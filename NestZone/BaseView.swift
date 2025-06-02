@@ -1,12 +1,5 @@
-//
-//  BaseView.swift
-//  NestZone
-//
-//  Created by muratcankoc on 01/06/2025.
-//
-
 import SwiftUI
-import UIKit  // For UIImpactFeedbackGenerator
+import UIKit
 
 struct BaseView: View {
     @State private var selectedTab: Tab = .home
@@ -17,7 +10,7 @@ struct BaseView: View {
     enum Tab: String, CaseIterable {
         case home = "Home"
         case list = "List"
-        case chat = "Chat"
+        case notes = "Notes"
         case recipes = "Recipes"
         case settings = "Settings"
 
@@ -25,7 +18,7 @@ struct BaseView: View {
             switch self {
             case .home: return "house.fill"
             case .list: return "list.bullet.rectangle.fill"
-            case .chat: return "bubble.left.and.bubble.right.fill"
+            case .notes: return "note.text"
             case .recipes: return "fork.knife"
             case .settings: return "gearshape.fill"
             }
@@ -34,39 +27,66 @@ struct BaseView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            DashboardView()
-                .tabItem {
-                    Label(Tab.home.rawValue, systemImage: Tab.home.icon)
-                }
-                .tag(Tab.home)
+            NavigationStack {
+                DashboardView()
+            }
+            .tag(Tab.home)
+            .tabItem {
+                Label(Tab.home.rawValue, systemImage: Tab.home.icon)
+            }
+            .accessibilityIdentifier("HomeTab")
             
-            Text("List")
-                .tabItem {
-                    Label(Tab.list.rawValue, systemImage: Tab.list.icon)
+            NavigationStack {
+                ListView()
+            }
+            .tag(Tab.list)
+            .tabItem {
+                Label(Tab.list.rawValue, systemImage: Tab.list.icon)
+            }
+            .accessibilityIdentifier("ListTab")
+            .overlay(
+                Button {
+                    selectedTab = .list
+                } label: {
+                    Image(systemName: Tab.list.icon)
+                        .opacity(0.001)
                 }
-                .tag(Tab.list)
+                .frame(width: 60, height: 60)
+                .position(x: UIScreen.main.bounds.width / 4, y: UIScreen.main.bounds.height - 40)
+            )
             
-            Text("Chat")
-                .tabItem {
-                    Label(Tab.chat.rawValue, systemImage: Tab.chat.icon)
-                }
-                .tag(Tab.chat)
+            NavigationStack {
+                NotesView()
+            }
+            .tag(Tab.notes)
+            .tabItem {
+                Label(Tab.notes.rawValue, systemImage: Tab.notes.icon)
+            }
+            .accessibilityIdentifier("NotesTab")
             
-            Text("Recipes")
-                .tabItem {
-                    Label(Tab.recipes.rawValue, systemImage: Tab.recipes.icon)
-                }
-                .tag(Tab.recipes)
+            NavigationStack {
+                Text("Recipes")
+            }
+            .tag(Tab.recipes)
+            .tabItem {
+                Label(Tab.recipes.rawValue, systemImage: Tab.recipes.icon)
+            }
+            .accessibilityIdentifier("RecipesTab")
             
             NavigationStack {
                 SettingsView()
             }
+            .tag(Tab.settings)
             .tabItem {
                 Label(Tab.settings.rawValue, systemImage: Tab.settings.icon)
             }
-            .tag(Tab.settings)
+            .accessibilityIdentifier("SettingsTab")
         }
         .tint(selectedTheme.colors(for: colorScheme).primary[0])
         .environment(\.colorScheme, .dark)
     }
+}
+
+#Preview {
+    BaseView()
 }

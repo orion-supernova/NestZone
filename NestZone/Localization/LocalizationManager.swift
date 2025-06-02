@@ -34,9 +34,12 @@ enum LocalizationKey: Hashable {
     case about
     case logout
     case language
+    case notes
 
     func hash(into hasher: inout Hasher) {
         switch self {
+        case .notes:
+            hasher.combine(20)
         case .done:
             hasher.combine(0)
         case .hello(let name):
@@ -85,7 +88,8 @@ enum LocalizationKey: Hashable {
 
     static func == (lhs: LocalizationKey, rhs: LocalizationKey) -> Bool {
         switch (lhs, rhs) {
-        case (.done, .done),
+        case (.notes, .notes),
+             (.done, .done),
              (.todaysTasks, .todaysTasks),
              (.statistics, .statistics),
              (.kitchen, .kitchen),
@@ -129,6 +133,7 @@ final class LocalizationManager: ObservableObject {
     
     private let translations: [Language: [LocalizationKey: String]] = [
         .english: [
+            .notes: "Notes",
             .done: "Done",
             .hello(name: "*"): "Hello %@!",
             .tasksCount(count: 0): "You have %d tasks today",
@@ -152,6 +157,7 @@ final class LocalizationManager: ObservableObject {
         ],
         
         .turkish: [
+            .notes: "Notlar",
             .done: "Tamam",
             .hello(name: "*"): "Merhaba %@!",
             .tasksCount(count: 0): "Bugün %d görevin var",
