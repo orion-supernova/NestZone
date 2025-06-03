@@ -6,6 +6,24 @@ struct PocketBaseErrorResponse: Codable {
     let data: [String: String]
 }
 
+struct PocketBaseUser: Codable {
+    let id: String
+    let email: String
+    let name: String?
+    let avatar: String?
+    let home_id: [String]
+    let created: String
+    let updated: String
+    let verified: Bool
+    let emailVisibility: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case id, email, name, avatar, created, updated, verified
+        case home_id
+        case emailVisibility = "emailVisibility"
+    }
+}
+
 struct PocketBaseListResponse<T: Codable>: Codable {
     let page: Int
     let perPage: Int

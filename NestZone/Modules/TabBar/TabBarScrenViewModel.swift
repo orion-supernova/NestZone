@@ -21,13 +21,31 @@ class TabBarScrenViewModel: ObservableObject {
                 throw PocketBaseManager.PocketBaseError.unauthorized
             }
             
+            // First fetch user details to get home_ids
+            let userResponse: PocketBaseUser = try await pocketBase.request(
+                endpoint: "/api/collections/users/records/\(userId)",
+                method: .get,
+                requiresAuth: true,
+                responseType: PocketBaseUser.self
+            )
+            
+            // If user has no homes, return empty
+            guard !userResponse.home_id.isEmpty else {
+                self.homes = []
+                return
+            }
+            
+            // Then fetch homes using the home_ids
+            let homeIds = userResponse.home_id.joined(separator: "','")
             let response: PocketBaseListResponse<Home> = try await pocketBase.request(
                 endpoint: "/api/collections/homes/records",
                 method: .get,
-                parameters: ["filter": "members ~ '\(userId)'"],
+                parameters: ["filter": "id ~ '\(homeIds)'"],
+                requiresAuth: true,
                 responseType: PocketBaseListResponse<Home>.self
             )
             self.homes = response.items
+            
         } catch let error as PocketBaseManager.PocketBaseError {
             switch error {
             case .badRequest:
