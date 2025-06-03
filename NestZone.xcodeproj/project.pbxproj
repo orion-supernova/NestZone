@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		54F0C6022DEEF45F00026F84 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 54F0C6012DEEF45F00026F84 /* Alamofire */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		54F0C1BD2DECACBE00026F84 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				54F0C6022DEEF45F00026F84 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = NestZone;
 			packageProductDependencies = (
+				54F0C6012DEEF45F00026F84 /* Alamofire */,
 			);
 			productName = NestZone;
 			productReference = 54F0C1AF2DECACBC00026F84 /* NestZone.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 54F0C1A62DECACBC00026F84;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				54F0C6002DEEF45F00026F84 /* XCRemoteSwiftPackageReference "Alamofire" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 54F0C1B02DECACBC00026F84 /* Products */;
 			projectDirPath = "";
@@ -558,6 +567,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		54F0C6002DEEF45F00026F84 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		54F0C6012DEEF45F00026F84 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 54F0C6002DEEF45F00026F84 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 54F0C1A72DECACBC00026F84 /* Project object */;
 }

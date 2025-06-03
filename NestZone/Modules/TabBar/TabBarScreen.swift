@@ -1,11 +1,12 @@
 import SwiftUI
 import UIKit
 
-struct BaseView: View {
+struct TabBarScreen: View {
     @State private var selectedTab: Tab = .home
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var localizationManager = LocalizationManager.shared
+    @EnvironmentObject private var authManager: PocketBaseAuthManager
 
     enum Tab: String, CaseIterable {
         case home = "Home"
@@ -28,7 +29,7 @@ struct BaseView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                DashboardView()
+                HomeTabScreen()
             }
             .tag(Tab.home)
             .tabItem {
@@ -84,9 +85,15 @@ struct BaseView: View {
         }
         .tint(selectedTheme.colors(for: colorScheme).primary[0])
         .environment(\.colorScheme, .dark)
+        .task {
+            // Try to refresh auth on app start
+            if authManager.currentUser == nil {
+                try? await authManager.refreshAuth()
+            }
+        }
     }
 }
 
 #Preview {
-    BaseView()
+    TabBarScreen()
 }

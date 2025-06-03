@@ -6,7 +6,7 @@ struct SettingsView: View {
     @State private var isShowingThemeSheet = false
     @State private var isShowingLanguageSheet = false
     @StateObject private var localizationManager = LocalizationManager.shared
-
+    @EnvironmentObject private var authManager: PocketBaseAuthManager
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -196,7 +196,9 @@ struct SettingsView: View {
 
                         // Logout Section
                         SettingsSection(title: "") {
-                            SettingsButton(action: {}) {
+                            SettingsButton(action: {
+                                authManager.logout()
+                            }) {
                                 HStack(spacing: 16) {
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 12)

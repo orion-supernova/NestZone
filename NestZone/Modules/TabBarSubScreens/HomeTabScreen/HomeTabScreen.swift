@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct DashboardView: View {
+struct HomeTabScreen: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @State private var tasksAppeared = false
@@ -78,15 +78,33 @@ struct DashboardView: View {
     }
     
     // Sample data
-    private var sampleTasks: [HouseTask] = [
-        HouseTask(title: LocalizationManager.text(.kitchen), assignedTo: "Sarah", timeLeft: "2 saat", progress: 0.65, type: .cleaning),
-        HouseTask(title: LocalizationManager.text(.shopping), assignedTo: "Mike", timeLeft: "Bugün", progress: 0.25, type: .shopping),
-        HouseTask(title: LocalizationManager.text(.laundry), assignedTo: "Emma", timeLeft: "3 saat", progress: 0.8, type: .cleaning)
+    private var sampleTasks: [HouseTaskViewModel] = [
+        HouseTaskViewModel(
+            title: LocalizationManager.text(.kitchen),
+            assignedTo: "Sarah",
+            timeLeft: "2 saat",
+            progress: 0.65,
+            type: .cleaning
+        ),
+        HouseTaskViewModel(
+            title: LocalizationManager.text(.shopping),
+            assignedTo: "Mike",
+            timeLeft: "Bugün",
+            progress: 0.25,
+            type: .shopping
+        ),
+        HouseTaskViewModel(
+            title: LocalizationManager.text(.laundry),
+            assignedTo: "Emma",
+            timeLeft: "3 saat",
+            progress: 0.8,
+            type: .cleaning
+        )
     ]
 }
 
 struct TaskCard: View {
-    let task: HouseTask
+    let task: HouseTaskViewModel
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @State private var isPressed = false
@@ -322,4 +340,8 @@ struct PerformanceRow: View {
         .contentShape(Rectangle())
         .padding(.horizontal, 8)
     }
+}
+
+#Preview {
+    HomeTabScreen()
 }

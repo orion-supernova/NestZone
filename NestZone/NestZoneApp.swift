@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct NestZoneApp: App {
+    @StateObject private var authManager = PocketBaseAuthManager()
+    
     var body: some Scene {
         WindowGroup {
-            BaseView()
+            ContentView()
+                .environmentObject(authManager)
         }
     }
 }

@@ -3,10 +3,10 @@ import SwiftUI
 struct NotesView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @State private var notes: [Note] = [
-        Note(text: "Please get some milk on your way home! 🥛", author: "Sarah", color: .yellow),
-        Note(text: "Dinner's in the fridge, just heat it up 🍝", author: "Mike", color: .pink),
-        Note(text: "Called the plumber, they're coming tomorrow at 10am 🔧", author: "Emma", color: .blue)
+    @State private var notes: [NoteViewModel] = [
+        NoteViewModel(text: "Please get some milk on your way home! 🥛", author: "Sarah", color: .yellow),
+        NoteViewModel(text: "Dinner's in the fridge, just heat it up 🍝", author: "Mike", color: .pink),
+        NoteViewModel(text: "Called the plumber, they're coming tomorrow at 10am 🔧", author: "Emma", color: .blue)
     ]
     @State private var newNoteText = ""
     @State private var showingNewNote = false
@@ -40,7 +40,7 @@ struct NotesView: View {
     }
 }
 
-struct Note: Identifiable {
+struct NoteViewModel: Identifiable {
     let id = UUID()
     let text: String
     let author: String
@@ -49,7 +49,7 @@ struct Note: Identifiable {
 }
 
 struct NoteCard: View {
-    let note: Note
+    let note: NoteViewModel
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @State private var isPressed = false
@@ -150,7 +150,7 @@ private struct ColorCircle: View {
 }
 
 struct NewNoteSheet: View {
-    @Binding var notes: [Note]
+    @Binding var notes: [NoteViewModel]
     @Binding var isPresented: Bool
     @State private var noteText = ""
     @State private var selectedColor: Color = .yellow
@@ -210,7 +210,7 @@ struct NewNoteSheet: View {
     private var addButton: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button("Add") {
-                let note = Note(text: noteText, author: "Sarah", color: selectedColor)
+                let note = NoteViewModel(text: noteText, author: "Sarah", color: selectedColor)
                 notes.insert(note, at: 0)
                 isPresented = false
             }
