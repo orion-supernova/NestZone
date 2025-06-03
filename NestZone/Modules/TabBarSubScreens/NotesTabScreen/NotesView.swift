@@ -218,3 +218,7 @@ struct NewNoteSheet: View {
         }
     }
 }
+
+#Preview {
+    NotesView()
+}

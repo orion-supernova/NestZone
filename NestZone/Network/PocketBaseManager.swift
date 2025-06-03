@@ -57,11 +57,13 @@ class PocketBaseManager {
             headers["Authorization"] = token
         }
         
+        let encoding: ParameterEncoding = method == .get ? URLEncoding.default : JSONEncoding.default
+        
         let response = await AF.request(
             "\(baseURL)\(endpoint)",
             method: method,
             parameters: parameters,
-            encoding: JSONEncoding.default,
+            encoding: encoding,
             headers: headers
         )
         .validate()

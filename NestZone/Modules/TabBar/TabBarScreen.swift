@@ -7,6 +7,7 @@ struct TabBarScreen: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var localizationManager = LocalizationManager.shared
     @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @StateObject private var viewModel = TabBarScrenViewModel()
 
     enum Tab: String, CaseIterable {
         case home = "Home"
@@ -89,6 +90,12 @@ struct TabBarScreen: View {
             // Try to refresh auth on app start
             if authManager.currentUser == nil {
                 try? await authManager.refreshAuth()
+                print(authManager.currentUser)
+            }
+            do {
+                try await viewModel.fetchUserHome(authManager: authManager)
+            } catch let error {
+                print(error.localizedDescription)
             }
         }
     }

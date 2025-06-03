@@ -1,7 +1,21 @@
 import Foundation
 
+struct PocketBaseErrorResponse: Codable {
+    let status: Int
+    let message: String
+    let data: [String: String]
+}
+
+struct PocketBaseListResponse<T: Codable>: Codable {
+    let page: Int
+    let perPage: Int
+    let totalPages: Int
+    let totalItems: Int
+    let items: [T]
+}
+
 // MARK: - Home Collection
-struct Home: Codable {
+struct Home: Codable, Identifiable {
     let id: String
     let name: String
     let address: GeoPoint?
@@ -203,3 +217,5 @@ struct CalendarEvent: Codable {
         case updated
     }
 }
+
+// Rest of the file remains the same...
