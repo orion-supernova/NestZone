@@ -13,13 +13,18 @@ class TabBarScrenViewModel: ObservableObject {
     // MARK: - Properties
     private let pocketBase = PocketBaseManager.shared
     @Published var homes: [Home] = []
+    @Published var isLoading = false
     
     // MARK: - Public Methods
     func fetchUserHome(authManager: PocketBaseAuthManager) async throws {
+        isLoading = true
+        
         do {
             guard let userId = authManager.currentUser?.id else {
                 throw PocketBaseManager.PocketBaseError.unauthorized
             }
+            
+            print("DEBUG: Fetching homes for user:", userId)
             
             // First fetch user details to get home_ids
             let userResponse: PocketBaseUser = try await pocketBase.request(
@@ -29,44 +34,45 @@ class TabBarScrenViewModel: ObservableObject {
                 responseType: PocketBaseUser.self
             )
             
+            print("DEBUG: User response:", userResponse)
+            print("DEBUG: User home_ids:", userResponse.home_id)
+            
             // If user has no homes, return empty
             guard !userResponse.home_id.isEmpty else {
                 self.homes = []
+                isLoading = false
                 return
             }
             
-            // Then fetch homes using the home_ids
-            let homeIds = userResponse.home_id.joined(separator: "','")
+            print("DEBUG: Starting to fetch homes...")
+            print("DEBUG: Home IDs to fetch:", userResponse.home_id)
+            
+            // Fix: Use ?= operator with array syntax
+            let homeIds = userResponse.home_id.map { "'\($0)'" }.joined(separator: ", ")
+            let query = "(id=\(homeIds))"
+            let endpoint = "/api/collections/homes/records"
+            
+            print("DEBUG: Using filter query:", query)
+            
             let response: PocketBaseListResponse<Home> = try await pocketBase.request(
-                endpoint: "/api/collections/homes/records",
+                endpoint: endpoint,
                 method: .get,
-                parameters: ["filter": "id ~ '\(homeIds)'"],
+                parameters: ["filter": query],
                 requiresAuth: true,
                 responseType: PocketBaseListResponse<Home>.self
             )
             self.homes = response.items
             
         } catch let error as PocketBaseManager.PocketBaseError {
-            switch error {
-            case .badRequest:
-                print("Invalid filter or request format")
-                throw error
-            case .unauthorized:
-                print("Authorization required")
-                throw error
-            case .forbidden:
-                print("Only superusers can access this action")
-                throw error
-            case .serverError(let message):
-                print("Server error: \(message)")
-                throw error
-            default:
-                print("Unknown error: \(error)")
-                throw error
-            }
+            print("DEBUG: PocketBase error in user fetch:", error)
+            print("DEBUG: Error description:", error.localizedDescription)
+            throw error
         } catch {
-            print("Error fetching homes: \(error)")
+            print("DEBUG: Unknown error in user fetch:", error)
+            print("DEBUG: Error description:", error.localizedDescription)
             throw error
         }
+        
+        isLoading = false
     }
 }

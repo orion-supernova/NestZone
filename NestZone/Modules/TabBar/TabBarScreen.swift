@@ -28,63 +28,71 @@ struct TabBarScreen: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            NavigationStack {
-                HomeTabScreen()
-            }
-            .tag(Tab.home)
-            .tabItem {
-                Label(Tab.home.rawValue, systemImage: Tab.home.icon)
-            }
-            .accessibilityIdentifier("HomeTab")
-            
-            NavigationStack {
-                ListView()
-            }
-            .tag(Tab.list)
-            .tabItem {
-                Label(Tab.list.rawValue, systemImage: Tab.list.icon)
-            }
-            .accessibilityIdentifier("ListTab")
-            .overlay(
-                Button {
-                    selectedTab = .list
-                } label: {
-                    Image(systemName: Tab.list.icon)
-                        .opacity(0.001)
+        Group {
+            if viewModel.homes.isEmpty {
+                NoHomesView()
+                    .environmentObject(viewModel)
+                    .environmentObject(authManager)
+            } else {
+                TabView(selection: $selectedTab) {
+                    NavigationStack {
+                        HomeTabScreen()
+                    }
+                    .tag(Tab.home)
+                    .tabItem {
+                        Label(Tab.home.rawValue, systemImage: Tab.home.icon)
+                    }
+                    .accessibilityIdentifier("HomeTab")
+                    
+                    NavigationStack {
+                        ListView()
+                    }
+                    .tag(Tab.list)
+                    .tabItem {
+                        Label(Tab.list.rawValue, systemImage: Tab.list.icon)
+                    }
+                    .accessibilityIdentifier("ListTab")
+                    .overlay(
+                        Button {
+                            selectedTab = .list
+                        } label: {
+                            Image(systemName: Tab.list.icon)
+                                .opacity(0.001)
+                        }
+                        .frame(width: 60, height: 60)
+                        .position(x: UIScreen.main.bounds.width / 4, y: UIScreen.main.bounds.height - 40)
+                    )
+                    
+                    NavigationStack {
+                        NotesView()
+                    }
+                    .tag(Tab.notes)
+                    .tabItem {
+                        Label(Tab.notes.rawValue, systemImage: Tab.notes.icon)
+                    }
+                    .accessibilityIdentifier("NotesTab")
+                    
+                    NavigationStack {
+                        Text("Recipes")
+                    }
+                    .tag(Tab.recipes)
+                    .tabItem {
+                        Label(Tab.recipes.rawValue, systemImage: Tab.recipes.icon)
+                    }
+                    .accessibilityIdentifier("RecipesTab")
+                    
+                    NavigationStack {
+                        SettingsView()
+                    }
+                    .tag(Tab.settings)
+                    .tabItem {
+                        Label(Tab.settings.rawValue, systemImage: Tab.settings.icon)
+                    }
+                    .accessibilityIdentifier("SettingsTab")
                 }
-                .frame(width: 60, height: 60)
-                .position(x: UIScreen.main.bounds.width / 4, y: UIScreen.main.bounds.height - 40)
-            )
-            
-            NavigationStack {
-                NotesView()
+                .tint(selectedTheme.colors(for: colorScheme).primary[0])
             }
-            .tag(Tab.notes)
-            .tabItem {
-                Label(Tab.notes.rawValue, systemImage: Tab.notes.icon)
-            }
-            .accessibilityIdentifier("NotesTab")
-            
-            NavigationStack {
-                Text("Recipes")
-            }
-            .tag(Tab.recipes)
-            .tabItem {
-                Label(Tab.recipes.rawValue, systemImage: Tab.recipes.icon)
-            }
-            .accessibilityIdentifier("RecipesTab")
-            
-            NavigationStack {
-                SettingsView()
-            }
-            .tag(Tab.settings)
-            .tabItem {
-                Label(Tab.settings.rawValue, systemImage: Tab.settings.icon)
-            }
-            .accessibilityIdentifier("SettingsTab")
         }
-        .tint(selectedTheme.colors(for: colorScheme).primary[0])
         .environment(\.colorScheme, .dark)
         .task {
             // Try to refresh auth on app start

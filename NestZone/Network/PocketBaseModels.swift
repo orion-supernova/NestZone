@@ -56,6 +56,11 @@ struct Home: Codable, Identifiable {
 struct GeoPoint: Codable {
     let lat: Double
     let lng: Double
+    
+    enum CodingKeys: String, CodingKey {
+        case lat
+        case lng = "lon"
+    }
 }
 
 // MARK: - Task Collection

@@ -147,3 +147,7 @@ struct ThemeButton: View {
         }
     }
 }
+
+#Preview {
+    ThemeSelectionSheet(isShowingSheet: .constant(true))
+}

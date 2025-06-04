@@ -86,7 +86,7 @@ struct NoteCard: View {
                 
                 LinearGradient(
                     colors: [
-                        .white.opacity(0.15),
+                        .white.opacity(0.3),
                         .clear,
                         .black.opacity(0.05)
                     ],

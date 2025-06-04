@@ -103,3 +103,7 @@ struct LanguageButton: View {
         .animation(.spring(duration: 0.2), value: isPressed)
     }
 }
+
+#Preview {
+    LanguageSelectionSheet(isShowingSheet: .constant(true))
+}

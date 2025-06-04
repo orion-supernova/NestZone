@@ -3,9 +3,10 @@ import Alamofire
 
 @MainActor
 class PocketBaseManager {
+    // MARK: - Properties
     static let shared = PocketBaseManager()
     
-    private let baseURL = "https://nestzone.walhallaa.com"
+    private(set) var baseURL = "https://nestzone.walhallaa.com"
     private var authToken: String?
     
     private init() {}
@@ -57,7 +58,15 @@ class PocketBaseManager {
             headers["Authorization"] = token
         }
         
-        let encoding: ParameterEncoding = method == .get ? URLEncoding.default : JSONEncoding.default
+        // Use URLEncoding.queryString for GET requests to properly encode complex filter queries
+        let encoding: ParameterEncoding = method == .get ? URLEncoding.queryString : JSONEncoding.default
+        
+        // Debug full request details
+        print("DEBUG: Full URL:", "\(baseURL)\(endpoint)")
+        print("DEBUG: Method:", method.rawValue)
+        print("DEBUG: Parameters:", parameters ?? [:])
+        print("DEBUG: Headers:", headers)
+        print("DEBUG: Encoding:", encoding)
         
         let response = await AF.request(
             "\(baseURL)\(endpoint)",
@@ -70,10 +79,22 @@ class PocketBaseManager {
         .serializingDecodable(T.self)
         .response
         
+        // Debug response details
+        print("DEBUG: Response URL:", response.request?.url?.absoluteString ?? "nil")
+        print("DEBUG: Response Status Code:", response.response?.statusCode ?? -1)
+        if let data = response.data, let str = String(data: data, encoding: .utf8) {
+            print("DEBUG: Response Body:", str)
+        }
+        
         switch response.result {
         case .success(let data):
             return data
-        case .failure:
+        case .failure(let error):
+            print("DEBUG: Response Error:", error)
+            print("DEBUG: Response Error Description:", error.localizedDescription)
+            if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                print("DEBUG: Error Response Body:", str)
+            }
             throw mapError(from: response)
         }
     }
@@ -177,6 +198,12 @@ class PocketBaseManager {
     private func mapError<T>(from response: AFDataResponse<T>) -> PocketBaseError {
         guard let statusCode = response.response?.statusCode else {
             return .networkError
+        }
+        
+        // Debug print for error investigation
+        if let data = response.data, 
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            print("DEBUG: Error Response:", json)
         }
         
         switch statusCode {

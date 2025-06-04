@@ -111,9 +111,9 @@ struct TaskCard: View {
     
     var taskIcon: String {
         switch task.type {
-        case .cleaning: return "spray.sparkle.fill"
+        case .cleaning: return "bubbles.and.sparkles"
         case .shopping: return "cart.fill"
-        case .maintenance: return "wrench.fill"
+        case .maintenance: return "hammer"
         }
     }
     
