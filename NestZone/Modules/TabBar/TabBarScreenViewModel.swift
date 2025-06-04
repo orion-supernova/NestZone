@@ -13,7 +13,7 @@ class TabBarScreenViewModel: ObservableObject {
     // MARK: - Properties
     private let pocketBase = PocketBaseManager.shared
     @Published var homes: [Home] = []
-    @Published var isLoading = false
+    @Published var isLoading = true
     
     // MARK: - Public Methods
     func fetchUserHome(authManager: PocketBaseAuthManager) async throws {

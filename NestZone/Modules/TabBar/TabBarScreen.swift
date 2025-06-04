@@ -29,7 +29,16 @@ struct TabBarScreen: View {
 
     var body: some View {
         Group {
-            if viewModel.homes.isEmpty {
+            if viewModel.isLoading {
+                // Loading View
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .tint(selectedTheme.colors(for: colorScheme).primary[0])
+                    Text("Loading...")
+                        .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
+                }
+            } else if viewModel.homes.isEmpty {
                 NoHomesView()
                     .environmentObject(viewModel)
                     .environmentObject(authManager)
