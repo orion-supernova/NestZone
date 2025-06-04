@@ -1,5 +1,5 @@
 //
-//  TabBarScrenViewModel.swift
+//  TabBarScreenViewModel.swift
 //  NestZone
 //
 //  Created by muratcankoc on 03/06/2025.
@@ -9,7 +9,7 @@ import SwiftUI
 import Alamofire
 
 @MainActor
-class TabBarScrenViewModel: ObservableObject {
+class TabBarScreenViewModel: ObservableObject {
     // MARK: - Properties
     private let pocketBase = PocketBaseManager.shared
     @Published var homes: [Home] = []

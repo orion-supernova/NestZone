@@ -7,7 +7,7 @@ struct TabBarScreen: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var localizationManager = LocalizationManager.shared
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @StateObject private var viewModel = TabBarScrenViewModel()
+    @StateObject private var viewModel = TabBarScreenViewModel()
 
     enum Tab: String, CaseIterable {
         case home = "Home"

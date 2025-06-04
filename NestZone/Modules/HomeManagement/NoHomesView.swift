@@ -7,7 +7,7 @@ struct NoHomesView: View {
     @State private var showJoinHome = false
     @State private var animateContent = false
     @State private var animateButtons = false
-    @EnvironmentObject var viewModel: TabBarScrenViewModel
+    @EnvironmentObject var viewModel: TabBarScreenViewModel
     @EnvironmentObject var authManager: PocketBaseAuthManager
     
     var body: some View {
