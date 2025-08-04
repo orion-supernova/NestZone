@@ -292,28 +292,26 @@ struct SettingsButton<Content: View>: View {
     }
     
     var body: some View {
-        Button(action: action) {
-            content
-        }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
-        .onTapGesture {
+        Button {
             let impact = UIImpactFeedbackGenerator(style: .light)
             impact.impactOccurred()
             
-            withAnimation {
+            withAnimation(.spring(response: 0.2)) {
                 isPressed = true
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation {
+                withAnimation(.spring(response: 0.2)) {
                     isPressed = false
                 }
+                action()
             }
-            
-            action()
+        } label: {
+            content
+                .contentShape(Rectangle())
         }
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
     }
 }
 
@@ -326,7 +324,11 @@ struct SettingsRow: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        SettingsButton(action: action) {
+        Button {
+            let impact = UIImpactFeedbackGenerator(style: .light)
+            impact.impactOccurred()
+            action()
+        } label: {
             HStack(spacing: 16) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
@@ -356,6 +358,7 @@ struct SettingsRow: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
             }
+            .contentShape(Rectangle())
         }
     }
 }

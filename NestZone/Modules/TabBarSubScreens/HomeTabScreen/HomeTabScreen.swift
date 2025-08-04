@@ -9,6 +9,7 @@ struct HomeTabScreen: View {
     
     @State private var animateHeader = false
     @State private var animateStats = false
+    @State private var showingShoppingView = false
     
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -30,7 +31,7 @@ struct HomeTabScreen: View {
                     .offset(y: animateHeader ? 0 : 30)
                 
                 // Navigable Statistics
-                NavigableStatsSection()
+                NavigableStatsSection(showingShoppingView: $showingShoppingView)
                     .environmentObject(viewModel)
                     .environmentObject(tabNavigationHelper)
                     .padding(.top, 40)
@@ -63,6 +64,9 @@ struct HomeTabScreen: View {
             }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .fullScreenCover(isPresented: $showingShoppingView) {
+            ShoppingListView()
         }
     }
     
@@ -274,6 +278,7 @@ struct QuickActionsView: View {
 struct NavigableStatsSection: View {
     @EnvironmentObject private var viewModel: HomeTabViewModel
     @EnvironmentObject var tabNavigationHelper: TabNavigationHelper
+    @Binding var showingShoppingView: Bool
     
     let statConfigs = [
         ("note.text", "Notes", [Color.blue, Color.cyan]),
@@ -311,8 +316,8 @@ struct NavigableStatsSection: View {
                             switch index {
                             case 0: // Notes
                                 tabNavigationHelper.navigateToTab(.notes)
-                            case 1: // Shopping (Management)
-                                tabNavigationHelper.navigateToTab(.management)
+                            case 1: // Shopping - Direct navigation
+                                showingShoppingView = true
                             case 2: // Issues (Management)
                                 tabNavigationHelper.navigateToTab(.management)
                             case 3: // Completed (Management)
