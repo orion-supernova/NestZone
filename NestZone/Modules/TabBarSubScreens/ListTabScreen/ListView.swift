@@ -1,868 +1,1114 @@
 import SwiftUI
-import Combine
-import UIKit
 
-// MARK: - Models
-struct ListItem: Identifiable {
-    let id = UUID()
-    var title: String
-    var isCompleted: Bool
-    var date: Date
-    var image: UIImage?
-}
-
-enum CategoryType: String, CaseIterable {
-    case generic = "Generic"
-    case shopping = "Shopping"
-    case places = "Places to Visit"
-    case maintenance = "House Maintenance"
-    
-    var defaultIcon: String {
-        switch self {
-        case .generic: return "list.bullet"
-        case .shopping: return "cart.fill"
-        case .places: return "map.fill"
-        case .maintenance: return "wrench.fill"
-        }
-    }
-    
-    var defaultColor: Color {
-        switch self {
-        case .generic: return .gray
-        case .shopping: return .purple
-        case .places: return .green
-        case .maintenance: return .blue
-        }
-    }
-}
-
-struct ListCategory: Identifiable {
-    let id = UUID()
-    var name: String
-    var icon: String
-    var color: Color
-    var items: [ListItem]
-    var type: CategoryType = .generic
-}
-
-// MARK: - Views
 struct ListView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @State private var categories: [ListCategory] = [
-        ListCategory(
-            name: "House Maintenance",
-            icon: "wrench.fill",
-            color: .blue,
-            items: [
-                ListItem(title: "Fix bathroom sink", isCompleted: false, date: Date(), image: nil),
-                ListItem(title: "Replace living room light bulb", isCompleted: true, date: Date(), image: nil),
-                ListItem(title: "Clean air filters", isCompleted: false, date: Date(), image: nil)
-            ],
-            type: .maintenance
-        ),
-        ListCategory(
-            name: "Places to Visit",
-            icon: "map.fill",
-            color: .green,
-            items: [
-                ListItem(title: "Local Farmers Market", isCompleted: false, date: Date(), image: nil),
-                ListItem(title: "New Italian Restaurant", isCompleted: false, date: Date(), image: nil)
-            ],
-            type: .places
-        ),
-        ListCategory(
-            name: "Home Improvement",
-            icon: "house.fill",
-            color: .orange,
-            items: [
-                ListItem(title: "Paint bedroom walls", isCompleted: false, date: Date(), image: nil),
-                ListItem(title: "Buy new curtains", isCompleted: false, date: Date(), image: nil)
-            ],
-            type: .generic
-        ),
-        ListCategory(
-            name: "Shopping",
-            icon: "cart.fill",
-            color: .purple,
-            items: [
-                ListItem(title: "Weekly groceries", isCompleted: false, date: Date(), image: nil),
-                ListItem(title: "Kitchen supplies", isCompleted: true, date: Date(), image: nil)
-            ],
-            type: .shopping
-        )
+    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    
+    @State private var animateCards = false
+    @State private var animateHeader = false
+    @State private var showingShoppingView = false
+    
+    // Mock data for demonstration
+    @State private var modules: [ModuleData] = [
+        ModuleData(type: .shopping, itemCount: 12, recentActivity: "Added milk to groceries", progress: 0.65),
+        ModuleData(type: .recipes, itemCount: 8, recentActivity: "Saved pasta recipe", progress: 0.80),
+        ModuleData(type: .maintenance, itemCount: 3, recentActivity: "Fixed kitchen sink", progress: 0.33),
+        ModuleData(type: .finance, itemCount: 5, recentActivity: "Split electricity bill", progress: 0.40),
+        ModuleData(type: .notes, itemCount: 15, recentActivity: "Added shopping reminder", progress: 0.90),
+        ModuleData(type: .calendar, itemCount: 4, recentActivity: "House party scheduled", progress: 0.25)
     ]
-    @State private var showingNewItemSheet = false
-    @State private var showingNewCategorySheet = false
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                ForEach($categories) { $category in
-                    CategoryCard(category: $category, categories: $categories)
-                        .id(category.id)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(category.name) category with \(category.items.count) items")
-                }
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 0) {
+                // Colorful Header
+                ModuleHubHeaderView()
+                    .padding(.horizontal, 24)
+                    .padding(.top, 10)
+                    .opacity(animateHeader ? 1 : 0)
+                    .offset(y: animateHeader ? 0 : -50)
+                
+                // Module Cards Grid
+                ModuleCardsSection(modules: modules, showingShoppingView: $showingShoppingView)
+                    .padding(.top, 32)
+                    .opacity(animateCards ? 1 : 0)
+                    .offset(y: animateCards ? 0 : 100)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
         }
-        .navigationTitle("Lists")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        showingNewItemSheet = true
-                    } label: {
-                        Label("Add Item", systemImage: "plus")
-                    }
+        .background(
+            ZStack {
+                // Dynamic rainbow background
+                RadialGradient(
+                    colors: [
+                        selectedTheme.colors(for: colorScheme).background,
+                        Color.purple.opacity(0.08),
+                        Color.blue.opacity(0.05),
+                        Color.green.opacity(0.03),
+                        Color.orange.opacity(0.02)
+                    ],
+                    center: .topLeading,
+                    startRadius: 0,
+                    endRadius: 1200
+                )
+                
+                // Floating colorful shapes
+                GeometryReader { geometry in
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.purple.opacity(0.4), Color.pink.opacity(0.2)],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 50
+                            )
+                        )
+                        .frame(width: 100, height: 100)
+                        .offset(x: -50, y: geometry.size.height * 0.2)
+                        .blur(radius: 35)
                     
-                    Button {
-                        showingNewCategorySheet = true
-                    } label: {
-                        Label("Add Category", systemImage: "folder.badge.plus")
-                    }
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(selectedTheme.colors(for: colorScheme).primary[0])
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.blue.opacity(0.3), Color.cyan.opacity(0.1)],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 40
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                        .offset(x: geometry.size.width - 10, y: geometry.size.height * 0.5)
+                        .blur(radius: 30)
+                    
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.green.opacity(0.4), Color.mint.opacity(0.2)],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 30
+                            )
+                        )
+                        .frame(width: 60, height: 60)
+                        .offset(x: geometry.size.width * 0.3, y: geometry.size.height * 0.8)
+                        .blur(radius: 25)
                 }
-                .accessibilityLabel("Add new item or category")
             }
+        )
+        .onAppear {
+            startAnimations()
         }
-        .background(selectedTheme.colors(for: colorScheme).background)
-        .sheet(isPresented: $showingNewItemSheet) {
-            GlobalNewItemSheet(categories: $categories, isPresented: $showingNewItemSheet)
+        .fullScreenCover(isPresented: $showingShoppingView) {
+            ShoppingListView()
         }
-        .sheet(isPresented: $showingNewCategorySheet) {
-            NewCategorySheet(categories: $categories, isPresented: $showingNewCategorySheet)
+    }
+    
+    private func startAnimations() {
+        withAnimation(.easeOut(duration: 1.0)) {
+            animateHeader = true
+        }
+        
+        withAnimation(.easeOut(duration: 1.2).delay(0.3)) {
+            animateCards = true
         }
     }
 }
 
-// MARK: - CategoryCard
-struct CategoryCard: View {
-    @Binding var category: ListCategory
-    @Binding var categories: [ListCategory]
+struct ModuleHubHeaderView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @State private var isExpanded = false
-    @State private var showingDetailView = false
-    @Namespace private var animation
-    
-    var completedCount: Int {
-        category.items.filter { $0.isCompleted }.count
-    }
-    
-    var progress: Double {
-        guard !category.items.isEmpty else { return 0.0 }
-        return Double(completedCount) / Double(category.items.count)
-    }
-    
-    var estimatedCost: Double {
-        Double(category.items.count * 25)
-    }
+    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @State private var pulseAnimation = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            Button {
-                let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                impactMed.impactOccurred()
-                
-                withAnimation(.spring(duration: 0.6, bounce: 0.1)) {
-                    showingDetailView = true
-                }
-            } label: {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(category.color.opacity(0.15))
-                            .frame(width: 44, height: 44)
-                        
-                        Image(systemName: category.icon)
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(category.color)
-                    }
+        VStack(spacing: 32) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Module Hub 🏠")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    selectedTheme.colors(for: colorScheme).text,
+                                    Color.purple
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                     
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(category.name)
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
+                    Text("Manage everything in one place! ✨")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.purple, Color.pink],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                
+                Spacer()
+                
+                // Animated hub icon
+                ZStack {
+                    Circle()
+                        .fill(
+                            AngularGradient(
+                                colors: [.purple, .pink, .red, .orange, .yellow, .green, .cyan, .blue, .purple],
+                                center: .center
+                            )
+                        )
+                        .frame(width: 52, height: 52)
+                    
+                    Circle()
+                        .fill(selectedTheme.colors(for: colorScheme).background)
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: "square.grid.3x3.fill")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.purple, Color.pink],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .scaleEffect(pulseAnimation ? 1.2 : 1.0)
+                        .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: pulseAnimation)
+                }
+            }
+            
+            // Quick Stats Overview
+            VStack(spacing: 20) {
+                HStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Active Modules")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                         
-                        Text("\(completedCount) of \(category.items.count) completed")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
+                        Text("6 Available")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color.green, Color.blue],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                     }
                     
                     Spacer()
                     
-                    if category.type == .shopping {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("$\(estimatedCost, specifier: "%.0f")")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(category.color)
-                            Text("budget")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
-                        }
-                    } else if category.type == .places {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(category.items.count)")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(category.color)
-                            Text("places")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
-                        }
-                    }
-                    
+                    // Hub Progress Ring
                     ZStack {
                         Circle()
-                            .stroke(category.color.opacity(0.2), lineWidth: 3)
-                            .frame(width: 36, height: 36)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 8)
+                            .frame(width: 70, height: 70)
                         
                         Circle()
-                            .trim(from: 0, to: progress)
-                            .stroke(category.color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                            .frame(width: 36, height: 36)
+                            .trim(from: 0, to: 0.83) // 5/6 modules active
+                            .stroke(
+                                AngularGradient(
+                                    colors: [.purple, .pink, .red, .orange, .yellow, .green, .cyan, .blue],
+                                    center: .center
+                                ),
+                                style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                            )
+                            .frame(width: 70, height: 70)
                             .rotationEffect(.degrees(-90))
-                            .animation(.easeInOut(duration: 0.5), value: progress)
+                            .animation(.spring(response: 1.5, dampingFraction: 0.8), value: true)
+                    }
+                }
+                
+                // Module Summary Cards
+                HStack(spacing: 12) {
+                    MiniModuleCard(
+                        title: "Lists",
+                        count: "12",
+                        gradient: [.green, .mint]
+                    )
+                    
+                    MiniModuleCard(
+                        title: "Ideas",
+                        count: "8",
+                        gradient: [.blue, .cyan]
+                    )
+                    
+                    MiniModuleCard(
+                        title: "Tasks",
+                        count: "15",
+                        gradient: [.purple, .pink]
+                    )
+                    
+                    MiniModuleCard(
+                        title: "Events",
+                        count: "4",
+                        gradient: [.orange, .red]
+                    )
+                }
+            }
+            .padding(24)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(selectedTheme.colors(for: colorScheme).glassMaterial)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
+                    
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.purple.opacity(0.5),
+                                    Color.pink.opacity(0.3),
+                                    Color.clear
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                }
+            )
+        }
+        .onAppear {
+            pulseAnimation = true
+        }
+    }
+}
+
+struct MiniModuleCard: View {
+    let title: String
+    let count: String
+    let gradient: [Color]
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(count)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: gradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            
+            Text(title)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(gradient[0].opacity(0.1))
+        )
+    }
+}
+
+struct ModuleCardsSection: View {
+    let modules: [ModuleData]
+    @Binding var showingShoppingView: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            HStack {
+                Text("Available Modules")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.purple, Color.pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                
+                Spacer()
+                
+                Text("\(modules.count) modules")
+                    .font(.system(size: 14, weight: .semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.purple.opacity(0.2), Color.pink.opacity(0.2)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.purple, Color.pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
+            .padding(.horizontal, 24)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 16),
+                GridItem(.flexible(), spacing: 16)
+            ], spacing: 20) {
+                ForEach(Array(modules.enumerated()), id: \.element.type.id) { index, module in
+                    VibrantModuleCard(module: module, index: index, showingShoppingView: $showingShoppingView)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 100)
+        }
+    }
+}
+
+struct VibrantModuleCard: View {
+    let module: ModuleData
+    let index: Int
+    @Binding var showingShoppingView: Bool
+    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isPressed = false
+    @State private var iconBounce = false
+    
+    var moduleGradient: [Color] {
+        module.type.colors
+    }
+    
+    var body: some View {
+        Button {
+            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+            impactMed.impactOccurred()
+            
+            withAnimation(.spring(response: 0.3)) {
+                isPressed = true
+                iconBounce = true
+            }
+            
+            // Navigate to module
+            if module.type == .shopping {
+                showingShoppingView = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.3)) {
+                    isPressed = false
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.spring(response: 0.6)) {
+                    iconBounce = false
+                }
+            }
+        } label: {
+            VStack(spacing: 18) {
+                // Header with icon and coming soon badge
+                HStack {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(
+                                LinearGradient(
+                                    colors: moduleGradient.map { $0.opacity(0.2) },
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 44, height: 44)
                         
-                        Text("\(Int(progress * 100))%")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(category.color)
+                        Image(systemName: module.type.icon)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: moduleGradient,
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .scaleEffect(iconBounce ? 1.2 : 1.0)
+                            .animation(.interpolatingSpring(duration: 0.6, bounce: 0.7), value: iconBounce)
                     }
                     
-                    Button {
-                        withAnimation(.spring(duration: 0.4, bounce: 0.3)) {
-                            isExpanded.toggle()
+                    Spacer()
+                    
+                    if module.type.comingSoon {
+                        Text("Soon")
+                            .font(.system(size: 10, weight: .bold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(Color.orange.opacity(0.2))
+                            )
+                            .foregroundColor(.orange)
+                    } else {
+                        Text("\(module.itemCount)")
+                            .font(.system(size: 14, weight: .bold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(moduleGradient[0].opacity(0.2))
+                            )
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: moduleGradient,
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    }
+                }
+                
+                // Content
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(module.type.title)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [selectedTheme.colors(for: colorScheme).text, moduleGradient[0]],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .lineLimit(1)
+                        
+                        Text(module.type.subtitle)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+                    
+                    if !module.type.comingSoon {
+                        // Recent Activity
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Recent")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.secondary)
+                            
+                            Text(module.recentActivity)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: moduleGradient,
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .lineLimit(2)
                         }
-                    } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
-                            .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                            .animation(.spring(duration: 0.4, bounce: 0.3), value: isExpanded)
+                        
+                        // Progress Bar
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Progress")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                                
+                                Spacer()
+                                
+                                Text("\(Int(module.progress * 100))%")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: moduleGradient,
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                            }
+                            
+                            GeometryReader { geometry in
+                                ZStack(alignment: .leading) {
+                                    Capsule()
+                                        .fill(Color.gray.opacity(0.2))
+                                        .frame(height: 4)
+                                    
+                                    Capsule()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: moduleGradient,
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(width: geometry.size.width * module.progress, height: 4)
+                                        .animation(.spring(response: 1.0, dampingFraction: 0.8), value: module.progress)
+                                }
+                            }
+                            .frame(height: 4)
+                        }
                     }
                 }
             }
-            .buttonStyle(.plain)
-            .padding(20)
-            .background(selectedTheme.colors(for: colorScheme).cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: isExpanded ? 16 : 16))
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.ultraThinMaterial)
+                
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: moduleGradient.map { $0.opacity(0.4) } + [Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+            }
+        )
+        .shadow(
+            color: moduleGradient[0].opacity(0.15),
+            radius: 12,
+            x: 0,
+            y: 6
+        )
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isPressed)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.1) {
+                iconBounce = true
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    iconBounce = false
+                }
+            }
+        }
+    }
+}
+
+// Create the dedicated ShoppingListView
+struct ShoppingListView: View {
+    @StateObject private var viewModel = ListTabViewModel()
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingNewItemSheet = false
+    
+    var body: some View {
+        NavigationView {
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    // Shopping Header
+                    ShoppingHeaderView()
+                        .environmentObject(viewModel)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 10)
+                    
+                    // Shopping Categories
+                    ShoppingCategoriesSection()
+                        .environmentObject(viewModel)
+                        .padding(.top, 32)
+                }
+            }
+            .background(
+                RadialGradient(
+                    colors: [
+                        Color(.systemGray6),
+                        Color.green.opacity(0.08),
+                        Color.blue.opacity(0.05)
+                    ],
+                    center: .topTrailing,
+                    startRadius: 0,
+                    endRadius: 1200
+                )
+            )
+            .navigationTitle("Shopping Lists")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Back") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingNewItemSheet = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color.green, Color.mint],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                }
+            }
+            .sheet(isPresented: $showingNewItemSheet) {
+                RainbowNewItemSheet()
+                    .environmentObject(viewModel)
+            }
+        }
+    }
+}
+
+struct ShoppingHeaderView: View {
+    @EnvironmentObject private var viewModel: ListTabViewModel
+    @State private var pulseAnimation = false
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Shopping Lists 🛒")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.primary, Color.green],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                    
+                    Text("Let's get everything you need! ✨")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.green, Color.mint],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                
+                Spacer()
+            }
             
-            if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach($category.items) { $item in
-                        SwipeableRow(itemTitle: item.title) {
-                            ListItemRow(item: $item)
-                        } onDelete: {
-                            category.items.removeAll { $0.id == item.id }
+            // Statistics
+            HStack(spacing: 12) {
+                MiniShoppingCard(
+                    title: "Total",
+                    count: "\(viewModel.totalItems)",
+                    gradient: [.blue, .purple]
+                )
+                
+                MiniShoppingCard(
+                    title: "Done",
+                    count: "\(viewModel.completedItems)",
+                    gradient: [.green, .mint]
+                )
+                
+                MiniShoppingCard(
+                    title: "Left",
+                    count: "\(viewModel.pendingItems)",
+                    gradient: [.orange, .red]
+                )
+            }
+        }
+    }
+}
+
+struct ShoppingCategoriesSection: View {
+    @EnvironmentObject private var viewModel: ListTabViewModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            HStack {
+                Text("Shopping Categories")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.green, Color.mint],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            
+            if viewModel.isLoading {
+                VStack(spacing: 16) {
+                    ForEach(0..<4, id: \.self) { _ in
+                        ShimmerCategoryCard()
+                    }
+                }
+                .padding(.horizontal, 20)
+            } else {
+                LazyVStack(spacing: 16) {
+                    ForEach(ShoppingItem.ShoppingCategory.allCases, id: \.self) { category in
+                        if let items = viewModel.categories[category], !items.isEmpty {
+                            VibrantCategoryCard(category: category, items: items, index: ShoppingItem.ShoppingCategory.allCases.firstIndex(of: category) ?? 0)
+                                .environmentObject(viewModel)
                         }
-                        if item.id != category.items.last?.id {
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+}
+
+struct MiniShoppingCard: View {
+    let title: String
+    let count: String
+    let gradient: [Color]
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(count)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: gradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            
+            Text(title)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(gradient[0].opacity(0.1))
+        )
+    }
+}
+
+struct ShimmerCategoryCard: View {
+    @State private var shimmerOffset: CGFloat = -200
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 50, height: 50)
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(height: 18)
+                    
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 14)
+                        .frame(maxWidth: 150)
+                }
+                
+                Spacer()
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.ultraThinMaterial)
+        )
+    }
+}
+
+struct VibrantCategoryCard: View {
+    let category: ShoppingItem.ShoppingCategory
+    let items: [ShoppingItem]
+    let index: Int
+    @EnvironmentObject private var viewModel: ListTabViewModel
+    @State private var isPressed = false
+    @State private var isExpanded = false
+    
+    var categoryGradient: [Color] {
+        viewModel.getCategoryColor(category)
+    }
+    
+    var completedCount: Int {
+        items.filter { $0.isPurchased }.count
+    }
+    
+    var progress: Double {
+        guard !items.isEmpty else { return 0.0 }
+        return Double(completedCount) / Double(items.count)
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Category Header
+            Button {
+                let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                impactMed.impactOccurred()
+                
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 16) {
+                    // Category Icon
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(
+                                LinearGradient(
+                                    colors: categoryGradient.map { $0.opacity(0.2) },
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 50, height: 50)
+                        
+                        Image(systemName: viewModel.getCategoryIcon(category))
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: categoryGradient,
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(viewModel.getCategoryName(category))
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        Text("\(completedCount) of \(items.count) completed")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isExpanded)
+                }
+                .padding(20)
+            }
+            .buttonStyle(.plain)
+            
+            // Expanded Items List
+            if isExpanded {
+                LazyVStack(spacing: 8) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { itemIndex, item in
+                        VibrantShoppingItem(item: item, gradient: categoryGradient, index: itemIndex)
+                            .environmentObject(viewModel)
+                        
+                        if itemIndex < items.count - 1 {
                             Divider()
                                 .padding(.horizontal, 20)
                         }
                     }
                 }
-                .background(selectedTheme.colors(for: colorScheme).cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.bottom, 16)
                 .transition(.asymmetric(
                     insertion: .move(edge: .top).combined(with: .opacity),
                     removal: .move(edge: .top).combined(with: .opacity)
                 ))
             }
         }
-        .background(selectedTheme.colors(for: colorScheme).cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-        .fullScreenCover(isPresented: $showingDetailView) {
-            CategoryDetailView(category: $category, categories: $categories)
-        }
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.ultraThinMaterial)
+        )
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isPressed)
     }
 }
 
-// MARK: - CategoryDetailView
-struct CategoryDetailView: View {
-    @Binding var category: ListCategory
-    @Binding var categories: [ListCategory]
-    @Environment(\.dismiss) private var dismiss
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
-    @State private var showingNewItemSheet = false
-    @State private var showingDeleteAlert = false
-    @Namespace private var heroAnimation
-    @State private var slideItemID: UUID?
-    
-    var completedCount: Int {
-        category.items.filter { $0.isCompleted }.count
-    }
-    
-    var progress: Double {
-        guard !category.items.isEmpty else { return 0.0 }
-        return Double(completedCount) / Double(category.items.count)
-    }
-    
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            ScrollView {
-                VStack(spacing: 20) {
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 16, weight: .semibold))
-                                Text("Back")
-                                    .font(.system(size: 16, weight: .medium))
-                            }
-                            .foregroundStyle(selectedTheme.colors(for: colorScheme).primary[0])
-                        }
-                        
-                        Spacer()
-                        
-                        Button {
-                            showingNewItemSheet = true
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundStyle(selectedTheme.colors(for: colorScheme).primary[0])
-                        }
-                        
-                        Button {
-                            let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                            impactMed.impactOccurred()
-                            showingDeleteAlert = true
-                        } label: {
-                            Image(systemName: "trash.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundStyle(selectedTheme.colors(for: colorScheme).destructive)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    
-                    VStack(spacing: 16) {
-                        HStack {
-                            ZStack {
-                                Circle()
-                                    .fill(category.color.opacity(0.15))
-                                    .frame(width: 60, height: 60)
-                                
-                                Image(systemName: category.icon)
-                                    .font(.system(size: 24, weight: .semibold))
-                                    .foregroundStyle(category.color)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(category.name)
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
-                                
-                                Text("\(completedCount) of \(category.items.count) completed")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
-                            }
-                            
-                            Spacer()
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Progress")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
-                                
-                                Spacer()
-                                
-                                Text("\(Int(progress * 100))%")
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundStyle(category.color)
-                            }
-                            
-                            GeometryReader { geometry in
-                                ZStack(alignment: .leading) {
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(category.color.opacity(0.2))
-                                        .frame(height: 8)
-                                    
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(category.color)
-                                        .frame(width: geometry.size.width * progress, height: 8)
-                                        .animation(.easeInOut(duration: 0.8), value: progress)
-                                }
-                            }
-                            .frame(height: 8)
-                        }
-                    }
-                    .padding(24)
-                    .background(selectedTheme.colors(for: colorScheme).cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-                    
-                    LazyVStack(spacing: 12) {
-                        ForEach($category.items) { $item in
-                            SwipeableRow(itemTitle: item.title) {
-                                ListItemRow(item: $item)
-                            } onDelete: {
-                                category.items.removeAll { $0.id == item.id }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                }
-                .padding(.bottom, 20)
-            }
-        }
-        .background(selectedTheme.colors(for: colorScheme).background)
-        .sheet(isPresented: $showingNewItemSheet) {
-            CategoryNewItemSheet(category: $category, isPresented: $showingNewItemSheet)
-        }
-        .alert("Delete Category", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
-                withAnimation {
-                    dismiss()
-                    if let index = categories.firstIndex(where: { $0.id == category.id }) {
-                        categories.remove(at: index)
-                    }
-                }
-            }
-        } message: {
-            Text("Are you sure you want to delete '\(category.name)' and all its items? This action cannot be undone.")
-        }
-    }
-}
-
-// MARK: - SwipeableRow
-struct SwipeableRow<Content: View>: View {
-    let content: Content
-    let onDelete: () -> Void
-    @State private var offset: CGFloat = 0
-    @State private var isSwiped = false
-    @State private var showingDeleteAlert = false
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
-    let itemTitle: String
-    
-    init(itemTitle: String, @ViewBuilder content: @escaping () -> Content, onDelete: @escaping () -> Void) {
-        self.content = content()
-        self.onDelete = onDelete
-        self.itemTitle = itemTitle
-    }
-    
-    var body: some View {
-        ZStack {
-            HStack(spacing: 0) {
-                content
-                    .frame(maxWidth: .infinity)
-                    .background(selectedTheme.colors(for: colorScheme).cardBackground)
-                    .offset(x: offset)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                withAnimation(.spring()) {
-                                    offset = value.translation.width
-                                    if offset < -60 {
-                                        offset = -60
-                                    }
-                                    if offset > 0 {
-                                        offset = 0
-                                    }
-                                }
-                            }
-                            .onEnded { value in
-                                withAnimation(.spring()) {
-                                    if value.translation.width < -50 {
-                                        isSwiped = true
-                                        offset = -60
-                                    } else {
-                                        isSwiped = false
-                                        offset = 0
-                                    }
-                                }
-                            }
-                    )
-                
-                if offset < 0 {
-                    Button {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
-                        showingDeleteAlert = true
-                    } label: {
-                        Image(systemName: "trash.fill")
-                            .font(.title2)
-                            .foregroundStyle(.white)
-                            .frame(width: 60, height: 50)
-                            .background(selectedTheme.colors(for: colorScheme).destructive)
-                    }
-                    .transition(.move(edge: .trailing))
-                }
-            }
-        }
-        .clipped()
-        .alert("Delete Item", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) {
-                withAnimation(.spring()) {
-                    offset = 0
-                    isSwiped = false
-                }
-            }
-            Button("Delete", role: .destructive) {
-                withAnimation(.spring()) {
-                    onDelete()
-                }
-            }
-        } message: {
-            Text("Are you sure you want to delete '\(itemTitle)'? This action cannot be undone.")
-        }
-    }
-}
-
-// MARK: - ListItemRow
-struct ListItemRow: View {
-    @Binding var item: ListItem
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
+struct VibrantShoppingItem: View {
+    let item: ShoppingItem
+    let gradient: [Color]
+    let index: Int
+    @EnvironmentObject private var viewModel: ListTabViewModel
     @State private var isPressed = false
-    @State private var offset = CGSize.zero
+    @State private var showingDeleteAlert = false
+    @State private var offset: CGFloat = 0
     
     var body: some View {
         HStack(spacing: 16) {
+            // Completion Button
             Button {
                 let impactMed = UIImpactFeedbackGenerator(style: .medium)
                 impactMed.impactOccurred()
                 
-                withAnimation(.spring(duration: 0.3)) {
-                    item.isCompleted.toggle()
+                Task {
+                    await viewModel.toggleItemCompletion(item)
                 }
             } label: {
                 ZStack {
-                    Circle()
-                        .fill(item.isCompleted ? selectedTheme.colors(for: colorScheme).primary[0] : Color.clear)
-                        .frame(width: 24, height: 24)
+                    if item.isPurchased {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: gradient,
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 28, height: 28)
+                    } else {
+                        Circle()
+                            .fill(Color.clear)
+                            .frame(width: 28, height: 28)
+                    }
                     
                     Circle()
-                        .stroke(item.isCompleted ? selectedTheme.colors(for: colorScheme).primary[0] : selectedTheme.colors(for: colorScheme).textSecondary, lineWidth: 2)
-                        .frame(width: 24, height: 24)
+                        .stroke(
+                            LinearGradient(
+                                colors: item.isPurchased ? gradient : [Color.gray],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2
+                        )
+                        .frame(width: 28, height: 28)
                     
-                    if item.isCompleted {
+                    if item.isPurchased {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(.white)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
                     }
                 }
             }
             .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.title)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
-                    .strikethrough(item.isCompleted)
-                    .opacity(item.isCompleted ? 0.6 : 1.0)
-                    .lineLimit(2)
+                Text(item.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .strikethrough(item.isPurchased)
+                    .opacity(item.isPurchased ? 0.7 : 1.0)
                 
-                Text(item.date.formatted(date: .abbreviated, time: .omitted))
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
+                if let description = item.description, !description.isEmpty {
+                    Text(description)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
             }
             
             Spacer()
             
-            if let image = item.image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 40, height: 40)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            if let quantity = item.quantity, quantity > 1 {
+                Text("×\(Int(quantity))")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: gradient,
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(gradient[0].opacity(0.2))
+                    )
             }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(selectedTheme.colors(for: colorScheme).cardBackground)
+        .background(Color.clear)
         .contentShape(Rectangle())
         .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.spring(duration: 0.2), value: isPressed)
-    }
-}
-
-// MARK: - CategoryNewItemSheet
-struct CategoryNewItemSheet: View {
-    @Binding var category: ListCategory
-    @Binding var isPresented: Bool
-    @State private var itemTitle = ""
-    @State private var selectedImage: UIImage?
-    @State private var showingImagePicker = false
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section {
-                    TextField("Item Title", text: $itemTitle)
-                }
-                
-                Section("Image") {
-                    Button {
-                        showingImagePicker = true
-                    } label: {
-                        HStack {
-                            Text(selectedImage == nil ? "Add Image" : "Change Image")
-                            Spacer()
-                            if let image = selectedImage {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 60, height: 60)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
+        .offset(x: offset)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isPressed)
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    if value.translation.width < 0 {
+                        offset = max(value.translation.width, -80)
                     }
+                }
+                .onEnded { value in
+                    withAnimation(.spring()) {
+                        if value.translation.width < -50 {
+                            showingDeleteAlert = true
+                        }
+                        offset = 0
+                    }
+                }
+        )
+        .alert("Delete Item", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                Task {
+                    await viewModel.deleteItem(item)
                 }
             }
-            .navigationTitle("Add to \(category.name)")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") {
-                        withAnimation {
-                            let newItem = ListItem(
-                                title: itemTitle,
-                                isCompleted: false,
-                                date: Date(),
-                                image: selectedImage
-                            )
-                            category.items.append(newItem)
-                            isPresented = false
-                        }
-                    }
-                    .disabled(itemTitle.isEmpty)
-                }
-            }
-        }
-        .sheet(isPresented: $showingImagePicker) {
-            ImagePicker(image: $selectedImage)
+        } message: {
+            Text("Are you sure you want to delete '\(item.name)'?")
         }
     }
 }
 
-// MARK: - GlobalNewItemSheet
-struct GlobalNewItemSheet: View {
-    @Binding var categories: [ListCategory]
-    @Binding var isPresented: Bool
-    @State private var selectedCategoryIndex = 0
-    @State private var itemTitle = ""
-    @State private var selectedImage: UIImage?
-    @State private var showingImagePicker = false
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
+// Create the dedicated RainbowNewItemSheet
+struct RainbowNewItemSheet: View {
+    @EnvironmentObject private var viewModel: ListTabViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var itemName = ""
+    @State private var itemDescription = ""
+    @State private var quantity: Double = 1.0
+    @State private var selectedCategory: ShoppingItem.ShoppingCategory = .groceries
     
     var body: some View {
         NavigationView {
             Form {
-                Section {
-                    TextField("Item Title", text: $itemTitle)
+                Section("Item Details") {
+                    TextField("Item Name", text: $itemName)
+                    TextField("Description (Optional)", text: $itemDescription)
                 }
                 
-                Section("Image") {
-                    Button {
-                        showingImagePicker = true
-                    } label: {
-                        HStack {
-                            Text(selectedImage == nil ? "Add Image" : "Change Image")
-                            Spacer()
-                            if let image = selectedImage {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 60, height: 60)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
-                    }
-                }
-                
-                Section("Category") {
-                    Picker("Category", selection: $selectedCategoryIndex) {
-                        ForEach(Array(categories.enumerated()), id: \.element.id) { index, category in
-                            HStack {
-                                Image(systemName: category.icon)
-                                    .foregroundStyle(category.color)
-                                Text(category.name)
-                            }
-                            .tag(index)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("New Item")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") {
-                        withAnimation {
-                            let newItem = ListItem(
-                                title: itemTitle,
-                                isCompleted: false,
-                                date: Date(),
-                                image: selectedImage
-                            )
-                            categories[selectedCategoryIndex].items.append(newItem)
-                            isPresented = false
-                        }
-                    }
-                    .disabled(itemTitle.isEmpty)
-                }
-            }
-        }
-        .sheet(isPresented: $showingImagePicker) {
-            ImagePicker(image: $selectedImage)
-        }
-    }
-}
-
-// MARK: - NewCategorySheet
-struct NewCategorySheet: View {
-    @Binding var categories: [ListCategory]
-    @Binding var isPresented: Bool
-    @State private var categoryName = ""
-    @State private var selectedType: CategoryType = .generic
-    @State private var selectedIcon = "list.bullet"
-    @State private var selectedColor: Color = .gray
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
-    
-    let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink, .gray, .brown, .cyan]
-    let icons = ["list.bullet", "star.fill", "heart.fill", "bookmark.fill", "tag.fill", "flag.fill", "bell.fill", "car.fill", "house.fill", "person.fill"]
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section("Category Details") {
-                    TextField("Category Name", text: $categoryName)
+                Section("Quantity & Category") {
+                    Stepper("Quantity: \(Int(quantity))", value: $quantity, in: 1...99)
                     
-                    Picker("Type", selection: $selectedType) {
-                        ForEach(CategoryType.allCases, id: \.self) { type in
-                            Text(type.rawValue).tag(type)
-                        }
-                    }
-                    .onChange(of: selectedType) { _, newType in
-                        selectedIcon = newType.defaultIcon
-                        selectedColor = newType.defaultColor
-                    }
-                }
-                
-                Section("Icon") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
-                        ForEach(icons, id: \.self) { icon in
-                            Button {
-                                selectedIcon = icon
-                            } label: {
-                                Image(systemName: icon)
-                                    .font(.system(size: 20))
-                                    .foregroundStyle(selectedIcon == icon ? .white : selectedColor)
-                                    .frame(width: 44, height: 44)
-                                    .background(selectedIcon == icon ? selectedColor : Color.clear)
-                                    .clipShape(Circle())
-                            }
-                        }
-                    }
-                }
-                
-                Section("Color") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
-                        ForEach(colors, id: \.self) { color in
-                            Button {
-                                selectedColor = color
-                            } label: {
-                                Circle()
-                                    .fill(color)
-                                    .frame(width: 44, height: 44)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(selectedColor == color ? Color.white : Color.clear, lineWidth: 2)
-                                    )
-                            }
+                    Picker("Category", selection: $selectedCategory) {
+                        ForEach(ShoppingItem.ShoppingCategory.allCases, id: \.self) { category in
+                            Text(viewModel.getCategoryName(category)).tag(category)
                         }
                     }
                 }
             }
-            .navigationTitle("New Category")
+            .navigationTitle("Add Item")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
-                        isPresented = false
+                        dismiss()
                     }
                 }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add") {
-                        withAnimation {
-                            let newCategory = ListCategory(
-                                name: categoryName,
-                                icon: selectedIcon,
-                                color: selectedColor,
-                                items: [],
-                                type: selectedType
+                        Task {
+                            await viewModel.addItem(
+                                name: itemName,
+                                description: itemDescription.isEmpty ? nil : itemDescription,
+                                quantity: quantity,
+                                category: selectedCategory
                             )
-                            categories.append(newCategory)
-                            isPresented = false
+                            dismiss()
                         }
                     }
-                    .disabled(categoryName.isEmpty)
+                    .disabled(itemName.isEmpty)
                 }
             }
         }
     }
 }
 
-// MARK: - ImagePicker
-struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var image: UIImage?
-    @Environment(\.presentationMode) var presentationMode
-    
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.delegate = context.coordinator
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: ImagePicker
-        
-        init(_ parent: ImagePicker) {
-            self.parent = parent
-        }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.image = image
-            }
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-        
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-    }
+#Preview {
+    ListView()
+        .environmentObject(PocketBaseAuthManager())
 }

@@ -125,7 +125,7 @@ struct ShoppingItem: Codable {
     let created: String
     let updated: String
     
-    enum ShoppingCategory: String, Codable {
+    enum ShoppingCategory: String, Codable, CaseIterable {
         case groceries = "groceries"
         case household = "household"
         case cleaning = "cleaning"
