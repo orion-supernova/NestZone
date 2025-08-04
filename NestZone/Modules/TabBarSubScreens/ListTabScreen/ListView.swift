@@ -29,9 +29,9 @@ struct ListView: View {
                     .opacity(animateHeader ? 1 : 0)
                     .offset(y: animateHeader ? 0 : -50)
                 
-                // Module Cards Grid
+                // Module Cards Grid (directly without wrapper)
                 ModuleCardsSection(modules: modules, showingShoppingView: $showingShoppingView)
-                    .padding(.top, 32)
+                    .padding(.top, 40)
                     .opacity(animateCards ? 1 : 0)
                     .offset(y: animateCards ? 0 : 100)
             }
@@ -124,7 +124,7 @@ struct ModuleHubHeaderView: View {
         VStack(spacing: 32) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Module Hub 🏠")
+                    Text("Management Hub 🏠")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -178,104 +178,6 @@ struct ModuleHubHeaderView: View {
                         .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: pulseAnimation)
                 }
             }
-            
-            // Quick Stats Overview
-            VStack(spacing: 20) {
-                HStack(spacing: 20) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Active Modules")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                        
-                        Text("6 Available")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color.green, Color.blue],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    }
-                    
-                    Spacer()
-                    
-                    // Hub Progress Ring
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 8)
-                            .frame(width: 70, height: 70)
-                        
-                        Circle()
-                            .trim(from: 0, to: 0.83) // 5/6 modules active
-                            .stroke(
-                                AngularGradient(
-                                    colors: [.purple, .pink, .red, .orange, .yellow, .green, .cyan, .blue],
-                                    center: .center
-                                ),
-                                style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                            )
-                            .frame(width: 70, height: 70)
-                            .rotationEffect(.degrees(-90))
-                            .animation(.spring(response: 1.5, dampingFraction: 0.8), value: true)
-                    }
-                }
-                
-                // Module Summary Cards
-                HStack(spacing: 12) {
-                    MiniModuleCard(
-                        title: "Lists",
-                        count: "12",
-                        gradient: [.green, .mint]
-                    )
-                    
-                    MiniModuleCard(
-                        title: "Ideas",
-                        count: "8",
-                        gradient: [.blue, .cyan]
-                    )
-                    
-                    MiniModuleCard(
-                        title: "Tasks",
-                        count: "15",
-                        gradient: [.purple, .pink]
-                    )
-                    
-                    MiniModuleCard(
-                        title: "Events",
-                        count: "4",
-                        gradient: [.orange, .red]
-                    )
-                }
-            }
-            .padding(24)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(selectedTheme.colors(for: colorScheme).glassMaterial)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
-                    
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.purple.opacity(0.5),
-                                    Color.pink.opacity(0.3),
-                                    Color.clear
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                }
-            )
         }
         .onAppear {
             pulseAnimation = true
@@ -318,55 +220,16 @@ struct ModuleCardsSection: View {
     @Binding var showingShoppingView: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            HStack {
-                Text("Available Modules")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.purple, Color.pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                
-                Spacer()
-                
-                Text("\(modules.count) modules")
-                    .font(.system(size: 14, weight: .semibold))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.purple.opacity(0.2), Color.pink.opacity(0.2)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.purple, Color.pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+        LazyVGrid(columns: [
+            GridItem(.flexible(), spacing: 16),
+            GridItem(.flexible(), spacing: 16)
+        ], spacing: 20) {
+            ForEach(Array(modules.enumerated()), id: \.element.type.id) { index, module in
+                VibrantModuleCard(module: module, index: index, showingShoppingView: $showingShoppingView)
             }
-            .padding(.horizontal, 24)
-            
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 16),
-                GridItem(.flexible(), spacing: 16)
-            ], spacing: 20) {
-                ForEach(Array(modules.enumerated()), id: \.element.type.id) { index, module in
-                    VibrantModuleCard(module: module, index: index, showingShoppingView: $showingShoppingView)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 100)
         }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 100)
     }
 }
 
@@ -410,22 +273,22 @@ struct VibrantModuleCard: View {
                 }
             }
         } label: {
-            VStack(spacing: 18) {
-                // Header with icon and coming soon badge
+            VStack(spacing: 0) {
+                // Header section - Fixed height
                 HStack {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: 16)
                             .fill(
                                 LinearGradient(
-                                    colors: moduleGradient.map { $0.opacity(0.2) },
+                                    colors: moduleGradient.map { $0.opacity(0.3) },
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 44, height: 44)
+                            .frame(width: 48, height: 48)
                         
                         Image(systemName: module.type.icon)
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: 22, weight: .bold))
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: moduleGradient,
@@ -433,70 +296,83 @@ struct VibrantModuleCard: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .scaleEffect(iconBounce ? 1.2 : 1.0)
-                            .animation(.interpolatingSpring(duration: 0.6, bounce: 0.7), value: iconBounce)
+                            .scaleEffect(iconBounce ? 1.3 : 1.0)
+                            .animation(.interpolatingSpring(duration: 0.6, bounce: 0.8), value: iconBounce)
                     }
                     
                     Spacer()
                     
                     if module.type.comingSoon {
                         Text("Soon")
-                            .font(.system(size: 10, weight: .bold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .font(.system(size: 11, weight: .black))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
                             .background(
                                 Capsule()
-                                    .fill(Color.orange.opacity(0.2))
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.orange, Color.red],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
                             )
-                            .foregroundColor(.orange)
+                            .foregroundColor(.white)
+                            .shadow(color: Color.orange.opacity(0.4), radius: 4, x: 0, y: 2)
                     } else {
                         Text("\(module.itemCount)")
-                            .font(.system(size: 14, weight: .bold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .font(.system(size: 14, weight: .black))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
                             .background(
                                 Capsule()
-                                    .fill(moduleGradient[0].opacity(0.2))
+                                    .fill(
+                                        LinearGradient(
+                                            colors: moduleGradient,
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
                             )
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: moduleGradient,
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .foregroundColor(.white)
+                            .shadow(color: moduleGradient[0].opacity(0.4), radius: 4, x: 0, y: 2)
                     }
                 }
+                .frame(height: 50) // Fixed header height
                 
-                // Content
-                VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(module.type.title)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [selectedTheme.colors(for: colorScheme).text, moduleGradient[0]],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                Spacer(minLength: 16) // Flexible spacer
+                
+                // Title section - Fixed height
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(module.type.title)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [selectedTheme.colors(for: colorScheme).text, moduleGradient[0]],
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
-                            .lineLimit(1)
-                        
-                        Text(module.type.subtitle)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
+                        )
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    if !module.type.comingSoon {
-                        // Recent Activity
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Recent")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.secondary)
-                            
-                            Text(module.recentActivity)
-                                .font(.system(size: 11, weight: .medium))
+                    Text(module.type.subtitle)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(height: 50) // Fixed title section height
+                
+                Spacer(minLength: 16) // Flexible spacer
+                
+                // Bottom section - Fixed height
+                if !module.type.comingSoon {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("\(Int(module.progress * 100))%")
+                                .font(.system(size: 16, weight: .bold))
                                 .foregroundStyle(
                                     LinearGradient(
                                         colors: moduleGradient,
@@ -504,65 +380,77 @@ struct VibrantModuleCard: View {
                                         endPoint: .trailing
                                     )
                                 )
-                                .lineLimit(2)
+                            
+                            Spacer()
+                            
+                            Text("Complete")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.secondary)
                         }
                         
-                        // Progress Bar
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Progress")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                                
-                                Text("\(Int(module.progress * 100))%")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(height: 6)
+                            
+                            GeometryReader { geometry in
+                                Capsule()
+                                    .fill(
                                         LinearGradient(
-                                            colors: moduleGradient,
+                                            colors: moduleGradient + [moduleGradient[1].opacity(0.7)],
                                             startPoint: .leading,
                                             endPoint: .trailing
                                         )
                                     )
+                                    .frame(width: geometry.size.width * module.progress, height: 6)
+                                    .animation(.spring(response: 1.0, dampingFraction: 0.8), value: module.progress)
                             }
-                            
-                            GeometryReader { geometry in
-                                ZStack(alignment: .leading) {
-                                    Capsule()
-                                        .fill(Color.gray.opacity(0.2))
-                                        .frame(height: 4)
-                                    
-                                    Capsule()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: moduleGradient,
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .frame(width: geometry.size.width * module.progress, height: 4)
-                                        .animation(.spring(response: 1.0, dampingFraction: 0.8), value: module.progress)
-                                }
-                            }
-                            .frame(height: 4)
+                            .frame(height: 6)
                         }
                     }
+                    .frame(height: 40) // Fixed bottom section height
+                } else {
+                    VStack(spacing: 6) {
+                        Text("Coming Soon")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color.orange, Color.red],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                        
+                        Text("Stay tuned!")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(height: 40) // Fixed bottom section height - same as progress section
                 }
             }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .frame(width: (UIScreen.main.bounds.width - 60) / 2, height: 200) // Fixed card dimensions
+            .contentShape(Rectangle()) // Make entire area tappable
         }
-        .buttonStyle(.plain)
         .background(
             ZStack {
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 24)
                     .fill(.ultraThinMaterial)
+                    .background(
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(
+                                LinearGradient(
+                                    colors: moduleGradient.map { $0.opacity(0.05) },
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    )
                 
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 24)
                     .stroke(
                         LinearGradient(
-                            colors: moduleGradient.map { $0.opacity(0.4) } + [Color.clear],
+                            colors: moduleGradient.map { $0.opacity(0.6) } + [Color.clear, Color.clear],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
@@ -571,18 +459,18 @@ struct VibrantModuleCard: View {
             }
         )
         .shadow(
-            color: moduleGradient[0].opacity(0.15),
-            radius: 12,
+            color: moduleGradient[0].opacity(0.2),
+            radius: 15,
             x: 0,
-            y: 6
+            y: 8
         )
-        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .scaleEffect(isPressed ? 0.96 : 1.0)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isPressed)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.1) {
                 iconBounce = true
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     iconBounce = false
                 }
             }

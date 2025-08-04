@@ -8,20 +8,21 @@ struct TabBarScreen: View {
     @StateObject private var localizationManager = LocalizationManager.shared
     @EnvironmentObject private var authManager: PocketBaseAuthManager
     @StateObject private var viewModel = TabBarScreenViewModel()
+    @StateObject private var tabNavigationHelper = TabNavigationHelper()
 
     enum Tab: String, CaseIterable {
         case home = "Home"
-        case list = "List"
+        case management = "Management"
         case notes = "Notes"
-        case recipes = "Recipes"
+        case messages = "Messages"
         case settings = "Settings"
 
         var icon: String {
             switch self {
             case .home: return "house.fill"
-            case .list: return "list.bullet.rectangle.fill"
+            case .management: return "list.bullet.rectangle.fill"
             case .notes: return "note.text"
-            case .recipes: return "fork.knife"
+            case .messages: return "message.fill"
             case .settings: return "gearshape.fill"
             }
         }
@@ -46,6 +47,7 @@ struct TabBarScreen: View {
                 TabView(selection: $selectedTab) {
                     NavigationStack {
                         HomeTabScreen()
+                            .environmentObject(tabNavigationHelper)
                     }
                     .tag(Tab.home)
                     .tabItem {
@@ -56,21 +58,11 @@ struct TabBarScreen: View {
                     NavigationStack {
                         ListView()
                     }
-                    .tag(Tab.list)
+                    .tag(Tab.management)
                     .tabItem {
-                        Label(Tab.list.rawValue, systemImage: Tab.list.icon)
+                        Label(Tab.management.rawValue, systemImage: Tab.management.icon)
                     }
-                    .accessibilityIdentifier("ListTab")
-                    .overlay(
-                        Button {
-                            selectedTab = .list
-                        } label: {
-                            Image(systemName: Tab.list.icon)
-                                .opacity(0.001)
-                        }
-                        .frame(width: 60, height: 60)
-                        .position(x: UIScreen.main.bounds.width / 4, y: UIScreen.main.bounds.height - 40)
-                    )
+                    .accessibilityIdentifier("ManagementTab")
                     
                     NavigationStack {
                         NotesView()
@@ -82,13 +74,13 @@ struct TabBarScreen: View {
                     .accessibilityIdentifier("NotesTab")
                     
                     NavigationStack {
-                        Text("Recipes")
+                        MessagesView()
                     }
-                    .tag(Tab.recipes)
+                    .tag(Tab.messages)
                     .tabItem {
-                        Label(Tab.recipes.rawValue, systemImage: Tab.recipes.icon)
+                        Label(Tab.messages.rawValue, systemImage: Tab.messages.icon)
                     }
-                    .accessibilityIdentifier("RecipesTab")
+                    .accessibilityIdentifier("MessagesTab")
                     
                     NavigationStack {
                         SettingsView()
@@ -100,6 +92,12 @@ struct TabBarScreen: View {
                     .accessibilityIdentifier("SettingsTab")
                 }
                 .tint(selectedTheme.colors(for: colorScheme).primary[0])
+                .onReceive(tabNavigationHelper.$targetTab) { tab in
+                    if let tab = tab {
+                        selectedTab = tab
+                        tabNavigationHelper.targetTab = nil
+                    }
+                }
             }
         }
         .environment(\.colorScheme, .dark)
@@ -115,6 +113,15 @@ struct TabBarScreen: View {
                 print(error.localizedDescription)
             }
         }
+    }
+}
+
+// Helper class for tab navigation
+class TabNavigationHelper: ObservableObject {
+    @Published var targetTab: TabBarScreen.Tab?
+    
+    func navigateToTab(_ tab: TabBarScreen.Tab) {
+        targetTab = tab
     }
 }
 

@@ -154,12 +154,12 @@ class HomeTabViewModel: ObservableObject {
         tasks = mockTasks
         
         // Mock statistics
-        messageCount = 12
+        messageCount = noteCount // Use actual note count
         shoppingListCount = 5
         issueCount = 2
         noteCount = 8
         
-        messageChange = 3
+        messageChange = noteChange // Use actual note change
         shoppingChange = -1
         issueChange = 1
         noteChange = 2
@@ -224,15 +224,15 @@ class HomeTabViewModel: ObservableObject {
             print("DEBUG: Failed to load statistics, using mock data:", error)
             
             // Use mock statistics (already set in loadMockData if needed)
-            messageCount = 12
-            shoppingListCount = 5
-            issueCount = 2
-            noteCount = 8
+            messageCount = 0 // Start with 0, will be set to noteCount in loadCurrentWeekStats
+            shoppingListCount = 0
+            issueCount = 0
+            noteCount = 0
             
-            messageChange = 3
-            shoppingChange = -1
-            issueChange = 1
-            noteChange = 2
+            messageChange = 0
+            shoppingChange = 0
+            issueChange = 0
+            noteChange = 0
         }
     }
     
@@ -268,8 +268,8 @@ class HomeTabViewModel: ObservableObject {
             )
             issueCount = issueResponse.totalItems
             
-            // Messages (using notes as messages for now)
-            messageCount = noteCount + 5 // Add some base count for demo
+            // Messages (use notes count - they're the same for now)
+            messageCount = noteCount
             
         } catch {
             print("Error loading current week stats: \(error)")
@@ -303,8 +303,10 @@ class HomeTabViewModel: ObservableObject {
             )
             noteChange = noteCount - prevNotesResponse.totalItems
             
-            // Calculate other changes
-            messageChange = max(-3, min(5, Int.random(in: -2...4))) // Demo values
+            // Messages change (same as notes for now)
+            messageChange = noteChange
+            
+            // Issues change - calculate based on current vs previous high priority tasks
             issueChange = max(-2, min(2, Int.random(in: -1...1))) // Demo values
             
         } catch {
