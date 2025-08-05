@@ -4,7 +4,6 @@ import Foundation
 @MainActor
 class HomeTabViewModel: ObservableObject {
     @Published var tasks: [PocketBaseTask] = []
-    @Published var todayProgress: Double = 0.0
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showingPermissionsError = false
@@ -20,6 +19,7 @@ class HomeTabViewModel: ObservableObject {
     @Published var shoppingChange = 0
     @Published var issueChange = 0
     @Published var noteChange = 0
+    @Published var completedTasksChange = 0
     
     private let pocketBase = PocketBaseManager.shared
     private var currentHomeId: String?
@@ -45,9 +45,6 @@ class HomeTabViewModel: ObservableObject {
             // Then load all data in parallel
             try await loadTasks()
             try await loadStatistics()
-            
-            // Calculate today's progress
-            calculateTodayProgress()
             
         } catch {
             if error.localizedDescription.contains("cancelled") {
@@ -153,18 +150,20 @@ class HomeTabViewModel: ObservableObject {
         
         tasks = mockTasks
         
-        // Mock statistics
-        messageCount = noteCount // Use actual note count
+        // Mock statistics - make them more realistic based on actual mock data
+        messageCount = 0 // Will be set to noteCount in loadCurrentWeekStats
         shoppingListCount = 5
-        issueCount = 2
+        issueCount = mockTasks.filter { $0.priority == .high && !$0.isCompleted }.count // Count actual high priority incomplete tasks
         noteCount = 8
         
-        messageChange = noteChange // Use actual note change
+        messageChange = 0 // Will be set to noteChange in loadCurrentWeekStats  
         shoppingChange = -1
-        issueChange = 1
+        issueChange = 0 // More realistic default
         noteChange = 2
+        completedTasksChange = 1 // One task completed this week
         
         print("DEBUG: Loaded \(tasks.count) mock tasks for development")
+        print("DEBUG: Mock issues count: \(issueCount)")
     }
     
     private func getCurrentHome() async {
@@ -219,6 +218,9 @@ class HomeTabViewModel: ObservableObject {
             
             // Load previous week for comparison
             try await loadPreviousWeekStats(homeId: homeId)
+            
+            // Calculate completed tasks change
+            calculateCompletedTasksChange()
         } catch {
             // If we can't load stats due to permissions, use mock data
             print("DEBUG: Failed to load statistics, using mock data:", error)
@@ -233,6 +235,10 @@ class HomeTabViewModel: ObservableObject {
             shoppingChange = 0
             issueChange = 0
             noteChange = 0
+            completedTasksChange = 0
+            
+            // Still calculate completed tasks change from available task data
+            calculateCompletedTasksChange()
         }
     }
     
@@ -306,8 +312,14 @@ class HomeTabViewModel: ObservableObject {
             // Messages change (same as notes for now)
             messageChange = noteChange
             
-            // Issues change - calculate based on current vs previous high priority tasks
-            issueChange = max(-2, min(2, Int.random(in: -1...1))) // Demo values
+            // Issues change - calculate based on actual previous week high priority tasks
+            let prevIssueFilter = "home_id = '\(homeId)' && priority = 'high' && is_completed = false && created >= '\(twoWeeksAgoString)' && created < '\(weekAgoString)'"
+            let prevIssueResponse: PocketBaseListResponse<PocketBaseTask> = try await pocketBase.getCollection(
+                "tasks",
+                responseType: PocketBaseListResponse<PocketBaseTask>.self,
+                filter: prevIssueFilter
+            )
+            issueChange = issueCount - prevIssueResponse.totalItems
             
         } catch {
             print("Error loading previous week stats: \(error)")
@@ -315,25 +327,27 @@ class HomeTabViewModel: ObservableObject {
         }
     }
     
-    private func calculateTodayProgress() {
-        let today = Calendar.current.startOfDay(for: Date())
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+    private func calculateCompletedTasksChange() {
+        let calendar = Calendar.current
+        let today = Date()
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: today) ?? today
+        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: today) ?? today
         
-        let todayTasks = tasks.filter { task in
-            let formatter = ISO8601DateFormatter()
-            if let taskDate = formatter.date(from: task.created) {
-                return taskDate >= today && taskDate < tomorrow
-            }
-            return false
-        }
+        let formatter = ISO8601DateFormatter()
         
-        guard !todayTasks.isEmpty else {
-            todayProgress = 0.0
-            return
-        }
+        // Count tasks completed this week (updated this week with isCompleted = true)
+        let thisWeekCompleted = tasks.filter { task in
+            guard task.isCompleted, let updatedDate = formatter.date(from: task.updated) else { return false }
+            return updatedDate >= weekAgo && updatedDate <= today
+        }.count
         
-        let completedTasks = todayTasks.filter { $0.isCompleted }
-        todayProgress = Double(completedTasks.count) / Double(todayTasks.count)
+        // Count tasks completed last week
+        let lastWeekCompleted = tasks.filter { task in
+            guard task.isCompleted, let updatedDate = formatter.date(from: task.updated) else { return false }
+            return updatedDate >= twoWeeksAgo && updatedDate < weekAgo
+        }.count
+        
+        completedTasksChange = thisWeekCompleted - lastWeekCompleted
     }
     
     func refreshData() async {
@@ -361,7 +375,6 @@ class HomeTabViewModel: ObservableObject {
                     updated: ISO8601DateFormatter().string(from: Date()),
                     dueDate: task.dueDate
                 )
-                calculateTodayProgress()
             }
             return
         }
@@ -377,7 +390,6 @@ class HomeTabViewModel: ObservableObject {
             
             // Refresh tasks after update
             try await loadTasks()
-            calculateTodayProgress()
             
         } catch {
             errorMessage = "Failed to update task: \(error.localizedDescription)"

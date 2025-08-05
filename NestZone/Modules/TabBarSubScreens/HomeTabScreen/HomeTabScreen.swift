@@ -104,7 +104,7 @@ struct SimpleHeaderView: View {
                             )
                         )
                     
-                    Text("Welcome to your smart home! ")
+                    Text("Manage your shared home together! ")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(
@@ -140,64 +140,6 @@ struct SimpleHeaderView: View {
                     }
                 }
             }
-            
-            // Today's Progress Summary
-            HStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Today's Progress")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    
-                    Text("\(Int(viewModel.todayProgress * 100))%")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.green, Color.blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                }
-                
-                Spacer()
-                
-                // Simple Progress Ring
-                ZStack {
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 6)
-                        .frame(width: 60, height: 60)
-                    
-                    Circle()
-                        .trim(from: 0, to: viewModel.todayProgress)
-                        .stroke(
-                            LinearGradient(
-                                colors: [Color.green, Color.blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ),
-                            style: StrokeStyle(lineWidth: 6, lineCap: .round)
-                        )
-                        .frame(width: 60, height: 60)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.spring(response: 1.5, dampingFraction: 0.8), value: viewModel.todayProgress)
-                }
-            }
-            .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [Color.purple.opacity(0.3), Color.clear],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    )
-            )
         }
     }
 }
@@ -284,7 +226,7 @@ struct NavigableStatsSection: View {
         ("note.text", "Notes", [Color.blue, Color.cyan]),
         ("list.bullet.clipboard.fill", "Shopping", [Color.green, Color.mint]),
         ("exclamationmark.triangle.fill", "Issues", [Color.red, Color.pink]),
-        ("checkmark.circle.fill", "Completed", [Color.orange, Color.yellow])
+        ("checkmark.circle.fill", "Tasks Done", [Color.orange, Color.yellow])
     ]
     
     var body: some View {
@@ -318,9 +260,9 @@ struct NavigableStatsSection: View {
                                 tabNavigationHelper.navigateToTab(.notes)
                             case 1: // Shopping - Direct navigation
                                 showingShoppingView = true
-                            case 2: // Issues (Management)
+                            case 2: // Issues - Navigate to management with filter
                                 tabNavigationHelper.navigateToTab(.management)
-                            case 3: // Completed (Management)
+                            case 3: // Tasks Done - Navigate to management (completed tasks view)
                                 tabNavigationHelper.navigateToTab(.management)
                             default:
                                 break
@@ -338,7 +280,7 @@ struct NavigableStatsSection: View {
         case 0: return "\(viewModel.noteCount)"
         case 1: return "\(viewModel.shoppingListCount)"
         case 2: return "\(viewModel.issueCount)"
-        case 3: return "\(viewModel.tasks.filter { $0.isCompleted }.count)"
+        case 3: return "\(getCompletedTasksCount())"
         default: return "0"
         }
     }
@@ -349,11 +291,15 @@ struct NavigableStatsSection: View {
         case 0: change = viewModel.noteChange
         case 1: change = viewModel.shoppingChange
         case 2: change = viewModel.issueChange
-        case 3: change = max(-5, min(5, Int.random(in: -2...3)))
+        case 3: change = viewModel.completedTasksChange
         default: change = 0
         }
         
         return change >= 0 ? "+\(change)" : "\(change)"
+    }
+    
+    private func getCompletedTasksCount() -> Int {
+        return viewModel.tasks.filter { $0.isCompleted }.count
     }
 }
 
@@ -367,6 +313,11 @@ struct NavigableStatCard: View {
     let action: () -> Void
     
     @State private var isPressed = false
+    
+    // Computed property to check if change should be shown
+    private var shouldShowChange: Bool {
+        return change != "+0" && change != "0" && change != "-0"
+    }
     
     var body: some View {
         Button {
@@ -410,29 +361,32 @@ struct NavigableStatCard: View {
                     
                     Spacer()
                     
-                    Text(change)
-                        .font(.system(size: 10, weight: .bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: change.hasPrefix("+") ? 
-                                            [Color.green.opacity(0.2), Color.mint.opacity(0.3)] :
-                                            [Color.red.opacity(0.2), Color.pink.opacity(0.3)],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
+                    // Only show change badge if change is not 0
+                    if shouldShowChange {
+                        Text(change)
+                            .font(.system(size: 10, weight: .bold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: change.hasPrefix("+") ? 
+                                                [Color.green.opacity(0.2), Color.mint.opacity(0.3)] :
+                                                [Color.red.opacity(0.2), Color.pink.opacity(0.3)],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
                                     )
-                                )
-                        )
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: change.hasPrefix("+") ? [.green, .mint] : [.red, .pink],
-                                startPoint: .leading,
-                                endPoint: .trailing
                             )
-                        )
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: change.hasPrefix("+") ? [.green, .mint] : [.red, .pink],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
