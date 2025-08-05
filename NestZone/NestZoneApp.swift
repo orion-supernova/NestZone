@@ -13,8 +13,15 @@ struct NestZoneApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(authManager)
+            Group {
+                if authManager.currentUser == nil {
+                    AuthenticationScreen()
+                        .environmentObject(authManager)
+                } else {
+                    TabBarScreen()
+                        .environmentObject(authManager)
+                }
+            }
         }
     }
 }

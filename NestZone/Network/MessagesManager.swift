@@ -23,6 +23,12 @@ class MessagesManager {
         title: String? = nil,
         isGroupChat: Bool = false
     ) async throws -> PocketBaseConversation {
+        print("DEBUG: Creating conversation with data:")
+        print("  - participants: \(participants)")
+        print("  - homeId: \(homeId)")
+        print("  - title: \(title ?? "nil")")
+        print("  - isGroupChat: \(isGroupChat)")
+        
         let data: [String: Any] = [
             "participants": participants,
             "home_id": homeId,
@@ -30,11 +36,14 @@ class MessagesManager {
             "title": title ?? ""
         ]
         
-        return try await pocketBase.createRecord(
+        let conversation = try await pocketBase.createRecord(
             in: "conversations",
             data: data,
             responseType: PocketBaseConversation.self
         )
+        
+        print("DEBUG: Conversation created successfully: \(conversation.id)")
+        return conversation
     }
     
     func updateConversationLastMessage(
@@ -42,43 +51,89 @@ class MessagesManager {
         lastMessage: String,
         timestamp: String
     ) async throws -> PocketBaseConversation {
+        print("DEBUG: Updating conversation \(conversationId)")
+        print("DEBUG: Setting last_message to: '\(lastMessage)'")
+        print("DEBUG: Setting last_message_at to: '\(timestamp)'")
+        
         let data: [String: Any] = [
             "last_message": lastMessage,
             "last_message_at": timestamp
         ]
         
-        return try await pocketBase.updateRecord(
+        print("DEBUG: Update data: \(data)")
+        
+        let updatedConversation = try await pocketBase.updateRecord(
             in: "conversations",
             id: conversationId,
             data: data,
             responseType: PocketBaseConversation.self
         )
+        
+        print("DEBUG: Conversation updated successfully")
+        print("DEBUG: New last_message: '\(updatedConversation.lastMessage ?? "nil")'")
+        print("DEBUG: New last_message_at: '\(updatedConversation.lastMessageAt ?? "nil")'")
+        
+        return updatedConversation
     }
     
     // MARK: - Messages
     func fetchMessages(for conversationId: String) async throws -> [PocketBaseMessage] {
-        let response: PocketBaseListResponse<PocketBaseMessage> = try await pocketBase.getCollection(
-            "messages",
-            responseType: PocketBaseListResponse<PocketBaseMessage>.self,
-            filter: "conversation_id = '\(conversationId)'",
-            sort: "created"
-        )
-        return response.items
+        do {
+            // Use the correct field name that matches PocketBase schema
+            let filter = "conversations_id='\(conversationId)'"
+            
+            print("DEBUG: Fetching messages with filter: \(filter)")
+            
+            let response: PocketBaseListResponse<PocketBaseMessage> = try await pocketBase.getCollection(
+                "messages",
+                responseType: PocketBaseListResponse<PocketBaseMessage>.self,
+                filter: filter,
+                sort: "created"
+            )
+            
+            print("DEBUG: Successfully fetched \(response.items.count) messages")
+            return response.items
+        } catch {
+            print("DEBUG: Error fetching messages: \(error)")
+            // If messages collection doesn't exist or is empty, return empty array
+            if let pocketBaseError = error as? PocketBaseManager.PocketBaseError,
+               case .badRequest = pocketBaseError {
+                print("DEBUG: Messages collection might not exist yet, returning empty array")
+                return []
+            }
+            throw error
+        }
     }
     
     func sendMessage(
         conversationId: String,
         senderId: String,
         content: String,
-        messageType: PocketBaseMessage.MessageType = .text
+        messageType: PocketBaseMessage.MessageType = .text,
+        file: String? = nil
     ) async throws -> PocketBaseMessage {
-        let data: [String: Any] = [
-            "conversation_id": conversationId,
+        print("DEBUG: Sending message with data:")
+        print("  - conversationId: \(conversationId)")
+        print("  - senderId: \(senderId)")
+        print("  - content: \(content)")
+        print("  - messageType: \(messageType.rawValue)")
+        print("  - file: \(file ?? "none")")
+        
+        // Use the correct field name that matches PocketBase schema
+        var data: [String: Any] = [
+            "conversations_id": conversationId,
             "sender_id": senderId,
             "content": content,
             "message_type": messageType.rawValue,
             "read_by": [senderId] // Sender automatically reads their own message
         ]
+        
+        // Add file if provided
+        if let file = file {
+            data["file"] = file
+        }
+        
+        print("DEBUG: Creating message with data: \(data)")
         
         let message = try await pocketBase.createRecord(
             in: "messages",
@@ -86,13 +141,36 @@ class MessagesManager {
             responseType: PocketBaseMessage.self
         )
         
-        // Update conversation's last message
-        let timestamp = ISO8601DateFormatter().string(from: Date())
-        try await updateConversationLastMessage(
-            conversationId: conversationId,
-            lastMessage: content,
-            timestamp: timestamp
-        )
+        print("DEBUG: Message created successfully: \(message.id)")
+        
+        // Update conversation's last message with appropriate preview text
+        let previewText = getMessagePreview(content: content, messageType: messageType)
+        
+        // Use the message creation timestamp for better accuracy
+        let messageDate = ISO8601DateFormatter().date(from: message.created) ?? Date()
+        let timestamp = ISO8601DateFormatter().string(from: messageDate)
+        
+        print("DEBUG: Updating conversation last message with preview: '\(previewText)'")
+        print("DEBUG: Using timestamp from message: '\(timestamp)'")
+        
+        do {
+            let updatedConversation = try await updateConversationLastMessage(
+                conversationId: conversationId,
+                lastMessage: previewText,
+                timestamp: timestamp
+            )
+            
+            print("DEBUG: Conversation last message updated successfully")
+            print("DEBUG: Conversation now shows: '\(updatedConversation.lastMessage ?? "nil")'")
+            
+            // Add a small delay to ensure server has processed the update
+            try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay
+            
+        } catch {
+            print("DEBUG: CRITICAL: Failed to update conversation last message: \(error)")
+            // This is important - if conversation doesn't update, the list won't show the new message
+            throw error
+        }
         
         return message
     }
@@ -124,23 +202,103 @@ class MessagesManager {
     }
     
     func getUnreadMessageCount(for conversationId: String, userId: String) async throws -> Int {
-        // Get all messages in conversation where user is NOT in read_by array
-        let response: PocketBaseListResponse<PocketBaseMessage> = try await pocketBase.getCollection(
-            "messages",
-            responseType: PocketBaseListResponse<PocketBaseMessage>.self,
-            filter: "conversation_id = '\(conversationId)' && sender_id != '\(userId)' && read_by !~ '\(userId)'"
-        )
-        
-        return response.totalItems
+        do {
+            // Use the correct field name that matches PocketBase schema
+            let filter = "conversations_id='\(conversationId)'"
+            
+            print("DEBUG: Getting unread messages with filter: \(filter)")
+            
+            let response: PocketBaseListResponse<PocketBaseMessage> = try await pocketBase.getCollection(
+                "messages",
+                responseType: PocketBaseListResponse<PocketBaseMessage>.self,
+                filter: filter
+            )
+            
+            // Filter locally to avoid complex PocketBase queries
+            let unreadMessages = response.items.filter { message in
+                message.senderId != userId && !message.readBy.contains(userId)
+            }
+            
+            print("DEBUG: Found \(unreadMessages.count) unread messages out of \(response.items.count) total")
+            return unreadMessages.count
+        } catch {
+            print("DEBUG: Error getting unread count: \(error)")
+            // If the query fails (e.g., no messages collection exists yet), return 0
+            return 0
+        }
     }
     
     // MARK: - User Helpers
     func fetchHouseholdMembers(for homeId: String) async throws -> [PocketBaseUser] {
-        let response: PocketBaseListResponse<PocketBaseUser> = try await pocketBase.getCollection(
-            "users",
-            responseType: PocketBaseListResponse<PocketBaseUser>.self,
-            filter: "home_id ~ '\(homeId)'"
+        // First get the home to see the member IDs
+        let home: Home = try await pocketBase.request(
+            endpoint: "/api/collections/homes/records/\(homeId)",
+            requiresAuth: true,
+            responseType: Home.self
         )
-        return response.items
+        
+        guard !home.members.isEmpty else {
+            return []
+        }
+        
+        // Fetch each user individually to avoid query syntax issues
+        var users: [PocketBaseUser] = []
+        
+        for memberId in home.members {
+            do {
+                let user: PocketBaseUser = try await pocketBase.request(
+                    endpoint: "/api/collections/users/records/\(memberId)",
+                    requiresAuth: true,
+                    responseType: PocketBaseUser.self
+                )
+                users.append(user)
+            } catch {
+                // If we can't fetch a specific user, just skip them
+                // This handles cases where a user might have been deleted but still in home.members
+                continue
+            }
+        }
+        
+        return users
+    }
+    
+    // MARK: - Debug / Test Functions
+    func testMessagesCollection() async {
+        do {
+            print("DEBUG: Testing if messages collection exists...")
+            
+            // Try to get any messages (even if empty)
+            let response: PocketBaseListResponse<PocketBaseMessage> = try await pocketBase.getCollection(
+                "messages",
+                responseType: PocketBaseListResponse<PocketBaseMessage>.self
+            )
+            
+            print("DEBUG: Messages collection exists! Total items: \(response.totalItems)")
+            
+        } catch {
+            print("DEBUG: Messages collection test failed: \(error)")
+            print("DEBUG: This might mean the messages collection doesn't exist in PocketBase yet")
+            print("DEBUG: You may need to create it manually in the PocketBase admin interface")
+        }
+    }
+    
+    // Helper function to generate appropriate preview text for different message types
+    private func getMessagePreview(content: String, messageType: PocketBaseMessage.MessageType) -> String {
+        switch messageType {
+        case .text:
+            return content
+        case .image:
+            return "📷 Photo"
+        case .video:
+            return "🎥 Video"
+        case .gif:
+            return "🎞️ GIF"
+        case .document:
+            return "📄 Document"
+        case .audio:
+            return "🎵 Audio"
+        case .system:
+            return content
+        }
     }
 }

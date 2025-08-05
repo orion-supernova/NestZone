@@ -171,7 +171,7 @@ struct PocketBaseNote: Codable, Identifiable {
 }
 
 // MARK: - Messages Collection
-struct PocketBaseConversation: Codable, Identifiable {
+struct PocketBaseConversation: Codable, Identifiable, Hashable {
     let id: String
     let participants: [String]  // User IDs
     let homeId: String  // Related Home
@@ -193,15 +193,24 @@ struct PocketBaseConversation: Codable, Identifiable {
         case created
         case updated
     }
+    
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: PocketBaseConversation, rhs: PocketBaseConversation) -> Bool {
+        return lhs.id == rhs.id
+    }
 }
 
-struct PocketBaseMessage: Codable, Identifiable {
+struct PocketBaseMessage: Codable, Identifiable, Hashable {
     let id: String
     let conversationId: String  // Related Conversation
     let senderId: String  // User ID
     let content: String
     let messageType: MessageType
-    let image: String?
+    let file: String?  // Can be image, video, gif, document, etc.
     let readBy: [String]  // User IDs who have read this message
     let created: String
     let updated: String
@@ -209,19 +218,32 @@ struct PocketBaseMessage: Codable, Identifiable {
     enum MessageType: String, Codable {
         case text = "text"
         case image = "image"
+        case video = "video"
+        case gif = "gif"
+        case document = "document"
+        case audio = "audio"
         case system = "system"
     }
     
     enum CodingKeys: String, CodingKey {
         case id
-        case conversationId = "conversation_id"
+        case conversationId = "conversations_id"
         case senderId = "sender_id"
         case content
         case messageType = "message_type"
-        case image
+        case file = "file"  // Generic file field for all media types
         case readBy = "read_by"
         case created
         case updated
+    }
+    
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: PocketBaseMessage, rhs: PocketBaseMessage) -> Bool {
+        return lhs.id == rhs.id
     }
 }
 

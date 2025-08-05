@@ -7,6 +7,9 @@ struct SettingsView: View {
     @State private var isShowingLanguageSheet = false
     @StateObject private var localizationManager = LocalizationManager.shared
     @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @State private var currentHome: Home?
+    @State private var isLoadingHome = true
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -45,6 +48,108 @@ struct SettingsView: View {
                     .padding(.bottom, 32)
                     
                     VStack(spacing: 24) {
+                        // Home Management Section
+                        if let home = currentHome {
+                            SettingsSection(title: "HOME MANAGEMENT") {
+                                VStack(spacing: 0) {
+                                    // Current Home
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        HStack(spacing: 16) {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [.blue, .cyan],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        )
+                                                    )
+                                                    .frame(width: 40, height: 40)
+                                                    .shadow(color: Color.blue.opacity(0.4), radius: 8, x: 0, y: 4)
+                                                
+                                                Image(systemName: "house.fill")
+                                                    .font(.system(size: 18, weight: .medium))
+                                                    .foregroundStyle(.white)
+                                            }
+                                            
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("Current Home")
+                                                    .font(.body)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
+                                                
+                                                Text(home.name)
+                                                    .font(.caption)
+                                                    .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Text("\(home.members.count) \(home.members.count == 1 ? "member" : "members")")
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                                .foregroundStyle(selectedTheme.colors(for: colorScheme).primary.first ?? .blue)
+                                        }
+                                        
+                                        if let inviteCode = home.inviteCode {
+                                            VStack(alignment: .leading, spacing: 8) {
+                                                Text("Invite Code")
+                                                    .font(.caption)
+                                                    .fontWeight(.bold)
+                                                    .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
+                                                
+                                                HStack {
+                                                    Text(inviteCode)
+                                                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                                        .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
+                                                        .padding(.horizontal, 12)
+                                                        .padding(.vertical, 8)
+                                                        .background(
+                                                            RoundedRectangle(cornerRadius: 8)
+                                                                .fill(selectedTheme.colors(for: colorScheme).background.opacity(0.8))
+                                                        )
+                                                    
+                                                    Spacer()
+                                                    
+                                                    Button {
+                                                        UIPasteboard.general.string = inviteCode
+                                                        let impact = UIImpactFeedbackGenerator(style: .light)
+                                                        impact.impactOccurred()
+                                                    } label: {
+                                                        HStack(spacing: 4) {
+                                                            Image(systemName: "doc.on.doc")
+                                                                .font(.system(size: 12, weight: .semibold))
+                                                            Text("Copy")
+                                                                .font(.caption)
+                                                                .fontWeight(.semibold)
+                                                        }
+                                                        .foregroundStyle(.white)
+                                                        .padding(.horizontal, 12)
+                                                        .padding(.vertical, 6)
+                                                        .background(
+                                                            Capsule()
+                                                                .fill(
+                                                                    LinearGradient(
+                                                                        colors: [.blue, .cyan],
+                                                                        startPoint: .leading,
+                                                                        endPoint: .trailing
+                                                                    )
+                                                                )
+                                                        )
+                                                    }
+                                                }
+                                                
+                                                Text("Share this code with household members so they can join your home")
+                                                    .font(.caption2)
+                                                    .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
+                                            }
+                                            .padding(.top, 8)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
                         // Appearance Section
                         SettingsSection(title: LocalizationManager.text(.appearance)) {
                             VStack(spacing: 0) {
@@ -244,7 +349,38 @@ struct SettingsView: View {
                 LanguageSelectionSheet(isShowingSheet: $isShowingLanguageSheet)
             }
             .tint(selectedTheme.colors(for: colorScheme).primary[0])
+            .task {
+                await loadCurrentHome()
+            }
         }
+    }
+    
+    private func loadCurrentHome() async {
+        guard let currentUser = authManager.currentUser else { return }
+        
+        isLoadingHome = true
+        
+        do {
+            let pocketBase = PocketBaseManager.shared
+            let userResponse: PocketBaseUser = try await pocketBase.request(
+                endpoint: "/api/collections/users/records/\(currentUser.id)",
+                requiresAuth: true,
+                responseType: PocketBaseUser.self
+            )
+            
+            if let homeId = userResponse.home_id.first {
+                let homeResponse: Home = try await pocketBase.request(
+                    endpoint: "/api/collections/homes/records/\(homeId)",
+                    requiresAuth: true,
+                    responseType: Home.self
+                )
+                currentHome = homeResponse
+            }
+        } catch {
+            print("Error loading home: \(error)")
+        }
+        
+        isLoadingHome = false
     }
 }
 

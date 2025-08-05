@@ -13,6 +13,9 @@ class PocketBaseAuthManager: ObservableObject {
         case networkError
         case unauthorized
         case serverError(String)
+        case passwordMismatch
+        case weakPassword
+        case emailAlreadyExists
         
         var errorDescription: String? {
             switch self {
@@ -20,6 +23,9 @@ class PocketBaseAuthManager: ObservableObject {
             case .networkError: return "Network error occurred"
             case .unauthorized: return "Invalid authorization token"
             case .serverError(let message): return message
+            case .passwordMismatch: return "Passwords don't match"
+            case .weakPassword: return "Password must be at least 8 characters"
+            case .emailAlreadyExists: return "An account with this email already exists"
             }
         }
     }
@@ -60,6 +66,51 @@ class PocketBaseAuthManager: ObservableObject {
                 throw AuthError.unauthorized
             case .serverError(let message):
                 throw AuthError.serverError(message)
+            default:
+                throw AuthError.networkError
+            }
+        } catch {
+            throw AuthError.networkError
+        }
+    }
+    
+    func register(email: String, password: String, fullName: String) async throws {
+        // Validate password strength
+        guard password.count >= 8 else {
+            throw AuthError.weakPassword
+        }
+        
+        let parameters = [
+            "email": email,
+            "password": password,
+            "passwordConfirm": password,
+            "name": fullName
+        ]
+        
+        do {
+            // First create the user account (returns UserCreationResponse without email/token)
+            let _: UserCreationResponse = try await pocketBase.request(
+                endpoint: "/api/collections/users/records",
+                method: .post,
+                parameters: parameters,
+                responseType: UserCreationResponse.self
+            )
+            
+            // After successful registration, automatically log in to get the full auth response
+            try await login(email: email, password: password)
+            
+        } catch let error as PocketBaseManager.PocketBaseError {
+            switch error {
+            case .badRequest:
+                throw AuthError.emailAlreadyExists
+            case .networkError:
+                throw AuthError.networkError
+            case .serverError(let message):
+                if message.contains("email") || message.contains("already exists") {
+                    throw AuthError.emailAlreadyExists
+                } else {
+                    throw AuthError.serverError(message)
+                }
             default:
                 throw AuthError.networkError
             }

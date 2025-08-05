@@ -8,127 +8,156 @@ struct MessagesView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showingNewMessage = false
-    @State private var householdMembers: [PocketBaseUser] = []
+    @State private var currentHome: Home?
     @State private var unreadCounts: [String: Int] = [:]
-    @State private var currentHomeId: String?
+    @State private var selectedConversation: PocketBaseConversation?
+    @State private var refreshTimer: Timer?
     
     private let messagesManager = MessagesManager.shared
     
     var body: some View {
-        ZStack {
-            // Background with colorful gradients
-            RadialGradient(
-                colors: [
-                    selectedTheme.colors(for: colorScheme).background,
-                    Color.blue.opacity(0.05),
-                    Color.cyan.opacity(0.03)
-                ],
-                center: .center,
-                startRadius: 0,
-                endRadius: 500
-            )
-            .ignoresSafeArea()
-            
-            // Floating colorful shapes
-            GeometryReader { geometry in
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.blue.opacity(0.3), Color.cyan.opacity(0.1)],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 40
-                        )
-                    )
-                    .frame(width: 80, height: 80)
-                    .offset(x: geometry.size.width - 60, y: 50)
-                    .blur(radius: 30)
+        NavigationStack {
+            ZStack {
+                // Background with colorful gradients
+                RadialGradient(
+                    colors: [
+                        selectedTheme.colors(for: colorScheme).background,
+                        Color.blue.opacity(0.05),
+                        Color.cyan.opacity(0.03)
+                    ],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 500
+                )
+                .ignoresSafeArea()
                 
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.purple.opacity(0.4), Color.pink.opacity(0.2)],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 50
-                        )
-                    )
-                    .frame(width: 100, height: 100)
-                    .offset(x: 20, y: geometry.size.height * 0.7)
-                    .blur(radius: 35)
-            }
-            
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text("Messages")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.blue, Color.purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                // Floating colorful shapes
+                GeometryReader { geometry in
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.blue.opacity(0.3), Color.cyan.opacity(0.1)],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 40
                             )
                         )
+                        .frame(width: 80, height: 80)
+                        .offset(x: geometry.size.width - 60, y: 50)
+                        .blur(radius: 30)
                     
-                    Spacer()
-                    
-                    Button {
-                        showingNewMessage = true
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.blue, Color.purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 44, height: 44)
-                            
-                            Image(systemName: "plus")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.purple.opacity(0.4), Color.pink.opacity(0.2)],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 50
+                            )
+                        )
+                        .frame(width: 100, height: 100)
+                        .offset(x: 20, y: geometry.size.height * 0.7)
+                        .blur(radius: 35)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
                 
-                // Content
-                if isLoading {
-                    loadingView
-                } else if conversations.isEmpty {
-                    emptyStateView
-                } else {
-                    conversationsList
+                VStack(spacing: 0) {
+                    // Header
+                    HStack {
+                        Text("Messages")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                        
+                        Spacer()
+                        
+                        Button {
+                            showingNewMessage = true
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.blue, Color.purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 44, height: 44)
+                                
+                                Image(systemName: "plus")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+                    
+                    // Content
+                    if isLoading {
+                        loadingView
+                    } else if conversations.isEmpty {
+                        emptyStateView
+                    } else {
+                        conversationsList
+                    }
                 }
             }
-        }
-        .onAppear {
-            Task {
+            .onAppear {
+                print("DEBUG: MessagesView appeared - refreshing conversations")
+                Task {
+                    await loadData()
+                }
+                startPeriodicRefresh()
+            }
+            .onDisappear {
+                stopPeriodicRefresh()
+            }
+            .refreshable {
+                print("DEBUG: Pull to refresh triggered")
                 await loadData()
             }
-        }
-        .refreshable {
-            await loadData()
-        }
-        .fullScreenCover(isPresented: $showingNewMessage) {
-            NewMessageView(
-                householdMembers: householdMembers,
-                currentHomeId: currentHomeId ?? ""
-            ) { newConversation in
-                conversations.insert(newConversation, at: 0)
+            .fullScreenCover(isPresented: $showingNewMessage) {
+                NewMessageView(
+                    home: currentHome,
+                    currentUserId: authManager.currentUser?.id ?? ""
+                ) { newConversation in
+                    // Add new conversation and refresh the list to get updated data
+                    conversations.insert(newConversation, at: 0)
+                    Task {
+                        print("DEBUG: New conversation created - refreshing conversation list")
+                        await loadDataSilently()
+                    }
+                }
             }
-        }
-        .alert("Error", isPresented: .constant(errorMessage != nil)) {
-            Button("OK") {
-                errorMessage = nil
+            .navigationDestination(item: $selectedConversation) { conversation in
+                ChatDetailView(
+                    conversation: conversation,
+                    currentUserId: authManager.currentUser?.id ?? ""
+                )
+                .onDisappear {
+                    // Add a delay before refreshing to ensure server updates are complete
+                    print("DEBUG: Returned from chat detail - refreshing conversations with delay")
+                    Task {
+                        // Wait a moment for server to process any pending updates
+                        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
+                        await loadData() // Use full refresh instead of silent to ensure we get latest data
+                    }
+                }
             }
-        } message: {
-            Text(errorMessage ?? "")
+            .alert("Error", isPresented: .constant(errorMessage != nil)) {
+                Button("OK") {
+                    errorMessage = nil
+                }
+            } message: {
+                Text(errorMessage ?? "")
+            }
         }
     }
     
@@ -141,8 +170,10 @@ struct MessagesView: View {
         isLoading = true
         errorMessage = nil
         
+        print("DEBUG: Starting fresh data load for conversations")
+        
         do {
-            // First, fetch user's home (following the same pattern as other ViewModels)
+            // Get user's home info
             let pocketBase = PocketBaseManager.shared
             let userResponse: PocketBaseUser = try await pocketBase.request(
                 endpoint: "/api/collections/users/records/\(currentUser.id)",
@@ -150,37 +181,126 @@ struct MessagesView: View {
                 responseType: PocketBaseUser.self
             )
             
+            print("DEBUG: User response: \(userResponse)")
+            print("DEBUG: User home_id: \(userResponse.home_id)")
+            
             guard let homeId = userResponse.home_id.first else {
                 errorMessage = "No home found"
                 isLoading = false
                 return
             }
             
-            currentHomeId = homeId
+            print("DEBUG: Loading data for home ID: \(homeId)")
             
-            // Load conversations and household members concurrently
-            async let conversationsTask = messagesManager.fetchConversations(for: homeId)
-            async let membersTask = messagesManager.fetchHouseholdMembers(for: homeId)
+            // Get home details
+            let home: Home = try await pocketBase.request(
+                endpoint: "/api/collections/homes/records/\(homeId)",
+                requiresAuth: true,
+                responseType: Home.self
+            )
             
-            let (fetchedConversations, fetchedMembers) = try await (conversationsTask, membersTask)
+            currentHome = home
+            print("DEBUG: Home loaded: \(home.name) with \(home.members.count) members")
             
-            conversations = fetchedConversations
-            householdMembers = fetchedMembers
+            // Load conversations (this will get the latest from server)
+            print("DEBUG: Fetching fresh conversations for home: \(homeId)")
+            let freshConversations = try await messagesManager.fetchConversations(for: homeId)
+            print("DEBUG: Found \(freshConversations.count) conversations")
             
-            // Load unread counts for each conversation
+            // Update conversations array
+            conversations = freshConversations
+            
+            // Clear old unread counts and load fresh ones
+            unreadCounts = [:]
             for conversation in conversations {
-                let unreadCount = try await messagesManager.getUnreadMessageCount(
-                    for: conversation.id,
-                    userId: currentUser.id
-                )
-                unreadCounts[conversation.id] = unreadCount
+                print("DEBUG: Loading unread count for conversation: \(conversation.id)")
+                do {
+                    let unreadCount = try await messagesManager.getUnreadMessageCount(
+                        for: conversation.id,
+                        userId: currentUser.id
+                    )
+                    unreadCounts[conversation.id] = unreadCount
+                    print("DEBUG: Conversation \(conversation.id) has \(unreadCount) unread messages")
+                } catch {
+                    print("DEBUG: Failed to get unread count for conversation \(conversation.id): \(error)")
+                    unreadCounts[conversation.id] = 0
+                }
             }
             
+            print("DEBUG: Data refresh completed successfully")
+            
         } catch {
-            errorMessage = error.localizedDescription
+            print("DEBUG: Error loading messages data: \(error)")
+            if let pocketBaseError = error as? PocketBaseManager.PocketBaseError {
+                errorMessage = pocketBaseError.localizedDescription
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
         
         isLoading = false
+    }
+    
+    private func startPeriodicRefresh() {
+        stopPeriodicRefresh() // Stop any existing timer
+        
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
+            print("DEBUG: Periodic refresh triggered")
+            Task {
+                await loadDataSilently()
+            }
+        }
+    }
+    
+    private func stopPeriodicRefresh() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
+    
+    // Silent refresh that doesn't show loading indicator
+    private func loadDataSilently() async {
+        guard let currentUser = authManager.currentUser else { return }
+        
+        do {
+            // Get user's home info
+            let pocketBase = PocketBaseManager.shared
+            let userResponse: PocketBaseUser = try await pocketBase.request(
+                endpoint: "/api/collections/users/records/\(currentUser.id)",
+                requiresAuth: true,
+                responseType: PocketBaseUser.self
+            )
+            
+            print("DEBUG: User response: \(userResponse)")
+            print("DEBUG: User home_id: \(userResponse.home_id)")
+            
+            guard let homeId = userResponse.home_id.first else { return }
+            
+            print("DEBUG: Loading data for home ID: \(homeId)")
+            
+            // Silently fetch fresh conversations
+            let freshConversations = try await messagesManager.fetchConversations(for: homeId)
+            
+            // Update conversations if there are changes
+            if freshConversations.count != conversations.count ||
+               !freshConversations.elementsEqual(conversations, by: { $0.id == $1.id && $0.updated == $1.updated }) {
+                print("DEBUG: Conversations updated during silent refresh")
+                conversations = freshConversations
+                
+                // Update unread counts for new/changed conversations
+                for conversation in conversations {
+                    if unreadCounts[conversation.id] == nil {
+                        let unreadCount = try await messagesManager.getUnreadMessageCount(
+                            for: conversation.id,
+                            userId: currentUser.id
+                        )
+                        unreadCounts[conversation.id] = unreadCount
+                    }
+                }
+            }
+            
+        } catch {
+            print("DEBUG: Silent refresh failed: \(error)")
+        }
     }
     
     private var loadingView: some View {
@@ -232,7 +352,7 @@ struct MessagesView: View {
                     )
                 )
             
-            Text("Start a conversation with your household members")
+            Text("Create a group chat to stay connected with your household")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -241,21 +361,26 @@ struct MessagesView: View {
             Button {
                 showingNewMessage = true
             } label: {
-                Text("Start a Conversation")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.message.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                    
+                    Text("Create Group Chat")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.blue, Color.purple],
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
-                    )
+                        )
+                )
             }
             .padding(.top, 16)
         }
@@ -268,14 +393,13 @@ struct MessagesView: View {
                 ForEach(conversations, id: \.id) { conversation in
                     ConversationCard(
                         conversation: conversation,
-                        householdMembers: householdMembers,
+                        home: currentHome,
                         unreadCount: unreadCounts[conversation.id] ?? 0,
                         currentUserId: authManager.currentUser?.id ?? ""
                     )
                     .padding(.horizontal, 24)
                     .onTapGesture {
-                        // TODO: Navigate to chat detail view
-                        print("Tapped conversation: \(conversation.id)")
+                        selectedConversation = conversation
                     }
                 }
             }
@@ -287,7 +411,7 @@ struct MessagesView: View {
 
 struct ConversationCard: View {
     let conversation: PocketBaseConversation
-    let householdMembers: [PocketBaseUser]
+    let home: Home?
     let unreadCount: Int
     let currentUserId: String
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
@@ -363,32 +487,27 @@ struct ConversationCard: View {
             return "GC"
         }
         
-        // Get the other participant (not current user)
-        let otherParticipantId = conversation.participants.first { $0 != currentUserId }
-        let otherParticipant = householdMembers.first { $0.id == otherParticipantId }
-        
-        guard let name = otherParticipant?.name else { return "?" }
-        let components = name.split(separator: " ")
-        if components.count >= 2 {
-            return "\(components[0].first?.uppercased() ?? "")\(components[1].first?.uppercased() ?? "")"
-        } else {
-            return "\(name.prefix(2).uppercased())"
-        }
+        // For now, just show generic initials since we don't have user details
+        return "HM" // Household Member
     }
     
     private func getTitle() -> String {
         if conversation.isGroupChat {
-            return conversation.title ?? "Group Chat"
+            return conversation.title ?? "Household Chat"
         } else {
-            // Get the other participant (not current user)
-            let otherParticipantId = conversation.participants.first { $0 != currentUserId }
-            let otherParticipant = householdMembers.first { $0.id == otherParticipantId }
-            return otherParticipant?.name ?? "Unknown User"
+            // Get the other participant count
+            let otherParticipants = conversation.participants.filter { $0 != currentUserId }
+            if otherParticipants.count == 1 {
+                return "Direct Message"
+            } else {
+                return "Chat"
+            }
         }
     }
     
     private func formatDate() -> String {
-        guard let lastMessageAt = conversation.lastMessageAt else {
+        guard let lastMessageAt = conversation.lastMessageAt,
+              !lastMessageAt.isEmpty else {
             return ""
         }
         

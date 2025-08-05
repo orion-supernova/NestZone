@@ -3,15 +3,13 @@ import SwiftUI
 struct NewMessageView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @State private var selectedContacts: [String] = []
     @State private var messageText = ""
-    @State private var isGroupChat = false
     @State private var groupTitle = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
     
-    let householdMembers: [PocketBaseUser]
-    let currentHomeId: String
+    let home: Home?
+    let currentUserId: String
     var onMessageSent: ((PocketBaseConversation) -> Void)? = nil
     
     private let messagesManager = MessagesManager.shared
@@ -28,171 +26,154 @@ struct NewMessageView: View {
                     
                     Spacer()
                     
-                    Text("New Message")
+                    Text("New Group Chat")
                         .font(.system(size: 18, weight: .semibold))
                     
                     Spacer()
                     
-                    Button("Send") {
+                    Button("Create") {
                         Task {
-                            await sendMessage()
+                            await createGroupChat()
                         }
                     }
-                    .foregroundColor(canSend ? .blue : .gray)
-                    .disabled(!canSend || isLoading)
+                    .foregroundColor(canCreate ? .blue : .gray)
+                    .disabled(!canCreate || isLoading)
                 }
                 .padding(.horizontal)
                 .padding(.top, 10)
                 
                 Divider()
                 
-                VStack(spacing: 16) {
-                    // Group chat toggle
-                    if selectedContacts.count > 1 {
-                        HStack {
-                            Toggle("Group Chat", isOn: $isGroupChat)
+                VStack(spacing: 24) {
+                    // Info Section
+                    VStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.blue, Color.purple, Color.cyan],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 80, height: 80)
+                                .shadow(color: Color.blue.opacity(0.4), radius: 12, x: 0, y: 6)
+                            
+                            Image(systemName: "person.3.fill")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        
+                        VStack(spacing: 8) {
+                            Text("Household Group Chat")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [Color.blue, Color.purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                            
+                            if let home = home {
+                                Text("This chat will include all \(home.members.count) members of \(home.name)")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
+                            } else {
+                                Text("This chat will include all household members")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
+                            }
+                        }
+                    }
+                    .padding(.top, 32)
+                    
+                    // Group name input
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("GROUP NAME (OPTIONAL)")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        
+                        TextField("e.g., Family Chat, House Updates...", text: $groupTitle)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.thinMaterial)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.words)
+                    }
+                    .padding(.horizontal)
+                    
+                    // Initial message input - Simple approach to avoid constraints
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("FIRST MESSAGE")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        
+                        TextField("Say hello to your household...", text: $messageText)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.thinMaterial)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.sentences)
+                    }
+                    .padding(.horizontal)
+                    
+                    // Member count info
+                    if let home = home {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.2.fill")
                                 .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.blue)
+                            
+                            Text("\(home.members.count) household members will be added to this chat")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary)
                             
                             Spacer()
                         }
                         .padding(.horizontal)
-                        .padding(.top, 16)
-                        
-                        if isGroupChat {
-                            TextField("Group name (optional)", text: $groupTitle)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .padding(.horizontal)
-                        }
-                    }
-                    
-                    // Selected contacts
-                    if !selectedContacts.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(selectedContacts, id: \.self) { contactId in
-                                    if let contact = householdMembers.first(where: { $0.id == contactId }) {
-                                        HStack(spacing: 8) {
-                                            Text(getInitials(for: contact.name ?? "?"))
-                                                .font(.system(size: 14, weight: .bold))
-                                                .foregroundColor(.white)
-                                                .frame(width: 28, height: 28)
-                                                .background(Color.blue)
-                                                .clipShape(Circle())
-                                            
-                                            Text(contact.name ?? "Unknown")
-                                                .font(.system(size: 14))
-                                                .lineLimit(1)
-                                            
-                                            Button {
-                                                selectedContacts.removeAll(where: { $0 == contactId })
-                                            } label: {
-                                                Image(systemName: "xmark")
-                                                    .font(.system(size: 10))
-                                                    .foregroundColor(.gray)
-                                                    .frame(width: 18, height: 18)
-                                                    .background(Color.gray.opacity(0.2))
-                                                    .clipShape(Circle())
-                                            }
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.gray.opacity(0.1))
-                                        .clipShape(Capsule())
-                                    }
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        .padding(.vertical, 8)
-                    }
-                    
-                    Divider()
-                    
-                    // Message input
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("MESSAGE")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                        
-                        TextEditor(text: $messageText)
-                            .frame(height: 100)
-                            .padding(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                            .padding(.horizontal)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.blue.opacity(0.05))
+                        )
+                        .padding(.horizontal)
                     }
                     
                     Spacer()
-                    
-                    // Contacts list
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("HOUSEHOLD MEMBERS")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                        
-                        ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(householdMembers.filter { $0.id != authManager.currentUser?.id }, id: \.id) { member in
-                                    Button {
-                                        toggleContact(member.id)
-                                    } label: {
-                                        HStack(spacing: 16) {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(
-                                                        LinearGradient(
-                                                            colors: [Color.blue, Color.purple],
-                                                            startPoint: .topLeading,
-                                                            endPoint: .bottomTrailing
-                                                        )
-                                                    )
-                                                    .frame(width: 40, height: 40)
-                                                
-                                                Text(getInitials(for: member.name ?? "?"))
-                                                    .font(.system(size: 16, weight: .bold))
-                                                    .foregroundColor(.white)
-                                            }
-                                            
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(member.name ?? "Unknown")
-                                                    .font(.system(size: 16, weight: .medium))
-                                                    .foregroundColor(.primary)
-                                                
-                                                Text(member.email)
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(.secondary)
-                                            }
-                                            
-                                            Spacer()
-                                            
-                                            if selectedContacts.contains(member.id) {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundColor(.blue)
-                                                    .font(.system(size: 20))
-                                            } else {
-                                                Image(systemName: "circle")
-                                                    .foregroundColor(.gray)
-                                                    .font(.system(size: 20))
-                                            }
-                                        }
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 8)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                }
-                            }
-                        }
-                    }
                 }
                 
                 if isLoading {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                        .padding()
+                    HStack(spacing: 12) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        
+                        Text("Creating group chat...")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(.thinMaterial)
+                    .clipShape(Capsule())
+                    .padding(.bottom, 20)
                 }
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
@@ -207,38 +188,13 @@ struct NewMessageView: View {
         .presentationDragIndicator(.visible)
     }
     
-    private var canSend: Bool {
-        !selectedContacts.isEmpty && !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    private var canCreate: Bool {
+        !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
-    private func getInitials(for name: String) -> String {
-        let components = name.split(separator: " ")
-        if components.count >= 2 {
-            return "\(components[0].first?.uppercased() ?? "")\(components[1].first?.uppercased() ?? "")"
-        } else {
-            return "\(name.prefix(2).uppercased())"
-        }
-    }
-    
-    private func toggleContact(_ contactId: String) {
-        if selectedContacts.contains(contactId) {
-            selectedContacts.removeAll(where: { $0 == contactId })
-        } else {
-            selectedContacts.append(contactId)
-        }
-        
-        // Auto-enable group chat for multiple contacts
-        if selectedContacts.count > 1 {
-            isGroupChat = true
-        } else {
-            isGroupChat = false
-        }
-    }
-    
-    private func sendMessage() async {
+    private func createGroupChat() async {
         guard let currentUser = authManager.currentUser,
-              !selectedContacts.isEmpty,
-              !currentHomeId.isEmpty else {
+              let home = home else {
             errorMessage = "Missing required information"
             return
         }
@@ -247,30 +203,41 @@ struct NewMessageView: View {
         errorMessage = nil
         
         do {
-            // Include current user in participants
-            var allParticipants = selectedContacts
-            allParticipants.append(currentUser.id)
+            // Create conversation with all household members
+            let allParticipants = home.members // This includes current user
             
-            // Create conversation
+            print("DEBUG: Creating conversation with participants: \(allParticipants)")
+            print("DEBUG: Home ID: \(home.id)")
+            print("DEBUG: Group title: \(groupTitle.isEmpty ? "\(home.name) Chat" : groupTitle)")
+            
             let conversation = try await messagesManager.createConversation(
                 participants: allParticipants,
-                homeId: currentHomeId,
-                title: isGroupChat ? (groupTitle.isEmpty ? nil : groupTitle) : nil,
-                isGroupChat: isGroupChat
+                homeId: home.id,
+                title: groupTitle.isEmpty ? "\(home.name) Chat" : groupTitle,
+                isGroupChat: true
             )
             
+            print("DEBUG: Conversation created with ID: \(conversation.id)")
+            
             // Send initial message
-            let _ = try await messagesManager.sendMessage(
+            let message = try await messagesManager.sendMessage(
                 conversationId: conversation.id,
                 senderId: currentUser.id,
                 content: messageText.trimmingCharacters(in: .whitespacesAndNewlines)
             )
             
+            print("DEBUG: Message sent with ID: \(message.id)")
+            
             onMessageSent?(conversation)
             dismiss()
             
         } catch {
-            errorMessage = error.localizedDescription
+            print("DEBUG: Error creating group chat: \(error)")
+            if let pocketBaseError = error as? PocketBaseManager.PocketBaseError {
+                errorMessage = pocketBaseError.localizedDescription
+            } else {
+                errorMessage = "Failed to create group chat: \(error.localizedDescription)"
+            }
         }
         
         isLoading = false
@@ -278,5 +245,5 @@ struct NewMessageView: View {
 }
 
 #Preview {
-    NewMessageView(householdMembers: [], currentHomeId: "")
+    NewMessageView(home: nil, currentUserId: "")
 }
