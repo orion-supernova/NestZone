@@ -4,16 +4,10 @@ struct MessagesView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @State private var conversations: [PocketBaseConversation] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @StateObject private var viewModel = MessageListViewModel()
     @State private var showingNewMessage = false
-    @State private var currentHome: Home?
-    @State private var unreadCounts: [String: Int] = [:]
     @State private var selectedConversation: PocketBaseConversation?
-    @State private var refreshTimer: Timer?
-    
-    private let messagesManager = MessagesManager.shared
+    @State private var currentHome: Home?
     
     var body: some View {
         NavigationStack {
@@ -100,9 +94,9 @@ struct MessagesView: View {
                     .padding(.top, 16)
                     
                     // Content
-                    if isLoading {
+                    if viewModel.isLoading {
                         loadingView
-                    } else if conversations.isEmpty {
+                    } else if viewModel.conversations.isEmpty {
                         emptyStateView
                     } else {
                         conversationsList
@@ -110,196 +104,39 @@ struct MessagesView: View {
                 }
             }
             .onAppear {
-                print("DEBUG: MessagesView appeared - refreshing conversations")
-                Task {
-                    await loadData()
-                }
-                startPeriodicRefresh()
-            }
-            .onDisappear {
-                stopPeriodicRefresh()
+                print("DEBUG: MessagesView appeared")
+                viewModel.setup(authManager: authManager)
             }
             .refreshable {
                 print("DEBUG: Pull to refresh triggered")
-                await loadData()
+                await viewModel.refresh()
             }
             .fullScreenCover(isPresented: $showingNewMessage) {
                 NewMessageView(
                     home: currentHome,
                     currentUserId: authManager.currentUser?.id ?? ""
                 ) { newConversation in
-                    // Add new conversation and refresh the list to get updated data
-                    conversations.insert(newConversation, at: 0)
-                    Task {
-                        print("DEBUG: New conversation created - refreshing conversation list")
-                        await loadDataSilently()
-                    }
+                    viewModel.addNewConversation(newConversation)
                 }
             }
             .navigationDestination(item: $selectedConversation) { conversation in
                 ChatDetailView(
                     conversation: conversation,
                     currentUserId: authManager.currentUser?.id ?? ""
-                )
-                .onDisappear {
-                    // Add a delay before refreshing to ensure server updates are complete
-                    print("DEBUG: Returned from chat detail - refreshing conversations with delay")
+                ) {
+                    // Refresh conversations when returning from chat
                     Task {
-                        // Wait a moment for server to process any pending updates
-                        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
-                        await loadData() // Use full refresh instead of silent to ensure we get latest data
+                        await viewModel.refresh()
                     }
                 }
             }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
+            .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("OK") {
-                    errorMessage = nil
+                    viewModel.errorMessage = nil
                 }
             } message: {
-                Text(errorMessage ?? "")
+                Text(viewModel.errorMessage ?? "")
             }
-        }
-    }
-    
-    private func loadData() async {
-        guard let currentUser = authManager.currentUser else {
-            errorMessage = "User not authenticated"
-            return
-        }
-        
-        isLoading = true
-        errorMessage = nil
-        
-        print("DEBUG: Starting fresh data load for conversations")
-        
-        do {
-            // Get user's home info
-            let pocketBase = PocketBaseManager.shared
-            let userResponse: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(currentUser.id)",
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            print("DEBUG: User response: \(userResponse)")
-            print("DEBUG: User home_id: \(userResponse.home_id)")
-            
-            guard let homeId = userResponse.home_id.first else {
-                errorMessage = "No home found"
-                isLoading = false
-                return
-            }
-            
-            print("DEBUG: Loading data for home ID: \(homeId)")
-            
-            // Get home details
-            let home: Home = try await pocketBase.request(
-                endpoint: "/api/collections/homes/records/\(homeId)",
-                requiresAuth: true,
-                responseType: Home.self
-            )
-            
-            currentHome = home
-            print("DEBUG: Home loaded: \(home.name) with \(home.members.count) members")
-            
-            // Load conversations (this will get the latest from server)
-            print("DEBUG: Fetching fresh conversations for home: \(homeId)")
-            let freshConversations = try await messagesManager.fetchConversations(for: homeId)
-            print("DEBUG: Found \(freshConversations.count) conversations")
-            
-            // Update conversations array
-            conversations = freshConversations
-            
-            // Clear old unread counts and load fresh ones
-            unreadCounts = [:]
-            for conversation in conversations {
-                print("DEBUG: Loading unread count for conversation: \(conversation.id)")
-                do {
-                    let unreadCount = try await messagesManager.getUnreadMessageCount(
-                        for: conversation.id,
-                        userId: currentUser.id
-                    )
-                    unreadCounts[conversation.id] = unreadCount
-                    print("DEBUG: Conversation \(conversation.id) has \(unreadCount) unread messages")
-                } catch {
-                    print("DEBUG: Failed to get unread count for conversation \(conversation.id): \(error)")
-                    unreadCounts[conversation.id] = 0
-                }
-            }
-            
-            print("DEBUG: Data refresh completed successfully")
-            
-        } catch {
-            print("DEBUG: Error loading messages data: \(error)")
-            if let pocketBaseError = error as? PocketBaseManager.PocketBaseError {
-                errorMessage = pocketBaseError.localizedDescription
-            } else {
-                errorMessage = error.localizedDescription
-            }
-        }
-        
-        isLoading = false
-    }
-    
-    private func startPeriodicRefresh() {
-        stopPeriodicRefresh() // Stop any existing timer
-        
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
-            print("DEBUG: Periodic refresh triggered")
-            Task {
-                await loadDataSilently()
-            }
-        }
-    }
-    
-    private func stopPeriodicRefresh() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
-    }
-    
-    // Silent refresh that doesn't show loading indicator
-    private func loadDataSilently() async {
-        guard let currentUser = authManager.currentUser else { return }
-        
-        do {
-            // Get user's home info
-            let pocketBase = PocketBaseManager.shared
-            let userResponse: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(currentUser.id)",
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            print("DEBUG: User response: \(userResponse)")
-            print("DEBUG: User home_id: \(userResponse.home_id)")
-            
-            guard let homeId = userResponse.home_id.first else { return }
-            
-            print("DEBUG: Loading data for home ID: \(homeId)")
-            
-            // Silently fetch fresh conversations
-            let freshConversations = try await messagesManager.fetchConversations(for: homeId)
-            
-            // Update conversations if there are changes
-            if freshConversations.count != conversations.count ||
-               !freshConversations.elementsEqual(conversations, by: { $0.id == $1.id && $0.updated == $1.updated }) {
-                print("DEBUG: Conversations updated during silent refresh")
-                conversations = freshConversations
-                
-                // Update unread counts for new/changed conversations
-                for conversation in conversations {
-                    if unreadCounts[conversation.id] == nil {
-                        let unreadCount = try await messagesManager.getUnreadMessageCount(
-                            for: conversation.id,
-                            userId: currentUser.id
-                        )
-                        unreadCounts[conversation.id] = unreadCount
-                    }
-                }
-            }
-            
-        } catch {
-            print("DEBUG: Silent refresh failed: \(error)")
         }
     }
     
@@ -390,11 +227,10 @@ struct MessagesView: View {
     private var conversationsList: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                ForEach(conversations, id: \.id) { conversation in
+                ForEach(viewModel.conversations, id: \.id) { conversation in
                     ConversationCard(
                         conversation: conversation,
-                        home: currentHome,
-                        unreadCount: unreadCounts[conversation.id] ?? 0,
+                        unreadCount: viewModel.unreadCounts[conversation.id] ?? 0,
                         currentUserId: authManager.currentUser?.id ?? ""
                     )
                     .padding(.horizontal, 24)
@@ -411,7 +247,6 @@ struct MessagesView: View {
 
 struct ConversationCard: View {
     let conversation: PocketBaseConversation
-    let home: Home?
     let unreadCount: Int
     let currentUserId: String
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
@@ -434,12 +269,14 @@ struct ConversationCard: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
                 
-                // Online indicator (placeholder for now)
-                Circle()
-                    .fill(Color.green)
-                    .frame(width: 12, height: 12)
-                    .offset(x: 18, y: 18)
-                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                // Show unread indicator
+                if unreadCount > 0 {
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 12, height: 12)
+                        .offset(x: 18, y: 18)
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                }
             }
             
             VStack(alignment: .leading, spacing: 4) {
@@ -457,19 +294,16 @@ struct ConversationCard: View {
                 
                 HStack {
                     Text(conversation.lastMessage ?? "No messages yet")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
+                        .font(.system(size: 14, weight: unreadCount > 0 ? .semibold : .regular))
+                        .foregroundColor(unreadCount > 0 ? selectedTheme.colors(for: colorScheme).text : selectedTheme.colors(for: colorScheme).textSecondary)
                         .lineLimit(1)
                     
                     Spacer()
                     
                     if unreadCount > 0 {
-                        Text("\(unreadCount)")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 20, height: 20)
-                            .background(Color.blue)
-                            .clipShape(Circle())
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 8, height: 8)
                     }
                 }
             }
@@ -486,22 +320,14 @@ struct ConversationCard: View {
         if conversation.isGroupChat {
             return "GC"
         }
-        
-        // For now, just show generic initials since we don't have user details
-        return "HM" // Household Member
+        return "HM"
     }
     
     private func getTitle() -> String {
         if conversation.isGroupChat {
             return conversation.title ?? "Household Chat"
         } else {
-            // Get the other participant count
-            let otherParticipants = conversation.participants.filter { $0 != currentUserId }
-            if otherParticipants.count == 1 {
-                return "Direct Message"
-            } else {
-                return "Chat"
-            }
+            return "Direct Message"
         }
     }
     

@@ -8,12 +8,24 @@ class MessagesManager {
     
     // MARK: - Conversations
     func fetchConversations(for homeId: String) async throws -> [PocketBaseConversation] {
+        print("DEBUG: Fetching conversations with filter: home_id = '\(homeId)'")
+        
         let response: PocketBaseListResponse<PocketBaseConversation> = try await pocketBase.getCollection(
             "conversations",
             responseType: PocketBaseListResponse<PocketBaseConversation>.self,
             filter: "home_id = '\(homeId)'",
             sort: "-last_message_at,-updated"
         )
+        
+        print("DEBUG: Raw conversation response:")
+        for (index, conversation) in response.items.enumerated() {
+            print("DEBUG: Conversation \(index): id=\(conversation.id)")
+            print("DEBUG:   - title: '\(conversation.title ?? "nil")'")
+            print("DEBUG:   - last_message: '\(conversation.lastMessage ?? "nil")'")
+            print("DEBUG:   - last_message_at: '\(conversation.lastMessageAt ?? "nil")'")
+            print("DEBUG:   - updated: '\(conversation.updated)'")
+        }
+        
         return response.items
     }
     
@@ -145,32 +157,19 @@ class MessagesManager {
         
         // Update conversation's last message with appropriate preview text
         let previewText = getMessagePreview(content: content, messageType: messageType)
-        
-        // Use the message creation timestamp for better accuracy
-        let messageDate = ISO8601DateFormatter().date(from: message.created) ?? Date()
-        let timestamp = ISO8601DateFormatter().string(from: messageDate)
+        let timestamp = ISO8601DateFormatter().string(from: Date())
         
         print("DEBUG: Updating conversation last message with preview: '\(previewText)'")
-        print("DEBUG: Using timestamp from message: '\(timestamp)'")
+        print("DEBUG: Using timestamp: '\(timestamp)'")
         
-        do {
-            let updatedConversation = try await updateConversationLastMessage(
-                conversationId: conversationId,
-                lastMessage: previewText,
-                timestamp: timestamp
-            )
-            
-            print("DEBUG: Conversation last message updated successfully")
-            print("DEBUG: Conversation now shows: '\(updatedConversation.lastMessage ?? "nil")'")
-            
-            // Add a small delay to ensure server has processed the update
-            try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay
-            
-        } catch {
-            print("DEBUG: CRITICAL: Failed to update conversation last message: \(error)")
-            // This is important - if conversation doesn't update, the list won't show the new message
-            throw error
-        }
+        // Make sure this completes successfully
+        try await updateConversationLastMessage(
+            conversationId: conversationId,
+            lastMessage: previewText,
+            timestamp: timestamp
+        )
+        
+        print("DEBUG: Conversation update completed")
         
         return message
     }
