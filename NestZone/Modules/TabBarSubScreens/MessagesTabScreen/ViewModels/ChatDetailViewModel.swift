@@ -34,10 +34,9 @@ class ChatDetailViewModel: ObservableObject {
     
     deinit {
         print("DEBUG: ChatDetailViewModel - deinit called")
-        // Clean up realtime subscription synchronously
-        Task { @MainActor in
-            await cleanupRealtimeSubscription()
-        }
+        // Don't perform async operations in deinit as they can cause retain cycles
+        // Just mark as unsubscribed
+        isSubscribedToRealtime = false
     }
     
     // MARK: - Public Methods
@@ -119,6 +118,7 @@ class ChatDetailViewModel: ObservableObject {
     }
     
     func onViewDisappear() async {
+        print("DEBUG: ChatDetailViewModel - onViewDisappear called")
         await cleanupRealtimeSubscription()
     }
     
@@ -184,13 +184,14 @@ class ChatDetailViewModel: ObservableObject {
         }
         
         print("DEBUG: ChatDetailViewModel - Cleaning up realtime subscription")
+        isSubscribedToRealtime = false // Mark as unsubscribed first
         
         do {
             try await realtimeManager.unsubscribe(from: "messages")
-            isSubscribedToRealtime = false
             print("DEBUG: ChatDetailViewModel - Successfully unsubscribed from realtime")
         } catch {
-            print("DEBUG: ChatDetailViewModel - Failed to unsubscribe from realtime: \(error)")
+            print("DEBUG: ChatDetailViewModel - Failed to unsubscribe from realtime (this is okay): \(error)")
+            // Don't treat this as a fatal error - connection might already be closed
         }
     }
     

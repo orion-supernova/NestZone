@@ -94,9 +94,9 @@ class PocketBaseRealtimeManager: NSObject, ObservableObject {
     
     func clearAllSubscriptions() async {
         print("DEBUG: Realtime - Clearing all subscriptions and callbacks")
-        await disconnect()
         subscriptions.removeAll()
         callbacks.removeAll()
+        await disconnect()
     }
     
     // MARK: - Subscription Management
@@ -158,15 +158,23 @@ class PocketBaseRealtimeManager: NSObject, ObservableObject {
         
         print("DEBUG: Realtime - Unsubscribing from: \(topic)")
         
+        // Remove from local state first
         subscriptions.remove(topic)
         callbacks.removeValue(forKey: topic)
         
-        guard let clientId = clientId else {
-            print("DEBUG: Realtime - No client ID, skipping unsubscribe")
+        // If not connected or no client ID, we're already effectively unsubscribed
+        guard isConnected, let clientId = clientId else {
+            print("DEBUG: Realtime - Not connected or no client ID, local unsubscribe only")
             return
         }
         
-        try await setSubscriptions(clientId: clientId, subscriptions: Array(subscriptions))
+        do {
+            try await setSubscriptions(clientId: clientId, subscriptions: Array(subscriptions))
+            print("DEBUG: Realtime - Successfully unsubscribed from server")
+        } catch {
+            print("DEBUG: Realtime - Server unsubscribe failed (connection might be closed): \(error)")
+            // Don't throw the error - local unsubscribe is sufficient if server fails
+        }
     }
     
     // MARK: - Private Implementation
