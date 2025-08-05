@@ -202,13 +202,64 @@ class PocketBaseRealtimeManager: NSObject, ObservableObject {
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 204 else {
-            print("DEBUG: Realtime - Subscription failed with status: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        guard let httpResponse = response as? HTTPURLResponse else {
             throw PocketBaseRealtimeError.subscriptionFailed
         }
         
-        print("DEBUG: Realtime - Subscriptions updated: \(subscriptions)")
+        if httpResponse.statusCode == 404 {
+            print("DEBUG: Realtime - Client ID expired (404), reconnecting...")
+            // Client ID is invalid, need to reconnect
+            await disconnect()
+            try await connect()
+            
+            // Wait for new client ID
+            var attempts = 0
+            while clientId == self.clientId && attempts < 50 {
+                try await Task.sleep(nanoseconds: 200_000_000)
+                attempts += 1
+            }
+            
+            guard let newClientId = self.clientId else {
+                throw PocketBaseRealtimeError.notConnected
+            }
+            
+            print("DEBUG: Realtime - Got new client ID: \(newClientId), retrying subscription")
+            
+            // Retry with new client ID
+            let newBody: [String: Any] = [
+                "clientId": newClientId,
+                "subscriptions": subscriptions
+            ]
+            
+            guard let newBodyData = try? JSONSerialization.data(withJSONObject: newBody) else {
+                throw PocketBaseRealtimeError.invalidRequest
+            }
+            
+            var newRequest = URLRequest(url: url)
+            newRequest.httpMethod = "POST"
+            newRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            newRequest.httpBody = newBodyData
+            
+            if let token = pocketBase.getAuthToken() {
+                newRequest.setValue(token, forHTTPHeaderField: "Authorization")
+            }
+            
+            let (_, retryResponse) = try await URLSession.shared.data(for: newRequest)
+            
+            guard let retryHttpResponse = retryResponse as? HTTPURLResponse,
+                  retryHttpResponse.statusCode == 204 else {
+                print("DEBUG: Realtime - Retry subscription failed with status: \((retryResponse as? HTTPURLResponse)?.statusCode ?? -1)")
+                throw PocketBaseRealtimeError.subscriptionFailed
+            }
+            
+            print("DEBUG: Realtime - Retry subscriptions successful")
+            
+        } else if httpResponse.statusCode == 204 {
+            print("DEBUG: Realtime - Subscriptions updated: \(subscriptions)")
+        } else {
+            print("DEBUG: Realtime - Subscription failed with status: \(httpResponse.statusCode)")
+            throw PocketBaseRealtimeError.subscriptionFailed
+        }
     }
     
     private func processBuffer() {
