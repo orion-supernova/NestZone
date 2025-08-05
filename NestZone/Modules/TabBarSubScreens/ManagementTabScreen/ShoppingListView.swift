@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Main Shopping List View
 struct ShoppingListView: View {
-    @StateObject private var viewModel = ListTabViewModel()
+    @StateObject private var viewModel = ManagementTabViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showingNewItemSheet = false
     @AppStorage("shoppingListViewMode") private var isGroupedView = true // Persist view mode preference
@@ -216,7 +216,7 @@ struct GroupedViewButton: View {
 
 // MARK: - Shopping Header
 struct ShoppingHeaderView: View {
-    @EnvironmentObject private var viewModel: ListTabViewModel
+    @EnvironmentObject private var viewModel: ManagementTabViewModel
     @State private var pulseAnimation = false
     
     var body: some View {
@@ -304,7 +304,7 @@ struct MiniShoppingCard: View {
 
 // MARK: - Shopping Categories Section
 struct ShoppingCategoriesSection: View {
-    @EnvironmentObject private var viewModel: ListTabViewModel
+    @EnvironmentObject private var viewModel: ManagementTabViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -347,7 +347,7 @@ struct ShoppingCategoriesSection: View {
 
 // MARK: - Plain List Section
 struct ShoppingPlainListSection: View {
-    @EnvironmentObject private var viewModel: ListTabViewModel
+    @EnvironmentObject private var viewModel: ManagementTabViewModel
     
     // Sort items: incomplete first, then completed
     var sortedItems: [ShoppingItem] {
@@ -438,7 +438,7 @@ struct VibrantCategoryCard: View {
     let category: ShoppingItem.ShoppingCategory
     let items: [ShoppingItem]
     let index: Int
-    @EnvironmentObject private var viewModel: ListTabViewModel
+    @EnvironmentObject private var viewModel: ManagementTabViewModel
     @State private var isPressed = false
     @State private var isExpanded = false
     
@@ -547,7 +547,7 @@ struct VibrantShoppingItem: View {
     let item: ShoppingItem
     let gradient: [Color]
     let index: Int
-    @EnvironmentObject private var viewModel: ListTabViewModel
+    @EnvironmentObject private var viewModel: ManagementTabViewModel
     @State private var isPressed = false
     @State private var showingDeleteAlert = false
     @State private var offset: CGFloat = 0
@@ -675,7 +675,7 @@ struct VibrantPlainShoppingItem: View {
     let item: ShoppingItem
     let gradient: [Color]
     let index: Int
-    @EnvironmentObject private var viewModel: ListTabViewModel
+    @EnvironmentObject private var viewModel: ManagementTabViewModel
     @State private var isPressed = false
     @State private var showingDeleteAlert = false
     @State private var offset: CGFloat = 0
@@ -881,7 +881,7 @@ struct ShimmerPlainItem: View {
 
 // MARK: - Add Item Sheet
 struct RainbowNewItemSheet: View {
-    @EnvironmentObject private var viewModel: ListTabViewModel
+    @EnvironmentObject private var viewModel: ManagementTabViewModel
     @Environment(\.dismiss) private var dismiss
     
     @State private var itemName = ""
@@ -933,4 +933,9 @@ struct RainbowNewItemSheet: View {
             }
         }
     }
+}
+
+#Preview {
+    ShoppingListView()
+        .environmentObject(PocketBaseAuthManager())
 }

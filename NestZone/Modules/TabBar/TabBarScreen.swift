@@ -56,7 +56,7 @@ struct TabBarScreen: View {
                     .accessibilityIdentifier("HomeTab")
                     
                     NavigationStack {
-                        ListView()
+                        ManagementTabScreen()
                     }
                     .tag(Tab.management)
                     .tabItem {

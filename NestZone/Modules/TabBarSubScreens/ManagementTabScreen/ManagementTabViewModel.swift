@@ -2,7 +2,7 @@ import SwiftUI
 import Foundation
 
 @MainActor
-class ListTabViewModel: ObservableObject {
+class ManagementTabViewModel: ObservableObject {
     @Published var shoppingItems: [ShoppingItem] = []
     @Published var categories: [ShoppingItem.ShoppingCategory: [ShoppingItem]] = [:]
     @Published var isLoading = false
