@@ -5,7 +5,7 @@ struct ShoppingListView: View {
     @StateObject private var viewModel = ListTabViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showingNewItemSheet = false
-    @State private var isGroupedView = true // Toggle between grouped and plain list
+    @AppStorage("shoppingListViewMode") private var isGroupedView = true // Persist view mode preference
     
     var body: some View {
         NavigationView {
@@ -17,8 +17,8 @@ struct ShoppingListView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 10)
                     
-                    // Vibrant View Mode Toggle
-                    VibrantViewModeToggle(isGroupedView: $isGroupedView)
+                    // Simplified View Mode Toggle
+                    SimplifiedViewModeToggle(isGroupedView: $isGroupedView)
                         .padding(.horizontal, 24)
                         .padding(.top, 24)
                     
@@ -81,61 +81,10 @@ struct ShoppingListView: View {
     }
 }
 
-// MARK: - View Mode Toggle
-struct VibrantViewModeToggle: View {
+// MARK: - Simplified View Mode Toggle
+struct SimplifiedViewModeToggle: View {
     @Binding var isGroupedView: Bool
     @State private var bounceAnimation = false
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            // Header
-            ViewModeHeader()
-            
-            // Toggle Buttons
-            ViewModeButtons(isGroupedView: $isGroupedView, bounceAnimation: $bounceAnimation)
-            
-            // Visual Previews
-            ViewModePreviews(isGroupedView: isGroupedView)
-        }
-        .padding(.vertical, 16)
-        .background(
-            ViewModeBackground(isGroupedView: isGroupedView)
-        )
-        .shadow(
-            color: shadowColor,
-            radius: 12,
-            x: 0,
-            y: 6
-        )
-    }
-    
-    private var shadowColor: Color {
-        (isGroupedView ? Color.green : Color.blue).opacity(0.2)
-    }
-}
-
-// MARK: - View Mode Components
-struct ViewModeHeader: View {
-    var body: some View {
-        HStack {
-            Text("View Mode")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color.primary, Color.green],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-            
-            Spacer()
-        }
-    }
-}
-
-struct ViewModeButtons: View {
-    @Binding var isGroupedView: Bool
-    @Binding var bounceAnimation: Bool
     
     var body: some View {
         HStack(spacing: 0) {
@@ -156,6 +105,7 @@ struct ViewModeButtons: View {
     }
 }
 
+// MARK: - View Mode Components
 struct PlainViewButton: View {
     @Binding var isGroupedView: Bool
     @Binding var bounceAnimation: Bool
@@ -178,7 +128,7 @@ struct PlainViewButton: View {
                 Image(systemName: "list.bullet")
                     .font(.system(size: 16, weight: .bold))
                 
-                Text("Plain List")
+                Text("List")
                     .font(.system(size: 14, weight: .bold))
             }
             .foregroundColor(textColor)
@@ -232,7 +182,7 @@ struct GroupedViewButton: View {
                 Image(systemName: "rectangle.3.group")
                     .font(.system(size: 16, weight: .bold))
                 
-                Text("Grouped")
+                Text("Categories")
                     .font(.system(size: 14, weight: .bold))
             }
             .foregroundColor(textColor)
@@ -261,138 +211,6 @@ struct GroupedViewButton: View {
     
     private var scaleEffect: CGFloat {
         (isGroupedView && bounceAnimation) ? 1.05 : 1.0
-    }
-}
-
-struct ViewModePreviews: View {
-    let isGroupedView: Bool
-    
-    var body: some View {
-        HStack(spacing: 20) {
-            PlainListPreview(isGroupedView: isGroupedView)
-            Spacer()
-            GroupedListPreview(isGroupedView: isGroupedView)
-        }
-        .padding(.horizontal, 20)
-    }
-}
-
-struct PlainListPreview: View {
-    let isGroupedView: Bool
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 2) {
-                ForEach(0..<3, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(barColor)
-                        .frame(width: 20, height: 3)
-                }
-            }
-            
-            Text("All items")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(textColor)
-        }
-        .opacity(opacity)
-        .animation(.easeInOut(duration: 0.3), value: isGroupedView)
-    }
-    
-    private var barColor: Color {
-        isGroupedView ? Color.secondary.opacity(0.3) : Color.blue.opacity(0.6)
-    }
-    
-    private var textColor: Color {
-        isGroupedView ? .secondary : .blue
-    }
-    
-    private var opacity: Double {
-        isGroupedView ? 0.5 : 1.0
-    }
-}
-
-struct GroupedListPreview: View {
-    let isGroupedView: Bool
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            VStack(spacing: 2) {
-                HStack(spacing: 2) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(firstBarColor)
-                        .frame(width: 12, height: 3)
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(secondBarColor)
-                        .frame(width: 8, height: 3)
-                }
-                HStack(spacing: 2) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(thirdBarColor)
-                        .frame(width: 10, height: 3)
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(fourthBarColor)
-                        .frame(width: 6, height: 3)
-                }
-            }
-            
-            Text("By category")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(textColor)
-        }
-        .opacity(opacity)
-        .animation(.easeInOut(duration: 0.3), value: isGroupedView)
-    }
-    
-    private var firstBarColor: Color {
-        !isGroupedView ? Color.secondary.opacity(0.3) : Color.green.opacity(0.6)
-    }
-    
-    private var secondBarColor: Color {
-        !isGroupedView ? Color.secondary.opacity(0.3) : Color.green.opacity(0.4)
-    }
-    
-    private var thirdBarColor: Color {
-        !isGroupedView ? Color.secondary.opacity(0.3) : Color.mint.opacity(0.6)
-    }
-    
-    private var fourthBarColor: Color {
-        !isGroupedView ? Color.secondary.opacity(0.3) : Color.mint.opacity(0.4)
-    }
-    
-    private var textColor: Color {
-        !isGroupedView ? .secondary : .green
-    }
-    
-    private var opacity: Double {
-        !isGroupedView ? 0.5 : 1.0
-    }
-}
-
-struct ViewModeBackground: View {
-    let isGroupedView: Bool
-    
-    var body: some View {
-        RoundedRectangle(cornerRadius: 24)
-            .fill(.ultraThinMaterial)
-            .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(backgroundGradient)
-            )
-    }
-    
-    private var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                backgroundColorStart,
-                Color.clear
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-    
-    private var backgroundColorStart: Color {
-        isGroupedView ? Color.green.opacity(0.1) : Color.blue.opacity(0.1)
     }
 }
 
