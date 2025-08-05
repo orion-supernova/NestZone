@@ -170,6 +170,81 @@ struct PocketBaseNote: Codable, Identifiable {
     }
 }
 
+// MARK: - Messages Collection
+struct PocketBaseConversation: Codable, Identifiable {
+    let id: String
+    let participants: [String]  // User IDs
+    let homeId: String  // Related Home
+    let isGroupChat: Bool
+    let title: String?
+    let lastMessage: String?
+    let lastMessageAt: String?
+    let created: String
+    let updated: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case participants
+        case homeId = "home_id"
+        case isGroupChat = "is_group_chat"
+        case title
+        case lastMessage = "last_message"
+        case lastMessageAt = "last_message_at"
+        case created
+        case updated
+    }
+}
+
+struct PocketBaseMessage: Codable, Identifiable {
+    let id: String
+    let conversationId: String  // Related Conversation
+    let senderId: String  // User ID
+    let content: String
+    let messageType: MessageType
+    let image: String?
+    let readBy: [String]  // User IDs who have read this message
+    let created: String
+    let updated: String
+    
+    enum MessageType: String, Codable {
+        case text = "text"
+        case image = "image"
+        case system = "system"
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case conversationId = "conversation_id"
+        case senderId = "sender_id"
+        case content
+        case messageType = "message_type"
+        case image
+        case readBy = "read_by"
+        case created
+        case updated
+    }
+}
+
+struct MessageReadStatus: Codable, Identifiable {
+    let id: String
+    let messageId: String
+    let userId: String
+    let conversationId: String
+    let readAt: String
+    let created: String
+    let updated: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case messageId = "message_id"
+        case userId = "user_id"
+        case conversationId = "conversation_id"
+        case readAt = "read_at"
+        case created
+        case updated
+    }
+}
+
 // MARK: - Expense Collection
 struct Expense: Codable {
     let id: String
@@ -242,5 +317,3 @@ struct CalendarEvent: Codable {
         case updated
     }
 }
-
-// Rest of the file remains the same...
