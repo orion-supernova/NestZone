@@ -86,6 +86,18 @@ struct ChatDetailView: View {
             messageInputView
         }
         .navigationBarHidden(true)
+        .onAppear {
+            print("DEBUG: ChatDetailView - onAppear called")
+            Task {
+                await viewModel.onViewAppear()
+            }
+        }
+        .onDisappear {
+            print("DEBUG: ChatDetailView - onDisappear called")
+            Task {
+                await viewModel.onViewDisappear()
+            }
+        }
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") {
                 viewModel.errorMessage = nil
