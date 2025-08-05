@@ -148,12 +148,13 @@ struct ShoppingItem: Codable {
 }
 
 // MARK: - Note Collection
-struct PocketBaseNote: Codable {
+struct PocketBaseNote: Codable, Identifiable {
     let id: String
     let description: String
     let createdBy: String?  // User ID
     let homeId: String  // Related Home
     let image: String?
+    let color: String?  // Add color field
     let created: String
     let updated: String
     
@@ -163,6 +164,7 @@ struct PocketBaseNote: Codable {
         case createdBy = "created_by"
         case homeId = "home_id"
         case image
+        case color  // Add color field
         case created
         case updated
     }

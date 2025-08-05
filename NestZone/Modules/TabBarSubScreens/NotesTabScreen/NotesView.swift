@@ -3,25 +3,21 @@ import SwiftUI
 struct NotesView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @State private var notes: [NoteViewModel] = [
-        NoteViewModel(text: "Please get some milk on your way home! 🥛", author: "Sarah", color: .yellow),
-        NoteViewModel(text: "Dinner's in the fridge, just heat it up 🍝", author: "Mike", color: .pink),
-        NoteViewModel(text: "Called the plumber, they're coming tomorrow at 10am 🔧", author: "Emma", color: .blue)
-    ]
-    @State private var newNoteText = ""
+    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @StateObject private var viewModel = NotesViewModel()
     @State private var showingNewNote = false
+    @State private var selectedNote: PocketBaseNote?
+    @State private var showingEditNote = false
     
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
-                ForEach(notes) { note in
-                    NoteCard(note: note)
-                }
+            if viewModel.isLoading {
+                loadingView
+            } else if viewModel.notes.isEmpty {
+                emptyStateView
+            } else {
+                notesGrid
             }
-            .padding()
         }
         .background(selectedTheme.colors(for: colorScheme).background)
         .navigationTitle(LocalizationManager.text(.notes))
@@ -30,195 +26,143 @@ struct NotesView: View {
                 Button {
                     showingNewNote = true
                 } label: {
-                    Image(systemName: "square.and.pencil")
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.purple, Color.pink],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 32, height: 32)
+                        
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
             }
         }
-        .sheet(isPresented: $showingNewNote) {
-            NewNoteSheet(notes: $notes, isPresented: $showingNewNote)
+        .refreshable {
+            await viewModel.refreshData()
+        }
+        .fullScreenCover(isPresented: $showingNewNote) {
+            ModernNoteCreator()
+                .environmentObject(viewModel)
+                .environmentObject(authManager)
+        }
+        // Changed to use item-based presentation to avoid conditional content issues
+        .fullScreenCover(item: $selectedNote) { note in
+            EditNoteSheet(note: note)
+                .environmentObject(viewModel)
+                .environmentObject(authManager)
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .onAppear {
+            viewModel.setAuthManager(authManager)
         }
     }
-}
-
-struct NoteViewModel: Identifiable {
-    let id = UUID()
-    let text: String
-    let author: String
-    let color: Color
-    let date = Date()
-}
-
-struct NoteCard: View {
-    let note: NoteViewModel
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
-    @State private var isPressed = false
-    @State private var rotationDirection = 1.0
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(note.text)
-                .font(.system(size: 16, weight: .medium, design: .rounded))
-                .foregroundStyle(.black)
-                .multilineTextAlignment(.leading)
-                .lineLimit(nil)
-            
+    private var loadingView: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 16) {
+            ForEach(0..<6, id: \.self) { _ in
+                ShimmerNoteCard()
+            }
+        }
+        .padding()
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 0) {
             Spacer()
             
-            HStack {
-                Text("- \(note.author)")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.black.opacity(0.7))
+            VStack(spacing: 32) {
+                // Clean icon
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.purple.opacity(0.1), Color.pink.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                    
+                    Image(systemName: "note.text")
+                        .font(.system(size: 32, weight: .light))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.purple, Color.pink],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
                 
-                Spacer()
-                
-                Text(note.date, style: .time)
-                    .font(.system(size: 10, weight: .regular, design: .rounded))
-                    .foregroundStyle(.black.opacity(0.5))
-            }
-        }
-        .padding(16)
-        .frame(width: 160, height: 160)
-        .background(
-            ZStack {
-                Rectangle()
-                    .fill(note.color)
-                
-                LinearGradient(
-                    colors: [
-                        .white.opacity(0.3),
-                        .clear,
-                        .black.opacity(0.05)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                
-                LinearGradient(
-                    colors: [
-                        .white.opacity(0.1),
-                        .clear
-                    ],
-                    startPoint: .top,
-                    endPoint: .center
-                )
-            }
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 2))
-        .rotationEffect(.degrees(4 * rotationDirection))
-        .shadow(
-            color: .black.opacity(0.15),
-            radius: 4,
-            x: 1,
-            y: 3
-        )
-        .scaleEffect(isPressed ? 0.95 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
-        .onTapGesture {
-            let impactMed = UIImpactFeedbackGenerator(style: .light)
-            impactMed.impactOccurred()
-            
-            withAnimation {
-                isPressed = true
-                rotationDirection *= -1
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation {
-                    isPressed = false
+                VStack(spacing: 16) {
+                    Text("No Notes Yet")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text("Create your first family note\nand start sharing thoughts")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
                 }
             }
+            
+            Spacer()
+            Spacer()
         }
-    }
-}
-
-private struct ColorCircle: View {
-    let color: Color
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Circle()
-            .fill(color)
-            .frame(width: 30, height: 30)
-            .overlay(
-                Circle()
-                    .stroke(isSelected ? Color.primary : Color.clear, lineWidth: 2)
-            )
-            .onTapGesture(perform: action)
-    }
-}
-
-struct NewNoteSheet: View {
-    @Binding var notes: [NoteViewModel]
-    @Binding var isPresented: Bool
-    @State private var noteText = ""
-    @State private var selectedColor: Color = .yellow
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
-    
-    let colors: [Color] = [.yellow, .pink, .blue, .green, .orange, .purple]
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                textSection
-                colorSection
-            }
-            .navigationTitle("New Note")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                cancelButton
-                addButton
-            }
-        }
+        .padding(.horizontal, 32)
     }
     
-    private var textSection: some View {
-        Section {
-            TextEditor(text: $noteText)
-                .frame(height: 100)
-        }
-    }
-    
-    private var colorSection: some View {
-        Section("Color") {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(colors, id: \.self) { color in
-                        ColorCircle(
-                            color: color,
-                            isSelected: selectedColor == color
-                        ) {
-                            selectedColor = color
+    private var notesGrid: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 16) {
+            ForEach(viewModel.notes) { note in
+                NoteCard(
+                    note: note,
+                    userName: viewModel.getUserName(for: note)
+                ) {
+                    // Tap to change tilt direction
+                    print("Note tapped: \(note.id)")
+                    // Handle tap action if needed
+                }
+                .onLongPressGesture {
+                    // Long press to edit - only if user is owner
+                    // Access authManager correctly to get current user ID
+                    if let currentUserId = authManager.currentUser?.id {
+                        if note.createdBy == currentUserId {
+                            print("Note long pressed: \(note.id)")
+                            selectedNote = note
+                        } else {
+                            print("User is not owner of note: \(note.id)")
                         }
                     }
                 }
-                .padding(.horizontal, 4)
             }
         }
-    }
-    
-    private var cancelButton: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button("Cancel") {
-                isPresented = false
-            }
-        }
-    }
-    
-    private var addButton: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button("Add") {
-                let note = NoteViewModel(text: noteText, author: "Sarah", color: selectedColor)
-                notes.insert(note, at: 0)
-                isPresented = false
-            }
-            .disabled(noteText.isEmpty)
-        }
+        .padding()
     }
 }
 
 #Preview {
-    NotesView()
+    NavigationView {
+        NotesView()
+    }
 }
