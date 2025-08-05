@@ -24,11 +24,11 @@ enum ModuleType: String, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .shopping: return "Manage your shopping lists"
-        case .recipes: return "Save and organize recipes"
-        case .maintenance: return "Track house maintenance"
-        case .finance: return "Split bills and expenses"
-        case .notes: return "Quick notes and ideas"
-        case .calendar: return "Events and schedules"
+        case .recipes: return "Save delicious recipes & meal plans"
+        case .maintenance: return "Track repairs & maintenance tasks"
+        case .finance: return "Split bills & manage expenses"
+        case .notes: return "Capture ideas & important notes"
+        case .calendar: return "Organize events & schedules"
         }
     }
     

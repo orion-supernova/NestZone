@@ -26,6 +26,10 @@ struct VibrantModuleCard: View {
             // Navigate to module
             if module.type == .shopping {
                 showingShoppingView = true
+            } else if module.type.comingSoon {
+                // Show coming soon feedback
+                let impactLight = UIImpactFeedbackGenerator(style: .light)
+                impactLight.impactOccurred()
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -47,7 +51,7 @@ struct VibrantModuleCard: View {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(
                                 LinearGradient(
-                                    colors: moduleGradient.map { $0.opacity(0.3) },
+                                    colors: moduleGradient.map { $0.opacity(module.type.comingSoon ? 0.15 : 0.3) },
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -58,7 +62,7 @@ struct VibrantModuleCard: View {
                             .font(.system(size: 22, weight: .bold))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: moduleGradient,
+                                    colors: moduleGradient.map { $0.opacity(module.type.comingSoon ? 0.6 : 1.0) },
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -88,6 +92,26 @@ struct VibrantModuleCard: View {
                             .foregroundColor(.white)
                             .shadow(color: moduleGradient[0].opacity(0.4), radius: 4, x: 0, y: 2)
                     }
+                    
+                    // "Soon!" tag for coming soon modules
+                    if module.type.comingSoon {
+                        Text("Soon!")
+                            .font(.system(size: 12, weight: .black))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.orange, Color.red],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                            )
+                            .foregroundColor(.white)
+                            .shadow(color: Color.orange.opacity(0.4), radius: 4, x: 0, y: 2)
+                    }
                 }
                 .frame(height: 50)
                 
@@ -99,7 +123,10 @@ struct VibrantModuleCard: View {
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [selectedTheme.colors(for: colorScheme).text, moduleGradient[0]],
+                                colors: [
+                                    selectedTheme.colors(for: colorScheme).text.opacity(module.type.comingSoon ? 0.7 : 1.0), 
+                                    moduleGradient[0].opacity(module.type.comingSoon ? 0.7 : 1.0)
+                                ],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -110,7 +137,7 @@ struct VibrantModuleCard: View {
                     
                     Text(module.type.subtitle)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(module.type.comingSoon ? .secondary.opacity(0.8) : .secondary)
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -132,7 +159,7 @@ struct VibrantModuleCard: View {
                         RoundedRectangle(cornerRadius: 22)
                             .fill(
                                 LinearGradient(
-                                    colors: moduleGradient.map { $0.opacity(0.08) },
+                                    colors: moduleGradient.map { $0.opacity(module.type.comingSoon ? 0.04 : 0.08) },
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -143,7 +170,7 @@ struct VibrantModuleCard: View {
                 RoundedRectangle(cornerRadius: 22)
                     .stroke(
                         LinearGradient(
-                            colors: moduleGradient.map { $0.opacity(0.7) },
+                            colors: moduleGradient.map { $0.opacity(module.type.comingSoon ? 0.4 : 0.7) },
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
@@ -152,7 +179,7 @@ struct VibrantModuleCard: View {
             }
         )
         .shadow(
-            color: moduleGradient[0].opacity(0.25),
+            color: moduleGradient[0].opacity(module.type.comingSoon ? 0.1 : 0.25),
             radius: 12,
             x: 0,
             y: 6

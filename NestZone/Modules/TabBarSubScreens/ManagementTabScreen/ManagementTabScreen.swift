@@ -16,14 +16,14 @@ struct ManagementTabScreen: View {
             ModuleData(
                 type: .shopping, 
                 itemCount: viewModel.totalItems, 
-                recentActivity: "Added milk to groceries", 
-                progress: 0.65
+                recentActivity: viewModel.totalItems > 0 ? "Added \(viewModel.pendingItems) pending items" : "No items yet", 
+                progress: viewModel.totalItems > 0 ? Double(viewModel.completedItems) / Double(viewModel.totalItems) : 0.0
             ),
-            ModuleData(type: .recipes, itemCount: 0, recentActivity: "Coming soon", progress: 0.0),
-            ModuleData(type: .maintenance, itemCount: 0, recentActivity: "Coming soon", progress: 0.0),
-            ModuleData(type: .finance, itemCount: 0, recentActivity: "Coming soon", progress: 0.0),
-            ModuleData(type: .notes, itemCount: 0, recentActivity: "Coming soon", progress: 0.0),
-            ModuleData(type: .calendar, itemCount: 0, recentActivity: "Coming soon", progress: 0.0)
+            ModuleData(type: .recipes, itemCount: 0, recentActivity: "Recipe storage & meal planning", progress: 0.0),
+            ModuleData(type: .maintenance, itemCount: 0, recentActivity: "House repair tracking", progress: 0.0),
+            ModuleData(type: .finance, itemCount: 0, recentActivity: "Bill splitting & budgets", progress: 0.0),
+            ModuleData(type: .notes, itemCount: 0, recentActivity: "Quick notes & reminders", progress: 0.0),
+            ModuleData(type: .calendar, itemCount: 0, recentActivity: "Shared family calendar", progress: 0.0)
         ]
     }
     
