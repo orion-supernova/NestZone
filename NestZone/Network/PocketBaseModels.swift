@@ -227,7 +227,7 @@ struct PocketBaseMessage: Codable, Identifiable, Hashable {
     
     enum CodingKeys: String, CodingKey {
         case id
-        case conversationId = "conversations_id"
+        case conversationId = "conversation_id"
         case senderId = "sender_id"
         case content
         case messageType = "message_type"

@@ -9,6 +9,8 @@ struct MessagesView: View {
     @State private var selectedConversation: PocketBaseConversation?
     @State private var currentHome: Home?
     
+    private let pocketBase = PocketBaseManager.shared
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -106,10 +108,14 @@ struct MessagesView: View {
             .onAppear {
                 print("DEBUG: MessagesView appeared")
                 viewModel.setup(authManager: authManager)
+                Task {
+                    await loadCurrentHome()
+                }
             }
             .refreshable {
                 print("DEBUG: Pull to refresh triggered")
                 await viewModel.refresh()
+                await loadCurrentHome()
             }
             .fullScreenCover(isPresented: $showingNewMessage) {
                 NewMessageView(
@@ -241,6 +247,39 @@ struct MessagesView: View {
             }
             .padding(.top, 24)
             .padding(.bottom, 100)
+        }
+    }
+    
+    private func loadCurrentHome() async {
+        guard let currentUserId = authManager.currentUser?.id else { return }
+        
+        do {
+            // Get user's home ID
+            let userResponse: PocketBaseUser = try await pocketBase.request(
+                endpoint: "/api/collections/users/records/\(currentUserId)",
+                requiresAuth: true,
+                responseType: PocketBaseUser.self
+            )
+            
+            guard let homeId = userResponse.home_id.first else {
+                print("DEBUG: MessagesView - User has no home")
+                return
+            }
+            
+            // Fetch the home details
+            let home: Home = try await pocketBase.request(
+                endpoint: "/api/collections/homes/records/\(homeId)",
+                requiresAuth: true,
+                responseType: Home.self
+            )
+            
+            await MainActor.run {
+                currentHome = home
+                print("DEBUG: MessagesView - Loaded home: \(home.name)")
+            }
+            
+        } catch {
+            print("DEBUG: MessagesView - Error loading home: \(error)")
         }
     }
 }

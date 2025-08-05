@@ -92,7 +92,7 @@ class MessagesManager {
     func fetchMessages(for conversationId: String) async throws -> [PocketBaseMessage] {
         do {
             // Use the correct field name that matches PocketBase schema
-            let filter = "conversations_id='\(conversationId)'"
+            let filter = "conversation_id='\(conversationId)'"
             
             print("DEBUG: Fetching messages with filter: \(filter)")
             
@@ -133,7 +133,7 @@ class MessagesManager {
         
         // Use the correct field name that matches PocketBase schema
         var data: [String: Any] = [
-            "conversations_id": conversationId,
+            "conversation_id": conversationId,
             "sender_id": senderId,
             "content": content,
             "message_type": messageType.rawValue,
@@ -203,7 +203,7 @@ class MessagesManager {
     func getUnreadMessageCount(for conversationId: String, userId: String) async throws -> Int {
         do {
             // Use the correct field name that matches PocketBase schema
-            let filter = "conversations_id='\(conversationId)'"
+            let filter = "conversation_id='\(conversationId)'"
             
             print("DEBUG: Getting unread messages with filter: \(filter)")
             

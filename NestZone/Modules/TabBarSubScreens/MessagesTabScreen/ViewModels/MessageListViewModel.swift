@@ -78,9 +78,18 @@ class MessageListViewModel: ObservableObject {
                 responseType: PocketBaseUser.self
             )
             
+            print("DEBUG: MessageListViewModel - Full user response:")
+            print("DEBUG: - User ID: \(userResponse.id)")
+            print("DEBUG: - User email: \(userResponse.email)")
+            print("DEBUG: - User name: \(userResponse.name ?? "nil")")
+            print("DEBUG: - User home_id array: \(userResponse.home_id)")
+            print("DEBUG: - home_id count: \(userResponse.home_id.count)")
+            print("DEBUG: - home_id.first: \(userResponse.home_id.first ?? "nil")")
+            
             guard let homeId = userResponse.home_id.first else {
-                errorMessage = "No home found"
+                errorMessage = "No home found - User's home_id array is empty. Please create or join a home first."
                 isLoading = false
+                print("DEBUG: MessageListViewModel - GUARD FAILED: home_id array is empty")
                 return
             }
             
