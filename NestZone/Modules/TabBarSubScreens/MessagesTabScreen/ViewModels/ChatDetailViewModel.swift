@@ -8,10 +8,12 @@ class ChatDetailViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var newMessageText = ""
+    @Published var userCache: [String: PocketBaseUser] = [:] // Cache for user data
     
     // MARK: - Private Properties
     private let messagesManager = MessagesManager.shared
     private let realtimeManager = PocketBaseRealtimeManager.shared
+    private let userService = UserService.shared
     private let conversation: PocketBaseConversation
     private let currentUserId: String
     private var onMessageSent: (() -> Void)?
@@ -26,7 +28,7 @@ class ChatDetailViewModel: ObservableObject {
         
         print("DEBUG: ChatDetailViewModel initialized for conversation: \(conversation.id)")
         
-        // Load messages only
+        // Load messages and user data
         Task {
             await loadMessages()
         }
@@ -58,6 +60,9 @@ class ChatDetailViewModel: ObservableObject {
             messages = loadedMessages
             print("DEBUG: ChatDetailViewModel - Loaded \(loadedMessages.count) messages")
             
+            // Load user data for all participants
+            await loadUserData()
+            
             // Mark messages as read
             await markMessagesAsRead()
             
@@ -67,6 +72,27 @@ class ChatDetailViewModel: ObservableObject {
         }
         
         isLoading = false
+    }
+    
+    func loadUserData() async {
+        // Get all unique sender IDs and read-by user IDs
+        var userIds = Set<String>()
+        
+        for message in messages {
+            userIds.insert(message.senderId)
+            userIds.formUnion(message.readBy)
+        }
+        
+        // Add conversation participants
+        userIds.formUnion(conversation.participants)
+        
+        // Fetch user data
+        let users = await userService.getUsers(ids: Array(userIds))
+        userCache = users
+    }
+    
+    func getUserName(for userId: String) -> String {
+        return userCache[userId]?.name ?? userService.getUserName(for: userId)
     }
     
     func sendMessage() async {
@@ -218,6 +244,13 @@ class ChatDetailViewModel: ObservableObject {
                 if !messages.contains(where: { $0.id == message.id }) {
                     messages.append(message)
                     print("DEBUG: ChatDetailViewModel - Added new message from realtime: \(message.id)")
+                    
+                    // Load user data for the sender if not cached
+                    if userCache[message.senderId] == nil {
+                        if let user = await userService.getUser(id: message.senderId) {
+                            userCache[message.senderId] = user
+                        }
+                    }
                     
                     // Mark as read if it's from another user
                     if message.senderId != currentUserId {

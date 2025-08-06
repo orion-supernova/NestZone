@@ -8,7 +8,7 @@ struct PocketBaseErrorResponse: Codable {
 
 struct PocketBaseUser: Codable {
     let id: String
-    let email: String
+    let email: String?  // Made optional since not all users have email exposed
     let name: String?
     let avatar: String?
     let home_id: [String]
@@ -18,7 +18,8 @@ struct PocketBaseUser: Codable {
     let emailVisibility: Bool
     
     enum CodingKeys: String, CodingKey {
-        case id, email, name, avatar, created, updated, verified
+        case id, name, avatar, created, updated, verified
+        case email  // Now optional
         case home_id
         case emailVisibility = "emailVisibility"
     }
