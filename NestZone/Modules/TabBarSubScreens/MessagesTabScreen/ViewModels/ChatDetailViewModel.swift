@@ -189,7 +189,7 @@ class ChatDetailViewModel: ObservableObject {
         do {
             print("DEBUG: ChatDetailViewModel - Creating callback closure")
             
-            try await realtimeManager.subscribe(to: "messages") { [weak self] event in
+            try await realtimeManager.subscribe(to: "messages", filter: "conversation_id='\(conversation.id)\'") { [weak self] event in
                 print("DEBUG: ChatDetailViewModel - Callback triggered with event: \(event.action)")
                 guard let self = self else { 
                     print("DEBUG: ChatDetailViewModel - Self is nil in callback")
@@ -221,7 +221,7 @@ class ChatDetailViewModel: ObservableObject {
         isSubscribedToRealtime = false // Mark as unsubscribed first
         
         do {
-            try await realtimeManager.unsubscribe(from: "messages")
+            try await realtimeManager.unsubscribe(from: "messages", filter: "conversation_id=\'\(conversation.id)\'")
             print("DEBUG: ChatDetailViewModel - Successfully unsubscribed from realtime")
         } catch {
             print("DEBUG: ChatDetailViewModel - Failed to unsubscribe from realtime (this is okay): \(error)")
@@ -239,12 +239,6 @@ class ChatDetailViewModel: ObservableObject {
             let message = try JSONDecoder().decode(PocketBaseMessage.self, from: messageData)
             
             print("DEBUG: ChatDetailViewModel - Parsed message: \(message.id) for conversation: \(message.conversationId)")
-            
-            // Only handle messages for this conversation
-            guard message.conversationId == conversation.id else {
-                print("DEBUG: ChatDetailViewModel - Message not for this conversation (\(conversation.id)), ignoring")
-                return
-            }
             
             switch event.action {
             case .create:

@@ -101,8 +101,13 @@ class PocketBaseRealtimeManager: NSObject, ObservableObject {
     
     // MARK: - Subscription Management
     
-    func subscribe(to collection: String, recordId: String? = nil, callback: @escaping (PocketBaseRealtimeEvent) -> Void) async throws {
-        let topic = recordId != nil ? "\(collection)/\(recordId!)" : collection
+    func subscribe(to collection: String, recordId: String? = nil, filter: String? = nil, callback: @escaping (PocketBaseRealtimeEvent) -> Void) async throws {
+        var topic = collection
+        if let recordId = recordId {
+            topic = "\(collection)/\(recordId)"
+        } else if let filter = filter, let encodedFilter = filter.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            topic = "\(collection)?filter=\(encodedFilter)"
+        }
         
         print("DEBUG: Realtime - Subscribing to: \(topic)")
         
@@ -153,8 +158,13 @@ class PocketBaseRealtimeManager: NSObject, ObservableObject {
         print("DEBUG: Realtime - Final callback check - count: \(callbacks.count), topics: \(Array(callbacks.keys))")
     }
     
-    func unsubscribe(from collection: String, recordId: String? = nil) async throws {
-        let topic = recordId != nil ? "\(collection)/\(recordId!)" : collection
+    func unsubscribe(from collection: String, recordId: String? = nil, filter: String? = nil) async throws {
+        var topic = collection
+        if let recordId = recordId {
+            topic = "\(collection)/\(recordId)"
+        } else if let filter = filter, let encodedFilter = filter.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            topic = "\(collection)?filter=\(encodedFilter)"
+        }
         
         print("DEBUG: Realtime - Unsubscribing from: \(topic)")
         
@@ -388,32 +398,64 @@ class PocketBaseRealtimeManager: NSObject, ObservableObject {
     }
     
     private func shouldDeliverEvent(_ event: PocketBaseRealtimeEvent, to topic: String) -> Bool {
-        // For messages collection subscription
-        if topic == "messages" {
-            // Check if the record is a message by looking for conversation_id field OR collectionName
-            let hasConversationId = event.record["conversation_id"] != nil
-            let isMessagesCollection = event.record["collectionName"] as? String == "messages"
-            
-            print("DEBUG: Realtime - Event delivery check for topic '\(topic)':")
-            print("DEBUG: Realtime - Has conversation_id: \(hasConversationId)")
-            print("DEBUG: Realtime - Is messages collection: \(isMessagesCollection)")
-            
-            return hasConversationId || isMessagesCollection
-        }
-        
-        // For specific record subscriptions like "messages/record_id"
+        // Get the collection name from the event, if available.
+        let eventCollection = event.record["collectionName"] as? String
+
+        // --- Check 1: Specific Record Subscription (e.g., "messages/ID") ---
         if topic.contains("/") {
-            let components = topic.split(separator: "/")
+            let components = topic.split(separator: "/", maxSplits: 1)
             if components.count == 2 {
                 let collection = String(components[0])
                 let recordId = String(components[1])
-                
-                if collection == "messages" && event.record["id"] as? String == recordId {
+                if eventCollection == collection && event.record["id"] as? String == recordId {
                     return true
                 }
             }
         }
+
+        // --- Check 2: Filtered Subscription (e.g., "messages?filter=...") ---
+        if topic.contains("?filter=") {
+            let components = topic.components(separatedBy: "?filter=")
+            guard components.count == 2 else { return false }
+            let collection = components[0]
+            let filter = components[1]
+
+            // Ensure the event belongs to the subscribed collection
+            // Special handling for messages which might not have collectionName in the event
+            let isMessageEvent = event.record["conversation_id"] != nil
+            if eventCollection != collection && !(collection == "messages" && isMessageEvent) {
+                return false
+            }
+
+            // Simple key-value parser for the filter. This is not a full query parser.
+            // It only handles a single, URL-encoded "key='value'" filter.
+            if let decodedFilter = filter.removingPercentEncoding {
+                // Example: conversation_id='xyz'
+                let parts = decodedFilter.components(separatedBy: "=")
+                if parts.count == 2 {
+                    let key = parts[0]
+                    let value = parts[1].trimmingCharacters(in: CharacterSet(charactersIn: "'")) // remove quotes
+                    if let eventValue = event.record[key] as? String, eventValue == value {
+                        return true // The event record matches the filter.
+                    }
+                }
+            }
+            return false // Filter exists, but didn't match.
+        }
+
+        // --- Check 3: General Collection Subscription (e.g., "messages") ---
+        // This should match if the topic is exactly the collection name.
+        if eventCollection == topic {
+            return true
+        }
         
+        // --- Fallback for "messages" topic ---
+        // This is to maintain backward compatibility for any code that subscribes to "messages"
+        // and expects all message-like events.
+        if topic == "messages" && (eventCollection == "messages" || event.record["conversation_id"] != nil) {
+            return true
+        }
+
         return false
     }
 }
