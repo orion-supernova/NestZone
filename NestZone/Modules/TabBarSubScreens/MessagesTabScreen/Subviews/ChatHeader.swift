@@ -7,12 +7,10 @@ struct ChatHeader: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 16) {
-                Button {
-                    onBackTapped()
-                } label: {
-                    HStack(spacing: 4) {
+                Button(action: onBackTapped) {
+                    HStack(spacing: 6) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.system(size: 16, weight: .semibold))
                         Text("Back")
                             .font(.system(size: 16, weight: .medium))
                     }
@@ -21,15 +19,15 @@ struct ChatHeader: View {
                 
                 // Avatar and Title
                 HStack(spacing: 12) {
-                    ChatAvatar(conversation: conversation)
+                    ModernChatAvatar(conversation: conversation)
                     
                     VStack(alignment: .leading, spacing: 2) {
                         Text(getTitle())
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(.primary)
                         
                         Text("\(conversation.participants.count) members")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                 }
@@ -42,14 +40,14 @@ struct ChatHeader: View {
                         // TODO: Show chat info
                     } label: {
                         Image(systemName: "info.circle")
-                            .font(.system(size: 18, weight: .medium))
+                            .font(.system(size: 20, weight: .medium))
                             .foregroundColor(.blue)
                     }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(.thinMaterial)
+            .background(.regularMaterial)
             
             Divider()
         }
@@ -64,7 +62,7 @@ struct ChatHeader: View {
     }
 }
 
-struct ChatAvatar: View {
+struct ModernChatAvatar: View {
     let conversation: PocketBaseConversation
     
     var body: some View {
@@ -77,10 +75,10 @@ struct ChatAvatar: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 36, height: 36)
+                .frame(width: 40, height: 40)
             
             Text(conversation.isGroupChat ? "GC" : "DM")
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.white)
         }
     }
@@ -105,4 +103,5 @@ struct ChatAvatar: View {
         
         Spacer()
     }
+    .background(Color(.systemGroupedBackground))
 }

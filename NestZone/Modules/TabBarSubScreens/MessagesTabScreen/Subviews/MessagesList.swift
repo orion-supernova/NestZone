@@ -8,10 +8,15 @@ struct ChatMessagesList: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(messages, id: \.id) { message in
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                        let previousMessage = index > 0 ? messages[index - 1] : nil
+                        let nextMessage = index < messages.count - 1 ? messages[index + 1] : nil
+                        
                         MessageBubble(
                             message: message,
+                            previousMessage: previousMessage,
+                            nextMessage: nextMessage,
                             isCurrentUser: message.senderId == currentUserId,
                             conversation: conversation
                         )
@@ -65,11 +70,11 @@ struct ChatMessagesList: View {
             PocketBaseMessage(
                 id: "3",
                 conversationId: "conv1",
-                senderId: "user3",
+                senderId: "user2",
                 content: "Good morning! Beautiful day today 🌞",
                 messageType: .text,
                 file: nil,
-                readBy: ["user3", "user1"],
+                readBy: ["user2", "user1"],
                 created: "2025-01-01T10:10:00Z",
                 updated: "2025-01-01T10:10:00Z"
             )
@@ -85,6 +90,6 @@ struct ChatMessagesList: View {
             created: "2025-01-01T00:00:00Z",
             updated: "2025-01-01T10:10:00Z"
         ),
-        currentUserId: "user2"
+        currentUserId: "user1"
     )
 }

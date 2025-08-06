@@ -14,15 +14,13 @@ struct ChatMessageInputView: View {
             HStack(spacing: 12) {
                 // Message text field
                 TextField("Type a message...", text: $messageText, axis: .vertical)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 16, weight: .regular))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.gray.opacity(0.1))
-                    )
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .focused($isMessageFieldFocused)
-                    .lineLimit(1...4)
+                    .lineLimit(1...6)
                     .onSubmit {
                         if canSendMessage {
                             Task {
@@ -32,42 +30,20 @@ struct ChatMessageInputView: View {
                     }
                 
                 // Send button
-                Button {
+                Button(action: {
                     Task {
                         await onSendMessage()
                     }
-                } label: {
-                    SendButton(isEnabled: canSendMessage)
+                }) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(canSendMessage ? .blue : .gray)
                 }
                 .disabled(!canSendMessage)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(.thinMaterial)
-        }
-    }
-}
-
-struct SendButton: View {
-    let isEnabled: Bool
-    
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: isEnabled ? [Color.blue, Color.purple] : [Color.gray.opacity(0.3)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 36, height: 36)
-            
-            Image(systemName: "arrow.up")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .scaleEffect(isEnabled ? 1.0 : 0.8)
-                .animation(.easeInOut(duration: 0.2), value: isEnabled)
+            .background(.regularMaterial)
         }
     }
 }
@@ -84,12 +60,14 @@ struct ChatMessageInputPreview: View {
             ChatMessageInputView(
                 messageText: $messageText,
                 isMessageFieldFocused: $isFocused,
-                canSendMessage: true,
+                canSendMessage: !messageText.isEmpty,
                 onSendMessage: {
                     print("Send message tapped")
+                    messageText = ""
                 }
             )
         }
+        .background(Color(.systemGroupedBackground))
     }
 }
 
