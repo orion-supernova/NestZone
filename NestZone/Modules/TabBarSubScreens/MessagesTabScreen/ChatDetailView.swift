@@ -37,7 +37,8 @@ struct ChatDetailView: View {
                 ChatMessagesList(
                     messages: viewModel.messages,
                     conversation: conversation,
-                    currentUserId: currentUserId
+                    currentUserId: currentUserId,
+                    isInputFocused: $isMessageFieldFocused
                 )
             }
             
