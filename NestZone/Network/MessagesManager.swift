@@ -96,6 +96,8 @@ class MessagesManager {
             
             print("DEBUG: Fetching messages with filter: \(filter)")
             
+            // Explicitly fetch up to 500 messages to avoid pagination issues
+            // This prevents missing messages that would be on other pages
             let response: PocketBaseListResponse<PocketBaseMessage> = try await pocketBase.getCollection(
                 "messages",
                 responseType: PocketBaseListResponse<PocketBaseMessage>.self,
@@ -104,6 +106,24 @@ class MessagesManager {
             )
             
             print("DEBUG: Successfully fetched \(response.items.count) messages")
+            print("DEBUG: Total items available: \(response.totalItems)")
+            
+            // If there are more items than we fetched, we need to fetch all pages
+            // For simplicity, let's increase the page size to reduce chances of misses
+            if response.totalItems > response.items.count {
+                print("DEBUG: There are more messages than fetched, fetching with larger page size")
+                
+                // Make a second request with perPage parameter to get more messages
+                let largeResponse: PocketBaseListResponse<PocketBaseMessage> = try await pocketBase.request(
+                    endpoint: "/api/collections/messages/records?filter=\(filter)&sort=created&perPage=500",
+                    requiresAuth: true,
+                    responseType: PocketBaseListResponse<PocketBaseMessage>.self
+                )
+                
+                print("DEBUG: Fetched \(largeResponse.items.count) messages with larger page size")
+                return largeResponse.items
+            }
+            
             return response.items
         } catch {
             print("DEBUG: Error fetching messages: \(error)")

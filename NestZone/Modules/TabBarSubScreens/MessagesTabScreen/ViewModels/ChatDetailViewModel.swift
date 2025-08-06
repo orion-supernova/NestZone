@@ -57,7 +57,15 @@ class ChatDetailViewModel: ObservableObject {
         
         do {
             let loadedMessages = try await messagesManager.fetchMessages(for: conversation.id)
-            messages = loadedMessages
+            // Sort messages by creation date (oldest first)
+            messages = loadedMessages.sorted { message1, message2 in
+                let formatter = ISO8601DateFormatter()
+                guard let date1 = formatter.date(from: message1.created),
+                      let date2 = formatter.date(from: message2.created) else {
+                    return false
+                }
+                return date1 < date2
+            }
             print("DEBUG: ChatDetailViewModel - Loaded \(loadedMessages.count) messages")
             
             // Load user data for all participants
@@ -243,6 +251,15 @@ class ChatDetailViewModel: ObservableObject {
                 // Add new message if not already present
                 if !messages.contains(where: { $0.id == message.id }) {
                     messages.append(message)
+                    // Sort messages by creation date to maintain correct order
+                    messages.sort { message1, message2 in
+                        let formatter = ISO8601DateFormatter()
+                        guard let date1 = formatter.date(from: message1.created),
+                              let date2 = formatter.date(from: message2.created) else {
+                            return false
+                        }
+                        return date1 < date2
+                    }
                     print("DEBUG: ChatDetailViewModel - Added new message from realtime: \(message.id)")
                     
                     // Load user data for the sender if not cached
@@ -262,6 +279,15 @@ class ChatDetailViewModel: ObservableObject {
                 // Update existing message
                 if let index = messages.firstIndex(where: { $0.id == message.id }) {
                     messages[index] = message
+                    // Re-sort messages in case the update affected the order
+                    messages.sort { message1, message2 in
+                        let formatter = ISO8601DateFormatter()
+                        guard let date1 = formatter.date(from: message1.created),
+                              let date2 = formatter.date(from: message2.created) else {
+                            return false
+                        }
+                        return date1 < date2
+                    }
                     print("DEBUG: ChatDetailViewModel - Updated message from realtime: \(message.id)")
                 }
                 
