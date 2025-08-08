@@ -57,7 +57,8 @@ enum ModuleType: String, CaseIterable, Identifiable {
     var comingSoon: Bool {
         switch self {
         case .shopping: return false
-        case .recipes, .maintenance, .finance, .notes, .calendar: return true
+        case .recipes: return false
+        case .maintenance, .finance, .notes, .calendar: return true
         }
     }
 }

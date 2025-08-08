@@ -9,6 +9,7 @@ struct ManagementTabScreen: View {
     @State private var animateCards = false
     @State private var animateHeader = false
     @State private var showingShoppingView = false
+    @State private var showingRecipesView = false
     
     // Dynamic modules data based on real data
     var modules: [ModuleData] {
@@ -22,7 +23,6 @@ struct ManagementTabScreen: View {
             ModuleData(type: .recipes, itemCount: 0, recentActivity: "Recipe storage & meal planning", progress: 0.0),
             ModuleData(type: .maintenance, itemCount: 0, recentActivity: "House repair tracking", progress: 0.0),
             ModuleData(type: .finance, itemCount: 0, recentActivity: "Bill splitting & budgets", progress: 0.0),
-            ModuleData(type: .notes, itemCount: 0, recentActivity: "Quick notes & reminders", progress: 0.0),
             ModuleData(type: .calendar, itemCount: 0, recentActivity: "Shared family calendar", progress: 0.0)
         ]
     }
@@ -38,7 +38,7 @@ struct ManagementTabScreen: View {
                     .offset(y: animateHeader ? 0 : -50)
                 
                 // Module Cards Grid (directly without wrapper)
-                ModuleCardsSection(modules: modules, showingShoppingView: $showingShoppingView)
+                ModuleCardsSection(modules: modules, showingShoppingView: $showingShoppingView, showingRecipesView: $showingRecipesView)
                     .padding(.top, 40)
                     .opacity(animateCards ? 1 : 0)
                     .offset(y: animateCards ? 0 : 100)
@@ -109,6 +109,9 @@ struct ManagementTabScreen: View {
         .fullScreenCover(isPresented: $showingShoppingView) {
             ShoppingListView()
                 .environmentObject(viewModel)
+        }
+        .fullScreenCover(isPresented: $showingRecipesView) {
+            RecipeListView()
         }
     }
     

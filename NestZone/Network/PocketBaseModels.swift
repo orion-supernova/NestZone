@@ -340,3 +340,46 @@ struct CalendarEvent: Codable {
         case updated
     }
 }
+
+// MARK: - Recipes Collection
+struct Recipe: Codable, Identifiable {
+    let id: String
+    let title: String
+    let description: String?
+    let ingredients: [String]?
+    let steps: [String]?
+    let tags: [String]?
+    let prepTime: Int?
+    let cookTime: Int?
+    let servings: Int?
+    let difficulty: Difficulty?
+    let image: String?
+    let homeId: String
+    let createdBy: String?
+    let created: String
+    let updated: String
+    
+    enum Difficulty: String, Codable, CaseIterable {
+        case easy = "easy"
+        case medium = "medium"
+        case hard = "hard"
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case description
+        case ingredients
+        case steps
+        case tags
+        case prepTime = "prep_time"
+        case cookTime = "cook_time"
+        case servings
+        case difficulty
+        case image
+        case homeId = "home_id"
+        case createdBy = "created_by"
+        case created
+        case updated
+    }
+}
