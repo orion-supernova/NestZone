@@ -5,7 +5,7 @@ struct NoteCard: View {
     let userName: String
     let onTap: () -> Void
     @State private var isPressed = false
-    @State private var rotationDirection = Double.random(in: -6...6)
+    @State private var tiltAngle = Double.random(in: -3...3)
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -57,7 +57,7 @@ struct NoteCard: View {
             }
         )
         .clipShape(RoundedRectangle(cornerRadius: 2))
-        .rotationEffect(.degrees(rotationDirection))
+        .rotationEffect(.degrees(tiltAngle))
         .shadow(
             color: .black.opacity(0.15),
             radius: 4,
@@ -70,12 +70,19 @@ struct NoteCard: View {
             let impactMed = UIImpactFeedbackGenerator(style: .light)
             impactMed.impactOccurred()
             
-            withAnimation {
+            let maxAbs: Double = 5.0
+            let minAbs: Double = 1.0
+            let nextDirection: Double = tiltAngle >= 0 ? -1 : 1
+            let nextMagnitude = Double.random(in: minAbs...maxAbs)
+            let nextAngle = nextDirection * nextMagnitude
+            
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.75, blendDuration: 0.2)) {
                 isPressed = true
+                tiltAngle = nextAngle
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     isPressed = false
                 }
                 onTap()

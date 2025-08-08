@@ -52,7 +52,6 @@ struct EditNoteSheet: View {
                     .disabled(noteText.isEmpty || noteText == note.description)
                     .opacity((noteText.isEmpty || noteText == note.description) ? 0.5 : 1.0)
                 }
-                .padding(.horizontal)
                 
                 // Note Preview - Realistic size with tilt
                 VStack(alignment: .leading, spacing: 8) {
@@ -153,10 +152,10 @@ struct EditNoteSheet: View {
                             .fill(Color.red.opacity(0.1))
                     )
                 }
-                .padding(.horizontal)
                 
                 Spacer()
             }
+            .padding(.horizontal, 20)
             .padding(.vertical, 20)
         }
         .alert("Delete Note", isPresented: $showingDeleteAlert) {
