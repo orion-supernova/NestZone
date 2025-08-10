@@ -7,7 +7,6 @@ struct CookingModeView: View {
     @State private var currentPhase: CookingPhase = .ingredients
     @State private var currentIndex: Int = 0
     @State private var checkedIngredients: Set<Int> = []
-    @State private var completedSteps: Set<Int> = []
     @State private var showingQuitAlert = false
     
     enum CookingPhase {
@@ -20,15 +19,6 @@ struct CookingModeView: View {
     
     var steps: [String] {
         recipe.steps ?? []
-    }
-    
-    var canProceed: Bool {
-        switch currentPhase {
-        case .ingredients:
-            return checkedIngredients.count == ingredients.count
-        case .cooking:
-            return currentIndex == steps.count - 1 && completedSteps.contains(currentIndex)
-        }
     }
     
     var gradient: [Color] {
@@ -150,17 +140,17 @@ struct CookingModeView: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing))
                 } else {
-                    Text("Step \(currentIndex + 1)/\(steps.count)")
+                    Text("Step \(currentIndex + 1)/\(max(steps.count, 1))")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing))
                 }
             }
             
-            ProgressView(value: currentPhase == .ingredients ? 
-                        Double(checkedIngredients.count) / Double(max(ingredients.count, 1)) :
-                        Double(currentIndex + 1) / Double(max(steps.count, 1)))
-                .progressViewStyle(LinearProgressViewStyle(tint: gradient[0]))
-                .frame(height: 6)
+            ProgressView(value: currentPhase == .ingredients ?
+                         Double(checkedIngredients.count) / Double(max(ingredients.count, 1)) :
+                         Double(currentIndex + 1) / Double(max(steps.count, 1)))
+            .progressViewStyle(LinearProgressViewStyle(tint: gradient[0]))
+            .frame(height: 6)
         }
     }
     
@@ -201,13 +191,8 @@ struct CookingModeView: View {
                     step: steps[currentIndex],
                     stepNumber: currentIndex + 1,
                     totalSteps: steps.count,
-                    gradient: gradient,
-                    isCompleted: completedSteps.contains(currentIndex)
-                ) {
-                    withAnimation(.spring(response: 0.3)) {
-                        _ = completedSteps.insert(currentIndex)
-                    }
-                }
+                    gradient: gradient
+                )
                 .padding(.horizontal, 24)
             }
         }
@@ -215,19 +200,37 @@ struct CookingModeView: View {
     
     private var bottomControls: some View {
         HStack(spacing: 16) {
-            // Back button
-            if (currentPhase == .ingredients && !checkedIngredients.isEmpty) || 
-               (currentPhase == .cooking && currentIndex > 0) {
+            // INGREDIENTS PHASE: show nothing until all checked; then show Start Cooking
+            if currentPhase == .ingredients {
+                Spacer()
+                if ingredients.count > 0 && checkedIngredients.count == ingredients.count {
+                    Button {
+                        withAnimation(.spring()) {
+                            currentPhase = .cooking
+                            currentIndex = 0
+                        }
+                    } label: {
+                        HStack {
+                            Text("Start Cooking")
+                            Image(systemName: "play.fill")
+                        }
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
+                        .background(
+                            Capsule().fill(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing))
+                        )
+                        .shadow(color: gradient[0].opacity(0.4), radius: 8, x: 0, y: 4)
+                    }
+                }
+                Spacer()
+            } else {
+                // COOKING PHASE: Back and Next/Finish
                 Button {
                     withAnimation(.spring()) {
-                        if currentPhase == .cooking && currentIndex > 0 {
+                        if currentIndex > 0 {
                             currentIndex -= 1
-                            completedSteps.remove(currentIndex)
-                        } else if currentPhase == .ingredients {
-                            // Reset some ingredients
-                            if let lastChecked = checkedIngredients.max() {
-                                checkedIngredients.remove(lastChecked)
-                            }
                         }
                     }
                 } label: {
@@ -247,73 +250,34 @@ struct CookingModeView: View {
                             )
                     )
                 }
-            }
-            
-            Spacer()
-            
-            // Next/Start Cooking/Finish button
-            Button {
-                withAnimation(.spring()) {
-                    if currentPhase == .ingredients && canProceed {
-                        currentPhase = .cooking
-                        currentIndex = 0
-                    } else if currentPhase == .cooking {
-                        if currentIndex < steps.count - 1 {
+                .disabled(currentIndex == 0)
+                
+                Spacer()
+                
+                Button {
+                    withAnimation(.spring()) {
+                        if currentIndex < max(steps.count - 1, 0) {
                             currentIndex += 1
-                        } else if canProceed {
-                            // Recipe completed
+                        } else {
                             dismiss()
                         }
                     }
+                } label: {
+                    HStack {
+                        Text(currentIndex == max(steps.count - 1, 0) ? "Finish" : "Next Step")
+                        Image(systemName: currentIndex == max(steps.count - 1, 0) ? "checkmark" : "chevron.right")
+                    }
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                    .background(
+                        Capsule().fill(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing))
+                    )
+                    .shadow(color: gradient[0].opacity(0.4), radius: 8, x: 0, y: 4)
                 }
-            } label: {
-                HStack {
-                    Text(nextButtonText)
-                    Image(systemName: nextButtonIcon)
-                }
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 16)
-                .background(
-                    Capsule()
-                        .fill(
-                            canProceedToNext ? 
-                            LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing) :
-                            LinearGradient(colors: [.gray], startPoint: .leading, endPoint: .trailing)
-                        )
-                )
-                .shadow(color: canProceedToNext ? gradient[0].opacity(0.4) : .clear, radius: 8, x: 0, y: 4)
+                .disabled(steps.isEmpty)
             }
-            .disabled(!canProceedToNext)
-        }
-    }
-    
-    private var nextButtonText: String {
-        if currentPhase == .ingredients {
-            return canProceed ? "Start Cooking" : "Gather Ingredients"
-        } else {
-            if currentIndex == steps.count - 1 {
-                return canProceed ? "Finish" : "Complete Step"
-            } else {
-                return "Next Step"
-            }
-        }
-    }
-    
-    private var nextButtonIcon: String {
-        if currentPhase == .ingredients {
-            return "flame.fill"
-        } else {
-            return currentIndex == steps.count - 1 ? "checkmark" : "chevron.right"
-        }
-    }
-    
-    private var canProceedToNext: Bool {
-        if currentPhase == .ingredients {
-            return true // Can always try to gather ingredients
-        } else {
-            return completedSteps.contains(currentIndex) || currentIndex < steps.count - 1
         }
     }
 }
@@ -378,8 +342,6 @@ struct CookingStepCard: View {
     let stepNumber: Int
     let totalSteps: Int
     let gradient: [Color]
-    let isCompleted: Bool
-    let onComplete: () -> Void
     
     var body: some View {
         VStack(spacing: 20) {
@@ -399,19 +361,6 @@ struct CookingStepCard: View {
                         Text("Step \(stepNumber) of \(totalSteps)")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
-                        
-                        Text(isCompleted ? "Completed" : "In Progress")
-                            .font(.system(size: 12, weight: .bold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule().fill(
-                                    isCompleted ? 
-                                    LinearGradient(colors: [.green], startPoint: .leading, endPoint: .trailing) :
-                                    LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing)
-                                )
-                            )
-                            .foregroundColor(.white)
                     }
                     
                     Spacer()
@@ -432,26 +381,6 @@ struct CookingStepCard: View {
                             .stroke(LinearGradient(colors: gradient.map { $0.opacity(0.4) }, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 2)
                     )
             )
-            
-            if !isCompleted {
-                Button {
-                    onComplete()
-                } label: {
-                    HStack {
-                        Image(systemName: "checkmark")
-                        Text("Mark as Complete")
-                    }
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(
-                        Capsule()
-                            .fill(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing))
-                    )
-                    .shadow(color: gradient[0].opacity(0.3), radius: 6, x: 0, y: 3)
-                }
-            }
         }
     }
 }
