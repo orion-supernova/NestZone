@@ -3,6 +3,7 @@ import SwiftUI
 enum ModuleType: String, CaseIterable, Identifiable {
     case shopping = "shopping"
     case recipes = "recipes"
+    case movies = "movies"
     case maintenance = "maintenance"
     case finance = "finance"
     case notes = "notes"
@@ -14,6 +15,7 @@ enum ModuleType: String, CaseIterable, Identifiable {
         switch self {
         case .shopping: return "Shopping Lists"
         case .recipes: return "Recipes"
+        case .movies: return "Movies"
         case .maintenance: return "House Problems"
         case .finance: return "Bills & Finance"
         case .notes: return "Notes & Ideas"
@@ -25,6 +27,7 @@ enum ModuleType: String, CaseIterable, Identifiable {
         switch self {
         case .shopping: return "Manage your shopping lists"
         case .recipes: return "Save delicious recipes & meal plans"
+        case .movies: return "Create & manage movie lists"
         case .maintenance: return "Track repairs & maintenance tasks"
         case .finance: return "Split bills & manage expenses"
         case .notes: return "Capture ideas & important notes"
@@ -36,6 +39,7 @@ enum ModuleType: String, CaseIterable, Identifiable {
         switch self {
         case .shopping: return "cart.fill"
         case .recipes: return "fork.knife"
+        case .movies: return "film.fill"
         case .maintenance: return "wrench.adjustable.fill"
         case .finance: return "dollarsign.circle.fill"
         case .notes: return "note.text"
@@ -47,9 +51,10 @@ enum ModuleType: String, CaseIterable, Identifiable {
         switch self {
         case .shopping: return [.green, .mint]
         case .recipes: return [.orange, .yellow]
+        case .movies: return [.purple, .pink]
         case .maintenance: return [.blue, .cyan]
-        case .finance: return [.purple, .pink]
-        case .notes: return [.indigo, .blue]
+        case .finance: return [.indigo, .purple]
+        case .notes: return [.teal, .blue]
         case .calendar: return [.red, .orange]
         }
     }
@@ -58,6 +63,7 @@ enum ModuleType: String, CaseIterable, Identifiable {
         switch self {
         case .shopping: return false
         case .recipes: return false
+        case .movies: return false
         case .maintenance, .finance, .notes, .calendar: return true
         }
     }

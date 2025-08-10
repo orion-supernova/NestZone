@@ -5,6 +5,7 @@ struct VibrantModuleCard: View {
     let index: Int
     @Binding var showingShoppingView: Bool
     @Binding var showingRecipesView: Bool
+    @Binding var showingMoviesView: Bool
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @State private var isPressed = false
@@ -29,6 +30,8 @@ struct VibrantModuleCard: View {
                 showingShoppingView = true
             } else if module.type == .recipes {
                 showingRecipesView = true
+            } else if module.type == .movies {
+                showingMoviesView = true
             } else if module.type.comingSoon {
                 // Show coming soon feedback
                 let impactLight = UIImpactFeedbackGenerator(style: .light)
@@ -204,6 +207,7 @@ struct VibrantModuleCard: View {
 #Preview {
     @State var showingShoppingView = false
     @State var showingRecipesView = false
+    @State var showingMoviesView = false
     let sampleModule = ModuleData(
         type: .shopping,
         itemCount: 5,
@@ -215,7 +219,8 @@ struct VibrantModuleCard: View {
         module: sampleModule,
         index: 0,
         showingShoppingView: $showingShoppingView,
-        showingRecipesView: $showingRecipesView
+        showingRecipesView: $showingRecipesView,
+        showingMoviesView: $showingMoviesView
     )
     .padding()
 }
