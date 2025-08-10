@@ -14,6 +14,22 @@ struct Movie: Identifiable, Codable, Hashable {
     }
 }
 
+struct MovieExtras: Codable, Hashable {
+    var plot: String?
+    var cast: [String]
+    var directors: [String]
+    var writers: [String]
+    var runtimeMinutes: Int?
+    
+    init(plot: String? = nil, cast: [String] = [], directors: [String] = [], writers: [String] = [], runtimeMinutes: Int? = nil) {
+        self.plot = plot
+        self.cast = cast
+        self.directors = directors
+        self.writers = writers
+        self.runtimeMinutes = runtimeMinutes
+    }
+}
+
 final class MovieAPI {
     static let shared = MovieAPI()
     private init() {}
@@ -352,6 +368,171 @@ final class MovieAPI {
         }()
         let genres = short?.genre ?? []
         return Movie(id: imdbID, title: title, year: year, poster: poster, genres: genres)
+    }
+    
+    func getExtras(imdbID: String) async -> MovieExtras? {
+        guard let url = URL(string: "https://imdb.iamidiotareyoutoo.com/search?tt=\(imdbID)") else { return nil }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return decodeIMDBExtras(data: data)
+        } catch {
+            print("Failed to fetch extras for \(imdbID): \(error)")
+            return nil
+        }
+    }
+    
+    private func decodeIMDBExtras(data: Data) -> MovieExtras? {
+        var extras = MovieExtras()
+        do {
+            let json = try JSONSerialization.jsonObject(with: data, options: [])
+            guard let dict = json as? [String: Any] else { return extras }
+            
+            // Get plot from multiple possible locations
+            if let top = dict["top"] as? [String: Any],
+               let plot = top["plot"] as? [String: Any],
+               let plotText = plot["plotText"] as? [String: Any],
+               let plainText = plotText["plainText"] as? String {
+                extras.plot = plainText
+            } else if let short = dict["short"] as? [String: Any],
+                      let description = short["description"] as? String {
+                extras.plot = description
+            }
+            
+            // Get runtime from top level
+            if let top = dict["top"] as? [String: Any],
+               let runtime = top["runtime"] as? [String: Any],
+               let seconds = runtime["seconds"] as? Int {
+                extras.runtimeMinutes = seconds / 60
+            } else if let short = dict["short"] as? [String: Any],
+                      let duration = short["duration"] as? String {
+                // Parse PT1H16M format
+                extras.runtimeMinutes = Self.parsePTDuration(duration)
+            }
+            
+            // Get cast from principalCredits or cast
+            if let top = dict["top"] as? [String: Any],
+               let principalCredits = top["principalCredits"] as? [[String: Any]] {
+                for creditCategory in principalCredits {
+                    if let category = creditCategory["category"] as? [String: Any],
+                       let categoryId = category["id"] as? String,
+                       categoryId == "cast",
+                       let credits = creditCategory["credits"] as? [[String: Any]] {
+                        extras.cast = credits.compactMap { credit in
+                            if let name = credit["name"] as? [String: Any],
+                               let nameText = name["nameText"] as? [String: Any],
+                               let text = nameText["text"] as? String {
+                                return text
+                            }
+                            return nil
+                        }
+                        break
+                    }
+                }
+            }
+            
+            // Fallback to short.actor
+            if extras.cast.isEmpty,
+               let short = dict["short"] as? [String: Any],
+               let actors = short["actor"] as? [[String: Any]] {
+                extras.cast = actors.compactMap { actor in
+                    return actor["name"] as? String
+                }
+            }
+            
+            // Get directors
+            if let top = dict["top"] as? [String: Any],
+               let principalCredits = top["principalCredits"] as? [[String: Any]] {
+                for creditCategory in principalCredits {
+                    if let category = creditCategory["category"] as? [String: Any],
+                       let categoryId = category["id"] as? String,
+                       categoryId == "director",
+                       let credits = creditCategory["credits"] as? [[String: Any]] {
+                        extras.directors = credits.compactMap { credit in
+                            if let name = credit["name"] as? [String: Any],
+                               let nameText = name["nameText"] as? [String: Any],
+                               let text = nameText["text"] as? String {
+                                return text
+                            }
+                            return nil
+                        }
+                        break
+                    }
+                }
+            }
+            
+            // Fallback to short.director
+            if extras.directors.isEmpty,
+               let short = dict["short"] as? [String: Any],
+               let directors = short["director"] as? [[String: Any]] {
+                extras.directors = directors.compactMap { director in
+                    return director["name"] as? String
+                }
+            }
+            
+            // Get writers
+            if let top = dict["top"] as? [String: Any],
+               let principalCredits = top["principalCredits"] as? [[String: Any]] {
+                for creditCategory in principalCredits {
+                    if let category = creditCategory["category"] as? [String: Any],
+                       let categoryId = category["id"] as? String,
+                       categoryId == "writer",
+                       let credits = creditCategory["credits"] as? [[String: Any]] {
+                        extras.writers = credits.compactMap { credit in
+                            if let name = credit["name"] as? [String: Any],
+                               let nameText = name["nameText"] as? [String: Any],
+                               let text = nameText["text"] as? String {
+                                return text
+                            }
+                            return nil
+                        }
+                        break
+                    }
+                }
+            }
+            
+            // Fallback to short.creator
+            if extras.writers.isEmpty,
+               let short = dict["short"] as? [String: Any],
+               let creators = short["creator"] as? [[String: Any]] {
+                extras.writers = creators.compactMap { creator in
+                    return creator["name"] as? String
+                }
+            }
+            
+            return extras
+        } catch {
+            print("Extras JSON parse error: \(error)")
+            return extras
+        }
+    }
+    
+    private static func parsePTDuration(_ duration: String) -> Int? {
+        // Parse PT1H16M format
+        let pattern = #"PT(?:(\d+)H)?(?:(\d+)M)?"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        
+        let range = NSRange(duration.startIndex..<duration.endIndex, in: duration)
+        guard let match = regex.firstMatch(in: duration, range: range) else { return nil }
+        
+        var totalMinutes = 0
+        
+        // Hours
+        if match.range(at: 1).location != NSNotFound {
+            let hoursRange = Range(match.range(at: 1), in: duration)!
+            if let hours = Int(duration[hoursRange]) {
+                totalMinutes += hours * 60
+            }
+        }
+        
+        // Minutes
+        if match.range(at: 2).location != NSNotFound {
+            let minutesRange = Range(match.range(at: 2), in: duration)!
+            if let minutes = Int(duration[minutesRange]) {
+                totalMinutes += minutes
+            }
+        }
+        
+        return totalMinutes > 0 ? totalMinutes : nil
     }
 }
 

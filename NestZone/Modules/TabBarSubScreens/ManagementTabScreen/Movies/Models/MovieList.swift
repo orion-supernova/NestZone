@@ -39,7 +39,7 @@ struct StoredMovie: Identifiable, Codable {
     let poster: String?
     let genres: [String]
     let homeId: String
-    let listId: String
+    let listId: String  // Back to single string relation
     let created: String
     let updated: String
     

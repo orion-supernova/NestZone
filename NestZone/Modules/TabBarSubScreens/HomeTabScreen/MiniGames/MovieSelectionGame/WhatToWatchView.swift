@@ -107,8 +107,8 @@ struct WhatToWatchView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }
                 }
-                if !viewModel.watched.isEmpty {
-                    ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    if !viewModel.watched.isEmpty {
                         Button("Clear History") {
                             viewModel.showingClearHistoryAlert = true
                         }
@@ -135,7 +135,7 @@ struct WhatToWatchView: View {
         }
         .sheet(isPresented: $viewModel.showingMovieDetail) {
             if let movie = viewModel.selectedMovieForDetail {
-                MovieDetailInfoSheet(movie: movie)
+                MovieDetailInfoSheet(movie: movie, originList: nil)
             }
         }
         .sheet(isPresented: $viewModel.showingPreviousPolls) {

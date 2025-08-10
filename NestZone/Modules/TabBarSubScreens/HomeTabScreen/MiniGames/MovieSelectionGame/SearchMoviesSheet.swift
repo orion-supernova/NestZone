@@ -123,14 +123,18 @@ struct SearchMoviesSheet: View {
                 selectedMovie = nil
             } content: {
                 if let movie = selectedMovie {
-                    MovieDetailSheet(movie: movie) { movieToAdd in
-                        Task { @MainActor in
-                            if !addedMovies.contains(movieToAdd.id) {
-                                addedMovies.insert(movieToAdd.id)
-                                onAdd(movieToAdd)
+                    MovieDetailSheet(
+                        movie: movie,
+                        onAdd: { movieToAdd in
+                            Task { @MainActor in
+                                if !addedMovies.contains(movieToAdd.id) {
+                                    addedMovies.insert(movieToAdd.id)
+                                    onAdd(movieToAdd)
+                                }
                             }
-                        }
-                    }
+                        },
+                        currentList: nil
+                    )
                 }
             }
         }

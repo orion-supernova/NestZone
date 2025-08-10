@@ -111,14 +111,14 @@ struct MovieListDetailView: View {
         .fullScreenCover(item: $activeSheet) { route in
             switch route {
             case .addMovies:
-                SearchMoviesForListSheet { movie in
+                SearchMoviesForListSheet(currentList: movieList) { movie in
                     Task {
                         await viewModel.addMovieToList(movie, listId: movieList.id)
                         await loadMovies()
                     }
                 }
             case .movieDetail(let movie):
-                MovieDetailInfoSheet(movie: movie)
+                MovieDetailInfoSheet(movie: movie, originList: movieList)
             }
         }
         .alert("Delete List", isPresented: $showingDeleteAlert) {

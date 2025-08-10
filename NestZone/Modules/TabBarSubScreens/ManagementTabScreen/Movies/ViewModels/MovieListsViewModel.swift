@@ -136,4 +136,23 @@ class MovieListsViewModel: ObservableObject {
             return []
         }
     }
+    
+    func isMovieInList(_ imdbId: String, listId: String) async -> Bool {
+        do {
+            return try await movieListsManager.isMovieInList(imdbId: imdbId, listId: listId)
+        } catch {
+            print("Failed to check membership for \(imdbId) in \(listId): \(error)")
+            return false
+        }
+    }
+    
+    func membershipForMovie(_ imdbId: String) async -> Set<String> {
+        do {
+            let listIds = try await movieListsManager.getListsForMovie(imdbId: imdbId)
+            return Set(listIds)
+        } catch {
+            print("Failed to get membership for \(imdbId): \(error)")
+            return Set()
+        }
+    }
 }

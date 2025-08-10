@@ -21,6 +21,11 @@ final class MovieListsManager: @unchecked Sendable {
         value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
     }
     
+    private func encodeFilter(_ filter: String) -> String {
+        // Use standard URL encoding for the entire filter
+        return filter.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? filter
+    }
+    
     private func getCurrentHomeId() async throws -> String {
         // Get the first home for the user
         let endpoint = "/api/collections/homes/records?perPage=1"
@@ -36,7 +41,7 @@ final class MovieListsManager: @unchecked Sendable {
     func fetchMovieLists() async throws -> [MovieList] {
         let homeId = try await getCurrentHomeId()
         let filterRaw = "home_id = '\(homeId)'"
-        let endpoint = "/api/collections/movie_lists/records?filter=\(encode(filterRaw))&sort=created"
+        let endpoint = "/api/collections/movie_lists/records?filter=\(encodeFilter(filterRaw))&sort=created"
         let response: PBListResponse<MovieList> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<MovieList>.self)
         return response.items
     }
@@ -87,11 +92,13 @@ final class MovieListsManager: @unchecked Sendable {
     func addMovieToList(movie: Movie, listId: String) async throws {
         let homeId = try await getCurrentHomeId()
         
+        // Check if movie already exists in this specific list
         let filterRaw = "imdb_id = '\(movie.id)' && list_id = '\(listId)'"
-        let checkEndpoint = "/api/collections/movies/records?filter=\(encode(filterRaw))&perPage=1"
+        let checkEndpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&perPage=1"
         let checkResponse: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: checkEndpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
         
         if checkResponse.items.isEmpty {
+            // Movie doesn't exist in this list, create new record
             let params: [String: Any] = [
                 "imdb_id": movie.id,
                 "title": movie.title,
@@ -99,7 +106,7 @@ final class MovieListsManager: @unchecked Sendable {
                 "poster": movie.poster ?? NSNull(),
                 "genres": movie.genres,
                 "home_id": homeId,
-                "list_id": listId
+                "list_id": listId  // Single relation
             ]
             
             let _: StoredMovie = try await pocketBase.createRecord(in: "movies", data: params, responseType: StoredMovie.self)
@@ -110,22 +117,27 @@ final class MovieListsManager: @unchecked Sendable {
     }
 
     func removeMovieFromList(movieId: String, listId: String) async throws {
-        // movieId here may be either a PB record id or an IMDb id. Try both.
-        let filterRaw = "(id = '\(movieId)' || imdb_id = '\(movieId)') && list_id = '\(listId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encode(filterRaw))&perPage=1"
-        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
+        // First get all movies for this specific list
+        let listMovies = try await fetchMoviesForList(listId: listId)
         
-        if let record = response.items.first {
-            try await pocketBase.deleteRecord(from: "movies", id: record.id)
-            print("🗑️ Removed movie from list \(listId) (recordId: \(record.id), imdb: \(record.imdbId))")
+        // Find the movie in this list by IMDb ID or record ID
+        guard let recordToDelete = listMovies.first(where: { 
+            $0.imdbId == movieId || $0.id == movieId 
+        }) else {
+            print("⚠️ Movie with id \(movieId) not found in list \(listId)")
+            return
         }
+        
+        // Delete the found record
+        try await pocketBase.deleteRecord(from: "movies", id: recordToDelete.id)
+        print("🗑️ Removed movie from list \(listId) (recordId: \(recordToDelete.id), imdb: \(recordToDelete.imdbId))")
     }
     
     // MARK: - Movies
     
     func fetchMoviesForList(listId: String) async throws -> [StoredMovie] {
         let filterRaw = "list_id = '\(listId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encode(filterRaw))&sort=-created"
+        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&sort=-created"
         let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
         return response.items
     }
@@ -133,18 +145,33 @@ final class MovieListsManager: @unchecked Sendable {
     func fetchAllMoviesForHome() async throws -> [StoredMovie] {
         let homeId = try await getCurrentHomeId()
         let filterRaw = "home_id = '\(homeId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encode(filterRaw))&sort=-created"
+        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&sort=-created"
         let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
         return response.items
     }
     
     func getMovieCountForList(listId: String) async throws -> Int {
         let filterRaw = "list_id = '\(listId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encode(filterRaw))&perPage=1"
+        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&perPage=1"
         let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
         return response.totalItems ?? 0
     }
     
+    func isMovieInList(imdbId: String, listId: String) async throws -> Bool {
+        let filterRaw = "imdb_id = '\(imdbId)' && list_id = '\(listId)'"
+        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&perPage=1"
+        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
+        return !response.items.isEmpty
+    }
+    
+    func getListsForMovie(imdbId: String) async throws -> [String] {
+        let homeId = try await getCurrentHomeId()
+        let filterRaw = "imdb_id = '\(imdbId)' && home_id = '\(homeId)'"
+        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))"
+        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
+        return response.items.map { $0.listId }
+    }
+
     private func getPresetDescription(for type: MovieListType) -> String {
         switch type {
         case .wishlist: return "Movies you want to watch someday"

@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct SearchMoviesForListSheet: View {
+    let currentList: MovieList?
     let onAdd: (Movie) -> Void
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = SearchMoviesViewModel()
-    
+
     var body: some View {
         NavigationView {
             VStack {
@@ -42,14 +43,18 @@ struct SearchMoviesForListSheet: View {
                 }
             }
             .fullScreenCover(item: $viewModel.selectedMovie) { movie in
-                MovieDetailSheet(movie: movie) { movieToAdd in
-                    Task { @MainActor in
-                        if !viewModel.addedMovies.contains(movieToAdd.id) {
-                            viewModel.addMovie(movieToAdd)
-                            onAdd(movieToAdd)
+                MovieDetailSheet(
+                    movie: movie,
+                    onAdd: { movieToAdd in
+                        Task { @MainActor in
+                            if !viewModel.addedMovies.contains(movieToAdd.id) {
+                                viewModel.addMovie(movieToAdd)
+                                onAdd(movieToAdd)
+                            }
                         }
-                    }
-                }
+                    },
+                    currentList: currentList
+                )
             }
         }
     }
@@ -63,7 +68,7 @@ struct SearchLoadingView: View {
 }
 
 #Preview {
-    SearchMoviesForListSheet { movie in
+    SearchMoviesForListSheet(currentList: nil) { movie in
         print("Added movie: \(movie.title)")
     }
 }
