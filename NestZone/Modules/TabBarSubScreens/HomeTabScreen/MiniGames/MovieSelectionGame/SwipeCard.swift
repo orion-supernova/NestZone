@@ -26,11 +26,12 @@ struct SwipeCard: View {
                     Rectangle()
                         .fill(LinearGradient(colors: [.purple.opacity(0.2), .pink.opacity(0.2)], startPoint: .top, endPoint: .bottom))
                         .overlay(
-                            Image(systemName: "photo")
-                                .font(.system(size: 40))
-                                .foregroundStyle(.white.opacity(0.5))
+                            ProgressView()
+                                .scaleEffect(1.2)
                         )
                 }
+                .frame(width: 300, height: 450)
+                .clipped()
             } else {
                 Rectangle()
                     .fill(LinearGradient(colors: [.purple.opacity(0.2), .pink.opacity(0.2)], startPoint: .top, endPoint: .bottom))
@@ -39,6 +40,7 @@ struct SwipeCard: View {
                             .font(.system(size: 40))
                             .foregroundStyle(.white.opacity(0.5))
                     )
+                    .frame(width: 300, height: 450)
             }
             
             // Swipe indicators (only show when dragging)
@@ -97,6 +99,7 @@ struct SwipeCard: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.white)
                     .shadow(color: .black, radius: 2, x: 1, y: 1)
+                    .lineLimit(2)
                 
                 HStack(spacing: 8) {
                     if let year = movie.year {
@@ -114,6 +117,7 @@ struct SwipeCard: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Capsule().fill(Color.black.opacity(0.4)))
+                            .lineLimit(1)
                     }
                 }
                 
@@ -139,7 +143,7 @@ struct SwipeCard: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
             )
         }
-        .frame(width: 300, height: 450)
+        .frame(width: 300, height: 480)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(.ultraThinMaterial)

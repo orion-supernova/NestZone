@@ -1,5 +1,19 @@
 import Foundation
 
+struct User: Codable, Identifiable {
+    let id: String
+    let name: String
+    let email: String?
+    let avatar: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case email
+        case avatar
+    }
+}
+
 struct Poll: Codable, Identifiable {
     let id: String
     let homeId: String?
@@ -220,12 +234,45 @@ final class PollsManager: @unchecked Sendable {
         
         let filterRaw = "poll_id = '\(pollId)' && user_id = '\(userIdToUse)'"
         let endpoint = "/api/collections/poll_votes/records?filter=\(encode(filterRaw))&perPage=200"
+        
+        print("🔍 DEBUG fetchUserVotes:")
+        print("  - Poll ID: \(pollId)")
+        print("  - User ID to filter: '\(userIdToUse)'")
+        print("  - Filter: \(filterRaw)")
+        print("  - Encoded filter: \(encode(filterRaw))")
+        print("  - Full endpoint: \(endpoint)")
+        
         let response: PBListResponse<PollVote> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<PollVote>.self)
+        
+        print("🔍 DEBUG fetchUserVotes results:")
+        print("  - Total items returned: \(response.items.count)")
+        for (index, vote) in response.items.enumerated() {
+            print("  - Vote \(index): user='\(vote.userId)', target='\(vote.targetExternalId ?? "nil")', vote=\(vote.vote)")
+        }
+        
+        let filteredVotes = response.items.filter { $0.userId == userIdToUse }
+        print("🔍 DEBUG after client-side filtering:")
+        print("  - Filtered items count: \(filteredVotes.count)")
+        
+        if response.items.count != filteredVotes.count {
+            print("⚠️ WARNING: Server-side filtering failed! Expected \(filteredVotes.count) items but got \(response.items.count)")
+            print("⚠️ Using client-side filtered results instead")
+            return filteredVotes
+        }
+        
         return response.items
     }
     
     func closePoll(pollId: String) async throws {
         let _: Poll = try await pocketBase.updateRecord(in: "polls", id: pollId, data: ["status": "closed"], responseType: Poll.self)
+    }
+    
+    func deletePoll(pollId: String) async throws {
+        print("🗑️ Deleting poll: \(pollId)")
+        
+        // With foreign key relations, just delete the poll - related records will cascade delete
+        try await pocketBase.deleteRecord(from: "polls", id: pollId)
+        print("✅ Poll deleted successfully: \(pollId)")
     }
     
     func getHouseMemberCount(homeId: String? = nil) async throws -> Int {
@@ -241,6 +288,18 @@ final class PollsManager: @unchecked Sendable {
     }
     
     // MARK: - Helpers
+    
+    func fetchUsers(userIds: [String]) async throws -> [User] {
+        guard !userIds.isEmpty else { return [] }
+        
+        // Create filter for multiple user IDs
+        let filterParts = userIds.map { "id='\($0)'" }
+        let filterRaw = "(\(filterParts.joined(separator: " || ")))"
+        let endpoint = "/api/collections/users/records?filter=\(encode(filterRaw))&perPage=100"
+        
+        let response: PBListResponse<User> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<User>.self)
+        return response.items
+    }
     
     func voteCounts(for votes: [PollVote]) -> [String: (yes: Int, no: Int)] {
         var map: [String: (yes: Int, no: Int)] = [:]

@@ -10,23 +10,62 @@ struct Movie: Identifiable, Codable, Hashable {
     
     var posterURL: URL? {
         guard let poster else { return nil }
-        return URL(string: poster)
+        // TMDb poster URLs need the base URL
+        if poster.hasPrefix("http") {
+            return URL(string: poster)
+        } else {
+            return URL(string: "https://image.tmdb.org/t/p/w500\(poster)")
+        }
     }
 }
 
 struct MovieExtras: Codable, Hashable {
     var plot: String?
-    var cast: [String]
+    var cast: [CastMember]
     var directors: [String]
     var writers: [String]
     var runtimeMinutes: Int?
+    var rating: Double?
+    var voteCount: Int?
+    var budget: Int?
+    var revenue: Int?
+    var releaseDate: String?
+    var originalLanguage: String?
+    var productionCompanies: [String]
+    var keywords: [String]
+    var backdropPath: String?
     
-    init(plot: String? = nil, cast: [String] = [], directors: [String] = [], writers: [String] = [], runtimeMinutes: Int? = nil) {
+    struct CastMember: Codable, Hashable {
+        let name: String
+        let character: String?
+        let profilePath: String?
+        
+        var profileURL: URL? {
+            guard let profilePath else { return nil }
+            return URL(string: "https://image.tmdb.org/t/p/w185\(profilePath)")
+        }
+    }
+    
+    init(plot: String? = nil, cast: [CastMember] = [], directors: [String] = [], writers: [String] = [], runtimeMinutes: Int? = nil, rating: Double? = nil, voteCount: Int? = nil, budget: Int? = nil, revenue: Int? = nil, releaseDate: String? = nil, originalLanguage: String? = nil, productionCompanies: [String] = [], keywords: [String] = [], backdropPath: String? = nil) {
         self.plot = plot
         self.cast = cast
         self.directors = directors
         self.writers = writers
         self.runtimeMinutes = runtimeMinutes
+        self.rating = rating
+        self.voteCount = voteCount
+        self.budget = budget
+        self.revenue = revenue
+        self.releaseDate = releaseDate
+        self.originalLanguage = originalLanguage
+        self.productionCompanies = productionCompanies
+        self.keywords = keywords
+        self.backdropPath = backdropPath
+    }
+    
+    var backdropURL: URL? {
+        guard let backdropPath else { return nil }
+        return URL(string: "https://image.tmdb.org/t/p/w780\(backdropPath)")
     }
 }
 
@@ -34,11 +73,13 @@ final class MovieAPI {
     static let shared = MovieAPI()
     private init() {}
     
-    // Thread-safe cache and catalog with actors or locks
+    // TMDb API KEY
+    private let apiKey = "1b4bd86ca9d5443c16277d701d971c04"
+    private let baseURL = "https://api.themoviedb.org/3"
+    
+    // Thread-safe cache
     private let cacheQueue = DispatchQueue(label: "MovieAPI.cache", attributes: .concurrent)
     private var _cache: [String: Movie] = [:]
-    private var _catalog: [Movie] = []
-    private var _catalogLoaded = false
     
     private var cache: [String: Movie] {
         get {
@@ -49,42 +90,26 @@ final class MovieAPI {
         }
     }
     
-    private var catalog: [Movie] {
-        get {
-            return cacheQueue.sync { _catalog }
-        }
-        set {
-            cacheQueue.async(flags: .barrier) { self._catalog = newValue }
-        }
-    }
-    
-    private var catalogLoaded: Bool {
-        get {
-            return cacheQueue.sync { _catalogLoaded }
-        }
-        set {
-            cacheQueue.async(flags: .barrier) { self._catalogLoaded = newValue }
-        }
-    }
-    
-    // Expanded curated IMDb IDs for better search results
-    private let curatedIDs: [String] = [
-        // Marvel/Superhero
-        "tt4154796", "tt0848228", "tt3501632", "tt1825683", "tt2250912", "tt10872600", "tt4154756", "tt6320628", "tt4154664", "tt2395427",
-        // Classic/Popular
-        "tt0111161", "tt0068646", "tt0071562", "tt0468569", "tt0050083", "tt0108052", "tt0167260", "tt0110912", "tt0060196", "tt0120737",
-        // Sci-Fi
-        "tt0133093", "tt0137523", "tt0816692", "tt1375666", "tt0109830", "tt0120815", "tt0121765", "tt0121766", "tt0086190", "tt0078748",
-        // Action/Thriller
-        "tt0120586", "tt0114369", "tt0088763", "tt0317248", "tt0993846", "tt1345836", "tt0405094", "tt0372784", "tt0482571", "tt1853728",
-        // Comedy/Drama
-        "tt6751668", "tt1049413", "tt0407887", "tt7286456", "tt4158110", "tt0892769", "tt0325980", "tt0338013", "tt0268978", "tt0162222",
-        // Spider-Man specifically (since you searched for it)
-        "tt0145487", "tt0316654", "tt0413300", "tt0948470", "tt1872181", "tt2250912", "tt6320628", "tt10872600",
-        // Eternal Sunshine and Charlie Kaufman
-        "tt0338013", "tt0405159", "tt1101592", "tt2872718",
-        // More variety
-        "tt0169547", "tt0172495", "tt0253474", "tt0364569", "tt0477348", "tt0758758", "tt1130884", "tt1392190", "tt1675434", "tt1877830"
+    // TMDb Genre IDs
+    private let genreMap: [String: Int] = [
+        "action": 28,
+        "adventure": 12,
+        "animation": 16,
+        "comedy": 35,
+        "crime": 80,
+        "documentary": 99,
+        "drama": 18,
+        "family": 10751,
+        "fantasy": 14,
+        "history": 36,
+        "horror": 27,
+        "music": 10402,
+        "mystery": 9648,
+        "romance": 10749,
+        "sci-fi": 878,
+        "thriller": 53,
+        "war": 10752,
+        "western": 37
     ]
     
     // MARK: - Public API
@@ -92,447 +117,391 @@ final class MovieAPI {
     func searchMovies(query: String) async -> [Movie] {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if q.isEmpty {
-            return await searchMoviesFromAPI(query: "popular")
+        guard !q.isEmpty else {
+            return await getPopularMovies()
         }
         
-        let lower = q.lowercased()
-        if lower == "popular" || lower == "top" {
-            let popularQueries = ["Spider-Man", "Avengers", "Batman", "Star Wars", "Marvel", "Harry Potter"]
-            let randomQuery = popularQueries.randomElement() ?? "popular"
-            if let suggestion = await searchMoviesViaIMDBSuggestion(query: randomQuery), !suggestion.isEmpty {
-                return suggestion
-            }
-            return await searchMoviesFromAPI(query: randomQuery)
-        }
-        
-        if let suggestion = await searchMoviesViaIMDBSuggestion(query: q), !suggestion.isEmpty {
-            return suggestion
-        }
-        return await searchMoviesFromAPI(query: q)
+        return await searchMoviesFromTMDb(query: q)
     }
     
-    private func searchMoviesViaIMDBSuggestion(query: String) async -> [Movie]? {
-        guard let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let first = query.first?.lowercased() else {
-            return nil
-        }
-        let urlStr = "https://v2.sg.media-imdb.com/suggestion/\(first)/\(encoded).json"
-        guard let url = URL(string: urlStr) else { return nil }
-        
-        struct SuggestResponse: Decodable {
-            struct Item: Decodable {
-                let id: String?
-                let l: String?
-                let y: Int?
-                let i: ImageData?
-                
-                struct ImageData: Decodable {
-                    let imageUrl: String?
-                    let width: Int?
-                    let height: Int?
-                }
-            }
-            let d: [Item]?
-        }
-        
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let decoded = try JSONDecoder().decode(SuggestResponse.self, from: data)
-            let items = decoded.d ?? []
-            let movies: [Movie] = items.compactMap { item in
-                guard let id = item.id, id.hasPrefix("tt"), let title = item.l else { return nil }
-                let poster = item.i?.imageUrl
-                let year = item.y
-                return Movie(id: id, title: title, year: year, poster: poster, genres: [])
-            }
-            for m in movies {
-                cacheQueue.async(flags: .barrier) { self._cache[m.id] = m }
-            }
-            return movies
-        } catch {
-            print("IMDb suggestion search failed for '\(query)': \(error)")
-            return nil
-        }
-    }
-    
-    private func searchMoviesFromAPI(query: String) async -> [Movie] {
+    private func searchMoviesFromTMDb(query: String) async -> [Movie] {
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "https://imdb.iamidiotareyoutoo.com/search?q=\(encodedQuery)") else {
+              let url = URL(string: "\(baseURL)/search/movie?api_key=\(apiKey)&query=\(encodedQuery)&include_adult=false") else {
             return []
         }
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            let movies = try decodeSearchResults(data: data)
+            let movies = try decodeTMDbSearchResults(data: data)
             for movie in movies {
                 cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
             }
             return movies
         } catch {
-            print("API search failed for '\(query)': \(error)")
+            print("TMDb search failed for '\(query)': \(error)")
+            return []
+        }
+    }
+    
+    private func getPopularMovies() async -> [Movie] {
+        guard let url = URL(string: "\(baseURL)/movie/popular?api_key=\(apiKey)&include_adult=false") else {
+            return []
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let movies = try decodeTMDbSearchResults(data: data)
+            for movie in movies {
+                cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+            }
+            return movies
+        } catch {
+            print("Failed to fetch popular movies: \(error)")
             return []
         }
     }
     
     func getDetails(imdbID: String) async -> Movie? {
+        print("🎬 MovieAPI: Getting details for ID: \(imdbID)")
+        
         if let cached = cacheQueue.sync(execute: { _cache[imdbID] }) {
+            print("🎬 MovieAPI: Found cached movie: \(cached.title)")
             return cached
         }
         
-        guard let url = URL(string: "https://imdb.iamidiotareyoutoo.com/search?tt=\(imdbID)") else { return nil }
+        // If it's a TMDb ID (numeric), use it directly
+        if let tmdbId = Int(imdbID) {
+            print("🎬 MovieAPI: Treating as TMDb ID: \(tmdbId)")
+            return await getMovieDetails(tmdbId: tmdbId)
+        }
+        
+        // If it's an IMDb ID (starts with tt), search for it
+        if imdbID.hasPrefix("tt") {
+            print("🎬 MovieAPI: Treating as IMDb ID: \(imdbID)")
+            return await findMovieByImdbId(imdbID)
+        }
+        
+        print("🎬 MovieAPI: Unknown ID format: \(imdbID)")
+        return nil
+    }
+    
+    private func getMovieDetails(tmdbId: Int) async -> Movie? {
+        guard let url = URL(string: "\(baseURL)/movie/\(tmdbId)?api_key=\(apiKey)&append_to_response=genres") else {
+            return nil
+        }
+        
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            if let movie = try decodeIMDBDetails(imdbID: imdbID, data: data) {
-                cacheQueue.async(flags: .barrier) { self._cache[imdbID] = movie }
+            if let movie = try decodeTMDbMovieDetails(data: data) {
+                print("🎬 MovieAPI: Got TMDb details for \(movie.title) (ID: \(movie.id))")
+                cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+                // IMPORTANT: Also cache with the original TMDb ID string format
+                cacheQueue.async(flags: .barrier) { self._cache[String(tmdbId)] = movie }
                 return movie
             }
         } catch {
-            print("Failed to fetch details for \(imdbID): \(error)")
+            print("Failed to fetch details for TMDb ID \(tmdbId): \(error)")
+        }
+        return nil
+    }
+    
+    private func findMovieByImdbId(_ imdbId: String) async -> Movie? {
+        guard let url = URL(string: "\(baseURL)/find/\(imdbId)?api_key=\(apiKey)&external_source=imdb_id") else {
+            return nil
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let movie = try decodeTMDbFindResults(data: data) {
+                cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+                return movie
+            }
+        } catch {
+            print("Failed to find movie by IMDb ID \(imdbId): \(error)")
         }
         return nil
     }
     
     func searchByGenre(genre: String) async -> [Movie] {
-        // Try API search first with genre-specific queries
-        let genreQueries: [String: [String]] = [
-            "action": ["action", "marvel", "batman", "fast furious"],
-            "adventure": ["adventure", "indiana jones", "pirates caribbean"],
-            "comedy": ["comedy", "funny", "laugh", "adam sandler"],
-            "drama": ["drama", "oscar", "best picture"],
-            "fantasy": ["fantasy", "lord rings", "harry potter"],
-            "horror": ["horror", "scary", "halloween", "nightmare"],
-            "romance": ["romance", "love", "romantic", "rom com"],
-            "sci-fi": ["sci-fi", "star wars", "star trek", "blade runner"],
-            "thriller": ["thriller", "suspense", "psychological"],
-            "animation": ["animation", "disney", "pixar", "cartoon"]
-        ]
+        print("🎬 MovieAPI: Searching by genre: \(genre)")
         
-        let g = genre.lowercased()
-        let queries = genreQueries[g] ?? [genre]
-        let selectedQuery = queries.randomElement() ?? genre
-        
-        let apiResults = await searchMoviesFromAPI(query: selectedQuery)
-        
-        // Filter by genre if possible
-        let genreFiltered = apiResults.filter { movie in
-            movie.genres.map { $0.lowercased() }.contains(where: { $0.contains(g) })
+        guard let genreId = genreMap[genre.lowercased()] else {
+            print("🎬 MovieAPI: Unknown genre \(genre), falling back to search")
+            return await searchMovies(query: genre)
         }
         
-        if !genreFiltered.isEmpty {
-            return Array(genreFiltered.shuffled().prefix(20))
-        }
+        // Get multiple pages for better variety
+        var allMovies: [Movie] = []
+        let maxPages = 3
         
-        // Return API results even if not perfectly genre-matched
-        if !apiResults.isEmpty {
-            return Array(apiResults.shuffled().prefix(20))
-        }
-        
-        // Return empty array if no API results
-        return []
-    }
-    
-    // MARK: - Helpers
-    
-    private func ensureCatalogLoaded() async {
-        if catalogLoaded { return }
-        
-        // Build catalog from curated IDs only (network), not static hardcoded items
-        let loaded = await withTaskGroup(of: Movie?.self) { group in
-            for id in curatedIDs {
-                group.addTask { await self.getDetails(imdbID: id) }
+        for page in 1...maxPages {
+            guard let url = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&with_genres=\(genreId)&page=\(page)&include_adult=false&sort_by=popularity.desc") else {
+                continue
             }
-            var movies: [Movie] = []
-            for await movie in group {
-                if let movie = movie, !movies.contains(where: { $0.id == movie.id }) {
-                    movies.append(movie)
+            
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let movies = try decodeTMDbSearchResults(data: data)
+                print("🎬 MovieAPI: Found \(movies.count) movies on page \(page)")
+                
+                for movie in movies {
+                    if !allMovies.contains(where: { $0.id == movie.id }) {
+                        allMovies.append(movie)
+                    }
                 }
+                
+                // Cache the movies
+                for movie in movies {
+                    cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+                }
+                
+            } catch {
+                print("🎬 MovieAPI: Failed to fetch page \(page) for genre \(genre): \(error)")
             }
-            return movies
         }
         
-        cacheQueue.async(flags: .barrier) {
-            self._catalog = loaded
-            self._catalogLoaded = true
-        }
+        print("🎬 MovieAPI: Total unique movies found: \(allMovies.count)")
+        let shuffled = Array(allMovies.shuffled().prefix(20))
+        print("🎬 MovieAPI: Returning \(shuffled.count) movies")
+        return shuffled
     }
     
-    private func extractIMDBId(from text: String) -> String? {
-        let pattern = #"tt\d{7,}"#
-        if let range = text.range(of: pattern, options: .regularExpression) {
-            return String(text[range])
-        }
-        return nil
-    }
+    // MARK: - Decoding Helpers
     
-    private func decodeSearchResults(data: Data) throws -> [Movie] {
-        struct SearchResult: Decodable {
-            let imdbId: String?
-            let name: String?
-            let image: String?
-            let datePublished: String?
-            let genre: [String]?
+    private func decodeTMDbSearchResults(data: Data) throws -> [Movie] {
+        struct TMDbSearchResponse: Decodable {
+            let results: [TMDbMovie]
+        }
+        
+        struct TMDbMovie: Decodable {
+            let id: Int
+            let title: String
+            let release_date: String?
+            let poster_path: String?
+            let genre_ids: [Int]?
+            let overview: String?
         }
         
         let decoder = JSONDecoder()
+        let response = try decoder.decode(TMDbSearchResponse.self, from: data)
         
-        // Try to decode as array first
-        if let results = try? decoder.decode([SearchResult].self, from: data) {
-            return results.compactMap { result in
-                guard let imdbId = result.imdbId, let name = result.name else { return nil }
-                
-                let year: Int? = {
-                    if let date = result.datePublished, let y = Int(date.prefix(4)) { return y }
-                    return nil
-                }()
-                
-                return Movie(
-                    id: imdbId,
-                    title: name,
-                    year: year,
-                    poster: result.image,
-                    genres: result.genre ?? []
-                )
-            }
-        }
-        
-        // Try to decode as single result
-        if let result = try? decoder.decode(SearchResult.self, from: data) {
-            guard let imdbId = result.imdbId, let name = result.name else { return [] }
-            
+        return response.results.compactMap { tmdbMovie in
             let year: Int? = {
-                if let date = result.datePublished, let y = Int(date.prefix(4)) { return y }
+                if let releaseDate = tmdbMovie.release_date, !releaseDate.isEmpty {
+                    return Int(releaseDate.prefix(4))
+                }
                 return nil
             }()
             
-            return [Movie(
-                id: imdbId,
-                title: name,
+            // Convert genre IDs to genre names
+            let genreNames = tmdbMovie.genre_ids?.compactMap { genreId in
+                return genreMap.first(where: { $0.value == genreId })?.key.capitalized
+            } ?? []
+            
+            return Movie(
+                id: String(tmdbMovie.id),
+                title: tmdbMovie.title,
                 year: year,
-                poster: result.image,
-                genres: result.genre ?? []
-            )]
+                poster: tmdbMovie.poster_path,
+                genres: genreNames
+            )
         }
-        
-        // Try to decode as dictionary with results key
-        struct SearchResponse: Decodable {
-            let results: [SearchResult]?
-            let Search: [SearchResult]?  // Some APIs use uppercase
-        }
-        
-        if let response = try? decoder.decode(SearchResponse.self, from: data) {
-            let results = response.results ?? response.Search ?? []
-            return results.compactMap { result in
-                guard let imdbId = result.imdbId, let name = result.name else { return nil }
-                
-                let year: Int? = {
-                    if let date = result.datePublished, let y = Int(date.prefix(4)) { return y }
-                    return nil
-                }()
-                
-                return Movie(
-                    id: imdbId,
-                    title: name,
-                    year: year,
-                    poster: result.image,
-                    genres: result.genre ?? []
-                )
-            }
-        }
-        
-        // If all fails, return empty array
-        print("Failed to decode search results, data: \(String(data: data, encoding: .utf8) ?? "invalid")")
-        return []
     }
     
-    private func decodeIMDBDetails(imdbID: String, data: Data) throws -> Movie? {
-        struct IMDBShort: Decodable {
-            let name: String?
-            let image: String?
-            let datePublished: String?
-            let genre: [String]?
-        }
-        struct IMDBRoot: Decodable {
-            let imdbId: String?
-            let short: IMDBShort?
+    private func decodeTMDbMovieDetails(data: Data) throws -> Movie? {
+        struct TMDbMovieDetails: Decodable {
+            let id: Int
+            let title: String
+            let release_date: String?
+            let poster_path: String?
+            let genres: [TMDbGenre]?
+            let overview: String?
+            
+            struct TMDbGenre: Decodable {
+                let name: String
+            }
         }
         
         let decoder = JSONDecoder()
-        let root = try decoder.decode(IMDBRoot.self, from: data)
-        let short = root.short
-        let title = short?.name ?? "Unknown"
-        let poster = short?.image
+        let movieDetails = try decoder.decode(TMDbMovieDetails.self, from: data)
+        
         let year: Int? = {
-            if let date = short?.datePublished, let y = Int(date.prefix(4)) { return y }
+            if let releaseDate = movieDetails.release_date, !releaseDate.isEmpty {
+                return Int(releaseDate.prefix(4))
+            }
             return nil
         }()
-        let genres = short?.genre ?? []
-        return Movie(id: imdbID, title: title, year: year, poster: poster, genres: genres)
+        
+        let genreNames = movieDetails.genres?.map { $0.name } ?? []
+        
+        return Movie(
+            id: String(movieDetails.id),
+            title: movieDetails.title,
+            year: year,
+            poster: movieDetails.poster_path,
+            genres: genreNames
+        )
+    }
+    
+    private func decodeTMDbFindResults(data: Data) throws -> Movie? {
+        struct TMDbFindResponse: Decodable {
+            let movie_results: [TMDbMovie]
+            
+            struct TMDbMovie: Decodable {
+                let id: Int
+                let title: String
+                let release_date: String?
+                let poster_path: String?
+                let genre_ids: [Int]?
+            }
+        }
+        
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(TMDbFindResponse.self, from: data)
+        
+        guard let tmdbMovie = response.movie_results.first else {
+            return nil
+        }
+        
+        let year: Int? = {
+            if let releaseDate = tmdbMovie.release_date, !releaseDate.isEmpty {
+                return Int(releaseDate.prefix(4))
+            }
+            return nil
+        }()
+        
+        let genreNames = tmdbMovie.genre_ids?.compactMap { genreId in
+            return genreMap.first(where: { $0.value == genreId })?.key.capitalized
+        } ?? []
+        
+        return Movie(
+            id: String(tmdbMovie.id),
+            title: tmdbMovie.title,
+            year: year,
+            poster: tmdbMovie.poster_path,
+            genres: genreNames
+        )
     }
     
     func getExtras(imdbID: String) async -> MovieExtras? {
-        guard let url = URL(string: "https://imdb.iamidiotareyoutoo.com/search?tt=\(imdbID)") else { return nil }
+        // Convert ID to TMDb ID if needed
+        let tmdbId: Int
+        if let id = Int(imdbID) {
+            tmdbId = id
+        } else if imdbID.hasPrefix("tt") {
+            // Find TMDb ID from IMDb ID first
+            guard let movie = await findMovieByImdbId(imdbID), let id = Int(movie.id) else {
+                return nil
+            }
+            tmdbId = id
+        } else {
+            return nil
+        }
+        
+        guard let url = URL(string: "\(baseURL)/movie/\(tmdbId)?api_key=\(apiKey)&append_to_response=credits,keywords") else {
+            return nil
+        }
+        
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            return decodeIMDBExtras(data: data)
+            return try decodeTMDbExtras(data: data)
         } catch {
-            print("Failed to fetch extras for \(imdbID): \(error)")
+            print("Failed to fetch extras for TMDb ID \(tmdbId): \(error)")
             return nil
         }
     }
     
-    private func decodeIMDBExtras(data: Data) -> MovieExtras? {
-        var extras = MovieExtras()
+    private func decodeTMDbExtras(data: Data) -> MovieExtras? {
+        struct TMDbMovieExtras: Decodable {
+            let overview: String?
+            let runtime: Int?
+            let vote_average: Double?
+            let vote_count: Int?
+            let budget: Int?
+            let revenue: Int?
+            let release_date: String?
+            let original_language: String?
+            let backdrop_path: String?
+            let production_companies: [ProductionCompany]?
+            let credits: Credits?
+            let keywords: Keywords?
+            
+            struct ProductionCompany: Decodable {
+                let name: String
+            }
+            
+            struct Credits: Decodable {
+                let cast: [Cast]?
+                let crew: [Crew]?
+                
+                struct Cast: Decodable {
+                    let name: String
+                    let character: String?
+                    let profile_path: String?
+                }
+                
+                struct Crew: Decodable {
+                    let name: String
+                    let job: String
+                }
+            }
+            
+            struct Keywords: Decodable {
+                let keywords: [Keyword]?
+                
+                struct Keyword: Decodable {
+                    let name: String
+                }
+            }
+        }
+        
         do {
-            let json = try JSONSerialization.jsonObject(with: data, options: [])
-            guard let dict = json as? [String: Any] else { return extras }
+            let decoder = JSONDecoder()
+            let details = try decoder.decode(TMDbMovieExtras.self, from: data)
             
-            // Get plot from multiple possible locations
-            if let top = dict["top"] as? [String: Any],
-               let plot = top["plot"] as? [String: Any],
-               let plotText = plot["plotText"] as? [String: Any],
-               let plainText = plotText["plainText"] as? String {
-                extras.plot = plainText
-            } else if let short = dict["short"] as? [String: Any],
-                      let description = short["description"] as? String {
-                extras.plot = description
-            }
+            // Extract cast members
+            let castMembers = details.credits?.cast?.prefix(20).map { castMember in
+                MovieExtras.CastMember(
+                    name: castMember.name,
+                    character: castMember.character,
+                    profilePath: castMember.profile_path
+                )
+            } ?? []
             
-            // Get runtime from top level
-            if let top = dict["top"] as? [String: Any],
-               let runtime = top["runtime"] as? [String: Any],
-               let seconds = runtime["seconds"] as? Int {
-                extras.runtimeMinutes = seconds / 60
-            } else if let short = dict["short"] as? [String: Any],
-                      let duration = short["duration"] as? String {
-                // Parse PT1H16M format
-                extras.runtimeMinutes = Self.parsePTDuration(duration)
-            }
+            // Extract directors
+            let directors = details.credits?.crew?.filter { $0.job == "Director" }.map { $0.name } ?? []
             
-            // Get cast from principalCredits or cast
-            if let top = dict["top"] as? [String: Any],
-               let principalCredits = top["principalCredits"] as? [[String: Any]] {
-                for creditCategory in principalCredits {
-                    if let category = creditCategory["category"] as? [String: Any],
-                       let categoryId = category["id"] as? String,
-                       categoryId == "cast",
-                       let credits = creditCategory["credits"] as? [[String: Any]] {
-                        extras.cast = credits.compactMap { credit in
-                            if let name = credit["name"] as? [String: Any],
-                               let nameText = name["nameText"] as? [String: Any],
-                               let text = nameText["text"] as? String {
-                                return text
-                            }
-                            return nil
-                        }
-                        break
-                    }
-                }
-            }
+            // Extract writers
+            let writers = details.credits?.crew?.filter { crew in
+                ["Writer", "Screenplay", "Story", "Author"].contains(crew.job)
+            }.map { $0.name } ?? []
             
-            // Fallback to short.actor
-            if extras.cast.isEmpty,
-               let short = dict["short"] as? [String: Any],
-               let actors = short["actor"] as? [[String: Any]] {
-                extras.cast = actors.compactMap { actor in
-                    return actor["name"] as? String
-                }
-            }
+            // Extract production companies
+            let companies = details.production_companies?.map { $0.name } ?? []
             
-            // Get directors
-            if let top = dict["top"] as? [String: Any],
-               let principalCredits = top["principalCredits"] as? [[String: Any]] {
-                for creditCategory in principalCredits {
-                    if let category = creditCategory["category"] as? [String: Any],
-                       let categoryId = category["id"] as? String,
-                       categoryId == "director",
-                       let credits = creditCategory["credits"] as? [[String: Any]] {
-                        extras.directors = credits.compactMap { credit in
-                            if let name = credit["name"] as? [String: Any],
-                               let nameText = name["nameText"] as? [String: Any],
-                               let text = nameText["text"] as? String {
-                                return text
-                            }
-                            return nil
-                        }
-                        break
-                    }
-                }
-            }
+            // Extract keywords
+            let keywordList = details.keywords?.keywords?.map { $0.name } ?? []
             
-            // Fallback to short.director
-            if extras.directors.isEmpty,
-               let short = dict["short"] as? [String: Any],
-               let directors = short["director"] as? [[String: Any]] {
-                extras.directors = directors.compactMap { director in
-                    return director["name"] as? String
-                }
-            }
-            
-            // Get writers
-            if let top = dict["top"] as? [String: Any],
-               let principalCredits = top["principalCredits"] as? [[String: Any]] {
-                for creditCategory in principalCredits {
-                    if let category = creditCategory["category"] as? [String: Any],
-                       let categoryId = category["id"] as? String,
-                       categoryId == "writer",
-                       let credits = creditCategory["credits"] as? [[String: Any]] {
-                        extras.writers = credits.compactMap { credit in
-                            if let name = credit["name"] as? [String: Any],
-                               let nameText = name["nameText"] as? [String: Any],
-                               let text = nameText["text"] as? String {
-                                return text
-                            }
-                            return nil
-                        }
-                        break
-                    }
-                }
-            }
-            
-            // Fallback to short.creator
-            if extras.writers.isEmpty,
-               let short = dict["short"] as? [String: Any],
-               let creators = short["creator"] as? [[String: Any]] {
-                extras.writers = creators.compactMap { creator in
-                    return creator["name"] as? String
-                }
-            }
-            
-            return extras
+            return MovieExtras(
+                plot: details.overview,
+                cast: Array(castMembers),
+                directors: directors,
+                writers: writers,
+                runtimeMinutes: details.runtime,
+                rating: details.vote_average,
+                voteCount: details.vote_count,
+                budget: details.budget == 0 ? nil : details.budget,
+                revenue: details.revenue == 0 ? nil : details.revenue,
+                releaseDate: details.release_date,
+                originalLanguage: details.original_language,
+                productionCompanies: companies,
+                keywords: keywordList,
+                backdropPath: details.backdrop_path
+            )
         } catch {
-            print("Extras JSON parse error: \(error)")
-            return extras
+            print("Failed to decode TMDb extras: \(error)")
+            return nil
         }
-    }
-    
-    private static func parsePTDuration(_ duration: String) -> Int? {
-        // Parse PT1H16M format
-        let pattern = #"PT(?:(\d+)H)?(?:(\d+)M)?"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
-        
-        let range = NSRange(duration.startIndex..<duration.endIndex, in: duration)
-        guard let match = regex.firstMatch(in: duration, range: range) else { return nil }
-        
-        var totalMinutes = 0
-        
-        // Hours
-        if match.range(at: 1).location != NSNotFound {
-            let hoursRange = Range(match.range(at: 1), in: duration)!
-            if let hours = Int(duration[hoursRange]) {
-                totalMinutes += hours * 60
-            }
-        }
-        
-        // Minutes
-        if match.range(at: 2).location != NSNotFound {
-            let minutesRange = Range(match.range(at: 2), in: duration)!
-            if let minutes = Int(duration[minutesRange]) {
-                totalMinutes += minutes
-            }
-        }
-        
-        return totalMinutes > 0 ? totalMinutes : nil
     }
 }
 

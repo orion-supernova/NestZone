@@ -182,8 +182,8 @@ struct MovieDetailSheet: View {
                     .padding(.horizontal, 20)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
-                        ForEach(cast.prefix(12), id: \.self) { name in
-                            Text(name)
+                        ForEach(cast.prefix(12), id: \.name) { castMember in
+                            Text(castMember.name)
                                 .font(.system(size: 13, weight: .medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
@@ -432,8 +432,8 @@ struct MovieDetailInfoSheet: View {
                     .padding(.horizontal, 20)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
-                        ForEach(cast.prefix(12), id: \.self) { name in
-                            Text(name)
+                        ForEach(cast.prefix(12), id: \.name) { castMember in
+                            Text(castMember.name)
                                 .font(.system(size: 13, weight: .medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
