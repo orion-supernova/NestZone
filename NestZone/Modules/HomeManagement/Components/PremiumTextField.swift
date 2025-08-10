@@ -6,6 +6,8 @@ struct PremiumTextField: View {
     @Binding var text: String
     let icon: String
     let isRequired: Bool
+    var isSecure: Bool = false
+    var keyboardType: UIKeyboardType = .default
     
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
@@ -45,19 +47,41 @@ struct PremiumTextField: View {
                     .scaleEffect(animateIcon ? 1.1 : 1.0)
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: animateIcon)
                 
-                TextField(placeholder, text: $text)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(selectedTheme.colors(for: colorScheme).text)
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            animateIcon = true
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                if isSecure {
+                    SecureField(placeholder, text: $text)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(selectedTheme.colors(for: colorScheme).text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(keyboardType)
+                        .onTapGesture {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                animateIcon = false
+                                animateIcon = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    animateIcon = false
+                                }
                             }
                         }
-                    }
+                } else {
+                    TextField(placeholder, text: $text)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(selectedTheme.colors(for: colorScheme).text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(keyboardType)
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                animateIcon = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    animateIcon = false
+                                }
+                            }
+                        }
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
