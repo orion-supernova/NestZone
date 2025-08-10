@@ -10,11 +10,11 @@ struct HomeTabScreen: View {
     @State private var animateHeader = false
     @State private var animateStats = false
     @State private var showingShoppingView = false
+    @State private var showingWhatToWatch = false
     
     var body: some View {
         ScrollView(showsIndicators: false) {
             LazyVStack(spacing: 0) {
-                // Simplified Header
                 SimpleHeaderView()
                     .environmentObject(viewModel)
                     .padding(.horizontal, 24)
@@ -22,22 +22,20 @@ struct HomeTabScreen: View {
                     .opacity(animateHeader ? 1 : 0)
                     .offset(y: animateHeader ? 0 : -50)
                 
-                // Quick Actions
-                QuickActionsView()
-                    .environmentObject(tabNavigationHelper)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 32)
-                    .opacity(animateHeader ? 1 : 0)
-                    .offset(y: animateHeader ? 0 : 30)
-                
-                // Navigable Statistics
                 NavigableStatsSection(showingShoppingView: $showingShoppingView)
                     .environmentObject(viewModel)
                     .environmentObject(tabNavigationHelper)
                     .padding(.top, 40)
-                    .padding(.bottom, 100)
                     .opacity(animateStats ? 1 : 0)
                     .offset(y: animateStats ? 0 : 50)
+                
+                MiniGamesSection {
+                    showingWhatToWatch = true
+                }
+                .padding(.top, 24)
+                .padding(.bottom, 100)
+                .opacity(animateStats ? 1 : 0)
+                .offset(y: animateStats ? 0 : 50)
             }
         }
         .background(
@@ -67,6 +65,9 @@ struct HomeTabScreen: View {
         }
         .fullScreenCover(isPresented: $showingShoppingView) {
             ShoppingListView()
+        }
+        .fullScreenCover(isPresented: $showingWhatToWatch) {
+            WhatToWatchView()
         }
     }
     
@@ -117,7 +118,6 @@ struct SimpleHeaderView: View {
                 
                 Spacer()
                 
-                // Simple Profile Avatar
                 ZStack {
                     Circle()
                         .fill(
@@ -144,75 +144,85 @@ struct SimpleHeaderView: View {
     }
 }
 
-struct QuickActionsView: View {
-    @EnvironmentObject var tabNavigationHelper: TabNavigationHelper
-    
-    let actions = [
-        ("list.bullet.clipboard.fill", "Management", [Color.green, Color.mint]),
-        ("message.fill", "Messages", [Color.blue, Color.cyan]),
-        ("note.text", "Notes", [Color.orange, Color.yellow])
-    ]
+struct MiniGamesSection: View {
+    let onTapWhatToWatch: () -> Void
     
     var body: some View {
-        HStack(spacing: 16) {
-            ForEach(Array(actions.enumerated()), id: \.offset) { index, action in
-                Button {
-                    let impactLight = UIImpactFeedbackGenerator(style: .light)
-                    impactLight.impactOccurred()
-                    
-                    switch index {
-                    case 0: tabNavigationHelper.navigateToTab(.management)
-                    case 1: tabNavigationHelper.navigateToTab(.messages)
-                    case 2: tabNavigationHelper.navigateToTab(.notes)
-                    default: break
-                    }
-                } label: {
-                    VStack(spacing: 8) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: action.2,
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+        VStack(spacing: 16) {
+            HStack {
+                Text("Mini Games")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.purple, Color.pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            
+            Button(action: onTapWhatToWatch) {
+                HStack(spacing: 16) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.pink.opacity(0.2), Color.purple.opacity(0.2)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
-                                .frame(width: 40, height: 40)
-                            
-                            Image(systemName: action.0)
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white)
-                        }
+                            )
+                            .frame(width: 50, height: 50)
                         
-                        Text(action.1)
-                            .font(.system(size: 12, weight: .semibold))
+                        Image(systemName: "film.fill")
+                            .font(.system(size: 22, weight: .bold))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: action.2,
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                                    colors: [.pink, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
                             )
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: action.2.map { $0.opacity(0.3) },
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("What to watch tonight")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        Text("Swipe to vote with your home, confetti on matches")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .padding(20)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.pink.opacity(0.3), .purple.opacity(0.3)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
                             )
                     )
-                }
-            }
+            )
+            .padding(.horizontal, 20)
         }
     }
 }
@@ -256,13 +266,13 @@ struct NavigableStatsSection: View {
                         index: index,
                         action: {
                             switch index {
-                            case 0: // Notes
+                            case 0:
                                 tabNavigationHelper.navigateToTab(.notes)
-                            case 1: // Shopping - Direct navigation
+                            case 1:
                                 showingShoppingView = true
-                            case 2: // Issues - Navigate to management with filter
+                            case 2:
                                 tabNavigationHelper.navigateToTab(.management)
-                            case 3: // Tasks Done - Navigate to management (completed tasks view)
+                            case 3:
                                 tabNavigationHelper.navigateToTab(.management)
                             default:
                                 break
@@ -314,7 +324,6 @@ struct NavigableStatCard: View {
     
     @State private var isPressed = false
     
-    // Computed property to check if change should be shown
     private var shouldShowChange: Bool {
         return change != "+0" && change != "0" && change != "-0"
     }
@@ -361,7 +370,6 @@ struct NavigableStatCard: View {
                     
                     Spacer()
                     
-                    // Only show change badge if change is not 0
                     if shouldShowChange {
                         Text(change)
                             .font(.system(size: 10, weight: .bold))
