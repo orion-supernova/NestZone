@@ -12,7 +12,7 @@ struct TabBarScreen: View {
 
     enum Tab: String, CaseIterable {
         case home = "Home"
-        case management = "Management"
+        case management = "Hub"
         case notes = "Notes"
         case messages = "Messages"
         case settings = "Settings"
