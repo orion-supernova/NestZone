@@ -102,7 +102,41 @@ final class PollsManager: @unchecked Sendable {
         let home = try await resolveHomeIdIfNeeded(homeId)
         let filterRaw = "home_id = '\(home)' && status = 'active' && type = 'movie'"
         let endpoint = "/api/collections/polls/records?filter=\(encode(filterRaw))&sort=-created&perPage=1"
+        
+        print("🔍 DEBUG getActivePoll:")
+        print("  - Home ID: \(home)")
+        print("  - Filter: \(filterRaw)")
+        print("  - Endpoint: \(endpoint)")
+        
         let response: PBListResponse<Poll> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<Poll>.self)
+        
+        print("🔍 DEBUG getActivePoll results:")
+        print("  - Total polls found: \(response.items.count)")
+        for (index, poll) in response.items.enumerated() {
+            print("  - Poll \(index): id=\(poll.id), status=\(poll.status ?? "nil"), title=\(poll.title ?? "nil")")
+        }
+        
+        return response.items.first
+    }
+    
+    func getRecentPoll(homeId: String? = nil) async throws -> Poll? {
+        let home = try await resolveHomeIdIfNeeded(homeId)
+        let filterRaw = "home_id = '\(home)' && type = 'movie'"
+        let endpoint = "/api/collections/polls/records?filter=\(encode(filterRaw))&sort=-created&perPage=1"
+        
+        print("🔍 DEBUG getRecentPoll:")
+        print("  - Home ID: \(home)")
+        print("  - Filter: \(filterRaw)")
+        print("  - Endpoint: \(endpoint)")
+        
+        let response: PBListResponse<Poll> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<Poll>.self)
+        
+        print("🔍 DEBUG getRecentPoll results:")
+        print("  - Total polls found: \(response.items.count)")
+        for (index, poll) in response.items.enumerated() {
+            print("  - Poll \(index): id=\(poll.id), status=\(poll.status ?? "nil"), title=\(poll.title ?? "nil")")
+        }
+        
         return response.items.first
     }
     
@@ -110,7 +144,20 @@ final class PollsManager: @unchecked Sendable {
         let home = try await resolveHomeIdIfNeeded(homeId)
         let filterRaw = "home_id = '\(home)' && status = 'closed' && type = 'movie'"
         let endpoint = "/api/collections/polls/records?filter=\(encode(filterRaw))&sort=-created&perPage=\(limit)"
+        
+        print("🔍 DEBUG getPreviousPolls:")
+        print("  - Home ID: \(home)")
+        print("  - Filter: \(filterRaw)")
+        print("  - Endpoint: \(endpoint)")
+        
         let response: PBListResponse<Poll> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<Poll>.self)
+        
+        print("🔍 DEBUG getPreviousPolls results:")
+        print("  - Total polls found: \(response.items.count)")
+        for (index, poll) in response.items.enumerated() {
+            print("  - Poll \(index): id=\(poll.id), status='\(poll.status ?? "nil")', title='\(poll.title ?? "nil")'")
+        }
+        
         return response.items
     }
     

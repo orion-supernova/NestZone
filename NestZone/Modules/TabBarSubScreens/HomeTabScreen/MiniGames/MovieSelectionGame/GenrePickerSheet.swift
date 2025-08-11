@@ -1,9 +1,10 @@
 import SwiftUI
 
 struct GenrePickerSheet: View {
-    let onPick: ([String]) -> Void
+    let onPick: ([String], Bool) -> Void // Add includeAdult parameter
     @Environment(\.dismiss) private var dismiss
     @State private var selectedGenres: Set<String> = []
+    @State private var includeAdult = false // Add adult content toggle
     
     // Enhanced genre list with emojis and descriptions
     let genres = [
@@ -69,7 +70,7 @@ struct GenrePickerSheet: View {
                     .padding(.horizontal, 20)
                 }
                 
-                // Selected Count & Action Button
+                // Selected Count, Adult Toggle & Action Button
                 VStack(spacing: 16) {
                     if !selectedGenres.isEmpty {
                         HStack(spacing: 8) {
@@ -97,8 +98,39 @@ struct GenrePickerSheet: View {
                         }
                         .padding(.horizontal, 20)
                         
+                        // Adult Content Toggle
+                        VStack(spacing: 12) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Include Adult Content")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(.primary)
+                                    
+                                    Text("Include movies with mature themes and content")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: $includeAdult)
+                                    .toggleStyle(SwitchToggleStyle(tint: .purple))
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.ultraThinMaterial)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(.purple.opacity(0.2), lineWidth: 1)
+                                    )
+                            )
+                            .padding(.horizontal, 20)
+                        }
+                        
                         Button {
-                            onPick(Array(selectedGenres))
+                            onPick(Array(selectedGenres), includeAdult)
                             dismiss()
                         } label: {
                             HStack(spacing: 8) {

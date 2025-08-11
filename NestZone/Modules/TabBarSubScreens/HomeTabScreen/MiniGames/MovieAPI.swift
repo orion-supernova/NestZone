@@ -114,19 +114,223 @@ final class MovieAPI {
     
     // MARK: - Public API
     
-    func searchMovies(query: String) async -> [Movie] {
+    func searchMovies(query: String, includeAdult: Bool = false) async -> [Movie] {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard !q.isEmpty else {
-            return await getPopularMovies()
+            return await getPopularMovies(includeAdult: includeAdult)
         }
         
-        return await searchMoviesFromTMDb(query: q)
+        return await searchMoviesFromTMDb(query: q, includeAdult: includeAdult)
     }
     
-    private func searchMoviesFromTMDb(query: String) async -> [Movie] {
+    func searchByGenre(genre: String, includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Searching by genre: \(genre), includeAdult: \(includeAdult)")
+        
+        guard let genreId = genreMap[genre.lowercased()] else {
+            print("🎬 MovieAPI: Unknown genre \(genre), falling back to search")
+            return await searchMovies(query: genre, includeAdult: includeAdult)
+        }
+        
+        // Get multiple pages for better variety
+        var allMovies: [Movie] = []
+        let maxPages = 3
+        
+        for page in 1...maxPages {
+            guard let url = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&with_genres=\(genreId)&page=\(page)&include_adult=\(includeAdult)&sort_by=popularity.desc") else {
+                continue
+            }
+            
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let movies = try decodeTMDbSearchResults(data: data)
+                print("🎬 MovieAPI: Found \(movies.count) movies on page \(page)")
+                
+                for movie in movies {
+                    if !allMovies.contains(where: { $0.id == movie.id }) {
+                        allMovies.append(movie)
+                    }
+                }
+                
+                // Cache the movies
+                for movie in movies {
+                    cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+                }
+                
+            } catch {
+                print("🎬 MovieAPI: Failed to fetch page \(page) for genre \(genre): \(error)")
+            }
+        }
+        
+        print("🎬 MovieAPI: Total unique movies found: \(allMovies.count)")
+        let shuffled = Array(allMovies.shuffled().prefix(20))
+        print("🎬 MovieAPI: Returning \(shuffled.count) movies")
+        return shuffled
+    }
+    
+    func searchByActor(actorName: String, includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Searching by actor: \(actorName)")
+        
+        // First, find the actor ID
+        guard let actorId = await findPersonId(name: actorName) else {
+            print("🎬 MovieAPI: Actor not found: \(actorName)")
+            return []
+        }
+        
+        // Then get movies with this actor
+        return await getMoviesByPerson(personId: actorId, includeAdult: includeAdult)
+    }
+    
+    func searchByDirector(directorName: String, includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Searching by director: \(directorName)")
+        
+        // First, find the director ID
+        guard let directorId = await findPersonId(name: directorName) else {
+            print("🎬 MovieAPI: Director not found: \(directorName)")
+            return []
+        }
+        
+        // Then get movies directed by this person
+        return await getMoviesByDirector(directorId: directorId, includeAdult: includeAdult)
+    }
+    
+    func searchByYear(year: Int, includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Searching by year: \(year)")
+        
+        var allMovies: [Movie] = []
+        let maxPages = 3
+        
+        for page in 1...maxPages {
+            guard let url = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&primary_release_year=\(year)&page=\(page)&include_adult=\(includeAdult)&sort_by=popularity.desc") else {
+                continue
+            }
+            
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let movies = try decodeTMDbSearchResults(data: data)
+                
+                for movie in movies {
+                    if !allMovies.contains(where: { $0.id == movie.id }) {
+                        allMovies.append(movie)
+                    }
+                }
+                
+                // Cache the movies
+                for movie in movies {
+                    cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+                }
+                
+            } catch {
+                print("🎬 MovieAPI: Failed to fetch page \(page) for year \(year): \(error)")
+            }
+        }
+        
+        let shuffled = Array(allMovies.shuffled().prefix(20))
+        print("🎬 MovieAPI: Returning \(shuffled.count) movies for year \(year)")
+        return shuffled
+    }
+    
+    func searchByDecade(decade: Int, includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Searching by decade: \(decade)s")
+        
+        let startYear = decade
+        let endYear = decade + 9
+        
+        var allMovies: [Movie] = []
+        let maxPages = 3
+        
+        for page in 1...maxPages {
+            guard let url = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&primary_release_date.gte=\(startYear)-01-01&primary_release_date.lte=\(endYear)-12-31&page=\(page)&include_adult=\(includeAdult)&sort_by=popularity.desc") else {
+                continue
+            }
+            
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let movies = try decodeTMDbSearchResults(data: data)
+                
+                for movie in movies {
+                    if !allMovies.contains(where: { $0.id == movie.id }) {
+                        allMovies.append(movie)
+                    }
+                }
+                
+                // Cache the movies
+                for movie in movies {
+                    cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+                }
+                
+            } catch {
+                print("🎬 MovieAPI: Failed to fetch page \(page) for decade \(decade)s: \(error)")
+            }
+        }
+        
+        let shuffled = Array(allMovies.shuffled().prefix(20))
+        print("🎬 MovieAPI: Returning \(shuffled.count) movies for decade \(decade)s")
+        return shuffled
+    }
+    
+    // MARK: - TMDB Lists
+    
+    func getNowPlayingMovies(includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Getting now playing movies")
+        return await getMoviesList(endpoint: "now_playing", includeAdult: includeAdult)
+    }
+    
+    func getPopularMovies(includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Getting popular movies")
+        return await getMoviesList(endpoint: "popular", includeAdult: includeAdult)
+    }
+    
+    func getTopRatedMovies(includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Getting top rated movies")
+        return await getMoviesList(endpoint: "top_rated", includeAdult: includeAdult)
+    }
+    
+    func getUpcomingMovies(includeAdult: Bool = false) async -> [Movie] {
+        print("🎬 MovieAPI: Getting upcoming movies")
+        return await getMoviesList(endpoint: "upcoming", includeAdult: includeAdult)
+    }
+    
+    private func getMoviesList(endpoint: String, includeAdult: Bool = false) async -> [Movie] {
+        var allMovies: [Movie] = []
+        let maxPages = 3
+        
+        for page in 1...maxPages {
+            guard let url = URL(string: "\(baseURL)/movie/\(endpoint)?api_key=\(apiKey)&page=\(page)&include_adult=\(includeAdult)") else {
+                continue
+            }
+            
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let movies = try decodeTMDbSearchResults(data: data)
+                print("🎬 MovieAPI: Found \(movies.count) \(endpoint) movies on page \(page)")
+                
+                for movie in movies {
+                    if !allMovies.contains(where: { $0.id == movie.id }) {
+                        allMovies.append(movie)
+                    }
+                }
+                
+                // Cache the movies
+                for movie in movies {
+                    cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+                }
+                
+            } catch {
+                print("🎬 MovieAPI: Failed to fetch page \(page) for \(endpoint): \(error)")
+            }
+        }
+        
+        let shuffled = Array(allMovies.shuffled().prefix(20))
+        print("🎬 MovieAPI: Returning \(shuffled.count) \(endpoint) movies")
+        return shuffled
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func searchMoviesFromTMDb(query: String, includeAdult: Bool = false) async -> [Movie] {
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "\(baseURL)/search/movie?api_key=\(apiKey)&query=\(encodedQuery)&include_adult=false") else {
+              let url = URL(string: "\(baseURL)/search/movie?api_key=\(apiKey)&query=\(encodedQuery)&include_adult=\(includeAdult)") else {
             return []
         }
         
@@ -143,20 +347,73 @@ final class MovieAPI {
         }
     }
     
-    private func getPopularMovies() async -> [Movie] {
-        guard let url = URL(string: "\(baseURL)/movie/popular?api_key=\(apiKey)&include_adult=false") else {
+    private func findPersonId(name: String) async -> Int? {
+        guard let encodedName = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "\(baseURL)/search/person?api_key=\(apiKey)&query=\(encodedName)") else {
+            return nil
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            
+            struct PersonSearchResponse: Decodable {
+                let results: [Person]
+                
+                struct Person: Decodable {
+                    let id: Int
+                    let name: String
+                }
+            }
+            
+            let decoder = JSONDecoder()
+            let response = try decoder.decode(PersonSearchResponse.self, from: data)
+            return response.results.first?.id
+        } catch {
+            print("🎬 MovieAPI: Failed to find person \(name): \(error)")
+            return nil
+        }
+    }
+    
+    private func getMoviesByPerson(personId: Int, includeAdult: Bool = false) async -> [Movie] {
+        guard let url = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&with_cast=\(personId)&include_adult=\(includeAdult)&sort_by=popularity.desc") else {
             return []
         }
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let movies = try decodeTMDbSearchResults(data: data)
+            
+            // Cache the movies
             for movie in movies {
                 cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
             }
-            return movies
+            
+            let shuffled = Array(movies.shuffled().prefix(20))
+            return shuffled
         } catch {
-            print("Failed to fetch popular movies: \(error)")
+            print("🎬 MovieAPI: Failed to get movies for person \(personId): \(error)")
+            return []
+        }
+    }
+    
+    private func getMoviesByDirector(directorId: Int, includeAdult: Bool = false) async -> [Movie] {
+        guard let url = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&with_crew=\(directorId)&include_adult=\(includeAdult)&sort_by=popularity.desc") else {
+            return []
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let movies = try decodeTMDbSearchResults(data: data)
+            
+            // Cache the movies
+            for movie in movies {
+                cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
+            }
+            
+            let shuffled = Array(movies.shuffled().prefix(20))
+            return shuffled
+        } catch {
+            print("🎬 MovieAPI: Failed to get movies for director \(directorId): \(error)")
             return []
         }
     }
@@ -222,48 +479,32 @@ final class MovieAPI {
         return nil
     }
     
-    func searchByGenre(genre: String) async -> [Movie] {
-        print("🎬 MovieAPI: Searching by genre: \(genre)")
-        
-        guard let genreId = genreMap[genre.lowercased()] else {
-            print("🎬 MovieAPI: Unknown genre \(genre), falling back to search")
-            return await searchMovies(query: genre)
+    func getExtras(imdbID: String) async -> MovieExtras? {
+        // Convert ID to TMDb ID if needed
+        let tmdbId: Int
+        if let id = Int(imdbID) {
+            tmdbId = id
+        } else if imdbID.hasPrefix("tt") {
+            // Find TMDb ID from IMDb ID first
+            guard let movie = await findMovieByImdbId(imdbID), let id = Int(movie.id) else {
+                return nil
+            }
+            tmdbId = id
+        } else {
+            return nil
         }
         
-        // Get multiple pages for better variety
-        var allMovies: [Movie] = []
-        let maxPages = 3
-        
-        for page in 1...maxPages {
-            guard let url = URL(string: "\(baseURL)/discover/movie?api_key=\(apiKey)&with_genres=\(genreId)&page=\(page)&include_adult=false&sort_by=popularity.desc") else {
-                continue
-            }
-            
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                let movies = try decodeTMDbSearchResults(data: data)
-                print("🎬 MovieAPI: Found \(movies.count) movies on page \(page)")
-                
-                for movie in movies {
-                    if !allMovies.contains(where: { $0.id == movie.id }) {
-                        allMovies.append(movie)
-                    }
-                }
-                
-                // Cache the movies
-                for movie in movies {
-                    cacheQueue.async(flags: .barrier) { self._cache[movie.id] = movie }
-                }
-                
-            } catch {
-                print("🎬 MovieAPI: Failed to fetch page \(page) for genre \(genre): \(error)")
-            }
+        guard let url = URL(string: "\(baseURL)/movie/\(tmdbId)?api_key=\(apiKey)&append_to_response=credits,keywords") else {
+            return nil
         }
         
-        print("🎬 MovieAPI: Total unique movies found: \(allMovies.count)")
-        let shuffled = Array(allMovies.shuffled().prefix(20))
-        print("🎬 MovieAPI: Returning \(shuffled.count) movies")
-        return shuffled
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return try decodeTMDbExtras(data: data)
+        } catch {
+            print("Failed to fetch extras for TMDb ID \(tmdbId): \(error)")
+            return nil
+        }
     }
     
     // MARK: - Decoding Helpers
@@ -381,34 +622,6 @@ final class MovieAPI {
             poster: tmdbMovie.poster_path,
             genres: genreNames
         )
-    }
-    
-    func getExtras(imdbID: String) async -> MovieExtras? {
-        // Convert ID to TMDb ID if needed
-        let tmdbId: Int
-        if let id = Int(imdbID) {
-            tmdbId = id
-        } else if imdbID.hasPrefix("tt") {
-            // Find TMDb ID from IMDb ID first
-            guard let movie = await findMovieByImdbId(imdbID), let id = Int(movie.id) else {
-                return nil
-            }
-            tmdbId = id
-        } else {
-            return nil
-        }
-        
-        guard let url = URL(string: "\(baseURL)/movie/\(tmdbId)?api_key=\(apiKey)&append_to_response=credits,keywords") else {
-            return nil
-        }
-        
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            return try decodeTMDbExtras(data: data)
-        } catch {
-            print("Failed to fetch extras for TMDb ID \(tmdbId): \(error)")
-            return nil
-        }
     }
     
     private func decodeTMDbExtras(data: Data) -> MovieExtras? {

@@ -166,7 +166,7 @@ struct WhatToWatchView: View {
                             VStack(spacing: 16) {
                                 // Start Poll Button
                                 Button("Start Movie Poll") {
-                                    viewModel.showingGenrePicker = true
+                                    viewModel.showingPollTypeSelection = true
                                 }
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundStyle(.white)
@@ -220,34 +220,47 @@ struct WhatToWatchView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }
                 }
-                
-                // Add Previous Polls button to toolbar when not in poll
-                if !viewModel.isInPoll && !viewModel.isCreatingPoll {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showingPreviousPolls = true
-                        } label: {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 16))
-                        }
-                    }
-                }
             }
         }
-        .sheet(isPresented: $viewModel.showingGenrePicker) {
-            GenrePickerSheet { genres in
-                Task { await viewModel.startGenrePoll(genres) }
+        .fullScreenCover(isPresented: $viewModel.showingPollTypeSelection) {
+            PollTypeSelectionSheet { pollType in
+                viewModel.handlePollTypeSelection(pollType)
             }
         }
-        .sheet(isPresented: $viewModel.showingMovieDetail) {
+        .fullScreenCover(isPresented: $viewModel.showingGenrePicker) {
+            GenrePickerSheet { genres, includeAdult in
+                Task { await viewModel.startGenrePoll(genres, includeAdult: includeAdult) }
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.showingActorInput) {
+            ActorInputSheet(includeAdult: viewModel.includeAdultContent) { actorName in
+                Task { await viewModel.startActorPoll(actorName) }
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.showingDirectorInput) {
+            DirectorInputSheet(includeAdult: viewModel.includeAdultContent) { directorName in
+                Task { await viewModel.startDirectorPoll(directorName) }
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.showingYearInput) {
+            YearInputSheet(includeAdult: viewModel.includeAdultContent) { year in
+                Task { await viewModel.startYearPoll(year) }
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.showingDecadeInput) {
+            DecadeInputSheet(includeAdult: viewModel.includeAdultContent) { decade in
+                Task { await viewModel.startDecadePoll(decade) }
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.showingMovieDetail) {
             if let movie = viewModel.selectedMovieForDetail {
                 SimpleMovieDetailSheet(movie: movie)
             }
         }
-        .sheet(isPresented: $showingPreviousPolls) {
+        .fullScreenCover(isPresented: $showingPreviousPolls) {
             PreviousPollsView()
         }
-        .sheet(isPresented: $viewModel.showingMatchOptions) {
+        .fullScreenCover(isPresented: $viewModel.showingMatchOptions) {
             MatchOptionsSheet(
                 matches: viewModel.currentMatches,
                 onContinue: {
@@ -261,7 +274,7 @@ struct WhatToWatchView: View {
                 }
             )
         }
-        .sheet(isPresented: $viewModel.showingPollSummary) {
+        .fullScreenCover(isPresented: $viewModel.showingPollSummary) {
             if let summary = viewModel.pollSummary {
                 PollSummarySheet(summary: summary)
             }

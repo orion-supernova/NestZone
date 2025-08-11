@@ -47,26 +47,6 @@ struct SwipeCard: View {
             if isDragging && abs(offset.width) > 30 {
                 VStack {
                     HStack {
-                        if offset.width < -30 {
-                            VStack(spacing: 8) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 50, weight: .bold))
-                                    .foregroundStyle(.red)
-                                    .background(
-                                        Circle()
-                                            .fill(.white)
-                                            .frame(width: 60, height: 60)
-                                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                                    )
-                                Text("NOPE")
-                                    .font(.system(size: 20, weight: .black, design: .rounded))
-                                    .foregroundStyle(.red)
-                                    .shadow(color: .black.opacity(0.5), radius: 2, x: 1, y: 1)
-                            }
-                            .opacity(min(1.0, abs(offset.width) / threshold))
-                            .scaleEffect(0.8 + min(0.3, abs(offset.width) / threshold * 0.3))
-                        }
-                        Spacer()
                         if offset.width > 30 {
                             VStack(spacing: 8) {
                                 Image(systemName: "heart.circle.fill")
@@ -85,6 +65,26 @@ struct SwipeCard: View {
                             }
                             .opacity(min(1.0, offset.width / threshold))
                             .scaleEffect(0.8 + min(0.3, offset.width / threshold * 0.3))
+                        }
+                        Spacer()
+                        if offset.width < -30 {
+                            VStack(spacing: 8) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 50, weight: .bold))
+                                    .foregroundStyle(.red)
+                                    .background(
+                                        Circle()
+                                            .fill(.white)
+                                            .frame(width: 60, height: 60)
+                                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                                    )
+                                Text("NOPE")
+                                    .font(.system(size: 20, weight: .black, design: .rounded))
+                                    .foregroundStyle(.red)
+                                    .shadow(color: .black.opacity(0.5), radius: 2, x: 1, y: 1)
+                            }
+                            .opacity(min(1.0, abs(offset.width) / threshold))
+                            .scaleEffect(0.8 + min(0.3, abs(offset.width) / threshold * 0.3))
                         }
                     }
                     .padding(.horizontal, 40)

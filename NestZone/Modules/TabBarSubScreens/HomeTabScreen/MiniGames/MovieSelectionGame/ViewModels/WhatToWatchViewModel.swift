@@ -10,7 +10,12 @@ class WhatToWatchViewModel: ObservableObject {
     @Published var selectedMovieForDetail: Movie?
     @Published var showingMovieDetail = false
     @Published var activePoll: Poll?
+    @Published var showingPollTypeSelection = false // NEW: Show poll type selection
     @Published var showingGenrePicker = false
+    @Published var showingActorInput = false // NEW: Show actor input
+    @Published var showingDirectorInput = false // NEW: Show director input
+    @Published var showingYearInput = false // NEW: Show year input
+    @Published var showingDecadeInput = false // NEW: Show decade input
     @Published var isCreatingPoll = false
     @Published var finalWinner: Movie? // Track final winner
     @Published var isLoadingPollMovies = false // Loading indicator for movie details
@@ -20,6 +25,7 @@ class WhatToWatchViewModel: ObservableObject {
     @Published var showingPollSummary = false // NEW: Show final poll summary
     @Published var pollSummary: PollSummary? // Summary data
     @Published var votingStats: VotingStats? // NEW: Current voting statistics
+    @Published var includeAdultContent = false // NEW: Adult content toggle
     
     // MARK: - Private Properties
     private let polls = PollsManager.shared
@@ -31,6 +37,21 @@ class WhatToWatchViewModel: ObservableObject {
     // MARK: - Initialization
     func initialize() async {
         print("🎬 WhatToWatch: Initializing...")
+        
+        // Reset any previous state first
+        await MainActor.run {
+            isInPoll = false
+            activePoll = nil
+            finalWinner = nil
+            currentMatches = []
+            showingMatchOptions = false
+            showingPollSummary = false
+            pollSummary = nil
+            votingStats = nil
+            hasSelectedMatch = false
+            voteCount = 0
+        }
+        
         await checkForActivePoll()
     }
     
@@ -43,23 +64,66 @@ class WhatToWatchViewModel: ObservableObject {
     private func checkForActivePoll() async {
         print("🎬 WhatToWatch: Checking for active poll...")
         do {
+            // First check for active polls
             if let poll = try await polls.getActivePoll(homeId: nil) {
                 print("🎬 WhatToWatch: Found active poll: \(poll.id)")
-                await joinExistingPoll(poll)
+                print("🎬 WhatToWatch: Poll status: \(poll.status ?? "nil")")
+                print("🎬 WhatToWatch: Poll title: \(poll.title ?? "nil")")
+                
+                // Double-check that the poll is actually active
+                if poll.status == "active" {
+                    await joinExistingPoll(poll)
+                } else {
+                    print("⚠️ WhatToWatch: Poll status is not 'active' (\(poll.status ?? "nil")), ignoring it")
+                    print("🎬 WhatToWatch: No valid active poll found")
+                }
             } else {
                 print("🎬 WhatToWatch: No active poll found")
+                
+                // DEBUG: Also check for any recent polls to understand what's happening
+                if let recentPoll = try await polls.getRecentPoll(homeId: nil) {
+                    print("🔍 DEBUG: Found recent poll: \(recentPoll.id)")
+                    print("🔍 DEBUG: Recent poll status: \(recentPoll.status ?? "nil")")
+                    print("🔍 DEBUG: Recent poll title: \(recentPoll.title ?? "nil")")
+                } else {
+                    print("🔍 DEBUG: No recent polls found at all")
+                }
             }
         } catch {
             print("🎬 WhatToWatch: Failed to check for active poll: \(error)")
         }
     }
     
-    func startGenrePoll(_ genres: [String]) async {
-        print("🎬 WhatToWatch: Starting genre poll with genres: \(genres)")
-        isCreatingPoll = true
+    // MARK: - Poll Type Selection
+    func handlePollTypeSelection(_ pollType: PollType) {
+        switch pollType {
+        case .genre:
+            showingGenrePicker = true
+        case .actor:
+            showingActorInput = true
+        case .director:
+            showingDirectorInput = true
+        case .year:
+            showingYearInput = true
+        case .decade:
+            showingDecadeInput = true
+        case .nowPlaying:
+            Task { await startNowPlayingPoll() }
+        case .popular:
+            Task { await startPopularPoll() }
+        case .topRated:
+            Task { await startTopRatedPoll() }
+        case .upcoming:
+            Task { await startUpcomingPoll() }
+        }
+    }
+    
+    // MARK: - Poll Creation Methods
+    func startGenrePoll(_ genres: [String], includeAdult: Bool) async {
+        print("🎬 WhatToWatch: Starting genre poll with genres: \(genres), includeAdult: \(includeAdult)")
         
-        defer {
-            isCreatingPoll = false
+        await MainActor.run {
+            isCreatingPoll = true
         }
         
         var allResults: [Movie] = []
@@ -67,7 +131,7 @@ class WhatToWatchViewModel: ObservableObject {
         // Get movies from selected genres
         for genre in genres {
             print("🎬 WhatToWatch: Searching for genre: \(genre)")
-            let results = await MovieAPI.shared.searchByGenre(genre: genre)
+            let results = await MovieAPI.shared.searchByGenre(genre: genre, includeAdult: includeAdult)
             print("🎬 WhatToWatch: Found \(results.count) movies for genre \(genre)")
             for movie in results {
                 if !allResults.contains(where: { $0.id == movie.id }) {
@@ -85,7 +149,218 @@ class WhatToWatchViewModel: ObservableObject {
             print("🎬 - \(movie.title) (\(movie.id))")
         }
         
-        await startNewPoll(title: "Movie Poll", candidates: selectedMovies)
+        await startNewPoll(title: "Genre Poll: \(genres.joined(separator: ", "))", candidates: selectedMovies)
+        
+        await MainActor.run {
+            showingGenrePicker = false
+        }
+    }
+    
+    func startActorPoll(_ actorName: String) async {
+        print("🎬 WhatToWatch: Starting actor poll for: \(actorName)")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.searchByActor(actorName: actorName, includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) movies for actor \(actorName)")
+        
+        guard !movies.isEmpty else {
+            print("❌ No movies found for actor: \(actorName)")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Actor Poll: \(actorName)", candidates: movies)
+        
+        // Dismiss the actor input sheet
+        await MainActor.run {
+            showingActorInput = false
+        }
+    }
+    
+    func startDirectorPoll(_ directorName: String) async {
+        print("🎬 WhatToWatch: Starting director poll for: \(directorName)")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.searchByDirector(directorName: directorName, includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) movies for director \(directorName)")
+        
+        guard !movies.isEmpty else {
+            print("❌ No movies found for director: \(directorName)")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Director Poll: \(directorName)", candidates: movies)
+        
+        await MainActor.run {
+            showingDirectorInput = false
+        }
+    }
+    
+    func startYearPoll(_ year: Int) async {
+        print("🎬 WhatToWatch: Starting year poll for: \(year)")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.searchByYear(year: year, includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) movies for year \(year)")
+        
+        guard !movies.isEmpty else {
+            print("❌ No movies found for year: \(year)")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Year Poll: \(year)", candidates: movies)
+        
+        await MainActor.run {
+            showingYearInput = false
+        }
+    }
+    
+    func startDecadePoll(_ decade: Int) async {
+        print("🎬 WhatToWatch: Starting decade poll for: \(decade)s")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.searchByDecade(decade: decade, includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) movies for decade \(decade)s")
+        
+        guard !movies.isEmpty else {
+            print("❌ No movies found for decade: \(decade)s")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Decade Poll: \(decade)s", candidates: movies)
+        
+        await MainActor.run {
+            showingDecadeInput = false
+        }
+    }
+    
+    func startMixedPoll() async {
+        print("🎬 WhatToWatch: Starting mixed poll")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.searchMovies(query: "", includeAdult: includeAdultContent) // Gets popular movies
+        print("🎬 WhatToWatch: Found \(movies.count) popular movies")
+        
+        guard !movies.isEmpty else {
+            print("❌ No popular movies found")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        let selectedMovies = Array(movies.shuffled().prefix(20))
+        await startNewPoll(title: "Mixed Movie Poll", candidates: selectedMovies)
+    }
+    
+    func startNowPlayingPoll() async {
+        print("🎬 WhatToWatch: Starting now playing poll")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.getNowPlayingMovies(includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) now playing movies")
+        
+        guard !movies.isEmpty else {
+            print("❌ No now playing movies found")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Now Playing Movies", candidates: movies)
+    }
+    
+    func startPopularPoll() async {
+        print("🎬 WhatToWatch: Starting popular poll")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.getPopularMovies(includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) popular movies")
+        
+        guard !movies.isEmpty else {
+            print("❌ No popular movies found")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Popular Movies", candidates: movies)
+    }
+    
+    func startTopRatedPoll() async {
+        print("🎬 WhatToWatch: Starting top rated poll")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.getTopRatedMovies(includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) top rated movies")
+        
+        guard !movies.isEmpty else {
+            print("❌ No top rated movies found")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Top Rated Movies", candidates: movies)
+    }
+    
+    func startUpcomingPoll() async {
+        print("🎬 WhatToWatch: Starting upcoming poll")
+        
+        await MainActor.run {
+            isCreatingPoll = true
+        }
+        
+        let movies = await MovieAPI.shared.getUpcomingMovies(includeAdult: includeAdultContent)
+        print("🎬 WhatToWatch: Found \(movies.count) upcoming movies")
+        
+        guard !movies.isEmpty else {
+            print("❌ No upcoming movies found")
+            await MainActor.run {
+                isCreatingPoll = false
+            }
+            return
+        }
+        
+        await startNewPoll(title: "Upcoming Movies", candidates: movies)
     }
     
     func closePoll() async {
@@ -103,22 +378,15 @@ class WhatToWatchViewModel: ObservableObject {
                     try await polls.submitVote(pollId: pollId, imdbId: cardViewModel.movie.id, vote: vote, userId: nil)
                     print("✅ Vote submitted successfully")
                     
-                    // Increment vote count and check for matches periodically
-                    await MainActor.run {
-                        voteCount += 1
-                    }
-                    
                     // Update voting stats when poll is complete
                     if cardStack.filter({ $0.isVisible }).count <= 1 {
                         await updateVotingStats()
                     }
                     
-                    // Only check for matches every few votes OR if all cards are done OR if it's a YES vote
-                    let shouldCheckMatches = voteCount % matchCheckInterval == 0 || 
-                                           cardStack.filter({ $0.isVisible }).count <= 1 || 
-                                           vote == true
-                    
-                    if shouldCheckMatches {
+                    // Check for matches immediately if this was a YES vote, or if all cards are done
+                    if vote == true {
+                        await checkForMatchesForMovie(cardViewModel.movie.id)
+                    } else if cardStack.filter({ $0.isVisible }).count <= 1 {
                         await checkForMatches()
                     }
                 } catch {
@@ -131,6 +399,89 @@ class WhatToWatchViewModel: ObservableObject {
             if let index = cardStack.firstIndex(where: { $0.id == cardViewModel.id }) {
                 cardStack[index].isVisible = false
             }
+        }
+    }
+
+    // NEW: Check if a specific movie is a match
+    private func checkForMatchesForMovie(_ movieId: String) async {
+        guard let pollId = activePoll?.id, !hasSelectedMatch else { return }
+        
+        do {
+            let votes = try await polls.fetchVotes(pollId: pollId)
+            let houseMemberCount = try await polls.getHouseMemberCount(homeId: nil)
+            
+            let allMatchIds = polls.getMatches(votes: votes, houseMemberCount: houseMemberCount)
+            
+            // Only show matches if the swiped movie is actually a match
+            if allMatchIds.contains(movieId) {
+                print("🏆 Movie \(movieId) is a match! Showing all \(allMatchIds.count) matches")
+                
+                // Fetch movie details for ALL matches (not just the swiped one)
+                let matches: [Movie] = await withTaskGroup(of: Movie?.self) { group in
+                    for matchId in allMatchIds {
+                        group.addTask { 
+                            await MovieAPI.shared.getDetails(imdbID: matchId)
+                        }
+                    }
+                    var list: [Movie] = []
+                    for await movie in group {
+                        if let movie = movie {
+                            list.append(movie)
+                        }
+                    }
+                    return list
+                }
+                
+                await MainActor.run {
+                    currentMatches = matches // Show ALL matches
+                    showingMatchOptions = true
+                    hasSelectedMatch = true
+                }
+            } else {
+                print("📊 Movie \(movieId) got a YES vote but is not yet a match")
+            }
+        } catch {
+            print("❌ Failed to check for matches for movie: \(error)")
+        }
+    }
+
+    // UPDATED: Keep original method for final poll completion
+    private func checkForMatches() async {
+        guard let pollId = activePoll?.id, !hasSelectedMatch else { return }
+        
+        do {
+            let votes = try await polls.fetchVotes(pollId: pollId)
+            let houseMemberCount = try await polls.getHouseMemberCount(homeId: nil)
+            
+            let matchIds = polls.getMatches(votes: votes, houseMemberCount: houseMemberCount)
+            
+            if !matchIds.isEmpty {
+                print("🏆 Found \(matchIds.count) matches: \(matchIds)")
+                
+                // Fetch movie details for all matches
+                let matches: [Movie] = await withTaskGroup(of: Movie?.self) { group in
+                    for matchId in matchIds {
+                        group.addTask { 
+                            await MovieAPI.shared.getDetails(imdbID: matchId)
+                        }
+                    }
+                    var list: [Movie] = []
+                    for await movie in group {
+                        if let movie = movie {
+                            list.append(movie)
+                        }
+                    }
+                    return list
+                }
+                
+                await MainActor.run {
+                    currentMatches = matches
+                    showingMatchOptions = true
+                    hasSelectedMatch = true
+                }
+            }
+        } catch {
+            print("❌ Failed to check for matches: \(error)")
         }
     }
     
@@ -151,37 +502,56 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        // Start loading
-        isLoadingPollMovies = true
-        loadingProgress = 0.0
+        // Start loading on main actor
+        await MainActor.run {
+            isLoadingPollMovies = true
+            loadingProgress = 0.0
+        }
         
         do {
-            loadingProgress = 0.3 // 30% for creating poll
+            await MainActor.run {
+                loadingProgress = 0.3 // 30% for creating poll
+            }
             
             let poll = try await polls.createPoll(homeId: nil, title: title, candidates: candidates, genre: nil)
             print("✅ Poll created successfully: \(poll.id)")
             
-            loadingProgress = 1.0 // 100% complete
+            await MainActor.run {
+                loadingProgress = 1.0 // 100% complete
+                activePoll = poll
+                isInPoll = true
+                isLoadingPollMovies = false
+                isCreatingPoll = false // Explicitly set this to false
+            }
             
-            activePoll = poll
+            // Initialize card stack after setting state
             initializeCardStack(with: candidates)
-            isInPoll = true
-            isLoadingPollMovies = false
+            
         } catch {
             print("❌ Failed to create poll: \(error)")
             // Even if server fails, start local poll
             print("🎬 Starting local poll as fallback")
             
-            loadingProgress = 1.0 // 100% complete
+            await MainActor.run {
+                loadingProgress = 1.0 // 100% complete
+                isInPoll = true
+                isLoadingPollMovies = false
+                isCreatingPoll = false // Explicitly set this to false
+            }
             
             initializeCardStack(with: candidates)
-            isInPoll = true
-            isLoadingPollMovies = false
         }
     }
     
     private func joinExistingPoll(_ poll: Poll) async {
         print("🎬 WhatToWatch: Joining existing poll: \(poll.id)")
+        print("🎬 WhatToWatch: Poll status verification: \(poll.status ?? "nil")")
+        
+        // Double-check poll status before joining
+        guard poll.status == "active" else {
+            print("❌ WhatToWatch: Refusing to join non-active poll (status: \(poll.status ?? "nil"))")
+            return
+        }
         
         // Start loading
         isLoadingPollMovies = true
@@ -378,46 +748,6 @@ class WhatToWatchViewModel: ObservableObject {
         }
         
         return userId
-    }
-    
-    // NEW: Updated method to check for matches (not auto-close)
-    private func checkForMatches() async {
-        guard let pollId = activePoll?.id, !hasSelectedMatch else { return }
-        
-        do {
-            let votes = try await polls.fetchVotes(pollId: pollId)
-            let houseMemberCount = try await polls.getHouseMemberCount(homeId: nil)
-            
-            let matchIds = polls.getMatches(votes: votes, houseMemberCount: houseMemberCount)
-            
-            if !matchIds.isEmpty {
-                print("🏆 Found \(matchIds.count) matches: \(matchIds)")
-                
-                // Fetch movie details for all matches
-                let matches: [Movie] = await withTaskGroup(of: Movie?.self) { group in
-                    for matchId in matchIds {
-                        group.addTask { 
-                            await MovieAPI.shared.getDetails(imdbID: matchId)
-                        }
-                    }
-                    var list: [Movie] = []
-                    for await movie in group {
-                        if let movie = movie {
-                            list.append(movie)
-                        }
-                    }
-                    return list
-                }
-                
-                await MainActor.run {
-                    currentMatches = matches
-                    showingMatchOptions = true
-                    hasSelectedMatch = true
-                }
-            }
-        } catch {
-            print("❌ Failed to check for matches: \(error)")
-        }
     }
     
     // NEW: Continue poll (dismiss match notification)
