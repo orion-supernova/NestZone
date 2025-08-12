@@ -18,14 +18,14 @@ struct ManagementTabScreen: View {
             ModuleData(
                 type: .shopping, 
                 itemCount: viewModel.totalItems, 
-                recentActivity: viewModel.totalItems > 0 ? "Added \(viewModel.pendingItems) pending items" : "No items yet", 
+                recentActivity: viewModel.totalItems > 0 ? LocalizationManager.managementModuleShoppingSubtitleDynamic(viewModel.pendingItems) : LocalizationManager.managementModuleShoppingSubtitleEmpty, 
                 progress: viewModel.totalItems > 0 ? Double(viewModel.completedItems) / Double(viewModel.totalItems) : 0.0
             ),
-            ModuleData(type: .recipes, itemCount: 0, recentActivity: "Recipe storage & meal planning", progress: 0.0),
-            ModuleData(type: .movies, itemCount: 0, recentActivity: "Wishlist & movie collections", progress: 0.0),
-            ModuleData(type: .maintenance, itemCount: 0, recentActivity: "House repair tracking", progress: 0.0),
-            ModuleData(type: .finance, itemCount: 0, recentActivity: "Bill splitting & budgets", progress: 0.0),
-            ModuleData(type: .calendar, itemCount: 0, recentActivity: "Shared family calendar", progress: 0.0)
+            ModuleData(type: .recipes, itemCount: 0, recentActivity: LocalizationManager.managementModuleRecipesSubtitle, progress: 0.0),
+            ModuleData(type: .movies, itemCount: 0, recentActivity: LocalizationManager.managementModuleMoviesSubtitle, progress: 0.0),
+            ModuleData(type: .maintenance, itemCount: 0, recentActivity: LocalizationManager.managementModuleMaintenanceSubtitle, progress: 0.0),
+            ModuleData(type: .finance, itemCount: 0, recentActivity: LocalizationManager.managementModuleFinanceSubtitle, progress: 0.0),
+            ModuleData(type: .calendar, itemCount: 0, recentActivity: LocalizationManager.managementModuleCalendarSubtitle, progress: 0.0)
         ]
     }
     

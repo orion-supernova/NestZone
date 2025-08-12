@@ -160,6 +160,14 @@ extension LocalizationManager {
     static var recipesExploreFilterRecipeFoundSingular: String { t("recipes_explore_filter_recipe_found_singular") }
     static var recipesExploreFilterRecipeFoundPlural: String { t("recipes_explore_filter_recipe_found_plural") }
 
+    // Explore Filters - Sliders
+    static var recipesExploreFilterMaxTimeLabel: String { t("recipes_explore_filter_max_time_label") }
+    static var recipesExploreFilterMaxTimeMinLabel: String { t("recipes_explore_filter_max_time_min_label") }
+    static var recipesExploreFilterMaxTimeMaxLabel: String { t("recipes_explore_filter_max_time_max_label") }
+    static var recipesExploreFilterMaxServingsLabel: String { t("recipes_explore_filter_max_servings_label") }
+    static var recipesExploreFilterMaxServingsMinLabel: String { t("recipes_explore_filter_max_servings_min_label") }
+    static var recipesExploreFilterMaxServingsMaxLabel: String { t("recipes_explore_filter_max_servings_max_label") }
+
     static var recipesNewRecipeTitleField: String { t("recipes_new_recipe_title_field") }
     static var recipesNewRecipeTitlePlaceholder: String { t("recipes_new_recipe_title_placeholder") }
     static var recipesNewRecipeDescriptionField: String { t("recipes_new_recipe_description_field") }
@@ -440,4 +448,71 @@ extension LocalizationManager {
     static var movieListsDefaultListName: String { t("movie_lists_default_list_name") }
 
     static var yearInputPickerTitle: String { t("year_input_picker_title") }
+
+    // Management Modules
+    static func managementModuleShoppingSubtitleDynamic(_ count: Int) -> String { tFormat("management_module_shopping_subtitle_dynamic", count) }
+    static var managementModuleShoppingSubtitleEmpty: String { t("management_module_shopping_subtitle_empty") }
+
+    static func managementErrorUpdateItem(_ error: String) -> String { tFormat("management_error_update_item", error) }
+    static func managementErrorAddItem(_ error: String) -> String { tFormat("management_error_add_item", error) }
+    static func managementErrorDeleteItem(_ error: String) -> String { tFormat("management_error_delete_item", error) }
+
+    // Movie Lists
+    static var movieListsTitle: String { t("movie_lists_title") }
+    static var movieListsSubtitle: String { t("movie_lists_subtitle") }
+    static var movieListsQuickCollections: String { t("movie_lists_quick_collections") }
+    static var movieListsWishlistTitle: String { t("movie_lists_wishlist_title") }
+    static var movieListsWishlistSubtitle: String { t("movie_lists_wishlist_subtitle") }
+    static var movieListsWatchedTitle: String { t("movie_lists_watched_title") }
+    static var movieListsWatchedSubtitle: String { t("movie_lists_watched_subtitle") }
+    static var movieListsCustomLists: String { t("movie_lists_custom_lists") }
+    static var movieListsNoCustomLists: String { t("movie_lists_no_custom_lists") }
+    static var movieListsNoCustomListsSubtitle: String { t("movie_lists_no_custom_lists_subtitle") }
+    static var movieListsCreateFirstList: String { t("movie_lists_create_first_list") }
+
+    // Create Movie List
+    static var createMovieListTitle: String { t("create_movie_list_title") }
+    static var createMovieListSubtitle: String { t("create_movie_list_subtitle") }
+    static var createMovieListNameLabel: String { t("create_movie_list_name_label") }
+    static var createMovieListNamePlaceholder: String { t("create_movie_list_name_placeholder") }
+    static var createMovieListDescriptionLabel: String { t("create_movie_list_description_label") }
+    static var createMovieListDescriptionPlaceholder: String { t("create_movie_list_description_placeholder") }
+
+    // Custom List Row
+    static var movieListsMoviesCount: String { t("movie_lists_movies_count") }
+
+    // Movie List Detail
+    static var movieListDetailLoadingMovies: String { t("movie_list_detail_loading_movies") }
+    static var movieListDetailDeleteList: String { t("movie_list_detail_delete_list") }
+    static func movieListDetailDeleteListMessage(_ listName: String) -> String { tFormat("movie_list_detail_delete_list_message", listName) }
+    static var movieListDetailNoMovies: String { t("movie_list_detail_no_movies") }
+    static func movieListDetailNoMoviesSubtitle(_ listName: String) -> String { tFormat("movie_list_detail_no_movies_subtitle", listName) }
+    static var movieListDetailAddMovies: String { t("movie_list_detail_add_movies") }
+    static var movieListDetailRemoveFromList: String { t("movie_list_detail_remove_from_list") }
+    static var movieListDetailRemoveMovie: String { t("movie_list_detail_remove_movie") }
+    static var movieListDetailRemove: String { t("movie_list_detail_remove") }
+    static func movieListDetailRemoveMovieMessage(_ movieTitle: String) -> String { tFormat("movie_list_detail_remove_movie_message", movieTitle) }
+
+    // Movie Lists Manager
+    static var movieListsWishlistDescriptionFull: String { t("movie_lists_wishlist_description_full") }
+    static var movieListsWatchedDescriptionFull: String { t("movie_lists_watched_description_full") }
+
+    // Movie Search Row
+    static var movieSearchRowAdded: String { t("movie_search_row_added") }
+
+    // Search Header
+    static var searchHeaderPlaceholder: String { t("search_header_placeholder") }
+
+    // Search Movies
+    static var searchMoviesTitle: String { t("search_movies_title") }
+    static var commonSearch: String { t("common_search") }
+    static var searchMoviesSearching: String { t("search_movies_searching") }
+
+    // Recipe Errors
+    static var recipeErrorMissingAuth: String { t("recipe_error_missing_auth") }
+    static func recipeErrorAddRecipe(_ error: String) -> String { tFormat("recipe_error_add_recipe", error) }
+    static func recipeErrorDeleteRecipe(_ error: String) -> String { tFormat("recipe_error_delete_recipe", error) }
+
+    // Shopping Categories
+    static func shoppingCategoryCompletedItems(_ completed: Int, _ total: Int) -> String { tFormat("shopping_category_completed_items", completed, total) }
 }

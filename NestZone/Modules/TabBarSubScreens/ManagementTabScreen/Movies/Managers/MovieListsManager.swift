@@ -172,10 +172,24 @@ final class MovieListsManager: @unchecked Sendable {
         return response.items.map { $0.listId }
     }
 
-    private func getPresetDescription(for type: MovieListType) -> String {
+    func updateListDescription(listId: String, newDescription: String) async throws -> MovieList {
+        let params: [String: Any] = [
+            "description": newDescription
+        ]
+        return try await pocketBase.updateRecord(in: "movie_lists", id: listId, data: params, responseType: MovieList.self)
+    }
+
+    func updateListName(listId: String, newName: String) async throws -> MovieList {
+        let params: [String: Any] = [
+            "name": newName
+        ]
+        return try await pocketBase.updateRecord(in: "movie_lists", id: listId, data: params, responseType: MovieList.self)
+    }
+
+    func getPresetDescription(for type: MovieListType) -> String {
         switch type {
-        case .wishlist: return "Movies you want to watch someday"
-        case .watched: return "Movies you've already watched"
+        case .wishlist: return LocalizationManager.movieListsWishlistDescriptionFull
+        case .watched: return LocalizationManager.movieListsWatchedDescriptionFull
         case .custom: return ""
         }
     }

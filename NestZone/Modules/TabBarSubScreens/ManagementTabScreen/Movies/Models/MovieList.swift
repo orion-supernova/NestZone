@@ -24,9 +24,9 @@ enum MovieListType: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .wishlist: return "Wishlist"
-        case .watched: return "Watched"
-        case .custom: return "Custom"
+        case .wishlist: return LocalizationManager.movieListsWishlistTitle
+        case .watched: return LocalizationManager.movieListsWatchedTitle
+        case .custom: return LocalizationManager.movieListsCustomLists
         }
     }
 }

@@ -165,6 +165,13 @@
   "recipes_explore_filter_recipe_found_singular": "tarif bulundu",
   "recipes_explore_filter_recipe_found_plural": "tarif bulundu",
 
+  "recipes_explore_filter_max_time_label": "Maks. Süre",
+  "recipes_explore_filter_max_time_min_label": "10dk",
+  "recipes_explore_filter_max_time_max_label": "5sa+",
+  "recipes_explore_filter_max_servings_label": "Maks. Porsiyon",
+  "recipes_explore_filter_max_servings_min_label": "1",
+  "recipes_explore_filter_max_servings_max_label": "20+",
+
   "recipes_new_recipe_title_field": "Tarif Başlığı",
   "recipes_new_recipe_title_placeholder": "örn., Spagetti Carbonara",
   "recipes_new_recipe_description_field": "Açıklama",
@@ -411,9 +418,9 @@
   "matches_section_popular_choices": "Popüler Seçimler",
   "matches_section_description": "Ev üyelerinden olumlu oy alan filmler",
 
-  "poll_title_genre": "Tür Anketi: %@",
-  "poll_title_actor": "Oyuncu Anketi: %@",
-  "poll_title_director": "Yönetmen Anketi: %@",
+  "poll_title_genre": "Tür Anketi: %d",
+  "poll_title_actor": "Oyuncu Anketi: %d",
+  "poll_title_director": "Yönetmen Anketi: %d",
   "poll_title_year": "Yıl Anketi: %d",
   "poll_title_decade": "On Yıl Anketi: %d'ler",
   "poll_title_mixed": "Karışık Film Anketi",
@@ -423,8 +430,64 @@
   "poll_title_upcoming": "Yakında Çıkacak Filmler",
 
   "movie_details_add_to_lists": "Listelere Ekle",
-  "movie_details_added_to_list": "%@ listesine eklendi",
+  "movie_details_added_to_list": "%d listesine eklendi",
   "movie_lists_default_list_name": "Liste",
 
-  "year_input_picker_title": "Yıl"
+  "year_input_picker_title": "Yıl",
+
+  "management_module_shopping_subtitle_dynamic": "%d bekleyen ürün eklendi",
+  "management_module_shopping_subtitle_empty": "Henüz ürün yok",
+
+  "management_error_update_item": "Ürün güncellenemedi: %@",
+  "management_error_add_item": "Ürün eklenemedi: %@",
+  "management_error_delete_item": "Ürün silinemedi: %@",
+
+  "movie_lists_title": "Film Koleksiyonları",
+  "movie_lists_subtitle": "Film izleme listelerinizi ve koleksiyonlarınızı düzenleyin",
+  "movie_lists_quick_collections": "Hızlı Koleksiyonlar",
+  "movie_lists_wishlist_title": "İzleme Listesi",
+  "movie_lists_wishlist_subtitle": "İzlemek istediğiniz filmler",
+  "movie_lists_watched_title": "İzlenenler",
+  "movie_lists_watched_subtitle": "İzlediğiniz filmler",
+  "movie_lists_custom_lists": "Özel Listeler",
+  "movie_lists_no_custom_lists": "Henüz Özel Liste Yok",
+  "movie_lists_no_custom_lists_subtitle": "\"Korku Filmleri\" veya \"Romantik Komedi Klasikleri\" gibi temalı koleksiyonlar oluşturun",
+  "movie_lists_create_first_list": "İlk Listenizi Oluşturun",
+
+  "create_movie_list_title": "Film Listesi Oluştur",
+  "create_movie_list_subtitle": "Filmleri temaya, türe veya istediğiniz herhangi bir kritere göre düzenleyin",
+  "create_movie_list_name_label": "Liste Adı",
+  "create_movie_list_name_placeholder": "örn., Korku Klasikleri, Romantik Komedi Favorileri",
+  "create_movie_list_description_label": "Açıklama (İsteğe Bağlı)",
+  "create_movie_list_description_placeholder": "Bu listenin ne için olduğunu açıklayın...",
+
+  "movie_lists_movies_count": "film",
+
+  "movie_list_detail_loading_movies": "Filmler yükleniyor...",
+  "movie_list_detail_delete_list": "Listeyi Sil",
+  "movie_list_detail_delete_list_message": "Bu işlem \"%@\" listesini kalıcı olarak silecek ve geri alınamaz.",
+  "movie_list_detail_no_movies": "Henüz Film Yok",
+  "movie_list_detail_no_movies_subtitle": "%@ listenizi film ekleyerek oluşturmaya başlayın",
+  "movie_list_detail_add_movies": "Film Ekle",
+  "movie_list_detail_remove_from_list": "Listeden Kaldır",
+  "movie_list_detail_remove_movie": "Filmi Kaldır",
+  "movie_list_detail_remove": "Kaldır",
+  "movie_list_detail_remove_movie_message": "\"%@\" filmini bu listeden kaldırmak istiyor musunuz?",
+
+  "movie_lists_wishlist_description_full": "Bir gün izlemek istediğiniz filmler",
+  "movie_lists_watched_description_full": "Zaten izlediğiniz filmler",
+
+  "movie_search_row_added": "Eklendi",
+
+  "search_header_placeholder": "Listenize eklemek için film arayın...",
+
+  "search_movies_title": "Film Ekle",
+  "common_search": "Ara",
+  "search_movies_searching": "Filmler aranıyor...",
+
+  "recipe_error_missing_auth": "Kimlik doğrulama eksik.",
+  "recipe_error_add_recipe": "Tarif eklenemedi: %@",
+  "recipe_error_delete_recipe": "Tarif silinemedi: %@",
+
+  "shopping_category_completed_items": "%d / %d tamamlandı",
 }

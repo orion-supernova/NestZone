@@ -114,7 +114,7 @@ class RecipeViewModel: ObservableObject {
     ) async {
         guard let homeId = currentHomeId else { return }
         guard let userId = authManager?.currentUser?.id else {
-            errorMessage = "Missing authentication."
+            errorMessage = LocalizationManager.recipeErrorMissingAuth
             return
         }
         
@@ -145,7 +145,7 @@ class RecipeViewModel: ObservableObject {
             )
             recipes.insert(created, at: 0)
         } catch {
-            errorMessage = "Failed to add recipe: \(error.localizedDescription)"
+            errorMessage = LocalizationManager.recipeErrorAddRecipe(error.localizedDescription)
         }
     }
     
@@ -154,7 +154,7 @@ class RecipeViewModel: ObservableObject {
             try await pocketBase.deleteRecord(from: "recipes", id: recipe.id)
             try await loadRecipesFromBackend()
         } catch {
-            errorMessage = "Failed to delete recipe: \(error.localizedDescription)"
+            errorMessage = LocalizationManager.recipeErrorDeleteRecipe(error.localizedDescription)
         }
     }
 }

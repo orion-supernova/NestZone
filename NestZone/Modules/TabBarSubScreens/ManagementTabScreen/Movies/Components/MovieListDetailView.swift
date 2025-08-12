@@ -57,7 +57,7 @@ struct MovieListDetailView: View {
                             .padding(.top, 10)
                         
                         if isLoadingMovies {
-                            ProgressView("Loading movies...")
+                            ProgressView(LocalizationManager.movieListDetailLoadingMovies)
                                 .padding()
                         } else if movies.isEmpty {
                             emptyStateView
@@ -75,7 +75,7 @@ struct MovieListDetailView: View {
             .navigationTitle(movieList.name)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button(LocalizationManager.commonClose) { dismiss() }
                         .foregroundStyle(theme.text)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -90,7 +90,7 @@ struct MovieListDetailView: View {
                         
                         if movieList.type == .custom {
                             Menu {
-                                Button("Delete List", role: .destructive) {
+                                Button(LocalizationManager.movieListDetailDeleteList, role: .destructive) {
                                     showingDeleteAlert = true
                                 }
                             } label: {
@@ -121,16 +121,16 @@ struct MovieListDetailView: View {
                 MovieDetailInfoSheet(movie: movie, originList: movieList)
             }
         }
-        .alert("Delete List", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert(LocalizationManager.movieListDetailDeleteList, isPresented: $showingDeleteAlert) {
+            Button(LocalizationManager.commonCancel, role: .cancel) { }
+            Button(LocalizationManager.commonDelete, role: .destructive) {
                 Task {
                     await viewModel.deleteCustomList(movieList)
                     dismiss()
                 }
             }
         } message: {
-            Text("This will permanently delete \"\(movieList.name)\" and cannot be undone.")
+            Text(LocalizationManager.movieListDetailDeleteListMessage(movieList.name))
         }
     }
     
@@ -160,7 +160,7 @@ struct MovieListDetailView: View {
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(LinearGradient(colors: listColors, startPoint: .leading, endPoint: .trailing))
                     
-                    Text("movies")
+                    Text(LocalizationManager.movieListsMoviesCount)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -194,11 +194,11 @@ struct MovieListDetailView: View {
                 .foregroundStyle(LinearGradient(colors: listColors.map { $0.opacity(0.6) }, startPoint: .topLeading, endPoint: .bottomTrailing))
             
             VStack(spacing: 8) {
-                Text("No Movies Yet")
+                Text(LocalizationManager.movieListDetailNoMovies)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.primary)
                 
-                Text("Start building your \(movieList.name.lowercased()) by adding some movies")
+                Text(LocalizationManager.movieListDetailNoMoviesSubtitle(movieList.name.lowercased()))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -209,7 +209,7 @@ struct MovieListDetailView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")
-                    Text("Add Movies")
+                    Text(LocalizationManager.movieListDetailAddMovies)
                 }
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(.white)
@@ -315,16 +315,16 @@ struct MovieCardView: View {
                 }
             }
             .contextMenu {
-                Button("Remove from List", role: .destructive) {
+                Button(LocalizationManager.movieListDetailRemoveFromList, role: .destructive) {
                     showingRemoveAlert = true
                 }
             }
         }
-        .alert("Remove Movie", isPresented: $showingRemoveAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Remove", role: .destructive) { onRemove() }
+        .alert(LocalizationManager.movieListDetailRemoveMovie, isPresented: $showingRemoveAlert) {
+            Button(LocalizationManager.commonCancel, role: .cancel) { }
+            Button(LocalizationManager.movieListDetailRemove, role: .destructive) { onRemove() }
         } message: {
-            Text("Remove \"\(storedMovie.title)\" from this list?")
+            Text(LocalizationManager.movieListDetailRemoveMovieMessage(storedMovie.title))
         }
     }
 }

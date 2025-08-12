@@ -114,7 +114,7 @@ class ManagementTabViewModel: ObservableObject {
             calculateStatistics()
             
         } catch {
-            errorMessage = "Failed to update item: \(error.localizedDescription)"
+            errorMessage = LocalizationManager.managementErrorUpdateItem(error.localizedDescription)
         }
     }
     
@@ -142,7 +142,7 @@ class ManagementTabViewModel: ObservableObject {
             calculateStatistics()
             
         } catch {
-            errorMessage = "Failed to add item: \(error.localizedDescription)"
+            errorMessage = LocalizationManager.managementErrorAddItem(error.localizedDescription)
         }
     }
     
@@ -155,7 +155,7 @@ class ManagementTabViewModel: ObservableObject {
             calculateStatistics()
             
         } catch {
-            errorMessage = "Failed to delete item: \(error.localizedDescription)"
+            errorMessage = LocalizationManager.managementErrorDeleteItem(error.localizedDescription)
         }
     }
     
@@ -179,7 +179,7 @@ class ManagementTabViewModel: ObservableObject {
             calculateStatistics()
             
         } catch {
-            errorMessage = "Failed to update item: \(error.localizedDescription)"
+            errorMessage = LocalizationManager.managementErrorUpdateItem(error.localizedDescription)
         }
     }
     

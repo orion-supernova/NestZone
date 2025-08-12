@@ -10,7 +10,7 @@ struct SearchHeader: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
             
-            TextField("Search movies to add to your list...", text: $query)
+            TextField(LocalizationManager.searchHeaderPlaceholder, text: $query)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .onSubmit { onSearch() }

@@ -436,13 +436,13 @@ struct FilterSheet: View {
                             }
                             
                             Slider(value: $maxTime, in: 10...300, step: 5) {
-                                Text("Max Time")
+                                Text(LocalizationManager.recipesExploreFilterMaxTimeLabel)
                             } minimumValueLabel: {
-                                Text("10m")
+                                Text(LocalizationManager.recipesExploreFilterMaxTimeMinLabel)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             } maximumValueLabel: {
-                                Text("5h+")
+                                Text(LocalizationManager.recipesExploreFilterMaxTimeMaxLabel)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -461,13 +461,13 @@ struct FilterSheet: View {
                             }
                             
                             Slider(value: $maxServings, in: 1...20, step: 1) {
-                                Text("Max Servings")
+                                Text(LocalizationManager.recipesExploreFilterMaxServingsLabel)
                             } minimumValueLabel: {
-                                Text("1")
+                                Text(LocalizationManager.recipesExploreFilterMaxServingsMinLabel)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             } maximumValueLabel: {
-                                Text("20+")
+                                Text(LocalizationManager.recipesExploreFilterMaxServingsMaxLabel)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }

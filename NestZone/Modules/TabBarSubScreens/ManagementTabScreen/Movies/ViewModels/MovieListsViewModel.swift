@@ -63,18 +63,57 @@ class MovieListsViewModel: ObservableObject {
         let presetTypes: [MovieListType] = [.wishlist, .watched]
         
         for type in presetTypes {
-            let exists = switch type {
-            case .wishlist: wishlist != nil
-            case .watched: watched != nil
-            case .custom: false
+            var foundList: MovieList? = nil
+            switch type {
+            case .wishlist: foundList = wishlist
+            case .watched: foundList = watched
+            case .custom: break // Should not happen for preset types
             }
             
-            if !exists {
+            let currentLocalizedName = type.displayName
+            let currentLocalizedDescription = movieListsManager.getPresetDescription(for: type)
+            
+            if let existingList = foundList {
+                var listNeedsUpdate = false
+                var updatedList = existingList
+                
+                // Check and update name
+                if existingList.name != currentLocalizedName {
+                    print("Updating preset list '\(existingList.name)' name to '\(currentLocalizedName)'")
+                    do {
+                        updatedList = try await movieListsManager.updateListName(listId: existingList.id, newName: currentLocalizedName)
+                        listNeedsUpdate = true
+                    } catch {
+                        print("Failed to update preset list name \(type): \(error)")
+                    }
+                }
+                
+                // Check and update description
+                if existingList.description != currentLocalizedDescription {
+                    print("Updating preset list '\(existingList.name)' description to '\(currentLocalizedDescription)'")
+                    do {
+                        updatedList = try await movieListsManager.updateListDescription(listId: updatedList.id, newDescription: currentLocalizedDescription)
+                        listNeedsUpdate = true
+                    } catch {
+                        print("Failed to update preset list description \(type): \(error)")
+                    }
+                }
+                
+                if listNeedsUpdate {
+                    switch type {
+                    case .wishlist: self.wishlist = updatedList
+                    case .watched: self.watched = updatedList
+                    case .custom: break
+                    }
+                }
+            } else {
+                // List does not exist, create it
+                print("Creating missing preset list: \(type)")
                 do {
                     let newList = try await movieListsManager.createPresetList(type: type)
                     switch type {
-                    case .wishlist: wishlist = newList
-                    case .watched: watched = newList
+                    case .wishlist: self.wishlist = newList
+                    case .watched: self.watched = newList
                     case .custom: break
                     }
                 } catch {

@@ -48,7 +48,7 @@ struct MovieListsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button(LocalizationManager.commonClose) { dismiss() }
                         .foregroundStyle(theme.text)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -85,7 +85,7 @@ struct MovieListsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Movie Collections")
+                    Text(LocalizationManager.movieListsTitle)
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -94,7 +94,7 @@ struct MovieListsView: View {
                                 endPoint: .trailing
                             )
                         )
-                    Text("Organize your movie watchlists and collections")
+                    Text(LocalizationManager.movieListsSubtitle)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(
@@ -125,14 +125,14 @@ struct MovieListsView: View {
     
     private var presetListsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Quick Collections")
+            Text(LocalizationManager.movieListsQuickCollections)
                 .font(.system(size: 20, weight: .bold))
                 .foregroundStyle(LinearGradient(colors: [.purple, .pink], startPoint: .leading, endPoint: .trailing))
             
             HStack(spacing: 16) {
                 PresetListCard(
-                    title: "Wishlist",
-                    subtitle: "Movies you want to watch",
+                    title: LocalizationManager.movieListsWishlistTitle,
+                    subtitle: LocalizationManager.movieListsWishlistSubtitle,
                     icon: "heart.fill",
                     colors: [.red, .pink],
                     count: viewModel.wishlistCount
@@ -141,8 +141,8 @@ struct MovieListsView: View {
                 }
                 
                 PresetListCard(
-                    title: "Watched",
-                    subtitle: "Movies you've seen",
+                    title: LocalizationManager.movieListsWatchedTitle,
+                    subtitle: LocalizationManager.movieListsWatchedSubtitle,
                     icon: "checkmark.seal.fill",
                     colors: [.green, .mint],
                     count: viewModel.watchedCount
@@ -156,7 +156,7 @@ struct MovieListsView: View {
     private var customListsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Custom Lists")
+                Text(LocalizationManager.movieListsCustomLists)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(LinearGradient(colors: [.purple, .pink], startPoint: .leading, endPoint: .trailing))
                 Spacer()
@@ -177,11 +177,11 @@ struct MovieListsView: View {
                         .foregroundStyle(LinearGradient(colors: [.purple.opacity(0.6), .pink.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing))
                     
                     VStack(spacing: 8) {
-                        Text("No Custom Lists Yet")
+                        Text(LocalizationManager.movieListsNoCustomLists)
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(.primary)
                         
-                        Text("Create themed collections like \"Horror Movies\" or \"Rom-Com Classics\"")
+                        Text(LocalizationManager.movieListsNoCustomListsSubtitle)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -192,7 +192,7 @@ struct MovieListsView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "plus.circle.fill")
-                            Text("Create Your First List")
+                            Text(LocalizationManager.movieListsCreateFirstList)
                         }
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.white)

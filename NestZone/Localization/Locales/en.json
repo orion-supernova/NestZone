@@ -165,6 +165,13 @@
   "recipes_explore_filter_recipe_found_singular": "recipe found",
   "recipes_explore_filter_recipe_found_plural": "recipes found",
 
+  "recipes_explore_filter_max_time_label": "Max Time",
+  "recipes_explore_filter_max_time_min_label": "10m",
+  "recipes_explore_filter_max_time_max_label": "5h+",
+  "recipes_explore_filter_max_servings_label": "Max Servings",
+  "recipes_explore_filter_max_servings_min_label": "1",
+  "recipes_explore_filter_max_servings_max_label": "20+",
+
   "recipes_new_recipe_title_field": "Recipe Title",
   "recipes_new_recipe_title_placeholder": "e.g., Spaghetti Carbonara",
   "recipes_new_recipe_description_field": "Description",
@@ -423,8 +430,64 @@
   "poll_title_upcoming": "Upcoming Movies",
 
   "movie_details_add_to_lists": "Add to Lists",
-  "movie_details_added_to_list": "Added to %@",
+  "movie_details_added_to_list": "Added to %d",
   "movie_lists_default_list_name": "List",
 
-  "year_input_picker_title": "Year"
+  "year_input_picker_title": "Year",
+
+  "management_module_shopping_subtitle_dynamic": "Added %d pending items",
+  "management_module_shopping_subtitle_empty": "No items yet",
+
+  "management_error_update_item": "Failed to update item: %@",
+  "management_error_add_item": "Failed to add item: %@",
+  "management_error_delete_item": "Failed to delete item: %@",
+
+  "movie_lists_title": "Movie Collections",
+  "movie_lists_subtitle": "Organize your movie watchlists and collections",
+  "movie_lists_quick_collections": "Quick Collections",
+  "movie_lists_wishlist_title": "Wishlist",
+  "movie_lists_wishlist_subtitle": "Movies you want to watch",
+  "movie_lists_watched_title": "Watched",
+  "movie_lists_watched_subtitle": "Movies you've seen",
+  "movie_lists_custom_lists": "Custom Lists",
+  "movie_lists_no_custom_lists": "No Custom Lists Yet",
+  "movie_lists_no_custom_lists_subtitle": "Create themed collections like \"Horror Movies\" or \"Rom-Com Classics\"",
+  "movie_lists_create_first_list": "Create Your First List",
+
+  "create_movie_list_title": "Create Movie List",
+  "create_movie_list_subtitle": "Organize movies by theme, genre, or any criteria you want",
+  "create_movie_list_name_label": "List Name",
+  "create_movie_list_name_placeholder": "e.g., Horror Classics, Rom-Com Favorites",
+  "create_movie_list_description_label": "Description (Optional)",
+  "create_movie_list_description_placeholder": "Describe what this list is for...",
+
+  "movie_lists_movies_count": "movies",
+
+  "movie_list_detail_loading_movies": "Loading movies...",
+  "movie_list_detail_delete_list": "Delete List",
+  "movie_list_detail_delete_list_message": "This will permanently delete \"%@\" and cannot be undone.",
+  "movie_list_detail_no_movies": "No Movies Yet",
+  "movie_list_detail_no_movies_subtitle": "Start building your %@ by adding some movies",
+  "movie_list_detail_add_movies": "Add Movies",
+  "movie_list_detail_remove_from_list": "Remove from List",
+  "movie_list_detail_remove_movie": "Remove Movie",
+  "movie_list_detail_remove": "Remove",
+  "movie_list_detail_remove_movie_message": "Remove \"%@\" from this list?",
+
+  "movie_lists_wishlist_description_full": "Movies you want to watch someday",
+  "movie_lists_watched_description_full": "Movies you've already watched",
+
+  "movie_search_row_added": "Added",
+
+  "search_header_placeholder": "Search movies to add to your list...",
+
+  "search_movies_title": "Add Movies",
+  "common_search": "Search",
+  "search_movies_searching": "Searching movies...",
+
+  "recipe_error_missing_auth": "Missing authentication.",
+  "recipe_error_add_recipe": "Failed to add recipe: %@",
+  "recipe_error_delete_recipe": "Failed to delete recipe: %@",
+
+  "shopping_category_completed_items": "%d of %d completed",
 }

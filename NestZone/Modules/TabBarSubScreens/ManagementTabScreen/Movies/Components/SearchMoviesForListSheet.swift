@@ -31,14 +31,14 @@ struct SearchMoviesForListSheet: View {
                     )
                 }
             }
-            .navigationTitle("Add Movies")
+            .navigationTitle(LocalizationManager.searchMoviesTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }
+                    Button(LocalizationManager.commonDone) { dismiss() }
                 }
                 ToolbarItem(placement: .keyboard) {
-                    Button("Search") { viewModel.search() }
+                    Button(LocalizationManager.commonSearch) { viewModel.search() }
                         .font(.system(size: 14, weight: .bold))
                 }
             }
@@ -62,7 +62,7 @@ struct SearchMoviesForListSheet: View {
 
 struct SearchLoadingView: View {
     var body: some View {
-        ProgressView("Searching movies...")
+        ProgressView(LocalizationManager.searchMoviesSearching)
             .padding()
     }
 }

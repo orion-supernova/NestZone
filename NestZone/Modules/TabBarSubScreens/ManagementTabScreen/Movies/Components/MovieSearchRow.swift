@@ -86,7 +86,7 @@ struct ActionButtonView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
                     .font(.system(size: 18))
-                Text("Added")
+                Text(LocalizationManager.movieSearchRowAdded)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.green)
             }

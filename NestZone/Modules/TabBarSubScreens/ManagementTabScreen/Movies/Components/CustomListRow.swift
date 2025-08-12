@@ -44,7 +44,7 @@ struct CustomListRow: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.purple)
                     
-                    Text("movies")
+                    Text(LocalizationManager.movieListsMoviesCount)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 }

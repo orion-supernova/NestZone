@@ -495,7 +495,7 @@ struct VibrantCategoryCard: View {
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.primary)
                         
-                        Text("\(completedCount) of \(items.count) completed")
+                        Text(LocalizationManager.shoppingCategoryCompletedItems(completedCount, items.count))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                     }

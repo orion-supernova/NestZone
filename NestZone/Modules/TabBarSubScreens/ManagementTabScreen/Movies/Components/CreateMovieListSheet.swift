@@ -33,10 +33,10 @@ struct CreateMovieListSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizationManager.commonCancel) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Create") {
+                    Button(LocalizationManager.commonCreate) {
                         onCreate(name.trimmingCharacters(in: .whitespacesAndNewlines), description.trimmingCharacters(in: .whitespacesAndNewlines))
                         dismiss()
                     }
@@ -70,7 +70,7 @@ struct CreateMovieListSheet: View {
                 Spacer()
             }
             
-            Text("Create Movie List")
+            Text(LocalizationManager.createMovieListTitle)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(
                     LinearGradient(
@@ -80,7 +80,7 @@ struct CreateMovieListSheet: View {
                     )
                 )
             
-            Text("Organize movies by theme, genre, or any criteria you want")
+            Text(LocalizationManager.createMovieListSubtitle)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(.secondary)
         }
@@ -89,11 +89,11 @@ struct CreateMovieListSheet: View {
     private var formFields: some View {
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("List Name")
+                Text(LocalizationManager.createMovieListNameLabel)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.primary)
                 
-                TextField("e.g., Horror Classics, Rom-Com Favorites", text: $name)
+                TextField(LocalizationManager.createMovieListNamePlaceholder, text: $name)
                     .textInputAutocapitalization(.words)
                     .padding(12)
                     .background(
@@ -107,11 +107,11 @@ struct CreateMovieListSheet: View {
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("Description (Optional)")
+                Text(LocalizationManager.createMovieListDescriptionLabel)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.primary)
                 
-                TextField("Describe what this list is for...", text: $description, axis: .vertical)
+                TextField(LocalizationManager.createMovieListDescriptionPlaceholder, text: $description, axis: .vertical)
                     .lineLimit(3...6)
                     .textInputAutocapitalization(.sentences)
                     .padding(12)
