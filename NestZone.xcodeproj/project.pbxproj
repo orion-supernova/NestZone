@@ -33,9 +33,22 @@
 		54F0C1C62DECACBE00026F84 /* NestZoneUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NestZoneUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		541911542E4B44670081E4E4 /* Exceptions for "NestZone" folder in "NestZone" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 54F0C1AE2DECACBC00026F84 /* NestZone */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		54F0C1B12DECACBC00026F84 /* NestZone */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				541911542E4B44670081E4E4 /* Exceptions for "NestZone" folder in "NestZone" target */,
+			);
 			path = NestZone;
 			sourceTree = "<group>";
 		};
@@ -409,7 +422,9 @@
 				DEVELOPMENT_TEAM = 37TC2VKVJ6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NestZone/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Bungalaven;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -440,7 +455,9 @@
 				DEVELOPMENT_TEAM = 37TC2VKVJ6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NestZone/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Bungalaven;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
