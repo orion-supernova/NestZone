@@ -13,11 +13,48 @@ struct AuthenticationScreen: View {
     @State private var fullName = ""
     @State private var animateHeader = false
     @State private var animateContent = false
+    @State private var keyboardHeight: CGFloat = 0
+    @State private var lastDragValue: DragGesture.Value?
     
     private var theme: ThemeColors {
         selectedTheme.colors(for: colorScheme)
     }
     
+    // Password validation computed properties
+    private var passwordValidationState: ValidationState {
+        if password.isEmpty {
+            return .neutral
+        }
+        return password.count >= 8 ? .valid : .invalid
+    }
+    
+    private var passwordValidationMessage: String {
+        if password.isEmpty {
+            return ""
+        }
+        return password.count >= 8 ? "Password looks good!" : "Password should be at least 8 characters"
+    }
+    
+    private var confirmPasswordValidationState: ValidationState {
+        if confirmPassword.isEmpty {
+            return .neutral
+        }
+        if password.isEmpty {
+            return .invalid
+        }
+        return password == confirmPassword ? .valid : .invalid
+    }
+    
+    private var confirmPasswordValidationMessage: String {
+        if confirmPassword.isEmpty {
+            return ""
+        }
+        if password.isEmpty {
+            return "Please enter password first"
+        }
+        return password == confirmPassword ? "Passwords match!" : "Passwords don't match"
+    }
+
     var body: some View {
         NavigationView {
             ScrollView(showsIndicators: false) {
@@ -44,20 +81,49 @@ struct AuthenticationScreen: View {
                         .opacity(animateContent ? 1 : 0)
                         .offset(y: animateContent ? 0 : 40)
                     
-                    Spacer(minLength: 60)
+                    Spacer(minLength: keyboardHeight > 0 ? 180 : 60)
                 }
+                .padding(.bottom, keyboardHeight > 0 ? 80 : 0)
             }
             .background(background)
             .navigationTitle(isLoginMode ? "Sign In" : "Create Account")
             .navigationBarTitleDisplayMode(.inline)
+            .onTapGesture {
+                hideKeyboard()
+            }
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { value in
+                        // Only dismiss keyboard when scrolling down (positive translation.height)
+                        if let lastValue = lastDragValue {
+                            let deltaY = value.translation.height - lastValue.translation.height
+                            if deltaY > 0 && abs(deltaY) > 10 { // Scrolling down with some threshold
+                                hideKeyboard()
+                            }
+                        }
+                        lastDragValue = value
+                    }
+                    .onEnded { _ in
+                        lastDragValue = nil
+                    }
+            )
+            .safeAreaInset(edge: .bottom) {
+                Color.clear
+                    .frame(height: keyboardHeight > 0 ? 40 : 0)
+                    .animation(.easeInOut(duration: 0.25), value: keyboardHeight)
+            }
         }
         .onAppear {
+            setupKeyboardObservers()
             withAnimation(.easeOut(duration: 0.8)) {
                 animateHeader = true
             }
             withAnimation(.easeOut(duration: 1.0).delay(0.2)) {
                 animateContent = true
             }
+        }
+        .onDisappear {
+            removeKeyboardObservers()
         }
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") {
@@ -247,7 +313,9 @@ struct AuthenticationScreen: View {
                 text: $password,
                 icon: "lock.fill",
                 isRequired: true,
-                isSecure: true
+                isSecure: true,
+                validationState: isLoginMode ? .neutral : passwordValidationState,
+                validationMessage: isLoginMode ? "" : passwordValidationMessage
             )
             
             if !isLoginMode {
@@ -257,7 +325,9 @@ struct AuthenticationScreen: View {
                     text: $confirmPassword,
                     icon: "lock.fill",
                     isRequired: true,
-                    isSecure: true
+                    isSecure: true,
+                    validationState: confirmPasswordValidationState,
+                    validationMessage: confirmPasswordValidationMessage
                 )
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -300,6 +370,39 @@ struct AuthenticationScreen: View {
                    password.count >= 8 &&
                    email.contains("@")
         }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillShowNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    keyboardHeight = frame.height
+                }
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillHideNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            withAnimation(.easeInOut(duration: 0.25)) {
+                keyboardHeight = 0
+            }
+        }
+    }
+    
+    private func removeKeyboardObservers() {
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
     }
 }
 
