@@ -44,3 +44,19 @@ struct WhatToWatchHeader: View {
         }
     }
 }
+
+#Preview {
+    WhatToWatchHeader(
+        theme: AppTheme.basic.colors(for: .light),
+        isInPoll: false
+    )
+    .padding()
+}
+
+#Preview("In Poll") {
+    WhatToWatchHeader(
+        theme: AppTheme.basic.colors(for: .light),
+        isInPoll: true
+    )
+    .padding()
+}

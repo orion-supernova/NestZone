@@ -72,3 +72,32 @@ struct LoadingButton: View {
         .disabled(!isEnabled || isLoading)
     }
 }
+
+#Preview {
+    VStack(spacing: 20) {
+        LoadingButton(
+            title: "Save Changes",
+            icon: "checkmark.circle.fill",
+            isLoading: false,
+            isEnabled: true,
+            action: { print("Button tapped") }
+        )
+        
+        LoadingButton(
+            title: "Loading...",
+            icon: "arrow.2.circlepath",
+            isLoading: true,
+            isEnabled: true,
+            action: { print("Button tapped") }
+        )
+        
+        LoadingButton(
+            title: "Disabled Button",
+            icon: "xmark.circle.fill",
+            isLoading: false,
+            isEnabled: false,
+            action: { print("Button tapped") }
+        )
+    }
+    .padding()
+}

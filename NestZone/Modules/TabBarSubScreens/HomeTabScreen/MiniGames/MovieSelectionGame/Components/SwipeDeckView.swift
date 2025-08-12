@@ -114,3 +114,24 @@ struct PollCompleteView: View {
         )
     }
 }
+
+#Preview("Poll Complete") {
+    let sampleStats = VotingStats(
+        userVotes: ["user1": 5, "user2": 3, "user3": 7],
+        totalItems: 10, houseMemberNames: ["user1": "Alice", "user2": "Bob", "user3": "Charlie"]
+    )
+    
+    PollCompleteView(votingStats: sampleStats)
+        .padding()
+}
+
+#Preview("Empty Deck") {
+    SwipeDeckView(
+        cardStack: [],
+        onSwipeLeft: { _ in },
+        onSwipeRight: { _ in },
+        onTap: { _ in },
+        votingStats: nil
+    )
+    .padding()
+}

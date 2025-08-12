@@ -66,3 +66,23 @@ struct CustomListRow: View {
         }
     }
 }
+
+#Preview {
+    let sampleList = MovieList(
+        id: "1",
+        homeId: "home1",
+        name: "Horror Classics",
+        description: "The best scary movies of all time",
+        type: .custom,
+        isPreset: false,
+        created: "",
+        updated: ""
+    )
+    
+    CustomListRow(
+        list: sampleList,
+        movieCount: 23,
+        action: { print("Custom list tapped") }
+    )
+    .padding()
+}

@@ -80,3 +80,17 @@ struct MatchMovieCard: View {
         }
     }
 }
+
+#Preview {
+    let sampleMovies = [
+        Movie(id: "1", title: "The Matrix", year: 1999, poster: nil, genres: ["Action"]),
+        Movie(id: "2", title: "Inception", year: 2010, poster: nil, genres: ["Thriller"]),
+        Movie(id: "3", title: "The Dark Knight", year: 2008, poster: nil, genres: ["Action"])
+    ]
+    
+    MatchesSection(
+        currentMatches: sampleMovies,
+        onSelectMatch: { movie in print("Selected: \(movie.title)") }
+    )
+    .padding()
+}

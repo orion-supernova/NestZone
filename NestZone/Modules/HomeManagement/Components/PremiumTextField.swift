@@ -197,3 +197,51 @@ struct PremiumTextField: View {
         }
     }
 }
+
+#Preview {
+    @State var text1 = ""
+    @State var text2 = "Sample text"
+    @State var text3 = ""
+    @State var secureText = ""
+    
+    VStack(spacing: 24) {
+        PremiumTextField(
+            title: "Email",
+            placeholder: "Enter your email",
+            text: $text1,
+            icon: "envelope.fill",
+            isRequired: true,
+            keyboardType: .emailAddress
+        )
+        
+        PremiumTextField(
+            title: "Name",
+            placeholder: "Enter your name",
+            text: $text2,
+            icon: "person.fill",
+            isRequired: false,
+            validationState: .valid,
+            validationMessage: "Looks good!"
+        )
+        
+        PremiumTextField(
+            title: "Username",
+            placeholder: "Choose a username",
+            text: $text3,
+            icon: "at",
+            isRequired: true,
+            validationState: .invalid,
+            validationMessage: "Username already taken"
+        )
+        
+        PremiumTextField(
+            title: "Password",
+            placeholder: "Enter password",
+            text: $secureText,
+            icon: "lock.fill",
+            isRequired: true,
+            isSecure: true
+        )
+    }
+    .padding()
+}

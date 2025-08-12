@@ -99,3 +99,30 @@ struct ActionButtonView: View {
         }
     }
 }
+
+#Preview {
+    let sampleMovie = Movie(
+        id: "1",
+        title: "The Matrix",
+        year: 1999,
+        poster: nil,
+        genres: ["Action", "Sci-Fi"]
+    )
+    
+    VStack(spacing: 16) {
+        MovieSearchRow(
+            movie: sampleMovie,
+            isAdded: false,
+            onAdd: { print("Added movie") },
+            onTap: { print("Tapped movie") }
+        )
+        
+        MovieSearchRow(
+            movie: sampleMovie,
+            isAdded: true,
+            onAdd: { print("Added movie") },
+            onTap: { print("Tapped movie") }
+        )
+    }
+    .padding()
+}

@@ -106,3 +106,25 @@ struct ErrorOverlay: View {
         }
     }
 }
+
+#Preview("Success Overlay") {
+    @State var showSuccess = true
+    
+    ZStack {
+        Color.gray.opacity(0.2)
+            .ignoresSafeArea()
+        
+        SuccessOverlay(show: $showSuccess, message: "Account Created!")
+    }
+}
+
+#Preview("Error Overlay") {
+    @State var showError = true
+    
+    ZStack {
+        Color.gray.opacity(0.2)
+            .ignoresSafeArea()
+        
+        ErrorOverlay(show: $showError, message: "Something went wrong. Please try again.")
+    }
+}

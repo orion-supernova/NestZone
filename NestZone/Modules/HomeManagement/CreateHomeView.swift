@@ -157,3 +157,8 @@ struct CreateHomeView: View {
         )
     }
 }
+
+#Preview {
+    CreateHomeView()
+        .environmentObject(PocketBaseAuthManager())
+}

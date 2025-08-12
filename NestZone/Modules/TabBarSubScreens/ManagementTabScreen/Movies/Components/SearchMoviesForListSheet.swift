@@ -68,7 +68,18 @@ struct SearchLoadingView: View {
 }
 
 #Preview {
-    SearchMoviesForListSheet(currentList: nil) { movie in
+    let sampleList = MovieList(
+        id: "1",
+        homeId: "home1",
+        name: "Wishlist",
+        description: "Movies to watch",
+        type: .wishlist,
+        isPreset: true,
+        created: "",
+        updated: ""
+    )
+    
+    SearchMoviesForListSheet(currentList: sampleList) { movie in
         print("Added movie: \(movie.title)")
     }
 }

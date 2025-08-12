@@ -48,3 +48,33 @@ struct PollControls: View {
         }
     }
 }
+
+#Preview("Active Poll") {
+    PollControls(
+        hasVisibleCards: true,
+        isCuratedPoll: false,
+        onExitPoll: { print("Exit poll") },
+        onGetNewMovies: { print("Get new movies") }
+    )
+    .padding()
+}
+
+#Preview("Curated Poll") {
+    PollControls(
+        hasVisibleCards: true,
+        isCuratedPoll: true,
+        onExitPoll: { print("Exit poll") },
+        onGetNewMovies: { print("Get new movies") }
+    )
+    .padding()
+}
+
+#Preview("Poll Complete") {
+    PollControls(
+        hasVisibleCards: false,
+        isCuratedPoll: false,
+        onExitPoll: { print("Exit poll") },
+        onGetNewMovies: { print("Get new movies") }
+    )
+    .padding()
+}

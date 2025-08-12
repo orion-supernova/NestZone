@@ -143,3 +143,8 @@ struct JoinHomeView: View {
         )
     }
 }
+
+#Preview {
+    JoinHomeView()
+        .environmentObject(PocketBaseAuthManager())
+}

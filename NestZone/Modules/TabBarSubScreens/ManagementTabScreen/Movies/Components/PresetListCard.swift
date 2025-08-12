@@ -79,3 +79,15 @@ struct PresetListCard: View {
         }
     }
 }
+
+#Preview {
+    PresetListCard(
+        title: "Wishlist",
+        subtitle: "Movies you want to watch",
+        icon: "heart.fill",
+        colors: [.red, .pink],
+        count: 15,
+        action: { print("Preset list tapped") }
+    )
+    .padding()
+}

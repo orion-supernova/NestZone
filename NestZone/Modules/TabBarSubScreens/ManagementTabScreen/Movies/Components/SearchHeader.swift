@@ -28,3 +28,13 @@ struct SearchHeader: View {
         .padding(.top, 12)
     }
 }
+
+#Preview {
+    @State var query = "The Matrix"
+    
+    SearchHeader(
+        query: $query,
+        onSearch: { print("Searching for: \(query)") },
+        onClear: { query = "" }
+    )
+}
