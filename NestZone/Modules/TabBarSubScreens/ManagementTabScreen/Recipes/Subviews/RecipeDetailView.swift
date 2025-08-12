@@ -24,7 +24,7 @@ struct RecipeDetailView: View {
         let prep = recipe.prepTime ?? 0
         let cook = recipe.cookTime ?? 0
         let total = prep + cook
-        return total > 0 ? "\(total) min total" : "No time specified"
+        return total > 0 ? LocalizationManager.recipesDetailTimeTotalFormat(total) : LocalizationManager.recipesDetailTimeNotSpecified
     }
     
     var body: some View {
@@ -72,7 +72,7 @@ struct RecipeDetailView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "play.fill")
                             .font(.system(size: 16, weight: .bold))
-                        Text("Start Preparing")
+                        Text(LocalizationManager.recipesDetailStartPreparingButton)
                             .font(.system(size: 16, weight: .bold))
                     }
                     .foregroundColor(.white)
@@ -111,16 +111,16 @@ struct RecipeDetailView: View {
         .fullScreenCover(isPresented: $showingCookingMode) {
             CookingModeView(recipe: recipe)
         }
-        .alert("Delete Recipe", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert(LocalizationManager.recipesDetailDeleteAlertTitle, isPresented: $showingDeleteAlert) {
+            Button(LocalizationManager.commonCancel, role: .cancel) { }
+            Button(LocalizationManager.commonDelete, role: .destructive) {
                 Task {
                     await viewModel.deleteRecipe(recipe)
                     dismiss()
                 }
             }
         } message: {
-            Text("Are you sure you want to delete '\(recipe.title)'? This action cannot be undone.")
+            Text(LocalizationManager.recipesDetailDeleteAlertMessage(recipe.title))
         }
     }
     
@@ -170,16 +170,16 @@ struct RecipeDetailView: View {
     private var infoSection: some View {
         HStack(spacing: 12) {
             if let prep = recipe.prepTime, prep > 0 {
-                InfoCard(title: "Prep", value: "\(prep) min", icon: "timer", gradient: gradient)
+                InfoCard(title: LocalizationManager.recipesDetailInfoCardPrep, value: "\(prep) min", icon: "timer", gradient: gradient)
             }
             if let cook = recipe.cookTime, cook > 0 {
-                InfoCard(title: "Cook", value: "\(cook) min", icon: "flame.fill", gradient: gradient)
+                InfoCard(title: LocalizationManager.recipesDetailInfoCardCook, value: "\(cook) min", icon: "flame.fill", gradient: gradient)
             }
             if let servings = recipe.servings {
-                InfoCard(title: "Serves", value: "\(servings)", icon: "person.2.fill", gradient: gradient)
+                InfoCard(title: LocalizationManager.recipesDetailInfoCardServes, value: "\(servings)", icon: "person.2.fill", gradient: gradient)
             }
             if let difficulty = recipe.difficulty {
-                InfoCard(title: "Level", value: difficulty.rawValue.capitalized, icon: "star.fill", gradient: gradient)
+                InfoCard(title: LocalizationManager.recipesDetailInfoCardLevel, value: difficulty.rawValue.capitalized, icon: "star.fill", gradient: gradient)
             }
         }
     }
@@ -191,7 +191,7 @@ struct RecipeDetailView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(LinearGradient(colors: gradient, startPoint: .topLeading, endPoint: .bottomTrailing))
                 
-                Text("Ingredients")
+                Text(LocalizationManager.recipesDetailIngredientsSectionTitle)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
                 
@@ -230,7 +230,7 @@ struct RecipeDetailView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(LinearGradient(colors: gradient, startPoint: .topLeading, endPoint: .bottomTrailing))
                 
-                Text("Instructions")
+                Text(LocalizationManager.recipesDetailInstructionsSectionTitle)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
                 

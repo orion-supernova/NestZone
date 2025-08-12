@@ -74,13 +74,13 @@ struct CookingModeView: View {
                     .padding(.bottom, 40)
             }
         }
-        .alert("Quit Cooking", isPresented: $showingQuitAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Quit", role: .destructive) {
+        .alert(LocalizationManager.recipesCookingQuitAlertTitle, isPresented: $showingQuitAlert) {
+            Button(LocalizationManager.commonCancel, role: .cancel) { }
+            Button(LocalizationManager.recipesCookingQuitAlertQuitButton, role: .destructive) {
                 dismiss()
             }
         } message: {
-            Text("Are you sure you want to quit cooking? Your progress will be lost.")
+            Text(LocalizationManager.recipesCookingQuitAlertMessage)
         }
     }
     
@@ -100,7 +100,7 @@ struct CookingModeView: View {
                 Spacer()
                 
                 VStack(spacing: 4) {
-                    Text(currentPhase == .ingredients ? "Prepare Ingredients" : "Cook Recipe")
+                    Text(currentPhase == .ingredients ? LocalizationManager.recipesCookingPrepareIngredients : LocalizationManager.recipesCookingCookRecipe)
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.primary)
                     
@@ -131,16 +131,16 @@ struct CookingModeView: View {
     private var progressIndicator: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("Progress")
+                Text(LocalizationManager.recipesCookingProgressLabel)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
                 Spacer()
                 if currentPhase == .ingredients {
-                    Text("\(checkedIngredients.count)/\(ingredients.count) ingredients")
+                    Text(LocalizationManager.recipesCookingIngredientsProgress(checkedIngredients.count, ingredients.count))
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing))
                 } else {
-                    Text("Step \(currentIndex + 1)/\(max(steps.count, 1))")
+                    Text(LocalizationManager.recipesCookingStepsProgress(currentIndex + 1, max(steps.count, 1)))
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing))
                 }
@@ -156,7 +156,7 @@ struct CookingModeView: View {
     
     private var ingredientsPhase: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Check off each ingredient as you gather it")
+            Text(LocalizationManager.recipesCookingCheckIngredientsInstruction)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 24)
@@ -211,7 +211,7 @@ struct CookingModeView: View {
                         }
                     } label: {
                         HStack {
-                            Text("Start Cooking")
+                            Text(LocalizationManager.recipesCookingStartCookingButton)
                             Image(systemName: "play.fill")
                         }
                         .font(.system(size: 16, weight: .bold))
@@ -236,7 +236,7 @@ struct CookingModeView: View {
                 } label: {
                     HStack {
                         Image(systemName: "chevron.left")
-                        Text("Back")
+                        Text(LocalizationManager.recipesCookingBackButton)
                     }
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.primary)
@@ -264,7 +264,7 @@ struct CookingModeView: View {
                     }
                 } label: {
                     HStack {
-                        Text(currentIndex == max(steps.count - 1, 0) ? "Finish" : "Next Step")
+                        Text(currentIndex == max(steps.count - 1, 0) ? LocalizationManager.recipesCookingFinishButton : LocalizationManager.recipesCookingNextStepButton)
                         Image(systemName: currentIndex == max(steps.count - 1, 0) ? "checkmark" : "chevron.right")
                     }
                     .font(.system(size: 16, weight: .bold))

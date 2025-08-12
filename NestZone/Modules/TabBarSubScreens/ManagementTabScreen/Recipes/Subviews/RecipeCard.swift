@@ -19,7 +19,7 @@ struct RecipeCard: View {
         let prep = recipe.prepTime ?? 0
         let cook = recipe.cookTime ?? 0
         let total = prep + cook
-        return total > 0 ? "\(total)min" : "—"
+        return total > 0 ? LocalizationManager.recipesCardTimeFormat(total) : LocalizationManager.recipesCardTimeNotSpecified
     }
     
     var body: some View {

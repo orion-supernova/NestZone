@@ -39,7 +39,7 @@ struct ExploreRecipesView: View {
                                         )
                                     }
                                 } label: {
-                                    Label("Add to My Recipes", systemImage: "plus")
+                                    Label(LocalizationManager.recipesExploreAddToMyRecipes, systemImage: "plus")
                                 }
                             }
                         }
@@ -60,11 +60,11 @@ struct ExploreRecipesView: View {
                     endRadius: 1200
                 )
             )
-            .navigationTitle("Explore Recipes")
+            .navigationTitle(LocalizationManager.recipesExploreScreenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button(LocalizationManager.recipesExploreCloseButton) { dismiss() }
                         .foregroundColor(.secondary)
                 }
             }
@@ -74,12 +74,12 @@ struct ExploreRecipesView: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Curated Picks ✨")
+                Text(LocalizationManager.recipesExploreHeaderTitle)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing)
                     )
-                Text("Discover global favorites and Turkish classics")
+                Text(LocalizationManager.recipesExploreHeaderSubtitle)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(
                         LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing)

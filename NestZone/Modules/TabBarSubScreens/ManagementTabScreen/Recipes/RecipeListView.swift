@@ -26,7 +26,7 @@ struct RecipeListView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "sparkles")
                                 .font(.system(size: 16, weight: .bold))
-                            Text("Explore Recipes")
+                            Text(LocalizationManager.recipesExploreButton)
                                 .font(.system(size: 16, weight: .bold))
                         }
                         .foregroundColor(.white)
@@ -62,7 +62,7 @@ struct RecipeListView: View {
                                             await viewModel.deleteRecipe(recipe)
                                         }
                                     } label: {
-                                        Label("Delete", systemImage: "trash")
+                                        Label(LocalizationManager.recipesDeleteButton, systemImage: "trash")
                                     }
                                 }
                             }
@@ -84,11 +84,11 @@ struct RecipeListView: View {
                     endRadius: 1200
                 )
             )
-            .navigationTitle("Recipes")
+            .navigationTitle(LocalizationManager.recipesScreenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Back") { dismiss() }
+                    Button(LocalizationManager.recipesBackButton) { dismiss() }
                         .foregroundColor(.secondary)
                 }
                 
@@ -105,7 +105,7 @@ struct RecipeListView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .accessibilityLabel("Explore Recipes")
+                            .accessibilityLabel(LocalizationManager.recipesExploreButton)
                     }
                 }
                 
@@ -145,7 +145,7 @@ struct RecipeListView: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Meal Planning 🍽️")
+                Text(LocalizationManager.recipesHeaderTitle)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
@@ -154,7 +154,7 @@ struct RecipeListView: View {
                             endPoint: .trailing
                         )
                     )
-                Text("Save and organize your family’s favorite meals")
+                Text(LocalizationManager.recipesHeaderSubtitle)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(
                         LinearGradient(
@@ -173,7 +173,7 @@ struct RecipeListView: View {
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search recipes, tags…", text: $viewModel.searchText)
+                TextField(LocalizationManager.recipesSearchPlaceholder, text: $viewModel.searchText)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
             }
@@ -185,7 +185,7 @@ struct RecipeListView: View {
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    TagPill(title: "All", isSelected: viewModel.selectedTag == nil) {
+                    TagPill(title: LocalizationManager.recipesTagAll, isSelected: viewModel.selectedTag == nil) {
                         viewModel.selectedTag = nil
                     }
                     ForEach(viewModel.allTags, id: \.self) { tag in
@@ -230,9 +230,9 @@ struct RecipeListView: View {
             Image(systemName: "fork.knife.circle")
                 .font(.system(size: 56, weight: .light))
                 .foregroundStyle(LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing))
-            Text("No recipes yet")
+            Text(LocalizationManager.recipesEmptyStateTitle)
                 .font(.system(size: 18, weight: .semibold))
-            Text("Add your first recipe and start planning meals!")
+            Text(LocalizationManager.recipesEmptyStateSubtitle)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.secondary)
         }

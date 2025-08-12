@@ -123,4 +123,70 @@ extension LocalizationManager {
     static var tabBarMessages: String { t("tab_bar_messages") }
     static var tabBarSettings: String { t("tab_bar_settings") }
     static var tabBarLoading: String { t("tab_bar_loading") }
+
+    // MARK: - Recipes
+    static var recipesExploreButton: String { t("recipes_explore_button") }
+    static var recipesDeleteButton: String { t("recipes_delete_button") }
+    static var recipesScreenTitle: String { t("recipes_screen_title") }
+    static var recipesBackButton: String { t("recipes_back_button") }
+    static var recipesHeaderTitle: String { t("recipes_header_title") }
+    static var recipesHeaderSubtitle: String { t("recipes_header_subtitle") }
+    static var recipesSearchPlaceholder: String { t("recipes_search_placeholder") }
+    static var recipesTagAll: String { t("recipes_tag_all") }
+    static var recipesEmptyStateTitle: String { t("recipes_empty_state_title") }
+    static var recipesEmptyStateSubtitle: String { t("recipes_empty_state_subtitle") }
+
+    static var recipesExploreAddToMyRecipes: String { t("recipes_explore_add_to_my_recipes") }
+    static var recipesExploreScreenTitle: String { t("recipes_explore_screen_title") }
+    static var recipesExploreCloseButton: String { t("recipes_explore_close_button") }
+    static var recipesExploreHeaderTitle: String { t("recipes_explore_header_title") }
+    static var recipesExploreHeaderSubtitle: String { t("recipes_explore_header_subtitle") }
+
+    static var recipesNewRecipeTitleField: String { t("recipes_new_recipe_title_field") }
+    static var recipesNewRecipeTitlePlaceholder: String { t("recipes_new_recipe_title_placeholder") }
+    static var recipesNewRecipeDescriptionField: String { t("recipes_new_recipe_description_field") }
+    static var recipesNewRecipeDescriptionPlaceholder: String { t("recipes_new_recipe_description_placeholder") }
+    static var recipesNewRecipeScreenTitle: String { t("recipes_new_recipe_screen_title") }
+    static var recipesNewRecipeAddButton: String { t("recipes_new_recipe_add_button") }
+    static var recipesNewRecipeHeaderTitle: String { t("recipes_new_recipe_header_title") }
+    static var recipesNewRecipeHeaderSubtitle: String { t("recipes_new_recipe_header_subtitle") }
+    static var recipesNewRecipeTagsSectionTitle: String { t("recipes_new_recipe_tags_section_title") }
+    static func recipesNewRecipeTagsLimitInfo(_ maxTags: Int) -> String { tFormat("recipes_new_recipe_tags_limit_info", maxTags) }
+    static var recipesNewRecipeTimeServingsSectionTitle: String { t("recipes_new_recipe_time_servings_section_title") }
+    static var recipesNewRecipePrepTimePlaceholder: String { t("recipes_new_recipe_prep_time_placeholder") }
+    static var recipesNewRecipeCookTimePlaceholder: String { t("recipes_new_recipe_cook_time_placeholder") }
+    static var recipesNewRecipeServingsPlaceholder: String { t("recipes_new_recipe_servings_placeholder") }
+    static var recipesNewRecipeDifficultyPicker: String { t("recipes_new_recipe_difficulty_picker") }
+    static var recipesNewRecipeIngredientsEditorTitle: String { t("recipes_new_recipe_ingredients_editor_title") }
+    static var recipesNewRecipeStepsEditorTitle: String { t("recipes_new_recipe_steps_editor_title") }
+
+    static var recipesCookingQuitAlertTitle: String { t("recipes_cooking_quit_alert_title") }
+    static var recipesCookingQuitAlertQuitButton: String { t("recipes_cooking_quit_alert_quit_button") }
+    static var recipesCookingQuitAlertMessage: String { t("recipes_cooking_quit_alert_message") }
+    static var recipesCookingPrepareIngredients: String { t("recipes_cooking_prepare_ingredients") }
+    static var recipesCookingCookRecipe: String { t("recipes_cooking_cook_recipe") }
+    static var recipesCookingProgressLabel: String { t("recipes_cooking_progress_label") }
+    static func recipesCookingIngredientsProgress(_ checked: Int, _ total: Int) -> String { tFormat("recipes_cooking_ingredients_progress", checked, total) }
+    static func recipesCookingStepsProgress(_ current: Int, _ total: Int) -> String { tFormat("recipes_cooking_steps_progress", current, total) }
+    static var recipesCookingCheckIngredientsInstruction: String { t("recipes_cooking_check_ingredients_instruction") }
+    static var recipesCookingStartCookingButton: String { t("recipes_cooking_start_cooking_button") }
+    static var recipesCookingBackButton: String { t("recipes_cooking_back_button") }
+    static var recipesCookingFinishButton: String { t("recipes_cooking_finish_button") }
+    static var recipesCookingNextStepButton: String { t("recipes_cooking_next_step_button") }
+    static func recipesCookingStepCardTitle(_ stepNumber: Int, _ totalSteps: Int) -> String { tFormat("recipes_cooking_step_card_title", stepNumber, totalSteps) }
+
+    static func recipesCardTimeFormat(_ minutes: Int) -> String { tFormat("recipes_card_time_format", minutes) }
+    static var recipesCardTimeNotSpecified: String { t("recipes_card_time_not_specified") }
+
+    static func recipesDetailTimeTotalFormat(_ minutes: Int) -> String { tFormat("recipes_detail_time_total_format", minutes) }
+    static var recipesDetailTimeNotSpecified: String { t("recipes_detail_time_not_specified") }
+    static var recipesDetailStartPreparingButton: String { t("recipes_detail_start_preparing_button") }
+    static var recipesDetailDeleteAlertTitle: String { t("recipes_detail_delete_alert_title") }
+    static func recipesDetailDeleteAlertMessage(_ recipeTitle: String) -> String { tFormat("recipes_detail_delete_alert_message", recipeTitle) }
+    static var recipesDetailInfoCardPrep: String { t("recipes_detail_info_card_prep") }
+    static var recipesDetailInfoCardCook: String { t("recipes_detail_info_card_cook") }
+    static var recipesDetailInfoCardServes: String { t("recipes_detail_info_card_serves") }
+    static var recipesDetailInfoCardLevel: String { t("recipes_detail_info_card_level") }
+    static var recipesDetailIngredientsSectionTitle: String { t("recipes_detail_ingredients_section_title") }
+    static var recipesDetailInstructionsSectionTitle: String { t("recipes_detail_instructions_section_title") }
 }

@@ -30,8 +30,8 @@ struct NewRecipeSheet: View {
                     // Title + Description
                     VStack(spacing: 12) {
                         PremiumTextField(
-                            title: "Recipe Title",
-                            placeholder: "e.g., Spaghetti Carbonara",
+                            title: LocalizationManager.recipesNewRecipeTitleField,
+                            placeholder: LocalizationManager.recipesNewRecipeTitlePlaceholder,
                             text: $title,
                             icon: "fork.knife",
                             isRequired: true
@@ -39,8 +39,8 @@ struct NewRecipeSheet: View {
                         .focused($focusedField, equals: .title)
                         
                         PremiumTextField(
-                            title: "Description", 
-                            placeholder: "Short description (optional)",
+                            title: LocalizationManager.recipesNewRecipeDescriptionField, 
+                            placeholder: LocalizationManager.recipesNewRecipeDescriptionPlaceholder,
                             text: $description,
                             icon: "text.alignleft",
                             isRequired: false
@@ -88,15 +88,15 @@ struct NewRecipeSheet: View {
                     endRadius: 1200
                 )
             )
-            .navigationTitle("New Recipe")
+            .navigationTitle(LocalizationManager.recipesNewRecipeScreenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizationManager.commonCancel) { dismiss() }
                         .foregroundColor(.secondary)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") { createRecipe() }
+                    Button(LocalizationManager.recipesNewRecipeAddButton) { createRecipe() }
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(
                             LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -109,12 +109,12 @@ struct NewRecipeSheet: View {
     
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Create Delicious ✨")
+            Text(LocalizationManager.recipesNewRecipeHeaderTitle)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(
                     LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing)
                 )
-            Text("Add a new recipe with tags, timing, ingredients, and steps.")
+            Text(LocalizationManager.recipesNewRecipeHeaderSubtitle)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(.secondary)
         }
@@ -125,7 +125,7 @@ struct NewRecipeSheet: View {
     
     private var tagsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Tags")
+            Text(LocalizationManager.recipesNewRecipeStepsEditorTitle)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.primary)
             
@@ -146,7 +146,7 @@ struct NewRecipeSheet: View {
             }
             
             if selectedTags.count >= maxTags {
-                Text("You can select up to \(maxTags) tags.")
+                Text(LocalizationManager.recipesNewRecipeTagsLimitInfo(maxTags))
                     .font(.footnote)
                     .foregroundColor(.secondary)
             }
@@ -164,20 +164,20 @@ struct NewRecipeSheet: View {
     
     private var numbersSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Time & Servings")
+            Text(LocalizationManager.recipesNewRecipeTimeServingsSectionTitle)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.primary)
             
             HStack(spacing: 12) {
-                SimpleNumberField("Prep (min)", text: $prepTime)
+                SimpleNumberField(LocalizationManager.recipesNewRecipePrepTimePlaceholder, text: $prepTime)
                     .focused($focusedField, equals: .prep)
-                SimpleNumberField("Cook (min)", text: $cookTime)
+                SimpleNumberField(LocalizationManager.recipesNewRecipeCookTimePlaceholder, text: $cookTime)
                     .focused($focusedField, equals: .cook)
-                SimpleNumberField("Servings", text: $servings)
+                SimpleNumberField(LocalizationManager.recipesNewRecipeServingsPlaceholder, text: $servings)
                     .focused($focusedField, equals: .servings)
             }
             
-            Picker("Difficulty", selection: $difficulty) {
+            Picker(LocalizationManager.recipesNewRecipeDifficultyPicker, selection: $difficulty) {
                 ForEach(Recipe.Difficulty.allCases, id: \.self) { d in
                     Text(d.rawValue.capitalized).tag(d)
                 }
@@ -197,7 +197,7 @@ struct NewRecipeSheet: View {
     
     private func editorSection(title: String, text: Binding<String>, field: Field) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
+            Text(LocalizationManager.recipesNewRecipeIngredientsEditorTitle)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.primary)
             
