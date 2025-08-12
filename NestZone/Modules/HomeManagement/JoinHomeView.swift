@@ -47,11 +47,11 @@ struct JoinHomeView: View {
                             }
                             
                             VStack(spacing: 8) {
-                                Text("Join Home")
+                                Text(LocalizationManager.homeSetupJoinHomeTitle)
                                     .font(.system(size: 24, weight: .bold, design: .rounded))
                                     .foregroundColor(selectedTheme.colors(for: colorScheme).text)
                                 
-                                Text("Enter the invite code to join an existing home")
+                                Text(LocalizationManager.homeSetupJoinHomeSubtitle)
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
                                     .multilineTextAlignment(.center)
@@ -66,8 +66,8 @@ struct JoinHomeView: View {
                         // Form Field
                         VStack(spacing: 24) {
                             PremiumTextField(
-                                title: "Invite Code",
-                                placeholder: "Enter invite code",
+                                title: LocalizationManager.joinHomeInviteCodeLabel,
+                                placeholder: LocalizationManager.joinHomeInviteCodePlaceholder,
                                 text: $inviteCode,
                                 icon: "key.fill",
                                 isRequired: true
@@ -85,7 +85,7 @@ struct JoinHomeView: View {
                         // Join Button
                         VStack(spacing: 16) {
                             LoadingButton(
-                                title: "Join Home",
+                                title: LocalizationManager.joinHomeButton,
                                 icon: "person.2.circle.fill",
                                 isLoading: viewModel.isLoading,
                                 isEnabled: !inviteCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -110,7 +110,7 @@ struct JoinHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
+                    Button(LocalizationManager.commonCancel) {
                         dismiss()
                     }
                     .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
@@ -136,7 +136,7 @@ struct JoinHomeView: View {
             }
         }
         .overlay(
-            SuccessOverlay(show: $showSuccess, message: "Joined Home!")
+            SuccessOverlay(show: $showSuccess, message: LocalizationManager.joinHomeSuccessMessage)
         )
         .overlay(
             ErrorOverlay(show: $viewModel.showError, message: viewModel.errorMessage ?? "")

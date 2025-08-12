@@ -513,6 +513,63 @@ extension LocalizationManager {
     static func recipeErrorAddRecipe(_ error: String) -> String { tFormat("recipe_error_add_recipe", error) }
     static func recipeErrorDeleteRecipe(_ error: String) -> String { tFormat("recipe_error_delete_recipe", error) }
 
+    // Common
+    static var commonLoading: String { t("common_loading") }
+
     // Shopping Categories
     static func shoppingCategoryCompletedItems(_ completed: Int, _ total: Int) -> String { tFormat("shopping_category_completed_items", completed, total) }
+
+    // Authentication
+    static var authSignInTitle: String { t("auth_sign_in_title") }
+    static var authCreateAccountTitle: String { t("auth_create_account_title") }
+    static var authPasswordValid: String { t("auth_password_valid") }
+    static var authPasswordTooShort: String { t("auth_password_too_short") }
+    static var authConfirmPasswordEmpty: String { t("auth_confirm_password_empty") }
+    static var authPasswordsMatch: String { t("auth_passwords_match") }
+    static var authPasswordsMismatch: String { t("auth_passwords_mismatch") }
+    static var authWelcomeTitle: String { t("auth_welcome_title") }
+    static var authSignInSubtitle: String { t("auth_sign_in_subtitle") }
+    static var authCreateAccountSubtitle: String { t("auth_create_account_subtitle") }
+    static var authLoginButton: String { t("auth_login_button") }
+    static var authSignUpButton: String { t("auth_sign_up_button") }
+    static var authFullNameLabel: String { t("auth_full_name_label") }
+    static var authFullNamePlaceholder: String { t("auth_full_name_placeholder") }
+    static var authEmailLabel: String { t("auth_email_label") }
+    static var authEmailPlaceholder: String { t("auth_email_placeholder") }
+    static var authPasswordLabel: String { t("auth_password_label") }
+    static var authPasswordPlaceholder: String { t("auth_password_placeholder") }
+    static var authConfirmPasswordLabel: String { t("auth_confirm_password_label") }
+    static var authConfirmPasswordPlaceholder: String { t("auth_confirm_password_placeholder") }
+    static var authCreateAccountButton: String { t("auth_create_account_button") }
+
+    // Home Setup Flow
+    static var homeSetupSubtitle: String { t("home_setup_subtitle") }
+    static var homeSetupCreateHomeTitle: String { t("home_setup_create_home_title") }
+    static var homeSetupCreateHomeSubtitle: String { t("home_setup_create_home_subtitle") }
+    static var homeSetupJoinHomeTitle: String { t("home_setup_join_home_title") }
+    static var homeSetupJoinHomeSubtitle: String { t("home_setup_join_home_subtitle") }
+
+    // Create Home View
+    static var createHomeSubtitle: String { t("create_home_subtitle") }
+    static var createHomeNameLabel: String { t("create_home_name_label") }
+    static var createHomeNamePlaceholder: String { t("create_home_name_placeholder") }
+    static var createHomeAddressLabel: String { t("create_home_address_label") }
+    static var createHomeAddressPlaceholder: String { t("create_home_address_placeholder") }
+    static var createHomeButton: String { t("create_home_button") }
+    static var createHomeSuccessMessage: String { t("create_home_success_message") }
+
+    // Home Management
+    static var homeManagementHomeNameEmpty: String { t("home_management_home_name_empty") }
+    static var homeManagementInviteCodeEmpty: String { t("home_management_invite_code_empty") }
+    static var homeManagementInvalidInviteCode: String { t("home_management_invalid_invite_code") }
+    static var homeManagementAlreadyMember: String { t("home_management_already_member") }
+
+    // Join Home View
+    static var joinHomeInviteCodeLabel: String { t("join_home_invite_code_label") }
+    static var joinHomeInviteCodePlaceholder: String { t("join_home_invite_code_placeholder") }
+    static var joinHomeButton: String { t("join_home_button") }
+    static var joinHomeSuccessMessage: String { t("join_home_success_message") }
+
+    // No Homes View
+    static var noHomesGetStartedTitle: String { t("no_homes_get_started_title") }
 }

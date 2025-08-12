@@ -26,7 +26,7 @@ struct HomeSetupFlow: View {
                 VStack(spacing: 0) {
                     // Header
                     VStack(spacing: 16) {
-                        Text("Welcome to NestZone!")
+                        Text(LocalizationManager.authWelcomeTitle)
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(
                                 LinearGradient(
@@ -37,7 +37,7 @@ struct HomeSetupFlow: View {
                             )
                             .multilineTextAlignment(.center)
                         
-                        Text("Let's set up your household")
+                        Text(LocalizationManager.homeSetupSubtitle)
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -55,8 +55,8 @@ struct HomeSetupFlow: View {
                         // Options
                         VStack(spacing: 20) {
                             HomeSetupCard(
-                                title: "Create New Home",
-                                subtitle: "Start fresh and invite family members",
+                                title: LocalizationManager.homeSetupCreateHomeTitle,
+                                subtitle: LocalizationManager.homeSetupCreateHomeSubtitle,
                                 icon: "house.circle.fill",
                                 gradient: [.purple, .blue],
                                 action: {
@@ -65,8 +65,8 @@ struct HomeSetupFlow: View {
                             )
                             
                             HomeSetupCard(
-                                title: "Join Existing Home",
-                                subtitle: "Use an invite code from a family member",
+                                title: LocalizationManager.homeSetupJoinHomeTitle,
+                                subtitle: LocalizationManager.homeSetupJoinHomeSubtitle,
                                 icon: "person.2.circle.fill",
                                 gradient: [.blue, .cyan],
                                 action: {

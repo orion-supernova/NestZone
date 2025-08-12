@@ -29,7 +29,7 @@ struct NoHomesView: View {
                     
                     // Content - Using WelcomeCard style
                     VStack(spacing: 36) {
-                        Text("Let's Get Started")
+                        Text(LocalizationManager.noHomesGetStartedTitle)
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundColor(selectedTheme.colors(for: colorScheme).text)
                             .opacity(animateContent ? 1 : 0)
@@ -38,16 +38,16 @@ struct NoHomesView: View {
                         
                         VStack(spacing: 20) {
                             WelcomeCard(
-                                title: "Create a Home",
-                                subtitle: "Start a new space and invite your household",
+                                title: LocalizationManager.homeSetupCreateHomeTitle,
+                                subtitle: LocalizationManager.homeSetupCreateHomeSubtitle,
                                 icon: "house.circle.fill",
                                 gradient: [.purple, .blue],
                                 action: { showCreateHome = true }
                             )
                             
                             WelcomeCard(
-                                title: "Join a Home",
-                                subtitle: "Enter an invite code to join an existing home",
+                                title: LocalizationManager.homeSetupJoinHomeTitle,
+                                subtitle: LocalizationManager.homeSetupJoinHomeSubtitle,
                                 icon: "person.2.circle.fill",
                                 gradient: [.blue, .cyan],
                                 action: { showJoinHome = true }

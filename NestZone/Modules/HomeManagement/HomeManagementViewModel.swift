@@ -13,7 +13,7 @@ class HomeManagementViewModel: ObservableObject {
     
     func createHome(name: String, address: String?, authManager: PocketBaseAuthManager) async {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            showErrorMessage("Home name cannot be empty")
+            showErrorMessage(LocalizationManager.homeManagementHomeNameEmpty)
             return
         }
         
@@ -82,7 +82,7 @@ class HomeManagementViewModel: ObservableObject {
     
     func joinHome(inviteCode: String, authManager: PocketBaseAuthManager) async {
         guard !inviteCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            showErrorMessage("Invite code cannot be empty")
+            showErrorMessage(LocalizationManager.homeManagementInviteCodeEmpty)
             return
         }
         
@@ -104,14 +104,14 @@ class HomeManagementViewModel: ObservableObject {
             )
             
             guard let home = response.items.first else {
-                showErrorMessage("Invalid invite code")
+                showErrorMessage(LocalizationManager.homeManagementInvalidInviteCode)
                 isLoading = false
                 return
             }
             
             // Check if user is already a member
             if home.members.contains(userId) {
-                showErrorMessage("You're already a member of this home")
+                showErrorMessage(LocalizationManager.homeManagementAlreadyMember)
                 isLoading = false
                 return
             }

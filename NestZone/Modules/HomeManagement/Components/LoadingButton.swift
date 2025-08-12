@@ -45,7 +45,7 @@ struct LoadingButton: View {
                         .font(.system(size: 18, weight: .semibold))
                 }
                 
-                Text(isLoading ? "Loading..." : title)
+                Text(isLoading ? LocalizationManager.commonLoading : title)
                     .font(.system(size: 17, weight: .semibold))
             }
             .foregroundColor(.white)

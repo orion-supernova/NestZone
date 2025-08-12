@@ -53,7 +53,7 @@ struct CreateHomeView: View {
                                     .font(.system(size: 24, weight: .bold, design: .rounded))
                                     .foregroundColor(selectedTheme.colors(for: colorScheme).text)
                                 
-                                Text("Set up your shared living space")
+                                Text(LocalizationManager.createHomeSubtitle)
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
                             }
@@ -66,8 +66,8 @@ struct CreateHomeView: View {
                         // Form Fields
                         VStack(spacing: 24) {
                             PremiumTextField(
-                                title: "Home Name",
-                                placeholder: "Enter home name",
+                                title: LocalizationManager.createHomeNameLabel,
+                                placeholder: LocalizationManager.createHomeNamePlaceholder,
                                 text: $homeName,
                                 icon: "house.fill",
                                 isRequired: true
@@ -79,8 +79,8 @@ struct CreateHomeView: View {
                             .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animateFields)
                             
                             PremiumTextField(
-                                title: "Address (Optional)",
-                                placeholder: "Enter home address",
+                                title: LocalizationManager.createHomeAddressLabel,
+                                placeholder: LocalizationManager.createHomeAddressPlaceholder,
                                 text: $homeAddress,
                                 icon: "location.fill",
                                 isRequired: false
@@ -98,7 +98,7 @@ struct CreateHomeView: View {
                         // Create Button
                         VStack(spacing: 16) {
                             LoadingButton(
-                                title: "Create Home",
+                                title: LocalizationManager.createHomeButton,
                                 icon: "plus.circle.fill",
                                 isLoading: viewModel.isLoading,
                                 isEnabled: !homeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -124,7 +124,7 @@ struct CreateHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
+                    Button(LocalizationManager.commonCancel) {
                         dismiss()
                     }
                     .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
@@ -150,7 +150,7 @@ struct CreateHomeView: View {
             }
         }
         .overlay(
-            SuccessOverlay(show: $showSuccess, message: "Home Created!")
+            SuccessOverlay(show: $showSuccess, message: LocalizationManager.createHomeSuccessMessage)
         )
         .overlay(
             ErrorOverlay(show: $viewModel.showError, message: viewModel.errorMessage ?? "")

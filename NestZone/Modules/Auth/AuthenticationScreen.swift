@@ -32,7 +32,7 @@ struct AuthenticationScreen: View {
         if password.isEmpty {
             return ""
         }
-        return password.count >= 8 ? "Password looks good!" : "Password should be at least 8 characters"
+        return password.count >= 8 ? LocalizationManager.authPasswordValid : LocalizationManager.authPasswordTooShort
     }
     
     private var confirmPasswordValidationState: ValidationState {
@@ -50,9 +50,9 @@ struct AuthenticationScreen: View {
             return ""
         }
         if password.isEmpty {
-            return "Please enter password first"
+            return LocalizationManager.authConfirmPasswordEmpty
         }
-        return password == confirmPassword ? "Passwords match!" : "Passwords don't match"
+        return password == confirmPassword ? LocalizationManager.authPasswordsMatch : LocalizationManager.authPasswordsMismatch
     }
 
     var body: some View {
@@ -86,7 +86,7 @@ struct AuthenticationScreen: View {
                 .padding(.bottom, keyboardHeight > 0 ? 80 : 0)
             }
             .background(background)
-            .navigationTitle(isLoginMode ? "Sign In" : "Create Account")
+            .navigationTitle(isLoginMode ? LocalizationManager.authSignInTitle : LocalizationManager.authCreateAccountTitle)
             .navigationBarTitleDisplayMode(.inline)
             .onTapGesture {
                 hideKeyboard()
@@ -125,8 +125,8 @@ struct AuthenticationScreen: View {
         .onDisappear {
             removeKeyboardObservers()
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") {
+        .alert(LocalizationManager.commonErrorTitle, isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button(LocalizationManager.commonOkButton) {
                 viewModel.errorMessage = nil
             }
         } message: {
@@ -179,7 +179,7 @@ struct AuthenticationScreen: View {
     private var header: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Welcome to NestZone")
+                Text(LocalizationManager.authWelcomeTitle)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
@@ -188,7 +188,7 @@ struct AuthenticationScreen: View {
                             endPoint: .trailing
                         )
                     )
-                Text(isLoginMode ? "Sign in to continue ✨" : "Create your account ✨")
+                Text(isLoginMode ? LocalizationManager.authSignInSubtitle : LocalizationManager.authCreateAccountSubtitle)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(
                         LinearGradient(
@@ -231,7 +231,7 @@ struct AuthenticationScreen: View {
                     isLoginMode = true
                 }
             } label: {
-                Text("Login")
+                Text(LocalizationManager.authLoginButton)
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(isLoginMode ? .white : .secondary)
                     .frame(maxWidth: .infinity)
@@ -254,7 +254,7 @@ struct AuthenticationScreen: View {
                     isLoginMode = false
                 }
             } label: {
-                Text("Sign Up")
+                Text(LocalizationManager.authSignUpButton)
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(!isLoginMode ? .white : .secondary)
                     .frame(maxWidth: .infinity)
@@ -285,8 +285,8 @@ struct AuthenticationScreen: View {
         VStack(spacing: 16) {
             if !isLoginMode {
                 PremiumTextField(
-                    title: "Full Name",
-                    placeholder: "Enter your full name",
+                    title: LocalizationManager.authFullNameLabel,
+                    placeholder: LocalizationManager.authFullNamePlaceholder,
                     text: $fullName,
                     icon: "person.fill",
                     isRequired: true
@@ -298,8 +298,8 @@ struct AuthenticationScreen: View {
             }
             
             PremiumTextField(
-                title: "Email",
-                placeholder: "Enter your email",
+                title: LocalizationManager.authEmailLabel,
+                placeholder: LocalizationManager.authEmailPlaceholder,
                 text: $email,
                 icon: "envelope.fill",
                 isRequired: true,
@@ -308,8 +308,8 @@ struct AuthenticationScreen: View {
             )
             
             PremiumTextField(
-                title: "Password",
-                placeholder: "Enter your password",
+                title: LocalizationManager.authPasswordLabel,
+                placeholder: LocalizationManager.authPasswordPlaceholder,
                 text: $password,
                 icon: "lock.fill",
                 isRequired: true,
@@ -320,8 +320,8 @@ struct AuthenticationScreen: View {
             
             if !isLoginMode {
                 PremiumTextField(
-                    title: "Confirm Password",
-                    placeholder: "Confirm your password",
+                    title: LocalizationManager.authConfirmPasswordLabel,
+                    placeholder: LocalizationManager.authConfirmPasswordPlaceholder,
                     text: $confirmPassword,
                     icon: "lock.fill",
                     isRequired: true,
@@ -339,7 +339,7 @@ struct AuthenticationScreen: View {
     
     private var submitButton: some View {
         LoadingButton(
-            title: isLoginMode ? "Login" : "Create Account",
+            title: isLoginMode ? LocalizationManager.authLoginButton : LocalizationManager.authCreateAccountButton,
             icon: isLoginMode ? "arrow.right" : "sparkles",
             isLoading: viewModel.isLoading,
             isEnabled: isFormValid
