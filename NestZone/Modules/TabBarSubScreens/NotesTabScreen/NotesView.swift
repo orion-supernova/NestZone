@@ -20,7 +20,7 @@ struct NotesView: View {
             }
         }
         .background(selectedTheme.colors(for: colorScheme).background)
-        .navigationTitle(LocalizationManager.text(.notes))
+        .navigationTitle(LocalizationManager.notesScreenTitle)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -58,8 +58,8 @@ struct NotesView: View {
                 .environmentObject(viewModel)
                 .environmentObject(authManager)
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") {
+        .alert(LocalizationManager.commonErrorTitle, isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button(LocalizationManager.commonOkButton) {
                 viewModel.errorMessage = nil
             }
         } message: {
@@ -111,11 +111,11 @@ struct NotesView: View {
                 }
                 
                 VStack(spacing: 16) {
-                    Text("No Notes Yet")
+                    Text(LocalizationManager.notesEmptyStateTitle)
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundColor(.primary)
                     
-                    Text("Create your first family note\nand start sharing thoughts")
+                    Text(LocalizationManager.notesEmptyStateSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

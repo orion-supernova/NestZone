@@ -50,11 +50,11 @@ struct ThemeSelectionSheet: View {
                 .padding()
             }
             .background(selectedTheme.colors(for: colorScheme).background)
-            .navigationTitle("Choose Theme")
+            .navigationTitle(LocalizationManager.settingsThemeChooseTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(LocalizationManager.text(.done)) {
+                    Button(LocalizationManager.commonDone) {
                         isShowingSheet = false
                     }
                 }

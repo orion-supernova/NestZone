@@ -1,0 +1,130 @@
+{
+  "_____SETTINGS_____": "================ AYARLAR ================",
+
+  "settings_screen_title": "Ayarlar",
+  "settings_profile_welcome_back": "Tekrar hoş geldin!",
+  "settings_profile_customize_experience": "Deneyimini kişiselleştir",
+
+  "settings_home_management_title": "Ev Yönetimi",
+  "settings_current_home_title": "Mevcut Ev",
+  "settings_members_singular": "üye",
+  "settings_members_plural": "üye",
+  "settings_invite_code_title": "Davet Kodu",
+  "settings_invite_code_copy_button": "Kopyala",
+  "settings_invite_code_help_text": "Bu kodu evdeki kişilerle paylaşarak evinize katılmalarını sağlayın",
+
+  "settings_appearance_title": "Görünüm",
+  "settings_theme_title": "Tema",
+  "settings_language_title": "Dil",
+
+  "settings_theme_choose_title": "Tema Seç",
+  "settings_language_choose_title": "Dil Seç",
+
+  "settings_account_title": "Hesap",
+  "settings_profile_title": "Profil",
+  "settings_notifications_title": "Bildirimler",
+
+  "settings_general_title": "Genel",
+  "settings_help_title": "Yardım",
+  "settings_about_title": "Hakkında",
+
+  "settings_logout_button_title": "Çıkış Yap",
+
+  "_____COMMON_____": "================ GENEL ================",
+
+  "common_done": "Tamam",
+  "common_error_title": "Hata",
+  "common_ok_button": "Tamam",
+  "common_cancel": "İptal",
+  "common_add": "Ekle",
+  "common_delete": "Sil",
+  "common_back": "Geri",
+  "common_close": "Kapat",
+  "common_create": "Oluştur",
+
+  "_____TAB_BAR_____": "================ SEKME ÇUBUĞU ================",
+
+  "tab_bar_home": "Ana Sayfa",
+  "tab_bar_hub": "Merkez",
+  "tab_bar_notes": "Notlar",
+  "tab_bar_messages": "Mesajlar",
+  "tab_bar_settings": "Ayarlar",
+  "tab_bar_loading": "Yükleniyor...",
+
+  "_____HOME_TAB_____": "================ ANA SEKME ================",
+
+  "home_hello_user": "Merhaba %@!",
+  "home_header_subtitle": "Paylaşılan evinizi birlikte yönetin!",
+  "home_minigames_title": "Mini Oyunlar",
+  "home_minigames_watch_title": "Bu akşam ne izleyelim",
+  "home_minigames_watch_description": "Bu akşam ne izleyeceğinize karar veremiyor musunuz? Hadi küçük bir oyunla seçelim!",
+
+  "home_stats_title": "Ev İstatistikleri",
+  "home_stats_notes_title": "Notlar",
+  "home_stats_shopping_title": "Alışveriş",
+  "home_stats_issues_title": "Sorunlar",
+  "home_stats_tasks_done_title": "Tamamlanan Görevler",
+
+  "_____NOTES_TAB_____": "================ NOTLAR SEKMESI ================",
+
+  "notes_screen_title": "Notlar",
+  "notes_empty_state_title": "Henüz Not Yok",
+  "notes_empty_state_subtitle": "İlk aile notunuzu oluşturun\nve düşüncelerinizi paylaşmaya başlayın",
+
+  "_____MANAGEMENT_TAB_____": "================ YÖNETİM SEKMESI ================",
+
+  "management_screen_title": "Yönetim Merkezi",
+  "management_header_title": "Yönetim Merkezi 🏠",
+  "management_header_subtitle": "Her şeyi tek yerden yönetin! ✨",
+
+  "management_module_shopping_title": "Alışveriş Listeleri",
+  "management_module_shopping_subtitle": "Alışveriş listelerinizi yönetin",
+  "management_module_recipes_title": "Tarifler",
+  "management_module_recipes_subtitle": "Lezzetli tarifleri kaydedin ve yemek planları yapın",
+  "management_module_movies_title": "Filmler",
+  "management_module_movies_subtitle": "Film listeleri oluşturun ve yönetin",
+  "management_module_maintenance_title": "Ev Sorunları",
+  "management_module_maintenance_subtitle": "Onarım ve bakım görevlerini takip edin",
+  "management_module_finance_title": "Faturalar ve Finans",
+  "management_module_finance_subtitle": "Faturaları paylaşın ve giderleri yönetin",
+  "management_module_notes_title": "Notlar ve Fikirler",
+  "management_module_notes_subtitle": "Fikirleri ve önemli notları kaydedin",
+  "management_module_calendar_title": "Takvim ve Etkinlikler",
+  "management_module_calendar_subtitle": "Etkinlikleri ve programları organize edin",
+
+  "management_coming_soon": "Yakında!",
+
+  "_____SHOPPING_____": "================ ALIŞVERİŞ ================",
+
+  "shopping_screen_title": "Alışveriş Listeleri",
+  "shopping_header_title": "Alışveriş Listeleri 🛒",
+  "shopping_header_subtitle": "İhtiyacınız olan her şeyi temin edelim! ✨",
+  "shopping_back_button": "Geri",
+  "shopping_categories_title": "Alışveriş Kategorileri",
+  "shopping_all_items_title": "Tüm Ürünler",
+  "shopping_list_view_mode": "Liste",
+  "shopping_categories_view_mode": "Kategoriler",
+  "shopping_stats_total": "Toplam",
+  "shopping_stats_done": "Tamamlanan",
+  "shopping_stats_left": "Kalan",
+  "shopping_items_count": "ürün",
+  "shopping_empty_state_title": "Henüz ürün yok",
+  "shopping_empty_state_subtitle": "İlk alışveriş öğenizi ekleyin!",
+  "shopping_add_item_title": "Ürün Ekle",
+  "shopping_delete_item_title": "Ürünü Sil",
+  "shopping_delete_item_message": "Bu ürünü silmek istediğinizden emin misiniz?",
+
+  "shopping_category_groceries": "Market",
+  "shopping_category_household": "Ev Eşyaları",
+  "shopping_category_cleaning": "Temizlik",
+  "shopping_category_other": "Diğer",
+
+  "shopping_add_item_details": "Ürün Detayları",
+  "shopping_add_item_name": "Ürün Adı",
+  "shopping_add_item_description": "Açıklama (İsteğe Bağlı)",
+  "shopping_add_item_quantity_category": "Miktar ve Kategori",
+  "shopping_add_item_quantity": "Miktar",
+  "shopping_add_item_category": "Kategori",
+  "shopping_add_item_cancel": "İptal",
+  "shopping_add_item_add": "Ekle"
+}

@@ -13,7 +13,7 @@ struct TabBarScreen: View {
     enum Tab: String, CaseIterable {
         case home = "Home"
         case management = "Hub"
-        case notes = "Notes"
+        case notes = "Notes" 
         case messages = "Messages"
         case settings = "Settings"
 
@@ -26,6 +26,16 @@ struct TabBarScreen: View {
             case .settings: return "gearshape.fill"
             }
         }
+        
+        var localizedTitle: String {
+            switch self {
+            case .home: return LocalizationManager.tabBarHome
+            case .management: return LocalizationManager.tabBarHub
+            case .notes: return LocalizationManager.tabBarNotes
+            case .messages: return LocalizationManager.tabBarMessages
+            case .settings: return LocalizationManager.tabBarSettings
+            }
+        }
     }
 
     var body: some View {
@@ -36,7 +46,7 @@ struct TabBarScreen: View {
                     ProgressView()
                         .scaleEffect(1.5)
                         .tint(selectedTheme.colors(for: colorScheme).primary[0])
-                    Text("Loading...")
+                    Text(LocalizationManager.tabBarLoading)
                         .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
                 }
             } else if viewModel.homes.isEmpty {
@@ -51,7 +61,7 @@ struct TabBarScreen: View {
                     }
                     .tag(Tab.home)
                     .tabItem {
-                        Label(Tab.home.rawValue, systemImage: Tab.home.icon)
+                        Label(Tab.home.localizedTitle, systemImage: Tab.home.icon)
                     }
                     .accessibilityIdentifier("HomeTab")
                     
@@ -60,7 +70,7 @@ struct TabBarScreen: View {
                     }
                     .tag(Tab.management)
                     .tabItem {
-                        Label(Tab.management.rawValue, systemImage: Tab.management.icon)
+                        Label(Tab.management.localizedTitle, systemImage: Tab.management.icon)
                     }
                     .accessibilityIdentifier("ManagementTab")
                     
@@ -69,7 +79,7 @@ struct TabBarScreen: View {
                     }
                     .tag(Tab.notes)
                     .tabItem {
-                        Label(Tab.notes.rawValue, systemImage: Tab.notes.icon)
+                        Label(Tab.notes.localizedTitle, systemImage: Tab.notes.icon)
                     }
                     .accessibilityIdentifier("NotesTab")
                     
@@ -78,7 +88,7 @@ struct TabBarScreen: View {
                     }
                     .tag(Tab.messages)
                     .tabItem {
-                        Label(Tab.messages.rawValue, systemImage: Tab.messages.icon)
+                        Label(Tab.messages.localizedTitle, systemImage: Tab.messages.icon)
                     }
                     .accessibilityIdentifier("MessagesTab")
                     
@@ -87,7 +97,7 @@ struct TabBarScreen: View {
                     }
                     .tag(Tab.settings)
                     .tabItem {
-                        Label(Tab.settings.rawValue, systemImage: Tab.settings.icon)
+                        Label(Tab.settings.localizedTitle, systemImage: Tab.settings.icon)
                     }
                     .accessibilityIdentifier("SettingsTab")
                 }

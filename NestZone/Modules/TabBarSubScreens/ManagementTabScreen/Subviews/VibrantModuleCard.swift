@@ -101,7 +101,7 @@ struct VibrantModuleCard: View {
                     
                     // "Soon!" tag for coming soon modules
                     if module.type.comingSoon {
-                        Text("Soon!")
+                        Text(LocalizationManager.managementComingSoon)
                             .font(.system(size: 12, weight: .black))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)

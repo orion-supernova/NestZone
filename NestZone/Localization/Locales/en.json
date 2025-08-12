@@ -1,0 +1,130 @@
+{
+  "_____SETTINGS_____": "================ SETTINGS ================",
+
+  "settings_screen_title": "Settings",
+  "settings_profile_welcome_back": "Welcome back!",
+  "settings_profile_customize_experience": "Customize your experience",
+
+  "settings_home_management_title": "Home Management",
+  "settings_current_home_title": "Current Home",
+  "settings_members_singular": "member",
+  "settings_members_plural": "members",
+  "settings_invite_code_title": "Invite Code",
+  "settings_invite_code_copy_button": "Copy",
+  "settings_invite_code_help_text": "Share this code with household members so they can join your home",
+
+  "settings_appearance_title": "Appearance",
+  "settings_theme_title": "Theme",
+  "settings_language_title": "Language",
+
+  "settings_theme_choose_title": "Choose Theme",
+  "settings_language_choose_title": "Choose Language",
+
+  "settings_account_title": "Account",
+  "settings_profile_title": "Profile",
+  "settings_notifications_title": "Notifications",
+
+  "settings_general_title": "General",
+  "settings_help_title": "Help",
+  "settings_about_title": "About",
+
+  "settings_logout_button_title": "Logout",
+
+  "_____COMMON_____": "================ COMMON ================",
+
+  "common_done": "Done",
+  "common_error_title": "Error",
+  "common_ok_button": "OK",
+  "common_cancel": "Cancel",
+  "common_add": "Add",
+  "common_delete": "Delete",
+  "common_back": "Back",
+  "common_close": "Close",
+  "common_create": "Create",
+
+  "_____TAB_BAR_____": "================ TAB BAR ================",
+
+  "tab_bar_home": "Home",
+  "tab_bar_hub": "Hub",
+  "tab_bar_notes": "Notes",
+  "tab_bar_messages": "Messages",
+  "tab_bar_settings": "Settings",
+  "tab_bar_loading": "Loading...",
+
+  "_____HOME_TAB_____": "================ HOME TAB ================",
+
+  "home_hello_user": "Hello %@!",
+  "home_header_subtitle": "Manage your shared home together!",
+  "home_minigames_title": "Mini Games",
+  "home_minigames_watch_title": "What to watch tonight",
+  "home_minigames_watch_description": "Can't decide what to watch tonight? Let's play a quick game to pick one!",
+
+  "home_stats_title": "House Statistics",
+  "home_stats_notes_title": "Notes",
+  "home_stats_shopping_title": "Shopping",
+  "home_stats_issues_title": "Issues",
+  "home_stats_tasks_done_title": "Tasks Done",
+
+  "_____NOTES_TAB_____": "================ NOTES TAB ================",
+
+  "notes_screen_title": "Notes",
+  "notes_empty_state_title": "No Notes Yet",
+  "notes_empty_state_subtitle": "Create your first family note\nand start sharing thoughts",
+
+  "_____MANAGEMENT_TAB_____": "================ MANAGEMENT TAB ================",
+
+  "management_screen_title": "Management Hub",
+  "management_header_title": "Management Hub 🏠",
+  "management_header_subtitle": "Manage everything in one place! ✨",
+
+  "management_module_shopping_title": "Shopping Lists",
+  "management_module_shopping_subtitle": "Manage your shopping lists",
+  "management_module_recipes_title": "Recipes",
+  "management_module_recipes_subtitle": "Save delicious recipes & meal plans",
+  "management_module_movies_title": "Movies",
+  "management_module_movies_subtitle": "Create & manage movie lists",
+  "management_module_maintenance_title": "House Problems",
+  "management_module_maintenance_subtitle": "Track repairs & maintenance tasks",
+  "management_module_finance_title": "Bills & Finance",
+  "management_module_finance_subtitle": "Split bills & manage expenses",
+  "management_module_notes_title": "Notes & Ideas",
+  "management_module_notes_subtitle": "Capture ideas & important notes",
+  "management_module_calendar_title": "Calendar & Events",
+  "management_module_calendar_subtitle": "Organize events & schedules",
+
+  "management_coming_soon": "Soon!",
+
+  "_____SHOPPING_____": "================ SHOPPING ================",
+
+  "shopping_screen_title": "Shopping Lists",
+  "shopping_header_title": "Shopping Lists 🛒",
+  "shopping_header_subtitle": "Let's get everything you need! ✨",
+  "shopping_back_button": "Back",
+  "shopping_categories_title": "Shopping Categories",
+  "shopping_all_items_title": "All Items",
+  "shopping_list_view_mode": "List",
+  "shopping_categories_view_mode": "Categories",
+  "shopping_stats_total": "Total",
+  "shopping_stats_done": "Done",
+  "shopping_stats_left": "Left",
+  "shopping_items_count": "items",
+  "shopping_empty_state_title": "No items yet",
+  "shopping_empty_state_subtitle": "Add your first shopping item!",
+  "shopping_add_item_title": "Add Item",
+  "shopping_delete_item_title": "Delete Item",
+  "shopping_delete_item_message": "Are you sure you want to delete this item?",
+
+  "shopping_category_groceries": "Groceries",
+  "shopping_category_household": "Household",
+  "shopping_category_cleaning": "Cleaning",
+  "shopping_category_other": "Other",
+
+  "shopping_add_item_details": "Item Details",
+  "shopping_add_item_name": "Item Name",
+  "shopping_add_item_description": "Description (Optional)",
+  "shopping_add_item_quantity_category": "Quantity & Category",
+  "shopping_add_item_quantity": "Quantity",
+  "shopping_add_item_category": "Category",
+  "shopping_add_item_cancel": "Cancel",
+  "shopping_add_item_add": "Add"
+}

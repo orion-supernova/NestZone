@@ -13,25 +13,25 @@ enum ModuleType: String, CaseIterable, Identifiable {
     
     var title: String {
         switch self {
-        case .shopping: return "Shopping Lists"
-        case .recipes: return "Recipes"
-        case .movies: return "Movies"
-        case .maintenance: return "House Problems"
-        case .finance: return "Bills & Finance"
-        case .notes: return "Notes & Ideas"
-        case .calendar: return "Calendar & Events"
+        case .shopping: return LocalizationManager.managementModuleShoppingTitle
+        case .recipes: return LocalizationManager.managementModuleRecipesTitle
+        case .movies: return LocalizationManager.managementModuleMoviesTitle
+        case .maintenance: return LocalizationManager.managementModuleMaintenanceTitle
+        case .finance: return LocalizationManager.managementModuleFinanceTitle
+        case .notes: return LocalizationManager.managementModuleNotesTitle
+        case .calendar: return LocalizationManager.managementModuleCalendarTitle
         }
     }
     
     var subtitle: String {
         switch self {
-        case .shopping: return "Manage your shopping lists"
-        case .recipes: return "Save delicious recipes & meal plans"
-        case .movies: return "Create & manage movie lists"
-        case .maintenance: return "Track repairs & maintenance tasks"
-        case .finance: return "Split bills & manage expenses"
-        case .notes: return "Capture ideas & important notes"
-        case .calendar: return "Organize events & schedules"
+        case .shopping: return LocalizationManager.managementModuleShoppingSubtitle
+        case .recipes: return LocalizationManager.managementModuleRecipesSubtitle
+        case .movies: return LocalizationManager.managementModuleMoviesSubtitle
+        case .maintenance: return LocalizationManager.managementModuleMaintenanceSubtitle
+        case .finance: return LocalizationManager.managementModuleFinanceSubtitle
+        case .notes: return LocalizationManager.managementModuleNotesSubtitle
+        case .calendar: return LocalizationManager.managementModuleCalendarSubtitle
         }
     }
     

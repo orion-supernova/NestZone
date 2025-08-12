@@ -48,11 +48,11 @@ struct ShoppingListView: View {
                     endRadius: 1200
                 )
             )
-            .navigationTitle("Shopping Lists")
+            .navigationTitle(LocalizationManager.shoppingScreenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Back") {
+                    Button(LocalizationManager.commonBack) {
                         dismiss()
                     }
                 }
@@ -128,7 +128,7 @@ struct PlainViewButton: View {
                 Image(systemName: "list.bullet")
                     .font(.system(size: 16, weight: .bold))
                 
-                Text("List")
+                Text(LocalizationManager.shoppingListViewMode)
                     .font(.system(size: 14, weight: .bold))
             }
             .foregroundColor(textColor)
@@ -182,7 +182,7 @@ struct GroupedViewButton: View {
                 Image(systemName: "rectangle.3.group")
                     .font(.system(size: 16, weight: .bold))
                 
-                Text("Categories")
+                Text(LocalizationManager.shoppingCategoriesViewMode)
                     .font(.system(size: 14, weight: .bold))
             }
             .foregroundColor(textColor)
@@ -223,7 +223,7 @@ struct ShoppingHeaderView: View {
         VStack(spacing: 24) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Shopping Lists 🛒")
+                    Text(LocalizationManager.shoppingHeaderTitle)
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -233,7 +233,7 @@ struct ShoppingHeaderView: View {
                             )
                         )
                     
-                    Text("Let's get everything you need! ✨")
+                    Text(LocalizationManager.shoppingHeaderSubtitle)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(
@@ -250,19 +250,19 @@ struct ShoppingHeaderView: View {
             // Statistics
             HStack(spacing: 12) {
                 MiniShoppingCard(
-                    title: "Total",
+                    title: LocalizationManager.shoppingStatsTotal,
                     count: "\(viewModel.totalItems)",
                     gradient: [.blue, .purple]
                 )
                 
                 MiniShoppingCard(
-                    title: "Done",
+                    title: LocalizationManager.shoppingStatsDone,
                     count: "\(viewModel.completedItems)",
                     gradient: [.green, .mint]
                 )
                 
                 MiniShoppingCard(
-                    title: "Left",
+                    title: LocalizationManager.shoppingStatsLeft,
                     count: "\(viewModel.pendingItems)",
                     gradient: [.orange, .red]
                 )
@@ -309,7 +309,7 @@ struct ShoppingCategoriesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             HStack {
-                Text("Shopping Categories")
+                Text(LocalizationManager.shoppingCategoriesTitle)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(
                         LinearGradient(
@@ -362,7 +362,7 @@ struct ShoppingPlainListSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             HStack {
-                Text("All Items")
+                Text(LocalizationManager.shoppingAllItemsTitle)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(
                         LinearGradient(
@@ -375,7 +375,7 @@ struct ShoppingPlainListSection: View {
                 Spacer()
                 
                 // Show total count
-                Text("\(sortedItems.count) items")
+                Text("\(sortedItems.count) \(LocalizationManager.shoppingItemsCount)")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
             }
@@ -395,11 +395,11 @@ struct ShoppingPlainListSection: View {
                         .font(.system(size: 48, weight: .light))
                         .foregroundColor(.secondary)
                     
-                    Text("No items yet")
+                    Text(LocalizationManager.shoppingEmptyStateTitle)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.primary)
                     
-                    Text("Add your first shopping item!")
+                    Text(LocalizationManager.shoppingEmptyStateSubtitle)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.secondary)
                 }
@@ -658,15 +658,15 @@ struct VibrantShoppingItem: View {
                     }
                 }
         )
-        .alert("Delete Item", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert(LocalizationManager.shoppingDeleteItemTitle, isPresented: $showingDeleteAlert) {
+            Button(LocalizationManager.commonCancel, role: .cancel) { }
+            Button(LocalizationManager.commonDelete, role: .destructive) {
                 Task {
                     await viewModel.deleteItem(item)
                 }
             }
         } message: {
-            Text("Are you sure you want to delete '\(item.name)'?")
+            Text(LocalizationManager.shoppingDeleteItemMessage)
         }
     }
 }
@@ -805,15 +805,15 @@ struct VibrantPlainShoppingItem: View {
                     }
                 }
         )
-        .alert("Delete Item", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert(LocalizationManager.shoppingDeleteItemTitle, isPresented: $showingDeleteAlert) {
+            Button(LocalizationManager.commonCancel, role: .cancel) { }
+            Button(LocalizationManager.commonDelete, role: .destructive) {
                 Task {
                     await viewModel.deleteItem(item)
                 }
             }
         } message: {
-            Text("Are you sure you want to delete '\(item.name)'?")
+            Text(LocalizationManager.shoppingDeleteItemMessage)
         }
     }
 }
@@ -892,32 +892,32 @@ struct RainbowNewItemSheet: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("Item Details") {
-                    TextField("Item Name", text: $itemName)
-                    TextField("Description (Optional)", text: $itemDescription)
+                Section(LocalizationManager.shoppingAddItemDetails) {
+                    TextField(LocalizationManager.shoppingAddItemName, text: $itemName)
+                    TextField(LocalizationManager.shoppingAddItemDescription, text: $itemDescription)
                 }
                 
-                Section("Quantity & Category") {
-                    Stepper("Quantity: \(Int(quantity))", value: $quantity, in: 1...99)
+                Section(LocalizationManager.shoppingAddItemQuantityCategory) {
+                    Stepper("\(LocalizationManager.shoppingAddItemQuantity): \(Int(quantity))", value: $quantity, in: 1...99)
                     
-                    Picker("Category", selection: $selectedCategory) {
+                    Picker(LocalizationManager.shoppingAddItemCategory, selection: $selectedCategory) {
                         ForEach(ShoppingItem.ShoppingCategory.allCases, id: \.self) { category in
                             Text(viewModel.getCategoryName(category)).tag(category)
                         }
                     }
                 }
             }
-            .navigationTitle("Add Item")
+            .navigationTitle(LocalizationManager.shoppingAddItemTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
+                    Button(LocalizationManager.commonCancel) {
                         dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") {
+                    Button(LocalizationManager.commonAdd) {
                         Task {
                             await viewModel.addItem(
                                 name: itemName,

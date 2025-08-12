@@ -34,12 +34,12 @@ struct SettingsView: View {
                         }
                         
                         VStack(spacing: 4) {
-                            Text("Welcome back!")
+                            Text(LocalizationManager.settingsProfileWelcomeBack)
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
                             
-                            Text("Customize your experience")
+                            Text(LocalizationManager.settingsProfileCustomizeExperience)
                                 .font(.subheadline)
                                 .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
                         }
@@ -50,7 +50,7 @@ struct SettingsView: View {
                     VStack(spacing: 24) {
                         // Home Management Section
                         if let home = currentHome {
-                            SettingsSection(title: "HOME MANAGEMENT") {
+                            SettingsSection(title: LocalizationManager.settingsHomeManagementTitle) {
                                 VStack(spacing: 0) {
                                     // Current Home
                                     VStack(alignment: .leading, spacing: 12) {
@@ -73,7 +73,7 @@ struct SettingsView: View {
                                             }
                                             
                                             VStack(alignment: .leading, spacing: 4) {
-                                                Text("Current Home")
+                                                Text(LocalizationManager.settingsCurrentHomeTitle)
                                                     .font(.body)
                                                     .fontWeight(.semibold)
                                                     .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
@@ -85,7 +85,7 @@ struct SettingsView: View {
                                             
                                             Spacer()
                                             
-                                            Text("\(home.members.count) \(home.members.count == 1 ? "member" : "members")")
+                                            Text("\(home.members.count) \(home.members.count == 1 ? LocalizationManager.settingsMembersSingular : LocalizationManager.settingsMembersPlural)")
                                                 .font(.caption)
                                                 .fontWeight(.semibold)
                                                 .foregroundStyle(selectedTheme.colors(for: colorScheme).primary.first ?? .blue)
@@ -93,7 +93,7 @@ struct SettingsView: View {
                                         
                                         if let inviteCode = home.inviteCode {
                                             VStack(alignment: .leading, spacing: 8) {
-                                                Text("Invite Code")
+                                                Text(LocalizationManager.settingsInviteCodeTitle)
                                                     .font(.caption)
                                                     .fontWeight(.bold)
                                                     .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
@@ -119,7 +119,7 @@ struct SettingsView: View {
                                                         HStack(spacing: 4) {
                                                             Image(systemName: "doc.on.doc")
                                                                 .font(.system(size: 12, weight: .semibold))
-                                                            Text("Copy")
+                                                            Text(LocalizationManager.settingsInviteCodeCopyButton)
                                                                 .font(.caption)
                                                                 .fontWeight(.semibold)
                                                         }
@@ -139,7 +139,7 @@ struct SettingsView: View {
                                                     }
                                                 }
                                                 
-                                                Text("Share this code with household members so they can join your home")
+                                                Text(LocalizationManager.settingsInviteCodeHelpText)
                                                     .font(.caption2)
                                                     .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
                                             }
@@ -151,7 +151,7 @@ struct SettingsView: View {
                         }
                         
                         // Appearance Section
-                        SettingsSection(title: LocalizationManager.text(.appearance)) {
+                        SettingsSection(title: LocalizationManager.settingsAppearanceTitle) {
                             VStack(spacing: 0) {
                                 // Theme Row
                                 SettingsButton(action: { isShowingThemeSheet = true }) {
@@ -174,7 +174,7 @@ struct SettingsView: View {
                                         }
                                         
                                         VStack(alignment: .leading, spacing: 4) {
-                                            Text(LocalizationManager.text(.theme))
+                                            Text(LocalizationManager.settingsThemeTitle)
                                                 .font(.body)
                                                 .fontWeight(.semibold)
                                                 .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
@@ -229,7 +229,7 @@ struct SettingsView: View {
                                         }
                                         
                                         VStack(alignment: .leading, spacing: 4) {
-                                            Text(LocalizationManager.text(.language))
+                                            Text(LocalizationManager.settingsLanguageTitle)
                                                 .font(.body)
                                                 .fontWeight(.semibold)
                                                 .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
@@ -250,10 +250,10 @@ struct SettingsView: View {
                         }
 
                         // Account Section
-                        SettingsSection(title: LocalizationManager.text(.account)) {
+                        SettingsSection(title: LocalizationManager.settingsAccountTitle) {
                             VStack(spacing: 0) {
                                 SettingsRow(
-                                    title: LocalizationManager.text(.profile),
+                                    title: LocalizationManager.settingsProfileTitle,
                                     icon: "person.crop.circle.fill",
                                     iconGradient: [.green, .mint]
                                 ) {
@@ -265,7 +265,7 @@ struct SettingsView: View {
                                     .padding(.vertical, 12)
                                 
                                 SettingsRow(
-                                    title: LocalizationManager.text(.notifications),
+                                    title: LocalizationManager.settingsNotificationsTitle,
                                     icon: "bell.fill",
                                     iconGradient: [.orange, .yellow]
                                 ) {
@@ -275,10 +275,10 @@ struct SettingsView: View {
                         }
 
                         // General Section
-                        SettingsSection(title: LocalizationManager.text(.general)) {
+                        SettingsSection(title: LocalizationManager.settingsGeneralTitle) {
                             VStack(spacing: 0) {
                                 SettingsRow(
-                                    title: LocalizationManager.text(.help),
+                                    title: LocalizationManager.settingsHelpTitle,
                                     icon: "questionmark.circle.fill",
                                     iconGradient: [.blue, .indigo]
                                 ) {
@@ -290,7 +290,7 @@ struct SettingsView: View {
                                     .padding(.vertical, 12)
                                 
                                 SettingsRow(
-                                    title: LocalizationManager.text(.about),
+                                    title: LocalizationManager.settingsAboutTitle,
                                     icon: "info.circle.fill",
                                     iconGradient: [.purple, .pink]
                                 ) {
@@ -322,7 +322,7 @@ struct SettingsView: View {
                                             .foregroundStyle(.white)
                                     }
                                     
-                                    Text(LocalizationManager.text(.logout))
+                                    Text(LocalizationManager.settingsLogoutButtonTitle)
                                         .font(.body)
                                         .fontWeight(.semibold)
                                         .foregroundStyle(.red)
@@ -340,7 +340,7 @@ struct SettingsView: View {
                 }
             }
             .background(selectedTheme.colors(for: colorScheme).background)
-            .navigationTitle(LocalizationManager.text(.settingsTitle))
+            .navigationTitle(LocalizationManager.settingsScreenTitle)
             .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $isShowingThemeSheet) {
                 ThemeSelectionSheet(isShowingSheet: $isShowingThemeSheet)

@@ -56,8 +56,8 @@ struct HomeTabScreen: View {
         .onAppear {
             startAnimations()
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") {
+        .alert(LocalizationManager.commonErrorTitle, isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button(LocalizationManager.commonOkButton) {
                 viewModel.errorMessage = nil
             }
         } message: {
@@ -92,7 +92,7 @@ struct SimpleHeaderView: View {
         VStack(spacing: 24) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(LocalizationManager.text(.hello(name: authManager.currentUser?.name ?? "User")))
+                    Text(LocalizationManager.homeHelloUser(authManager.currentUser?.name ?? "User"))
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -105,7 +105,7 @@ struct SimpleHeaderView: View {
                             )
                         )
                     
-                    Text("Manage your shared home together! ")
+                    Text(LocalizationManager.homeHeaderSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(
@@ -150,7 +150,7 @@ struct MiniGamesSection: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack {
-                Text("Mini Games")
+                Text(LocalizationManager.homeMinigamesTitle)
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(
                         LinearGradient(
@@ -188,11 +188,11 @@ struct MiniGamesSection: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("What to watch tonight")
+                        Text(LocalizationManager.homeMinigamesWatchTitle)
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.primary)
                         
-                        Text("Can't decide what movie to pick for the night? Let's play a game to solve this!")
+                        Text(LocalizationManager.homeMinigamesWatchDescription)
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.secondary)
                     }
@@ -233,15 +233,15 @@ struct NavigableStatsSection: View {
     @Binding var showingShoppingView: Bool
     
     let statConfigs = [
-        ("note.text", "Notes", [Color.blue, Color.cyan]),
-        ("list.bullet.clipboard.fill", "Shopping", [Color.green, Color.mint]),
-        ("exclamationmark.triangle.fill", "Issues", [Color.red, Color.pink]),
-        ("checkmark.circle.fill", "Tasks Done", [Color.orange, Color.yellow])
+        ("note.text", LocalizationManager.homeStatsNotesTitle, [Color.blue, Color.cyan]),
+        ("list.bullet.clipboard.fill", LocalizationManager.homeStatsShoppingTitle, [Color.green, Color.mint]),
+        ("exclamationmark.triangle.fill", LocalizationManager.homeStatsIssuesTitle, [Color.red, Color.pink]),
+        ("checkmark.circle.fill", LocalizationManager.homeStatsTasksDoneTitle, [Color.orange, Color.yellow])
     ]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text("House Statistics")
+            Text(LocalizationManager.homeStatsTitle)
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(
                     LinearGradient(

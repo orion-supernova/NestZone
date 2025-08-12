@@ -213,13 +213,13 @@ class ManagementTabViewModel: ObservableObject {
     func getCategoryName(_ category: ShoppingItem.ShoppingCategory) -> String {
         switch category {
         case .groceries:
-            return "Groceries"
+            return LocalizationManager.shoppingCategoryGroceries
         case .household:
-            return "Household"
+            return LocalizationManager.shoppingCategoryHousehold
         case .cleaning:
-            return "Cleaning"
+            return LocalizationManager.shoppingCategoryCleaning
         case .other:
-            return "Other"
+            return LocalizationManager.shoppingCategoryOther
         }
     }
     

@@ -10,7 +10,7 @@ struct ModuleHubHeaderView: View {
         VStack(spacing: 32) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Management Hub 🏠")
+                    Text(LocalizationManager.managementHeaderTitle)
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -23,7 +23,7 @@ struct ModuleHubHeaderView: View {
                             )
                         )
                     
-                    Text("Manage everything in one place! ✨")
+                    Text(LocalizationManager.managementHeaderSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(

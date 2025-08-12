@@ -41,11 +41,11 @@ struct LanguageSelectionSheet: View {
                 .padding()
             }
             .background(selectedTheme.colors(for: colorScheme).background)
-            .navigationTitle(LocalizationManager.text(.language))
+            .navigationTitle(LocalizationManager.settingsLanguageChooseTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(LocalizationManager.text(.done)) {
+                    Button(LocalizationManager.commonDone) {
                         isShowingSheet = false
                     }
                 }
