@@ -59,7 +59,7 @@ struct NewRecipeSheet: View {
                     
                     // Ingredients
                     editorSection(
-                        title: "Ingredients (one per line)",
+                        title: LocalizationManager.recipesNewRecipeIngredientsEditorTitle,
                         text: $ingredientsText,
                         field: .ingredients
                     )
@@ -67,7 +67,7 @@ struct NewRecipeSheet: View {
                     
                     // Steps
                     editorSection(
-                        title: "Steps (one per line)",
+                        title: LocalizationManager.recipesNewRecipeStepsEditorTitle,
                         text: $stepsText,
                         field: .steps
                     )
@@ -125,7 +125,7 @@ struct NewRecipeSheet: View {
     
     private var tagsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(LocalizationManager.recipesNewRecipeStepsEditorTitle)
+            Text(LocalizationManager.recipesNewRecipeTagsSectionTitle)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.primary)
             
@@ -179,7 +179,7 @@ struct NewRecipeSheet: View {
             
             Picker(LocalizationManager.recipesNewRecipeDifficultyPicker, selection: $difficulty) {
                 ForEach(Recipe.Difficulty.allCases, id: \.self) { d in
-                    Text(d.rawValue.capitalized).tag(d)
+                    Text(localizedDifficulty(d)).tag(d)
                 }
             }
             .pickerStyle(.segmented)
@@ -197,7 +197,7 @@ struct NewRecipeSheet: View {
     
     private func editorSection(title: String, text: Binding<String>, field: Field) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(LocalizationManager.recipesNewRecipeIngredientsEditorTitle)
+            Text(title)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.primary)
             
@@ -250,6 +250,14 @@ struct NewRecipeSheet: View {
                 part.split(separator: "-").map { $0.capitalized }.joined(separator: "-")
             }
             .joined(separator: " ")
+    }
+    
+    private func localizedDifficulty(_ difficulty: Recipe.Difficulty) -> String {
+        switch difficulty {
+        case .easy: return LocalizationManager.recipesDifficultyEasy
+        case .medium: return LocalizationManager.recipesDifficultyMedium
+        case .hard: return LocalizationManager.recipesDifficultyHard
+        }
     }
 }
 

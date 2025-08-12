@@ -32,6 +32,8 @@ extension LocalizationManager {
 
     // MARK: - Common
     static var commonDone: String { t("common_done") }
+    static var commonCancel: String { t("common_cancel") }
+    static var commonDelete: String { t("common_delete") }
     static var commonErrorTitle: String { t("common_error_title") }
     static var commonOkButton: String { t("common_ok_button") }
 
@@ -109,9 +111,7 @@ extension LocalizationManager {
     static var shoppingAddItemAdd: String { t("shopping_add_item_add") }
     
     // Common buttons
-    static var commonCancel: String { t("common_cancel") }
     static var commonAdd: String { t("common_add") }
-    static var commonDelete: String { t("common_delete") }
     static var commonBack: String { t("common_back") }
     static var commonClose: String { t("common_close") }
     static var commonCreate: String { t("common_create") }
@@ -141,6 +141,23 @@ extension LocalizationManager {
     static var recipesExploreCloseButton: String { t("recipes_explore_close_button") }
     static var recipesExploreHeaderTitle: String { t("recipes_explore_header_title") }
     static var recipesExploreHeaderSubtitle: String { t("recipes_explore_header_subtitle") }
+
+    static var recipesExploreFiltersTitle: String { t("recipes_explore_filters_title") }
+    static var recipesExploreFiltersClearAll: String { t("recipes_explore_filters_clear_all") }
+    static var recipesExploreFiltersNoRecipesFound: String { t("recipes_explore_filters_no_recipes_found") }
+    static var recipesExploreFiltersAdjustMessage: String { t("recipes_explore_filters_adjust_message") }
+    static var recipesExploreFiltersClearButton: String { t("recipes_explore_filters_clear_button") }
+    static var recipesExploreFilterSheetTitle: String { t("recipes_explore_filter_sheet_title") }
+    static var recipesExploreFilterSheetReset: String { t("recipes_explore_filter_sheet_reset") }
+    static var recipesExploreFilterSheetDone: String { t("recipes_explore_filter_sheet_done") }
+    static var recipesExploreFilterDifficultyTitle: String { t("recipes_explore_filter_difficulty_title") }
+    static var recipesExploreFilterCategoryTitle: String { t("recipes_explore_filter_category_title") }
+    static var recipesExploreFilterTimeTitle: String { t("recipes_explore_filter_time_title") }
+    static var recipesExploreFilterTimeAny: String { t("recipes_explore_filter_time_any") }
+    static var recipesExploreFilterServingsTitle: String { t("recipes_explore_filter_servings_title") }
+    static var recipesExploreFilterServingsAny: String { t("recipes_explore_filter_servings_any") }
+    static var recipesExploreFilterRecipeFoundSingular: String { t("recipes_explore_filter_recipe_found_singular") }
+    static var recipesExploreFilterRecipeFoundPlural: String { t("recipes_explore_filter_recipe_found_plural") }
 
     static var recipesNewRecipeTitleField: String { t("recipes_new_recipe_title_field") }
     static var recipesNewRecipeTitlePlaceholder: String { t("recipes_new_recipe_title_placeholder") }
@@ -189,4 +206,48 @@ extension LocalizationManager {
     static var recipesDetailInfoCardLevel: String { t("recipes_detail_info_card_level") }
     static var recipesDetailIngredientsSectionTitle: String { t("recipes_detail_ingredients_section_title") }
     static var recipesDetailInstructionsSectionTitle: String { t("recipes_detail_instructions_section_title") }
+
+    static var recipesDifficultyEasy: String { t("recipes_difficulty_easy") }
+    static var recipesDifficultyMedium: String { t("recipes_difficulty_medium") }
+    static var recipesDifficultyHard: String { t("recipes_difficulty_hard") }
+
+    // MARK: - Messages
+    static var messagesScreenTitle: String { t("messages_screen_title") }
+    static var messagesNewMessageButton: String { t("messages_new_message_button") }
+    static var messagesEmptyStateTitle: String { t("messages_empty_state_title") }
+    static var messagesEmptyStateSubtitle: String { t("messages_empty_state_subtitle") }
+    static var messagesCreateGroupChatButton: String { t("messages_create_group_chat_button") }
+    static var messagesNoMessagesYet: String { t("messages_no_messages_yet") }
+    static var messagesConversationCardGroupChatInitials: String { t("messages_conversation_card_group_chat_initials") }
+    static var messagesConversationCardHouseholdMemberInitials: String { t("messages_conversation_card_household_member_initials") }
+    static var messagesConversationCardDirectMessage: String { t("messages_conversation_card_direct_message") }
+    static var messagesConversationCardHouseholdChat: String { t("messages_conversation_card_household_chat") }
+    static var messagesLoadingConversations: String { t("messages_loading_conversations") }
+
+    static var messagesNewGroupTitle: String { t("messages_new_group_title") }
+    static var messagesNewGroupCancel: String { t("messages_new_group_cancel") }
+    static var messagesNewGroupCreate: String { t("messages_new_group_create") }
+    static var messagesNewGroupHeaderTitle: String { t("messages_new_group_header_title") }
+    static func messagesNewGroupDescription(_ count: Int, _ homeName: String) -> String { tFormat("messages_new_group_description", count, homeName) }
+    static var messagesNewGroupDescriptionGeneric: String { t("messages_new_group_description_generic") }
+    static var messagesNewGroupNameLabel: String { t("messages_new_group_name_label") }
+    static var messagesNewGroupNamePlaceholder: String { t("messages_new_group_name_placeholder") }
+    static var messagesNewGroupFirstMessageLabel: String { t("messages_new_group_first_message_label") }
+    static var messagesNewGroupFirstMessagePlaceholder: String { t("messages_new_group_first_message_placeholder") }
+    static func messagesNewGroupMembersInfo(_ count: Int) -> String { tFormat("messages_new_group_members_info", count) }
+    static var messagesNewGroupCreating: String { t("messages_new_group_creating") }
+    static var messagesNewGroupErrorMissingInfo: String { t("messages_new_group_error_missing_info") }
+    static func messagesNewGroupErrorCreationFailed(_ error: String) -> String { tFormat("messages_new_group_error_creation_failed", error) }
+
+    static var messagesChatHeaderBack: String { t("messages_chat_header_back") }
+    static var messagesChatLoading: String { t("messages_chat_loading") }
+    static var messagesChatEmptyTitle: String { t("messages_chat_empty_title") }
+    static var messagesChatEmptySubtitle: String { t("messages_chat_empty_subtitle") }
+    static var messagesChatInputPlaceholder: String { t("messages_chat_input_placeholder") }
+    static var messagesChatSendButton: String { t("messages_chat_send_button") }
+    static var messagesChatMessageFailed: String { t("messages_chat_message_failed") }
+    static var messagesChatMessageSending: String { t("messages_chat_message_sending") }
+    static var messagesChatErrorTitle: String { t("messages_chat_error_title") }
+    static var messagesChatErrorOk: String { t("messages_chat_error_ok") }
+    static func messagesChatMembersCount(_ count: Int) -> String { tFormat("messages_chat_members_count", count) }
 }

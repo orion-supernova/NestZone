@@ -7,7 +7,7 @@ struct ChatLoadingView: View {
                 .scaleEffect(1.2)
                 .tint(.blue)
             
-            Text("Loading messages...")
+            Text(LocalizationManager.messagesChatLoading)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
         }
@@ -35,11 +35,11 @@ struct ChatEmptyView: View {
             }
             
             VStack(spacing: 8) {
-                Text("No Messages Yet")
+                Text(LocalizationManager.messagesChatEmptyTitle)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.primary)
                 
-                Text("Be the first to send a message and start the conversation!")
+                Text(LocalizationManager.messagesChatEmptySubtitle)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)

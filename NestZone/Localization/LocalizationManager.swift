@@ -29,20 +29,46 @@ final class LocalizationManager: ObservableObject {
 
     private func loadFileTranslations() {
         for language in Language.allCases {
-            if let url = Bundle.main.url(forResource: language.rawValue, withExtension: "json") {
-                do {
-                    let data = try Data(contentsOf: url)
-                    if let dict = try JSONSerialization.jsonObject(with: data) as? [String: String] {
-                        fileTranslations[language] = dict
+            let fileName = language.rawValue
+            var loadedTranslations: [String: String] = [:]
+            
+            // Try multiple possible locations
+            let possiblePaths = [
+                // Direct in bundle root
+                Bundle.main.url(forResource: fileName, withExtension: "json"),
+                // In Localization subdirectory
+                Bundle.main.url(forResource: fileName, withExtension: "json", subdirectory: "Localization"),
+                // In Locales subdirectory
+                Bundle.main.url(forResource: fileName, withExtension: "json", subdirectory: "Locales"),
+                // In Localization/Locales subdirectory
+                Bundle.main.url(forResource: fileName, withExtension: "json", subdirectory: "Localization/Locales")
+            ]
+            
+            var foundFile = false
+            for url in possiblePaths {
+                if let url = url {
+                    do {
+                        let data = try Data(contentsOf: url)
+                        if let dict = try JSONSerialization.jsonObject(with: data) as? [String: String] {
+                            loadedTranslations = dict
+                            foundFile = true
+                            print("✅ Successfully loaded \(dict.count) translations for \(language.rawValue) from: \(url.lastPathComponent)")
+                            break
+                        }
+                    } catch {
+                        print("⚠️ Error parsing JSON for \(language.rawValue) at \(url.path): \(error)")
+                        continue
                     }
-                } catch {
-                    // If loading fails, keep previous or empty mapping
-                    fileTranslations[language] = fileTranslations[language] ?? [:]
                 }
-            } else {
-                // No file, ensure an empty mapping exists
-                fileTranslations[language] = fileTranslations[language] ?? [:]
             }
+            
+            if !foundFile {
+                print("❌ Could not find translation file for language: \(language.rawValue)")
+                print("📁 Bundle path: \(Bundle.main.bundlePath)")
+                print("📁 Bundle resources: \(Bundle.main.paths(forResourcesOfType: "json", inDirectory: nil))")
+            }
+            
+            fileTranslations[language] = loadedTranslations
         }
     }
 
@@ -53,6 +79,7 @@ final class LocalizationManager: ObservableObject {
         if let fallback = fileTranslations[.english]?[key] {
             return fallback
         }
+        print("🔍 Missing translation for key: \(key)")
         return key
     }
 

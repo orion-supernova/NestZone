@@ -82,7 +82,7 @@ struct RecipeCard: View {
                 
                 HStack {
                     if let difficulty = recipe.difficulty {
-                        Text(difficulty.rawValue.capitalized)
+                        Text(localizedDifficulty(difficulty))
                             .font(.system(size: 11, weight: .bold))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 6)
@@ -109,6 +109,14 @@ struct RecipeCard: View {
         case .easy: return .green
         case .medium: return .orange
         case .hard: return .red
+        }
+    }
+
+    private func localizedDifficulty(_ difficulty: Recipe.Difficulty) -> String {
+        switch difficulty {
+        case .easy: return LocalizationManager.recipesDifficultyEasy
+        case .medium: return LocalizationManager.recipesDifficultyMedium
+        case .hard: return LocalizationManager.recipesDifficultyHard
         }
     }
 }

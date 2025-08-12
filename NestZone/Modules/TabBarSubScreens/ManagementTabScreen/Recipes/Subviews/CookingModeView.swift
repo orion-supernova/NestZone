@@ -358,7 +358,7 @@ struct CookingStepCard: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Step \(stepNumber) of \(totalSteps)")
+                        Text(LocalizationManager.recipesCookingStepCardTitle(stepNumber, totalSteps))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                     }

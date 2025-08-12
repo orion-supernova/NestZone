@@ -7,13 +7,15 @@ struct ChatMessageInputView: View {
     let canSendMessage: Bool
     let onSendMessage: () async -> Void
     
+    @State private var isSending = false
+    
     var body: some View {
         VStack(spacing: 0) {
             Divider()
             
             HStack(spacing: 12) {
                 // Message text field
-                TextField("Type a message...", text: $messageText, axis: .vertical)
+                TextField(LocalizationManager.messagesChatInputPlaceholder, text: $messageText, axis: .vertical)
                     .font(.system(size: 16, weight: .regular))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -21,10 +23,14 @@ struct ChatMessageInputView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .focused($isMessageFieldFocused)
                     .lineLimit(1...6)
+                    .autocorrectionDisabled(false)
+                    .textInputAutocapitalization(.sentences)
                     .onSubmit {
-                        if canSendMessage {
+                        if canSendMessage && !isSending {
                             Task {
+                                isSending = true
                                 await onSendMessage()
+                                isSending = false
                             }
                         }
                     }
@@ -32,14 +38,23 @@ struct ChatMessageInputView: View {
                 // Send button
                 Button(action: {
                     Task {
+                        isSending = true
                         await onSendMessage()
+                        isSending = false
                     }
                 }) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(canSendMessage ? .blue : .gray)
+                    if isSending {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .tint(.blue)
+                    } else {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(canSendMessage ? .blue : .gray)
+                    }
                 }
-                .disabled(!canSendMessage)
+                .disabled(!canSendMessage || isSending)
+                .accessibilityLabel(isSending ? LocalizationManager.messagesChatMessageSending : LocalizationManager.messagesChatSendButton)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)

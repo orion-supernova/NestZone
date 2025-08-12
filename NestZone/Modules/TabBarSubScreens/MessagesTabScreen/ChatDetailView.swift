@@ -67,8 +67,8 @@ struct ChatDetailView: View {
                 await viewModel.onViewDisappear()
             }
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") {
+        .alert(LocalizationManager.messagesChatErrorTitle, isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button(LocalizationManager.messagesChatErrorOk) {
                 viewModel.errorMessage = nil
             }
         } message: {

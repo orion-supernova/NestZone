@@ -59,7 +59,7 @@ struct MessagesView: View {
                 VStack(spacing: 0) {
                     // Header
                     HStack {
-                        Text("Messages")
+                        Text(LocalizationManager.messagesScreenTitle)
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(
                                 LinearGradient(
@@ -91,6 +91,7 @@ struct MessagesView: View {
                             }
                         }
                         .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .accessibilityLabel(LocalizationManager.messagesNewMessageButton)
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 16)
@@ -136,8 +137,8 @@ struct MessagesView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") {
+            .alert(LocalizationManager.messagesChatErrorTitle, isPresented: .constant(viewModel.errorMessage != nil)) {
+                Button(LocalizationManager.messagesChatErrorOk) {
                     viewModel.errorMessage = nil
                 }
             } message: {
@@ -171,6 +172,7 @@ struct MessagesView: View {
             }
         }
         .padding(.top, 30)
+        .accessibilityLabel(LocalizationManager.messagesLoadingConversations)
     }
     
     private var emptyStateView: some View {
@@ -185,7 +187,7 @@ struct MessagesView: View {
                     )
                 )
             
-            Text("No Messages Yet")
+            Text(LocalizationManager.messagesEmptyStateTitle)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(
                     LinearGradient(
@@ -195,7 +197,7 @@ struct MessagesView: View {
                     )
                 )
             
-            Text("Create a group chat to stay connected with your household")
+            Text(LocalizationManager.messagesEmptyStateSubtitle)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -208,7 +210,7 @@ struct MessagesView: View {
                     Image(systemName: "plus.message.fill")
                         .font(.system(size: 16, weight: .semibold))
                     
-                    Text("Create Group Chat")
+                    Text(LocalizationManager.messagesCreateGroupChatButton)
                         .font(.system(size: 16, weight: .semibold))
                 }
                 .foregroundColor(.white)
@@ -332,7 +334,7 @@ struct ConversationCard: View {
                 }
                 
                 HStack {
-                    Text(conversation.lastMessage ?? "No messages yet")
+                    Text(conversation.lastMessage ?? LocalizationManager.messagesNoMessagesYet)
                         .font(.system(size: 14, weight: unreadCount > 0 ? .semibold : .regular))
                         .foregroundColor(unreadCount > 0 ? selectedTheme.colors(for: colorScheme).text : selectedTheme.colors(for: colorScheme).textSecondary)
                         .lineLimit(1)
@@ -357,16 +359,16 @@ struct ConversationCard: View {
     
     private func getInitials() -> String {
         if conversation.isGroupChat {
-            return "GC"
+            return LocalizationManager.messagesConversationCardGroupChatInitials
         }
-        return "HM"
+        return LocalizationManager.messagesConversationCardHouseholdMemberInitials
     }
     
     private func getTitle() -> String {
         if conversation.isGroupChat {
-            return conversation.title ?? "Household Chat"
+            return conversation.title ?? LocalizationManager.messagesConversationCardHouseholdChat
         } else {
-            return "Direct Message"
+            return LocalizationManager.messagesConversationCardDirectMessage
         }
     }
     

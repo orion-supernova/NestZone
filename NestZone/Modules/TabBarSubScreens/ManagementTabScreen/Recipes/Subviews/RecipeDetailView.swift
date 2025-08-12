@@ -179,7 +179,7 @@ struct RecipeDetailView: View {
                 InfoCard(title: LocalizationManager.recipesDetailInfoCardServes, value: "\(servings)", icon: "person.2.fill", gradient: gradient)
             }
             if let difficulty = recipe.difficulty {
-                InfoCard(title: LocalizationManager.recipesDetailInfoCardLevel, value: difficulty.rawValue.capitalized, icon: "star.fill", gradient: gradient)
+                InfoCard(title: LocalizationManager.recipesDetailInfoCardLevel, value: localizedDifficulty(difficulty), icon: "star.fill", gradient: gradient)
             }
         }
     }
@@ -293,5 +293,13 @@ struct InfoCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)
         )
+    }
+}
+
+private func localizedDifficulty(_ difficulty: Recipe.Difficulty) -> String {
+    switch difficulty {
+    case .easy: return LocalizationManager.recipesDifficultyEasy
+    case .medium: return LocalizationManager.recipesDifficultyMedium
+    case .hard: return LocalizationManager.recipesDifficultyHard
     }
 }

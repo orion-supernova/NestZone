@@ -5,103 +5,74 @@ struct ChatHeader: View {
     let onBackTapped: () -> Void
     
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 16) {
-                Button(action: onBackTapped) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                        Text("Back")
-                            .font(.system(size: 16, weight: .medium))
-                    }
-                    .foregroundColor(.blue)
-                }
-                
-                // Avatar and Title
-                HStack(spacing: 12) {
-                    ModernChatAvatar(conversation: conversation)
+        HStack(spacing: 16) {
+            Button {
+                onBackTapped()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
                     
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(getTitle())
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
-                        Text("\(conversation.participants.count) members")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
+                    Text(LocalizationManager.messagesChatHeaderBack)
+                        .font(.system(size: 16, weight: .medium))
                 }
+                .foregroundColor(.blue)
+            }
+            
+            Spacer()
+            
+            VStack(spacing: 2) {
+                Text(getTitle())
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
                 
-                Spacer()
-                
-                // Info button for group chats
                 if conversation.isGroupChat {
-                    Button {
-                        // TODO: Show chat info
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.blue)
-                    }
+                    Text(LocalizationManager.messagesChatMembersCount(conversation.participants.count))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(.regularMaterial)
             
-            Divider()
+            Spacer()
+            
+            // Profile/More button placeholder
+            Circle()
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 32, height: 32)
+                .overlay(
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                )
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.thinMaterial)
     }
     
     private func getTitle() -> String {
         if conversation.isGroupChat {
-            return conversation.title ?? "Group Chat"
+            return conversation.title ?? LocalizationManager.messagesConversationCardHouseholdChat
         } else {
-            return "Direct Message"
-        }
-    }
-}
-
-struct ModernChatAvatar: View {
-    let conversation: PocketBaseConversation
-    
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [Color.blue, Color.purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 40, height: 40)
-            
-            Text(conversation.isGroupChat ? "GC" : "DM")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.white)
+            return LocalizationManager.messagesConversationCardDirectMessage
         }
     }
 }
 
 #Preview {
-    VStack {
-        ChatHeader(
-            conversation: PocketBaseConversation(
-                id: "test",
-                participants: ["user1", "user2", "user3"],
-                homeId: "home1",
-                isGroupChat: true,
-                title: "Family Chat",
-                lastMessage: "Hello",
-                lastMessageAt: "2025-01-01T00:00:00Z",
-                created: "2025-01-01T00:00:00Z",
-                updated: "2025-01-01T00:00:00Z"
-            ),
-            onBackTapped: {}
+    ChatHeader(
+        conversation: PocketBaseConversation(
+            id: "test",
+            participants: ["user1", "user2", "user3"],
+            homeId: "home1",
+            isGroupChat: true,
+            title: "Family Chat",
+            lastMessage: "Hello everyone!",
+            lastMessageAt: "2025-01-01T00:00:00Z",
+            created: "2025-01-01T00:00:00Z",
+            updated: "2025-01-01T00:00:00Z"
         )
-        
-        Spacer()
+    ) {
+        // Back action
     }
-    .background(Color(.systemGroupedBackground))
 }

@@ -19,19 +19,19 @@ struct NewMessageView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button("Cancel") {
+                    Button(LocalizationManager.messagesNewGroupCancel) {
                         dismiss()
                     }
                     .foregroundColor(.blue)
                     
                     Spacer()
                     
-                    Text("New Group Chat")
+                    Text(LocalizationManager.messagesNewGroupTitle)
                         .font(.system(size: 18, weight: .semibold))
                     
                     Spacer()
                     
-                    Button("Create") {
+                    Button(LocalizationManager.messagesNewGroupCreate) {
                         Task {
                             await createGroupChat()
                         }
@@ -65,7 +65,7 @@ struct NewMessageView: View {
                         }
                         
                         VStack(spacing: 8) {
-                            Text("Household Group Chat")
+                            Text(LocalizationManager.messagesNewGroupHeaderTitle)
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundStyle(
                                     LinearGradient(
@@ -76,13 +76,13 @@ struct NewMessageView: View {
                                 )
                             
                             if let home = home {
-                                Text("This chat will include all \(home.members.count) members of \(home.name)")
+                                Text(LocalizationManager.messagesNewGroupDescription(home.members.count, home.name))
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 32)
                             } else {
-                                Text("This chat will include all household members")
+                                Text(LocalizationManager.messagesNewGroupDescriptionGeneric)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
@@ -94,11 +94,11 @@ struct NewMessageView: View {
                     
                     // Group name input
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("GROUP NAME (OPTIONAL)")
+                        Text(LocalizationManager.messagesNewGroupNameLabel)
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.secondary)
                         
-                        TextField("e.g., Family Chat, House Updates...", text: $groupTitle)
+                        TextField(LocalizationManager.messagesNewGroupNamePlaceholder, text: $groupTitle)
                             .font(.system(size: 16, weight: .medium))
                             .padding(16)
                             .background(
@@ -116,11 +116,11 @@ struct NewMessageView: View {
                     
                     // Initial message input - Simple approach to avoid constraints
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("FIRST MESSAGE")
+                        Text(LocalizationManager.messagesNewGroupFirstMessageLabel)
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.secondary)
                         
-                        TextField("Say hello to your household...", text: $messageText)
+                        TextField(LocalizationManager.messagesNewGroupFirstMessagePlaceholder, text: $messageText)
                             .font(.system(size: 16, weight: .medium))
                             .padding(16)
                             .background(
@@ -143,7 +143,7 @@ struct NewMessageView: View {
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.blue)
                             
-                            Text("\(home.members.count) household members will be added to this chat")
+                            Text(LocalizationManager.messagesNewGroupMembersInfo(home.members.count))
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(.secondary)
                             
@@ -166,7 +166,7 @@ struct NewMessageView: View {
                         ProgressView()
                             .scaleEffect(0.8)
                         
-                        Text("Creating group chat...")
+                        Text(LocalizationManager.messagesNewGroupCreating)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                     }
@@ -176,8 +176,8 @@ struct NewMessageView: View {
                     .padding(.bottom, 20)
                 }
             }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
-                Button("OK") {
+            .alert(LocalizationManager.messagesChatErrorTitle, isPresented: .constant(errorMessage != nil)) {
+                Button(LocalizationManager.messagesChatErrorOk) {
                     errorMessage = nil
                 }
             } message: {
@@ -195,7 +195,7 @@ struct NewMessageView: View {
     private func createGroupChat() async {
         guard let currentUser = authManager.currentUser,
               let home = home else {
-            errorMessage = "Missing required information"
+            errorMessage = LocalizationManager.messagesNewGroupErrorMissingInfo
             return
         }
         
@@ -234,9 +234,9 @@ struct NewMessageView: View {
         } catch {
             print("DEBUG: Error creating group chat: \(error)")
             if let pocketBaseError = error as? PocketBaseManager.PocketBaseError {
-                errorMessage = pocketBaseError.localizedDescription
+                errorMessage = LocalizationManager.messagesNewGroupErrorCreationFailed(pocketBaseError.localizedDescription)
             } else {
-                errorMessage = "Failed to create group chat: \(error.localizedDescription)"
+                errorMessage = LocalizationManager.messagesNewGroupErrorCreationFailed(error.localizedDescription)
             }
         }
         
