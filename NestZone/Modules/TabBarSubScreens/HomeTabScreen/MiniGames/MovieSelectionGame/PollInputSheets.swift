@@ -19,11 +19,11 @@ struct ActorInputSheet: View {
                             LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                     
-                    Text("Search by Actor")
+                    Text(LocalizationManager.actorInputTitle)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
                     
-                    Text("Enter the name of your favorite actor")
+                    Text(LocalizationManager.actorInputSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -34,7 +34,7 @@ struct ActorInputSheet: View {
                 
                 // Input Field
                 VStack(spacing: 16) {
-                    TextField("Actor name (e.g., Tom Hanks)", text: $actorName)
+                    TextField(LocalizationManager.actorInputPlaceholder, text: $actorName)
                         .font(.system(size: 18, weight: .medium))
                         .padding(.horizontal, 20)
                         .padding(.vertical, 16)
@@ -61,7 +61,7 @@ struct ActorInputSheet: View {
                                     Image(systemName: "play.fill")
                                         .font(.system(size: 16, weight: .bold))
                                 }
-                                Text(isCreatingPoll ? "Creating Poll..." : "Create Actor Poll")
+                                Text(isCreatingPoll ? LocalizationManager.actorInputCreatingPoll : LocalizationManager.actorInputCreatePoll)
                                     .font(.system(size: 18, weight: .bold))
                             }
                             .foregroundStyle(.white)
@@ -83,7 +83,7 @@ struct ActorInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizationManager.commonCancel) { dismiss() }
                 }
             }
         }
@@ -109,11 +109,11 @@ struct DirectorInputSheet: View {
                             LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                     
-                    Text("Search by Director")
+                    Text(LocalizationManager.directorInputTitle)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
                     
-                    Text("Enter the name of a film director")
+                    Text(LocalizationManager.directorInputSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -124,7 +124,7 @@ struct DirectorInputSheet: View {
                 
                 // Input Field
                 VStack(spacing: 16) {
-                    TextField("Director name (e.g., Christopher Nolan)", text: $directorName)
+                    TextField(LocalizationManager.directorInputPlaceholder, text: $directorName)
                         .font(.system(size: 18, weight: .medium))
                         .padding(.horizontal, 20)
                         .padding(.vertical, 16)
@@ -151,7 +151,7 @@ struct DirectorInputSheet: View {
                                     Image(systemName: "play.fill")
                                         .font(.system(size: 16, weight: .bold))
                                 }
-                                Text(isCreatingPoll ? "Creating Poll..." : "Create Director Poll")
+                                Text(isCreatingPoll ? LocalizationManager.directorInputCreatingPoll : LocalizationManager.directorInputCreatePoll)
                                     .font(.system(size: 18, weight: .bold))
                             }
                             .foregroundStyle(.white)
@@ -173,7 +173,7 @@ struct DirectorInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizationManager.commonCancel) { dismiss() }
                 }
             }
         }
@@ -202,11 +202,11 @@ struct YearInputSheet: View {
                             LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                     
-                    Text("Search by Year")
+                    Text(LocalizationManager.yearInputTitle)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
                     
-                    Text("Choose movies from a specific year")
+                    Text(LocalizationManager.yearInputSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -218,7 +218,7 @@ struct YearInputSheet: View {
                 // Year Picker
                 VStack(spacing: 24) {
                     VStack(spacing: 12) {
-                        Text("Selected Year")
+                        Text(LocalizationManager.yearInputSelectedYear)
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.secondary)
                         
@@ -229,7 +229,7 @@ struct YearInputSheet: View {
                             )
                     }
                     
-                    Picker("Year", selection: $selectedYear) {
+                    Picker(LocalizationManager.yearInputPickerTitle, selection: $selectedYear) {
                         ForEach(startYear...currentYear, id: \.self) { year in
                             Text("\(year)").tag(year)
                         }
@@ -250,7 +250,7 @@ struct YearInputSheet: View {
                                 Image(systemName: "play.fill")
                                     .font(.system(size: 16, weight: .bold))
                             }
-                            Text(isCreatingPoll ? "Creating Poll..." : "Create \(selectedYear) Poll")
+                            Text(isCreatingPoll ? LocalizationManager.yearInputCreatingPoll : LocalizationManager.yearInputCreatePoll(selectedYear))
                                 .font(.system(size: 18, weight: .bold))
                         }
                         .foregroundStyle(.white)
@@ -271,7 +271,7 @@ struct YearInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizationManager.commonCancel) { dismiss() }
                 }
             }
         }
@@ -299,11 +299,11 @@ struct DecadeInputSheet: View {
                             LinearGradient(colors: [.indigo, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                     
-                    Text("Search by Decade")
+                    Text(LocalizationManager.decadeInputTitle)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
                     
-                    Text("Choose movies from a specific decade")
+                    Text(LocalizationManager.decadeInputSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -315,7 +315,7 @@ struct DecadeInputSheet: View {
                 // Decade Selection
                 VStack(spacing: 24) {
                     VStack(spacing: 12) {
-                        Text("Selected Decade")
+                        Text(LocalizationManager.decadeInputSelectedDecade)
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.secondary)
                         
@@ -373,7 +373,7 @@ struct DecadeInputSheet: View {
                                 Image(systemName: "play.fill")
                                     .font(.system(size: 16, weight: .bold))
                             }
-                            Text(isCreatingPoll ? "Creating Poll..." : "Create \(selectedDecade)s Poll")
+                            Text(isCreatingPoll ? LocalizationManager.decadeInputCreatingPoll : LocalizationManager.decadeInputCreatePoll(selectedDecade))
                                 .font(.system(size: 18, weight: .bold))
                         }
                         .foregroundStyle(.white)
@@ -394,7 +394,7 @@ struct DecadeInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizationManager.commonCancel) { dismiss() }
                 }
             }
         }

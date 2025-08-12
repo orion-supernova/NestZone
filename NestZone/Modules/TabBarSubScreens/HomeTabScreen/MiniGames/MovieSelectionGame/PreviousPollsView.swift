@@ -16,7 +16,7 @@ struct PreviousPollsView: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.2)
-                        Text("Loading previous polls...")
+                        Text(LocalizationManager.previousPollsLoading)
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
@@ -28,11 +28,11 @@ struct PreviousPollsView: View {
                             .foregroundStyle(.secondary.opacity(0.5))
                         
                         VStack(spacing: 8) {
-                            Text("No Previous Polls")
+                            Text(LocalizationManager.previousPollsEmpty)
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundStyle(.primary)
                             
-                            Text("Your completed movie polls will appear here")
+                            Text(LocalizationManager.previousPollsEmptyDescription)
                                 .font(.system(size: 16))
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
@@ -62,11 +62,11 @@ struct PreviousPollsView: View {
                     }
                 }
             }
-            .navigationTitle("Previous Polls")
+            .navigationTitle(LocalizationManager.previousPollsTitle)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(LocalizationManager.commonDone) {
                         dismiss()
                     }
                 }
@@ -77,8 +77,8 @@ struct PreviousPollsView: View {
                 await loadPreviousPolls()
             }
         }
-        .alert("Delete Error", isPresented: $showingDeleteError) {
-            Button("OK") { }
+        .alert(LocalizationManager.previousPollsDeleteError, isPresented: $showingDeleteError) {
+            Button(LocalizationManager.commonOkButton) { }
         } message: {
             Text(deleteErrorMessage)
         }
@@ -183,7 +183,7 @@ struct PollHistoryCard: View {
                 // Poll Info
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(poll.title ?? "Movie Poll")
+                        Text(poll.title ?? LocalizationManager.previousPollsMoviePoll)
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(.primary)
                         
@@ -214,7 +214,7 @@ struct PollHistoryCard: View {
                                 Image(systemName: "crown.fill")
                                     .font(.system(size: 12))
                                     .foregroundStyle(.yellow)
-                                Text("Winner:")
+                                Text(LocalizationManager.previousPollsWinner)
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundStyle(.secondary)
                             }
@@ -231,7 +231,7 @@ struct PollHistoryCard: View {
                             }
                         }
                     } else {
-                        Text("No winner determined")
+                        Text(LocalizationManager.previousPollsNoWinner)
                             .font(.system(size: 14))
                             .foregroundStyle(.secondary)
                             .italic()
@@ -263,13 +263,13 @@ struct PollHistoryCard: View {
         .animation(.easeInOut(duration: 0.2), value: isDeleting)
         .padding(.horizontal, 4)
         .padding(.vertical, 4)
-        .alert("Delete Poll", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert(LocalizationManager.previousPollsDeleteAlert, isPresented: $showingDeleteAlert) {
+            Button(LocalizationManager.commonCancel, role: .cancel) { }
+            Button(LocalizationManager.commonDelete, role: .destructive) {
                 onDelete()
             }
         } message: {
-            Text("Are you sure you want to delete this poll? This action cannot be undone.")
+            Text(LocalizationManager.previousPollsDeleteMessage)
         }
     }
     

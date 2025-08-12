@@ -25,17 +25,31 @@ enum PollType: String, CaseIterable {
         }
     }
     
-    var description: String {
+    var localizedTitle: String {
         switch self {
-        case .genre: return "Choose movies by genre"
-        case .actor: return "Pick movies with specific actors"
-        case .director: return "Select movies by director"
-        case .year: return "Movies from a specific year"
-        case .decade: return "Movies from a decade"
-        case .nowPlaying: return "Movies currently in theaters"
-        case .popular: return "Most popular movies right now"
-        case .topRated: return "Highest rated movies of all time"
-        case .upcoming: return "Movies coming soon"
+        case .genre: return LocalizationManager.pollTypeGenre
+        case .actor: return LocalizationManager.pollTypeActor
+        case .director: return LocalizationManager.pollTypeDirector
+        case .year: return LocalizationManager.pollTypeYear
+        case .decade: return LocalizationManager.pollTypeDecade
+        case .nowPlaying: return LocalizationManager.pollTypeNowPlaying
+        case .popular: return LocalizationManager.pollTypePopular
+        case .topRated: return LocalizationManager.pollTypeTopRated
+        case .upcoming: return LocalizationManager.pollTypeUpcoming
+        }
+    }
+    
+    var localizedDescription: String {
+        switch self {
+        case .genre: return LocalizationManager.pollTypeGenreDescription
+        case .actor: return LocalizationManager.pollTypeActorDescription
+        case .director: return LocalizationManager.pollTypeDirectorDescription
+        case .year: return LocalizationManager.pollTypeYearDescription
+        case .decade: return LocalizationManager.pollTypeDecadeDescription
+        case .nowPlaying: return LocalizationManager.pollTypeNowPlayingDescription
+        case .popular: return LocalizationManager.pollTypePopularDescription
+        case .topRated: return LocalizationManager.pollTypeTopRatedDescription
+        case .upcoming: return LocalizationManager.pollTypeUpcomingDescription
         }
     }
     
@@ -63,7 +77,7 @@ struct PollTypeSelectionSheet: View {
             VStack(spacing: 0) {
                 // Header
                 VStack(spacing: 12) {
-                    Text("Create Movie Poll")
+                    Text(LocalizationManager.pollTypeSelectionTitle)
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -73,7 +87,7 @@ struct PollTypeSelectionSheet: View {
                             )
                         )
                     
-                    Text("Choose how you'd like to discover movies together")
+                    Text(LocalizationManager.pollTypeSelectionSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -137,11 +151,11 @@ struct PollTypeCard: View {
                 
                 // Title and Description
                 VStack(spacing: 6) {
-                    Text(pollType.rawValue)
+                    Text(pollType.localizedTitle)
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(.primary)
                     
-                    Text(pollType.description)
+                    Text(pollType.localizedDescription)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

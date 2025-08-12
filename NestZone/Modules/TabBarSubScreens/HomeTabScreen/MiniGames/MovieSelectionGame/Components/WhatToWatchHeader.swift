@@ -7,7 +7,7 @@ struct WhatToWatchHeader: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("What to watch tonight")
+                Text(LocalizationManager.whatToWatchTitle)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
@@ -16,7 +16,7 @@ struct WhatToWatchHeader: View {
                             endPoint: .trailing
                         )
                     )
-                Text(isInPoll ? "Swipe right for Yes, left for No" : "Start a poll or browse your watch history")
+                Text(isInPoll ? LocalizationManager.whatToWatchInPollInstructions : LocalizationManager.whatToWatchNoInPollInstructions)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(
                         LinearGradient(

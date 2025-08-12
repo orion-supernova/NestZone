@@ -31,7 +31,7 @@ struct WhatToWatchView: View {
                     VStack(spacing: 20) {
                         // Header
                         VStack(spacing: 8) {
-                            Text("What to watch tonight")
+                            Text(LocalizationManager.whatToWatchTitle)
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundStyle(
                                     LinearGradient(
@@ -44,11 +44,11 @@ struct WhatToWatchView: View {
                                 .lineLimit(2)
                             
                             if viewModel.isInPoll {
-                                Text("Swipe right for Yes, left for No")
+                                Text(LocalizationManager.whatToWatchInPollInstructions)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(.secondary)
                             } else {
-                                Text("Create polls and discover movies together")
+                                Text(LocalizationManager.whatToWatchNoInPollInstructions)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(.secondary)
                             }
@@ -88,11 +88,11 @@ struct WhatToWatchView: View {
                                         }
                                         
                                         VStack(spacing: 8) {
-                                            Text("Loading Movies")
+                                            Text(LocalizationManager.whatToWatchLoadingMovies)
                                                 .font(.system(size: 20, weight: .bold))
                                                 .foregroundStyle(.primary)
                                             
-                                            Text("Fetching movie details for your poll...")
+                                            Text(LocalizationManager.whatToWatchLoadingMoviesDetails)
                                                 .font(.system(size: 14, weight: .medium))
                                                 .foregroundStyle(.secondary)
                                                 .multilineTextAlignment(.center)
@@ -117,7 +117,7 @@ struct WhatToWatchView: View {
                             // Poll Action Buttons
                             HStack(spacing: 12) {
                                 // End Poll Button
-                                Button("End Poll") {
+                                Button(LocalizationManager.whatToWatchEndPoll) {
                                     Task { await viewModel.closePoll() }
                                 }
                                 .font(.system(size: 16, weight: .bold))
@@ -149,11 +149,11 @@ struct WhatToWatchView: View {
                                     .scaleEffect(1.5)
                                     .frame(width: 50, height: 50)
                                 
-                                Text("Creating your movie poll...")
+                                Text(LocalizationManager.whatToWatchCreatingPoll)
                                     .font(.system(size: 18, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
-                                Text("This may take a moment while we prepare your personalized movie selection")
+                                Text(LocalizationManager.whatToWatchCreatingPollDetails)
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
@@ -165,7 +165,7 @@ struct WhatToWatchView: View {
                             // Main Menu Buttons
                             VStack(spacing: 16) {
                                 // Start Poll Button
-                                Button("Start Movie Poll") {
+                                Button(LocalizationManager.whatToWatchStartPoll) {
                                     viewModel.showingPollTypeSelection = true
                                 }
                                 .font(.system(size: 18, weight: .bold))
@@ -185,7 +185,7 @@ struct WhatToWatchView: View {
                                     HStack(spacing: 12) {
                                         Image(systemName: "clock.arrow.circlepath")
                                             .font(.system(size: 16, weight: .bold))
-                                        Text("Previous Polls")
+                                        Text(LocalizationManager.whatToWatchPreviousPolls)
                                             .font(.system(size: 16, weight: .semibold))
                                     }
                                     .foregroundStyle(.purple)
@@ -218,7 +218,7 @@ struct WhatToWatchView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button(LocalizationManager.commonClose) { dismiss() }
                 }
             }
         }
@@ -293,7 +293,7 @@ struct WinnerAnnouncementView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            Text("🎉 We have a winner! 🎉")
+            Text(LocalizationManager.whatToWatchWinnerAnnouncement)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(
                     LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing)
@@ -336,7 +336,7 @@ struct WinnerAnnouncementView: View {
                 }
             }
             
-            Text("This movie got the most votes from your house!")
+            Text(LocalizationManager.whatToWatchWinnerHouseVotes)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -357,8 +357,4 @@ struct WinnerAnnouncementView: View {
         )
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
-}
-
-#Preview {
-    WhatToWatchView()
 }

@@ -25,11 +25,11 @@ struct MovieDetailSheet: View {
                     Spacer(minLength: 40)
                 }
             }
-            .navigationTitle("Movie Details")
+            .navigationTitle(LocalizationManager.movieDetailsTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button(LocalizationManager.commonClose) { dismiss() }
                 }
             }
             .onAppear {
@@ -101,7 +101,7 @@ struct MovieDetailSheet: View {
                     HStack {
                         Image(systemName: "clock")
                             .foregroundStyle(.secondary)
-                        Text("\(minutes) min")
+                        Text(LocalizationManager.movieDetailsMinutes(minutes))
                             .font(.system(size: 14))
                             .foregroundStyle(.secondary)
                     }
@@ -121,7 +121,7 @@ struct MovieDetailSheet: View {
                     HStack {
                         Image(systemName: "theatermasks")
                             .foregroundStyle(.secondary)
-                        Text("Genres")
+                        Text(LocalizationManager.movieDetailsGenres)
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
@@ -154,14 +154,14 @@ struct MovieDetailSheet: View {
             if isLoading {
                 HStack {
                     ProgressView().scaleEffect(0.8)
-                    Text("Loading details...")
+                    Text(LocalizationManager.movieDetailsLoadingDetails)
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
             } else if let plot = extras?.plot, !plot.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Overview")
+                    Text(LocalizationManager.movieDetailsOverview)
                         .font(.system(size: 18, weight: .bold))
                     Text(plot)
                         .font(.system(size: 14))
@@ -177,7 +177,7 @@ struct MovieDetailSheet: View {
     private var castCrewSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let cast = extras?.cast, !cast.isEmpty {
-                Text("Cast")
+                Text(LocalizationManager.movieDetailsCast)
                     .font(.system(size: 18, weight: .bold))
                     .padding(.horizontal, 20)
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -198,7 +198,7 @@ struct MovieDetailSheet: View {
                 HStack(spacing: 8) {
                     Image(systemName: "person.fill.viewfinder")
                         .foregroundStyle(.secondary)
-                    Text("Director: \(dirs.joined(separator: ", "))")
+                    Text("\(LocalizationManager.movieDetailsDirectors): \(dirs.joined(separator: ", "))")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
@@ -208,7 +208,7 @@ struct MovieDetailSheet: View {
                 HStack(spacing: 8) {
                     Image(systemName: "pencil")
                         .foregroundStyle(.secondary)
-                    Text("Writer: \(wrs.joined(separator: ", "))")
+                    Text("\(LocalizationManager.movieDetailsWriters): \(wrs.joined(separator: ", "))")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
@@ -220,7 +220,7 @@ struct MovieDetailSheet: View {
     
     private var addSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Add to Lists")
+            Text(LocalizationManager.movieDetailsAddToLists)
                 .font(.system(size: 18, weight: .bold))
                 .padding(.horizontal, 20)
             
@@ -230,11 +230,11 @@ struct MovieDetailSheet: View {
                 listsVM: listsVM,
                 onAddToCurrent: {
                     onAdd(detailedMovie ?? movie)
-                    showFeedback("Added to \(currentList?.name ?? "List")")
+                    showFeedback(LocalizationManager.movieDetailsAddedToList(currentList?.name ?? LocalizationManager.movieListsDefaultListName))
                     dismiss()
                 },
                 onAddedOther: { list in
-                    showFeedback("Added to \(list.name)")
+                    showFeedback(LocalizationManager.movieDetailsAddedToList(list.name))
                 }
             )
             .padding(.horizontal, 20)
@@ -278,11 +278,11 @@ struct MovieDetailInfoSheet: View {
                     Spacer(minLength: 50)
                 }
             }
-            .navigationTitle("Movie Details")
+            .navigationTitle(LocalizationManager.movieDetailsTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
+                    Button(LocalizationManager.commonDone) { dismiss() }
                 }
             }
             .onAppear {
@@ -364,7 +364,7 @@ struct MovieDetailInfoSheet: View {
                 HStack {
                     Image(systemName: "clock")
                         .foregroundStyle(.secondary)
-                    Text("\(minutes) min")
+                    Text(LocalizationManager.movieDetailsMinutes(minutes))
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
@@ -381,7 +381,7 @@ struct MovieDetailInfoSheet: View {
                     HStack {
                         Image(systemName: "theatermasks")
                             .foregroundStyle(.secondary)
-                        Text("Genres")
+                        Text(LocalizationManager.movieDetailsGenres)
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
@@ -407,13 +407,13 @@ struct MovieDetailInfoSheet: View {
             if isLoading {
                 HStack {
                     ProgressView().scaleEffect(0.8)
-                    Text("Loading additional details...")
+                    Text(LocalizationManager.movieDetailsLoadingDetails)
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
             } else if let plot = extras?.plot, !plot.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Overview")
+                    Text(LocalizationManager.movieDetailsOverview)
                         .font(.system(size: 18, weight: .bold))
                     Text(plot)
                         .font(.system(size: 14))
@@ -427,7 +427,7 @@ struct MovieDetailInfoSheet: View {
     private var castCrewSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let cast = extras?.cast, !cast.isEmpty {
-                Text("Cast")
+                Text(LocalizationManager.movieDetailsCast)
                     .font(.system(size: 18, weight: .bold))
                     .padding(.horizontal, 20)
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -448,7 +448,7 @@ struct MovieDetailInfoSheet: View {
                 HStack(spacing: 8) {
                     Image(systemName: "person.fill.viewfinder")
                         .foregroundStyle(.secondary)
-                    Text("Director: \(dirs.joined(separator: ", "))")
+                    Text("\(LocalizationManager.movieDetailsDirectors): \(dirs.joined(separator: ", "))")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
@@ -458,7 +458,7 @@ struct MovieDetailInfoSheet: View {
                 HStack(spacing: 8) {
                     Image(systemName: "pencil")
                         .foregroundStyle(.secondary)
-                    Text("Writer: \(wrs.joined(separator: ", "))")
+                    Text("\(LocalizationManager.movieDetailsWriters): \(wrs.joined(separator: ", "))")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
@@ -470,7 +470,7 @@ struct MovieDetailInfoSheet: View {
     
     private var addSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Add to Lists")
+            Text(LocalizationManager.movieDetailsAddToLists)
                 .font(.system(size: 18, weight: .bold))
                 .padding(.horizontal, 20)
             
@@ -482,12 +482,12 @@ struct MovieDetailInfoSheet: View {
                     if let list = originList {
                         Task {
                             await listsVM.addMovieToList(detailedMovie ?? movie, listId: list.id)
-                            showFeedback("Added to \(list.name)")
+                            showFeedback(LocalizationManager.movieDetailsAddedToList(list.name))
                         }
                     }
                 },
                 onAddedOther: { list in
-                    showFeedback("Added to \(list.name)")
+                    showFeedback(LocalizationManager.movieDetailsAddedToList(list.name))
                 }
             )
             .padding(.horizontal, 20)

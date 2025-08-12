@@ -72,7 +72,7 @@ struct SimpleMovieDetailSheet: View {
                                     }
                                     
                                     if let minutes = extras?.runtimeMinutes {
-                                        Text("\(minutes) min")
+                                        Text(LocalizationManager.movieDetailsMinutes(minutes))
                                             .font(.system(size: 16, weight: .medium))
                                             .foregroundStyle(.white.opacity(0.9))
                                     }
@@ -105,7 +105,7 @@ struct SimpleMovieDetailSheet: View {
                         if !currentGenres.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Genres")
+                                    Text(LocalizationManager.movieDetailsGenres)
                                         .font(.system(size: 18, weight: .bold))
                                     Spacer()
                                 }
@@ -128,7 +128,7 @@ struct SimpleMovieDetailSheet: View {
                         if let plot = extras?.plot, !plot.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Overview")
+                                    Text(LocalizationManager.movieDetailsOverview)
                                         .font(.system(size: 18, weight: .bold))
                                     Spacer()
                                 }
@@ -144,26 +144,26 @@ struct SimpleMovieDetailSheet: View {
                         if extras?.rating != nil || extras?.voteCount != nil || extras?.budget != nil {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Statistics")
+                                    Text(LocalizationManager.movieDetailsStatistics)
                                         .font(.system(size: 18, weight: .bold))
                                     Spacer()
                                 }
                                 
                                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                                     if let rating = extras?.rating {
-                                        StatCard(title: "Rating", value: String(format: "%.1f/10", rating), icon: "star.fill", color: .yellow)
+                                        StatCard(title: LocalizationManager.movieDetailsRating, value: String(format: "%.1f/10", rating), icon: "star.fill", color: .yellow)
                                     }
                                     
                                     if let voteCount = extras?.voteCount {
-                                        StatCard(title: "Votes", value: formatNumber(voteCount), icon: "person.2.fill", color: .blue)
+                                        StatCard(title: LocalizationManager.movieDetailsVotes, value: formatNumber(voteCount), icon: "person.2.fill", color: .blue)
                                     }
                                     
                                     if let budget = extras?.budget {
-                                        StatCard(title: "Budget", value: "$\(formatNumber(budget))", icon: "dollarsign.circle.fill", color: .green)
+                                        StatCard(title: LocalizationManager.movieDetailsBudget, value: "$\(formatNumber(budget))", icon: "dollarsign.circle.fill", color: .green)
                                     }
                                     
                                     if let revenue = extras?.revenue {
-                                        StatCard(title: "Revenue", value: "$\(formatNumber(revenue))", icon: "chart.line.uptrend.xyaxis", color: .orange)
+                                        StatCard(title: LocalizationManager.movieDetailsRevenue, value: "$\(formatNumber(revenue))", icon: "chart.line.uptrend.xyaxis", color: .orange)
                                     }
                                 }
                             }
@@ -174,7 +174,7 @@ struct SimpleMovieDetailSheet: View {
                         if let cast = extras?.cast, !cast.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Cast")
+                                    Text(LocalizationManager.movieDetailsCast)
                                         .font(.system(size: 18, weight: .bold))
                                     Spacer()
                                 }
@@ -195,18 +195,18 @@ struct SimpleMovieDetailSheet: View {
                            let writers = extras?.writers, !writers.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Crew")
+                                    Text(LocalizationManager.movieDetailsCrew)
                                         .font(.system(size: 18, weight: .bold))
                                     Spacer()
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 8) {
                                     if !directors.isEmpty {
-                                        CrewSection(title: "Director(s)", names: directors)
+                                        CrewSection(title: LocalizationManager.movieDetailsDirectors, names: directors)
                                     }
                                     
                                     if !writers.isEmpty {
-                                        CrewSection(title: "Writer(s)", names: writers)
+                                        CrewSection(title: LocalizationManager.movieDetailsWriters, names: writers)
                                     }
                                 }
                             }
@@ -217,7 +217,7 @@ struct SimpleMovieDetailSheet: View {
                         if let companies = extras?.productionCompanies, !companies.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Production")
+                                    Text(LocalizationManager.movieDetailsProduction)
                                         .font(.system(size: 18, weight: .bold))
                                     Spacer()
                                 }
@@ -240,7 +240,7 @@ struct SimpleMovieDetailSheet: View {
                         if let keywords = extras?.keywords, !keywords.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Text("Keywords")
+                                    Text(LocalizationManager.movieDetailsKeywords)
                                         .font(.system(size: 18, weight: .bold))
                                     Spacer()
                                 }
@@ -262,7 +262,7 @@ struct SimpleMovieDetailSheet: View {
                         if isLoading {
                             HStack {
                                 ProgressView().scaleEffect(0.8)
-                                Text("Loading details...")
+                                Text(LocalizationManager.movieDetailsLoadingDetails)
                                     .font(.system(size: 14))
                                     .foregroundStyle(.secondary)
                             }
@@ -274,11 +274,11 @@ struct SimpleMovieDetailSheet: View {
                     .padding(.top, 20)
                 }
             }
-            .navigationTitle("Movie Details")
+            .navigationTitle(LocalizationManager.movieDetailsTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
+                    Button(LocalizationManager.commonDone) { dismiss() }
                 }
             }
             .onAppear {

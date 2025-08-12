@@ -7,7 +7,7 @@ struct MatchesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Popular Choices")
+                Text(LocalizationManager.matchesSectionPopularChoices)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing))
                 Spacer()
@@ -19,7 +19,7 @@ struct MatchesSection: View {
                     .background(Capsule().fill(.orange.opacity(0.2)))
             }
             
-            Text("Movies getting positive votes from house members")
+            Text(LocalizationManager.matchesSectionDescription)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
                 .padding(.top, -8)

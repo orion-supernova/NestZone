@@ -11,36 +11,36 @@ struct PollSummarySheet: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 12) {
-                        Text("🏆 Poll Complete! 🏆")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(
-                                LinearGradient(colors: [.purple, .pink], startPoint: .leading, endPoint: .trailing)
-                            )
-                        
-                        Text("Here's how your house voted")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(LocalizationManager.pollSummaryComplete)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.purple, .pink], startPoint: .leading, endPoint: .trailing)
+                        )
+                    
+                    Text(LocalizationManager.pollSummaryDescription)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
                     .padding(.top, 20)
                     
                     // Stats
                     HStack(spacing: 20) {
                         StatBox(
-                            title: "Total Votes",
+                            title: LocalizationManager.pollSummaryTotalVotes,
                             value: "\(summary.totalVotes)",
                             icon: "hand.thumbsup.fill",
                             color: .blue
                         )
                         
                         StatBox(
-                            title: "Participants",
+                            title: LocalizationManager.pollSummaryParticipants,
                             value: "\(summary.participants)",
                             icon: "person.2.fill",
                             color: .green
                         )
                         
                         StatBox(
-                            title: "Matches",
+                            title: LocalizationManager.pollSummaryMatches,
                             value: "\(summary.matches.count)",
                             icon: "heart.fill",
                             color: .red
@@ -51,7 +51,7 @@ struct PollSummarySheet: View {
                     // Winner (if selected)
                     if let winner = summary.winner {
                         VStack(spacing: 16) {
-                            Text("🥇 Winner")
+                            Text(LocalizationManager.pollSummaryWinner)
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundStyle(.primary)
                             
@@ -63,7 +63,7 @@ struct PollSummarySheet: View {
                     // All Matches
                     if !summary.matches.isEmpty {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("All Matches")
+                            Text(LocalizationManager.pollSummaryAllMatches)
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundStyle(.primary)
                                 .padding(.horizontal, 20)
@@ -80,11 +80,11 @@ struct PollSummarySheet: View {
                     Spacer(minLength: 50)
                 }
             }
-            .navigationTitle("Poll Results")
+            .navigationTitle(LocalizationManager.pollSummaryTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(LocalizationManager.commonDone) {
                         dismiss()
                     }
                 }

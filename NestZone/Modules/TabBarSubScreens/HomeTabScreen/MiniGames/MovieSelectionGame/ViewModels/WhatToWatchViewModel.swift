@@ -149,7 +149,7 @@ class WhatToWatchViewModel: ObservableObject {
             print("🎬 - \(movie.title) (\(movie.id))")
         }
         
-        await startNewPoll(title: "Genre Poll: \(genres.joined(separator: ", "))", candidates: selectedMovies)
+        await startNewPoll(title: LocalizationManager.pollTitleGenre(genres.joined(separator: ", ")), candidates: selectedMovies)
         
         await MainActor.run {
             showingGenrePicker = false
@@ -174,7 +174,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Actor Poll: \(actorName)", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitleActor(actorName), candidates: movies)
         
         // Dismiss the actor input sheet
         await MainActor.run {
@@ -200,7 +200,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Director Poll: \(directorName)", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitleDirector(directorName), candidates: movies)
         
         await MainActor.run {
             showingDirectorInput = false
@@ -225,7 +225,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Year Poll: \(year)", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitleYear(year), candidates: movies)
         
         await MainActor.run {
             showingYearInput = false
@@ -250,7 +250,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Decade Poll: \(decade)s", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitleDecade(decade), candidates: movies)
         
         await MainActor.run {
             showingDecadeInput = false
@@ -276,7 +276,7 @@ class WhatToWatchViewModel: ObservableObject {
         }
         
         let selectedMovies = Array(movies.shuffled().prefix(20))
-        await startNewPoll(title: "Mixed Movie Poll", candidates: selectedMovies)
+        await startNewPoll(title: LocalizationManager.pollTitleMixed, candidates: selectedMovies)
     }
     
     func startNowPlayingPoll() async {
@@ -297,7 +297,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Now Playing Movies", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitleNowPlaying, candidates: movies)
     }
     
     func startPopularPoll() async {
@@ -318,7 +318,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Popular Movies", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitlePopular, candidates: movies)
     }
     
     func startTopRatedPoll() async {
@@ -339,7 +339,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Top Rated Movies", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitleTopRated, candidates: movies)
     }
     
     func startUpcomingPoll() async {
@@ -360,7 +360,7 @@ class WhatToWatchViewModel: ObservableObject {
             return
         }
         
-        await startNewPoll(title: "Upcoming Movies", candidates: movies)
+        await startNewPoll(title: LocalizationManager.pollTitleUpcoming, candidates: movies)
     }
     
     func closePoll() async {

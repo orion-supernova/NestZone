@@ -6,26 +6,28 @@ struct GenrePickerSheet: View {
     @State private var selectedGenres: Set<String> = []
     @State private var includeAdult = false // Add adult content toggle
     
-    // Enhanced genre list with emojis and descriptions
-    let genres = [
-        ("Action", "🎬", "Explosions, fights, and thrills"),
-        ("Adventure", "🗺️", "Epic journeys and quests"),
-        ("Comedy", "😂", "Laughs and good times"),
-        ("Drama", "🎭", "Emotional and compelling stories"),
-        ("Fantasy", "🧙‍♂️", "Magic and mythical worlds"),
-        ("Horror", "👻", "Scary and spine-chilling"),
-        ("Romance", "💕", "Love stories and relationships"),
-        ("Sci-Fi", "🚀", "Future tech and space adventures"),
-        ("Thriller", "😱", "Suspense and edge-of-your-seat"),
-        ("Animation", "🎨", "Animated movies and cartoons")
-    ]
+    // Enhanced genre list with emojis and localized descriptions
+    var genres: [(key: String, emoji: String, localizedName: String, localizedDescription: String)] {
+        [
+            ("Action", "🎬", LocalizationManager.genreAction, LocalizationManager.genreActionDescription),
+            ("Adventure", "🗺️", LocalizationManager.genreAdventure, LocalizationManager.genreAdventureDescription),
+            ("Comedy", "😂", LocalizationManager.genreComedy, LocalizationManager.genreComedyDescription),
+            ("Drama", "🎭", LocalizationManager.genreDrama, LocalizationManager.genreDramaDescription),
+            ("Fantasy", "🧙‍♂️", LocalizationManager.genreFantasy, LocalizationManager.genreFantasyDescription),
+            ("Horror", "👻", LocalizationManager.genreHorror, LocalizationManager.genreHorrorDescription),
+            ("Romance", "💕", LocalizationManager.genreRomance, LocalizationManager.genreRomanceDescription),
+            ("Sci-Fi", "🚀", LocalizationManager.genreSciFi, LocalizationManager.genreSciFiDescription),
+            ("Thriller", "😱", LocalizationManager.genreThriller, LocalizationManager.genreThrillerDescription),
+            ("Animation", "🎨", LocalizationManager.genreAnimation, LocalizationManager.genreAnimationDescription)
+        ]
+    }
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 // Header
                 VStack(spacing: 8) {
-                    Text("Choose Your Movie Genres")
+                    Text(LocalizationManager.genreSelectionTitle)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -35,7 +37,7 @@ struct GenrePickerSheet: View {
                             )
                         )
                     
-                    Text("Select one or more genres for your movie poll")
+                    Text(LocalizationManager.genreSelectionSubtitle)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -50,18 +52,18 @@ struct GenrePickerSheet: View {
                         GridItem(.flexible(), spacing: 12),
                         GridItem(.flexible(), spacing: 12)
                     ], spacing: 16) {
-                        ForEach(genres, id: \.0) { genre in
+                        ForEach(genres, id: \.key) { genre in
                             GenreCard(
-                                title: genre.0,
-                                emoji: genre.1,
-                                description: genre.2,
-                                isSelected: selectedGenres.contains(genre.0)
+                                title: genre.localizedName,
+                                emoji: genre.emoji,
+                                description: genre.localizedDescription,
+                                isSelected: selectedGenres.contains(genre.key)
                             ) {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    if selectedGenres.contains(genre.0) {
-                                        selectedGenres.remove(genre.0)
+                                    if selectedGenres.contains(genre.key) {
+                                        selectedGenres.remove(genre.key)
                                     } else {
-                                        selectedGenres.insert(genre.0)
+                                        selectedGenres.insert(genre.key)
                                     }
                                 }
                             }
@@ -74,23 +76,25 @@ struct GenrePickerSheet: View {
                 VStack(spacing: 16) {
                     if !selectedGenres.isEmpty {
                         HStack(spacing: 8) {
-                            Text("Selected:")
+                            Text(LocalizationManager.genreSelectionSelected)
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.secondary)
                             
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 8) {
-                                    ForEach(Array(selectedGenres.sorted()), id: \.self) { genre in
-                                        HStack(spacing: 4) {
-                                            Text(genres.first(where: { $0.0 == genre })?.1 ?? "")
-                                                .font(.system(size: 12))
-                                            Text(genre)
-                                                .font(.system(size: 12, weight: .medium))
+                                    ForEach(Array(selectedGenres.sorted()), id: \.self) { genreKey in
+                                        if let genre = genres.first(where: { $0.key == genreKey }) {
+                                            HStack(spacing: 4) {
+                                                Text(genre.emoji)
+                                                    .font(.system(size: 12))
+                                                Text(genre.localizedName)
+                                                    .font(.system(size: 12, weight: .medium))
+                                            }
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Capsule().fill(.purple.opacity(0.15)))
+                                            .foregroundStyle(.purple)
                                         }
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(Capsule().fill(.purple.opacity(0.15)))
-                                        .foregroundStyle(.purple)
                                     }
                                 }
                                 .padding(.horizontal, 4)
@@ -102,11 +106,11 @@ struct GenrePickerSheet: View {
                         VStack(spacing: 12) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Include Adult Content")
+                                    Text(LocalizationManager.genreSelectionIncludeAdult)
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(.primary)
                                     
-                                    Text("Include movies with mature themes and content")
+                                    Text(LocalizationManager.genreSelectionIncludeAdultDescription)
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundStyle(.secondary)
                                 }
@@ -136,7 +140,7 @@ struct GenrePickerSheet: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "play.fill")
                                     .font(.system(size: 16, weight: .bold))
-                                Text("Create Movie Poll")
+                                Text(LocalizationManager.genreSelectionCreatePoll)
                                     .font(.system(size: 18, weight: .bold))
                             }
                             .foregroundStyle(.white)
@@ -154,7 +158,7 @@ struct GenrePickerSheet: View {
                         }
                         .padding(.horizontal, 20)
                     } else {
-                        Text("Select at least one genre to continue")
+                        Text(LocalizationManager.genreSelectionSelectOneMessage)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 20)
@@ -184,7 +188,7 @@ struct GenrePickerSheet: View {
                 
                 if !selectedGenres.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("Clear All") {
+                        Button(LocalizationManager.genreSelectionClearAll) {
                             withAnimation {
                                 selectedGenres.removeAll()
                             }

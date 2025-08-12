@@ -14,13 +14,13 @@ struct MatchOptionsSheet: View {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 12) {
-                    Text("🎉 Matches Found! 🎉")
+                    Text(LocalizationManager.matchOptionsMatchesFound)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundStyle(
                             LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing)
                         )
                     
-                    Text("These movies got positive votes from your house members")
+                    Text(LocalizationManager.matchOptionsMatchesDescription)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -51,7 +51,7 @@ struct MatchOptionsSheet: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.right.circle")
-                            Text("Continue Poll")
+                            Text(LocalizationManager.matchOptionsContinuePoll)
                         }
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.white)
@@ -71,7 +71,7 @@ struct MatchOptionsSheet: View {
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "crown.fill")
-                                Text("Choose \"\(winner.title)\" as Winner")
+                                Text(LocalizationManager.matchOptionsChooseWinner(winner.title))
                             }
                             .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
@@ -91,7 +91,7 @@ struct MatchOptionsSheet: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "flag.checkered")
-                            Text("End Poll & See All Results")
+                            Text(LocalizationManager.matchOptionsEndPollSeeResults)
                         }
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.orange)
@@ -110,11 +110,11 @@ struct MatchOptionsSheet: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
             }
-            .navigationTitle("Poll Matches")
+            .navigationTitle(LocalizationManager.matchOptionsTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel") {
+                    Button(LocalizationManager.commonCancel) {
                         onContinue() // Same as continue
                         dismiss()
                     }

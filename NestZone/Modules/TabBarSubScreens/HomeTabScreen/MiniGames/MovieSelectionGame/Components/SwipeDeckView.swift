@@ -42,11 +42,11 @@ struct PollCompleteView: View {
                 .foregroundStyle(LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing))
             
             VStack(spacing: 8) {
-                Text("Poll Complete!")
+                Text(LocalizationManager.whatToWatchPollComplete)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.primary)
                 
-                Text("All movies have been reviewed")
+                Text(LocalizationManager.whatToWatchPollCompleteSubtitle)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.secondary)
             }
@@ -54,14 +54,14 @@ struct PollCompleteView: View {
             // Voting Statistics
             if let stats = votingStats {
                 VStack(spacing: 12) {
-                    Text("Voting Progress")
+                    Text(LocalizationManager.whatToWatchVotingProgress)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.primary)
                     
                     VStack(spacing: 8) {
                         ForEach(Array(stats.userVotes.keys.sorted()), id: \.self) { userId in
                             let voteCount = stats.userVotes[userId] ?? 0
-                            let userName = stats.houseMemberNames[userId] ?? "Unknown User"
+                            let userName = stats.houseMemberNames[userId] ?? LocalizationManager.userUnknown
                             let progress = Double(voteCount) / Double(stats.totalItems)
                             
                             HStack(spacing: 12) {
@@ -85,7 +85,7 @@ struct PollCompleteView: View {
                                     .frame(width: 120, alignment: .leading)
                                 }
                                 
-                                Text("\(voteCount)/\(stats.totalItems)")
+                                Text(LocalizationManager.whatToWatchVotingProgressCount(voteCount, stats.totalItems))
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundStyle(.secondary)
                                     .frame(width: 40, alignment: .trailing)
@@ -95,7 +95,7 @@ struct PollCompleteView: View {
                 }
                 .padding(.horizontal, 16)
             } else {
-                Text("Waiting for voting statistics...")
+                Text(LocalizationManager.whatToWatchWaitingStats)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)

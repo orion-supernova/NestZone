@@ -13,7 +13,7 @@ struct PollControls: View {
                 Button(action: onExitPoll) {
                     HStack(spacing: 8) {
                         Image(systemName: "xmark.circle")
-                        Text("Exit Poll")
+                        Text(LocalizationManager.pollControlsExitPoll)
                     }
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white)
@@ -33,7 +33,7 @@ struct PollControls: View {
                 Button(action: onGetNewMovies) {
                     HStack(spacing: 8) {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                        Text("Get New Movies")
+                        Text(LocalizationManager.pollControlsGetNewMovies)
                     }
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white)

@@ -115,6 +115,7 @@ extension LocalizationManager {
     static var commonBack: String { t("common_back") }
     static var commonClose: String { t("common_close") }
     static var commonCreate: String { t("common_create") }
+    static var userUnknown: String { t("user_unknown") }
 
     // MARK: - Tab Bar
     static var tabBarHome: String { t("tab_bar_home") }
@@ -250,4 +251,193 @@ extension LocalizationManager {
     static var messagesChatErrorTitle: String { t("messages_chat_error_title") }
     static var messagesChatErrorOk: String { t("messages_chat_error_ok") }
     static func messagesChatMembersCount(_ count: Int) -> String { tFormat("messages_chat_members_count", count) }
+
+    // MARK: - MiniGames - What to Watch
+    static var whatToWatchTitle: String { t("what_to_watch_title") }
+    static var whatToWatchInPollInstructions: String { t("what_to_watch_in_poll_instructions") }
+    static var whatToWatchNoInPollInstructions: String { t("what_to_watch_no_in_poll_instructions") }
+    static var whatToWatchLoadingMovies: String { t("what_to_watch_loading_movies") }
+    static var whatToWatchLoadingMoviesDetails: String { t("what_to_watch_loading_movies_details") }
+    static var whatToWatchCreatingPoll: String { t("what_to_watch_creating_poll") }
+    static var whatToWatchCreatingPollDetails: String { t("what_to_watch_creating_poll_details") }
+    
+    // Winner Announcement
+    static var whatToWatchWinnerAnnouncement: String { t("what_to_watch_winner_announcement") }
+    static var whatToWatchWinnerHouseVotes: String { t("what_to_watch_winner_house_votes") }
+    
+    // Buttons
+    static var whatToWatchEndPoll: String { t("what_to_watch_end_poll") }
+    static var whatToWatchStartPoll: String { t("what_to_watch_start_poll") }
+    static var whatToWatchPreviousPolls: String { t("what_to_watch_previous_polls") }
+    
+    // Poll Complete
+    static var whatToWatchPollComplete: String { t("what_to_watch_poll_complete") }
+    static var whatToWatchPollCompleteSubtitle: String { t("what_to_watch_poll_complete_subtitle") }
+    static var whatToWatchVotingProgress: String { t("what_to_watch_voting_progress") }
+    static var whatToWatchWaitingStats: String { t("what_to_watch_waiting_stats") }
+    static func whatToWatchVotingProgressCount(_ current: Int, _ total: Int) -> String { tFormat("what_to_watch_voting_progress_count", current, total) }
+    
+    // Poll Types
+    static var pollTypeGenre: String { t("poll_type_genre") }
+    static var pollTypeGenreDescription: String { t("poll_type_genre_description") }
+    static var pollTypeActor: String { t("poll_type_actor") }
+    static var pollTypeActorDescription: String { t("poll_type_actor_description") }
+    static var pollTypeDirector: String { t("poll_type_director") }
+    static var pollTypeDirectorDescription: String { t("poll_type_director_description") }
+    static var pollTypeYear: String { t("poll_type_year") }
+    static var pollTypeYearDescription: String { t("poll_type_year_description") }
+    static var pollTypeDecade: String { t("poll_type_decade") }
+    static var pollTypeDecadeDescription: String { t("poll_type_decade_description") }
+    static var pollTypeNowPlaying: String { t("poll_type_now_playing") }
+    static var pollTypeNowPlayingDescription: String { t("poll_type_now_playing_description") }
+    static var pollTypePopular: String { t("poll_type_popular") }
+    static var pollTypePopularDescription: String { t("poll_type_popular_description") }
+    static var pollTypeTopRated: String { t("poll_type_top_rated") }
+    static var pollTypeTopRatedDescription: String { t("poll_type_top_rated_description") }
+    static var pollTypeUpcoming: String { t("poll_type_upcoming") }
+    static var pollTypeUpcomingDescription: String { t("poll_type_upcoming_description") }
+    
+    // Poll Type Selection
+    static var pollTypeSelectionTitle: String { t("poll_type_selection_title") }
+    static var pollTypeSelectionSubtitle: String { t("poll_type_selection_subtitle") }
+    
+    // Genre Selection
+    static var genreSelectionTitle: String { t("genre_selection_title") }
+    static var genreSelectionSubtitle: String { t("genre_selection_subtitle") }
+    static var genreSelectionSelected: String { t("genre_selection_selected") }
+    static var genreSelectionClearAll: String { t("genre_selection_clear_all") }
+    static var genreSelectionCreatePoll: String { t("genre_selection_create_poll") }
+    static var genreSelectionSelectOneMessage: String { t("genre_selection_select_one_message") }
+    static var genreSelectionIncludeAdult: String { t("genre_selection_include_adult") }
+    static var genreSelectionIncludeAdultDescription: String { t("genre_selection_include_adult_description") }
+    
+    // Genre names and descriptions
+    static var genreAction: String { t("genre_action") }
+    static var genreActionDescription: String { t("genre_action_description") }
+    static var genreAdventure: String { t("genre_adventure") }
+    static var genreAdventureDescription: String { t("genre_adventure_description") }
+    static var genreComedy: String { t("genre_comedy") }
+    static var genreComedyDescription: String { t("genre_comedy_description") }
+    static var genreDrama: String { t("genre_drama") }
+    static var genreDramaDescription: String { t("genre_drama_description") }
+    static var genreFantasy: String { t("genre_fantasy") }
+    static var genreFantasyDescription: String { t("genre_fantasy_description") }
+    static var genreHorror: String { t("genre_horror") }
+    static var genreHorrorDescription: String { t("genre_horror_description") }
+    static var genreRomance: String { t("genre_romance") }
+    static var genreRomanceDescription: String { t("genre_romance_description") }
+    static var genreSciFi: String { t("genre_sci_fi") }
+    static var genreSciFiDescription: String { t("genre_sci_fi_description") }
+    static var genreThriller: String { t("genre_thriller") }
+    static var genreThrillerDescription: String { t("genre_thriller_description") }
+    static var genreAnimation: String { t("genre_animation") }
+    static var genreAnimationDescription: String { t("genre_animation_description") }
+    
+    // Actor Input
+    static var actorInputTitle: String { t("actor_input_title") }
+    static var actorInputSubtitle: String { t("actor_input_subtitle") }
+    static var actorInputPlaceholder: String { t("actor_input_placeholder") }
+    static var actorInputCreatePoll: String { t("actor_input_create_poll") }
+    static var actorInputCreatingPoll: String { t("actor_input_creating_poll") }
+    
+    // Director Input
+    static var directorInputTitle: String { t("director_input_title") }
+    static var directorInputSubtitle: String { t("director_input_subtitle") }
+    static var directorInputPlaceholder: String { t("director_input_placeholder") }
+    static var directorInputCreatePoll: String { t("director_input_create_poll") }
+    static var directorInputCreatingPoll: String { t("director_input_creating_poll") }
+    
+    // Year Input
+    static var yearInputTitle: String { t("year_input_title") }
+    static var yearInputSubtitle: String { t("year_input_subtitle") }
+    static var yearInputSelectedYear: String { t("year_input_selected_year") }
+    static func yearInputCreatePoll(_ year: Int) -> String { tFormat("year_input_create_poll", year) }
+    static var yearInputCreatingPoll: String { t("year_input_creating_poll") }
+    
+    // Decade Input
+    static var decadeInputTitle: String { t("decade_input_title") }
+    static var decadeInputSubtitle: String { t("decade_input_subtitle") }
+    static var decadeInputSelectedDecade: String { t("decade_input_selected_decade") }
+    static func decadeInputCreatePoll(_ decade: Int) -> String { tFormat("decade_input_create_poll", decade) }
+    static var decadeInputCreatingPoll: String { t("decade_input_creating_poll") }
+    
+    // Swipe Card
+    static var swipeCardLike: String { t("swipe_card_like") }
+    static var swipeCardNope: String { t("swipe_card_nope") }
+    static var swipeCardTapForDetails: String { t("swipe_card_tap_for_details") }
+    
+    // Movie Details
+    static var movieDetailsTitle: String { t("movie_details_title") }
+    static var movieDetailsGenres: String { t("movie_details_genres") }
+    static var movieDetailsOverview: String { t("movie_details_overview") }
+    static var movieDetailsStatistics: String { t("movie_details_statistics") }
+    static var movieDetailsRating: String { t("movie_details_rating") }
+    static var movieDetailsVotes: String { t("movie_details_votes") }
+    static var movieDetailsBudget: String { t("movie_details_budget") }
+    static var movieDetailsRevenue: String { t("movie_details_revenue") }
+    static var movieDetailsCast: String { t("movie_details_cast") }
+    static var movieDetailsCrew: String { t("movie_details_crew") }
+    static var movieDetailsDirectors: String { t("movie_details_directors") }
+    static var movieDetailsWriters: String { t("movie_details_writers") }
+    static var movieDetailsProduction: String { t("movie_details_production") }
+    static var movieDetailsKeywords: String { t("movie_details_keywords") }
+    static var movieDetailsLoadingDetails: String { t("movie_details_loading_details") }
+    static func movieDetailsMinutes(_ minutes: Int) -> String { tFormat("movie_details_minutes", minutes) }
+    
+    // Match Options
+    static var matchOptionsTitle: String { t("match_options_title") }
+    static var matchOptionsMatchesFound: String { t("match_options_matches_found") }
+    static var matchOptionsMatchesDescription: String { t("match_options_matches_description") }
+    static var matchOptionsContinuePoll: String { t("match_options_continue_poll") }
+    static func matchOptionsChooseWinner(_ movieTitle: String) -> String { tFormat("match_options_choose_winner", movieTitle) }
+    static var matchOptionsEndPollSeeResults: String { t("match_options_end_poll_see_results") }
+    
+    // Poll Summary
+    static var pollSummaryTitle: String { t("poll_summary_title") }
+    static var pollSummaryComplete: String { t("poll_summary_complete") }
+    static var pollSummaryDescription: String { t("poll_summary_description") }
+    static var pollSummaryTotalVotes: String { t("poll_summary_total_votes") }
+    static var pollSummaryParticipants: String { t("poll_summary_participants") }
+    static var pollSummaryMatches: String { t("poll_summary_matches") }
+    static var pollSummaryWinner: String { t("poll_summary_winner") }
+    static var pollSummaryAllMatches: String { t("poll_summary_all_matches") }
+    
+    // Previous Polls
+    static var previousPollsTitle: String { t("previous_polls_title") }
+    static var previousPollsLoading: String { t("previous_polls_loading") }
+    static var previousPollsEmpty: String { t("previous_polls_empty") }
+    static var previousPollsEmptyDescription: String { t("previous_polls_empty_description") }
+    static var previousPollsDeleteAlert: String { t("previous_polls_delete_alert") }
+    static var previousPollsDeleteMessage: String { t("previous_polls_delete_message") }
+    static var previousPollsDeleteError: String { t("previous_polls_delete_error") }
+    static var previousPollsMoviePoll: String { t("previous_polls_movie_poll") }
+    static var previousPollsWinner: String { t("previous_polls_winner") }
+    static var previousPollsNoWinner: String { t("previous_polls_no_winner") }
+    
+    // Poll Controls
+    static var pollControlsExitPoll: String { t("poll_controls_exit_poll") }
+    static var pollControlsGetNewMovies: String { t("poll_controls_get_new_movies") }
+    
+    // Matches Section
+    static var matchesSectionPopularChoices: String { t("matches_section_popular_choices") }
+    static var matchesSectionDescription: String { t("matches_section_description") }
+    
+    // Poll Titles (for ViewModel)
+    static func pollTitleGenre(_ genres: String) -> String { tFormat("poll_title_genre", genres) }
+    static func pollTitleActor(_ actorName: String) -> String { tFormat("poll_title_actor", actorName) }
+    static func pollTitleDirector(_ directorName: String) -> String { tFormat("poll_title_director", directorName) }
+    static func pollTitleYear(_ year: Int) -> String { tFormat("poll_title_year", year) }
+    static func pollTitleDecade(_ decade: Int) -> String { tFormat("poll_title_decade", decade) }
+    static var pollTitleMixed: String { t("poll_title_mixed") }
+    static var pollTitleNowPlaying: String { t("poll_title_now_playing") }
+    static var pollTitlePopular: String { t("poll_title_popular") }
+    static var pollTitleTopRated: String { t("poll_title_top_rated") }
+    static var pollTitleUpcoming: String { t("poll_title_upcoming") }
+
+    // Movie Lists
+    static var movieDetailsAddToLists: String { t("movie_details_add_to_lists") }
+    static func movieDetailsAddedToList(_ listName: String) -> String { tFormat("movie_details_added_to_list", listName) }
+    static var movieListsDefaultListName: String { t("movie_lists_default_list_name") }
+
+    static var yearInputPickerTitle: String { t("year_input_picker_title") }
 }
