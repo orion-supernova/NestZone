@@ -6,102 +6,69 @@ struct NoHomesView: View {
     @State private var showCreateHome = false
     @State private var showJoinHome = false
     @State private var animateContent = false
-    @State private var animateButtons = false
     @EnvironmentObject var viewModel: TabBarScreenViewModel
     @EnvironmentObject var authManager: PocketBaseAuthManager
     
     var body: some View {
         GeometryReader { geometry in
-            VStack(spacing: 0) {
-                Spacer()
+            ZStack {
+                // Background - Same gradient style as HomeSetupFlow
+                LinearGradient(
+                    colors: [
+                        selectedTheme.colors(for: colorScheme).background,
+                        Color.purple.opacity(0.1),
+                        Color.blue.opacity(0.05)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
                 
-                // Main Content
-                VStack(spacing: 32) {
-                    // Icon with animation
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: selectedTheme.colors(for: colorScheme).primary.map { $0.opacity(0.1) },
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 120, height: 120)
-                            .scaleEffect(animateContent ? 1 : 0.8)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animateContent)
-                        
-                        Image(systemName: "house.slash")
-                            .font(.system(size: 48, weight: .light))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: selectedTheme.colors(for: colorScheme).primary,
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .scaleEffect(animateContent ? 1 : 0.6)
-                            .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2), value: animateContent)
-                    }
+                VStack(spacing: 0) {
+                    Spacer()
                     
-                    // Text Content
-                    VStack(spacing: 16) {
-                        Text("No Homes Available")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                    // Content - Using WelcomeCard style
+                    VStack(spacing: 36) {
+                        Text("Let's Get Started")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundColor(selectedTheme.colors(for: colorScheme).text)
                             .opacity(animateContent ? 1 : 0)
                             .offset(y: animateContent ? 0 : 20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animateContent)
+                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: animateContent)
                         
-                        Text("Create your first home or join an existing one to start organizing your shared space")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(3)
-                            .opacity(animateContent ? 1 : 0)
-                            .offset(y: animateContent ? 0 : 20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animateContent)
+                        VStack(spacing: 20) {
+                            WelcomeCard(
+                                title: "Create a Home",
+                                subtitle: "Start a new space and invite your household",
+                                icon: "house.circle.fill",
+                                gradient: [.purple, .blue],
+                                action: { showCreateHome = true }
+                            )
+                            
+                            WelcomeCard(
+                                title: "Join a Home",
+                                subtitle: "Enter an invite code to join an existing home",
+                                icon: "person.2.circle.fill",
+                                gradient: [.blue, .cyan],
+                                action: { showJoinHome = true }
+                            )
+                        }
+                        .opacity(animateContent ? 1 : 0)
+                        .offset(y: animateContent ? 0 : 50)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animateContent)
                     }
-                    .padding(.horizontal, 32)
-                }
-                
-                Spacer()
-                
-                // Action Buttons
-                VStack(spacing: 16) {
-                    PremiumButton(
-                        title: "Create New Home",
-                        icon: "plus.circle.fill",
-                        style: .primary,
-                        action: { showCreateHome = true }
-                    )
-                    .scaleEffect(animateButtons ? 1 : 0.9)
-                    .opacity(animateButtons ? 1 : 0)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.6), value: animateButtons)
+                    .padding(.horizontal, 24)
                     
-                    PremiumButton(
-                        title: "Join Existing Home",
-                        icon: "person.2.circle.fill",
-                        style: .secondary,
-                        action: { showJoinHome = true }
-                    )
-                    .scaleEffect(animateButtons ? 1 : 0.9)
-                    .opacity(animateButtons ? 1 : 0)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.7), value: animateButtons)
+                    Spacer()
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, geometry.safeAreaInsets.bottom + 32)
             }
         }
-        .background(selectedTheme.colors(for: colorScheme).background)
         .onAppear {
             withAnimation {
                 animateContent = true
-                animateButtons = true
             }
         }
         .sheet(isPresented: $showCreateHome, onDismiss: {
-            // Reset state when sheet is dismissed
             showCreateHome = false
             Task {
                 try await viewModel.fetchUserHome(authManager: authManager)
@@ -110,7 +77,6 @@ struct NoHomesView: View {
             CreateHomeView()
         }
         .sheet(isPresented: $showJoinHome, onDismiss: {
-            // Reset state when sheet is dismissed
             showJoinHome = false
             Task {
                 try await viewModel.fetchUserHome(authManager: authManager)
@@ -121,69 +87,158 @@ struct NoHomesView: View {
     }
 }
 
-struct PremiumButton: View {
+struct WelcomeCard: View {
     let title: String
+    let subtitle: String
     let icon: String
-    let style: ButtonStyle
+    let gradient: [Color]
     let action: () -> Void
-    
-    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
-    @Environment(\.colorScheme) private var colorScheme
     @State private var isPressed = false
     
-    enum ButtonStyle {
-        case primary, secondary
-    }
-    
     var body: some View {
-        Button(action: {
-            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-            impactFeedback.impactOccurred()
+        Button {
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
             
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
+            withAnimation(.spring(response: 0.3)) {
                 isPressed = true
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                withAnimation(.spring(response: 0.3)) {
                     isPressed = false
                 }
                 action()
             }
-        }) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
-                
-                Text(title)
-                    .font(.system(size: 17, weight: .semibold))
-            }
-            .foregroundColor(style == .primary ? .white : selectedTheme.colors(for: colorScheme).text)
-            .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .background(
-                Group {
-                    if style == .primary {
-                        LinearGradient(
-                            colors: selectedTheme.colors(for: colorScheme).primary,
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+        } label: {
+            HStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: gradient,
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    } else {
-                        selectedTheme.colors(for: colorScheme).cardBackground
-                    }
+                        .frame(width: 60, height: 60)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.white)
                 }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                    
+                    Text(subtitle)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.secondary)
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.thinMaterial)
+                    .shadow(color: gradient[0].opacity(0.2), radius: 12, x: 0, y: 6)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(
-                color: (style == .primary ? selectedTheme.colors(for: colorScheme).primary[0] : Color.black).opacity(0.2),
-                radius: isPressed ? 8 : 12,
-                y: isPressed ? 4 : 6
-            )
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: isPressed)
         }
-        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isPressed ? 0.96 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isPressed)
+    }
+}
+
+struct OnboardingHero: View {
+    @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var rotate = false
+    
+    var body: some View {
+        ZStack {
+            // Gradient blobs
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: selectedTheme.colors(for: colorScheme).primary,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 260, height: 260)
+                .blur(radius: 60)
+                .opacity(0.35)
+                .offset(x: -70, y: -40)
+                .scaleEffect(rotate ? 1.02 : 0.98)
+                .animation(.easeInOut(duration: 4).repeatForever(autoreverses: true), value: rotate)
+            
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.cyan, Color.blue],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 210, height: 210)
+                .blur(radius: 50)
+                .opacity(0.28)
+                .offset(x: 60, y: -10)
+                .scaleEffect(rotate ? 0.98 : 1.02)
+                .animation(.easeInOut(duration: 4).delay(0.6).repeatForever(autoreverses: true), value: rotate)
+            
+            // Glass card with icon and subtle animated ring
+            ZStack {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 200, height: 200)
+                    .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
+                
+                Circle()
+                    .strokeBorder(
+                        AngularGradient(
+                            gradient: Gradient(colors: [Color.purple, Color.blue, Color.cyan, Color.purple]),
+                            center: .center
+                        ),
+                        lineWidth: 3
+                    )
+                    .frame(width: 160, height: 160)
+                    .rotationEffect(.degrees(rotate ? 360 : 0))
+                    .animation(.linear(duration: 16).repeatForever(autoreverses: false), value: rotate)
+                    .blur(radius: 0.2)
+                    .opacity(0.9)
+                
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.purple, Color.blue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 76, height: 76)
+                        .shadow(color: Color.purple.opacity(0.25), radius: 10, x: 0, y: 6)
+                    
+                    Image(systemName: "house.and.flag.fill")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.white)
+                        .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 3)
+                }
+            }
+            .padding(.top, 8)
+        }
+        .frame(height: 230)
+        .onAppear { rotate = true }
     }
 }
 
