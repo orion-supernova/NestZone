@@ -192,7 +192,7 @@ struct MiniGamesSection: View {
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.primary)
                         
-                        Text("Swipe to vote with your home, confetti on matches")
+                        Text("Can't decide what movie to pick for the night? Let's play a game to solve this!")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.secondary)
                     }
@@ -452,4 +452,5 @@ struct NavigableStatCard: View {
 #Preview {
     HomeTabScreen()
         .environmentObject(PocketBaseAuthManager())
+        .environmentObject(TabNavigationHelper())
 }
