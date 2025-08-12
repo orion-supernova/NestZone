@@ -137,6 +137,7 @@ struct HomeSetupCard: View {
                     Text(title)
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
                     
                     Text(subtitle)
                         .font(.system(size: 14, weight: .medium))
