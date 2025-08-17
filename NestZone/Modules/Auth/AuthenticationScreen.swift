@@ -20,7 +20,6 @@ struct AuthenticationScreen: View {
         selectedTheme.colors(for: colorScheme)
     }
     
-    // Password validation computed properties
     private var passwordValidationState: ValidationState {
         if password.isEmpty {
             return .neutral
@@ -94,10 +93,9 @@ struct AuthenticationScreen: View {
             .simultaneousGesture(
                 DragGesture()
                     .onChanged { value in
-                        // Only dismiss keyboard when scrolling down (positive translation.height)
                         if let lastValue = lastDragValue {
                             let deltaY = value.translation.height - lastValue.translation.height
-                            if deltaY > 0 && abs(deltaY) > 10 { // Scrolling down with some threshold
+                            if deltaY > 0 && abs(deltaY) > 10 {
                                 hideKeyboard()
                             }
                         }
@@ -139,8 +137,8 @@ struct AuthenticationScreen: View {
             RadialGradient(
                 colors: [
                     theme.background,
-                    theme.primaryColor.opacity(0.06),
-                    theme.secondaryPrimaryColor.opacity(0.04)
+                    theme.primaryColor.opacity(0.08),
+                    theme.accent.opacity(0.06)
                 ],
                 center: .topLeading,
                 startRadius: 0,
@@ -150,27 +148,44 @@ struct AuthenticationScreen: View {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [theme.secondary[0].opacity(0.25), theme.secondary[0].opacity(0.05)],
+                            colors: [
+                                (theme.secondary.first ?? theme.primaryColor).opacity(0.22),
+                                (theme.secondary.first ?? theme.primaryColor).opacity(0.05)
+                            ],
                             center: .center,
                             startRadius: 0,
-                            endRadius: 60
+                            endRadius: 80
                         )
                     )
-                    .frame(width: 120, height: 120)
-                    .offset(x: -40, y: geo.size.height * 0.2)
-                    .blur(radius: 25)
+                    .frame(width: 140, height: 140)
+                    .offset(x: -50, y: geo.size.height * 0.22)
+                    .blur(radius: 26)
+                
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [theme.primaryColor.opacity(0.25), theme.primaryColor.opacity(0.05)],
+                            colors: [theme.primaryColor.opacity(0.26), theme.primaryColor.opacity(0.06)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 90
+                        )
+                    )
+                    .frame(width: 160, height: 160)
+                    .offset(x: geo.size.width - 70, y: geo.size.height * 0.58)
+                    .blur(radius: 30)
+                
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [theme.accent.opacity(0.22), theme.accent.opacity(0.05)],
                             center: .center,
                             startRadius: 0,
                             endRadius: 70
                         )
                     )
-                    .frame(width: 140, height: 140)
-                    .offset(x: geo.size.width - 60, y: geo.size.height * 0.6)
-                    .blur(radius: 30)
+                    .frame(width: 120, height: 120)
+                    .offset(x: geo.size.width * 0.35, y: geo.size.height * 0.12)
+                    .blur(radius: 24)
             }
         }
         .ignoresSafeArea()
@@ -183,7 +198,7 @@ struct AuthenticationScreen: View {
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [theme.text, theme.primaryColor],
+                            colors: [theme.primaryColor, theme.accent],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -192,7 +207,7 @@ struct AuthenticationScreen: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [theme.primaryColor, theme.secondaryPrimaryColor],
+                            colors: [theme.secondaryPrimaryColor, theme.accent],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -203,7 +218,7 @@ struct AuthenticationScreen: View {
                 Circle()
                     .fill(
                         AngularGradient(
-                            colors: [.purple, .pink, .orange, .yellow, .green, .cyan, .blue, .purple],
+                            colors: theme.primary + [theme.accent],
                             center: .center
                         )
                     )
@@ -215,7 +230,7 @@ struct AuthenticationScreen: View {
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [theme.primaryColor, theme.secondaryPrimaryColor],
+                            colors: [theme.primaryColor, theme.accent],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -241,7 +256,7 @@ struct AuthenticationScreen: View {
                             .fill(
                                 isLoginMode ?
                                 LinearGradient(
-                                    colors: [theme.primaryColor, theme.secondaryPrimaryColor],
+                                    colors: theme.primary + [theme.accent],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ) :
@@ -264,7 +279,7 @@ struct AuthenticationScreen: View {
                             .fill(
                                 !isLoginMode ?
                                 LinearGradient(
-                                    colors: [theme.primaryColor, theme.secondaryPrimaryColor],
+                                    colors: theme.primary + [theme.accent],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ) :
@@ -357,6 +372,7 @@ struct AuthenticationScreen: View {
                 }
             }
         }
+        .tint(theme.accent)
     }
     
     private var isFormValid: Bool {
