@@ -36,8 +36,8 @@ class RecipeViewModel: ObservableObject {
     }
     
     private let pocketBase = PocketBaseManager.shared
-    private var currentHomeId: String?
     private var authManager: PocketBaseAuthManager?
+    private var homeChangeObserver: NSObjectProtocol?
     
     let allowedTags: [String] = [
         "breakfast", "lunch", "dinner", "dessert",
@@ -47,8 +47,27 @@ class RecipeViewModel: ObservableObject {
     ]
     
     init() {
+        setupHomeChangeObserver()
         Task {
             await loadRecipes()
+        }
+    }
+    
+    deinit {
+        if let observer = homeChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    private func setupHomeChangeObserver() {
+        homeChangeObserver = NotificationCenter.default.addObserver(
+            forName: .homeDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.loadRecipes()
+            }
         }
     }
     
@@ -56,7 +75,6 @@ class RecipeViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            await getCurrentHome()
             try await loadRecipesFromBackend()
         } catch {
             errorMessage = error.localizedDescription
@@ -64,20 +82,12 @@ class RecipeViewModel: ObservableObject {
         isLoading = false
     }
     
-    private func getCurrentHome() async {
-        do {
-            let response: PocketBaseListResponse<Home> = try await pocketBase.getCollection(
-                "homes",
-                responseType: PocketBaseListResponse<Home>.self
-            )
-            currentHomeId = response.items.first?.id
-        } catch {
-            print("Error getting home: \(error)")
-        }
-    }
-    
     private func loadRecipesFromBackend() async throws {
-        guard let homeId = currentHomeId else { return }
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            recipes = []
+            return
+        }
+        
         let filter = "home_id = '\(homeId)'"
         let sort = "-created"
         
@@ -112,7 +122,11 @@ class RecipeViewModel: ObservableObject {
         ingredients: [String]?,
         steps: [String]?
     ) async {
-        guard let homeId = currentHomeId else { return }
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            errorMessage = "No home selected"
+            return
+        }
+        
         guard let userId = authManager?.currentUser?.id else {
             errorMessage = LocalizationManager.recipeErrorMissingAuth
             return

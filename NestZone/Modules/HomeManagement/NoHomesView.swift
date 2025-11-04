@@ -6,7 +6,7 @@ struct NoHomesView: View {
     @State private var showCreateHome = false
     @State private var showJoinHome = false
     @State private var animateContent = false
-    @EnvironmentObject var viewModel: TabBarScreenViewModel
+    @EnvironmentObject var homeManager: HomeSelectionManager
     @EnvironmentObject var authManager: PocketBaseAuthManager
     
     var body: some View {
@@ -71,7 +71,7 @@ struct NoHomesView: View {
         .sheet(isPresented: $showCreateHome, onDismiss: {
             showCreateHome = false
             Task {
-                try await viewModel.fetchUserHome(authManager: authManager)
+                try await homeManager.fetchUserHomes(authManager: authManager)
             }
         }) {
             CreateHomeView()
@@ -79,7 +79,7 @@ struct NoHomesView: View {
         .sheet(isPresented: $showJoinHome, onDismiss: {
             showJoinHome = false
             Task {
-                try await viewModel.fetchUserHome(authManager: authManager)
+                try await homeManager.fetchUserHomes(authManager: authManager)
             }
         }) {
             JoinHomeView()

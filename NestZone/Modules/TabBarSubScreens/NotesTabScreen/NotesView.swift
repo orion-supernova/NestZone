@@ -10,16 +10,59 @@ struct NotesView: View {
     @State private var showingEditNote = false
     
     var body: some View {
-        ScrollView {
-            if viewModel.isLoading {
-                loadingView
-            } else if viewModel.notes.isEmpty {
-                emptyStateView
-            } else {
-                notesGrid
+        ZStack {
+            // Background with colorful gradients
+            RadialGradient(
+                colors: [
+                    selectedTheme.colors(for: colorScheme).background,
+                    Color.purple.opacity(0.05),
+                    Color.pink.opacity(0.03)
+                ],
+                center: .center,
+                startRadius: 0,
+                endRadius: 500
+            )
+            .ignoresSafeArea()
+            
+            // Floating colorful shapes
+            GeometryReader { geometry in
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.purple.opacity(0.3), Color.pink.opacity(0.1)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 40
+                        )
+                    )
+                    .frame(width: 80, height: 80)
+                    .offset(x: geometry.size.width - 60, y: 50)
+                    .blur(radius: 30)
+                
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.pink.opacity(0.4), Color.purple.opacity(0.2)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 50
+                        )
+                    )
+                    .frame(width: 100, height: 100)
+                    .offset(x: 20, y: geometry.size.height * 0.7)
+                    .blur(radius: 35)
+            }
+            
+            ScrollView {
+                if viewModel.isLoading {
+                    loadingView
+                } else if viewModel.notes.isEmpty {
+                    emptyStateView
+                } else {
+                    notesGrid
+                }
             }
         }
-        .background(selectedTheme.colors(for: colorScheme).background)
         .navigationTitle(LocalizationManager.notesScreenTitle)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -52,7 +95,6 @@ struct NotesView: View {
                 .environmentObject(viewModel)
                 .environmentObject(authManager)
         }
-        // Changed to use item-based presentation to avoid conditional content issues
         .fullScreenCover(item: $selectedNote) { note in
             EditNoteSheet(note: note)
                 .environmentObject(viewModel)
@@ -80,27 +122,28 @@ struct NotesView: View {
             }
         }
         .padding()
+        .padding(.top, 40)
     }
     
     private var emptyStateView: some View {
         VStack(spacing: 0) {
             Spacer()
             
-            VStack(spacing: 32) {
-                // Clean icon
+            VStack(spacing: 24) {
+                // Beautiful icon with gradient
                 ZStack {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.purple.opacity(0.1), Color.pink.opacity(0.1)],
+                                colors: [Color.purple.opacity(0.15), Color.pink.opacity(0.15)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 80, height: 80)
+                        .frame(width: 100, height: 100)
                     
                     Image(systemName: "note.text")
-                        .font(.system(size: 32, weight: .light))
+                        .font(.system(size: 48, weight: .light))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [Color.purple, Color.pink],
@@ -110,22 +153,58 @@ struct NotesView: View {
                         )
                 }
                 
-                VStack(spacing: 16) {
+                VStack(spacing: 12) {
                     Text(LocalizationManager.notesEmptyStateTitle)
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.purple, Color.pink],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                     
                     Text(LocalizationManager.notesEmptyStateSubtitle)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
+                        .lineLimit(3)
+                        .padding(.horizontal, 32)
                 }
+                
+                // Call to action button
+                Button {
+                    showingNewNote = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                        
+                        Text("Create Your First Note")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 14)
+                    .background(
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.purple, Color.pink],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    )
+                    .shadow(color: Color.purple.opacity(0.3), radius: 12, x: 0, y: 6)
+                }
+                .padding(.top, 8)
             }
             
             Spacer()
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 32)
     }
     
@@ -145,7 +224,6 @@ struct NotesView: View {
                 }
                 .onLongPressGesture {
                     // Long press to edit - only if user is owner
-                    // Access authManager correctly to get current user ID
                     if let currentUserId = authManager.currentUser?.id {
                         if note.createdBy == currentUserId {
                             print("Note long pressed: \(note.id)")
@@ -158,6 +236,7 @@ struct NotesView: View {
             }
         }
         .padding()
+        .padding(.top, 20)
     }
 }
 

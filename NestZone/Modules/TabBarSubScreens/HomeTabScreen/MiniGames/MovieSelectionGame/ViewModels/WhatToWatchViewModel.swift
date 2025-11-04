@@ -10,33 +10,86 @@ class WhatToWatchViewModel: ObservableObject {
     @Published var selectedMovieForDetail: Movie?
     @Published var showingMovieDetail = false
     @Published var activePoll: Poll?
-    @Published var showingPollTypeSelection = false // NEW: Show poll type selection
+    @Published var showingPollTypeSelection = false
     @Published var showingGenrePicker = false
-    @Published var showingActorInput = false // NEW: Show actor input
-    @Published var showingDirectorInput = false // NEW: Show director input
-    @Published var showingYearInput = false // NEW: Show year input
-    @Published var showingDecadeInput = false // NEW: Show decade input
+    @Published var showingActorInput = false
+    @Published var showingDirectorInput = false
+    @Published var showingYearInput = false
+    @Published var showingDecadeInput = false
     @Published var isCreatingPoll = false
-    @Published var finalWinner: Movie? // Track final winner
-    @Published var isLoadingPollMovies = false // Loading indicator for movie details
-    @Published var loadingProgress: Double = 0.0 // Progress indicator (0.0 to 1.0)
-    @Published var currentMatches: [Movie] = [] // NEW: Current matches found
-    @Published var showingMatchOptions = false // NEW: Show continue/end options
-    @Published var showingPollSummary = false // NEW: Show final poll summary
-    @Published var pollSummary: PollSummary? // Summary data
-    @Published var votingStats: VotingStats? // NEW: Current voting statistics
-    @Published var includeAdultContent = false // NEW: Adult content toggle
+    @Published var finalWinner: Movie?
+    @Published var isLoadingPollMovies = false
+    @Published var loadingProgress: Double = 0.0
+    @Published var currentMatches: [Movie] = []
+    @Published var showingMatchOptions = false
+    @Published var showingPollSummary = false
+    @Published var pollSummary: PollSummary?
+    @Published var votingStats: VotingStats?
+    @Published var includeAdultContent = false
     
     // MARK: - Private Properties
     private let polls = PollsManager.shared
     private var pollingTask: Task<Void, Never>?
-    private var hasSelectedMatch = false // Prevent multiple match selections
-    private var voteCount = 0 // Track votes to optimize match checking
-    private let matchCheckInterval = 3 // Check for matches every N votes
+    private var hasSelectedMatch = false
+    private var voteCount = 0
+    private let matchCheckInterval = 3
+    private var homeChangeObserver: NSObjectProtocol?
     
     // MARK: - Initialization
+    init() {
+        setupHomeChangeObserver()
+    }
+    
+    deinit {
+        pollingTask?.cancel()
+        pollingTask = nil
+        if let observer = homeChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    private func setupHomeChangeObserver() {
+        homeChangeObserver = NotificationCenter.default.addObserver(
+            forName: .homeDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.handleHomeChange()
+            }
+        }
+    }
+    
+    private func handleHomeChange() async {
+        print("🏠 WhatToWatch: Home changed, resetting poll state")
+        
+        // Close any active poll before switching homes
+        await closePollOnServer()
+        
+        // Check for active poll in the new home
+        await checkForActivePoll()
+    }
+    
     func initialize() async {
         print("🎬 WhatToWatch: Initializing...")
+        
+        // Check if we have a selected home
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: No home selected, clearing state")
+            await MainActor.run {
+                isInPoll = false
+                activePoll = nil
+                finalWinner = nil
+                currentMatches = []
+                showingMatchOptions = false
+                showingPollSummary = false
+                pollSummary = nil
+                votingStats = nil
+                hasSelectedMatch = false
+                voteCount = 0
+            }
+            return
+        }
         
         // Reset any previous state first
         await MainActor.run {
@@ -63,14 +116,18 @@ class WhatToWatchViewModel: ObservableObject {
     // MARK: - Poll Management
     private func checkForActivePoll() async {
         print("🎬 WhatToWatch: Checking for active poll...")
+        
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            print("⚠️ WhatToWatch: No home selected")
+            return
+        }
+        
         do {
-            // First check for active polls
-            if let poll = try await polls.getActivePoll(homeId: nil) {
+            if let poll = try await polls.getActivePoll(homeId: homeId) {
                 print("🎬 WhatToWatch: Found active poll: \(poll.id)")
                 print("🎬 WhatToWatch: Poll status: \(poll.status ?? "nil")")
                 print("🎬 WhatToWatch: Poll title: \(poll.title ?? "nil")")
                 
-                // Double-check that the poll is actually active
                 if poll.status == "active" {
                     await joinExistingPoll(poll)
                 } else {
@@ -80,8 +137,7 @@ class WhatToWatchViewModel: ObservableObject {
             } else {
                 print("🎬 WhatToWatch: No active poll found")
                 
-                // DEBUG: Also check for any recent polls to understand what's happening
-                if let recentPoll = try await polls.getRecentPoll(homeId: nil) {
+                if let recentPoll = try await polls.getRecentPoll(homeId: homeId) {
                     print("🔍 DEBUG: Found recent poll: \(recentPoll.id)")
                     print("🔍 DEBUG: Recent poll status: \(recentPoll.status ?? "nil")")
                     print("🔍 DEBUG: Recent poll title: \(recentPoll.title ?? "nil")")
@@ -122,13 +178,17 @@ class WhatToWatchViewModel: ObservableObject {
     func startGenrePoll(_ genres: [String], includeAdult: Bool) async {
         print("🎬 WhatToWatch: Starting genre poll with genres: \(genres), includeAdult: \(includeAdult)")
         
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
+        
         await MainActor.run {
             isCreatingPoll = true
         }
         
         var allResults: [Movie] = []
         
-        // Get movies from selected genres
         for genre in genres {
             print("🎬 WhatToWatch: Searching for genre: \(genre)")
             let results = await MovieAPI.shared.searchByGenre(genre: genre, includeAdult: includeAdult)
@@ -140,7 +200,6 @@ class WhatToWatchViewModel: ObservableObject {
             }
         }
         
-        // Shuffle and take 20
         allResults = allResults.shuffled()
         let selectedMovies = Array(allResults.prefix(20))
         print("🎬 WhatToWatch: Final movie selection: \(selectedMovies.count) movies")
@@ -159,6 +218,11 @@ class WhatToWatchViewModel: ObservableObject {
     func startActorPoll(_ actorName: String) async {
         print("🎬 WhatToWatch: Starting actor poll for: \(actorName)")
         
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
+        
         await MainActor.run {
             isCreatingPoll = true
         }
@@ -176,7 +240,6 @@ class WhatToWatchViewModel: ObservableObject {
         
         await startNewPoll(title: LocalizationManager.pollTitleActor(actorName), candidates: movies)
         
-        // Dismiss the actor input sheet
         await MainActor.run {
             showingActorInput = false
         }
@@ -184,6 +247,11 @@ class WhatToWatchViewModel: ObservableObject {
     
     func startDirectorPoll(_ directorName: String) async {
         print("🎬 WhatToWatch: Starting director poll for: \(directorName)")
+        
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
         
         await MainActor.run {
             isCreatingPoll = true
@@ -210,6 +278,11 @@ class WhatToWatchViewModel: ObservableObject {
     func startYearPoll(_ year: Int) async {
         print("🎬 WhatToWatch: Starting year poll for: \(year)")
         
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
+        
         await MainActor.run {
             isCreatingPoll = true
         }
@@ -234,6 +307,11 @@ class WhatToWatchViewModel: ObservableObject {
     
     func startDecadePoll(_ decade: Int) async {
         print("🎬 WhatToWatch: Starting decade poll for: \(decade)s")
+        
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
         
         await MainActor.run {
             isCreatingPoll = true
@@ -260,11 +338,16 @@ class WhatToWatchViewModel: ObservableObject {
     func startMixedPoll() async {
         print("🎬 WhatToWatch: Starting mixed poll")
         
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
+        
         await MainActor.run {
             isCreatingPoll = true
         }
         
-        let movies = await MovieAPI.shared.searchMovies(query: "", includeAdult: includeAdultContent) // Gets popular movies
+        let movies = await MovieAPI.shared.searchMovies(query: "", includeAdult: includeAdultContent)
         print("🎬 WhatToWatch: Found \(movies.count) popular movies")
         
         guard !movies.isEmpty else {
@@ -281,6 +364,11 @@ class WhatToWatchViewModel: ObservableObject {
     
     func startNowPlayingPoll() async {
         print("🎬 WhatToWatch: Starting now playing poll")
+        
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
         
         await MainActor.run {
             isCreatingPoll = true
@@ -303,6 +391,11 @@ class WhatToWatchViewModel: ObservableObject {
     func startPopularPoll() async {
         print("🎬 WhatToWatch: Starting popular poll")
         
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
+        
         await MainActor.run {
             isCreatingPoll = true
         }
@@ -324,6 +417,11 @@ class WhatToWatchViewModel: ObservableObject {
     func startTopRatedPoll() async {
         print("🎬 WhatToWatch: Starting top rated poll")
         
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
+        
         await MainActor.run {
             isCreatingPoll = true
         }
@@ -344,6 +442,11 @@ class WhatToWatchViewModel: ObservableObject {
     
     func startUpcomingPoll() async {
         print("🎬 WhatToWatch: Starting upcoming poll")
+        
+        guard HomeSelectionManager.shared.selectedHomeId != nil else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
         
         await MainActor.run {
             isCreatingPoll = true
@@ -378,12 +481,10 @@ class WhatToWatchViewModel: ObservableObject {
                     try await polls.submitVote(pollId: pollId, imdbId: cardViewModel.movie.id, vote: vote, userId: nil)
                     print("✅ Vote submitted successfully")
                     
-                    // Update voting stats when poll is complete
                     if cardStack.filter({ $0.isVisible }).count <= 1 {
                         await updateVotingStats()
                     }
                     
-                    // Check for matches immediately if this was a YES vote, or if all cards are done
                     if vote == true {
                         await checkForMatchesForMovie(cardViewModel.movie.id)
                     } else if cardStack.filter({ $0.isVisible }).count <= 1 {
@@ -402,21 +503,20 @@ class WhatToWatchViewModel: ObservableObject {
         }
     }
 
-    // NEW: Check if a specific movie is a match
     private func checkForMatchesForMovie(_ movieId: String) async {
-        guard let pollId = activePoll?.id, !hasSelectedMatch else { return }
+        guard let pollId = activePoll?.id,
+              let homeId = HomeSelectionManager.shared.selectedHomeId,
+              !hasSelectedMatch else { return }
         
         do {
             let votes = try await polls.fetchVotes(pollId: pollId)
-            let houseMemberCount = try await polls.getHouseMemberCount(homeId: nil)
+            let houseMemberCount = try await polls.getHouseMemberCount(homeId: homeId)
             
             let allMatchIds = polls.getMatches(votes: votes, houseMemberCount: houseMemberCount)
             
-            // Only show matches if the swiped movie is actually a match
             if allMatchIds.contains(movieId) {
                 print("🏆 Movie \(movieId) is a match! Showing all \(allMatchIds.count) matches")
                 
-                // Fetch movie details for ALL matches (not just the swiped one)
                 let matches: [Movie] = await withTaskGroup(of: Movie?.self) { group in
                     for matchId in allMatchIds {
                         group.addTask { 
@@ -433,7 +533,7 @@ class WhatToWatchViewModel: ObservableObject {
                 }
                 
                 await MainActor.run {
-                    currentMatches = matches // Show ALL matches
+                    currentMatches = matches
                     showingMatchOptions = true
                     hasSelectedMatch = true
                 }
@@ -445,20 +545,20 @@ class WhatToWatchViewModel: ObservableObject {
         }
     }
 
-    // UPDATED: Keep original method for final poll completion
     private func checkForMatches() async {
-        guard let pollId = activePoll?.id, !hasSelectedMatch else { return }
+        guard let pollId = activePoll?.id,
+              let homeId = HomeSelectionManager.shared.selectedHomeId,
+              !hasSelectedMatch else { return }
         
         do {
             let votes = try await polls.fetchVotes(pollId: pollId)
-            let houseMemberCount = try await polls.getHouseMemberCount(homeId: nil)
+            let houseMemberCount = try await polls.getHouseMemberCount(homeId: homeId)
             
             let matchIds = polls.getMatches(votes: votes, houseMemberCount: houseMemberCount)
             
             if !matchIds.isEmpty {
                 print("🏆 Found \(matchIds.count) matches: \(matchIds)")
                 
-                // Fetch movie details for all matches
                 let matches: [Movie] = await withTaskGroup(of: Movie?.self) { group in
                     for matchId in matchIds {
                         group.addTask { 
@@ -497,12 +597,16 @@ class WhatToWatchViewModel: ObservableObject {
     private func startNewPoll(title: String, candidates: [Movie]) async {
         print("🎬 WhatToWatch: Starting new poll with \(candidates.count) candidates")
         
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            print("⚠️ WhatToWatch: Cannot start poll without selected home")
+            return
+        }
+        
         guard !candidates.isEmpty else {
             print("❌ Cannot create poll with no candidates")
             return
         }
         
-        // Start loading on main actor
         await MainActor.run {
             isLoadingPollMovies = true
             loadingProgress = 0.0
@@ -510,33 +614,31 @@ class WhatToWatchViewModel: ObservableObject {
         
         do {
             await MainActor.run {
-                loadingProgress = 0.3 // 30% for creating poll
+                loadingProgress = 0.3
             }
             
-            let poll = try await polls.createPoll(homeId: nil, title: title, candidates: candidates, genre: nil)
+            let poll = try await polls.createPoll(homeId: homeId, title: title, candidates: candidates, genre: nil)
             print("✅ Poll created successfully: \(poll.id)")
             
             await MainActor.run {
-                loadingProgress = 1.0 // 100% complete
+                loadingProgress = 1.0
                 activePoll = poll
                 isInPoll = true
                 isLoadingPollMovies = false
-                isCreatingPoll = false // Explicitly set this to false
+                isCreatingPoll = false
             }
             
-            // Initialize card stack after setting state
             initializeCardStack(with: candidates)
             
         } catch {
             print("❌ Failed to create poll: \(error)")
-            // Even if server fails, start local poll
             print("🎬 Starting local poll as fallback")
             
             await MainActor.run {
-                loadingProgress = 1.0 // 100% complete
+                loadingProgress = 1.0
                 isInPoll = true
                 isLoadingPollMovies = false
-                isCreatingPoll = false // Explicitly set this to false
+                isCreatingPoll = false
             }
             
             initializeCardStack(with: candidates)
@@ -547,18 +649,15 @@ class WhatToWatchViewModel: ObservableObject {
         print("🎬 WhatToWatch: Joining existing poll: \(poll.id)")
         print("🎬 WhatToWatch: Poll status verification: \(poll.status ?? "nil")")
         
-        // Double-check poll status before joining
         guard poll.status == "active" else {
             print("❌ WhatToWatch: Refusing to join non-active poll (status: \(poll.status ?? "nil"))")
             return
         }
         
-        // Start loading
         isLoadingPollMovies = true
         loadingProgress = 0.0
         
         do {
-            // DEBUG: Check current user ID
             let currentUserId = await getCurrentUserId()
             print("🎬 DEBUG: Current user ID: '\(currentUserId)'")
             
@@ -568,18 +667,16 @@ class WhatToWatchViewModel: ObservableObject {
             let pollItems = try await pollItemsTask
             let userVotes = try await userVotesTask
             
-            loadingProgress = 0.2 // 20% progress after fetching poll data
+            loadingProgress = 0.2
             
             print("🎬 WhatToWatch: Poll has \(pollItems.count) items")
             print("🎬 WhatToWatch: User has \(userVotes.count) votes")
             
-            // DEBUG: Print all poll items
             print("🎬 DEBUG: Poll items:")
             for item in pollItems {
                 print("  - \(item.label ?? "Unknown") (ID: \(item.externalId))")
             }
             
-            // DEBUG: Print all user votes
             print("🎬 DEBUG: User votes:")
             for vote in userVotes {
                 print("  - \(vote.targetExternalId ?? "nil") = \(vote.vote ? "YES" : "NO") (userID: \(vote.userId))")
@@ -597,13 +694,11 @@ class WhatToWatchViewModel: ObservableObject {
             
             print("🎬 WhatToWatch: User has \(unvotedPollItems.count) unvoted items")
             
-            // DEBUG: Print unvoted items
             print("🎬 DEBUG: Unvoted items:")
             for item in unvotedPollItems {
                 print("  - \(item.label ?? "Unknown") (ID: \(item.externalId))")
             }
             
-            // ENHANCED DEBUG: If we have no unvoted items, let's investigate further
             if unvotedPollItems.isEmpty {
                 print("🎬 DEBUG: No unvoted items found!")
                 print("🎬 DEBUG: This means either:")
@@ -611,21 +706,18 @@ class WhatToWatchViewModel: ObservableObject {
                 print("  2. There's an ID mismatch between poll items and votes")
                 print("  3. User ID is incorrect")
                 
-                // Let's fetch ALL votes for this poll to debug
                 let allVotes = try await polls.fetchVotes(pollId: poll.id)
                 print("🎬 DEBUG: All votes in poll (\(allVotes.count) total):")
                 for vote in allVotes {
                     print("  - User \(vote.userId): \(vote.targetExternalId ?? "nil") = \(vote.vote ? "YES" : "NO")")
                 }
                 
-                // Check if the poll status is causing issues
                 print("🎬 DEBUG: Poll status: \(poll.status ?? "nil")")
                 
-                // FORCE RESET: If this user truly has no votes, show all items anyway
                 if userVotes.isEmpty {
                     print("🎬 DEBUG: User has no votes, forcing all items to be available")
                     
-                    loadingProgress = 0.3 // 30% progress before fetching movie details
+                    loadingProgress = 0.3
                     
                     let movies: [Movie] = await withTaskGroup(of: (Int, Movie?).self) { group in
                         for (index, item) in pollItems.enumerated() {
@@ -640,7 +732,6 @@ class WhatToWatchViewModel: ObservableObject {
                         for await (index, movie) in group { 
                             completed += 1
                             
-                            // Update progress: 30% to 90% for movie fetching
                             await MainActor.run {
                                 loadingProgress = 0.3 + (Double(completed) / Double(pollItems.count)) * 0.6
                             }
@@ -657,20 +748,19 @@ class WhatToWatchViewModel: ObservableObject {
                     
                     print("🎬 WhatToWatch: Retrieved \(movies.count) movie details (forced reset)")
                     
-                    loadingProgress = 1.0 // 100% complete
+                    loadingProgress = 1.0
                     
                     activePoll = poll
                     initializeCardStack(with: movies)
                     isInPoll = true
                     isLoadingPollMovies = false
                     
-                    // Check if there's already a final match
                     await checkForMatches()
                     return
                 }
             }
             
-            loadingProgress = 0.3 // 30% progress before fetching movie details
+            loadingProgress = 0.3
             
             let movies: [Movie] = await withTaskGroup(of: (Int, Movie?).self) { group in
                 for (index, item) in unvotedPollItems.enumerated() {
@@ -685,7 +775,6 @@ class WhatToWatchViewModel: ObservableObject {
                 for await (index, movie) in group { 
                     completed += 1
                     
-                    // Update progress: 30% to 90% for movie fetching  
                     await MainActor.run {
                         loadingProgress = 0.3 + (Double(completed) / Double(max(1, unvotedPollItems.count))) * 0.6
                     }
@@ -702,20 +791,18 @@ class WhatToWatchViewModel: ObservableObject {
             
             print("🎬 WhatToWatch: Retrieved \(movies.count) movie details")
             
-            loadingProgress = 1.0 // 100% complete
+            loadingProgress = 1.0
             
             activePoll = poll
             initializeCardStack(with: movies)
             isInPoll = true
             isLoadingPollMovies = false
             
-            // NEW: If user has completed voting, update voting stats AFTER setting activePoll
             if unvotedPollItems.isEmpty && userVotes.count == pollItems.count {
                 print("🎬 DEBUG: User has completed voting, updating voting stats")
                 await updateVotingStats()
             }
             
-            // Check if there's already a final match
             await checkForMatches()
         } catch {
             print("❌ Failed to join existing poll: \(error)")
@@ -727,7 +814,6 @@ class WhatToWatchViewModel: ObservableObject {
     }
     
     private func getCurrentUserId() async -> String {
-        // Use the same logic as PollsManager
         guard let token = await PocketBaseManager.shared.getAuthToken() else {
             return "NO_TOKEN"
         }
@@ -750,27 +836,28 @@ class WhatToWatchViewModel: ObservableObject {
         return userId
     }
     
-    // NEW: Continue poll (dismiss match notification)
     func continuePoll() {
         showingMatchOptions = false
         hasSelectedMatch = false
         currentMatches = []
-        voteCount = 0 // Reset vote count when continuing
+        voteCount = 0
     }
     
-    // NEW: End poll with winner
     func endPollWithWinner(_ winner: Movie) async {
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            print("⚠️ WhatToWatch: Cannot end poll without selected home")
+            return
+        }
+        
         showingMatchOptions = false
         
         do {
-            // Close the poll on server
             if let pollId = activePoll?.id {
                 try await polls.closePoll(pollId: pollId)
             }
             
-            // Create summary
             let votes = try await polls.fetchVotes(pollId: activePoll?.id ?? "")
-            let houseMemberCount = try await polls.getHouseMemberCount(homeId: nil)
+            let houseMemberCount = try await polls.getHouseMemberCount(homeId: homeId)
             
             pollSummary = PollSummary(
                 matches: currentMatches,
@@ -783,7 +870,6 @@ class WhatToWatchViewModel: ObservableObject {
             showConfetti = true
             showingPollSummary = true
             
-            // Reset poll state after showing summary
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 Task {
                     await MainActor.run {
@@ -799,20 +885,21 @@ class WhatToWatchViewModel: ObservableObject {
         }
     }
     
-    // NEW: End poll completely (show all matches summary)
     func endPollCompletely() async {
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            print("⚠️ WhatToWatch: Cannot end poll without selected home")
+            return
+        }
+        
         do {
-            // Close the poll on server
             if let pollId = activePoll?.id {
                 try await polls.closePoll(pollId: pollId)
             }
             
-            // Create summary with all matches
             let votes = try await polls.fetchVotes(pollId: activePoll?.id ?? "")
-            let houseMemberCount = try await polls.getHouseMemberCount(homeId: nil)
+            let houseMemberCount = try await polls.getHouseMemberCount(homeId: homeId)
             
-            // Determine the top winner from matches
-            let winner = currentMatches.first // Or implement more sophisticated winner selection
+            let winner = currentMatches.first
             
             pollSummary = PollSummary(
                 matches: currentMatches,
@@ -824,7 +911,6 @@ class WhatToWatchViewModel: ObservableObject {
             showingMatchOptions = false
             showingPollSummary = true
             
-            // Reset poll state after showing summary
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 Task {
                     await MainActor.run {
@@ -861,12 +947,11 @@ class WhatToWatchViewModel: ObservableObject {
         showingMatchOptions = false
         showingPollSummary = false
         pollSummary = nil
-        votingStats = nil // NEW: Clear voting stats
-        voteCount = 0 // NEW: Reset vote count
+        votingStats = nil
+        voteCount = 0
         print("🎬 WhatToWatch: Poll closed")
     }
     
-    // NEW: Update voting statistics
     private func updateVotingStats() async {
         guard let pollId = activePoll?.id else { 
             print("🎬 DEBUG: updateVotingStats - No active poll")
@@ -881,7 +966,6 @@ class WhatToWatchViewModel: ObservableObject {
             
             print("🎬 DEBUG: updateVotingStats - Got \(allVotes.count) votes and \(pollItems.count) items")
             
-            // Count votes per user
             var userVoteCounts: [String: Int] = [:]
             for vote in allVotes {
                 userVoteCounts[vote.userId, default: 0] += 1
@@ -889,7 +973,6 @@ class WhatToWatchViewModel: ObservableObject {
             
             print("🎬 DEBUG: updateVotingStats - User vote counts: \(userVoteCounts)")
             
-            // Fetch actual user names from users table
             var userNames: [String: String] = [:]
             let userIds = Array(userVoteCounts.keys)
             
@@ -901,7 +984,6 @@ class WhatToWatchViewModel: ObservableObject {
                 print("🎬 DEBUG: updateVotingStats - Fetched \(users.count) user names")
             } catch {
                 print("❌ Failed to fetch user names: \(error)")
-                // Fallback to shortened IDs if fetching names fails
                 for userId in userIds {
                     let shortId = String(userId.suffix(6))
                     userNames[userId] = "User \(shortId)"
@@ -933,7 +1015,7 @@ struct PollSummary {
 }
 
 struct VotingStats {
-    let userVotes: [String: Int] // userId -> vote count
+    let userVotes: [String: Int]
     let totalItems: Int
-    let houseMemberNames: [String: String] // userId -> display name
+    let houseMemberNames: [String: String]
 }

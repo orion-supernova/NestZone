@@ -12,13 +12,33 @@ class MessageListViewModel: ObservableObject {
     // MARK: - Private Properties
     private let messagesManager = MessagesManager.shared
     private let pocketBase = PocketBaseManager.shared
-    private var currentHomeId: String?
     private var currentUserId: String?
     private var hasInitialLoad = false
+    private var homeChangeObserver: NSObjectProtocol?
     
     // MARK: - Initialization
     init() {
         print("DEBUG: MessageListViewModel initialized")
+        setupHomeChangeObserver()
+    }
+    
+    deinit {
+        if let observer = homeChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    private func setupHomeChangeObserver() {
+        homeChangeObserver = NotificationCenter.default.addObserver(
+            forName: .homeDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.hasInitialLoad = false
+                await self?.loadConversations()
+            }
+        }
     }
     
     // MARK: - Public Methods
@@ -71,29 +91,14 @@ class MessageListViewModel: ObservableObject {
         print("DEBUG: MessageListViewModel - Loading conversations")
         
         do {
-            // Get user's home
-            let userResponse: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(currentUserId)",
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            print("DEBUG: MessageListViewModel - Full user response:")
-            print("DEBUG: - User ID: \(userResponse.id)")
-            print("DEBUG: - User email: \(userResponse.email)")
-            print("DEBUG: - User name: \(userResponse.name ?? "nil")")
-            print("DEBUG: - User home_id array: \(userResponse.home_id)")
-            print("DEBUG: - home_id count: \(userResponse.home_id.count)")
-            print("DEBUG: - home_id.first: \(userResponse.home_id.first ?? "nil")")
-            
-            guard let homeId = userResponse.home_id.first else {
-                errorMessage = "No home found - User's home_id array is empty. Please create or join a home first."
+            // Get home from HomeSelectionManager
+            guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+                errorMessage = "No home selected"
+                conversations = []
                 isLoading = false
-                print("DEBUG: MessageListViewModel - GUARD FAILED: home_id array is empty")
                 return
             }
             
-            currentHomeId = homeId
             print("DEBUG: MessageListViewModel - Home ID: \(homeId)")
             
             // Load conversations

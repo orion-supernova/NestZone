@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct NestZoneApp: App {
     @StateObject private var authManager = PocketBaseAuthManager()
+    @StateObject private var homeManager = HomeSelectionManager.shared
     
     var body: some Scene {
         WindowGroup {
@@ -17,9 +18,11 @@ struct NestZoneApp: App {
                 if authManager.currentUser == nil {
                     AuthenticationScreen()
                         .environmentObject(authManager)
+                        .environmentObject(homeManager)
                 } else {
                     TabBarScreen()
                         .environmentObject(authManager)
+                        .environmentObject(homeManager)
                 }
             }
         }

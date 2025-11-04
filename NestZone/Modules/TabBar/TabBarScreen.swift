@@ -7,8 +7,9 @@ struct TabBarScreen: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var localizationManager = LocalizationManager.shared
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @StateObject private var viewModel = TabBarScreenViewModel()
+    @EnvironmentObject private var homeManager: HomeSelectionManager
     @StateObject private var tabNavigationHelper = TabNavigationHelper()
+    @State private var isLoadingHomes = true
 
     enum Tab: String, CaseIterable {
         case home = "Home"
@@ -40,7 +41,7 @@ struct TabBarScreen: View {
 
     var body: some View {
         Group {
-            if viewModel.isLoading {
+            if isLoadingHomes {
                 // Loading View
                 VStack(spacing: 16) {
                     ProgressView()
@@ -49,9 +50,13 @@ struct TabBarScreen: View {
                     Text(LocalizationManager.tabBarLoading)
                         .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
                 }
-            } else if viewModel.homes.isEmpty {
+            } else if homeManager.availableHomes.isEmpty {
                 NoHomesView()
-                    .environmentObject(viewModel)
+                    .environmentObject(homeManager)
+                    .environmentObject(authManager)
+            } else if homeManager.needsHomeSelection {
+                HomeSelectionView()
+                    .environmentObject(homeManager)
                     .environmentObject(authManager)
             } else {
                 TabView(selection: $selectedTab) {
@@ -117,11 +122,14 @@ struct TabBarScreen: View {
                 try? await authManager.refreshAuth()
                 print(authManager.currentUser)
             }
+            
+            isLoadingHomes = true
             do {
-                try await viewModel.fetchUserHome(authManager: authManager)
-            } catch let error {
-                print(error.localizedDescription)
+                try await homeManager.fetchUserHomes(authManager: authManager)
+            } catch {
+                print("Error fetching homes: \(error.localizedDescription)")
             }
+            isLoadingHomes = false
         }
     }
 }

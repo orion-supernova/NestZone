@@ -540,4 +540,13 @@
   "join_home_success_message": "Joined Home!",
 
   "no_homes_get_started_title": "Let's Get Started",
+  
+  "home_selection_title": "Select Your Home",
+  "home_selection_subtitle": "Choose which home you want to manage",
+  "home_selection_switch_title": "Switch Home",
+  "home_selection_switch_subtitle": "Select a different home to manage",
+  
+  "join_another_home_button": "Join Another Home",
+  
+  "common_done_button": "Done"
 }

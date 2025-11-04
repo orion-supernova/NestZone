@@ -572,4 +572,19 @@ extension LocalizationManager {
 
     // No Homes View
     static var noHomesGetStartedTitle: String { t("no_homes_get_started_title") }
+    
+    // MARK: - Home Selection
+    static var homeSelectionTitle: String { t("home_selection_title") }
+    static var homeSelectionSubtitle: String { t("home_selection_subtitle") }
+    static var homeSelectionSwitchTitle: String { t("home_selection_switch_title") }
+    static var homeSelectionSwitchSubtitle: String { t("home_selection_switch_subtitle") }
+    
+    // MARK: - Switch Home
+    static var switchHomeButton: String { t("home_selection_switch_title") }
+    
+    // MARK: - Join Another Home
+    static var joinAnotherHomeButton: String { t("join_another_home_button") }
+    
+    // MARK: - Common Done Button
+    static var commonDoneButton: String { t("common_done_button") }
 }

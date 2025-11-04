@@ -22,11 +22,30 @@ class HomeTabViewModel: ObservableObject {
     @Published var completedTasksChange = 0
     
     private let pocketBase = PocketBaseManager.shared
-    private var currentHomeId: String?
+    private var homeChangeObserver: NSObjectProtocol?
     
     init() {
+        setupHomeChangeObserver()
         Task {
             await loadHomeData()
+        }
+    }
+    
+    deinit {
+        if let observer = homeChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    private func setupHomeChangeObserver() {
+        homeChangeObserver = NotificationCenter.default.addObserver(
+            forName: .homeDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.loadHomeData()
+            }
         }
     }
     
@@ -36,8 +55,22 @@ class HomeTabViewModel: ObservableObject {
         showingPermissionsError = false
         
         do {
-            // First get the current user's home
-            await getCurrentHome()
+            // Check if we have a selected home
+            guard HomeSelectionManager.shared.selectedHomeId != nil else {
+                // Clear all data if no home is selected
+                tasks = []
+                messageCount = 0
+                shoppingListCount = 0
+                issueCount = 0
+                noteCount = 0
+                messageChange = 0
+                shoppingChange = 0
+                issueChange = 0
+                noteChange = 0
+                completedTasksChange = 0
+                isLoading = false
+                return
+            }
             
             // Add small delay to prevent request conflicts
             try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -81,6 +114,8 @@ class HomeTabViewModel: ObservableObject {
     
     private func loadMockData() {
         // Create mock tasks for development/demo purposes
+        let mockHomeId = HomeSelectionManager.shared.selectedHomeId ?? "mock_home"
+        
         let mockTasks = [
             PocketBaseTask(
                 id: "mock1",
@@ -91,7 +126,7 @@ class HomeTabViewModel: ObservableObject {
                 assignedTo: "user1",
                 isCompleted: false,
                 image: nil,
-                homeId: currentHomeId ?? "mock_home",
+                homeId: mockHomeId,
                 priority: .high,
                 type: .cleaning,
                 created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400)),
@@ -107,7 +142,7 @@ class HomeTabViewModel: ObservableObject {
                 assignedTo: "user2",
                 isCompleted: true,
                 image: nil,
-                homeId: currentHomeId ?? "mock_home",
+                homeId: mockHomeId,
                 priority: .medium,
                 type: .shopping,
                 created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-172800)),
@@ -123,7 +158,7 @@ class HomeTabViewModel: ObservableObject {
                 assignedTo: "user3",
                 isCompleted: false,
                 image: nil,
-                homeId: currentHomeId ?? "mock_home",
+                homeId: mockHomeId,
                 priority: .high,
                 type: .maintenance,
                 created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-259200)),
@@ -139,7 +174,7 @@ class HomeTabViewModel: ObservableObject {
                 assignedTo: "user1",
                 isCompleted: false,
                 image: nil,
-                homeId: currentHomeId ?? "mock_home",
+                homeId: mockHomeId,
                 priority: .low,
                 type: .general,
                 created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-43200)),
@@ -166,25 +201,10 @@ class HomeTabViewModel: ObservableObject {
         print("DEBUG: Mock issues count: \(issueCount)")
     }
     
-    private func getCurrentHome() async {
-        do {
-            let response: PocketBaseListResponse<Home> = try await pocketBase.getCollection(
-                "homes",
-                responseType: PocketBaseListResponse<Home>.self
-            )
-            
-            currentHomeId = response.items.first?.id
-            print("DEBUG: Current Home ID: \(currentHomeId ?? "nil")")
-        } catch {
-            print("Error getting home: \(error)")
-            // Don't throw error here, we can still work with mock data
-        }
-    }
-    
     private func loadTasks() async throws {
-        guard let homeId = currentHomeId else { 
-            print("DEBUG: No home ID available")
-            return 
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            tasks = []
+            return
         }
         
         let filter = "home_id = '\(homeId)'"
@@ -210,7 +230,19 @@ class HomeTabViewModel: ObservableObject {
     }
     
     private func loadStatistics() async throws {
-        guard let homeId = currentHomeId else { return }
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            // Clear stats if no home
+            messageCount = 0
+            shoppingListCount = 0
+            issueCount = 0
+            noteCount = 0
+            messageChange = 0
+            shoppingChange = 0
+            issueChange = 0
+            noteChange = 0
+            completedTasksChange = 0
+            return
+        }
         
         do {
             // Load current week statistics
@@ -225,8 +257,8 @@ class HomeTabViewModel: ObservableObject {
             // If we can't load stats due to permissions, use mock data
             print("DEBUG: Failed to load statistics, using mock data:", error)
             
-            // Use mock statistics (already set in loadMockData if needed)
-            messageCount = 0 // Start with 0, will be set to noteCount in loadCurrentWeekStats
+            // Clear statistics
+            messageCount = 0
             shoppingListCount = 0
             issueCount = 0
             noteCount = 0

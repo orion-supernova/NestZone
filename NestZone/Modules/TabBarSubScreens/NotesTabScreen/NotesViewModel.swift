@@ -8,13 +8,32 @@ class NotesViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     private let pocketBase = PocketBaseManager.shared
-    private var currentHomeId: String?
     private var authManager: PocketBaseAuthManager?
     private var userCache: [String: PocketBaseUser] = [:] // Cache for user information
+    private var homeChangeObserver: NSObjectProtocol?
     
     init() {
+        setupHomeChangeObserver()
         Task {
             await loadNotes()
+        }
+    }
+    
+    deinit {
+        if let observer = homeChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    private func setupHomeChangeObserver() {
+        homeChangeObserver = NotificationCenter.default.addObserver(
+            forName: .homeDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.loadNotes()
+            }
         }
     }
     
@@ -27,9 +46,6 @@ class NotesViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // First get the current user's home
-            await getCurrentHome()
-            
             // Load notes
             try await loadNotesFromBackend()
             
@@ -43,21 +59,12 @@ class NotesViewModel: ObservableObject {
         isLoading = false
     }
     
-    private func getCurrentHome() async {
-        do {
-            let response: PocketBaseListResponse<Home> = try await pocketBase.getCollection(
-                "homes",
-                responseType: PocketBaseListResponse<Home>.self
-            )
-            
-            currentHomeId = response.items.first?.id
-        } catch {
-            print("Error getting home: \(error)")
-        }
-    }
-    
     private func loadNotesFromBackend() async throws {
-        guard let homeId = currentHomeId else { return }
+        // Get selected home from HomeSelectionManager
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            notes = []
+            return
+        }
         
         let filter = "home_id = '\(homeId)'"
         let sort = "-created"
@@ -103,7 +110,10 @@ class NotesViewModel: ObservableObject {
     }
     
     func addNote(text: String, color: String) async {
-        guard let homeId = currentHomeId else { return }
+        guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
+            errorMessage = "No home selected"
+            return
+        }
         
         do {
             let noteData: [String: Any] = [

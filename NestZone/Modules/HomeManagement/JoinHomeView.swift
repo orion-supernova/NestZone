@@ -15,7 +15,11 @@ struct JoinHomeView: View {
     
     var body: some View {
         NavigationView {
-            GeometryReader { geometry in
+            ZStack {
+                // Background
+                selectedTheme.colors(for: colorScheme).background
+                    .ignoresSafeArea()
+                
                 ScrollView {
                     VStack(spacing: 32) {
                         // Header
@@ -102,11 +106,11 @@ struct JoinHomeView: View {
                             .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.5), value: animateFields)
                         }
                         .padding(.horizontal, 24)
-                        .padding(.bottom, geometry.safeAreaInsets.bottom + 16)
+                        .padding(.bottom, 32)
                     }
+                    .frame(maxWidth: .infinity, minHeight: 600)
                 }
             }
-            .background(selectedTheme.colors(for: colorScheme).background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
