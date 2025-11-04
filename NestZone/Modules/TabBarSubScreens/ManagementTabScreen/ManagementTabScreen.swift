@@ -37,73 +37,24 @@ struct ManagementTabScreen: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 10)
                     .opacity(animateHeader ? 1 : 0)
-                    .offset(y: animateHeader ? 0 : -50)
                 
                 // Module Cards Grid (directly without wrapper)
                 ModuleCardsSection(modules: modules, showingShoppingView: $showingShoppingView, showingRecipesView: $showingRecipesView, showingMoviesView: $showingMoviesView)
                     .padding(.top, 40)
+                    .padding(.bottom, 100)
                     .opacity(animateCards ? 1 : 0)
-                    .offset(y: animateCards ? 0 : 100)
             }
         }
         .background(
-            ZStack {
-                // Dynamic rainbow background
-                RadialGradient(
-                    colors: [
-                        selectedTheme.colors(for: colorScheme).background,
-                        Color.purple.opacity(0.08),
-                        Color.blue.opacity(0.05),
-                        Color.green.opacity(0.03),
-                        Color.orange.opacity(0.02)
-                    ],
-                    center: .topLeading,
-                    startRadius: 0,
-                    endRadius: 1200
-                )
-                
-                // Floating colorful shapes
-                GeometryReader { geometry in
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [Color.purple.opacity(0.4), Color.pink.opacity(0.2)],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 50
-                            )
-                        )
-                        .frame(width: 100, height: 100)
-                        .offset(x: -50, y: geometry.size.height * 0.2)
-                        .blur(radius: 35)
-                    
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [Color.blue.opacity(0.3), Color.cyan.opacity(0.1)],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 40
-                            )
-                        )
-                        .frame(width: 80, height: 80)
-                        .offset(x: geometry.size.width - 10, y: geometry.size.height * 0.5)
-                        .blur(radius: 30)
-                    
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [Color.green.opacity(0.4), Color.mint.opacity(0.2)],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 30
-                            )
-                        )
-                        .frame(width: 60, height: 60)
-                        .offset(x: geometry.size.width * 0.3, y: geometry.size.height * 0.8)
-                        .blur(radius: 25)
-                }
-            }
+            LinearGradient(
+                colors: [
+                    selectedTheme.colors(for: colorScheme).background,
+                    Color.purple.opacity(0.03)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
         )
         .onAppear {
             startAnimations()
@@ -121,11 +72,8 @@ struct ManagementTabScreen: View {
     }
     
     private func startAnimations() {
-        withAnimation(.easeOut(duration: 1.0)) {
+        withAnimation(.easeOut(duration: 0.35)) {
             animateHeader = true
-        }
-        
-        withAnimation(.easeOut(duration: 1.2).delay(0.3)) {
             animateCards = true
         }
     }

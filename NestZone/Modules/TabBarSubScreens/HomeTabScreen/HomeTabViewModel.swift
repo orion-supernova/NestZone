@@ -54,6 +54,10 @@ class HomeTabViewModel: ObservableObject {
         errorMessage = nil
         showingPermissionsError = false
         
+        defer {
+            isLoading = false
+        }
+        
         do {
             // Check if we have a selected home
             guard HomeSelectionManager.shared.selectedHomeId != nil else {
@@ -68,7 +72,6 @@ class HomeTabViewModel: ObservableObject {
                 issueChange = 0
                 noteChange = 0
                 completedTasksChange = 0
-                isLoading = false
                 return
             }
             
@@ -79,17 +82,13 @@ class HomeTabViewModel: ObservableObject {
             try await loadTasks()
             try await loadStatistics()
             
+        } catch is CancellationError {
+            // Task was cancelled, just return without retrying
+            print("DEBUG: Load home data was cancelled")
+            return
         } catch {
-            if error.localizedDescription.contains("cancelled") {
-                // Retry once if request was cancelled
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                await loadHomeData()
-            } else {
-                await handleLoadError(error)
-            }
+            await handleLoadError(error)
         }
-        
-        isLoading = false
     }
     
     private func handleLoadError(_ error: Error) async {
