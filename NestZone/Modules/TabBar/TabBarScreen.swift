@@ -56,7 +56,7 @@ struct TabBarScreen: View {
             } else {
                 TabView(selection: $selectedTab) {
                     NavigationStack {
-                        HomeTabScreen()
+                        HomeTabScreen(home: viewModel.currentHome)
                             .environmentObject(tabNavigationHelper)
                     }
                     .tag(Tab.home)
@@ -66,7 +66,7 @@ struct TabBarScreen: View {
                     .accessibilityIdentifier("HomeTab")
                     
                     NavigationStack {
-                        ManagementTabScreen()
+                        ManagementTabScreen(home: viewModel.currentHome)
                     }
                     .tag(Tab.management)
                     .tabItem {
@@ -75,7 +75,7 @@ struct TabBarScreen: View {
                     .accessibilityIdentifier("ManagementTab")
                     
                     NavigationStack {
-                        NotesView()
+                        NotesView(home: viewModel.currentHome)
                     }
                     .tag(Tab.notes)
                     .tabItem {
@@ -84,7 +84,7 @@ struct TabBarScreen: View {
                     .accessibilityIdentifier("NotesTab")
                     
                     NavigationStack {
-                        MessagesView()
+                        MessagesView(home: viewModel.currentHome)
                     }
                     .tag(Tab.messages)
                     .tabItem {
@@ -93,7 +93,7 @@ struct TabBarScreen: View {
                     .accessibilityIdentifier("MessagesTab")
                     
                     NavigationStack {
-                        SettingsView()
+                        SettingsView(home: viewModel.currentHome)
                     }
                     .tag(Tab.settings)
                     .tabItem {

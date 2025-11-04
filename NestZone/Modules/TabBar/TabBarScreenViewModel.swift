@@ -14,6 +14,7 @@ class TabBarScreenViewModel: ObservableObject {
     private let pocketBase = PocketBaseManager.shared
     @Published var homes: [Home] = []
     @Published var isLoading = true
+    @Published var currentHome: Home?
     
     // MARK: - Public Methods
     func fetchUserHome(authManager: PocketBaseAuthManager) async throws {
@@ -60,6 +61,7 @@ class TabBarScreenViewModel: ObservableObject {
             )
             
             self.homes = response.items
+            setCurrentHome()
             
         } catch let error as PocketBaseManager.PocketBaseError {
             // Let the auth manager handle unauthorized errors (will trigger logout)
@@ -69,5 +71,9 @@ class TabBarScreenViewModel: ObservableObject {
         }
         
         isLoading = false
+    }
+
+    private func setCurrentHome() {
+        currentHome = homes.first
     }
 }

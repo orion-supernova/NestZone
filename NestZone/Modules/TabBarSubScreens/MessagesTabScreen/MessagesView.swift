@@ -4,12 +4,16 @@ struct MessagesView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @StateObject private var viewModel = MessageListViewModel()
+    @StateObject private var viewModel: MessageListViewModel
     @State private var showingNewMessage = false
     @State private var selectedConversation: PocketBaseConversation?
-    @State private var currentHome: Home?
     
-    private let pocketBase = PocketBaseManager.shared
+    let home: Home?
+
+    init(home: Home?) {
+        self.home = home
+        _viewModel = StateObject(wrappedValue: MessageListViewModel(home: home))
+    }
     
     var body: some View {
         NavigationStack {
@@ -109,18 +113,14 @@ struct MessagesView: View {
             .onAppear {
                 print("DEBUG: MessagesView appeared")
                 viewModel.setup(authManager: authManager)
-                Task {
-                    await loadCurrentHome()
-                }
             }
             .refreshable {
                 print("DEBUG: Pull to refresh triggered")
                 await viewModel.refresh()
-                await loadCurrentHome()
             }
             .fullScreenCover(isPresented: $showingNewMessage) {
                 NewMessageView(
-                    home: currentHome,
+                    home: home,
                     currentUserId: authManager.currentUser?.id ?? ""
                 ) { newConversation in
                     viewModel.addNewConversation(newConversation)
@@ -251,39 +251,6 @@ struct MessagesView: View {
             .padding(.bottom, 100)
         }
     }
-    
-    private func loadCurrentHome() async {
-        guard let currentUserId = authManager.currentUser?.id else { return }
-        
-        do {
-            // Get user's home ID
-            let userResponse: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(currentUserId)",
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            guard let homeId = userResponse.home_id.first else {
-                print("DEBUG: MessagesView - User has no home")
-                return
-            }
-            
-            // Fetch the home details
-            let home: Home = try await pocketBase.request(
-                endpoint: "/api/collections/homes/records/\(homeId)",
-                requiresAuth: true,
-                responseType: Home.self
-            )
-            
-            await MainActor.run {
-                currentHome = home
-                print("DEBUG: MessagesView - Loaded home: \(home.name)")
-            }
-            
-        } catch {
-            print("DEBUG: MessagesView - Error loading home: \(error)")
-        }
-    }
 }
 
 struct ConversationCard: View {
@@ -391,7 +358,7 @@ struct ConversationCard: View {
 
 #Preview {
     NavigationStack {
-        MessagesView()
+        MessagesView(home: Home(id: "1", name: "Test Home", members: [], inviteCode: "12345"))
             .environmentObject(PocketBaseAuthManager())
     }
 }

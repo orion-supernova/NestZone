@@ -17,7 +17,9 @@ class ManagementTabViewModel: ObservableObject {
     private let pocketBase = PocketBaseManager.shared
     private var currentHomeId: String?
     
-    init() {
+    init(home: Home?) {
+        self.currentHomeId = home?.id
+
         Task {
             await loadShoppingData()
         }
@@ -28,9 +30,6 @@ class ManagementTabViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // First get the current user's home
-            await getCurrentHome()
-            
             // Load shopping items
             try await loadShoppingItems()
             
@@ -42,19 +41,6 @@ class ManagementTabViewModel: ObservableObject {
         }
         
         isLoading = false
-    }
-    
-    private func getCurrentHome() async {
-        do {
-            let response: PocketBaseListResponse<Home> = try await pocketBase.getCollection(
-                "homes",
-                responseType: PocketBaseListResponse<Home>.self
-            )
-            
-            currentHomeId = response.items.first?.id
-        } catch {
-            print("Error getting home: \(error)")
-        }
     }
     
     private func loadShoppingItems() async throws {

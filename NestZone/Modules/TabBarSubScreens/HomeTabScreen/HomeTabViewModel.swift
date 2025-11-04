@@ -24,7 +24,9 @@ class HomeTabViewModel: ObservableObject {
     private let pocketBase = PocketBaseManager.shared
     private var currentHomeId: String?
     
-    init() {
+    init(home: Home?) {
+        self.currentHomeId = home?.id
+
         Task {
             await loadHomeData()
         }
@@ -36,9 +38,6 @@ class HomeTabViewModel: ObservableObject {
         showingPermissionsError = false
         
         do {
-            // First get the current user's home
-            await getCurrentHome()
-            
             // Add small delay to prevent request conflicts
             try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             
@@ -164,21 +163,6 @@ class HomeTabViewModel: ObservableObject {
         
         print("DEBUG: Loaded \(tasks.count) mock tasks for development")
         print("DEBUG: Mock issues count: \(issueCount)")
-    }
-    
-    private func getCurrentHome() async {
-        do {
-            let response: PocketBaseListResponse<Home> = try await pocketBase.getCollection(
-                "homes",
-                responseType: PocketBaseListResponse<Home>.self
-            )
-            
-            currentHomeId = response.items.first?.id
-            print("DEBUG: Current Home ID: \(currentHomeId ?? "nil")")
-        } catch {
-            print("Error getting home: \(error)")
-            // Don't throw error here, we can still work with mock data
-        }
     }
     
     private func loadTasks() async throws {

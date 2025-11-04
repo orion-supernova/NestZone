@@ -12,7 +12,9 @@ class NotesViewModel: ObservableObject {
     private var authManager: PocketBaseAuthManager?
     private var userCache: [String: PocketBaseUser] = [:] // Cache for user information
     
-    init() {
+    init(home: Home?) {
+        self.currentHomeId = home?.id
+
         Task {
             await loadNotes()
         }
@@ -27,9 +29,6 @@ class NotesViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // First get the current user's home
-            await getCurrentHome()
-            
             // Load notes
             try await loadNotesFromBackend()
             
@@ -41,19 +40,6 @@ class NotesViewModel: ObservableObject {
         }
         
         isLoading = false
-    }
-    
-    private func getCurrentHome() async {
-        do {
-            let response: PocketBaseListResponse<Home> = try await pocketBase.getCollection(
-                "homes",
-                responseType: PocketBaseListResponse<Home>.self
-            )
-            
-            currentHomeId = response.items.first?.id
-        } catch {
-            print("Error getting home: \(error)")
-        }
     }
     
     private func loadNotesFromBackend() async throws {

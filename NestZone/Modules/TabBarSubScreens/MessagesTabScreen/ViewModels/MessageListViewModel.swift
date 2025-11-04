@@ -17,8 +17,9 @@ class MessageListViewModel: ObservableObject {
     private var hasInitialLoad = false
     
     // MARK: - Initialization
-    init() {
-        print("DEBUG: MessageListViewModel initialized")
+    init(home: Home?) {
+        self.currentHomeId = home?.id
+        print("DEBUG: MessageListViewModel initialized with home: \(home?.id ?? "nil")")
     }
     
     // MARK: - Public Methods
@@ -71,30 +72,11 @@ class MessageListViewModel: ObservableObject {
         print("DEBUG: MessageListViewModel - Loading conversations")
         
         do {
-            // Get user's home
-            let userResponse: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(currentUserId)",
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            print("DEBUG: MessageListViewModel - Full user response:")
-            print("DEBUG: - User ID: \(userResponse.id)")
-            print("DEBUG: - User email: \(userResponse.email)")
-            print("DEBUG: - User name: \(userResponse.name ?? "nil")")
-            print("DEBUG: - User home_id array: \(userResponse.home_id)")
-            print("DEBUG: - home_id count: \(userResponse.home_id.count)")
-            print("DEBUG: - home_id.first: \(userResponse.home_id.first ?? "nil")")
-            
-            guard let homeId = userResponse.home_id.first else {
-                errorMessage = "No home found - User's home_id array is empty. Please create or join a home first."
+            guard let homeId = currentHomeId else {
+                errorMessage = "No home selected"
                 isLoading = false
-                print("DEBUG: MessageListViewModel - GUARD FAILED: home_id array is empty")
                 return
             }
-            
-            currentHomeId = homeId
-            print("DEBUG: MessageListViewModel - Home ID: \(homeId)")
             
             // Load conversations
             let freshConversations = try await messagesManager.fetchConversations(for: homeId)

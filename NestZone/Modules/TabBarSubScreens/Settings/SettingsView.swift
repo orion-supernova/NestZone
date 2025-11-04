@@ -7,9 +7,10 @@ struct SettingsView: View {
     @State private var isShowingLanguageSheet = false
     @StateObject private var localizationManager = LocalizationManager.shared
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @State private var currentHome: Home?
     @State private var isLoadingHome = true
     
+    let home: Home?
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -349,38 +350,7 @@ struct SettingsView: View {
                 LanguageSelectionSheet(isShowingSheet: $isShowingLanguageSheet)
             }
             .tint(selectedTheme.colors(for: colorScheme).primary[0])
-            .task {
-                await loadCurrentHome()
-            }
         }
-    }
-    
-    private func loadCurrentHome() async {
-        guard let currentUser = authManager.currentUser else { return }
-        
-        isLoadingHome = true
-        
-        do {
-            let pocketBase = PocketBaseManager.shared
-            let userResponse: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(currentUser.id)",
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            if let homeId = userResponse.home_id.first {
-                let homeResponse: Home = try await pocketBase.request(
-                    endpoint: "/api/collections/homes/records/\(homeId)",
-                    requiresAuth: true,
-                    responseType: Home.self
-                )
-                currentHome = homeResponse
-            }
-        } catch {
-            print("Error loading home: \(error)")
-        }
-        
-        isLoadingHome = false
     }
 }
 
@@ -500,5 +470,5 @@ struct SettingsRow: View {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(home: Home(id: "1", name: "Test Home", members: [], inviteCode: "12345"))
 }

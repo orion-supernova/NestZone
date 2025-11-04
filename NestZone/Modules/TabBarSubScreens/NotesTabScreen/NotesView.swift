@@ -4,11 +4,18 @@ struct NotesView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @StateObject private var viewModel = NotesViewModel()
+    @StateObject private var viewModel: NotesViewModel
     @State private var showingNewNote = false
     @State private var selectedNote: PocketBaseNote?
     @State private var showingEditNote = false
     
+    let home: Home?
+
+    init(home: Home?) {
+        self.home = home
+        _viewModel = StateObject(wrappedValue: NotesViewModel(home: home))
+    }
+
     var body: some View {
         ScrollView {
             if viewModel.isLoading {
@@ -163,6 +170,6 @@ struct NotesView: View {
 
 #Preview {
     NavigationView {
-        NotesView()
+        NotesView(home: Home(id: "1", name: "Test Home", members: [], inviteCode: "12345"))
     }
 }

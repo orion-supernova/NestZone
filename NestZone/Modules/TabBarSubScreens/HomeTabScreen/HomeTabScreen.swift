@@ -4,9 +4,16 @@ struct HomeTabScreen: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @StateObject private var viewModel = HomeTabViewModel()
+    @StateObject private var viewModel: HomeTabViewModel
     @EnvironmentObject var tabNavigationHelper: TabNavigationHelper
     
+    let home: Home?
+
+    init(home: Home?) {
+        self.home = home
+        _viewModel = StateObject(wrappedValue: HomeTabViewModel(home: home))
+    }
+
     @State private var animateHeader = false
     @State private var animateStats = false
     @State private var showingShoppingView = false
@@ -450,7 +457,7 @@ struct NavigableStatCard: View {
 }
 
 #Preview {
-    HomeTabScreen()
+    HomeTabScreen(home: Home(id: "1", name: "Test Home", members: [], inviteCode: "12345"))
         .environmentObject(PocketBaseAuthManager())
         .environmentObject(TabNavigationHelper())
 }

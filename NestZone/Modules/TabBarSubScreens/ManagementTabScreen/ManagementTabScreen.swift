@@ -4,7 +4,14 @@ struct ManagementTabScreen: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var authManager: PocketBaseAuthManager
-    @StateObject private var viewModel = ManagementTabViewModel()
+    @StateObject private var viewModel: ManagementTabViewModel
+
+    let home: Home?
+
+    init(home: Home?) {
+        self.home = home
+        _viewModel = StateObject(wrappedValue: ManagementTabViewModel(home: home))
+    }
     
     @State private var animateCards = false
     @State private var animateHeader = false
@@ -132,6 +139,6 @@ struct ManagementTabScreen: View {
 }
 
 #Preview {
-    ManagementTabScreen()
+    ManagementTabScreen(home: Home(id: "1", name: "Test Home", members: [], inviteCode: "12345"))
         .environmentObject(PocketBaseAuthManager())
 }
