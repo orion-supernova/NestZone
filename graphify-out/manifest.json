@@ -1,0 +1,592 @@
+{
+  "/Users/muratcankoc/Documents/Projects/NestZone/.claude/settings.local.json": {
+    "mtime": 1764764818.353441,
+    "ast_hash": "54b4c0d36b23ec77e00be55a5571c07e",
+    "semantic_hash": "54b4c0d36b23ec77e00be55a5571c07e"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/Docs/PocketBase/polls_schema.json": {
+    "mtime": 1764764818.3537273,
+    "ast_hash": "cea778c5486f89c8fd229b6587abf218",
+    "semantic_hash": "cea778c5486f89c8fd229b6587abf218"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Assets.xcassets/AccentColor.colorset/Contents.json": {
+    "mtime": 1764756044.6274047,
+    "ast_hash": "55019f7265dde0a78318b0807f98e847",
+    "semantic_hash": "55019f7265dde0a78318b0807f98e847"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1764764818.35836,
+    "ast_hash": "a58f93291d6b9c75c464bf3f31b885ec",
+    "semantic_hash": "a58f93291d6b9c75c464bf3f31b885ec"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Assets.xcassets/Contents.json": {
+    "mtime": 1764756044.6277344,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/ContentView.swift": {
+    "mtime": 1764764818.358863,
+    "ast_hash": "4d43c221cca6aeb63c6a2416a021df9b",
+    "semantic_hash": "4d43c221cca6aeb63c6a2416a021df9b"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Localization/L10n.swift": {
+    "mtime": 1764764818.3588192,
+    "ast_hash": "124f896880053a0214223c11a487f935",
+    "semantic_hash": "124f896880053a0214223c11a487f935"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Localization/Locales/SampleRecipes/sample_recipes_en.json": {
+    "mtime": 1764764818.359624,
+    "ast_hash": "a284361bab8387eacceb3164a99b46ba",
+    "semantic_hash": "a284361bab8387eacceb3164a99b46ba"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Localization/Locales/SampleRecipes/sample_recipes_tr.json": {
+    "mtime": 1764764818.3601446,
+    "ast_hash": "174866853bbeccdeb160ecbc26357b59",
+    "semantic_hash": "174866853bbeccdeb160ecbc26357b59"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Localization/Locales/en.json": {
+    "mtime": 1764764818.3590727,
+    "ast_hash": "c53448ea521522eaada3e2cc98e66168",
+    "semantic_hash": "c53448ea521522eaada3e2cc98e66168"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Localization/Locales/tr.json": {
+    "mtime": 1764764818.3603785,
+    "ast_hash": "554eabf2887536d80544d8c7337f7b7e",
+    "semantic_hash": "554eabf2887536d80544d8c7337f7b7e"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Localization/LocalizationManager.swift": {
+    "mtime": 1764764818.360123,
+    "ast_hash": "9a6e8ca3d74490789250e817a7658c1a",
+    "semantic_hash": "9a6e8ca3d74490789250e817a7658c1a"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Managers/HomeSelectionManager.swift": {
+    "mtime": 1764764818.360033,
+    "ast_hash": "ee9b7718ec1b57a9919b58bec45c08d6",
+    "semantic_hash": "ee9b7718ec1b57a9919b58bec45c08d6"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Models/HouseTask.swift": {
+    "mtime": 1764764818.3604786,
+    "ast_hash": "1f99aedcd470c57229dc46b23a17c06f",
+    "semantic_hash": "1f99aedcd470c57229dc46b23a17c06f"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/Auth/AuthenticationScreen.swift": {
+    "mtime": 1764764818.3609898,
+    "ast_hash": "93e3c9eaabdf3eeacbaca5f1476adfda",
+    "semantic_hash": "93e3c9eaabdf3eeacbaca5f1476adfda"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/Auth/AuthenticationViewModel.swift": {
+    "mtime": 1764764818.3609905,
+    "ast_hash": "16f964975bddbf03cccb9873050f890b",
+    "semantic_hash": "16f964975bddbf03cccb9873050f890b"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/Auth/HomeSetupFlow.swift": {
+    "mtime": 1764764818.3610573,
+    "ast_hash": "62ef537f3f54514cf5cfe6c077464436",
+    "semantic_hash": "62ef537f3f54514cf5cfe6c077464436"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/Components/LoadingButton.swift": {
+    "mtime": 1764764818.3616347,
+    "ast_hash": "911f3dcbaea34739910554d47073f546",
+    "semantic_hash": "911f3dcbaea34739910554d47073f546"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/Components/OverlayViews.swift": {
+    "mtime": 1764764818.3618162,
+    "ast_hash": "800088bd18fb6b25bb61f32a968d4b41",
+    "semantic_hash": "800088bd18fb6b25bb61f32a968d4b41"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/Components/PremiumTextField.swift": {
+    "mtime": 1764764818.3617587,
+    "ast_hash": "80f3270f1f68a4147e123ade298971db",
+    "semantic_hash": "80f3270f1f68a4147e123ade298971db"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/CreateHomeView.swift": {
+    "mtime": 1764764818.3619642,
+    "ast_hash": "4431c13595d27bab356fecfaf5c5730e",
+    "semantic_hash": "4431c13595d27bab356fecfaf5c5730e"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/HomeManagementViewModel.swift": {
+    "mtime": 1764764818.3620422,
+    "ast_hash": "cb19eb68ef6293ff1c28bff13252efed",
+    "semantic_hash": "cb19eb68ef6293ff1c28bff13252efed"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/HomeSelectionView.swift": {
+    "mtime": 1764764818.3620968,
+    "ast_hash": "3cfd1ded5ee2ddb877066e62aa679201",
+    "semantic_hash": "3cfd1ded5ee2ddb877066e62aa679201"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/JoinHomeView.swift": {
+    "mtime": 1764764818.3621686,
+    "ast_hash": "5dbcebb0dd8d15839a8f8e09c0a32337",
+    "semantic_hash": "5dbcebb0dd8d15839a8f8e09c0a32337"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/NoHomesView.swift": {
+    "mtime": 1764764818.3624249,
+    "ast_hash": "27ecc910356da7b292a1fc56c877f818",
+    "semantic_hash": "27ecc910356da7b292a1fc56c877f818"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/HomeManagement/SwitchHomeSheet.swift": {
+    "mtime": 1764764818.3625996,
+    "ast_hash": "db26844447321ee8a6f2dcb3b227282e",
+    "semantic_hash": "db26844447321ee8a6f2dcb3b227282e"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/Login/LoginScreen.swift": {
+    "mtime": 1764764818.363052,
+    "ast_hash": "dd859ebe18d16a2a52787a21875b3a72",
+    "semantic_hash": "dd859ebe18d16a2a52787a21875b3a72"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/Login/LoginViewModel.swift": {
+    "mtime": 1764764818.3627257,
+    "ast_hash": "f94d7d5e029947d1355fb2eb3b848c59",
+    "semantic_hash": "f94d7d5e029947d1355fb2eb3b848c59"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBar/TabBarScreen.swift": {
+    "mtime": 1764764818.3630416,
+    "ast_hash": "118b012f6701c5a830d76cc7801b3a7f",
+    "semantic_hash": "118b012f6701c5a830d76cc7801b3a7f"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBar/TabBarScreenViewModel.swift": {
+    "mtime": 1764764818.362639,
+    "ast_hash": "d24f452d4f730158685af2f53fef60b5",
+    "semantic_hash": "d24f452d4f730158685af2f53fef60b5"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/HomeTabScreen.swift": {
+    "mtime": 1764764818.3630517,
+    "ast_hash": "d5291e0f171a22f74f7112fdf11abdc6",
+    "semantic_hash": "d5291e0f171a22f74f7112fdf11abdc6"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/HomeTabViewModel.swift": {
+    "mtime": 1764764818.363146,
+    "ast_hash": "a20b0ad6d97353f7bc482de3cca2eb5a",
+    "semantic_hash": "a20b0ad6d97353f7bc482de3cca2eb5a"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/ConfettiView.swift": {
+    "mtime": 1764764818.3632057,
+    "ast_hash": "50076e3afde9605e0eb028b48cc0310e",
+    "semantic_hash": "50076e3afde9605e0eb028b48cc0310e"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieAPI.swift": {
+    "mtime": 1764764818.3633425,
+    "ast_hash": "7477858930850199df6370801be6f987",
+    "semantic_hash": "7477858930850199df6370801be6f987"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/Components/MatchesSection.swift": {
+    "mtime": 1764764818.3638132,
+    "ast_hash": "6c7a3e793e5700709c2769f07c13e7e9",
+    "semantic_hash": "6c7a3e793e5700709c2769f07c13e7e9"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/Components/PollControls.swift": {
+    "mtime": 1764764818.363588,
+    "ast_hash": "075163d32040feb654159a30ddc84f08",
+    "semantic_hash": "075163d32040feb654159a30ddc84f08"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/Components/SwipeDeckView.swift": {
+    "mtime": 1764764818.3635833,
+    "ast_hash": "82206cc422e337f155091192d34d54e7",
+    "semantic_hash": "82206cc422e337f155091192d34d54e7"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/Components/WhatToWatchHeader.swift": {
+    "mtime": 1764764818.3637214,
+    "ast_hash": "21a724a9d888f7832ff52e3ea835bb0d",
+    "semantic_hash": "21a724a9d888f7832ff52e3ea835bb0d"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/GenrePickerSheet.swift": {
+    "mtime": 1764764818.364032,
+    "ast_hash": "023f5c1265a9053788d1c8aae9d73d71",
+    "semantic_hash": "023f5c1265a9053788d1c8aae9d73d71"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/MatchOptionsSheet.swift": {
+    "mtime": 1764764818.3639572,
+    "ast_hash": "457e529e6573c60ede953a9e89decb74",
+    "semantic_hash": "457e529e6573c60ede953a9e89decb74"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/MovieDetailSheet.swift": {
+    "mtime": 1764764818.3641784,
+    "ast_hash": "0a2b8d5da96277c0a8b17c22bb1195dd",
+    "semantic_hash": "0a2b8d5da96277c0a8b17c22bb1195dd"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/MovieRow.swift": {
+    "mtime": 1764764818.3642945,
+    "ast_hash": "cceb86e870272db19588df86490c11e4",
+    "semantic_hash": "cceb86e870272db19588df86490c11e4"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/PollInputSheets.swift": {
+    "mtime": 1764764818.3646529,
+    "ast_hash": "6b6dafcaf2e09f68486d9a9bd541aec5",
+    "semantic_hash": "6b6dafcaf2e09f68486d9a9bd541aec5"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/PollSummarySheet.swift": {
+    "mtime": 1764764818.3642614,
+    "ast_hash": "113c496ac50d903ff39bae46de8b1879",
+    "semantic_hash": "113c496ac50d903ff39bae46de8b1879"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/PollTypeSelectionSheet.swift": {
+    "mtime": 1764764818.3648984,
+    "ast_hash": "a2caa0b48997fcd728e988edc50fb9bc",
+    "semantic_hash": "a2caa0b48997fcd728e988edc50fb9bc"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/PreviousPollsView.swift": {
+    "mtime": 1764764818.3648999,
+    "ast_hash": "2553a31acc0eaae137ac96fde6710d73",
+    "semantic_hash": "2553a31acc0eaae137ac96fde6710d73"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/SimpleMovieDetailSheet.swift": {
+    "mtime": 1764764818.364923,
+    "ast_hash": "44ee91baff3a4e7814da23047b5a9ca2",
+    "semantic_hash": "44ee91baff3a4e7814da23047b5a9ca2"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/SwipeCard.swift": {
+    "mtime": 1764764818.3650157,
+    "ast_hash": "a58e9858172f73e57e69493ccab07154",
+    "semantic_hash": "a58e9858172f73e57e69493ccab07154"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/ViewModels/WhatToWatchViewModel.swift": {
+    "mtime": 1764764818.3651493,
+    "ast_hash": "bb249013e5b59fb7b3e690d5977c3006",
+    "semantic_hash": "bb249013e5b59fb7b3e690d5977c3006"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/WhatToWatchView.swift": {
+    "mtime": 1764764818.365056,
+    "ast_hash": "ae7338a9876991ffd961c3cf236b7d20",
+    "semantic_hash": "ae7338a9876991ffd961c3cf236b7d20"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/PollsManager.swift": {
+    "mtime": 1764764818.3650932,
+    "ast_hash": "a2aba315db0cfb463d0f0c5d2c040232",
+    "semantic_hash": "a2aba315db0cfb463d0f0c5d2c040232"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/ManagementTabScreen.swift": {
+    "mtime": 1764764818.3653426,
+    "ast_hash": "3a4be29b942943db139edee5a58375c2",
+    "semantic_hash": "3a4be29b942943db139edee5a58375c2"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/ManagementTabViewModel.swift": {
+    "mtime": 1764764818.365422,
+    "ast_hash": "5bb272eaf8e3409b6e1f70a974d4a2d0",
+    "semantic_hash": "5bb272eaf8e3409b6e1f70a974d4a2d0"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Models/ModuleHub.swift": {
+    "mtime": 1764764818.3655198,
+    "ast_hash": "5bb1eca58afb514fb7ca65d662975e89",
+    "semantic_hash": "5bb1eca58afb514fb7ca65d662975e89"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/CreateMovieListSheet.swift": {
+    "mtime": 1764764818.3656282,
+    "ast_hash": "0ede5848724c0e854382974be6800a98",
+    "semantic_hash": "0ede5848724c0e854382974be6800a98"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/CustomListRow.swift": {
+    "mtime": 1764764818.3656583,
+    "ast_hash": "2316101e9b2c36a9e5df0e32456d40e2",
+    "semantic_hash": "2316101e9b2c36a9e5df0e32456d40e2"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/MovieListDetailView.swift": {
+    "mtime": 1764764818.3658092,
+    "ast_hash": "4b6a4dad1031bf08eda7f7ca1e39d057",
+    "semantic_hash": "4b6a4dad1031bf08eda7f7ca1e39d057"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/MovieSearchRow.swift": {
+    "mtime": 1764764818.365702,
+    "ast_hash": "0632175573407e01c527160ba6e37393",
+    "semantic_hash": "0632175573407e01c527160ba6e37393"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/PresetListCard.swift": {
+    "mtime": 1764764818.365867,
+    "ast_hash": "92fb206182d8f93525f97492979d6173",
+    "semantic_hash": "92fb206182d8f93525f97492979d6173"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/SearchHeader.swift": {
+    "mtime": 1764764818.3659708,
+    "ast_hash": "27ae21eac44def0cc2dcbd98550c8208",
+    "semantic_hash": "27ae21eac44def0cc2dcbd98550c8208"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/SearchMoviesForListSheet.swift": {
+    "mtime": 1764764818.3660758,
+    "ast_hash": "75a2dac49c49a6da2da1fe1d49281aa0",
+    "semantic_hash": "75a2dac49c49a6da2da1fe1d49281aa0"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/SearchResultsList.swift": {
+    "mtime": 1764764818.366273,
+    "ast_hash": "196fff1ca463c04c967a0478bc57c594",
+    "semantic_hash": "196fff1ca463c04c967a0478bc57c594"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Managers/MovieListsManager.swift": {
+    "mtime": 1764764818.3665204,
+    "ast_hash": "6ca48ef0b107040d5d6cbd7bfcefdf56",
+    "semantic_hash": "6ca48ef0b107040d5d6cbd7bfcefdf56"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Models/MovieList.swift": {
+    "mtime": 1764764818.3667116,
+    "ast_hash": "4938c2f091552f2ddfe2fcddd914272d",
+    "semantic_hash": "4938c2f091552f2ddfe2fcddd914272d"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/MovieListsView.swift": {
+    "mtime": 1764764818.366597,
+    "ast_hash": "394d1b10f5cfdc688cbe037387bce59c",
+    "semantic_hash": "394d1b10f5cfdc688cbe037387bce59c"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/ViewModels/MovieListsViewModel.swift": {
+    "mtime": 1764764818.3671017,
+    "ast_hash": "a5cabbbab806093c6f66c92713e8254d",
+    "semantic_hash": "a5cabbbab806093c6f66c92713e8254d"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/ViewModels/SearchMoviesViewModel.swift": {
+    "mtime": 1764764818.366994,
+    "ast_hash": "ca39481e53fce91312e75abeddc1be9d",
+    "semantic_hash": "ca39481e53fce91312e75abeddc1be9d"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Recipes/RecipeListView.swift": {
+    "mtime": 1764764818.3672566,
+    "ast_hash": "0df122856c6511f9b6dd45a8c3c736bb",
+    "semantic_hash": "0df122856c6511f9b6dd45a8c3c736bb"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Recipes/RecipeViewModel.swift": {
+    "mtime": 1764764818.3670545,
+    "ast_hash": "f2693c13770946ed7288c46f88fa66d1",
+    "semantic_hash": "f2693c13770946ed7288c46f88fa66d1"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Recipes/Subviews/CookingModeView.swift": {
+    "mtime": 1764764818.367152,
+    "ast_hash": "5dab58194acfe178206509b1ffa37f6b",
+    "semantic_hash": "5dab58194acfe178206509b1ffa37f6b"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Recipes/Subviews/ExploreRecipesView.swift": {
+    "mtime": 1764764818.3671782,
+    "ast_hash": "0390016ba6f41f5bd03c4b89973654aa",
+    "semantic_hash": "0390016ba6f41f5bd03c4b89973654aa"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Recipes/Subviews/NewRecipeSheet.swift": {
+    "mtime": 1764764818.3675776,
+    "ast_hash": "609e06f322a19a3df517be91100c7796",
+    "semantic_hash": "609e06f322a19a3df517be91100c7796"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Recipes/Subviews/RecipeCard.swift": {
+    "mtime": 1764764818.3673363,
+    "ast_hash": "2e37c0d8d5f7f0f91cc276837bfb2241",
+    "semantic_hash": "2e37c0d8d5f7f0f91cc276837bfb2241"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Recipes/Subviews/RecipeDetailView.swift": {
+    "mtime": 1764764818.3674757,
+    "ast_hash": "a4d61bcfc7f19443e01c89f078dee7ca",
+    "semantic_hash": "a4d61bcfc7f19443e01c89f078dee7ca"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/ShoppingListView.swift": {
+    "mtime": 1764764818.367829,
+    "ast_hash": "6e9740133241b34718af8c0ad3b7ddca",
+    "semantic_hash": "6e9740133241b34718af8c0ad3b7ddca"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Subviews/MiniModuleCard.swift": {
+    "mtime": 1764764818.367737,
+    "ast_hash": "c15d124e4a649b4d9b8aead0cb8751d9",
+    "semantic_hash": "c15d124e4a649b4d9b8aead0cb8751d9"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Subviews/ModuleCardsSection.swift": {
+    "mtime": 1764764818.3682127,
+    "ast_hash": "685d794e96e91a613989e5a31ea1985d",
+    "semantic_hash": "685d794e96e91a613989e5a31ea1985d"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Subviews/ModuleHubHeaderView.swift": {
+    "mtime": 1764764818.368065,
+    "ast_hash": "386cb8034aa3d0dbf670bf6b8083d0e3",
+    "semantic_hash": "386cb8034aa3d0dbf670bf6b8083d0e3"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Subviews/VibrantModuleCard.swift": {
+    "mtime": 1764764818.3681626,
+    "ast_hash": "aba1229748563e1597226aa04c2248b1",
+    "semantic_hash": "aba1229748563e1597226aa04c2248b1"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/ChatDetailView.swift": {
+    "mtime": 1764764818.368524,
+    "ast_hash": "436ec8c833b0e8eff910e9dc07d890d7",
+    "semantic_hash": "436ec8c833b0e8eff910e9dc07d890d7"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/MessagesView.swift": {
+    "mtime": 1764764818.3683774,
+    "ast_hash": "648dc2e055b01c013255465f04190dfb",
+    "semantic_hash": "648dc2e055b01c013255465f04190dfb"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/NewMessageView.swift": {
+    "mtime": 1764764818.3684175,
+    "ast_hash": "cca9ef9ea4a1492797deed6fff7077ab",
+    "semantic_hash": "cca9ef9ea4a1492797deed6fff7077ab"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/Subviews/ChatEmptyStates.swift": {
+    "mtime": 1764764818.368615,
+    "ast_hash": "d80dc4f41937e7ccb5b83454c74544ed",
+    "semantic_hash": "d80dc4f41937e7ccb5b83454c74544ed"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/Subviews/ChatHeader.swift": {
+    "mtime": 1764764818.3682766,
+    "ast_hash": "8c9a8e0960f12d3e5006682d151dc2de",
+    "semantic_hash": "8c9a8e0960f12d3e5006682d151dc2de"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/Subviews/MessageBubble.swift": {
+    "mtime": 1764764818.3686912,
+    "ast_hash": "0870a554ba4b389dc40607e2f31fe1af",
+    "semantic_hash": "0870a554ba4b389dc40607e2f31fe1af"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/Subviews/MessageInputView.swift": {
+    "mtime": 1764764818.3685737,
+    "ast_hash": "b26135a404982e3a2b0e6d410754e134",
+    "semantic_hash": "b26135a404982e3a2b0e6d410754e134"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/Subviews/MessagesList.swift": {
+    "mtime": 1764764818.369021,
+    "ast_hash": "e11f6b3969454ee6ac010c204fc37eb2",
+    "semantic_hash": "e11f6b3969454ee6ac010c204fc37eb2"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/Subviews/ReadReceiptsSheet.swift": {
+    "mtime": 1764764818.3690293,
+    "ast_hash": "a779cffcb1dcc0b2e2c97be8697106a9",
+    "semantic_hash": "a779cffcb1dcc0b2e2c97be8697106a9"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/ViewModels/ChatDetailViewModel.swift": {
+    "mtime": 1764764818.369411,
+    "ast_hash": "bef1ecda2c65111dda42bd82cac954d4",
+    "semantic_hash": "bef1ecda2c65111dda42bd82cac954d4"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/MessagesTabScreen/ViewModels/MessageListViewModel.swift": {
+    "mtime": 1764764818.3692245,
+    "ast_hash": "ee26eb169b2c22bf01b28a8967913c6c",
+    "semantic_hash": "ee26eb169b2c22bf01b28a8967913c6c"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/NotesTabScreen/Extensions/PocketBaseNote+Extensions.swift": {
+    "mtime": 1764764818.3691208,
+    "ast_hash": "023e94f5f08ad6ef759e823ec0df7fe3",
+    "semantic_hash": "023e94f5f08ad6ef759e823ec0df7fe3"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/NotesTabScreen/NotesView.swift": {
+    "mtime": 1764764818.3693109,
+    "ast_hash": "a66559f323c0399d5b01451e0217f219",
+    "semantic_hash": "a66559f323c0399d5b01451e0217f219"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/NotesTabScreen/NotesViewModel.swift": {
+    "mtime": 1764764818.36962,
+    "ast_hash": "fcf36685f355bf4ec5c54fcb70983567",
+    "semantic_hash": "fcf36685f355bf4ec5c54fcb70983567"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/NotesTabScreen/Subviews/EditNoteSheet.swift": {
+    "mtime": 1764764818.3696287,
+    "ast_hash": "b60625e8810dcdd8566f2d1a9d3f1547",
+    "semantic_hash": "b60625e8810dcdd8566f2d1a9d3f1547"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/NotesTabScreen/Subviews/ModernNoteCreator.swift": {
+    "mtime": 1764764818.3697531,
+    "ast_hash": "c6c92b3a28410e3f75e059a4d10ab986",
+    "semantic_hash": "c6c92b3a28410e3f75e059a4d10ab986"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/NotesTabScreen/Subviews/NoteCard.swift": {
+    "mtime": 1764764818.369847,
+    "ast_hash": "b00c822d1175e62dc5b548fb6a22a7bd",
+    "semantic_hash": "b00c822d1175e62dc5b548fb6a22a7bd"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/NotesTabScreen/Subviews/ShimmerNoteCard.swift": {
+    "mtime": 1764764818.3697333,
+    "ast_hash": "b3168e24cff6fb021d2cbd37060c4012",
+    "semantic_hash": "b3168e24cff6fb021d2cbd37060c4012"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/Settings/LanguageSelectionSheet.swift": {
+    "mtime": 1764764818.37028,
+    "ast_hash": "9b60e148c7090643a6fd40d1c7a5cc64",
+    "semantic_hash": "9b60e148c7090643a6fd40d1c7a5cc64"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift": {
+    "mtime": 1764764818.3701966,
+    "ast_hash": "2f4c45e54a3b4bbd3f1889f9058d59d3",
+    "semantic_hash": "2f4c45e54a3b4bbd3f1889f9058d59d3"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Modules/TabBarSubScreens/Settings/ThemeSelectionSheet.swift": {
+    "mtime": 1764764818.369997,
+    "ast_hash": "b9ecc9cd12d473d8a1d7dcd7ba0ed40e",
+    "semantic_hash": "b9ecc9cd12d473d8a1d7dcd7ba0ed40e"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/NestZoneApp.swift": {
+    "mtime": 1764764818.370389,
+    "ast_hash": "7bff843bc8b6b1ac08bcf41598ff3a52",
+    "semantic_hash": "7bff843bc8b6b1ac08bcf41598ff3a52"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/MessagesManager.swift": {
+    "mtime": 1764764818.3701406,
+    "ast_hash": "ed1f69932465537dcdd52f35586007e4",
+    "semantic_hash": "ed1f69932465537dcdd52f35586007e4"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/PocketBaseAuthDTOs.swift": {
+    "mtime": 1764764818.3703241,
+    "ast_hash": "347486cfd7ed159ed3a917b63e3f53a0",
+    "semantic_hash": "347486cfd7ed159ed3a917b63e3f53a0"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/PocketBaseAuthManager.swift": {
+    "mtime": 1764764818.3704815,
+    "ast_hash": "c3243e1c69ecaffd33632870b988f60c",
+    "semantic_hash": "c3243e1c69ecaffd33632870b988f60c"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/PocketBaseManager.swift": {
+    "mtime": 1764764818.3705537,
+    "ast_hash": "623dd292d19f46ef139c05cd110f8db9",
+    "semantic_hash": "623dd292d19f46ef139c05cd110f8db9"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/PocketBaseModels.swift": {
+    "mtime": 1764764818.3707407,
+    "ast_hash": "9a431e1cf8ecbdbb4597745c5a2cb0dd",
+    "semantic_hash": "9a431e1cf8ecbdbb4597745c5a2cb0dd"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/PocketBaseRealtimeManager.swift": {
+    "mtime": 1764764818.3708553,
+    "ast_hash": "91ada915975567b7808d3823da8dc26d",
+    "semantic_hash": "91ada915975567b7808d3823da8dc26d"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/SampleRecipeLoader.swift": {
+    "mtime": 1764764818.370813,
+    "ast_hash": "91edec59f51ed6bf9738773bee998f88",
+    "semantic_hash": "91edec59f51ed6bf9738773bee998f88"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Network/UserService.swift": {
+    "mtime": 1764764818.3708966,
+    "ast_hash": "a275dc10ec145b529607c6bcde08eac7",
+    "semantic_hash": "a275dc10ec145b529607c6bcde08eac7"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Utilities/Color+Hex.swift": {
+    "mtime": 1764764818.370924,
+    "ast_hash": "7e10575c2ff08a539344310c4f9676a8",
+    "semantic_hash": "7e10575c2ff08a539344310c4f9676a8"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Utilities/ColorScheme.swift": {
+    "mtime": 1764764818.3709764,
+    "ast_hash": "954317a2fa674b9b21c4a8c9dbf196db",
+    "semantic_hash": "954317a2fa674b9b21c4a8c9dbf196db"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZoneTests/NestZoneTests.swift": {
+    "mtime": 1764756044.628694,
+    "ast_hash": "0ebd1d78707e3a4a153dc48230bf87d4",
+    "semantic_hash": "0ebd1d78707e3a4a153dc48230bf87d4"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZoneUITests/NestZoneUITests.swift": {
+    "mtime": 1764756044.6287358,
+    "ast_hash": "3fd4b3aa947310077a2a093bb78476dc",
+    "semantic_hash": "3fd4b3aa947310077a2a093bb78476dc"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZoneUITests/NestZoneUITestsLaunchTests.swift": {
+    "mtime": 1764756044.6287668,
+    "ast_hash": "386ef953cd370cb382dd662a148ba359",
+    "semantic_hash": "386ef953cd370cb382dd662a148ba359"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/Docs/PocketBase/README.md": {
+    "mtime": 1764764818.356574,
+    "ast_hash": "57cb4bd68be4f5a215d1f015daa5998a",
+    "semantic_hash": "57cb4bd68be4f5a215d1f015daa5998a"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Assets.xcassets/AppIcon.appiconset/ChatGPT Image Aug 11, 2025 at 02_05_45 PM 1.png": {
+    "mtime": 1764764818.360342,
+    "ast_hash": "51cd70ed88b8db9d532b315ca279476f",
+    "semantic_hash": "51cd70ed88b8db9d532b315ca279476f"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Assets.xcassets/AppIcon.appiconset/ChatGPT Image Aug 11, 2025 at 02_05_45 PM 2.png": {
+    "mtime": 1764764818.3608177,
+    "ast_hash": "51cd70ed88b8db9d532b315ca279476f",
+    "semantic_hash": "51cd70ed88b8db9d532b315ca279476f"
+  },
+  "/Users/muratcankoc/Documents/Projects/NestZone/NestZone/Assets.xcassets/AppIcon.appiconset/ChatGPT Image Aug 11, 2025 at 02_05_45 PM.png": {
+    "mtime": 1764764818.36202,
+    "ast_hash": "51cd70ed88b8db9d532b315ca279476f",
+    "semantic_hash": "51cd70ed88b8db9d532b315ca279476f"
+  }
+}
