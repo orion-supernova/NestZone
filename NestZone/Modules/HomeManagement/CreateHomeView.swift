@@ -10,7 +10,6 @@ struct CreateHomeView: View {
     
     @State private var homeName = ""
     @State private var homeAddress = ""
-    @State private var animateFields = false
     @State private var showSuccess = false
     @FocusState private var isNameFieldFocused: Bool
     @FocusState private var isAddressFieldFocused: Bool
@@ -32,8 +31,6 @@ struct CreateHomeView: View {
                                         )
                                     )
                                     .frame(width: 80, height: 80)
-                                    .scaleEffect(animateFields ? 1 : 0.8)
-                                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animateFields)
                                 
                                 Image(systemName: "house.fill")
                                     .font(.system(size: 32, weight: .semibold))
@@ -44,10 +41,10 @@ struct CreateHomeView: View {
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                    .scaleEffect(animateFields ? 1 : 0.6)
-                                    .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2), value: animateFields)
+
                             }
-                            
+                            .appear(step: 0)
+
                             VStack(spacing: 8) {
                                 Text("Create New Home")
                                     .font(.system(size: 24, weight: .bold, design: .rounded))
@@ -57,9 +54,7 @@ struct CreateHomeView: View {
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
                             }
-                            .opacity(animateFields ? 1 : 0)
-                            .offset(y: animateFields ? 0 : 20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animateFields)
+                            .appear(step: 1)
                         }
                         .padding(.top, 24)
                         
@@ -74,9 +69,7 @@ struct CreateHomeView: View {
                             )
                             .autocorrectionDisabled()
                             .focused($isNameFieldFocused)
-                            .opacity(animateFields ? 1 : 0)
-                            .offset(x: animateFields ? 0 : -20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animateFields)
+                            .appear(step: 2)
                             
                             PremiumTextField(
                                 title: LocalizationManager.createHomeAddressLabel,
@@ -87,9 +80,7 @@ struct CreateHomeView: View {
                             )
                             .autocorrectionDisabled()
                             .focused($isAddressFieldFocused)
-                            .opacity(animateFields ? 1 : 0)
-                            .offset(x: animateFields ? 0 : -20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.5), value: animateFields)
+                            .appear(step: 3)
                         }
                         .padding(.horizontal, 24)
                         
@@ -111,9 +102,9 @@ struct CreateHomeView: View {
                                     )
                                 }
                             }
-                            .opacity(animateFields ? 1 : 0)
-                            .offset(y: animateFields ? 0 : 20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.6), value: animateFields)
+                            .appear(step: 4)
+                            .buttonStyle(.pressable)
+                            .shake(trigger: viewModel.errorShakeCount)
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, geometry.safeAreaInsets.bottom + 16)
@@ -132,10 +123,7 @@ struct CreateHomeView: View {
             }
         }
         .onAppear {
-            withAnimation {
-                animateFields = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
                 isNameFieldFocused = true
             }
         }

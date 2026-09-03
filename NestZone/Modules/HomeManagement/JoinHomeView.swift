@@ -9,7 +9,6 @@ struct JoinHomeView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     @State private var inviteCode = ""
-    @State private var animateFields = false
     @State private var showSuccess = false
     @FocusState private var isCodeFieldFocused: Bool
     
@@ -34,8 +33,6 @@ struct JoinHomeView: View {
                                         )
                                     )
                                     .frame(width: 80, height: 80)
-                                    .scaleEffect(animateFields ? 1 : 0.8)
-                                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animateFields)
                                 
                                 Image(systemName: "person.2.fill")
                                     .font(.system(size: 32, weight: .semibold))
@@ -46,8 +43,6 @@ struct JoinHomeView: View {
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                    .scaleEffect(animateFields ? 1 : 0.6)
-                                    .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2), value: animateFields)
                             }
                             
                             VStack(spacing: 8) {
@@ -60,9 +55,7 @@ struct JoinHomeView: View {
                                     .foregroundColor(selectedTheme.colors(for: colorScheme).textSecondary)
                                     .multilineTextAlignment(.center)
                             }
-                            .opacity(animateFields ? 1 : 0)
-                            .offset(y: animateFields ? 0 : 20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animateFields)
+                            .appear(step: 3)
                         }
                         .padding(.top, 24)
                         .padding(.horizontal, 24)
@@ -78,9 +71,7 @@ struct JoinHomeView: View {
                             )
                             .autocorrectionDisabled()
                             .focused($isCodeFieldFocused)
-                            .opacity(animateFields ? 1 : 0)
-                            .offset(x: animateFields ? 0 : -20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animateFields)
+                            .appear(step: 4)
                         }
                         .padding(.horizontal, 24)
                         
@@ -101,9 +92,9 @@ struct JoinHomeView: View {
                                     )
                                 }
                             }
-                            .opacity(animateFields ? 1 : 0)
-                            .offset(y: animateFields ? 0 : 20)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.5), value: animateFields)
+                            .appear(step: 5)
+                            .buttonStyle(.pressable)
+                            .shake(trigger: viewModel.errorShakeCount)
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 32)
@@ -122,9 +113,6 @@ struct JoinHomeView: View {
             }
         }
         .onAppear {
-            withAnimation {
-                animateFields = true
-            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isCodeFieldFocused = true
             }

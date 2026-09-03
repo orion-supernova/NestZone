@@ -8,6 +8,9 @@ class HomeManagementViewModel: ObservableObject {
     @Published var showError = false
     @Published var homeCreated = false
     @Published var homeJoined = false
+    /// Incremented on every rejection so the submit button can shake. A counter
+    /// rather than a Bool, so two identical errors in a row still register.
+    @Published var errorShakeCount = 0
     
     func createHome(name: String, address: String?, authManager: ConvexAuthManager) async {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -68,6 +71,7 @@ class HomeManagementViewModel: ObservableObject {
     
     private func showErrorMessage(_ message: String) {
         errorMessage = message
+        errorShakeCount += 1
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             showError = true
         }

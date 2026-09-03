@@ -11,9 +11,6 @@ struct AuthenticationScreen: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
 
-    @State private var animateHeader = false
-    @State private var animateContent = false
-
     private var theme: ThemeColors {
         selectedTheme.colors(for: colorScheme)
     }
@@ -25,19 +22,16 @@ struct AuthenticationScreen: View {
                     header
                         .padding(.horizontal, 24)
                         .padding(.top, 24)
-                        .opacity(animateHeader ? 1 : 0)
-                        .offset(y: animateHeader ? 0 : -40)
+                        .appear(step: 0)
 
                     explainer
                         .padding(.horizontal, 24)
-                        .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 20)
+                        .appear(step: 1)
 
                     signInWithAppleButton
                         .padding(.horizontal, 24)
                         .padding(.top, 8)
-                        .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 40)
+                        .appear(step: 2)
 
                     Spacer(minLength: 60)
                 }
@@ -45,10 +39,6 @@ struct AuthenticationScreen: View {
             .background(background)
             .navigationTitle(LocalizationManager.authSignInTitle)
             .navigationBarTitleDisplayMode(.inline)
-        }
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.8)) { animateHeader = true }
-            withAnimation(.easeOut(duration: 1.0).delay(0.2)) { animateContent = true }
         }
         .alert(LocalizationManager.commonErrorTitle, isPresented: .constant(viewModel.errorMessage != nil)) {
             Button(LocalizationManager.commonOkButton) {
@@ -87,6 +77,7 @@ struct AuthenticationScreen: View {
             } label: {
                 Color.clear.frame(height: 52).contentShape(Rectangle())
             }
+            .buttonStyle(.pressable)
             .disabled(viewModel.isLoading)
 
             if viewModel.isLoading {
@@ -98,65 +89,28 @@ struct AuthenticationScreen: View {
         .accessibilityLabel(Text("Sign in with Apple"))
     }
 
-        private var background: some View {
-            ZStack {
-                RadialGradient(
-                    colors: [
-                        theme.background,
-                        theme.primaryColor.opacity(0.08),
-                        theme.accent.opacity(0.06)
-                    ],
-                    center: .topLeading,
-                    startRadius: 0,
-                    endRadius: 1200
-                )
-                GeometryReader { geo in
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    (theme.secondary.first ?? theme.primaryColor).opacity(0.22),
-                                    (theme.secondary.first ?? theme.primaryColor).opacity(0.05)
-                                ],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 80
-                            )
-                        )
-                        .frame(width: 140, height: 140)
-                        .offset(x: -50, y: geo.size.height * 0.22)
-                        .blur(radius: 26)
-                    
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [theme.primaryColor.opacity(0.26), theme.primaryColor.opacity(0.06)],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 90
-                            )
-                        )
-                        .frame(width: 160, height: 160)
-                        .offset(x: geo.size.width - 70, y: geo.size.height * 0.58)
-                        .blur(radius: 30)
-                    
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [theme.accent.opacity(0.22), theme.accent.opacity(0.05)],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 70
-                            )
-                        )
-                        .frame(width: 120, height: 120)
-                        .offset(x: geo.size.width * 0.35, y: geo.size.height * 0.12)
-                        .blur(radius: 24)
-                }
-            }
-            .ignoresSafeArea()    }
+        /// Deliberately plain: a soft vertical wash and one very low-contrast
+    /// shape. The old version stacked three blurred radial "glow" circles, which
+    /// fought with the content and cost a full-screen blur every frame.
+    private var background: some View {
+        ZStack(alignment: .top) {
+            LinearGradient(
+                colors: [
+                    theme.primaryColor.opacity(colorScheme == .dark ? 0.14 : 0.07),
+                    theme.background
+                ],
+                startPoint: .top,
+                endPoint: .center
+            )
+            Circle()
+                .fill(theme.primaryColor.opacity(0.05))
+                .frame(width: 320, height: 320)
+                .offset(y: -190)
+        }
+        .ignoresSafeArea()
+    }
 
-        private var header: some View {
+    private var header: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(LocalizationManager.authWelcomeTitle)
