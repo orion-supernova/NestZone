@@ -1,0 +1,245 @@
+{
+  "collections": [
+    {
+      "name": "polls",
+      "type": "base",
+      "schema": [
+        {
+          "name": "home_id",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "homes",
+            "cascadeDelete": false,
+            "maxSelect": 1,
+            "displayFields": null
+          }
+        },
+        {
+          "name": "owner_id",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "users",
+            "cascadeDelete": false,
+            "maxSelect": 1,
+            "displayFields": null
+          }
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": false,
+          "options": {
+            "min": null,
+            "max": 160,
+            "pattern": ""
+          }
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "required": true,
+          "options": {
+            "maxSelect": 1,
+            "values": ["movie", "recipe", "generic"]
+          }
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "options": {
+            "maxSelect": 1,
+            "values": ["draft", "active", "closed"]
+          }
+        },
+        {
+          "name": "config",
+          "type": "json",
+          "required": false,
+          "options": {}
+        },
+        {
+          "name": "candidates",
+          "type": "json",
+          "required": false,
+          "options": {}
+        },
+        {
+          "name": "genre",
+          "type": "text",
+          "required": false,
+          "options": {
+            "min": null,
+            "max": 64,
+            "pattern": ""
+          }
+        },
+        {
+          "name": "expires_at",
+          "type": "date",
+          "required": false,
+          "options": {}
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX polls_home_status ON polls (home_id, status)",
+        "CREATE INDEX polls_owner ON polls (owner_id)"
+      ],
+      "listRule": "@request.auth.id != '' && @collection('homes').get(record.home_id).members ?~ @request.auth.id",
+      "viewRule": "@request.auth.id != '' && @collection('homes').get(record.home_id).members ?~ @request.auth.id",
+      "createRule": "@request.auth.id != '' && @collection('homes').get(@request.data.home_id).members ?~ @request.auth.id && @request.data.owner_id = @request.auth.id && @request.data.status in ['draft','active','closed'] && @request.data.type in ['movie','recipe','generic']",
+      "updateRule": "@request.auth.id != '' && record.owner_id = @request.auth.id && @collection('homes').get(record.home_id).members ?~ @request.auth.id",
+      "deleteRule": "@request.auth.id != '' && record.owner_id = @request.auth.id && @collection('homes').get(record.home_id).members ?~ @request.auth.id"
+    },
+    {
+      "name": "poll_items",
+      "type": "base",
+      "schema": [
+        {
+          "name": "poll_id",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "polls",
+            "cascadeDelete": true,
+            "maxSelect": 1,
+            "displayFields": null
+          }
+        },
+        {
+          "name": "entity_type",
+          "type": "select",
+          "required": false,
+          "options": {
+            "maxSelect": 1,
+            "values": ["movie", "recipe", "generic"]
+          }
+        },
+        {
+          "name": "external_id",
+          "type": "text",
+          "required": true,
+          "options": {
+            "min": 2,
+            "max": 128,
+            "pattern": ""
+          }
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "required": false,
+          "options": {
+            "min": 0,
+            "max": 200,
+            "pattern": ""
+          }
+        },
+        {
+          "name": "thumbnail_url",
+          "type": "text",
+          "required": false,
+          "options": {
+            "min": 0,
+            "max": 300,
+            "pattern": ""
+          }
+        },
+        {
+          "name": "payload",
+          "type": "json",
+          "required": false,
+          "options": {}
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "required": false,
+          "options": {
+            "min": 0,
+            "max": 1000000,
+            "noDecimal": true
+          }
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX poll_items_poll ON poll_items (poll_id)",
+        "CREATE UNIQUE INDEX poll_items_unique ON poll_items (poll_id, external_id)"
+      ],
+      "listRule": "@request.auth.id != '' && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id",
+      "viewRule": "@request.auth.id != '' && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id",
+      "createRule": "@request.auth.id != '' && @collection('homes').get(@collection('polls').get(@request.data.poll_id).home_id).members ?~ @request.auth.id && @collection('polls').get(@request.data.poll_id).status = 'active'",
+      "updateRule": "@request.auth.id != '' && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id && @collection('polls').get(record.poll_id).owner_id = @request.auth.id",
+      "deleteRule": "@request.auth.id != '' && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id && @collection('polls').get(record.poll_id).owner_id = @request.auth.id"
+    },
+    {
+      "name": "poll_votes",
+      "type": "base",
+      "schema": [
+        {
+          "name": "poll_id",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "polls",
+            "cascadeDelete": true,
+            "maxSelect": 1,
+            "displayFields": null
+          }
+        },
+        {
+          "name": "item_id",
+          "type": "relation",
+          "required": false,
+          "options": {
+            "collectionId": "poll_items",
+            "cascadeDelete": true,
+            "maxSelect": 1,
+            "displayFields": null
+          }
+        },
+        {
+          "name": "target_external_id",
+          "type": "text",
+          "required": false,
+          "options": {
+            "min": 2,
+            "max": 128,
+            "pattern": ""
+          }
+        },
+        {
+          "name": "vote",
+          "type": "bool",
+          "required": true,
+          "options": {}
+        },
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "users",
+            "cascadeDelete": false,
+            "maxSelect": 1,
+            "displayFields": null
+          }
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX poll_votes_poll ON poll_votes (poll_id)",
+        "CREATE INDEX poll_votes_item ON poll_votes (item_id)",
+        "CREATE INDEX poll_votes_user ON poll_votes (user_id)",
+        "CREATE UNIQUE INDEX poll_votes_unique_item ON poll_votes (poll_id, item_id, user_id)",
+        "CREATE UNIQUE INDEX poll_votes_unique_external ON poll_votes (poll_id, target_external_id, user_id)"
+      ],
+      "listRule": "@request.auth.id != '' && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id",
+      "viewRule": "@request.auth.id != '' && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id",
+      "createRule": "@request.auth.id != '' && @collection('polls').get(@request.data.poll_id).status = 'active' && @collection('homes').get(@collection('polls').get(@request.data.poll_id).home_id).members ?~ @request.auth.id && @request.data.user_id = @request.auth.id && ((@request.data.item_id != '' && @request.data.target_external_id = '') || (@request.data.item_id = '' && @request.data.target_external_id != ''))",
+      "updateRule": "@request.auth.id != '' && record.user_id = @request.auth.id && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id",
+      "deleteRule": "@request.auth.id != '' && record.user_id = @request.auth.id && @collection('homes').get(@collection('polls').get(record.poll_id).home_id).members ?~ @request.auth.id"
+    }
+  ]
+}

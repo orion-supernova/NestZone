@@ -1,6 +1,7 @@
 import Foundation
 
-struct HouseTask: Identifiable {
+// Local view model for tasks
+struct HouseTaskViewModel: Identifiable {
     let id: UUID = UUID()
     let title: String
     let assignedTo: String

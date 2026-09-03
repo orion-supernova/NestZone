@@ -1,0 +1,140 @@
+// One-shot PocketBase -> Convex importer (two-pass, relation-remapping).
+//
+// SECURITY: this is a public mutation guarded by a shared secret so the runner
+// script can call it over the self-hosted deployment URL. DELETE THIS FILE
+// (and redeploy) once the migration is done.
+//
+// How it works:
+//   Pass 1 - insert every doc WITHOUT relation fields; record pbId -> Convex _id.
+//   Pass 2 - patch each doc, mapping the stored PocketBase ids to Convex ids.
+// This ordering is cycle-safe (users<->homes, conversations<->messages).
+
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+// Which fields are relations, their target table, and whether multi-valued.
+const RELATIONS: Record<string, Record<string, { table: string; multi?: boolean }>> = {
+  users: { home_id: { table: "homes", multi: true } },
+  homes: { members: { table: "users", multi: true } },
+  tasks: {
+    created_by: { table: "users" },
+    updated_by: { table: "users" },
+    assigned_to: { table: "users" },
+    home_id: { table: "homes" },
+  },
+  shopping_items: {
+    created_by: { table: "users" },
+    updated_by: { table: "users" },
+    home_id: { table: "homes" },
+  },
+  notes: { created_by: { table: "users" }, home_id: { table: "homes" } },
+  conversations: {
+    participants: { table: "users", multi: true },
+    home_id: { table: "homes" },
+  },
+  messages: {
+    sender_id: { table: "users" },
+    read_by: { table: "users", multi: true },
+    conversation_id: { table: "conversations" },
+  },
+  recipes: { home_id: { table: "homes" }, created_by: { table: "users" } },
+  polls: { home_id: { table: "homes" } },
+  poll_items: { poll_id: { table: "polls" } },
+  poll_votes: { poll_id: { table: "polls" }, user_id: { table: "users" } },
+  movies: { home_id: { table: "homes" }, list_id: { table: "movie_lists" } },
+  movie_lists: { home_id: { table: "homes" } },
+};
+
+const TABLES = Object.keys(RELATIONS);
+
+// Drop null/undefined/"" so v.optional fields validate (and selects stay clean).
+function clean(obj: Record<string, any>) {
+  const out: Record<string, any> = {};
+  for (const [k, val] of Object.entries(obj)) {
+    if (val === null || val === undefined || val === "") continue;
+    out[k] = val;
+  }
+  return out;
+}
+
+export const importAll = mutation({
+  args: {
+    secret: v.string(),
+    // data: { tableName: [ {pbId, ...fields}, ... ] }
+    data: v.any(),
+    wipe: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { secret, data, wipe }) => {
+    if (secret !== process.env.MIGRATION_SECRET) {
+      throw new Error("Bad migration secret.");
+    }
+
+    // Idempotency guard: refuse to double-import unless wipe=true.
+    const already = await ctx.db
+      .query("users")
+      .withIndex("by_pbId", (q) => q.gt("pbId", ""))
+      .first();
+    if (already && !wipe) {
+      throw new Error(
+        "Looks already migrated (users with pbId exist). Re-run with wipe:true to clear & reimport.",
+      );
+    }
+    if (wipe) {
+      for (const t of TABLES) {
+        for await (const doc of ctx.db.query(t as any)) {
+          await ctx.db.delete(doc._id);
+        }
+      }
+    }
+
+    // ---- Pass 1: insert without relations ----
+    const idMap: Record<string, Record<string, any>> = {}; // table -> pbId -> _id
+    const counts: Record<string, number> = {};
+    for (const table of TABLES) {
+      idMap[table] = {};
+      const rows: any[] = data[table] ?? [];
+      const relFields = RELATIONS[table];
+      for (const row of rows) {
+        const doc: Record<string, any> = {};
+        for (const [k, val] of Object.entries(row)) {
+          if (k in relFields) continue; // strip relations for now
+          doc[k] = val;
+        }
+        const newId = await ctx.db.insert(table as any, clean(doc));
+        idMap[table][row.pbId] = newId;
+      }
+      counts[table] = rows.length;
+    }
+
+    // ---- Pass 2: patch relations (pbId -> Convex _id) ----
+    let patched = 0;
+    for (const table of TABLES) {
+      const rows: any[] = data[table] ?? [];
+      const relFields = RELATIONS[table];
+      if (Object.keys(relFields).length === 0) continue;
+      for (const row of rows) {
+        const patch: Record<string, any> = {};
+        for (const [field, spec] of Object.entries(relFields)) {
+          const raw = row[field];
+          if (raw === null || raw === undefined || raw === "") continue;
+          const map = idMap[spec.table];
+          if (spec.multi) {
+            const arr = (Array.isArray(raw) ? raw : [raw])
+              .map((pb: string) => map[pb])
+              .filter(Boolean);
+            if (arr.length) patch[field] = arr;
+          } else {
+            const mapped = map[raw];
+            if (mapped) patch[field] = mapped;
+          }
+        }
+        if (Object.keys(patch).length) {
+          await ctx.db.patch(idMap[table][row.pbId], patch);
+          patched++;
+        }
+      }
+    }
+
+    return { inserted: counts, patched };
+  },
+});
