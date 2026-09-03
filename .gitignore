@@ -2,8 +2,9 @@
 .DS_Store
 **/.DS_Store
 
-# Xcode
-NestZone.xcodeproj/xcuserdata/muratcankoc.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
+# Xcode — per-developer UI state, never shared. Tracking xcschememanagement.plist
+# made every build dirty the tree and blocked merges.
+**/xcuserdata/
 *.xcuserstate
 
 # PocketBase -> Convex migration source data.
