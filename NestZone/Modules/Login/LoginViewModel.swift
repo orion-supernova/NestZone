@@ -16,6 +16,10 @@ class LoginViewModel: ObservableObject {
 
     // MARK: - Public Methods
     func signInWithApple(authManager: ConvexAuthManager) async {
+        // Re-entrancy guard: two taps in the same frame both queue a Task
+        // before `isLoading` is published, so the disabled state alone is not enough.
+        guard !isLoading else { return }
+
         isLoading = true
         errorMessage = nil
         do {

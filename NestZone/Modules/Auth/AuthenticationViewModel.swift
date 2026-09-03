@@ -9,6 +9,10 @@ class AuthenticationViewModel: ObservableObject {
     /// whether this is a first authorization and the backend creates the account
     /// on demand, so one button covers both cases.
     func signInWithApple(authManager: ConvexAuthManager) async {
+        // Re-entrancy guard: two taps in the same frame both queue a Task
+        // before `isLoading` is published, so the disabled state alone is not enough.
+        guard !isLoading else { return }
+
         isLoading = true
         errorMessage = nil
 

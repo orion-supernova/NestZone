@@ -583,6 +583,11 @@ extension LocalizationManager {
     // MARK: - Switch Home
     static var switchHomeButton: String { t("home_selection_switch_title") }
     static var manageHomesButton: String { t("manage_homes_button") }
+    static var commonSave: String { t("common_save") }
+    static var profileNameTitle: String { t("profile_name_title") }
+    static var profileNamePlaceholder: String { t("profile_name_placeholder") }
+    static var profileNameFootnote: String { t("profile_name_footnote") }
+    static var profileNameAdd: String { t("profile_name_add") }
     
     // MARK: - Join Another Home
     static var joinAnotherHomeButton: String { t("join_another_home_button") }

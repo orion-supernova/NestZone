@@ -193,6 +193,10 @@ struct NewMessageView: View {
     }
     
     private func createGroupChat() async {
+        // Re-entrancy guard: two taps in the same frame both queue a Task
+        // before `isLoading` is published, so the disabled state alone is not enough.
+        guard !isLoading else { return }
+
         guard let currentUser = authManager.currentUser,
               let home = home else {
             errorMessage = LocalizationManager.messagesNewGroupErrorMissingInfo

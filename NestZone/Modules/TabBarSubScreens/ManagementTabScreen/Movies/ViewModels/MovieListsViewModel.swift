@@ -124,6 +124,10 @@ class MovieListsViewModel: ObservableObject {
     }
     
     func createCustomList(name: String, description: String) async {
+        // Re-entrancy guard: two taps in the same frame both queue a Task
+        // before `isLoading` is published, so the disabled state alone is not enough.
+        guard !isLoading else { return }
+
         do {
             let newList = try await movieListsManager.createCustomList(name: name, description: description)
             customLists.append(newList)

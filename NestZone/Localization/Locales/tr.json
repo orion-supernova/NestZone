@@ -1,10 +1,8 @@
 {
   "_____SETTINGS_____": "================ AYARLAR ================",
-
   "settings_screen_title": "Ayarlar",
   "settings_profile_welcome_back": "Tekrar hoş geldin!",
   "settings_profile_customize_experience": "Deneyimini kişiselleştir",
-
   "settings_home_management_title": "Ev Yönetimi",
   "settings_current_home_title": "Mevcut Ev",
   "settings_members_singular": "üye",
@@ -12,26 +10,19 @@
   "settings_invite_code_title": "Davet Kodu",
   "settings_invite_code_copy_button": "Kopyala",
   "settings_invite_code_help_text": "Bu kodu evdeki kişilerle paylaşarak evinize katılmalarını sağlayın",
-
   "settings_appearance_title": "Görünüm",
   "settings_theme_title": "Tema",
   "settings_language_title": "Dil",
-
   "settings_theme_choose_title": "Tema Seç",
   "settings_language_choose_title": "Dil Seç",
-
   "settings_account_title": "Hesap",
   "settings_profile_title": "Profil",
   "settings_notifications_title": "Bildirimler",
-
   "settings_general_title": "Genel",
   "settings_help_title": "Yardım",
   "settings_about_title": "Hakkında",
-
   "settings_logout_button_title": "Çıkış Yap",
-
   "_____COMMON_____": "================ GENEL ================",
-
   "common_done": "Tamam",
   "common_error_title": "Hata",
   "common_ok_button": "Tamam",
@@ -42,42 +33,32 @@
   "common_close": "Kapat",
   "common_create": "Oluştur",
   "user_unknown": "Bilinmeyen Kullanıcı",
-
   "_____TAB_BAR_____": "================ SEKME ÇUBUĞU ================",
-
   "tab_bar_home": "Ana Sayfa",
   "tab_bar_hub": "Merkez",
   "tab_bar_notes": "Notlar",
   "tab_bar_messages": "Mesajlar",
   "tab_bar_settings": "Ayarlar",
   "tab_bar_loading": "Yükleniyor...",
-
   "_____HOME_TAB_____": "================ ANA SEKME ================",
-
   "home_hello_user": "Merhaba %@!",
   "home_header_subtitle": "Paylaşılan evinizi birlikte yönetin!",
   "home_minigames_title": "Mini Oyunlar",
   "home_minigames_watch_title": "Bu akşam ne izleyelim",
   "home_minigames_watch_description": "Bu akşam ne izleyeceğinize karar veremiyor musunuz? Hadi küçük bir oyunla seçelim!",
-
   "home_stats_title": "Ev İstatistikleri",
   "home_stats_notes_title": "Notlar",
   "home_stats_shopping_title": "Alışveriş",
   "home_stats_issues_title": "Sorunlar",
   "home_stats_tasks_done_title": "Tamamlanan Görevler",
-
   "_____NOTES_TAB_____": "================ NOTLAR SEKMESI ================",
-
   "notes_screen_title": "Notlar",
   "notes_empty_state_title": "Henüz Not Yok",
   "notes_empty_state_subtitle": "İlk aile notunuzu oluşturun\nve düşüncelerinizi paylaşmaya başlayın",
-
   "_____MANAGEMENT_TAB_____": "================ YÖNETİM SEKMESI ================",
-
   "management_screen_title": "Yönetim Merkezi",
   "management_header_title": "Yönetim Merkezi 🏠",
   "management_header_subtitle": "Her şeyi tek yerden yönetin! ✨",
-
   "management_module_shopping_title": "Alışveriş Listeleri",
   "management_module_shopping_subtitle": "Alışveriş listelerinizi yönetin",
   "management_module_recipes_title": "Tarifler",
@@ -92,11 +73,8 @@
   "management_module_notes_subtitle": "Fikirleri ve önemli notları kaydedin",
   "management_module_calendar_title": "Takvim ve Etkinlikler",
   "management_module_calendar_subtitle": "Etkinlikleri ve programları organize edin",
-
   "management_coming_soon": "Yakında!",
-
   "_____SHOPPING_____": "================ ALIŞVERİŞ ================",
-
   "shopping_screen_title": "Alışveriş Listeleri",
   "shopping_header_title": "Alışveriş Listeleri 🛒",
   "shopping_header_subtitle": "İhtiyacınız olan her şeyi temin edelim! ✨",
@@ -114,12 +92,10 @@
   "shopping_add_item_title": "Ürün Ekle",
   "shopping_delete_item_title": "Ürünü Sil",
   "shopping_delete_item_message": "Bu ürünü silmek istediğinizden emin misiniz?",
-
   "shopping_category_groceries": "Market",
   "shopping_category_household": "Ev Eşyaları",
   "shopping_category_cleaning": "Temizlik",
   "shopping_category_other": "Diğer",
-
   "shopping_add_item_details": "Ürün Detayları",
   "shopping_add_item_name": "Ürün Adı",
   "shopping_add_item_description": "Açıklama (İsteğe Bağlı)",
@@ -128,9 +104,7 @@
   "shopping_add_item_category": "Kategori",
   "shopping_add_item_cancel": "İptal",
   "shopping_add_item_add": "Ekle",
-
   "_____RECIPES_____": "================ TARIFLER ================",
-
   "recipes_explore_button": "Tarifleri Keşfet",
   "recipes_delete_button": "Sil",
   "recipes_screen_title": "Tarifler",
@@ -141,13 +115,11 @@
   "recipes_tag_all": "Tümü",
   "recipes_empty_state_title": "Henüz tarif yok",
   "recipes_empty_state_subtitle": "İlk tarifinizi ekleyin ve yemek planlamaya başlayın!",
-
   "recipes_explore_add_to_my_recipes": "Tariflerime Ekle",
   "recipes_explore_screen_title": "Tarifleri Keşfet",
   "recipes_explore_close_button": "Kapat",
   "recipes_explore_header_title": "Özenle seçildi ✨",
   "recipes_explore_header_subtitle": "Dünya favorileri ve Türk klasiklerini keşfedin",
-
   "recipes_explore_filters_title": "Filtreler",
   "recipes_explore_filters_clear_all": "Tümünü Temizle",
   "recipes_explore_filters_no_recipes_found": "Tarif bulunamadı",
@@ -164,14 +136,12 @@
   "recipes_explore_filter_servings_any": "Herhangi",
   "recipes_explore_filter_recipe_found_singular": "tarif bulundu",
   "recipes_explore_filter_recipe_found_plural": "tarif bulundu",
-
   "recipes_explore_filter_max_time_label": "Maks. Süre",
   "recipes_explore_filter_max_time_min_label": "10dk",
   "recipes_explore_filter_max_time_max_label": "5sa+",
   "recipes_explore_filter_max_servings_label": "Maks. Porsiyon",
   "recipes_explore_filter_max_servings_min_label": "1",
   "recipes_explore_filter_max_servings_max_label": "20+",
-
   "recipes_new_recipe_title_field": "Tarif Başlığı",
   "recipes_new_recipe_title_placeholder": "örn., Spagetti Carbonara",
   "recipes_new_recipe_description_field": "Açıklama",
@@ -189,7 +159,6 @@
   "recipes_new_recipe_difficulty_picker": "Zorluk",
   "recipes_new_recipe_ingredients_editor_title": "Malzemeler (her satıra bir tane)",
   "recipes_new_recipe_steps_editor_title": "Adımlar (her satıra bir tane)",
-
   "recipes_cooking_quit_alert_title": "Pişirmeyi Bırak",
   "recipes_cooking_quit_alert_quit_button": "Çık",
   "recipes_cooking_quit_alert_message": "Pişirmeyi bırakmak istediğinizden emin misiniz? İlerlemeniz kaybolacak.",
@@ -204,10 +173,8 @@
   "recipes_cooking_finish_button": "Bitir",
   "recipes_cooking_next_step_button": "Sonraki Adım",
   "recipes_cooking_step_card_title": "Adım %d / %d",
-
   "recipes_card_time_format": "%ddk",
   "recipes_card_time_not_specified": "—",
-
   "recipes_detail_time_total_format": "Toplam %d dk",
   "recipes_detail_time_not_specified": "Süre belirtilmemiş",
   "recipes_detail_start_preparing_button": "Hazırlamaya Başla",
@@ -219,13 +186,10 @@
   "recipes_detail_info_card_level": "Seviye",
   "recipes_detail_ingredients_section_title": "Malzemeler",
   "recipes_detail_instructions_section_title": "Talimatlar",
-
   "recipes_difficulty_easy": "Kolay",
   "recipes_difficulty_medium": "Orta",
   "recipes_difficulty_hard": "Zor",
-
   "_____MESSAGES_____": "================ MESAJLAR ================",
-
   "messages_screen_title": "Mesajlar",
   "messages_new_message_button": "Yeni Mesaj",
   "messages_empty_state_title": "Henüz Mesaj Yok",
@@ -237,7 +201,6 @@
   "messages_conversation_card_direct_message": "Direkt Mesaj",
   "messages_conversation_card_household_chat": "Ev Sohbeti",
   "messages_loading_conversations": "Sohbetler yükleniyor...",
-
   "messages_new_group_title": "Yeni Grup Sohbeti",
   "messages_new_group_cancel": "İptal",
   "messages_new_group_create": "Oluştur",
@@ -252,7 +215,6 @@
   "messages_new_group_creating": "Grup sohbeti oluşturuluyor...",
   "messages_new_group_error_missing_info": "Gerekli bilgiler eksik",
   "messages_new_group_error_creation_failed": "Grup sohbeti oluşturulamadı: %@",
-
   "messages_chat_header_back": "Geri",
   "messages_chat_loading": "Mesajlar yükleniyor...",
   "messages_chat_empty_title": "Sohbeti başlatın",
@@ -264,9 +226,7 @@
   "messages_chat_error_title": "Hata",
   "messages_chat_error_ok": "Tamam",
   "messages_chat_members_count": "%d üye",
-
   "_____MINIGAMES_____": "================ MİNİ OYUNLAR ================",
-
   "what_to_watch_title": "Bu akşam ne izleyelim",
   "what_to_watch_in_poll_instructions": "Evet için sağa, Hayır için sola kaydırın",
   "what_to_watch_no_in_poll_instructions": "Anketler oluşturun ve birlikte filmler keşfedin",
@@ -274,20 +234,16 @@
   "what_to_watch_loading_movies_details": "Anketiniz için film detayları getiriliyor...",
   "what_to_watch_creating_poll": "Film anketiniz oluşturuluyor...",
   "what_to_watch_creating_poll_details": "Kişiselleştirilmiş film seçiminizi hazırlarken biraz zaman alabilir",
-
   "what_to_watch_winner_announcement": "🎉 Kazananımız var! 🎉",
   "what_to_watch_winner_house_votes": "Bu film evinizdeki en çok oyu aldı!",
-
   "what_to_watch_end_poll": "Anketi Bitir",
   "what_to_watch_start_poll": "Film Anketi Başlat",
   "what_to_watch_previous_polls": "Önceki Anketler",
-
   "what_to_watch_poll_complete": "Anket Tamamlandı!",
   "what_to_watch_poll_complete_subtitle": "Tüm filmler incelendi",
   "what_to_watch_voting_progress": "Oylama İlerlemesi",
   "what_to_watch_waiting_stats": "Oylama istatistikleri bekleniyor...",
   "what_to_watch_voting_progress_count": "%d/%d",
-
   "poll_type_genre": "Tür",
   "poll_type_genre_description": "Türe göre film seçin",
   "poll_type_actor": "Oyuncu",
@@ -306,10 +262,8 @@
   "poll_type_top_rated_description": "Tüm zamanların en yüksek puanlı filmleri",
   "poll_type_upcoming": "Yakında",
   "poll_type_upcoming_description": "Yakında çıkacak filmler",
-
   "poll_type_selection_title": "Film Anketi Oluştur",
   "poll_type_selection_subtitle": "Birlikte filmleri nasıl keşfetmek istediğinizi seçin",
-
   "genre_selection_title": "Film Türlerinizi Seçin",
   "genre_selection_subtitle": "Film anketiniz için bir veya daha fazla tür seçin",
   "genre_selection_selected": "Seçilen:",
@@ -318,7 +272,6 @@
   "genre_selection_select_one_message": "Devam etmek için en az bir tür seçin",
   "genre_selection_include_adult": "Yetişkin İçerik Dahil Et",
   "genre_selection_include_adult_description": "Yetişkin temaları ve içeriği olan filmleri dahil et",
-
   "genre_action": "Aksiyon",
   "genre_action_description": "Patlamalar, dövüşler ve heyecan",
   "genre_adventure": "Macera",
@@ -339,35 +292,29 @@
   "genre_thriller_description": "Merak ve nefes kesen",
   "genre_animation": "Animasyon",
   "genre_animation_description": "Animasyon filmler ve çizgi filmler",
-
   "actor_input_title": "Oyuncuya Göre Ara",
   "actor_input_subtitle": "Favori oyuncunuzun adını girin",
   "actor_input_placeholder": "Oyuncu adı (örn., Tom Hanks)",
   "actor_input_create_poll": "Oyuncu Anketi Oluştur",
   "actor_input_creating_poll": "Anket Oluşturuluyor...",
-
   "director_input_title": "Yönetmene Göre Ara",
   "director_input_subtitle": "Bir film yönetmeninin adını girin",
   "director_input_placeholder": "Yönetmen adı (örn., Christopher Nolan)",
   "director_input_create_poll": "Yönetmen Anketi Oluştur",
   "director_input_creating_poll": "Anket Oluşturuluyor...",
-
   "year_input_title": "Yıla Göre Ara",
   "year_input_subtitle": "Belirli bir yıldan filmler seçin",
   "year_input_selected_year": "Seçilen Yıl",
   "year_input_create_poll": "%d Anketi Oluştur",
   "year_input_creating_poll": "Anket Oluşturuluyor...",
-
   "decade_input_title": "On Yıla Göre Ara",
   "decade_input_subtitle": "Belirli bir on yıldan filmler seçin",
   "decade_input_selected_decade": "Seçilen On Yıl",
   "decade_input_create_poll": "%d'ler Anketi Oluştur",
   "decade_input_creating_poll": "Anket Oluşturuluyor...",
-
   "swipe_card_like": "BEĞENDİM",
   "swipe_card_nope": "HAYIR",
   "swipe_card_tap_for_details": "Detaylar için dokun",
-
   "movie_details_title": "Film Detayları",
   "movie_details_genres": "Türler",
   "movie_details_overview": "Genel Bakış",
@@ -384,14 +331,12 @@
   "movie_details_keywords": "Anahtar Kelimeler",
   "movie_details_loading_details": "Detaylar yükleniyor...",
   "movie_details_minutes": "%d dk",
-
   "match_options_title": "Anket Eşleşmeleri",
   "match_options_matches_found": "🎉 Eşleşmeler Bulundu! 🎉",
   "match_options_matches_description": "Bu filmler ev üyelerinizden olumlu oy aldı",
   "match_options_continue_poll": "Ankete Devam Et",
   "match_options_choose_winner": "\"%@\"'yi Kazanan Olarak Seç",
   "match_options_end_poll_see_results": "Anketi Bitir ve Tüm Sonuçları Gör",
-
   "poll_summary_title": "Anket Sonuçları",
   "poll_summary_complete": "🏆 Anket Tamamlandı! 🏆",
   "poll_summary_description": "Evinizin nasıl oy verdiği",
@@ -400,7 +345,6 @@
   "poll_summary_matches": "Eşleşmeler",
   "poll_summary_winner": "🥇 Kazanan",
   "poll_summary_all_matches": "Tüm Eşleşmeler",
-
   "previous_polls_title": "Önceki Anketler",
   "previous_polls_loading": "Önceki anketler yükleniyor...",
   "previous_polls_empty": "Önceki Anket Yok",
@@ -411,13 +355,10 @@
   "previous_polls_movie_poll": "Film Anketi",
   "previous_polls_winner": "Kazanan:",
   "previous_polls_no_winner": "Kazanan belirlenmedi",
-
   "poll_controls_exit_poll": "Anketten Çık",
   "poll_controls_get_new_movies": "Yeni Filmler Al",
-
   "matches_section_popular_choices": "Popüler Seçimler",
   "matches_section_description": "Ev üyelerinden olumlu oy alan filmler",
-
   "poll_title_genre": "Tür Anketi: %d",
   "poll_title_actor": "Oyuncu Anketi: %d",
   "poll_title_director": "Yönetmen Anketi: %d",
@@ -428,20 +369,15 @@
   "poll_title_popular": "Popüler Filmler",
   "poll_title_top_rated": "En Çok Beğenilen Filmler",
   "poll_title_upcoming": "Yakında Çıkacak Filmler",
-
   "movie_details_add_to_lists": "Listelere Ekle",
   "movie_details_added_to_list": "%d listesine eklendi",
   "movie_lists_default_list_name": "Liste",
-
   "year_input_picker_title": "Yıl",
-
   "management_module_shopping_subtitle_dynamic": "%d bekleyen ürün eklendi",
   "management_module_shopping_subtitle_empty": "Henüz ürün yok",
-
   "management_error_update_item": "Ürün güncellenemedi: %@",
   "management_error_add_item": "Ürün eklenemedi: %@",
   "management_error_delete_item": "Ürün silinemedi: %@",
-
   "movie_lists_title": "Film Koleksiyonları",
   "movie_lists_subtitle": "Film izleme listelerinizi ve koleksiyonlarınızı düzenleyin",
   "movie_lists_quick_collections": "Hızlı Koleksiyonlar",
@@ -453,16 +389,13 @@
   "movie_lists_no_custom_lists": "Henüz Özel Liste Yok",
   "movie_lists_no_custom_lists_subtitle": "\"Korku Filmleri\" veya \"Romantik Komedi Klasikleri\" gibi temalı koleksiyonlar oluşturun",
   "movie_lists_create_first_list": "İlk Listenizi Oluşturun",
-
   "create_movie_list_title": "Film Listesi Oluştur",
   "create_movie_list_subtitle": "Filmleri temaya, türe veya istediğiniz herhangi bir kritere göre düzenleyin",
   "create_movie_list_name_label": "Liste Adı",
   "create_movie_list_name_placeholder": "örn., Korku Klasikleri, Romantik Komedi Favorileri",
   "create_movie_list_description_label": "Açıklama (İsteğe Bağlı)",
   "create_movie_list_description_placeholder": "Bu listenin ne için olduğunu açıklayın...",
-
   "movie_lists_movies_count": "film",
-
   "movie_list_detail_loading_movies": "Filmler yükleniyor...",
   "movie_list_detail_delete_list": "Listeyi Sil",
   "movie_list_detail_delete_list_message": "Bu işlem \"%@\" listesini kalıcı olarak silecek ve geri alınamaz.",
@@ -473,26 +406,18 @@
   "movie_list_detail_remove_movie": "Filmi Kaldır",
   "movie_list_detail_remove": "Kaldır",
   "movie_list_detail_remove_movie_message": "\"%@\" filmini bu listeden kaldırmak istiyor musunuz?",
-
   "movie_lists_wishlist_description_full": "Bir gün izlemek istediğiniz filmler",
   "movie_lists_watched_description_full": "Zaten izlediğiniz filmler",
-
   "movie_search_row_added": "Eklendi",
-
   "search_header_placeholder": "Listenize eklemek için film arayın...",
-
   "search_movies_title": "Film Ekle",
   "common_search": "Ara",
   "search_movies_searching": "Filmler aranıyor...",
-
   "recipe_error_missing_auth": "Kimlik doğrulama eksik.",
   "recipe_error_add_recipe": "Tarif eklenemedi: %@",
   "recipe_error_delete_recipe": "Tarif silinemedi: %@",
-
   "common_loading": "Yükleniyor...",
-
   "shopping_category_completed_items": "%d / %d tamamlandı",
-
   "auth_sign_in_title": "Giriş Yap",
   "auth_create_account_title": "Hesap Oluştur",
   "auth_password_valid": "Şifre uygun!",
@@ -515,13 +440,11 @@
   "auth_confirm_password_label": "Şifreyi Onayla",
   "auth_confirm_password_placeholder": "Şifrenizi tekrar girin",
   "auth_create_account_button": "Hesap Oluştur",
-
   "home_setup_subtitle": "Evinizi kuralım",
   "home_setup_create_home_title": "Yeni Ev Oluştur",
   "home_setup_create_home_subtitle": "Yeni bir başlangıç yapın ve aile üyelerini davet edin",
   "home_setup_join_home_title": "Mevcut Eve Katıl",
   "home_setup_join_home_subtitle": "Bir aile üyesinden davet kodu kullanın",
-
   "create_home_subtitle": "Paylaşılan yaşam alanınızı kurun",
   "create_home_name_label": "Ev Adı",
   "create_home_name_placeholder": "Ev adını girin",
@@ -529,17 +452,19 @@
   "create_home_address_placeholder": "Ev adresini girin",
   "create_home_button": "Ev Oluştur",
   "create_home_success_message": "Ev Oluşturuldu!",
-
   "home_management_home_name_empty": "Ev adı boş olamaz",
   "home_management_invite_code_empty": "Davet kodu boş olamaz",
   "home_management_invalid_invite_code": "Geçersiz davet kodu",
   "home_management_already_member": "Zaten bu evin bir üyesisiniz",
-
   "join_home_invite_code_label": "Davet Kodu",
   "join_home_invite_code_placeholder": "Davet kodunu girin",
   "join_home_button": "Eve Katıl",
   "join_home_success_message": "Eve Katılındı!",
-
-  "no_homes_get_started_title": "Başlayalım"
-  ,"manage_homes_button": "Evi Yönet"
+  "no_homes_get_started_title": "Başlayalım",
+  "manage_homes_button": "Evi Yönet",
+  "profile_name_title": "Adın",
+  "profile_name_placeholder": "Adını gir",
+  "profile_name_footnote": "Apple adını yalnızca ilk girişte paylaşır, bu yüzden buradan ayarlaman gerekebilir.",
+  "profile_name_add": "Adını ekle",
+  "common_save": "Kaydet"
 }

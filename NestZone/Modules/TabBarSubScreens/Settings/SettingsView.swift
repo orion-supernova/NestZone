@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var isShowingThemeSheet = false
     @State private var isShowingLanguageSheet = false
     @State private var isShowingSwitchHomeSheet = false
+    @State private var isShowingEditName = false
     @State private var isShowingJoinHomeSheet = false
     @StateObject private var localizationManager = LocalizationManager.shared
     @EnvironmentObject private var authManager: ConvexAuthManager
@@ -37,6 +38,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $isShowingLanguageSheet) {
                 LanguageSelectionSheet(isShowingSheet: $isShowingLanguageSheet)
+            }
+            .sheet(isPresented: $isShowingEditName) {
+                EditNameSheet(currentName: authManager.currentUser?.name)
             }
             .sheet(isPresented: $isShowingSwitchHomeSheet) {
                 SwitchHomeSheet()
@@ -74,11 +78,24 @@ struct SettingsView: View {
             }
             
             VStack(spacing: 4) {
-                Text(LocalizationManager.settingsProfileWelcomeBack)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
-                
+                // Tapping the name opens the editor. Apple hands over a name only
+                // on the first authorization, so this is often the only way a
+                // returning user can set one.
+                Button { isShowingEditName = true } label: {
+                    HStack(spacing: 6) {
+                        Text(authManager.currentUser?.name?.isEmpty == false
+                             ? (authManager.currentUser?.name ?? "")
+                             : LocalizationManager.profileNameAdd)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
+                        Image(systemName: "pencil")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)
+                    }
+                }
+                .buttonStyle(.pressable)
+
                 Text(LocalizationManager.settingsProfileCustomizeExperience)
                     .font(.subheadline)
                     .foregroundStyle(selectedTheme.colors(for: colorScheme).textSecondary)

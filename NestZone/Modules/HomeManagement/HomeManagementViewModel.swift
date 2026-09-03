@@ -13,6 +13,10 @@ class HomeManagementViewModel: ObservableObject {
     @Published var errorShakeCount = 0
     
     func createHome(name: String, address: String?, authManager: ConvexAuthManager) async {
+        // Re-entrancy guard: two taps in the same frame both queue a Task
+        // before `isLoading` is published, so the disabled state alone is not enough.
+        guard !isLoading else { return }
+
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             showErrorMessage(LocalizationManager.homeManagementHomeNameEmpty)
@@ -40,6 +44,10 @@ class HomeManagementViewModel: ObservableObject {
     }
 
     func joinHome(inviteCode: String, authManager: ConvexAuthManager) async {
+        // Re-entrancy guard: two taps in the same frame both queue a Task
+        // before `isLoading` is published, so the disabled state alone is not enough.
+        guard !isLoading else { return }
+
         let code = inviteCode.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !code.isEmpty else {
             showErrorMessage(LocalizationManager.homeManagementInviteCodeEmpty)

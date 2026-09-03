@@ -135,6 +135,9 @@ struct SwitchHomeSheet: View {
     }
 
     private func remove(_ home: Home) {
+        // Re-entrancy guard: leaving twice would fire homes:leave twice, and the
+        // second call throws "Not a member of this home" after the first wins.
+        guard !isRemoving else { return }
         homeToRemove = nil
         isRemoving = true
         Task {

@@ -104,6 +104,23 @@ final class ConvexAuthManager: ObservableObject {
         Convex.log.log("Apple sign-in succeeded")
     }
 
+    /// Updates the signed-in user's display name.
+    ///
+    /// No manual refresh afterwards: `currentUser` is bound to a live `users:me`
+    /// subscription, so the new name arrives on its own.
+    ///
+    /// This matters more than it looks. Apple only supplies a name on the very
+    /// FIRST authorization for an app; every later sign-in omits it. Anyone who
+    /// had already authorized NestZone therefore ends up with no name and,
+    /// without this, no way to set one.
+    func updateDisplayName(_ name: String) async throws {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        // users:updateProfile returns the patched document, so it has to go
+        // through Convex.run rather than the SDK's no-result overload.
+        try await Convex.run("users:updateProfile", args: ["name": trimmed])
+    }
+
     func signOut() async {
         await client.logout()
     }

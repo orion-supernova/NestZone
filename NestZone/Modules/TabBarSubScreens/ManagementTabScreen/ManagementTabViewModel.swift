@@ -112,6 +112,10 @@ class ManagementTabViewModel: ObservableObject {
     }
 
     func addItem(name: String, description: String?, quantity: Double?, category: ShoppingItem.ShoppingCategory) async {
+        // Re-entrancy guard: two taps in the same frame both queue a Task
+        // before `isLoading` is published, so the disabled state alone is not enough.
+        guard !isLoading else { return }
+
         guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
             errorMessage = "No home selected"
             return
