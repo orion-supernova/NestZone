@@ -502,6 +502,7 @@
   "auth_passwords_mismatch": "Passwords don't match",
   "auth_welcome_title": "Welcome to NestZone",
   "auth_sign_in_subtitle": "Sign in to continue ✨",
+  "auth_apple_explainer": "Sign in with your Apple ID. NestZone never sees or stores a password.",
   "auth_create_account_subtitle": "Create your account ✨",
   "auth_login_button": "Login",
   "auth_sign_up_button": "Sign Up",

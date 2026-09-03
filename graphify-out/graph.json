@@ -58,7 +58,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "view",
-      "community": 17,
+      "community": 22,
       "norm_label": "view"
     },
     {
@@ -529,7 +529,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "observableobject",
-      "community": 46,
+      "community": 36,
       "norm_label": "observableobject"
     },
     {
@@ -873,10 +873,21 @@
       "norm_label": "authenticationscreen.swift"
     },
     {
+      "label": "AuthenticationServices",
+      "file_type": "code",
+      "type": "module",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "authenticationservices",
+      "community": 29,
+      "norm_label": "authenticationservices"
+    },
+    {
       "label": "AuthenticationScreen",
       "file_type": "code",
       "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L3",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "auth_authenticationscreen_authenticationscreen",
       "community": 29,
@@ -886,101 +897,21 @@
       "label": "ConvexAuthManager",
       "file_type": "code",
       "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L4",
+      "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationscreen_swift_convexauthmanager",
       "community": 29,
       "norm_label": "convexauthmanager"
     },
     {
-      "label": "CGFloat",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L16",
-      "_origin": "ast",
-      "id": "nestzone_modules_auth_authenticationscreen_swift_cgfloat",
-      "community": 29,
-      "norm_label": "cgfloat"
-    },
-    {
-      "label": "DragGesture",
+      "label": "ThemeColors",
       "file_type": "code",
       "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
       "source_location": "L17",
       "_origin": "ast",
-      "id": "draggesture",
-      "community": 29,
-      "norm_label": "draggesture"
-    },
-    {
-      "label": "ThemeColors",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L19",
-      "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationscreen_swift_themecolors",
       "community": 29,
       "norm_label": "themecolors"
-    },
-    {
-      "label": "ValidationState",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L23",
-      "_origin": "ast",
-      "id": "validationstate",
-      "community": 29,
-      "norm_label": "validationstate"
-    },
-    {
-      "label": "String",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L30",
-      "_origin": "ast",
-      "id": "nestzone_modules_auth_authenticationscreen_swift_string",
-      "community": 29,
-      "norm_label": "string"
-    },
-    {
-      "label": "Bool",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L378",
-      "_origin": "ast",
-      "id": "nestzone_modules_auth_authenticationscreen_swift_bool",
-      "community": 29,
-      "norm_label": "bool"
-    },
-    {
-      "label": ".hideKeyboard()",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L391",
-      "_origin": "ast",
-      "id": "auth_authenticationscreen_authenticationscreen_hidekeyboard",
-      "community": 29,
-      "norm_label": ".hidekeyboard()"
-    },
-    {
-      "label": ".setupKeyboardObservers()",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L395",
-      "_origin": "ast",
-      "id": "auth_authenticationscreen_authenticationscreen_setupkeyboardobservers",
-      "community": 29,
-      "norm_label": ".setupkeyboardobservers()"
-    },
-    {
-      "label": ".removeKeyboardObservers()",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L419",
-      "_origin": "ast",
-      "id": "auth_authenticationscreen_authenticationscreen_removekeyboardobservers",
-      "community": 29,
-      "norm_label": ".removekeyboardobservers()"
     },
     {
       "label": "AuthenticationViewModel.swift",
@@ -989,7 +920,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "auth_authenticationviewmodel",
-      "community": 40,
+      "community": 29,
       "norm_label": "authenticationviewmodel.swift"
     },
     {
@@ -999,7 +930,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "auth_authenticationviewmodel_authenticationviewmodel",
-      "community": 40,
+      "community": 29,
       "norm_label": "authenticationviewmodel"
     },
     {
@@ -1009,38 +940,28 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationviewmodel_swift_string",
-      "community": 40,
+      "community": 29,
       "norm_label": "string"
     },
     {
-      "label": ".login()",
+      "label": ".signInWithApple()",
       "file_type": "code",
       "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L8",
+      "source_location": "L11",
       "_origin": "ast",
-      "id": "auth_authenticationviewmodel_authenticationviewmodel_login",
-      "community": 40,
-      "norm_label": ".login()"
+      "id": "auth_authenticationviewmodel_authenticationviewmodel_signinwithapple",
+      "community": 29,
+      "norm_label": ".signinwithapple()"
     },
     {
       "label": "ConvexAuthManager",
       "file_type": "code",
       "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L8",
+      "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationviewmodel_swift_convexauthmanager",
-      "community": 40,
+      "community": 29,
       "norm_label": "convexauthmanager"
-    },
-    {
-      "label": ".register()",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L21",
-      "_origin": "ast",
-      "id": "auth_authenticationviewmodel_authenticationviewmodel_register",
-      "community": 40,
-      "norm_label": ".register()"
     },
     {
       "label": "HomeSetupFlow.swift",
@@ -1729,38 +1650,28 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "login_loginscreen",
-      "community": 35,
+      "community": 29,
       "norm_label": "loginscreen.swift"
     },
     {
       "label": "LoginScreen",
       "file_type": "code",
       "source_file": "NestZone/Modules/Login/LoginScreen.swift",
-      "source_location": "L3",
+      "source_location": "L5",
       "_origin": "ast",
       "id": "login_loginscreen_loginscreen",
-      "community": 35,
+      "community": 29,
       "norm_label": "loginscreen"
     },
     {
       "label": "ConvexAuthManager",
       "file_type": "code",
       "source_file": "NestZone/Modules/Login/LoginScreen.swift",
-      "source_location": "L6",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_modules_login_loginscreen_swift_convexauthmanager",
-      "community": 35,
+      "community": 29,
       "norm_label": "convexauthmanager"
-    },
-    {
-      "label": ".login()",
-      "file_type": "code",
-      "source_file": "NestZone/Modules/Login/LoginScreen.swift",
-      "source_location": "L66",
-      "_origin": "ast",
-      "id": "login_loginscreen_loginscreen_login",
-      "community": 35,
-      "norm_label": ".login()"
     },
     {
       "label": "LoginViewModel.swift",
@@ -1779,7 +1690,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "login_loginviewmodel_loginviewmodel",
-      "community": 35,
+      "community": 36,
       "norm_label": "loginviewmodel"
     },
     {
@@ -1789,18 +1700,18 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "nestzone_modules_login_loginviewmodel_swift_string",
-      "community": 35,
+      "community": 36,
       "norm_label": "string"
     },
     {
-      "label": ".login()",
+      "label": ".signInWithApple()",
       "file_type": "code",
       "source_file": "NestZone/Modules/Login/LoginViewModel.swift",
       "source_location": "L18",
       "_origin": "ast",
-      "id": "login_loginviewmodel_loginviewmodel_login",
-      "community": 35,
-      "norm_label": ".login()"
+      "id": "login_loginviewmodel_loginviewmodel_signinwithapple",
+      "community": 36,
+      "norm_label": ".signinwithapple()"
     },
     {
       "label": "ConvexAuthManager",
@@ -1809,7 +1720,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "nestzone_modules_login_loginviewmodel_swift_convexauthmanager",
-      "community": 35,
+      "community": 36,
       "norm_label": "convexauthmanager"
     },
     {
@@ -1960,7 +1871,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tabbar_tabbarscreenviewmodel",
-      "community": 46,
+      "community": 36,
       "norm_label": "tabbarscreenviewmodel.swift"
     },
     {
@@ -1970,7 +1881,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "tabbar_tabbarscreenviewmodel_tabbarscreenviewmodel",
-      "community": 46,
+      "community": 36,
       "norm_label": "tabbarscreenviewmodel"
     },
     {
@@ -1980,7 +1891,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "nestzone_modules_tabbar_tabbarscreenviewmodel_swift_home",
-      "community": 46,
+      "community": 36,
       "norm_label": "home"
     },
     {
@@ -1990,7 +1901,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "tabbar_tabbarscreenviewmodel_tabbarscreenviewmodel_fetchuserhome",
-      "community": 46,
+      "community": 36,
       "norm_label": ".fetchuserhome()"
     },
     {
@@ -2000,7 +1911,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "nestzone_modules_tabbar_tabbarscreenviewmodel_swift_convexauthmanager",
-      "community": 46,
+      "community": 36,
       "norm_label": "convexauthmanager"
     },
     {
@@ -2630,7 +2541,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "minigames_movieapi",
-      "community": 4,
+      "community": 0,
       "norm_label": "movieapi.swift"
     },
     {
@@ -2640,7 +2551,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "minigames_movieapi_movie",
-      "community": 4,
+      "community": 0,
       "norm_label": "movie"
     },
     {
@@ -2660,7 +2571,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "hashable",
-      "community": 4,
+      "community": 0,
       "norm_label": "hashable"
     },
     {
@@ -2670,7 +2581,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_hometabscreen_minigames_movieapi_swift_string",
-      "community": 4,
+      "community": 0,
       "norm_label": "string"
     },
     {
@@ -2680,7 +2591,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_hometabscreen_minigames_movieapi_swift_int",
-      "community": 4,
+      "community": 0,
       "norm_label": "int"
     },
     {
@@ -2690,7 +2601,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "url",
-      "community": 4,
+      "community": 0,
       "norm_label": "url"
     },
     {
@@ -2700,7 +2611,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "minigames_movieapi_movieextras",
-      "community": 4,
+      "community": 0,
       "norm_label": "movieextras"
     },
     {
@@ -2710,7 +2621,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "castmember",
-      "community": 4,
+      "community": 0,
       "norm_label": "castmember"
     },
     {
@@ -2720,7 +2631,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_hometabscreen_minigames_movieapi_swift_double",
-      "community": 4,
+      "community": 0,
       "norm_label": "double"
     },
     {
@@ -2730,7 +2641,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "minigames_movieapi_castmember",
-      "community": 4,
+      "community": 0,
       "norm_label": "castmember"
     },
     {
@@ -2740,7 +2651,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "minigames_movieapi_movieextras_init",
-      "community": 4,
+      "community": 0,
       "norm_label": ".init()"
     },
     {
@@ -2750,7 +2661,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi",
-      "community": 4,
+      "community": 0,
       "norm_label": "movieapi"
     },
     {
@@ -2760,7 +2671,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_init",
-      "community": 4,
+      "community": 0,
       "norm_label": ".init()"
     },
     {
@@ -2770,7 +2681,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_searchmovies",
-      "community": 4,
+      "community": 0,
       "norm_label": ".searchmovies()"
     },
     {
@@ -2780,7 +2691,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_hometabscreen_minigames_movieapi_swift_bool",
-      "community": 4,
+      "community": 0,
       "norm_label": "bool"
     },
     {
@@ -2790,7 +2701,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_searchbygenre",
-      "community": 4,
+      "community": 0,
       "norm_label": ".searchbygenre()"
     },
     {
@@ -2800,7 +2711,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_searchbyactor",
-      "community": 4,
+      "community": 0,
       "norm_label": ".searchbyactor()"
     },
     {
@@ -2810,7 +2721,7 @@
       "source_location": "L184",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_searchbydirector",
-      "community": 4,
+      "community": 0,
       "norm_label": ".searchbydirector()"
     },
     {
@@ -2820,7 +2731,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_searchbyyear",
-      "community": 4,
+      "community": 0,
       "norm_label": ".searchbyyear()"
     },
     {
@@ -2830,7 +2741,7 @@
       "source_location": "L233",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_searchbydecade",
-      "community": 4,
+      "community": 0,
       "norm_label": ".searchbydecade()"
     },
     {
@@ -2840,7 +2751,7 @@
       "source_location": "L274",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getnowplayingmovies",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getnowplayingmovies()"
     },
     {
@@ -2850,7 +2761,7 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getpopularmovies",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getpopularmovies()"
     },
     {
@@ -2860,7 +2771,7 @@
       "source_location": "L284",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_gettopratedmovies",
-      "community": 4,
+      "community": 0,
       "norm_label": ".gettopratedmovies()"
     },
     {
@@ -2870,7 +2781,7 @@
       "source_location": "L289",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getupcomingmovies",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getupcomingmovies()"
     },
     {
@@ -2880,7 +2791,7 @@
       "source_location": "L294",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getmovieslist",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getmovieslist()"
     },
     {
@@ -2890,7 +2801,7 @@
       "source_location": "L331",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_searchmoviesfromtmdb",
-      "community": 4,
+      "community": 0,
       "norm_label": ".searchmoviesfromtmdb()"
     },
     {
@@ -2900,7 +2811,7 @@
       "source_location": "L350",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_findpersonid",
-      "community": 4,
+      "community": 0,
       "norm_label": ".findpersonid()"
     },
     {
@@ -2910,7 +2821,7 @@
       "source_location": "L377",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getmoviesbyperson",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getmoviesbyperson()"
     },
     {
@@ -2920,7 +2831,7 @@
       "source_location": "L399",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getmoviesbydirector",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getmoviesbydirector()"
     },
     {
@@ -2930,7 +2841,7 @@
       "source_location": "L421",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getdetails",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getdetails()"
     },
     {
@@ -2940,7 +2851,7 @@
       "source_location": "L445",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getmoviedetails",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getmoviedetails()"
     },
     {
@@ -2950,7 +2861,7 @@
       "source_location": "L465",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_findmoviebyimdbid",
-      "community": 4,
+      "community": 0,
       "norm_label": ".findmoviebyimdbid()"
     },
     {
@@ -2960,7 +2871,7 @@
       "source_location": "L482",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_getextras",
-      "community": 4,
+      "community": 0,
       "norm_label": ".getextras()"
     },
     {
@@ -2970,7 +2881,7 @@
       "source_location": "L512",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_decodetmdbsearchresults",
-      "community": 4,
+      "community": 0,
       "norm_label": ".decodetmdbsearchresults()"
     },
     {
@@ -2980,7 +2891,7 @@
       "source_location": "L512",
       "_origin": "ast",
       "id": "data",
-      "community": 4,
+      "community": 0,
       "norm_label": "data"
     },
     {
@@ -2990,7 +2901,7 @@
       "source_location": "L552",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_decodetmdbmoviedetails",
-      "community": 4,
+      "community": 0,
       "norm_label": ".decodetmdbmoviedetails()"
     },
     {
@@ -3000,7 +2911,7 @@
       "source_location": "L587",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_decodetmdbfindresults",
-      "community": 4,
+      "community": 0,
       "norm_label": ".decodetmdbfindresults()"
     },
     {
@@ -3010,7 +2921,7 @@
       "source_location": "L627",
       "_origin": "ast",
       "id": "minigames_movieapi_movieapi_decodetmdbextras",
-      "community": 4,
+      "community": 0,
       "norm_label": ".decodetmdbextras()"
     },
     {
@@ -3020,7 +2931,7 @@
       "source_location": "L721",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager",
-      "community": 4,
+      "community": 0,
       "norm_label": "moviehistorymanager"
     },
     {
@@ -3030,7 +2941,7 @@
       "source_location": "L723",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager_init",
-      "community": 4,
+      "community": 0,
       "norm_label": ".init()"
     },
     {
@@ -3040,7 +2951,7 @@
       "source_location": "L728",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager_addwatched",
-      "community": 4,
+      "community": 0,
       "norm_label": ".addwatched()"
     },
     {
@@ -3050,7 +2961,7 @@
       "source_location": "L736",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager_lastwatched",
-      "community": 4,
+      "community": 0,
       "norm_label": ".lastwatched()"
     },
     {
@@ -3060,7 +2971,7 @@
       "source_location": "L740",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager_allwatched",
-      "community": 4,
+      "community": 0,
       "norm_label": ".allwatched()"
     },
     {
@@ -3070,7 +2981,7 @@
       "source_location": "L744",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager_clearall",
-      "community": 4,
+      "community": 0,
       "norm_label": ".clearall()"
     },
     {
@@ -3080,7 +2991,7 @@
       "source_location": "L749",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager_save",
-      "community": 4,
+      "community": 0,
       "norm_label": ".save()"
     },
     {
@@ -3090,7 +3001,7 @@
       "source_location": "L755",
       "_origin": "ast",
       "id": "minigames_movieapi_moviehistorymanager_load",
-      "community": 4,
+      "community": 0,
       "norm_label": ".load()"
     },
     {
@@ -4330,7 +4241,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "task",
-      "community": 0,
+      "community": 19,
       "norm_label": "task"
     },
     {
@@ -5241,7 +5152,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "localizederror",
-      "community": 11,
+      "community": 9,
       "norm_label": "localizederror"
     },
     {
@@ -6311,7 +6222,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "components_searchmoviesforlistsheet",
-      "community": 32,
+      "community": 36,
       "norm_label": "searchmoviesforlistsheet.swift"
     },
     {
@@ -6321,7 +6232,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "components_searchmoviesforlistsheet_searchmoviesforlistsheet",
-      "community": 32,
+      "community": 36,
       "norm_label": "searchmoviesforlistsheet"
     },
     {
@@ -6331,7 +6242,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_components_searchmoviesforlistsheet_swift_movielist",
-      "community": 32,
+      "community": 36,
       "norm_label": "movielist"
     },
     {
@@ -6341,7 +6252,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_components_searchmoviesforlistsheet_swift_movie",
-      "community": 32,
+      "community": 36,
       "norm_label": "movie"
     },
     {
@@ -6351,7 +6262,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_components_searchmoviesforlistsheet_swift_void",
-      "community": 32,
+      "community": 36,
       "norm_label": "void"
     },
     {
@@ -6361,7 +6272,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "components_searchmoviesforlistsheet_searchloadingview",
-      "community": 32,
+      "community": 36,
       "norm_label": "searchloadingview"
     },
     {
@@ -7261,7 +7172,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "viewmodels_searchmoviesviewmodel_searchmoviesviewmodel",
-      "community": 32,
+      "community": 36,
       "norm_label": "searchmoviesviewmodel"
     },
     {
@@ -7271,7 +7182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_viewmodels_searchmoviesviewmodel_swift_movie",
-      "community": 32,
+      "community": 36,
       "norm_label": "movie"
     },
     {
@@ -7281,7 +7192,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_viewmodels_searchmoviesviewmodel_swift_set",
-      "community": 32,
+      "community": 36,
       "norm_label": "set"
     },
     {
@@ -7291,7 +7202,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_viewmodels_searchmoviesviewmodel_swift_string",
-      "community": 32,
+      "community": 36,
       "norm_label": "string"
     },
     {
@@ -7301,7 +7212,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "viewmodels_searchmoviesviewmodel_searchmoviesviewmodel_search",
-      "community": 32,
+      "community": 36,
       "norm_label": ".search()"
     },
     {
@@ -7311,7 +7222,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "viewmodels_searchmoviesviewmodel_searchmoviesviewmodel_clearsearch",
-      "community": 32,
+      "community": 36,
       "norm_label": ".clearsearch()"
     },
     {
@@ -7321,7 +7232,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "viewmodels_searchmoviesviewmodel_searchmoviesviewmodel_addmovie",
-      "community": 32,
+      "community": 36,
       "norm_label": ".addmovie()"
     },
     {
@@ -7331,7 +7242,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "viewmodels_searchmoviesviewmodel_searchmoviesviewmodel_selectmovie",
-      "community": 32,
+      "community": 36,
       "norm_label": ".selectmovie()"
     },
     {
@@ -7431,7 +7342,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel",
-      "community": 16,
+      "community": 19,
       "norm_label": "recipeviewmodel"
     },
     {
@@ -7441,7 +7352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_recipeviewmodel_swift_recipe",
-      "community": 16,
+      "community": 19,
       "norm_label": "recipe"
     },
     {
@@ -7451,7 +7362,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_recipeviewmodel_swift_string",
-      "community": 16,
+      "community": 19,
       "norm_label": "string"
     },
     {
@@ -7461,7 +7372,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_recipeviewmodel_swift_convexauthmanager",
-      "community": 16,
+      "community": 19,
       "norm_label": "convexauthmanager"
     },
     {
@@ -7471,7 +7382,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_recipeviewmodel_swift_nsobjectprotocol",
-      "community": 16,
+      "community": 19,
       "norm_label": "nsobjectprotocol"
     },
     {
@@ -7481,7 +7392,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_init",
-      "community": 16,
+      "community": 19,
       "norm_label": ".init()"
     },
     {
@@ -7491,7 +7402,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_deinit",
-      "community": 16,
+      "community": 19,
       "norm_label": ".deinit()"
     },
     {
@@ -7501,7 +7412,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_setuphomechangeobserver",
-      "community": 16,
+      "community": 19,
       "norm_label": ".setuphomechangeobserver()"
     },
     {
@@ -7511,7 +7422,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_loadrecipes",
-      "community": 16,
+      "community": 19,
       "norm_label": ".loadrecipes()"
     },
     {
@@ -7521,7 +7432,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_loadrecipesfrombackend",
-      "community": 16,
+      "community": 19,
       "norm_label": ".loadrecipesfrombackend()"
     },
     {
@@ -7531,7 +7442,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_refresh",
-      "community": 16,
+      "community": 19,
       "norm_label": ".refresh()"
     },
     {
@@ -7541,7 +7452,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_setauthmanager",
-      "community": 16,
+      "community": 19,
       "norm_label": ".setauthmanager()"
     },
     {
@@ -7551,7 +7462,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_addrecipe",
-      "community": 16,
+      "community": 19,
       "norm_label": ".addrecipe()"
     },
     {
@@ -7561,7 +7472,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_recipeviewmodel_swift_int",
-      "community": 16,
+      "community": 19,
       "norm_label": "int"
     },
     {
@@ -7571,7 +7482,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "recipes_recipeviewmodel_recipeviewmodel_deleterecipe",
-      "community": 16,
+      "community": 19,
       "norm_label": ".deleterecipe()"
     },
     {
@@ -8061,7 +7972,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "subviews_newrecipesheet_newrecipesheet_createrecipe",
-      "community": 16,
+      "community": 19,
       "norm_label": ".createrecipe()"
     },
     {
@@ -8591,7 +8502,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "subviews_modulecardssection",
-      "community": 86,
+      "community": 85,
       "norm_label": "modulecardssection.swift"
     },
     {
@@ -8601,7 +8512,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "subviews_modulecardssection_modulecardssection",
-      "community": 86,
+      "community": 85,
       "norm_label": "modulecardssection"
     },
     {
@@ -8611,7 +8522,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_subviews_modulecardssection_swift_moduledata",
-      "community": 86,
+      "community": 85,
       "norm_label": "moduledata"
     },
     {
@@ -8621,7 +8532,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_subviews_modulecardssection_swift_bool",
-      "community": 86,
+      "community": 85,
       "norm_label": "bool"
     },
     {
@@ -8631,7 +8542,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "subviews_modulehubheaderview",
-      "community": 17,
+      "community": 25,
       "norm_label": "modulehubheaderview.swift"
     },
     {
@@ -8641,7 +8552,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "subviews_modulehubheaderview_modulehubheaderview",
-      "community": 17,
+      "community": 25,
       "norm_label": "modulehubheaderview"
     },
     {
@@ -8651,7 +8562,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_subviews_modulehubheaderview_swift_convexauthmanager",
-      "community": 17,
+      "community": 25,
       "norm_label": "convexauthmanager"
     },
     {
@@ -9021,7 +8932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "subviews_chatemptystates",
-      "community": 17,
+      "community": 22,
       "norm_label": "chatemptystates.swift"
     },
     {
@@ -9031,7 +8942,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "subviews_chatemptystates_chatloadingview",
-      "community": 17,
+      "community": 22,
       "norm_label": "chatloadingview"
     },
     {
@@ -9041,7 +8952,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "subviews_chatemptystates_chatemptyview",
-      "community": 17,
+      "community": 22,
       "norm_label": "chatemptyview"
     },
     {
@@ -9111,7 +9022,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "subviews_messagebubble",
-      "community": 25,
+      "community": 5,
       "norm_label": "messagebubble.swift"
     },
     {
@@ -9121,7 +9032,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble",
-      "community": 25,
+      "community": 5,
       "norm_label": "messagebubble"
     },
     {
@@ -9131,7 +9042,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_pocketbasemessage",
-      "community": 25,
+      "community": 5,
       "norm_label": "pocketbasemessage"
     },
     {
@@ -9141,7 +9052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_bool",
-      "community": 25,
+      "community": 5,
       "norm_label": "bool"
     },
     {
@@ -9151,7 +9062,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_pocketbaseconversation",
-      "community": 25,
+      "community": 5,
       "norm_label": "pocketbaseconversation"
     },
     {
@@ -9161,7 +9072,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_string",
-      "community": 25,
+      "community": 5,
       "norm_label": "string"
     },
     {
@@ -9171,7 +9082,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_pocketbaseuser",
-      "community": 25,
+      "community": 5,
       "norm_label": "pocketbaseuser"
     },
     {
@@ -9181,7 +9092,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_filepreview",
-      "community": 25,
+      "community": 5,
       "norm_label": ".filepreview()"
     },
     {
@@ -9191,7 +9102,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_formattime",
-      "community": 25,
+      "community": 5,
       "norm_label": ".formattime()"
     },
     {
@@ -9201,7 +9112,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_loadsendername",
-      "community": 25,
+      "community": 5,
       "norm_label": ".loadsendername()"
     },
     {
@@ -9211,7 +9122,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_loadreadreceipts",
-      "community": 25,
+      "community": 5,
       "norm_label": ".loadreadreceipts()"
     },
     {
@@ -9221,7 +9132,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "subviews_messagebubble_useravatar",
-      "community": 25,
+      "community": 5,
       "norm_label": "useravatar"
     },
     {
@@ -9231,7 +9142,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_cgfloat",
-      "community": 25,
+      "community": 5,
       "norm_label": "cgfloat"
     },
     {
@@ -9652,7 +9563,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel",
-      "community": 0,
+      "community": 19,
       "norm_label": "messagelistviewmodel"
     },
     {
@@ -9662,7 +9573,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_viewmodels_messagelistviewmodel_swift_pocketbaseconversation",
-      "community": 0,
+      "community": 19,
       "norm_label": "pocketbaseconversation"
     },
     {
@@ -9672,7 +9583,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_viewmodels_messagelistviewmodel_swift_string",
-      "community": 0,
+      "community": 19,
       "norm_label": "string"
     },
     {
@@ -9682,7 +9593,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_viewmodels_messagelistviewmodel_swift_int",
-      "community": 0,
+      "community": 19,
       "norm_label": "int"
     },
     {
@@ -9692,7 +9603,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_viewmodels_messagelistviewmodel_swift_nsobjectprotocol",
-      "community": 0,
+      "community": 19,
       "norm_label": "nsobjectprotocol"
     },
     {
@@ -9702,7 +9613,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_viewmodels_messagelistviewmodel_swift_anycancellable",
-      "community": 0,
+      "community": 19,
       "norm_label": "anycancellable"
     },
     {
@@ -9712,7 +9623,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_init",
-      "community": 0,
+      "community": 19,
       "norm_label": ".init()"
     },
     {
@@ -9722,7 +9633,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_deinit",
-      "community": 0,
+      "community": 19,
       "norm_label": ".deinit()"
     },
     {
@@ -9732,7 +9643,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_setuphomechangeobserver",
-      "community": 0,
+      "community": 19,
       "norm_label": ".setuphomechangeobserver()"
     },
     {
@@ -9742,7 +9653,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_setup",
-      "community": 0,
+      "community": 19,
       "norm_label": ".setup()"
     },
     {
@@ -9752,7 +9663,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_viewmodels_messagelistviewmodel_swift_convexauthmanager",
-      "community": 0,
+      "community": 19,
       "norm_label": "convexauthmanager"
     },
     {
@@ -9762,7 +9673,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_refresh",
-      "community": 0,
+      "community": 19,
       "norm_label": ".refresh()"
     },
     {
@@ -9772,7 +9683,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_addnewconversation",
-      "community": 0,
+      "community": 19,
       "norm_label": ".addnewconversation()"
     },
     {
@@ -9782,7 +9693,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_subscribeconversations",
-      "community": 0,
+      "community": 19,
       "norm_label": ".subscribeconversations()"
     },
     {
@@ -9792,7 +9703,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_loadunreadcounts",
-      "community": 0,
+      "community": 19,
       "norm_label": ".loadunreadcounts()"
     },
     {
@@ -9802,7 +9713,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "viewmodels_messagelistviewmodel_messagelistviewmodel_loadunreadcountforconversation",
-      "community": 0,
+      "community": 19,
       "norm_label": ".loadunreadcountforconversation()"
     },
     {
@@ -10786,6 +10697,446 @@
       "norm_label": "scene"
     },
     {
+      "label": "AppleSignInCoordinator.swift",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator",
+      "community": 29,
+      "norm_label": "applesignincoordinator.swift"
+    },
+    {
+      "label": "NSObject",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "nsobject",
+      "community": 29,
+      "norm_label": "nsobject"
+    },
+    {
+      "label": "Credential",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_credential",
+      "community": 29,
+      "norm_label": "credential"
+    },
+    {
+      "label": "String",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "nestzone_network_convex_applesignincoordinator_swift_string",
+      "community": 29,
+      "norm_label": "string"
+    },
+    {
+      "label": "Failure",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_failure",
+      "community": 29,
+      "norm_label": "failure"
+    },
+    {
+      "label": "cancelled",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_failure_cancelled",
+      "community": 29,
+      "norm_label": "cancelled"
+    },
+    {
+      "label": "missingIdentityToken",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_failure_missingidentitytoken",
+      "community": 29,
+      "norm_label": "missingidentitytoken"
+    },
+    {
+      "label": "underlying",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_failure_underlying",
+      "community": 29,
+      "norm_label": "underlying"
+    },
+    {
+      "label": "CheckedContinuation",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "checkedcontinuation",
+      "community": 29,
+      "norm_label": "checkedcontinuation"
+    },
+    {
+      "label": "Error",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "nestzone_network_convex_applesignincoordinator_swift_error",
+      "community": 29,
+      "norm_label": "error"
+    },
+    {
+      "label": ".signIn()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L42",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_applesignincoordinator_signin",
+      "community": 29,
+      "norm_label": ".signin()"
+    },
+    {
+      "label": ".finish()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_applesignincoordinator_finish",
+      "community": 29,
+      "norm_label": ".finish()"
+    },
+    {
+      "label": "Result",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "result",
+      "community": 29,
+      "norm_label": "result"
+    },
+    {
+      "label": "ASAuthorizationControllerDelegate",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "asauthorizationcontrollerdelegate",
+      "community": 29,
+      "norm_label": "asauthorizationcontrollerdelegate"
+    },
+    {
+      "label": ".authorizationController()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "community": 29,
+      "norm_label": ".authorizationcontroller()"
+    },
+    {
+      "label": "ASAuthorizationController",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "asauthorizationcontroller",
+      "community": 29,
+      "norm_label": "asauthorizationcontroller"
+    },
+    {
+      "label": "ASAuthorization",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "asauthorization",
+      "community": 29,
+      "norm_label": "asauthorization"
+    },
+    {
+      "label": "ASAuthorizationControllerPresentationContextProviding",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "asauthorizationcontrollerpresentationcontextproviding",
+      "community": 29,
+      "norm_label": "asauthorizationcontrollerpresentationcontextproviding"
+    },
+    {
+      "label": ".presentationAnchor()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L99",
+      "_origin": "ast",
+      "id": "convex_applesignincoordinator_applesignincoordinator_presentationanchor",
+      "community": 29,
+      "norm_label": ".presentationanchor()"
+    },
+    {
+      "label": "ASPresentationAnchor",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L99",
+      "_origin": "ast",
+      "id": "aspresentationanchor",
+      "community": 29,
+      "norm_label": "aspresentationanchor"
+    },
+    {
+      "label": "ConvexAppleAuthProvider.swift",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider",
+      "community": 7,
+      "norm_label": "convexappleauthprovider.swift"
+    },
+    {
+      "label": "ConvexAuthTokens",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexauthtokens",
+      "community": 7,
+      "norm_label": "convexauthtokens"
+    },
+    {
+      "label": "Decodable",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "decodable",
+      "community": 7,
+      "norm_label": "decodable"
+    },
+    {
+      "label": "Sendable",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "sendable",
+      "community": 7,
+      "norm_label": "sendable"
+    },
+    {
+      "label": "String",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "nestzone_network_convex_convexappleauthprovider_swift_string",
+      "community": 7,
+      "norm_label": "string"
+    },
+    {
+      "label": "ConvexAuthError",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L32",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexautherror",
+      "community": 7,
+      "norm_label": "convexautherror"
+    },
+    {
+      "label": "noCachedSession",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexautherror_nocachedsession",
+      "community": 7,
+      "norm_label": "nocachedsession"
+    },
+    {
+      "label": "noTokens",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexautherror_notokens",
+      "community": 7,
+      "norm_label": "notokens"
+    },
+    {
+      "label": "rejectedByServer",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L35",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexautherror_rejectedbyserver",
+      "community": 7,
+      "norm_label": "rejectedbyserver"
+    },
+    {
+      "label": ".from()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L49",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexautherror_from",
+      "community": 7,
+      "norm_label": ".from()"
+    },
+    {
+      "label": "Error",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L49",
+      "_origin": "ast",
+      "id": "nestzone_network_convex_convexappleauthprovider_swift_error",
+      "community": 7,
+      "norm_label": "error"
+    },
+    {
+      "label": "SignInActionResult",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L65",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_signinactionresult",
+      "community": 7,
+      "norm_label": "signinactionresult"
+    },
+    {
+      "label": "ConvexAppleAuthProvider",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L69",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexappleauthprovider",
+      "community": 7,
+      "norm_label": "convexappleauthprovider"
+    },
+    {
+      "label": "AuthProvider",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "authprovider",
+      "community": 7,
+      "norm_label": "authprovider"
+    },
+    {
+      "label": "PendingCredential",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L72",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_pendingcredential",
+      "community": 7,
+      "norm_label": "pendingcredential"
+    },
+    {
+      "label": "ConvexClient",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L83",
+      "_origin": "ast",
+      "id": "convexclient",
+      "community": 7,
+      "norm_label": "convexclient"
+    },
+    {
+      "label": "KeychainTokenStore",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L84",
+      "_origin": "ast",
+      "id": "keychaintokenstore",
+      "community": 7,
+      "norm_label": "keychaintokenstore"
+    },
+    {
+      "label": ".init()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L86",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexappleauthprovider_init",
+      "community": 7,
+      "norm_label": ".init()"
+    },
+    {
+      "label": ".login()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L93",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexappleauthprovider_login",
+      "community": 7,
+      "norm_label": ".login()"
+    },
+    {
+      "label": "escaping",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L93",
+      "_origin": "ast",
+      "id": "escaping",
+      "community": 7,
+      "norm_label": "escaping"
+    },
+    {
+      "label": ".loginFromCache()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L111",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexappleauthprovider_loginfromcache",
+      "community": 7,
+      "norm_label": ".loginfromcache()"
+    },
+    {
+      "label": ".extractIdToken()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L128",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexappleauthprovider_extractidtoken",
+      "community": 7,
+      "norm_label": ".extractidtoken()"
+    },
+    {
+      "label": ".logout()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L132",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexappleauthprovider_logout",
+      "community": 7,
+      "norm_label": ".logout()"
+    },
+    {
+      "label": ".persist()",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L140",
+      "_origin": "ast",
+      "id": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "community": 7,
+      "norm_label": ".persist()"
+    },
+    {
       "label": "ConvexAuthManager.swift",
       "file_type": "code",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
@@ -10802,7 +11153,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "convex_convexauthmanager_convexauthmanager",
-      "community": 64,
+      "community": 19,
       "norm_label": "convexauthmanager"
     },
     {
@@ -10812,7 +11163,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "nzuser",
-      "community": 64,
+      "community": 19,
       "norm_label": "nzuser"
     },
     {
@@ -10822,97 +11173,77 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "nestzone_network_convex_convexauthmanager_swift_anycancellable",
-      "community": 64,
+      "community": 19,
       "norm_label": "anycancellable"
+    },
+    {
+      "label": "AppleSignInCoordinator",
+      "file_type": "code",
+      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "applesignincoordinator",
+      "community": 29,
+      "norm_label": "applesignincoordinator"
     },
     {
       "label": ".init()",
       "file_type": "code",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "convex_convexauthmanager_convexauthmanager_init",
-      "community": 64,
+      "community": 19,
       "norm_label": ".init()"
     },
     {
       "label": ".bindCurrentUser()",
       "file_type": "code",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L66",
+      "source_location": "L67",
       "_origin": "ast",
       "id": "convex_convexauthmanager_convexauthmanager_bindcurrentuser",
-      "community": 64,
+      "community": 19,
       "norm_label": ".bindcurrentuser()"
     },
     {
-      "label": ".signIn()",
+      "label": ".signInWithApple()",
       "file_type": "code",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L81",
+      "source_location": "L85",
       "_origin": "ast",
-      "id": "convex_convexauthmanager_convexauthmanager_signin",
-      "community": 64,
-      "norm_label": ".signin()"
-    },
-    {
-      "label": "String",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L81",
-      "_origin": "ast",
-      "id": "nestzone_network_convex_convexauthmanager_swift_string",
-      "community": 64,
-      "norm_label": "string"
-    },
-    {
-      "label": ".signUp()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L89",
-      "_origin": "ast",
-      "id": "convex_convexauthmanager_convexauthmanager_signup",
-      "community": 64,
-      "norm_label": ".signup()"
-    },
-    {
-      "label": ".normalize()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L105",
-      "_origin": "ast",
-      "id": "convex_convexauthmanager_convexauthmanager_normalize",
-      "community": 64,
-      "norm_label": ".normalize()"
+      "id": "convex_convexauthmanager_convexauthmanager_signinwithapple",
+      "community": 7,
+      "norm_label": ".signinwithapple()"
     },
     {
       "label": ".signOut()",
       "file_type": "code",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L109",
+      "source_location": "L107",
       "_origin": "ast",
       "id": "convex_convexauthmanager_convexauthmanager_signout",
-      "community": 64,
+      "community": 19,
       "norm_label": ".signout()"
     },
     {
       "label": ".logout()",
       "file_type": "code",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L114",
+      "source_location": "L112",
       "_origin": "ast",
       "id": "convex_convexauthmanager_convexauthmanager_logout",
-      "community": 64,
+      "community": 19,
       "norm_label": ".logout()"
     },
     {
       "label": ".refreshAuth()",
       "file_type": "code",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L121",
+      "source_location": "L119",
       "_origin": "ast",
       "id": "convex_convexauthmanager_convexauthmanager_refreshauth",
-      "community": 64,
+      "community": 19,
       "norm_label": ".refreshauth()"
     },
     {
@@ -11195,326 +11526,6 @@
       "id": "convex_convexmodels_homeaddress",
       "community": 10,
       "norm_label": "homeaddress"
-    },
-    {
-      "label": "ConvexPasswordAuthProvider.swift",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider",
-      "community": 7,
-      "norm_label": "convexpasswordauthprovider.swift"
-    },
-    {
-      "label": "ConvexAuthTokens",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L26",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexauthtokens",
-      "community": 7,
-      "norm_label": "convexauthtokens"
-    },
-    {
-      "label": "Decodable",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "decodable",
-      "community": 7,
-      "norm_label": "decodable"
-    },
-    {
-      "label": "Sendable",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "sendable",
-      "community": 7,
-      "norm_label": "sendable"
-    },
-    {
-      "label": "String",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L27",
-      "_origin": "ast",
-      "id": "nestzone_network_convex_convexpasswordauthprovider_swift_string",
-      "community": 7,
-      "norm_label": "string"
-    },
-    {
-      "label": "ConvexAuthError",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L31",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror",
-      "community": 7,
-      "norm_label": "convexautherror"
-    },
-    {
-      "label": "noPendingCredentials",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L32",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_nopendingcredentials",
-      "community": 7,
-      "norm_label": "nopendingcredentials"
-    },
-    {
-      "label": "noCachedSession",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L33",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_nocachedsession",
-      "community": 7,
-      "norm_label": "nocachedsession"
-    },
-    {
-      "label": "noTokens",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L34",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_notokens",
-      "community": 7,
-      "norm_label": "notokens"
-    },
-    {
-      "label": "accountNotFound",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L35",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_accountnotfound",
-      "community": 7,
-      "norm_label": "accountnotfound"
-    },
-    {
-      "label": "wrongPassword",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L36",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_wrongpassword",
-      "community": 7,
-      "norm_label": "wrongpassword"
-    },
-    {
-      "label": "accountAlreadyExists",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L37",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_accountalreadyexists",
-      "community": 7,
-      "norm_label": "accountalreadyexists"
-    },
-    {
-      "label": "weakPassword",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L38",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_weakpassword",
-      "community": 7,
-      "norm_label": "weakpassword"
-    },
-    {
-      "label": "server",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L39",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_server",
-      "community": 7,
-      "norm_label": "server"
-    },
-    {
-      "label": ".from()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L55",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexautherror_from",
-      "community": 64,
-      "norm_label": ".from()"
-    },
-    {
-      "label": "Error",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L55",
-      "_origin": "ast",
-      "id": "nestzone_network_convex_convexpasswordauthprovider_swift_error",
-      "community": 64,
-      "norm_label": "error"
-    },
-    {
-      "label": "SignInActionResult",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L67",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_signinactionresult",
-      "community": 7,
-      "norm_label": "signinactionresult"
-    },
-    {
-      "label": "ConvexPasswordAuthProvider",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L71",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "community": 7,
-      "norm_label": "convexpasswordauthprovider"
-    },
-    {
-      "label": "AuthProvider",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "authprovider",
-      "community": 7,
-      "norm_label": "authprovider"
-    },
-    {
-      "label": "Flow",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L74",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_flow",
-      "community": 7,
-      "norm_label": "flow"
-    },
-    {
-      "label": "signIn",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L74",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_flow_signin",
-      "community": 7,
-      "norm_label": "signin"
-    },
-    {
-      "label": "signUp",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L74",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_flow_signup",
-      "community": 7,
-      "norm_label": "signup"
-    },
-    {
-      "label": "PendingCredentials",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L76",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_pendingcredentials",
-      "community": 7,
-      "norm_label": "pendingcredentials"
-    },
-    {
-      "label": "ConvexClient",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L89",
-      "_origin": "ast",
-      "id": "convexclient",
-      "community": 7,
-      "norm_label": "convexclient"
-    },
-    {
-      "label": "KeychainTokenStore",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L90",
-      "_origin": "ast",
-      "id": "keychaintokenstore",
-      "community": 7,
-      "norm_label": "keychaintokenstore"
-    },
-    {
-      "label": ".init()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L92",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexpasswordauthprovider_init",
-      "community": 7,
-      "norm_label": ".init()"
-    },
-    {
-      "label": ".login()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L100",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexpasswordauthprovider_login",
-      "community": 7,
-      "norm_label": ".login()"
-    },
-    {
-      "label": "escaping",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L100",
-      "_origin": "ast",
-      "id": "escaping",
-      "community": 7,
-      "norm_label": "escaping"
-    },
-    {
-      "label": ".loginFromCache()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L122",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexpasswordauthprovider_loginfromcache",
-      "community": 7,
-      "norm_label": ".loginfromcache()"
-    },
-    {
-      "label": ".extractIdToken()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L139",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexpasswordauthprovider_extractidtoken",
-      "community": 7,
-      "norm_label": ".extractidtoken()"
-    },
-    {
-      "label": ".logout()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L143",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexpasswordauthprovider_logout",
-      "community": 7,
-      "norm_label": ".logout()"
-    },
-    {
-      "label": ".persist()",
-      "file_type": "code",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L151",
-      "_origin": "ast",
-      "id": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist",
-      "community": 7,
-      "norm_label": ".persist()"
     },
     {
       "label": "KeychainTokenStore.swift",
@@ -13064,7 +13075,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "network_userservice_userservice",
-      "community": 34,
+      "community": 36,
       "norm_label": "userservice"
     },
     {
@@ -13074,7 +13085,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_network_userservice_swift_string",
-      "community": 34,
+      "community": 36,
       "norm_label": "string"
     },
     {
@@ -13084,7 +13095,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_network_userservice_swift_pocketbaseuser",
-      "community": 34,
+      "community": 36,
       "norm_label": "pocketbaseuser"
     },
     {
@@ -13094,7 +13105,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_network_userservice_swift_set",
-      "community": 34,
+      "community": 36,
       "norm_label": "set"
     },
     {
@@ -13104,7 +13115,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "network_userservice_userservice_init",
-      "community": 34,
+      "community": 36,
       "norm_label": ".init()"
     },
     {
@@ -13114,7 +13125,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "network_userservice_userservice_getuser",
-      "community": 34,
+      "community": 36,
       "norm_label": ".getuser()"
     },
     {
@@ -13124,7 +13135,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "network_userservice_userservice_getallusers",
-      "community": 34,
+      "community": 36,
       "norm_label": ".getallusers()"
     },
     {
@@ -13134,7 +13145,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "network_userservice_userservice_fetchusers",
-      "community": 34,
+      "community": 36,
       "norm_label": ".fetchusers()"
     },
     {
@@ -13144,7 +13155,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "network_userservice_userservice_getusername",
-      "community": 34,
+      "community": 36,
       "norm_label": ".getusername()"
     },
     {
@@ -13154,7 +13165,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "network_userservice_userservice_getusers",
-      "community": 34,
+      "community": 36,
       "norm_label": ".getusers()"
     },
     {
@@ -13164,7 +13175,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "network_userservice_userservice_clearcache",
-      "community": 34,
+      "community": 36,
       "norm_label": ".clearcache()"
     },
     {
@@ -13174,7 +13185,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "network_userservice_userservice_retryfaileduser",
-      "community": 34,
+      "community": 36,
       "norm_label": ".retryfaileduser()"
     },
     {
@@ -13696,7 +13707,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "generated_server",
-      "community": 90,
+      "community": 124,
       "norm_label": "server.js"
     },
     {
@@ -13720,10 +13731,20 @@
       "norm_label": "auth.ts"
     },
     {
+      "label": "AppleIdToken",
+      "file_type": "code",
+      "source_file": "backend/convex/auth.ts",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "convex_auth_appleidtoken",
+      "community": 108,
+      "norm_label": "appleidtoken"
+    },
+    {
       "label": "{ auth, signIn, signOut, store, isAuthenticated }",
       "file_type": "code",
       "source_file": "backend/convex/auth.ts",
-      "source_location": "L13",
+      "source_location": "L67",
       "_origin": "ast",
       "id": "convex_auth_auth_signin_signout_store_isauthenticated",
       "community": 108,
@@ -13736,7 +13757,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "convex_conversations",
-      "community": 90,
+      "community": 98,
       "norm_label": "conversations.ts"
     },
     {
@@ -13746,7 +13767,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "convex_conversations_listbyhome",
-      "community": 90,
+      "community": 98,
       "norm_label": "listbyhome"
     },
     {
@@ -13756,7 +13777,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "convex_conversations_create",
-      "community": 90,
+      "community": 98,
       "norm_label": "create"
     },
     {
@@ -13850,6 +13871,56 @@
       "norm_label": "http"
     },
     {
+      "label": "apple.ts",
+      "file_type": "code",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "lib_apple",
+      "community": 108,
+      "norm_label": "apple.ts"
+    },
+    {
+      "label": "APPLE_JWKS_URL",
+      "file_type": "code",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "lib_apple_apple_jwks_url",
+      "community": 108,
+      "norm_label": "apple_jwks_url"
+    },
+    {
+      "label": "jwks",
+      "file_type": "code",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "lib_apple_jwks",
+      "community": 108,
+      "norm_label": "jwks"
+    },
+    {
+      "label": "AppleIdentity",
+      "file_type": "code",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L32",
+      "_origin": "ast",
+      "id": "lib_apple_appleidentity",
+      "community": 108,
+      "norm_label": "appleidentity"
+    },
+    {
+      "label": "verifyAppleIdentityToken()",
+      "file_type": "code",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L42",
+      "_origin": "ast",
+      "id": "lib_apple_verifyappleidentitytoken",
+      "community": 108,
+      "norm_label": "verifyappleidentitytoken()"
+    },
+    {
       "label": "auth.ts",
       "file_type": "code",
       "source_file": "backend/convex/lib/auth.ts",
@@ -13866,7 +13937,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "lib_auth_requireuser",
-      "community": 97,
+      "community": 98,
       "norm_label": "requireuser()"
     },
     {
@@ -13978,6 +14049,66 @@
       "id": "lib_relations_cascadedeletehome",
       "community": 92,
       "norm_label": "cascadedeletehome()"
+    },
+    {
+      "label": "maintenance.ts",
+      "file_type": "code",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "convex_maintenance",
+      "community": 124,
+      "norm_label": "maintenance.ts"
+    },
+    {
+      "label": "APP_TABLES",
+      "file_type": "code",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "convex_maintenance_app_tables",
+      "community": 124,
+      "norm_label": "app_tables"
+    },
+    {
+      "label": "AUTH_TABLES",
+      "file_type": "code",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "convex_maintenance_auth_tables",
+      "community": 124,
+      "norm_label": "auth_tables"
+    },
+    {
+      "label": "ALL",
+      "file_type": "code",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "convex_maintenance_all",
+      "community": 124,
+      "norm_label": "all"
+    },
+    {
+      "label": "wipe",
+      "file_type": "code",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "convex_maintenance_wipe",
+      "community": 124,
+      "norm_label": "wipe"
+    },
+    {
+      "label": "counts",
+      "file_type": "code",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L35",
+      "_origin": "ast",
+      "id": "convex_maintenance_counts",
+      "community": 124,
+      "norm_label": "counts"
     },
     {
       "label": "messages.ts",
@@ -14226,7 +14357,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "convex_polls_requirepollowner",
-      "community": 93,
+      "community": 98,
       "norm_label": "requirepollowner()"
     },
     {
@@ -14376,7 +14507,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "convex_shopping",
-      "community": 98,
+      "community": 4,
       "norm_label": "shopping.ts"
     },
     {
@@ -14386,7 +14517,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "convex_shopping_category",
-      "community": 98,
+      "community": 4,
       "norm_label": "category"
     },
     {
@@ -14396,7 +14527,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "convex_shopping_listbyhome",
-      "community": 98,
+      "community": 4,
       "norm_label": "listbyhome"
     },
     {
@@ -14406,7 +14537,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "convex_shopping_create",
-      "community": 98,
+      "community": 4,
       "norm_label": "create"
     },
     {
@@ -14416,7 +14547,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "convex_shopping_setpurchased",
-      "community": 98,
+      "community": 4,
       "norm_label": "setpurchased"
     },
     {
@@ -14426,7 +14557,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "convex_shopping_update",
-      "community": 98,
+      "community": 4,
       "norm_label": "update"
     },
     {
@@ -14436,7 +14567,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "convex_shopping_remove",
-      "community": 98,
+      "community": 4,
       "norm_label": "remove"
     },
     {
@@ -14700,10 +14831,20 @@
       "norm_label": "convex"
     },
     {
+      "label": "jose",
+      "file_type": "code",
+      "source_file": "backend/package.json",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "backend_package_dependencies_jose",
+      "community": 26,
+      "norm_label": "jose"
+    },
+    {
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "backend/package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast",
       "id": "backend_package_devdependencies",
       "community": 26,
@@ -14713,7 +14854,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "backend/package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast",
       "id": "backend_package_devdependencies_typescript",
       "community": 26,
@@ -15170,6 +15311,16 @@
       "norm_label": "referential integrity (2026\u201009\u201003)"
     },
     {
+      "label": "Auth replaced: Sign in with Apple only (2026\u201109\u201103)",
+      "file_type": "document",
+      "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
+      "source_location": "L271",
+      "_origin": "ast",
+      "id": "convex_migration_backend_deploy_runbook_auth_replaced_sign_in_with_apple_only_2026_09_03",
+      "community": 101,
+      "norm_label": "auth replaced: sign in with apple only (2026\u201009\u201003)"
+    },
+    {
       "label": "iOS-Migration-Guide.md",
       "file_type": "document",
       "source_file": "Docs/Convex-Migration/iOS-Migration-Guide.md",
@@ -15526,7 +15677,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "generated_server_internalquery",
-      "community": 125,
+      "community": 124,
       "norm_label": "internalquery"
     },
     {
@@ -18322,6 +18473,28 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator",
+      "target": "foundation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider",
+      "target": "foundation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
       "source_location": "L13",
       "weight": 1.0,
@@ -18349,17 +18522,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "convex_convexmodels",
-      "target": "foundation"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L22",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
       "target": "foundation"
     },
     {
@@ -20997,34 +21159,37 @@
       "target": "auth_authenticationscreen_authenticationscreen"
     },
     {
-      "relation": "method",
+      "relation": "imports",
+      "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L391",
+      "source_location": "L2",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "auth_authenticationscreen_authenticationscreen_hidekeyboard"
+      "source": "auth_authenticationscreen",
+      "target": "authenticationservices",
+      "confidence_score": 1.0
     },
     {
-      "relation": "method",
+      "relation": "imports",
+      "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L419",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L15",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "auth_authenticationscreen_authenticationscreen_removekeyboardobservers"
+      "source": "convex_applesignincoordinator",
+      "target": "authenticationservices",
+      "confidence_score": 1.0
     },
     {
-      "relation": "method",
+      "relation": "imports",
+      "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L395",
+      "source_file": "NestZone/Modules/Login/LoginScreen.swift",
+      "source_location": "L2",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "auth_authenticationscreen_authenticationscreen_setupkeyboardobservers"
+      "source": "login_loginscreen",
+      "target": "authenticationservices",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -21041,39 +21206,6 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L17",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "draggesture"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L378",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "nestzone_modules_auth_authenticationscreen_swift_bool"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L16",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "nestzone_modules_auth_authenticationscreen_swift_cgfloat"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
       "source_location": "L4",
       "weight": 1.0,
       "context": "field",
@@ -21085,34 +21217,12 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L47",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "nestzone_modules_auth_authenticationscreen_swift_string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
       "source_location": "L19",
       "weight": 1.0,
       "context": "field",
       "confidence_score": 1.0,
       "source": "auth_authenticationscreen_authenticationscreen",
       "target": "nestzone_modules_auth_authenticationscreen_swift_themecolors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationScreen.swift",
-      "source_location": "L37",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationscreen_authenticationscreen",
-      "target": "validationstate"
     },
     {
       "relation": "contains",
@@ -21128,21 +21238,11 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_authenticationviewmodel_authenticationviewmodel",
-      "target": "auth_authenticationviewmodel_authenticationviewmodel_login"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L23",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "auth_authenticationviewmodel_authenticationviewmodel",
-      "target": "auth_authenticationviewmodel_authenticationviewmodel_register"
+      "target": "auth_authenticationviewmodel_authenticationviewmodel_signinwithapple",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -21159,67 +21259,12 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationviewmodel_authenticationviewmodel_login",
-      "target": "nestzone_modules_auth_authenticationviewmodel_swift_string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L23",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationviewmodel_authenticationviewmodel_register",
-      "target": "nestzone_modules_auth_authenticationviewmodel_swift_string"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L13",
-      "weight": 1.0,
-      "source": "auth_authenticationviewmodel_authenticationviewmodel_login",
-      "target": "convex_convexauthmanager_convexauthmanager_signin"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L8",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationviewmodel_authenticationviewmodel_login",
-      "target": "nestzone_modules_auth_authenticationviewmodel_swift_convexauthmanager"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L21",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "auth_authenticationviewmodel_authenticationviewmodel_register",
-      "target": "nestzone_modules_auth_authenticationviewmodel_swift_convexauthmanager"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "NestZone/Modules/Auth/AuthenticationViewModel.swift",
-      "source_location": "L33",
-      "weight": 1.0,
-      "source": "auth_authenticationviewmodel_authenticationviewmodel_register",
-      "target": "convex_convexauthmanager_convexauthmanager_signup"
+      "source": "auth_authenticationviewmodel_authenticationviewmodel_signinwithapple",
+      "target": "nestzone_modules_auth_authenticationviewmodel_swift_convexauthmanager",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -21978,16 +22023,6 @@
       "target": "login_loginscreen_loginscreen"
     },
     {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Login/LoginScreen.swift",
-      "source_location": "L66",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "login_loginscreen_loginscreen",
-      "target": "login_loginscreen_loginscreen_login"
-    },
-    {
       "relation": "calls",
       "context": "call",
       "confidence": "INFERRED",
@@ -22010,17 +22045,6 @@
       "target": "nestzone_modules_login_loginscreen_swift_convexauthmanager"
     },
     {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "NestZone/Modules/Login/LoginScreen.swift",
-      "source_location": "L67",
-      "weight": 1.0,
-      "source": "login_loginscreen_loginscreen_login",
-      "target": "task"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Modules/Login/LoginViewModel.swift",
@@ -22036,9 +22060,9 @@
       "source_file": "NestZone/Modules/Login/LoginViewModel.swift",
       "source_location": "L18",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "login_loginviewmodel_loginviewmodel",
-      "target": "login_loginviewmodel_loginviewmodel_login"
+      "target": "login_loginviewmodel_loginviewmodel_signinwithapple",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -22058,31 +22082,9 @@
       "source_location": "L18",
       "weight": 1.0,
       "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "login_loginviewmodel_loginviewmodel_login",
-      "target": "nestzone_modules_login_loginviewmodel_swift_string"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "NestZone/Modules/Login/LoginViewModel.swift",
-      "source_location": "L21",
-      "weight": 1.0,
-      "source": "login_loginviewmodel_loginviewmodel_login",
-      "target": "convex_convexauthmanager_convexauthmanager_signin"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Modules/Login/LoginViewModel.swift",
-      "source_location": "L18",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "login_loginviewmodel_loginviewmodel_login",
-      "target": "nestzone_modules_login_loginviewmodel_swift_convexauthmanager"
+      "source": "login_loginviewmodel_loginviewmodel_signinwithapple",
+      "target": "nestzone_modules_login_loginviewmodel_swift_convexauthmanager",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -28670,6 +28672,17 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider",
+      "target": "convexmobile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
       "source_location": "L15",
       "weight": 1.0,
@@ -28686,17 +28699,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "convex_convexclientprovider",
-      "target": "convexmobile"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L23",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
       "target": "convexmobile"
     },
     {
@@ -29883,12 +29885,22 @@
     {
       "relation": "implements",
       "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L31",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L26",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "localizederror"
+      "source": "convex_applesignincoordinator_failure",
+      "target": "localizederror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexautherror",
+      "target": "localizederror",
+      "confidence_score": 1.0
     },
     {
       "relation": "implements",
@@ -38099,12 +38111,860 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L98",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator",
+      "target": "applesignincoordinator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator",
+      "target": "convex_applesignincoordinator_credential",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator",
+      "target": "convex_applesignincoordinator_failure",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "applesignincoordinator",
+      "target": "nsobject",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "source": "applesignincoordinator",
+      "target": "convex_applesignincoordinator_credential",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "target": "convex_applesignincoordinator_credential",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L55",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "source": "convex_applesignincoordinator_applesignincoordinator_finish",
+      "target": "convex_applesignincoordinator_credential",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L42",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "convex_applesignincoordinator_applesignincoordinator_signin",
+      "target": "convex_applesignincoordinator_credential",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L23",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_applesignincoordinator_credential",
+      "target": "nestzone_network_convex_applesignincoordinator_swift_string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L31",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_applesignincoordinator_failure",
+      "target": "nestzone_network_convex_applesignincoordinator_swift_string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_failure",
+      "target": "convex_applesignincoordinator_failure_cancelled",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_failure",
+      "target": "convex_applesignincoordinator_failure_missingidentitytoken",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_failure",
+      "target": "convex_applesignincoordinator_failure_underlying",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "target": "convex_applesignincoordinator_failure_underlying",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "field",
+      "source": "applesignincoordinator",
+      "target": "checkedcontinuation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "source": "applesignincoordinator",
+      "target": "nestzone_network_convex_applesignincoordinator_swift_error",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L86",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "target": "nestzone_network_convex_applesignincoordinator_swift_error",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L55",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "source": "convex_applesignincoordinator_applesignincoordinator_finish",
+      "target": "nestzone_network_convex_applesignincoordinator_swift_error",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "applesignincoordinator",
+      "target": "convex_applesignincoordinator_applesignincoordinator_signin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_applesignincoordinator_signin",
+      "target": "asauthorizationcontroller",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "applesignincoordinator",
+      "target": "convex_applesignincoordinator_applesignincoordinator_finish",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "target": "convex_applesignincoordinator_applesignincoordinator_finish",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L55",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_applesignincoordinator_applesignincoordinator_finish",
+      "target": "result",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "applesignincoordinator",
+      "target": "asauthorizationcontrollerdelegate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "applesignincoordinator",
+      "target": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L63",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "target": "asauthorization",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L86",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_applesignincoordinator_applesignincoordinator_authorizationcontroller",
+      "target": "asauthorizationcontroller",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L99",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_applesignincoordinator_applesignincoordinator_presentationanchor",
+      "target": "asauthorizationcontroller",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L98",
+      "weight": 1.0,
+      "source": "applesignincoordinator",
+      "target": "asauthorizationcontrollerpresentationcontextproviding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L99",
+      "weight": 1.0,
+      "source": "applesignincoordinator",
+      "target": "convex_applesignincoordinator_applesignincoordinator_presentationanchor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/AppleSignInCoordinator.swift",
+      "source_location": "L99",
+      "weight": 1.0,
+      "source": "convex_applesignincoordinator_applesignincoordinator_presentationanchor",
+      "target": "aspresentationanchor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexautherror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexauthtokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_pendingcredential",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_signinactionresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L128",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_extractidtoken",
+      "target": "convex_convexappleauthprovider_convexauthtokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L93",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_login",
+      "target": "convex_convexappleauthprovider_convexauthtokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L111",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_loginfromcache",
+      "target": "convex_convexappleauthprovider_convexauthtokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L140",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "target": "convex_convexappleauthprovider_convexauthtokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexauthtokens",
+      "target": "decodable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L29",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexappleauthprovider_convexauthtokens",
+      "target": "nestzone_network_convex_convexappleauthprovider_swift_string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexauthtokens",
+      "target": "sendable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L66",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexappleauthprovider_signinactionresult",
+      "target": "convex_convexappleauthprovider_convexauthtokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_signinactionresult",
+      "target": "decodable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L93",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_login",
+      "target": "sendable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L111",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_loginfromcache",
+      "target": "sendable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L140",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "target": "sendable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L128",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_extractidtoken",
+      "target": "nestzone_network_convex_convexappleauthprovider_swift_string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L86",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_init",
+      "target": "nestzone_network_convex_convexappleauthprovider_swift_string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L37",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexappleauthprovider_convexautherror",
+      "target": "nestzone_network_convex_convexappleauthprovider_swift_string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L74",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexappleauthprovider_pendingcredential",
+      "target": "nestzone_network_convex_convexappleauthprovider_swift_string",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexautherror",
+      "target": "convex_convexappleauthprovider_convexautherror_from",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexautherror",
+      "target": "convex_convexappleauthprovider_convexautherror_nocachedsession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexautherror",
+      "target": "convex_convexappleauthprovider_convexautherror_notokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexautherror",
+      "target": "convex_convexappleauthprovider_convexautherror_rejectedbyserver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexautherror_from",
+      "target": "convex_convexappleauthprovider_convexautherror_rejectedbyserver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L49",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexautherror_from",
+      "target": "nestzone_network_convex_convexappleauthprovider_swift_error",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "convex_convexauthmanager_convexauthmanager_signinwithapple",
+      "target": "convex_convexappleauthprovider_convexautherror_from"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L140",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "target": "convex_convexappleauthprovider_signinactionresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "authprovider",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L128",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_extractidtoken",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_login",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L111",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_loginfromcache",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L132",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_logout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L79",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convex_convexappleauthprovider_pendingcredential",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L83",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "convexclient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L84",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider",
+      "target": "keychaintokenstore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZone/Network/Convex/ConvexClientProvider.swift",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "convex_convexclientprovider_convex",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_init",
+      "target": "convexclient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L86",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_init",
+      "target": "keychaintokenstore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_login",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_loginfromcache",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_login",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L93",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_login",
+      "target": "escaping",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L111",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_loginfromcache",
+      "target": "escaping",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L140",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "target": "escaping",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAppleAuthProvider.swift",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "convex_convexappleauthprovider_convexappleauthprovider_loginfromcache",
+      "target": "convex_convexappleauthprovider_convexappleauthprovider_persist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
       "source_location": "L17",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "convex_convexauthmanager",
       "target": "convex_convexauthmanager_convexauthmanager"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
+      "source_location": "L29",
+      "weight": 1.0,
+      "context": "field",
+      "source": "convex_convexauthmanager_convexauthmanager",
+      "target": "applesignincoordinator",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -38140,16 +39000,6 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L105",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager",
-      "target": "convex_convexauthmanager_convexauthmanager_normalize"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
       "source_location": "L121",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -38160,11 +39010,11 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L81",
+      "source_location": "L85",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "convex_convexauthmanager_convexauthmanager",
-      "target": "convex_convexauthmanager_convexauthmanager_signin"
+      "target": "convex_convexauthmanager_convexauthmanager_signinwithapple",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -38175,16 +39025,6 @@
       "confidence_score": 1.0,
       "source": "convex_convexauthmanager_convexauthmanager",
       "target": "convex_convexauthmanager_convexauthmanager_signout"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L89",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager",
-      "target": "convex_convexauthmanager_convexauthmanager_signup"
     },
     {
       "relation": "references",
@@ -38213,88 +39053,22 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "convex_convexauthmanager_convexauthmanager_signinwithapple",
+      "target": "applesignincoordinator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
       "source_location": "L46",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "convex_convexauthmanager_convexauthmanager_init",
       "target": "convex_convexauthmanager_convexauthmanager_bindcurrentuser"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L82",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager_signin",
-      "target": "convex_convexauthmanager_convexauthmanager_normalize"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L85",
-      "weight": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager_signin",
-      "target": "convex_convexpasswordauthprovider_convexautherror_from"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L81",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager_signin",
-      "target": "nestzone_network_convex_convexauthmanager_swift_string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L105",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager_normalize",
-      "target": "nestzone_network_convex_convexauthmanager_swift_string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L89",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager_signup",
-      "target": "nestzone_network_convex_convexauthmanager_swift_string"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L90",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager_signup",
-      "target": "convex_convexauthmanager_convexauthmanager_normalize"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "NestZone/Network/Convex/ConvexAuthManager.swift",
-      "source_location": "L96",
-      "weight": 1.0,
-      "source": "convex_convexauthmanager_convexauthmanager_signup",
-      "target": "convex_convexpasswordauthprovider_convexautherror_from"
     },
     {
       "relation": "calls",
@@ -38347,17 +39121,6 @@
       "confidence_score": 1.0,
       "source": "convex_convexclientprovider_convex",
       "target": "convex_convexclientprovider_convex_startdiagnostics"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "NestZone/Network/Convex/ConvexClientProvider.swift",
-      "source_location": "L32",
-      "weight": 1.0,
-      "source": "convex_convexclientprovider_convex",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider"
     },
     {
       "relation": "references",
@@ -38714,583 +39477,6 @@
       "confidence_score": 1.0,
       "source": "convex_convexmodels_home_init",
       "target": "nestzone_network_convex_convexmodels_swift_decoder"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L31",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexautherror"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexauthtokens"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L71",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L74",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_flow"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L76",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_pendingcredentials"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L67",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_signinactionresult"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexauthtokens",
-      "target": "decodable"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L28",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexauthtokens",
-      "target": "nestzone_network_convex_convexpasswordauthprovider_swift_string"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexauthtokens",
-      "target": "sendable"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L139",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_extractidtoken",
-      "target": "convex_convexpasswordauthprovider_convexauthtokens"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L100",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_login",
-      "target": "convex_convexpasswordauthprovider_convexauthtokens"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L122",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_loginfromcache",
-      "target": "convex_convexpasswordauthprovider_convexauthtokens"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L151",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist",
-      "target": "convex_convexpasswordauthprovider_convexauthtokens"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L68",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_signinactionresult",
-      "target": "convex_convexpasswordauthprovider_convexauthtokens"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L67",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_signinactionresult",
-      "target": "decodable"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L100",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_login",
-      "target": "sendable"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L122",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_loginfromcache",
-      "target": "sendable"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L151",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist",
-      "target": "sendable"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L41",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "nestzone_network_convex_convexpasswordauthprovider_swift_string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L139",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_extractidtoken",
-      "target": "nestzone_network_convex_convexpasswordauthprovider_swift_string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L92",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_init",
-      "target": "nestzone_network_convex_convexpasswordauthprovider_swift_string"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L74",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_flow",
-      "target": "nestzone_network_convex_convexpasswordauthprovider_swift_string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L79",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_pendingcredentials",
-      "target": "nestzone_network_convex_convexpasswordauthprovider_swift_string"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L37",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_accountalreadyexists"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L35",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_accountnotfound"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L55",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_from"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L33",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_nocachedsession"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L32",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_nopendingcredentials"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L34",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_notokens"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L39",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_server"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L38",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_weakpassword"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L36",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror",
-      "target": "convex_convexpasswordauthprovider_convexautherror_wrongpassword"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L55",
-      "weight": 1.0,
-      "context": "return_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexautherror_from",
-      "target": "nestzone_network_convex_convexpasswordauthprovider_swift_error"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L151",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist",
-      "target": "convex_convexpasswordauthprovider_signinactionresult"
-    },
-    {
-      "relation": "inherits",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L71",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "authprovider"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L139",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_extractidtoken"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L92",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_init"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L100",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_login"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L122",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_loginfromcache"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L143",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_logout"
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L151",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L85",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convex_convexpasswordauthprovider_pendingcredentials"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L89",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "convexclient"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L90",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider",
-      "target": "keychaintokenstore"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L74",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_flow",
-      "target": "convex_convexpasswordauthprovider_flow_signin"
-    },
-    {
-      "relation": "case_of",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L74",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_flow",
-      "target": "convex_convexpasswordauthprovider_flow_signup"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L80",
-      "weight": 1.0,
-      "context": "field",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_pendingcredentials",
-      "target": "convex_convexpasswordauthprovider_flow"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L93",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_init",
-      "target": "convexclient"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L92",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_init",
-      "target": "keychaintokenstore"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L103",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_login",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_loginfromcache"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L118",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_login",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L100",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_login",
-      "target": "escaping"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L122",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_loginfromcache",
-      "target": "escaping"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L151",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist",
-      "target": "escaping"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "NestZone/Network/Convex/ConvexPasswordAuthProvider.swift",
-      "source_location": "L131",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "convex_convexpasswordauthprovider_convexpasswordauthprovider_loginfromcache",
-      "target": "convex_convexpasswordauthprovider_convexpasswordauthprovider_persist"
     },
     {
       "relation": "contains",
@@ -41086,9 +41272,9 @@
       "source_file": "NestZone/Network/PocketBaseModels.swift",
       "source_location": "L212",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "network_pocketbasemodels_pocketbaseconversation",
-      "target": "network_pocketbasemodels_pocketbaseconversation",
-      "confidence_score": 1.0
+      "target": "network_pocketbasemodels_pocketbaseconversation"
     },
     {
       "relation": "method",
@@ -41149,9 +41335,9 @@
       "source_file": "NestZone/Network/PocketBaseModels.swift",
       "source_location": "L273",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "network_pocketbasemodels_pocketbasemessage",
-      "target": "network_pocketbasemodels_pocketbasemessage",
-      "confidence_score": 1.0
+      "target": "network_pocketbasemodels_pocketbasemessage"
     },
     {
       "relation": "method",
@@ -42275,6 +42461,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/convex/_generated/api.d.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "generated_api_d",
+      "target": "convex_maintenance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/_generated/api.d.ts",
       "source_location": "L17",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -42363,6 +42560,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/convex/_generated/api.d.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "generated_api_d",
+      "target": "lib_apple",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/_generated/api.d.ts",
       "source_location": "L16",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -42376,9 +42584,9 @@
       "source_file": "backend/convex/_generated/api.d.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "generated_api_d",
-      "target": "lib_relations",
-      "confidence_score": 1.0
+      "target": "lib_relations"
     },
     {
       "relation": "contains",
@@ -42539,6 +42747,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "generated_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "backend/convex/messages.ts",
       "source_location": "L9",
       "weight": 1.0,
@@ -42641,8 +42860,18 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "generated_server",
+      "target": "generated_server"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/auth.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "convex_auth",
+      "target": "convex_auth_appleidtoken",
       "confidence_score": 1.0
     },
     {
@@ -42654,6 +42883,28 @@
       "confidence_score": 1.0,
       "source": "convex_auth",
       "target": "convex_auth_auth_signin_signout_store_isauthenticated"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/auth.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "convex_auth",
+      "target": "lib_apple",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/auth.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "convex_auth",
+      "target": "lib_apple_verifyappleidentitytoken",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -42748,9 +42999,9 @@
       "source_file": "backend/convex/conversations.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_conversations",
-      "target": "lib_relations",
-      "confidence_score": 1.0
+      "target": "lib_relations"
     },
     {
       "relation": "imports",
@@ -42759,9 +43010,9 @@
       "source_file": "backend/convex/conversations.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_conversations",
-      "target": "lib_relations_requiremembers",
-      "confidence_score": 1.0
+      "target": "lib_relations_requiremembers"
     },
     {
       "relation": "contains",
@@ -42885,9 +43136,9 @@
       "source_file": "backend/convex/homes.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_homes",
-      "target": "lib_relations",
-      "confidence_score": 1.0
+      "target": "lib_relations"
     },
     {
       "relation": "imports",
@@ -42896,9 +43147,9 @@
       "source_file": "backend/convex/homes.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_homes",
-      "target": "lib_relations_cascadedeletehome",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeletehome"
     },
     {
       "relation": "contains",
@@ -42909,6 +43160,46 @@
       "confidence_score": 1.0,
       "source": "convex_http",
       "target": "convex_http_http"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "lib_apple",
+      "target": "lib_apple_apple_jwks_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "lib_apple",
+      "target": "lib_apple_appleidentity",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "lib_apple",
+      "target": "lib_apple_jwks",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/lib/apple.ts",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "lib_apple",
+      "target": "lib_apple_verifyappleidentitytoken",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -43320,9 +43611,9 @@
       "source_file": "backend/convex/movies.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_movies",
-      "target": "lib_relations",
-      "confidence_score": 1.0
+      "target": "lib_relations"
     },
     {
       "relation": "imports_from",
@@ -43331,9 +43622,9 @@
       "source_file": "backend/convex/polls.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_polls",
-      "target": "lib_relations",
-      "confidence_score": 1.0
+      "target": "lib_relations"
     },
     {
       "relation": "imports_from",
@@ -43342,9 +43633,9 @@
       "source_file": "backend/convex/tasks.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_tasks",
-      "target": "lib_relations",
-      "confidence_score": 1.0
+      "target": "lib_relations"
     },
     {
       "relation": "contains",
@@ -43352,9 +43643,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "lib_relations_cascadedeleteconversation",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeleteconversation"
     },
     {
       "relation": "contains",
@@ -43362,9 +43653,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L113",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "lib_relations_cascadedeletehome",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeletehome"
     },
     {
       "relation": "contains",
@@ -43372,9 +43663,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "lib_relations_cascadedeletemovielist",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeletemovielist"
     },
     {
       "relation": "contains",
@@ -43382,9 +43673,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L73",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "lib_relations_cascadedeletepoll",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeletepoll"
     },
     {
       "relation": "contains",
@@ -43392,9 +43683,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "lib_relations_requiremembers",
-      "confidence_score": 1.0
+      "target": "lib_relations_requiremembers"
     },
     {
       "relation": "contains",
@@ -43402,9 +43693,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "lib_relations_requireref",
-      "confidence_score": 1.0
+      "target": "lib_relations_requireref"
     },
     {
       "relation": "contains",
@@ -43412,9 +43703,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations",
-      "target": "lib_relations_requiresamehome",
-      "confidence_score": 1.0
+      "target": "lib_relations_requiresamehome"
     },
     {
       "relation": "imports",
@@ -43423,9 +43714,9 @@
       "source_file": "backend/convex/movies.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_movies",
-      "target": "lib_relations_requireref",
-      "confidence_score": 1.0
+      "target": "lib_relations_requireref"
     },
     {
       "relation": "calls",
@@ -43434,9 +43725,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations_requiremembers",
-      "target": "lib_relations_requireref",
-      "confidence_score": 1.0
+      "target": "lib_relations_requireref"
     },
     {
       "relation": "imports",
@@ -43445,9 +43736,9 @@
       "source_file": "backend/convex/movies.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_movies",
-      "target": "lib_relations_requiresamehome",
-      "confidence_score": 1.0
+      "target": "lib_relations_requiresamehome"
     },
     {
       "relation": "imports",
@@ -43456,9 +43747,9 @@
       "source_file": "backend/convex/tasks.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_tasks",
-      "target": "lib_relations_requiremembers",
-      "confidence_score": 1.0
+      "target": "lib_relations_requiremembers"
     },
     {
       "relation": "calls",
@@ -43467,9 +43758,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations_cascadedeletehome",
-      "target": "lib_relations_cascadedeleteconversation",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeleteconversation"
     },
     {
       "relation": "imports",
@@ -43478,9 +43769,9 @@
       "source_file": "backend/convex/polls.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_polls",
-      "target": "lib_relations_cascadedeletepoll",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeletepoll"
     },
     {
       "relation": "calls",
@@ -43489,9 +43780,9 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L143",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations_cascadedeletehome",
-      "target": "lib_relations_cascadedeletepoll",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeletepoll"
     },
     {
       "relation": "imports",
@@ -43500,9 +43791,9 @@
       "source_file": "backend/convex/movies.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_movies",
-      "target": "lib_relations_cascadedeletemovielist",
-      "confidence_score": 1.0
+      "target": "lib_relations_cascadedeletemovielist"
     },
     {
       "relation": "calls",
@@ -43511,8 +43802,80 @@
       "source_file": "backend/convex/lib/relations.ts",
       "source_location": "L133",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_relations_cascadedeletehome",
-      "target": "lib_relations_cascadedeletemovielist",
+      "target": "lib_relations_cascadedeletemovielist"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "convex_maintenance_all",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "convex_maintenance_app_tables",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "convex_maintenance_auth_tables",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "convex_maintenance_counts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "convex_maintenance_wipe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "generated_server_internalmutation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/maintenance.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "convex_maintenance",
+      "target": "generated_server_internalquery",
       "confidence_score": 1.0
     },
     {
@@ -44325,6 +44688,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/package.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_jose",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/package.json",
       "source_location": "L19",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -44667,6 +45040,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "convex_migration_backend_deploy_runbook_nestzone_backend_convex_deploy_data_import_runbook",
+      "target": "convex_migration_backend_deploy_runbook_auth_replaced_sign_in_with_apple_only_2026_09_03",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
       "source_location": "L154",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -44699,9 +45082,9 @@
       "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
       "source_location": "L226",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_migration_backend_deploy_runbook_nestzone_backend_convex_deploy_data_import_runbook",
-      "target": "convex_migration_backend_deploy_runbook_referential_integrity_2026_09_03",
-      "confidence_score": 1.0
+      "target": "convex_migration_backend_deploy_runbook_referential_integrity_2026_09_03"
     },
     {
       "relation": "contains",
@@ -45190,5 +45573,5 @@
       "source_file": "Docs/PocketBase/README.md"
     }
   ],
-  "built_at_commit": "bd7796b1dde59fc069ed23b399c58d1ea5aed124"
+  "built_at_commit": "c5163ca8d1d53f3e4c5357d2e2c770d85c8cb05e"
 }

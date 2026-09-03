@@ -5,32 +5,17 @@ class AuthenticationViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    func login(authManager: ConvexAuthManager, email: String, password: String) async {
+    /// The only sign-in path. There is no separate register flow: Apple reports
+    /// whether this is a first authorization and the backend creates the account
+    /// on demand, so one button covers both cases.
+    func signInWithApple(authManager: ConvexAuthManager) async {
         isLoading = true
         errorMessage = nil
 
         do {
-            try await authManager.signIn(email: email, password: password)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-
-        isLoading = false
-    }
-
-    func register(authManager: ConvexAuthManager, email: String, password: String, fullName: String) async {
-        isLoading = true
-        errorMessage = nil
-
-        // Basic client-side guard retained from the PocketBase flow.
-        guard password.count >= 8 else {
-            errorMessage = "Password must be at least 8 characters"
-            isLoading = false
-            return
-        }
-
-        do {
-            try await authManager.signUp(email: email, password: password, name: fullName)
+            try await authManager.signInWithApple()
+        } catch AppleSignInCoordinator.Failure.cancelled {
+            // User dismissed the Apple sheet — that's not an error worth showing.
         } catch {
             errorMessage = error.localizedDescription
         }

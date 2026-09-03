@@ -1,12 +1,13 @@
 import SwiftUI
+import AuthenticationServices
 
+/// Sign in with Apple only — NestZone stores no passwords. See convex/auth.ts.
 struct LoginScreen: View {
     // MARK: - Properties
     @StateObject private var viewModel = LoginViewModel()
     @EnvironmentObject private var authManager: ConvexAuthManager
-    @State private var email = ""
-    @State private var password = ""
-    
+    @Environment(\.colorScheme) private var colorScheme
+
     // MARK: - Body
     var body: some View {
         VStack(spacing: 20) {
@@ -14,58 +15,48 @@ struct LoginScreen: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-            
-            TextField("Email", text: $email)
-                .textFieldStyle(.roundedBorder)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.emailAddress)
-                .autocorrectionDisabled()
-            
-            SecureField("Password", text: $password)
-                .textFieldStyle(.roundedBorder)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            
-            Button {
-                login()
-            } label: {
-                ZStack {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text("Login")
-                            .foregroundColor(.white)
-                    }
+
+            Text(LocalizationManager.authAppleExplainer)
+                .font(.subheadline)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.white.opacity(0.8))
+                .padding(.horizontal, 32)
+
+            ZStack {
+                SignInWithAppleButton(.signIn) { _ in } onCompletion: { _ in }
+                    .signInWithAppleButtonStyle(.white)
+                    .frame(height: 50)
+                    .allowsHitTesting(false)
+                    .opacity(viewModel.isLoading ? 0.4 : 1)
+
+                // Our own coordinator drives the request so cancellation and the
+                // token exchange are handled in one place.
+                Button {
+                    Task { await viewModel.signInWithApple(authManager: authManager) }
+                } label: {
+                    Color.clear.frame(height: 50).contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .disabled(viewModel.isLoading)
+
+                if viewModel.isLoading {
+                    ProgressView().tint(.black)
+                }
             }
-            .background(email.isEmpty || password.isEmpty || viewModel.isLoading ? Color.gray.opacity(0.5) : Color.blue)
-            .cornerRadius(8)
-            .disabled(email.isEmpty || password.isEmpty || viewModel.isLoading)
+            .padding(.horizontal, 32)
+            .accessibilityElement(children: .ignore)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(Text("Sign in with Apple"))
         }
-        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black)
+        .background(Color.blue.ignoresSafeArea())
         .alert(
             "Error",
             isPresented: .constant(viewModel.errorMessage != nil),
-            presenting: viewModel.errorMessage,
-            actions: { item in
-                Button("OK") {
-                    viewModel.errorMessage = nil
-                }
-            }
-        ) { item in
+            presenting: viewModel.errorMessage
+        ) { _ in
+            Button("OK") { viewModel.errorMessage = nil }
+        } message: { item in
             Text(item)
-        }
-    }
-    
-    // MARK: - Private Methods
-    private func login() {
-        Task {
-            await viewModel.login(authManager: authManager, email: email, password: password)
         }
     }
 }

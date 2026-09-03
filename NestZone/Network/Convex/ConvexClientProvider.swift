@@ -28,8 +28,8 @@ enum Convex {
             .store(in: &diagnosticsBag)
     }
 
-    /// Drives the @convex-dev/auth Password provider (sign-in/up + token refresh).
-    static let authProvider = ConvexPasswordAuthProvider(deploymentUrl: deploymentURL)
+    /// Drives the @convex-dev/auth Apple provider (sign-in + token refresh).
+    static let authProvider = ConvexAppleAuthProvider(deploymentUrl: deploymentURL)
 
     /// Single shared, auth-aware client. Its generic `T` is inferred as
     /// `ConvexAuthTokens` from the provider.

@@ -13,7 +13,8 @@
   "dependencies": {
     "@convex-dev/auth": "^0.0.87",
     "@auth/core": "0.37.0",
-    "convex": "^1.27.0"
+    "convex": "^1.27.0",
+    "jose": "^5.10.0"
   },
   "devDependencies": {
     "typescript": "^5.6.0"

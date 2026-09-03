@@ -26,6 +26,7 @@ final class ConvexAuthManager: ObservableObject {
     private let provider = Convex.authProvider
     private var bag = Set<AnyCancellable>()
     private var meSubscription: AnyCancellable?
+    private var appleCoordinator: AppleSignInCoordinator?
 
     init() {
         Convex.startDiagnostics()
@@ -78,32 +79,29 @@ final class ConvexAuthManager: ObservableObject {
 
     // MARK: - Actions
 
-    func signIn(email: String, password: String) async throws {
-        provider.pending = .init(email: Self.normalize(email), password: password, name: nil, flow: .signIn)
+    /// The only way in: native Sign in with Apple. There is no sign-up flow —
+    /// Apple tells us whether this is a first authorization, and the backend
+    /// creates the account on demand keyed on Apple's stable `sub`.
+    func signInWithApple() async throws {
+        let coordinator = AppleSignInCoordinator()
+        // Held for the duration: ASAuthorizationController keeps only a weak
+        // delegate, so a local-only reference would be deallocated mid-flow.
+        appleCoordinator = coordinator
+        defer { appleCoordinator = nil }
+
+        let credential = try await coordinator.signIn()
+        Convex.log.log("Apple sign-in: got identity token, exchanging with Convex")
+
+        provider.pending = .init(
+            identityToken: credential.identityToken,
+            name: credential.displayName
+        )
         if case .failure(let error) = await client.login() {
             provider.pending = nil
+            Convex.log.error("Apple sign-in exchange failed: \(String(describing: error), privacy: .public)")
             throw ConvexAuthError.from(error)
         }
-    }
-
-    func signUp(email: String, password: String, name: String) async throws {
-        Convex.log.log("signUp start: \(Self.normalize(email), privacy: .public)")
-        provider.pending = .init(email: Self.normalize(email), password: password, name: name, flow: .signUp)
-        let result = await client.login()
-        if case .failure(let error) = result {
-            provider.pending = nil
-            Convex.log.error("signUp login() failed: \(String(describing: error), privacy: .public)")
-            throw ConvexAuthError.from(error)
-        }
-        Convex.log.log("signUp login() succeeded")
-    }
-
-    /// Canonicalize the email so sign-up and sign-in always hit the same auth account,
-    /// and so migrated (lowercase) profiles link correctly. @convex-dev/auth matches the
-    /// account by exact `providerAccountId` (the email), so client-side normalization is
-    /// what keeps "Foo@X.com ", "foo@x.com" from creating divergent accounts.
-    static func normalize(_ email: String) -> String {
-        email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        Convex.log.log("Apple sign-in succeeded")
     }
 
     func signOut() async {

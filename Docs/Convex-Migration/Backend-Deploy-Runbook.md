@@ -267,3 +267,55 @@ Still optional **on purpose** — see the header comment in `schema.ts` for the 
 The one that matters: **`users.home_id` must stay optional**, because a brand‑new signup
 belongs to no home until they create or join one. Making it required would break
 registration.
+
+## Auth replaced: Sign in with Apple only (2026‑09‑03)
+
+Email/password sign-in is **gone**. Not a preference — it was actively broken, and the
+failure was structural rather than a tuning problem:
+
+**What broke.** `@convex-dev/auth`'s Password provider hashes with Lucia's `Scrypt`
+(N=16384, **r=16** — twice the standard cost factor) implemented in pure JavaScript, and it
+calls that hash from **inside a mutation** (`createAccountFromCredentials.ts:66`). Convex
+gives a mutation a hard **1-second** budget. On this self-hosted backend the hash did not
+fit, so sign-up failed with `Function execution timed out (maximum duration: 1s)`. It was
+marginal rather than hopeless, which is the worst case: one attempt squeaked through and
+left a half-usable account, and the rest failed. The `InvalidAccountId` errors seen
+alongside it were a *different* thing — the normal "migrated user has no password account
+yet" path, thrown before that account existed.
+
+**Why Apple rather than faster hashing.** Cheaper hashing was measured and would have
+worked (native PBKDF2-HMAC-SHA256 at OWASP's 600k iterations uses under a third of the
+mutation budget, where three fit and five time out). But it keeps the app in the business
+of storing and verifying secrets. Apple verifies the user instead and we store only an
+opaque identifier.
+
+**How it works now.**
+- The iOS app uses the **native** `ASAuthorizationAppleIDProvider`
+  (`AppleSignInCoordinator.swift`) — no browser redirect, no OAuth callback. That is not
+  just a nicety here: this deployment only proxies `/.well-known/*` to the HTTP-actions
+  origin (see the tunnel section above), so the redirect-based OAuth routes would not be
+  reachable at all.
+- Apple returns a signed identity token; `convex/lib/apple.ts` verifies it against Apple's
+  published JWKS, checking RS256, `iss=https://appleid.apple.com`, `aud=<bundle id>`
+  (a **native** token's audience is the bundle id, not a Services ID) and expiry.
+- `convex/auth.ts` keys accounts on Apple's **`sub`**, never on email. `sub` is the only
+  claim present on every sign-in — Apple sends the email and the user's name **only on the
+  very first authorization**. Linking by email is allowed only when Apple says the address
+  is verified and is not a private-relay alias, since relay addresses are per-app and
+  matching one to another profile would be meaningless.
+- There is no sign-up flow. One button covers first and subsequent sign-ins; the backend
+  creates the account on demand.
+
+**Client-side:** `ConvexPasswordAuthProvider` → `ConvexAppleAuthProvider` (same
+`auth:signIn` / `auth:signOut` action contract, `{provider:"apple", params:{identityToken,
+name}}`). The email/password forms, the login/register toggle and the password validation
+in `AuthenticationScreen` and `LoginScreen` are removed. `NestZone.entitlements` carries
+`com.apple.developer.applesignin`, applied to the app target's Debug and Release configs
+only — deliberately **not** the test targets, where it would break signing.
+
+**Also fixed while in here:** `authRefreshTokens` had grown to **5,596 rows against 3
+sessions**. That is what made the account cleanup time out. All were purged. Worth watching
+whether it regrows — a client reconnect loop is the likely cause.
+
+**`tr.json` had a trailing comma** (invalid JSON). `JSONSerialization` happens to tolerate
+it, so Turkish was never actually broken, but every stricter parser rejects the file. Fixed.

@@ -13,13 +13,16 @@ class LoginViewModel: ObservableObject {
     // MARK: - Properties
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
+
     // MARK: - Public Methods
-    func login(authManager: ConvexAuthManager, email: String, password: String) async {
+    func signInWithApple(authManager: ConvexAuthManager) async {
         isLoading = true
+        errorMessage = nil
         do {
-            try await authManager.signIn(email: email, password: password)
-        } catch let error {
+            try await authManager.signInWithApple()
+        } catch AppleSignInCoordinator.Failure.cancelled {
+            // User dismissed the Apple sheet — not an error.
+        } catch {
             errorMessage = error.localizedDescription
         }
         isLoading = false

@@ -529,6 +529,7 @@ extension LocalizationManager {
     static var authPasswordsMismatch: String { t("auth_passwords_mismatch") }
     static var authWelcomeTitle: String { t("auth_welcome_title") }
     static var authSignInSubtitle: String { t("auth_sign_in_subtitle") }
+    static var authAppleExplainer: String { t("auth_apple_explainer") }
     static var authCreateAccountSubtitle: String { t("auth_create_account_subtitle") }
     static var authLoginButton: String { t("auth_login_button") }
     static var authSignUpButton: String { t("auth_sign_up_button") }

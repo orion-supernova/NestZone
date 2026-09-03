@@ -502,6 +502,7 @@
   "auth_passwords_mismatch": "Şifreler eşleşmiyor",
   "auth_welcome_title": "NestZone'a Hoş Geldiniz",
   "auth_sign_in_subtitle": "Devam etmek için giriş yapın ✨",
+  "auth_apple_explainer": "Apple Kimliğinle giriş yap. NestZone parolanı hiçbir zaman görmez veya saklamaz.",
   "auth_create_account_subtitle": "Hesabınızı oluşturun ✨",
   "auth_login_button": "Giriş Yap",
   "auth_sign_up_button": "Kaydol",
@@ -539,5 +540,5 @@
   "join_home_button": "Eve Katıl",
   "join_home_success_message": "Eve Katılındı!",
 
-  "no_homes_get_started_title": "Başlayalım",
+  "no_homes_get_started_title": "Başlayalım"
 }
