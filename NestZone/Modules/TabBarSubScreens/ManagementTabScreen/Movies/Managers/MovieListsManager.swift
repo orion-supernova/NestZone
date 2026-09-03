@@ -50,7 +50,7 @@ final class MovieListsManager {
 
     func deleteList(listId: String) async throws {
         // Server removes the list and all its movies.
-        try await Convex.client.mutation("movies:removeList", with: ["id": listId])
+        try await Convex.run("movies:removeList", args: ["id": listId])
     }
 
     func addMovieToList(movie: Movie, listId: String) async throws {
@@ -66,7 +66,7 @@ final class MovieListsManager {
         ]
         if let year = movie.year { args["year"] = Double(year) }
         if let poster = movie.poster { args["poster"] = poster }
-        try await Convex.client.mutation("movies:addMovie", with: args)
+        try await Convex.run("movies:addMovie", args: args)
     }
 
     func removeMovieFromList(movieId: String, listId: String) async throws {
@@ -74,7 +74,7 @@ final class MovieListsManager {
         guard let record = listMovies.first(where: { $0.imdbId == movieId || $0.id == movieId }) else {
             return
         }
-        try await Convex.client.mutation("movies:removeMovie", with: ["id": record.id])
+        try await Convex.run("movies:removeMovie", args: ["id": record.id])
     }
 
     // MARK: - Movies

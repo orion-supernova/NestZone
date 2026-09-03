@@ -24,7 +24,7 @@ class HomeManagementViewModel: ObservableObject {
             // mirrors the membership onto the user, all server-side, in one transaction.
             // (Free-text `address` isn't sent — the Convex schema expects a {lat,lng}
             //  geopoint; address capture is a follow-up.)
-            try await Convex.client.mutation("homes:create", with: ["name": trimmed])
+            try await Convex.run("homes:create", args: ["name": trimmed])
 
             withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                 homeCreated = true
@@ -49,7 +49,7 @@ class HomeManagementViewModel: ObservableObject {
         do {
             // `homes:join` validates the invite code and updates both home.members and
             // user.home_id server-side. An invalid code throws "Invalid invite code".
-            try await Convex.client.mutation("homes:join", with: ["inviteCode": code])
+            try await Convex.run("homes:join", args: ["inviteCode": code])
 
             withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                 homeJoined = true

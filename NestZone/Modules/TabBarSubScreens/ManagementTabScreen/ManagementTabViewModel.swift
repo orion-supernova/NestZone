@@ -100,7 +100,7 @@ class ManagementTabViewModel: ObservableObject {
     
     func toggleItemCompletion(_ item: ShoppingItem) async {
         do {
-            try await Convex.client.mutation("shopping:setPurchased", with: [
+            try await Convex.run("shopping:setPurchased", args: [
                 "id": item.id,
                 "is_purchased": !item.isPurchased,
             ])
@@ -118,7 +118,7 @@ class ManagementTabViewModel: ObservableObject {
         }
 
         do {
-            try await Convex.client.mutation("shopping:create", with: [
+            try await Convex.run("shopping:create", args: [
                 "homeId": homeId,
                 "name": name,
                 "description": description ?? "",
@@ -134,7 +134,7 @@ class ManagementTabViewModel: ObservableObject {
 
     func deleteItem(_ item: ShoppingItem) async {
         do {
-            try await Convex.client.mutation("shopping:remove", with: ["id": item.id])
+            try await Convex.run("shopping:remove", args: ["id": item.id])
             try await loadShoppingItems()
             calculateStatistics()
         } catch {
@@ -144,7 +144,7 @@ class ManagementTabViewModel: ObservableObject {
 
     func updateItem(_ item: ShoppingItem, name: String, description: String?, quantity: Double?) async {
         do {
-            try await Convex.client.mutation("shopping:update", with: [
+            try await Convex.run("shopping:update", args: [
                 "id": item.id,
                 "name": name,
                 "description": description ?? "",

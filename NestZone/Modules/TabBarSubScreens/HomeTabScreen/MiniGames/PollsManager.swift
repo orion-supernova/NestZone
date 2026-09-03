@@ -172,7 +172,7 @@ final class PollsManager {
     }
 
     func addMovieToPoll(pollId: String, movie: Movie, order: Int) async throws {
-        try await Convex.client.mutation("polls:addItem", with: [
+        try await Convex.run("polls:addItem", args: [
             "pollId": pollId,
             "external_id": movie.id,
             "label": movie.title,
@@ -187,7 +187,7 @@ final class PollsManager {
 
     func submitVote(pollId: String, imdbId: String, vote: Bool, userId: String? = nil) async throws {
         // Voter identity is taken from the authenticated session server-side.
-        try await Convex.client.mutation("polls:vote", with: [
+        try await Convex.run("polls:vote", args: [
             "pollId": pollId,
             "target_external_id": imdbId,
             "vote": vote,
@@ -204,12 +204,12 @@ final class PollsManager {
     }
 
     func closePoll(pollId: String) async throws {
-        try await Convex.client.mutation("polls:setStatus", with: ["pollId": pollId, "status": "closed"])
+        try await Convex.run("polls:setStatus", args: ["pollId": pollId, "status": "closed"])
     }
 
     func deletePoll(pollId: String) async throws {
         // Server cascades item + vote deletion.
-        try await Convex.client.mutation("polls:remove", with: ["pollId": pollId])
+        try await Convex.run("polls:remove", args: ["pollId": pollId])
     }
 
     func getHouseMemberCount(homeId: String? = nil) async throws -> Int {

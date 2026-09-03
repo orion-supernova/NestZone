@@ -146,7 +146,7 @@ class RecipeViewModel: ObservableObject {
 
     func deleteRecipe(_ recipe: Recipe) async {
         do {
-            try await Convex.client.mutation("recipes:remove", with: ["id": recipe.id])
+            try await Convex.run("recipes:remove", args: ["id": recipe.id])
             try await loadRecipesFromBackend()
         } catch {
             errorMessage = LocalizationManager.recipeErrorDeleteRecipe(error.localizedDescription)

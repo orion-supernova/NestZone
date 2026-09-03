@@ -258,7 +258,7 @@ class HomeTabViewModel: ObservableObject {
         }
 
         do {
-            try await Convex.client.mutation("tasks:update", with: [
+            try await Convex.run("tasks:update", args: [
                 "id": task.id,
                 "is_completed": !task.isCompleted,
             ])

@@ -97,7 +97,7 @@ class NotesViewModel: ObservableObject {
         }
         
         do {
-            try await Convex.client.mutation("notes:create", with: [
+            try await Convex.run("notes:create", args: [
                 "homeId": homeId,
                 "description": text,
                 "color": color,
@@ -114,7 +114,7 @@ class NotesViewModel: ObservableObject {
 
     func updateNote(_ note: PocketBaseNote, text: String) async {
         do {
-            try await Convex.client.mutation("notes:update", with: [
+            try await Convex.run("notes:update", args: [
                 "id": note.id,
                 "description": text,
             ])
@@ -130,7 +130,7 @@ class NotesViewModel: ObservableObject {
 
     func deleteNote(_ note: PocketBaseNote) async {
         do {
-            try await Convex.client.mutation("notes:remove", with: ["id": note.id])
+            try await Convex.run("notes:remove", args: ["id": note.id])
 
             // Refresh notes after deletion
             try await loadNotesFromBackend()

@@ -38,6 +38,24 @@ enum Convex {
         authProvider: authProvider
     )
 
+    /// Runs a mutation whose result we don't need.
+    ///
+    /// Use this instead of `Convex.client.mutation(name, with:)` — the SDK's
+    /// no-result overload is implemented as `let _: String? = try await
+    /// mutation(...)`, so it decodes the response as a string. Every mutation
+    /// that returns a document or `{ ok: true }` therefore fails with
+    /// "The data couldn't be read because it isn't in the correct format",
+    /// which is what broke home creation and every update/delete in the app.
+    /// `Discarded` accepts any JSON shape and keeps none of it.
+    static func run(_ name: String, args: [String: ConvexEncodable?]? = nil) async throws {
+        let _: Discarded? = try await client.mutation(name, with: args)
+    }
+
+    /// Decodes successfully from any JSON value, retaining nothing.
+    private struct Discarded: Decodable {
+        init(from decoder: Decoder) throws {}
+    }
+
     /// One-shot read: subscribe to a query and return its first value, then unsubscribe.
     /// Convex has no non-reactive query in the Swift SDK, so this adapts a subscription
     /// for `async`/`await` call sites (managers that "load once"). For live UI, subscribe

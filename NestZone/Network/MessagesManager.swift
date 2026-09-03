@@ -58,12 +58,12 @@ class MessagesManager {
         ]
         if let file = file { args["file"] = file }
         // Server also updates the conversation's last_message preview.
-        try await Convex.client.mutation("messages:send", with: args)
+        try await Convex.run("messages:send", args: args)
     }
 
     /// Mark every message in a conversation as read by the current user.
     func markConversationRead(conversationId: String) async throws {
-        try await Convex.client.mutation("messages:markRead", with: ["conversationId": conversationId])
+        try await Convex.run("messages:markRead", args: ["conversationId": conversationId])
     }
 
     func getUnreadMessageCount(for conversationId: String, userId: String) async throws -> Int {
