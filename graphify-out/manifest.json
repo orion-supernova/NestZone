@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "NestZone/Localization/L10n.swift": {
-    "mtime": 1788445978.3007174,
-    "ast_hash": "3d005d89f3bebacf056f9353dace4a3d",
+    "mtime": 1788455148.2511199,
+    "ast_hash": "86fcd91f4f4ed4c47508f2d5c65b5fe5",
     "semantic_hash": ""
   },
   "NestZone/Localization/Locales/SampleRecipes/sample_recipes_en.json": {
@@ -45,13 +45,13 @@
     "semantic_hash": "174866853bbeccdeb160ecbc26357b59"
   },
   "NestZone/Localization/Locales/en.json": {
-    "mtime": 1788446036.05942,
-    "ast_hash": "7f47128c41eae71d85b969344a28301d",
+    "mtime": 1788455148.2517185,
+    "ast_hash": "f10a1b2c495814413569f0d3feceffeb",
     "semantic_hash": ""
   },
   "NestZone/Localization/Locales/tr.json": {
-    "mtime": 1788446036.0612018,
-    "ast_hash": "a5f65919fa56bd58a0d073c0efeeb7a9",
+    "mtime": 1788455159.9586911,
+    "ast_hash": "5dd0fa836b88e484d696ac90d48efd00",
     "semantic_hash": ""
   },
   "NestZone/Localization/LocalizationManager.swift": {
@@ -490,8 +490,8 @@
     "semantic_hash": "9b60e148c7090643a6fd40d1c7a5cc64"
   },
   "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift": {
-    "mtime": 1788444638.959428,
-    "ast_hash": "7c3c19a6c9d72e5d483920a8a6467fc1",
+    "mtime": 1788455148.2245317,
+    "ast_hash": "88c352ea62bf3a988b11cfeef5daf227",
     "semantic_hash": ""
   },
   "NestZone/Modules/TabBarSubScreens/Settings/ThemeSelectionSheet.swift": {
@@ -595,7 +595,7 @@
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.d.ts": {
-    "mtime": 1788454983.118252,
+    "mtime": 1788455251.5248802,
     "ast_hash": "48c0e55eb0577b6d8d1c378162e0b20d",
     "semantic_hash": ""
   },
@@ -625,8 +625,8 @@
     "semantic_hash": ""
   },
   "backend/convex/auth.ts": {
-    "mtime": 1788445654.584648,
-    "ast_hash": "68f1bec120f9018a32b048b7a123dda1",
+    "mtime": 1788455215.5171719,
+    "ast_hash": "1916f64e5b55f18e45fa48ca12c156dc",
     "semantic_hash": ""
   },
   "backend/convex/conversations.ts": {

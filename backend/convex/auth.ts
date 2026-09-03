@@ -53,6 +53,8 @@ const AppleIdToken = ConvexCredentials({
       profile: {
         email: identity.email,
         name: displayName,
+        // Surfaced so createOrUpdateUser below can see Apple's verdict.
+        emailVerified: identity.emailVerified && !identity.isPrivateRelay,
       } as any,
       // Safe only because Apple has verified the address itself. Never link on a
       // private-relay address: those are per-app aliases, so matching one to an
@@ -66,4 +68,54 @@ const AppleIdToken = ConvexCredentials({
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [AppleIdToken],
+  callbacks: {
+    /**
+     * Adopt an existing profile with the same email instead of creating a second
+     * one for the same person.
+     *
+     * The library will not do this on its own: its linking path goes through
+     * `uniqueUserWithVerifiedEmail`, which only matches users that already carry
+     * `emailVerificationTime`. Any user created outside this flow — the accounts
+     * imported from PocketBase, for instance — has no such marker, so signing in
+     * with Apple silently produced a SECOND user on the same address and the
+     * person lost their homes and history.
+     *
+     * We link only when Apple itself verified the address and it is not a
+     * private-relay alias (relay addresses are per-app, so matching on one would
+     * be meaningless). We also stamp `emailVerificationTime` on the way through,
+     * so the library's own linking works from then on.
+     */
+    async createOrUpdateUser(ctx, args) {
+      // Re-login or token refresh on a known account.
+      if (args.existingUserId) return args.existingUserId;
+
+      const email = args.profile.email as string | undefined;
+      const name = args.profile.name as string | undefined;
+      const linkable = args.shouldLinkViaEmail === true;
+
+      if (email && linkable) {
+        const existing = await ctx.db
+          .query("users")
+          .withIndex("email", (q) => q.eq("email", email))
+          .first();
+        if (existing) {
+          const patch: Record<string, unknown> = {};
+          if (!existing.name && name) patch.name = name;
+          if (!(existing as any).emailVerificationTime) {
+            patch.emailVerificationTime = Date.now();
+          }
+          if (Object.keys(patch).length > 0) {
+            await ctx.db.patch(existing._id, patch as any);
+          }
+          return existing._id;
+        }
+      }
+
+      return await ctx.db.insert("users", {
+        email,
+        name,
+        emailVerificationTime: email && linkable ? Date.now() : undefined,
+      } as any);
+    },
+  },
 });

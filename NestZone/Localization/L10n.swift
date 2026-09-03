@@ -582,6 +582,7 @@ extension LocalizationManager {
     
     // MARK: - Switch Home
     static var switchHomeButton: String { t("home_selection_switch_title") }
+    static var manageHomesButton: String { t("manage_homes_button") }
     
     // MARK: - Join Another Home
     static var joinAnotherHomeButton: String { t("join_another_home_button") }

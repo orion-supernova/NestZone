@@ -10520,7 +10520,7 @@
       "label": ".currentHomeInfo()",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L121",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "settings_settingsview_settingsview_currenthomeinfo",
       "community": 5,
@@ -10530,7 +10530,7 @@
       "label": ".inviteCodeSection()",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L160",
+      "source_location": "L161",
       "_origin": "ast",
       "id": "settings_settingsview_settingsview_invitecodesection",
       "community": 5,
@@ -10540,7 +10540,7 @@
       "label": "String",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L160",
+      "source_location": "L161",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_settings_settingsview_swift_string",
       "community": 54,
@@ -10550,7 +10550,7 @@
       "label": ".iconView()",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L331",
+      "source_location": "L334",
       "_origin": "ast",
       "id": "settings_settingsview_settingsview_iconview",
       "community": 54,
@@ -10560,7 +10560,7 @@
       "label": "Color",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L331",
+      "source_location": "L334",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_settings_settingsview_swift_color",
       "community": 54,
@@ -10570,7 +10570,7 @@
       "label": "SettingsSection",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L402",
+      "source_location": "L405",
       "_origin": "ast",
       "id": "settings_settingsview_settingssection",
       "community": 54,
@@ -10580,7 +10580,7 @@
       "label": "Content",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L404",
+      "source_location": "L407",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_settings_settingsview_swift_content",
       "community": 54,
@@ -10590,7 +10590,7 @@
       "label": ".init()",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L408",
+      "source_location": "L411",
       "_origin": "ast",
       "id": "settings_settingsview_settingssection_init",
       "community": 54,
@@ -10600,7 +10600,7 @@
       "label": "SettingsButton",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L435",
+      "source_location": "L438",
       "_origin": "ast",
       "id": "settings_settingsview_settingsbutton",
       "community": 54,
@@ -10610,7 +10610,7 @@
       "label": "Void",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L436",
+      "source_location": "L439",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_settings_settingsview_swift_void",
       "community": 54,
@@ -10620,7 +10620,7 @@
       "label": ".init()",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L440",
+      "source_location": "L443",
       "_origin": "ast",
       "id": "settings_settingsview_settingsbutton_init",
       "community": 54,
@@ -10630,7 +10630,7 @@
       "label": "SettingsRow",
       "file_type": "code",
       "source_file": "NestZone/Modules/TabBarSubScreens/Settings/SettingsView.swift",
-      "source_location": "L469",
+      "source_location": "L472",
       "_origin": "ast",
       "id": "settings_settingsview_settingsrow",
       "community": 54,
@@ -14054,7 +14054,7 @@
       "label": "{ auth, signIn, signOut, store, isAuthenticated }",
       "file_type": "code",
       "source_file": "backend/convex/auth.ts",
-      "source_location": "L67",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "convex_auth_auth_signin_signout_store_isauthenticated",
       "community": 108,
@@ -20979,9 +20979,9 @@
       "source_file": "NestZone/Managers/HomeSelectionManager.swift",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_homeselectionmanager_homeselectionmanager",
-      "target": "managers_homeselectionmanager_homeselectionmanager_leavehome",
-      "confidence_score": 1.0
+      "target": "managers_homeselectionmanager_homeselectionmanager_leavehome"
     },
     {
       "relation": "method",
@@ -21053,9 +21053,9 @@
       "source_location": "L70",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "managers_homeselectionmanager_homeselectionmanager_leavehome",
-      "target": "nestzone_managers_homeselectionmanager_swift_home",
-      "confidence_score": 1.0
+      "target": "nestzone_managers_homeselectionmanager_swift_home"
     },
     {
       "relation": "references",
@@ -21119,9 +21119,9 @@
       "source_file": "NestZone/Managers/HomeSelectionManager.swift",
       "source_location": "L78",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_homeselectionmanager_homeselectionmanager_leavehome",
-      "target": "managers_homeselectionmanager_homeselectionmanager_fetchuserhomes",
-      "confidence_score": 1.0
+      "target": "managers_homeselectionmanager_homeselectionmanager_fetchuserhomes"
     },
     {
       "relation": "references",
@@ -21130,9 +21130,9 @@
       "source_location": "L70",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "managers_homeselectionmanager_homeselectionmanager_leavehome",
-      "target": "nestzone_managers_homeselectionmanager_swift_convexauthmanager",
-      "confidence_score": 1.0
+      "target": "nestzone_managers_homeselectionmanager_swift_convexauthmanager"
     },
     {
       "relation": "calls",
@@ -21152,9 +21152,9 @@
       "source_file": "NestZone/Managers/HomeSelectionManager.swift",
       "source_location": "L76",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_homeselectionmanager_homeselectionmanager_leavehome",
-      "target": "managers_homeselectionmanager_homeselectionmanager_clearselection",
-      "confidence_score": 1.0
+      "target": "managers_homeselectionmanager_homeselectionmanager_clearselection"
     },
     {
       "relation": "calls",
@@ -22300,9 +22300,9 @@
       "source_file": "NestZone/Modules/HomeManagement/SwitchHomeSheet.swift",
       "source_location": "L130",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet",
-      "target": "homemanagement_switchhomesheet_switchhomesheet_confirmmessage",
-      "confidence_score": 1.0
+      "target": "homemanagement_switchhomesheet_switchhomesheet_confirmmessage"
     },
     {
       "relation": "method",
@@ -22310,9 +22310,9 @@
       "source_file": "NestZone/Modules/HomeManagement/SwitchHomeSheet.swift",
       "source_location": "L126",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet",
-      "target": "homemanagement_switchhomesheet_switchhomesheet_issolemember",
-      "confidence_score": 1.0
+      "target": "homemanagement_switchhomesheet_switchhomesheet_issolemember"
     },
     {
       "relation": "method",
@@ -22320,9 +22320,9 @@
       "source_file": "NestZone/Modules/HomeManagement/SwitchHomeSheet.swift",
       "source_location": "L137",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet",
-      "target": "homemanagement_switchhomesheet_switchhomesheet_remove",
-      "confidence_score": 1.0
+      "target": "homemanagement_switchhomesheet_switchhomesheet_remove"
     },
     {
       "relation": "references",
@@ -22331,9 +22331,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_convexauthmanager",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_convexauthmanager"
     },
     {
       "relation": "references",
@@ -22342,9 +22342,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home"
     },
     {
       "relation": "references",
@@ -22364,9 +22364,9 @@
       "source_location": "L121",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_string",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_string"
     },
     {
       "relation": "references",
@@ -22386,9 +22386,9 @@
       "source_location": "L130",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet_confirmmessage",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home"
     },
     {
       "relation": "references",
@@ -22397,9 +22397,9 @@
       "source_location": "L126",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet_issolemember",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home"
     },
     {
       "relation": "references",
@@ -22408,9 +22408,9 @@
       "source_location": "L137",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet_remove",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_home"
     },
     {
       "relation": "references",
@@ -22419,9 +22419,9 @@
       "source_location": "L130",
       "weight": 1.0,
       "context": "return_type",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet_confirmmessage",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_string",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_string"
     },
     {
       "relation": "calls",
@@ -22430,9 +22430,9 @@
       "source_file": "NestZone/Modules/HomeManagement/SwitchHomeSheet.swift",
       "source_location": "L131",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet_confirmmessage",
-      "target": "homemanagement_switchhomesheet_switchhomesheet_issolemember",
-      "confidence_score": 1.0
+      "target": "homemanagement_switchhomesheet_switchhomesheet_issolemember"
     },
     {
       "relation": "references",
@@ -22441,9 +22441,9 @@
       "source_location": "L126",
       "weight": 1.0,
       "context": "return_type",
+      "confidence_score": 1.0,
       "source": "homemanagement_switchhomesheet_switchhomesheet_issolemember",
-      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_bool",
-      "confidence_score": 1.0
+      "target": "nestzone_modules_homemanagement_switchhomesheet_swift_bool"
     },
     {
       "relation": "references",
@@ -46445,5 +46445,5 @@
       "source_file": "Docs/PocketBase/README.md"
     }
   ],
-  "built_at_commit": "bada038f5e853de8fe4984d1f235f20083eaa298"
+  "built_at_commit": "cb50fe53e65f9f71e90f67cbef1a3c285b3aa612"
 }

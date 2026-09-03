@@ -101,13 +101,14 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             currentHomeInfo(for: home)
             
-            if homeManager.hasMultipleHomes {
-                Divider()
-                    .background(selectedTheme.colors(for: colorScheme).textSecondary.opacity(0.15))
-                    .padding(.vertical, 12)
-                
-                switchHomeButton
-            }
+            // Shown for ANY number of homes. This is also the only route to
+            // leaving or deleting a home, so gating it on hasMultipleHomes made
+            // a single home impossible to get rid of.
+            Divider()
+                .background(selectedTheme.colors(for: colorScheme).textSecondary.opacity(0.15))
+                .padding(.vertical, 12)
+
+            switchHomeButton
             
             // Join Another Home Button - Always show
             Divider()
@@ -211,7 +212,9 @@ struct SettingsView: View {
                         .foregroundStyle(.white)
                 }
                 
-                Text(LocalizationManager.switchHomeButton)
+                Text(homeManager.hasMultipleHomes
+                     ? LocalizationManager.switchHomeButton
+                     : LocalizationManager.manageHomesButton)
                     .font(.body)
                     .fontWeight(.semibold)
                     .foregroundStyle(selectedTheme.colors(for: colorScheme).text)
