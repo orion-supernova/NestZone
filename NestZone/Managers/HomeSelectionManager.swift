@@ -59,6 +59,25 @@ class HomeSelectionManager: ObservableObject {
         // This will trigger the home selection UI
     }
     
+    /// Leaves `home`. If the caller is its LAST member the server cascades the
+    /// entire home away — every task, shopping item, note, recipe, movie list,
+    /// poll, conversation and message under it, plus the `home_id` mirror on
+    /// every user (convex/lib/relations.ts `cascadeDeleteHome`). That is
+    /// deliberate: a home with no members can never satisfy `requireHomeMember`
+    /// again, so leaving one behind would strand its contents forever.
+    ///
+    /// When other members remain, only this user is removed and their data stays.
+    func leaveHome(_ home: Home, authManager: ConvexAuthManager) async throws {
+        // homes:leave returns an object, so it must go through Convex.run —
+        // the SDK's no-result overload would try to decode it as a String.
+        try await Convex.run("homes:leave", args: ["homeId": home.id])
+
+        if selectedHome?.id == home.id {
+            clearSelection()
+        }
+        try await fetchUserHomes(authManager: authManager)
+    }
+
     func selectHome(_ home: Home) {
         self.selectedHome = home
         persistSelection()

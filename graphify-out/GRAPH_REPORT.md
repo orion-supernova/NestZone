@@ -1,16 +1,16 @@
 # Graph Report - NestZone  (2026-09-03)
 
 ## Corpus Check
-- 151 files · ~225,751 words
+- 151 files · ~226,278 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1600 nodes · 2837 edges · 128 communities (112 shown, 16 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 109 edges (avg confidence: 0.8)
+- 1606 nodes · 2856 edges · 127 communities (112 shown, 15 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 111 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `be94d7a2`
+- Built from commit: `bada038f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -117,7 +117,6 @@
 - [[_COMMUNITY_Community 99|Community 99]]
 - [[_COMMUNITY_Community 100|Community 100]]
 - [[_COMMUNITY_Community 101|Community 101]]
-- [[_COMMUNITY_Community 102|Community 102]]
 - [[_COMMUNITY_Community 103|Community 103]]
 - [[_COMMUNITY_Community 104|Community 104]]
 - [[_COMMUNITY_Community 105|Community 105]]
@@ -152,19 +151,19 @@
 7. `Foundation` - 31 edges
 8. `MovieAPI` - 28 edges
 9. `HomeTabViewModel` - 26 edges
-10. `Task` - 25 edges
+10. `Task` - 26 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `CardViewModel` --calls--> `UUID`  [INFERRED]
-  NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/WhatToWatchView.swift → NestZone/Models/HouseTask.swift
 - `LoginScreen` --calls--> `LoginViewModel`  [INFERRED]
   NestZone/Modules/Login/LoginScreen.swift → NestZone/Modules/Login/LoginViewModel.swift
 - `WhatToWatchView` --calls--> `WhatToWatchViewModel`  [INFERRED]
   NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/WhatToWatchView.swift → NestZone/Modules/TabBarSubScreens/HomeTabScreen/MiniGames/MovieSelectionGame/ViewModels/WhatToWatchViewModel.swift
-- `SearchMoviesForListSheet` --calls--> `SearchMoviesViewModel`  [INFERRED]
-  NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/Components/SearchMoviesForListSheet.swift → NestZone/Modules/TabBarSubScreens/ManagementTabScreen/Movies/ViewModels/SearchMoviesViewModel.swift
 - `MessagesView` --calls--> `MessageListViewModel`  [INFERRED]
   NestZone/Modules/TabBarSubScreens/MessagesTabScreen/MessagesView.swift → NestZone/Modules/TabBarSubScreens/MessagesTabScreen/ViewModels/MessageListViewModel.swift
+- `Convex` --calls--> `ConvexAppleAuthProvider`  [INFERRED]
+  NestZone/Network/Convex/ConvexClientProvider.swift → NestZone/Network/Convex/ConvexAppleAuthProvider.swift
+- `assertParticipant()` --calls--> `requireUser()`  [EXTRACTED]
+  backend/convex/messages.ts → backend/convex/lib/auth.ts
 
 ## Import Cycles
 - None detected.
@@ -172,7 +171,7 @@
 ## Hyperedges (group relationships)
 - **Generic polls data model (polls, items, votes scoped to homes)** — pocketbase_readme_polls, pocketbase_readme_poll_items, pocketbase_readme_poll_votes, pocketbase_readme_homes [EXTRACTED 1.00]
 
-## Communities (128 total, 16 thin omitted)
+## Communities (127 total, 15 thin omitted)
 
 ### Community 0 - "What-To-Watch Voting"
 Cohesion: 0.15
@@ -199,12 +198,12 @@ Cohesion: 0.18
 Nodes (12): Color, Recipe, RecipeViewModel, String, ConvexAuthManager, Home, HomeSelectionManager, text (+4 more)
 
 ### Community 6 - "Movie List Model"
-Cohesion: 0.13
-Nodes (15): CodingKeys, created, description, genres, homeId, id, imdbId, isPreset (+7 more)
+Cohesion: 0.39
+Nodes (4): PocketBaseUser, Set, String, UserService
 
 ### Community 7 - "Realtime Event Manager"
-Cohesion: 0.10
-Nodes (22): AuthProvider, ConvexAppleAuthProvider, ConvexAuthError, noCachedSession, noTokens, rejectedByServer, ConvexAuthTokens, PendingCredential (+14 more)
+Cohesion: 0.33
+Nodes (6): AuthProvider, ConvexAppleAuthProvider, PendingCredential, ConvexClient, KeychainTokenStore, String
 
 ### Community 8 - "Movie UI Components"
 Cohesion: 0.50
@@ -212,15 +211,15 @@ Nodes (3): App, NestZoneApp, Scene
 
 ### Community 9 - "Polls Manager"
 Cohesion: 0.13
-Nodes (17): LocalizedError, Poll, PollDetail, PollItem, PollsError, noHome, PollsManager, PollVote (+9 more)
+Nodes (16): Poll, PollDetail, PollItem, PollsError, noHome, PollsManager, PollVote, User (+8 more)
 
 ### Community 10 - "DTO Coding Keys"
 Cohesion: 0.06
 Nodes (39): CodingKey, CodingKeys, address, created, id, inviteCode, members, name (+31 more)
 
 ### Community 11 - "Movie Lists Manager"
-Cohesion: 0.16
-Nodes (10): MovieListsManager, MoviesError, noHome, Bool, Int, Movie, MovieList, MovieListType (+2 more)
+Cohesion: 0.18
+Nodes (8): MovieListsManager, Bool, Int, Movie, MovieList, MovieListType, StoredMovie, String
 
 ### Community 12 - "Messages View"
 Cohesion: 0.23
@@ -235,8 +234,8 @@ Cohesion: 0.12
 Nodes (12): HomeTabViewModel, Color, Date, Double, Error, Int, NSObjectProtocol, PocketBaseNote (+4 more)
 
 ### Community 15 - "Home Creation & Tasks"
-Cohesion: 0.07
-Nodes (24): HomeSetupCard, HomeSetupFlow, CreateHomeView, HomeManagementViewModel, JoinHomeView, HouseTaskViewModel, TaskType, cleaning (+16 more)
+Cohesion: 0.06
+Nodes (30): HomeSetupCard, HomeSetupFlow, CreateHomeView, HomeManagementViewModel, JoinHomeView, HouseTaskViewModel, TaskType, cleaning (+22 more)
 
 ### Community 16 - "New Recipe Sheet"
 Cohesion: 0.07
@@ -251,8 +250,8 @@ Cohesion: 0.14
 Nodes (18): Bool, Double, Int, Recipe, RecipeViewModel, String, Void, Int (+10 more)
 
 ### Community 19 - "Management Tab ViewModel"
-Cohesion: 0.23
-Nodes (6): ManagementTabViewModel, Color, Double, NSObjectProtocol, ShoppingItem, String
+Cohesion: 0.09
+Nodes (19): AuthenticationScreen, AuthenticationViewModel, LoginViewModel, ManagementTabViewModel, ConvexAuthManager, ThemeColors, ConvexAuthManager, String (+11 more)
 
 ### Community 20 - "Notes ViewModel"
 Cohesion: 0.21
@@ -263,8 +262,8 @@ Cohesion: 0.11
 Nodes (7): NestZone, NestZoneTests, NestZoneUITests, NestZoneUITestsLaunchTests, Bool, XCTest, XCTestCase
 
 ### Community 22 - "Match & Poll Summary"
-Cohesion: 0.15
-Nodes (16): MatchesSection, MatchMovieCard, PollSummarySheet, StatBox, SummaryMovieRow, WinnerCard, Movie, Void (+8 more)
+Cohesion: 0.20
+Nodes (12): PollSummarySheet, StatBox, SummaryMovieRow, WinnerCard, Bool, Color, Movie, PollSummary (+4 more)
 
 ### Community 23 - "Messages Manager"
 Cohesion: 0.22
@@ -287,12 +286,12 @@ Cohesion: 0.16
 Nodes (14): PollType, actor, decade, director, genre, nowPlaying, popular, topRated (+6 more)
 
 ### Community 29 - "List & Difficulty Enums"
-Cohesion: 0.08
-Nodes (25): AppleSignInCoordinator, ASAuthorization, ASAuthorizationController, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding, ASPresentationAnchor, AuthenticationScreen, AuthenticationViewModel (+17 more)
+Cohesion: 0.18
+Nodes (13): AppleSignInCoordinator, ASAuthorization, ASAuthorizationController, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding, ASPresentationAnchor, CheckedContinuation, Credential (+5 more)
 
 ### Community 30 - "Movie List Detail"
-Cohesion: 0.15
-Nodes (9): CardViewModel, Double, NSObjectProtocol, Poll, PollSummary, Void, VotingStats, Never (+1 more)
+Cohesion: 0.06
+Nodes (24): Bool, CardViewModel, Double, Int, Movie, NSObjectProtocol, Poll, PollSummary (+16 more)
 
 ### Community 31 - "Note Color Extensions"
 Cohesion: 0.19
@@ -307,16 +306,16 @@ Cohesion: 0.16
 Nodes (16): Codable, EventCategory, ExpenseCategory, Int, T, TaskType, CalendarEvent, Expense (+8 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.19
-Nodes (13): MovieList, MovieListType, custom, watched, wishlist, StoredMovie, Bool, Decoder (+5 more)
+Cohesion: 0.06
+Nodes (36): CodingKeys, created, description, genres, homeId, id, imdbId, isPreset (+28 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.18
-Nodes (4): Int, String, PollType, VotingStats
+Nodes (9): AuthenticationServices, Failure, cancelled, missingIdentityToken, LocalizedError, LoginScreen, MoviesError, noHome (+1 more)
 
 ### Community 36 - "Auth Manager"
-Cohesion: 0.07
-Nodes (20): LoginViewModel, HomeSelectionManager, Bool, ConvexAuthManager, Home, String, ConvexAuthManager, String (+12 more)
+Cohesion: 0.14
+Nodes (13): SwitchHomeRow, SwitchHomeSheet, HomeSelectionManager, Bool, ConvexAuthManager, Home, String, Bool (+5 more)
 
 ### Community 37 - "Expense & Item Models"
 Cohesion: 0.25
@@ -335,7 +334,7 @@ Cohesion: 0.18
 Nodes (8): AnyCancellable, Bool, PocketBaseConversation, PocketBaseMessage, PocketBaseUser, String, Void, ChatDetailViewModel
 
 ### Community 41 - "App Services Core"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (6): Combine, ConvexMobile, Foundation, Notification.Name, os, SwiftUI
 
 ### Community 42 - "PocketBase Polls Schema"
@@ -355,8 +354,8 @@ Cohesion: 0.22
 Nodes (8): NoHomesView, OnboardingHero, WelcomeCard, Color, ConvexAuthManager, HomeSelectionManager, String, Void
 
 ### Community 46 - "Community 46"
-Cohesion: 0.22
-Nodes (7): AnyCancellable, ConvexAuthManager, Int, NSObjectProtocol, PocketBaseConversation, String, MessageListViewModel
+Cohesion: 0.53
+Nodes (5): ConvexAuthTokens, SignInActionResult, Decodable, escaping, Sendable
 
 ### Community 47 - "New Message Group"
 Cohesion: 0.22
@@ -399,8 +398,8 @@ Cohesion: 0.29
 Nodes (6): HomeSelectionCard, HomeSelectionView, ConvexAuthManager, Home, HomeSelectionManager, Void
 
 ### Community 57 - "Switch Home Sheet"
-Cohesion: 0.29
-Nodes (6): SwitchHomeRow, SwitchHomeSheet, Bool, Home, HomeSelectionManager, Void
+Cohesion: 0.33
+Nodes (5): ConvexAuthError, noCachedSession, noTokens, rejectedByServer, Error
 
 ### Community 58 - "Genre Picker"
 Cohesion: 0.43
@@ -427,8 +426,8 @@ Cohesion: 0.14
 Nodes (13): compilerOptions, allowJs, esModuleInterop, isolatedModules, lib, module, moduleResolution, noEmit (+5 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.22
-Nodes (6): Bool, Int, Movie, Set, String, MovieListsViewModel
+Cohesion: 0.38
+Nodes (4): Convex, ConvexEncodable, String, T
 
 ### Community 65 - "Community 65"
 Cohesion: 0.21
@@ -471,8 +470,8 @@ Cohesion: 0.20
 Nodes (10): ColorScheme, Color, ThemeColors, AppTheme, basic, cyberpunk, deepOcean, neonNight (+2 more)
 
 ### Community 75 - "Community 75"
-Cohesion: 0.20
-Nodes (7): CardViewModel, WhatToWatchView, WinnerAnnouncementView, Bool, Bool, Int, Movie
+Cohesion: 0.60
+Nodes (4): MatchesSection, MatchMovieCard, Movie, Void
 
 ### Community 76 - "Custom List Row"
 Cohesion: 0.40
@@ -499,8 +498,8 @@ Cohesion: 0.40
 Nodes (4): PocketBaseNote, String, Void, NoteCard
 
 ### Community 82 - "Community 82"
-Cohesion: 0.31
-Nodes (4): ConvexAuthManager, AnyCancellable, NZUser, Task
+Cohesion: 0.32
+Nodes (3): ConvexAuthManager, AnyCancellable, NZUser
 
 ### Community 83 - "Community 83"
 Cohesion: 0.29
@@ -515,8 +514,8 @@ Cohesion: 0.50
 Nodes (3): Color, String, MiniModuleCard
 
 ### Community 86 - "Community 86"
-Cohesion: 0.33
-Nodes (5): SearchLoadingView, SearchMoviesForListSheet, Movie, MovieList, Void
+Cohesion: 0.16
+Nodes (9): SearchLoadingView, SearchMoviesForListSheet, Movie, MovieList, Void, Movie, Set, String (+1 more)
 
 ### Community 87 - "Notes View"
 Cohesion: 0.50
@@ -615,24 +614,24 @@ Cohesion: 0.50
 Nodes (3): Bool, ModuleData, ModuleCardsSection
 
 ## Knowledge Gaps
-- **588 isolated node(s):** `ConvexAuthManager`, `english`, `turkish`, `Notification.Name`, `String` (+583 more)
+- **586 isolated node(s):** `ConvexAuthManager`, `english`, `turkish`, `Notification.Name`, `String` (+581 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SwiftUI` connect `App Services Core` to `What-To-Watch Voting`, `Localization Strings`, `Confetti & Realtime Models`, `Recipe Theming`, `Movie UI Components`, `Messages View`, `Home Creation & Tasks`, `New Recipe Sheet`, `Shopping List UI`, `Sample Recipes`, `Match & Poll Summary`, `Home Tab Screen`, `PocketBase Models`, `Cooking Mode`, `Poll Type Selection`, `List & Difficulty Enums`, `Community 32`, `Auth Manager`, `Expense & Item Models`, `Premium Text Field`, `Simple Movie Detail`, `Chat Detail`, `Movie Search Row`, `No-Homes Onboarding`, `New Message Group`, `Poll Input Sheets`, `Previous Polls`, `Theme Selection`, `Recipe List View`, `Read Receipts`, `Note Creator`, `Community 54`, `Swipe Deck`, `Home Selection View`, `Switch Home Sheet`, `Genre Picker`, `Swipe Card`, `Recipe Card`, `Chat Messages List`, `Edit Note Sheet`, `Community 65`, `Loading Button`, `Preset List Card`, `Search Results List`, `Language Selection`, `Match Options Sheet`, `Vibrant Module Card`, `Chat Header`, `Message Input`, `Community 74`, `Community 75`, `Custom List Row`, `Overlay Views`, `Management Tab Screen`, `Note Card`, `Create Movie List`, `Mini Module Card`, `Community 86`, `Notes View`, `Task Priority`, `Community 109`, `Community 110`, `Community 111`, `Community 112`, `Community 114`, `Community 115`, `Community 116`, `Community 117`?**
-  _High betweenness centrality (0.232) - this node is a cross-community bridge._
-- **Why does `Foundation` connect `App Services Core` to `What-To-Watch Voting`, `Community 33`, `Community 34`, `Realtime Event Manager`, `Polls Manager`, `DTO Coding Keys`, `Home Creation & Tasks`, `Sample Recipes`, `List & Difficulty Enums`, `Community 94`?**
-  _High betweenness centrality (0.149) - this node is a cross-community bridge._
-- **Why does `WhatToWatchViewModel` connect `Movie List Detail` to `Community 35`, `Auth Manager`, `Community 102`, `App Services Core`, `Community 75`, `Community 82`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+- **Why does `SwiftUI` connect `App Services Core` to `What-To-Watch Voting`, `Localization Strings`, `Confetti & Realtime Models`, `Recipe Theming`, `Movie UI Components`, `Messages View`, `Home Creation & Tasks`, `New Recipe Sheet`, `Shopping List UI`, `Sample Recipes`, `Management Tab ViewModel`, `Match & Poll Summary`, `Home Tab Screen`, `PocketBase Models`, `Cooking Mode`, `Poll Type Selection`, `Community 32`, `Community 35`, `Auth Manager`, `Expense & Item Models`, `Premium Text Field`, `Simple Movie Detail`, `Chat Detail`, `Movie Search Row`, `No-Homes Onboarding`, `New Message Group`, `Poll Input Sheets`, `Previous Polls`, `Theme Selection`, `Recipe List View`, `Read Receipts`, `Note Creator`, `Community 54`, `Swipe Deck`, `Home Selection View`, `Genre Picker`, `Swipe Card`, `Recipe Card`, `Chat Messages List`, `Edit Note Sheet`, `Community 65`, `Loading Button`, `Preset List Card`, `Search Results List`, `Language Selection`, `Match Options Sheet`, `Vibrant Module Card`, `Chat Header`, `Message Input`, `Community 74`, `Community 75`, `Custom List Row`, `Overlay Views`, `Management Tab Screen`, `Note Card`, `Create Movie List`, `Mini Module Card`, `Community 86`, `Notes View`, `Task Priority`, `Community 109`, `Community 110`, `Community 111`, `Community 112`, `Community 114`, `Community 115`, `Community 116`, `Community 117`?**
+  _High betweenness centrality (0.231) - this node is a cross-community bridge._
+- **Why does `Foundation` connect `App Services Core` to `What-To-Watch Voting`, `Localization Strings`, `Community 34`, `Community 35`, `Community 33`, `Polls Manager`, `DTO Coding Keys`, `Community 46`, `Home Creation & Tasks`, `Sample Recipes`, `Management Tab ViewModel`, `Community 94`?**
+  _High betweenness centrality (0.173) - this node is a cross-community bridge._
+- **Why does `WhatToWatchViewModel` connect `Movie List Detail` to `App Services Core`, `Management Tab ViewModel`, `Home Creation & Tasks`?**
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `Movie` (e.g. with `.addMovieToList()` and `.clearAll()`) actually correct?**
   _`Movie` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `ConvexAuthManager`, `english`, `turkish` to the rest of the system?**
-  _590 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _588 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `What-To-Watch Voting` be split into smaller, more focused modules?**
   _Cohesion score 0.14589371980676327 - nodes in this community are weakly interconnected._
 - **Should `Localization Strings` be split into smaller, more focused modules?**
-  _Cohesion score 0.08090117767537122 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07936507936507936 - nodes in this community are weakly interconnected._
