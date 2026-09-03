@@ -58,7 +58,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "view",
-      "community": 22,
+      "community": 17,
       "norm_label": "view"
     },
     {
@@ -459,7 +459,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "localization_localizationmanager",
-      "community": 1,
+      "community": 41,
       "norm_label": "localizationmanager.swift"
     },
     {
@@ -489,7 +489,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "caseiterable",
-      "community": 128,
+      "community": 29,
       "norm_label": "caseiterable"
     },
     {
@@ -529,7 +529,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "observableobject",
-      "community": 80,
+      "community": 64,
       "norm_label": "observableobject"
     },
     {
@@ -779,7 +779,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "identifiable",
-      "community": 25,
+      "community": 9,
       "norm_label": "identifiable"
     },
     {
@@ -869,7 +869,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "auth_authenticationscreen",
-      "community": 34,
+      "community": 64,
       "norm_label": "authenticationscreen.swift"
     },
     {
@@ -879,7 +879,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "auth_authenticationscreen_authenticationscreen",
-      "community": 34,
+      "community": 64,
       "norm_label": "authenticationscreen"
     },
     {
@@ -889,7 +889,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationscreen_swift_convexauthmanager",
-      "community": 34,
+      "community": 64,
       "norm_label": "convexauthmanager"
     },
     {
@@ -899,7 +899,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationscreen_swift_cgfloat",
-      "community": 34,
+      "community": 64,
       "norm_label": "cgfloat"
     },
     {
@@ -909,7 +909,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "draggesture",
-      "community": 34,
+      "community": 64,
       "norm_label": "draggesture"
     },
     {
@@ -919,7 +919,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationscreen_swift_themecolors",
-      "community": 34,
+      "community": 64,
       "norm_label": "themecolors"
     },
     {
@@ -929,7 +929,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "validationstate",
-      "community": 34,
+      "community": 64,
       "norm_label": "validationstate"
     },
     {
@@ -939,7 +939,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationscreen_swift_string",
-      "community": 34,
+      "community": 64,
       "norm_label": "string"
     },
     {
@@ -949,7 +949,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationscreen_swift_bool",
-      "community": 34,
+      "community": 64,
       "norm_label": "bool"
     },
     {
@@ -959,7 +959,7 @@
       "source_location": "L391",
       "_origin": "ast",
       "id": "auth_authenticationscreen_authenticationscreen_hidekeyboard",
-      "community": 34,
+      "community": 64,
       "norm_label": ".hidekeyboard()"
     },
     {
@@ -969,7 +969,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "auth_authenticationscreen_authenticationscreen_setupkeyboardobservers",
-      "community": 34,
+      "community": 64,
       "norm_label": ".setupkeyboardobservers()"
     },
     {
@@ -979,7 +979,7 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "auth_authenticationscreen_authenticationscreen_removekeyboardobservers",
-      "community": 34,
+      "community": 64,
       "norm_label": ".removekeyboardobservers()"
     },
     {
@@ -989,7 +989,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "auth_authenticationviewmodel",
-      "community": 75,
+      "community": 64,
       "norm_label": "authenticationviewmodel.swift"
     },
     {
@@ -999,7 +999,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "auth_authenticationviewmodel_authenticationviewmodel",
-      "community": 75,
+      "community": 64,
       "norm_label": "authenticationviewmodel"
     },
     {
@@ -1009,7 +1009,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationviewmodel_swift_string",
-      "community": 75,
+      "community": 64,
       "norm_label": "string"
     },
     {
@@ -1019,7 +1019,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "auth_authenticationviewmodel_authenticationviewmodel_login",
-      "community": 75,
+      "community": 64,
       "norm_label": ".login()"
     },
     {
@@ -1029,7 +1029,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_modules_auth_authenticationviewmodel_swift_convexauthmanager",
-      "community": 75,
+      "community": 64,
       "norm_label": "convexauthmanager"
     },
     {
@@ -1039,7 +1039,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "auth_authenticationviewmodel_authenticationviewmodel_register",
-      "community": 75,
+      "community": 64,
       "norm_label": ".register()"
     },
     {
@@ -1729,7 +1729,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "login_loginscreen",
-      "community": 46,
+      "community": 64,
       "norm_label": "loginscreen.swift"
     },
     {
@@ -1739,7 +1739,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "login_loginscreen_loginscreen",
-      "community": 46,
+      "community": 64,
       "norm_label": "loginscreen"
     },
     {
@@ -1749,7 +1749,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "nestzone_modules_login_loginscreen_swift_convexauthmanager",
-      "community": 46,
+      "community": 64,
       "norm_label": "convexauthmanager"
     },
     {
@@ -1759,7 +1759,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "login_loginscreen_loginscreen_login",
-      "community": 46,
+      "community": 64,
       "norm_label": ".login()"
     },
     {
@@ -1779,7 +1779,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "login_loginviewmodel_loginviewmodel",
-      "community": 46,
+      "community": 64,
       "norm_label": "loginviewmodel"
     },
     {
@@ -1789,7 +1789,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "nestzone_modules_login_loginviewmodel_swift_string",
-      "community": 46,
+      "community": 64,
       "norm_label": "string"
     },
     {
@@ -1799,7 +1799,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "login_loginviewmodel_loginviewmodel_login",
-      "community": 46,
+      "community": 64,
       "norm_label": ".login()"
     },
     {
@@ -1809,7 +1809,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "nestzone_modules_login_loginviewmodel_swift_convexauthmanager",
-      "community": 46,
+      "community": 64,
       "norm_label": "convexauthmanager"
     },
     {
@@ -1960,7 +1960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tabbar_tabbarscreenviewmodel",
-      "community": 80,
+      "community": 64,
       "norm_label": "tabbarscreenviewmodel.swift"
     },
     {
@@ -1970,7 +1970,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "tabbar_tabbarscreenviewmodel_tabbarscreenviewmodel",
-      "community": 80,
+      "community": 64,
       "norm_label": "tabbarscreenviewmodel"
     },
     {
@@ -1980,7 +1980,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "nestzone_modules_tabbar_tabbarscreenviewmodel_swift_home",
-      "community": 80,
+      "community": 64,
       "norm_label": "home"
     },
     {
@@ -1990,7 +1990,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "tabbar_tabbarscreenviewmodel_tabbarscreenviewmodel_fetchuserhome",
-      "community": 80,
+      "community": 64,
       "norm_label": ".fetchuserhome()"
     },
     {
@@ -2000,7 +2000,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "nestzone_modules_tabbar_tabbarscreenviewmodel_swift_convexauthmanager",
-      "community": 80,
+      "community": 64,
       "norm_label": "convexauthmanager"
     },
     {
@@ -3100,7 +3100,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "components_matchessection",
-      "community": 22,
+      "community": 30,
       "norm_label": "matchessection.swift"
     },
     {
@@ -3110,7 +3110,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "components_matchessection_matchessection",
-      "community": 22,
+      "community": 30,
       "norm_label": "matchessection"
     },
     {
@@ -3120,7 +3120,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_hometabscreen_minigames_movieselectiongame_components_matchessection_swift_movie",
-      "community": 22,
+      "community": 30,
       "norm_label": "movie"
     },
     {
@@ -3130,7 +3130,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_hometabscreen_minigames_movieselectiongame_components_matchessection_swift_void",
-      "community": 22,
+      "community": 30,
       "norm_label": "void"
     },
     {
@@ -3140,7 +3140,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "components_matchessection_matchmoviecard",
-      "community": 22,
+      "community": 30,
       "norm_label": "matchmoviecard"
     },
     {
@@ -4861,7 +4861,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys",
-      "community": 9,
+      "community": 10,
       "norm_label": "codingkeys"
     },
     {
@@ -4871,7 +4871,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "codingkey",
-      "community": 95,
+      "community": 10,
       "norm_label": "codingkey"
     },
     {
@@ -4881,7 +4881,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_id",
-      "community": 9,
+      "community": 10,
       "norm_label": "id"
     },
     {
@@ -4891,7 +4891,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_name",
-      "community": 9,
+      "community": 10,
       "norm_label": "name"
     },
     {
@@ -4901,7 +4901,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_email",
-      "community": 9,
+      "community": 10,
       "norm_label": "email"
     },
     {
@@ -4911,7 +4911,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_avatar",
-      "community": 9,
+      "community": 10,
       "norm_label": "avatar"
     },
     {
@@ -4961,7 +4961,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_homeid",
-      "community": 9,
+      "community": 10,
       "norm_label": "homeid"
     },
     {
@@ -4971,7 +4971,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_title",
-      "community": 9,
+      "community": 10,
       "norm_label": "title"
     },
     {
@@ -4981,7 +4981,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_type",
-      "community": 9,
+      "community": 10,
       "norm_label": "type"
     },
     {
@@ -4991,7 +4991,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_status",
-      "community": 9,
+      "community": 10,
       "norm_label": "status"
     },
     {
@@ -5001,7 +5001,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_genre",
-      "community": 9,
+      "community": 10,
       "norm_label": "genre"
     },
     {
@@ -5011,7 +5011,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_created",
-      "community": 9,
+      "community": 10,
       "norm_label": "created"
     },
     {
@@ -5021,7 +5021,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_updated",
-      "community": 9,
+      "community": 10,
       "norm_label": "updated"
     },
     {
@@ -5081,7 +5081,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_pollid",
-      "community": 9,
+      "community": 10,
       "norm_label": "pollid"
     },
     {
@@ -5091,7 +5091,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_entitytype",
-      "community": 9,
+      "community": 10,
       "norm_label": "entitytype"
     },
     {
@@ -5101,7 +5101,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_externalid",
-      "community": 9,
+      "community": 10,
       "norm_label": "externalid"
     },
     {
@@ -5111,7 +5111,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_label",
-      "community": 9,
+      "community": 10,
       "norm_label": "label"
     },
     {
@@ -5121,7 +5121,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_thumbnailurl",
-      "community": 9,
+      "community": 10,
       "norm_label": "thumbnailurl"
     },
     {
@@ -5131,7 +5131,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_order",
-      "community": 9,
+      "community": 10,
       "norm_label": "order"
     },
     {
@@ -5171,7 +5171,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_targetexternalid",
-      "community": 9,
+      "community": 10,
       "norm_label": "targetexternalid"
     },
     {
@@ -5181,7 +5181,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_vote",
-      "community": 9,
+      "community": 10,
       "norm_label": "vote"
     },
     {
@@ -5191,7 +5191,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "minigames_pollsmanager_codingkeys_userid",
-      "community": 9,
+      "community": 10,
       "norm_label": "userid"
     },
     {
@@ -6311,7 +6311,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "components_searchmoviesforlistsheet",
-      "community": 127,
+      "community": 32,
       "norm_label": "searchmoviesforlistsheet.swift"
     },
     {
@@ -6321,7 +6321,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "components_searchmoviesforlistsheet_searchmoviesforlistsheet",
-      "community": 127,
+      "community": 32,
       "norm_label": "searchmoviesforlistsheet"
     },
     {
@@ -6331,7 +6331,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_components_searchmoviesforlistsheet_swift_movielist",
-      "community": 127,
+      "community": 32,
       "norm_label": "movielist"
     },
     {
@@ -6341,7 +6341,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_components_searchmoviesforlistsheet_swift_movie",
-      "community": 127,
+      "community": 32,
       "norm_label": "movie"
     },
     {
@@ -6351,7 +6351,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_components_searchmoviesforlistsheet_swift_void",
-      "community": 127,
+      "community": 32,
       "norm_label": "void"
     },
     {
@@ -6361,7 +6361,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "components_searchmoviesforlistsheet_searchloadingview",
-      "community": 127,
+      "community": 32,
       "norm_label": "searchloadingview"
     },
     {
@@ -6701,7 +6701,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_movielist",
-      "community": 30,
+      "community": 6,
       "norm_label": "movielist.swift"
     },
     {
@@ -6711,7 +6711,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "models_movielist_movielist",
-      "community": 30,
+      "community": 6,
       "norm_label": "movielist"
     },
     {
@@ -6721,7 +6721,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_models_movielist_swift_string",
-      "community": 30,
+      "community": 6,
       "norm_label": "string"
     },
     {
@@ -6731,7 +6731,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_models_movielist_swift_movielisttype",
-      "community": 30,
+      "community": 6,
       "norm_label": "movielisttype"
     },
     {
@@ -6741,7 +6741,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_models_movielist_swift_bool",
-      "community": 30,
+      "community": 6,
       "norm_label": "bool"
     },
     {
@@ -6751,7 +6751,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_models_movielist_swift_double",
-      "community": 30,
+      "community": 6,
       "norm_label": "double"
     },
     {
@@ -6761,7 +6761,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "models_movielist_codingkeys",
-      "community": 54,
+      "community": 6,
       "norm_label": "codingkeys"
     },
     {
@@ -6771,7 +6771,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_id",
-      "community": 54,
+      "community": 6,
       "norm_label": "id"
     },
     {
@@ -6781,7 +6781,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_name",
-      "community": 54,
+      "community": 6,
       "norm_label": "name"
     },
     {
@@ -6791,7 +6791,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_description",
-      "community": 54,
+      "community": 6,
       "norm_label": "description"
     },
     {
@@ -6801,7 +6801,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_type",
-      "community": 54,
+      "community": 6,
       "norm_label": "type"
     },
     {
@@ -6811,7 +6811,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_created",
-      "community": 54,
+      "community": 6,
       "norm_label": "created"
     },
     {
@@ -6821,7 +6821,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_updated",
-      "community": 54,
+      "community": 6,
       "norm_label": "updated"
     },
     {
@@ -6831,7 +6831,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_homeid",
-      "community": 54,
+      "community": 6,
       "norm_label": "homeid"
     },
     {
@@ -6841,7 +6841,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_ispreset",
-      "community": 54,
+      "community": 6,
       "norm_label": "ispreset"
     },
     {
@@ -6851,7 +6851,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "models_movielist_movielist_init",
-      "community": 30,
+      "community": 6,
       "norm_label": ".init()"
     },
     {
@@ -6861,7 +6861,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_models_movielist_swift_decoder",
-      "community": 30,
+      "community": 6,
       "norm_label": "decoder"
     },
     {
@@ -6871,7 +6871,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "models_movielist_movielisttype",
-      "community": 128,
+      "community": 29,
       "norm_label": "movielisttype"
     },
     {
@@ -6881,7 +6881,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "models_movielist_movielisttype_wishlist",
-      "community": 128,
+      "community": 29,
       "norm_label": "wishlist"
     },
     {
@@ -6891,7 +6891,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "models_movielist_movielisttype_watched",
-      "community": 128,
+      "community": 29,
       "norm_label": "watched"
     },
     {
@@ -6901,7 +6901,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "models_movielist_movielisttype_custom",
-      "community": 128,
+      "community": 29,
       "norm_label": "custom"
     },
     {
@@ -6911,7 +6911,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "models_movielist_storedmovie",
-      "community": 30,
+      "community": 6,
       "norm_label": "storedmovie"
     },
     {
@@ -6921,7 +6921,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_models_movielist_swift_int",
-      "community": 30,
+      "community": 6,
       "norm_label": "int"
     },
     {
@@ -6931,7 +6931,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_title",
-      "community": 54,
+      "community": 6,
       "norm_label": "title"
     },
     {
@@ -6941,7 +6941,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_year",
-      "community": 54,
+      "community": 6,
       "norm_label": "year"
     },
     {
@@ -6951,7 +6951,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_poster",
-      "community": 54,
+      "community": 6,
       "norm_label": "poster"
     },
     {
@@ -6961,7 +6961,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_genres",
-      "community": 54,
+      "community": 6,
       "norm_label": "genres"
     },
     {
@@ -6971,7 +6971,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_imdbid",
-      "community": 54,
+      "community": 6,
       "norm_label": "imdbid"
     },
     {
@@ -6981,7 +6981,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "models_movielist_codingkeys_listid",
-      "community": 54,
+      "community": 6,
       "norm_label": "listid"
     },
     {
@@ -6991,7 +6991,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "models_movielist_storedmovie_init",
-      "community": 30,
+      "community": 6,
       "norm_label": ".init()"
     },
     {
@@ -7001,7 +7001,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_movies_models_movielist_swift_movie",
-      "community": 30,
+      "community": 6,
       "norm_label": "movie"
     },
     {
@@ -7011,7 +7011,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "models_movielist_storedmovie_tomovie",
-      "community": 30,
+      "community": 6,
       "norm_label": ".tomovie()"
     },
     {
@@ -8211,7 +8211,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "subviews_recipedetailview",
-      "community": 5,
+      "community": 37,
       "norm_label": "recipedetailview.swift"
     },
     {
@@ -8221,7 +8221,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "subviews_recipedetailview_recipedetailview",
-      "community": 5,
+      "community": 37,
       "norm_label": "recipedetailview"
     },
     {
@@ -8231,7 +8231,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_subviews_recipedetailview_swift_recipe",
-      "community": 5,
+      "community": 37,
       "norm_label": "recipe"
     },
     {
@@ -8241,7 +8241,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_subviews_recipedetailview_swift_recipeviewmodel",
-      "community": 5,
+      "community": 37,
       "norm_label": "recipeviewmodel"
     },
     {
@@ -8251,7 +8251,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_subviews_recipedetailview_swift_color",
-      "community": 5,
+      "community": 37,
       "norm_label": "color"
     },
     {
@@ -8261,7 +8261,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_managementtabscreen_recipes_subviews_recipedetailview_swift_string",
-      "community": 5,
+      "community": 37,
       "norm_label": "string"
     },
     {
@@ -8271,7 +8271,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "subviews_recipedetailview_recipedetailview_ingredientssection",
-      "community": 5,
+      "community": 37,
       "norm_label": ".ingredientssection()"
     },
     {
@@ -8281,7 +8281,7 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "subviews_recipedetailview_recipedetailview_stepssection",
-      "community": 5,
+      "community": 37,
       "norm_label": ".stepssection()"
     },
     {
@@ -8291,7 +8291,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "subviews_recipedetailview_infocard",
-      "community": 5,
+      "community": 37,
       "norm_label": "infocard"
     },
     {
@@ -8301,7 +8301,7 @@
       "source_location": "L299",
       "_origin": "ast",
       "id": "subviews_recipedetailview_localizeddifficulty",
-      "community": 5,
+      "community": 37,
       "norm_label": "localizeddifficulty()"
     },
     {
@@ -9021,7 +9021,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "subviews_chatemptystates",
-      "community": 22,
+      "community": 17,
       "norm_label": "chatemptystates.swift"
     },
     {
@@ -9031,7 +9031,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "subviews_chatemptystates_chatloadingview",
-      "community": 22,
+      "community": 17,
       "norm_label": "chatloadingview"
     },
     {
@@ -9041,7 +9041,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "subviews_chatemptystates_chatemptyview",
-      "community": 22,
+      "community": 17,
       "norm_label": "chatemptyview"
     },
     {
@@ -9111,7 +9111,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "subviews_messagebubble",
-      "community": 33,
+      "community": 37,
       "norm_label": "messagebubble.swift"
     },
     {
@@ -9121,7 +9121,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble",
-      "community": 33,
+      "community": 37,
       "norm_label": "messagebubble"
     },
     {
@@ -9131,7 +9131,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_pocketbasemessage",
-      "community": 33,
+      "community": 37,
       "norm_label": "pocketbasemessage"
     },
     {
@@ -9141,7 +9141,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_bool",
-      "community": 33,
+      "community": 37,
       "norm_label": "bool"
     },
     {
@@ -9151,7 +9151,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_pocketbaseconversation",
-      "community": 33,
+      "community": 37,
       "norm_label": "pocketbaseconversation"
     },
     {
@@ -9161,7 +9161,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_string",
-      "community": 33,
+      "community": 37,
       "norm_label": "string"
     },
     {
@@ -9171,7 +9171,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_pocketbaseuser",
-      "community": 33,
+      "community": 37,
       "norm_label": "pocketbaseuser"
     },
     {
@@ -9181,7 +9181,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_filepreview",
-      "community": 33,
+      "community": 37,
       "norm_label": ".filepreview()"
     },
     {
@@ -9191,7 +9191,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_formattime",
-      "community": 33,
+      "community": 37,
       "norm_label": ".formattime()"
     },
     {
@@ -9201,7 +9201,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_loadsendername",
-      "community": 33,
+      "community": 37,
       "norm_label": ".loadsendername()"
     },
     {
@@ -9211,7 +9211,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "subviews_messagebubble_messagebubble_loadreadreceipts",
-      "community": 33,
+      "community": 37,
       "norm_label": ".loadreadreceipts()"
     },
     {
@@ -9221,7 +9221,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "subviews_messagebubble_useravatar",
-      "community": 33,
+      "community": 37,
       "norm_label": "useravatar"
     },
     {
@@ -9231,7 +9231,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "nestzone_modules_tabbarsubscreens_messagestabscreen_subviews_messagebubble_swift_cgfloat",
-      "community": 33,
+      "community": 37,
       "norm_label": "cgfloat"
     },
     {
@@ -9812,7 +9812,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "extensions_pocketbasenote_extensions",
-      "community": 31,
+      "community": 41,
       "norm_label": "pocketbasenote+extensions.swift"
     },
     {
@@ -11093,7 +11093,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys",
-      "community": 95,
+      "community": 10,
       "norm_label": "codingkeys"
     },
     {
@@ -11103,7 +11103,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys_id",
-      "community": 95,
+      "community": 10,
       "norm_label": "id"
     },
     {
@@ -11113,7 +11113,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys_name",
-      "community": 95,
+      "community": 10,
       "norm_label": "name"
     },
     {
@@ -11123,7 +11123,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys_address",
-      "community": 95,
+      "community": 10,
       "norm_label": "address"
     },
     {
@@ -11133,7 +11133,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys_members",
-      "community": 95,
+      "community": 10,
       "norm_label": "members"
     },
     {
@@ -11143,7 +11143,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys_invitecode",
-      "community": 95,
+      "community": 10,
       "norm_label": "invitecode"
     },
     {
@@ -11153,7 +11153,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys_created",
-      "community": 95,
+      "community": 10,
       "norm_label": "created"
     },
     {
@@ -11163,7 +11163,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "convex_convexmodels_codingkeys_updated",
-      "community": 95,
+      "community": 10,
       "norm_label": "updated"
     },
     {
@@ -12304,7 +12304,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "network_pocketbasemodels_pocketbasenote",
-      "community": 25,
+      "community": 78,
       "norm_label": "pocketbasenote"
     },
     {
@@ -12434,7 +12434,7 @@
       "source_location": "L229",
       "_origin": "ast",
       "id": "network_pocketbasemodels_messagetype_text",
-      "community": 5,
+      "community": 37,
       "norm_label": "text"
     },
     {
@@ -12624,7 +12624,7 @@
       "source_location": "L297",
       "_origin": "ast",
       "id": "network_pocketbasemodels_expense",
-      "community": 78,
+      "community": 25,
       "norm_label": "expense"
     },
     {
@@ -12634,7 +12634,7 @@
       "source_location": "L302",
       "_origin": "ast",
       "id": "expensecategory",
-      "community": 78,
+      "community": 25,
       "norm_label": "expensecategory"
     },
     {
@@ -12864,7 +12864,7 @@
       "source_location": "L387",
       "_origin": "ast",
       "id": "network_pocketbasemodels_difficulty",
-      "community": 129,
+      "community": 29,
       "norm_label": "difficulty"
     },
     {
@@ -12874,7 +12874,7 @@
       "source_location": "L388",
       "_origin": "ast",
       "id": "network_pocketbasemodels_difficulty_easy",
-      "community": 129,
+      "community": 29,
       "norm_label": "easy"
     },
     {
@@ -12884,7 +12884,7 @@
       "source_location": "L389",
       "_origin": "ast",
       "id": "network_pocketbasemodels_difficulty_medium",
-      "community": 129,
+      "community": 29,
       "norm_label": "medium"
     },
     {
@@ -12894,7 +12894,7 @@
       "source_location": "L390",
       "_origin": "ast",
       "id": "network_pocketbasemodels_difficulty_hard",
-      "community": 129,
+      "community": 29,
       "norm_label": "hard"
     },
     {
@@ -12974,7 +12974,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "network_samplerecipeloader",
-      "community": 107,
+      "community": 18,
       "norm_label": "samplerecipeloader.swift"
     },
     {
@@ -12984,7 +12984,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "network_samplerecipeloader_samplerecipe",
-      "community": 107,
+      "community": 18,
       "norm_label": "samplerecipe"
     },
     {
@@ -12994,7 +12994,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "nestzone_network_samplerecipeloader_swift_string",
-      "community": 107,
+      "community": 18,
       "norm_label": "string"
     },
     {
@@ -13004,7 +13004,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "nestzone_network_samplerecipeloader_swift_int",
-      "community": 107,
+      "community": 18,
       "norm_label": "int"
     },
     {
@@ -13014,7 +13014,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "network_samplerecipeloader_samplerecipeloader",
-      "community": 107,
+      "community": 18,
       "norm_label": "samplerecipeloader"
     },
     {
@@ -13024,7 +13024,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "network_samplerecipeloader_samplerecipeloader_loadrecipes",
-      "community": 107,
+      "community": 18,
       "norm_label": ".loadrecipes()"
     },
     {
@@ -13034,7 +13034,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "nestzone_network_samplerecipeloader_swift_recipe",
-      "community": 107,
+      "community": 18,
       "norm_label": "recipe"
     },
     {
@@ -13044,7 +13044,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "network_samplerecipeloader_samplerecipeloader_converttorecipes",
-      "community": 107,
+      "community": 18,
       "norm_label": ".converttorecipes()"
     },
     {
@@ -13064,7 +13064,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "network_userservice_userservice",
-      "community": 40,
+      "community": 64,
       "norm_label": "userservice"
     },
     {
@@ -13074,7 +13074,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_network_userservice_swift_string",
-      "community": 40,
+      "community": 64,
       "norm_label": "string"
     },
     {
@@ -13084,7 +13084,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_network_userservice_swift_pocketbaseuser",
-      "community": 40,
+      "community": 64,
       "norm_label": "pocketbaseuser"
     },
     {
@@ -13094,7 +13094,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_network_userservice_swift_set",
-      "community": 40,
+      "community": 64,
       "norm_label": "set"
     },
     {
@@ -13104,7 +13104,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "network_userservice_userservice_init",
-      "community": 40,
+      "community": 64,
       "norm_label": ".init()"
     },
     {
@@ -13114,7 +13114,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "network_userservice_userservice_getuser",
-      "community": 40,
+      "community": 64,
       "norm_label": ".getuser()"
     },
     {
@@ -13124,7 +13124,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "network_userservice_userservice_getallusers",
-      "community": 40,
+      "community": 64,
       "norm_label": ".getallusers()"
     },
     {
@@ -13134,7 +13134,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "network_userservice_userservice_fetchusers",
-      "community": 40,
+      "community": 64,
       "norm_label": ".fetchusers()"
     },
     {
@@ -13144,7 +13144,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "network_userservice_userservice_getusername",
-      "community": 40,
+      "community": 64,
       "norm_label": ".getusername()"
     },
     {
@@ -13154,7 +13154,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "network_userservice_userservice_getusers",
-      "community": 40,
+      "community": 64,
       "norm_label": ".getusers()"
     },
     {
@@ -13164,7 +13164,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "network_userservice_userservice_clearcache",
-      "community": 40,
+      "community": 64,
       "norm_label": ".clearcache()"
     },
     {
@@ -13174,7 +13174,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "network_userservice_userservice_retryfaileduser",
-      "community": 40,
+      "community": 64,
       "norm_label": ".retryfaileduser()"
     },
     {
@@ -14143,7 +14143,7 @@
       "label": "requirePollOwner()",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L18",
+      "source_location": "L16",
       "_origin": "ast",
       "id": "convex_polls_requirepollowner",
       "community": 93,
@@ -14153,7 +14153,7 @@
       "label": "listByHome",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L27",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "convex_polls_listbyhome",
       "community": 93,
@@ -14163,7 +14163,7 @@
       "label": "detail",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L39",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "convex_polls_detail",
       "community": 93,
@@ -14173,7 +14173,7 @@
       "label": "create",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L65",
+      "source_location": "L63",
       "_origin": "ast",
       "id": "convex_polls_create",
       "community": 93,
@@ -14183,7 +14183,7 @@
       "label": "vote",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L115",
+      "source_location": "L113",
       "_origin": "ast",
       "id": "convex_polls_vote",
       "community": 93,
@@ -14193,7 +14193,7 @@
       "label": "addItem",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L155",
+      "source_location": "L152",
       "_origin": "ast",
       "id": "convex_polls_additem",
       "community": 93,
@@ -14203,7 +14203,7 @@
       "label": "remove",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L177",
+      "source_location": "L174",
       "_origin": "ast",
       "id": "convex_polls_remove",
       "community": 93,
@@ -14213,7 +14213,7 @@
       "label": "setStatus",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L194",
+      "source_location": "L191",
       "_origin": "ast",
       "id": "convex_polls_setstatus",
       "community": 93,
@@ -15058,6 +15058,16 @@
       "id": "convex_migration_backend_deploy_runbook_production_hardening_pass_2026_09_03",
       "community": 101,
       "norm_label": "production hardening pass (2026\u201009\u201003)"
+    },
+    {
+      "label": "Data cleanup + indexing (2026\u201109\u201103, deployed)",
+      "file_type": "document",
+      "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
+      "source_location": "L154",
+      "_origin": "ast",
+      "id": "convex_migration_backend_deploy_runbook_data_cleanup_indexing_2026_09_03_deployed",
+      "community": 101,
+      "norm_label": "data cleanup + indexing (2026\u201009\u201003, deployed)"
     },
     {
       "label": "iOS-Migration-Guide.md",
@@ -42838,9 +42848,9 @@
       "source_file": "backend/convex/lib/auth.ts",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_auth",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "contains",
@@ -42913,9 +42923,9 @@
       "source_file": "backend/convex/polls.ts",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_polls_requirepollowner",
-      "target": "lib_auth_requireuser",
-      "confidence_score": 1.0
+      "target": "lib_auth_requireuser"
     },
     {
       "relation": "imports",
@@ -43056,9 +43066,9 @@
       "source_file": "backend/convex/lib/auth.ts",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_auth_requiredochome",
-      "target": "lib_auth_requirehomemember",
-      "confidence_score": 1.0
+      "target": "lib_auth_requirehomemember"
     },
     {
       "relation": "imports",
@@ -43067,9 +43077,9 @@
       "source_file": "backend/convex/movies.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_movies",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "imports",
@@ -43078,9 +43088,9 @@
       "source_file": "backend/convex/notes.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_notes",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "imports",
@@ -43089,9 +43099,9 @@
       "source_file": "backend/convex/polls.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_polls",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "calls",
@@ -43100,9 +43110,9 @@
       "source_file": "backend/convex/polls.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_polls_requirepollowner",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "imports",
@@ -43111,9 +43121,9 @@
       "source_file": "backend/convex/recipes.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_recipes",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "imports",
@@ -43122,9 +43132,9 @@
       "source_file": "backend/convex/shopping.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_shopping",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "imports",
@@ -43133,9 +43143,9 @@
       "source_file": "backend/convex/tasks.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_tasks",
-      "target": "lib_auth_requiredochome",
-      "confidence_score": 1.0
+      "target": "lib_auth_requiredochome"
     },
     {
       "relation": "contains",
@@ -43459,9 +43469,9 @@
       "source_file": "backend/convex/polls.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_polls",
-      "target": "convex_polls_requirepollowner",
-      "confidence_score": 1.0
+      "target": "convex_polls_requirepollowner"
     },
     {
       "relation": "contains",
@@ -44289,6 +44299,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "convex_migration_backend_deploy_runbook_nestzone_backend_convex_deploy_data_import_runbook",
+      "target": "convex_migration_backend_deploy_runbook_data_cleanup_indexing_2026_09_03_deployed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
       "source_location": "L106",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -44301,9 +44321,9 @@
       "source_file": "Docs/Convex-Migration/Backend-Deploy-Runbook.md",
       "source_location": "L115",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_migration_backend_deploy_runbook_nestzone_backend_convex_deploy_data_import_runbook",
-      "target": "convex_migration_backend_deploy_runbook_production_hardening_pass_2026_09_03",
-      "confidence_score": 1.0
+      "target": "convex_migration_backend_deploy_runbook_production_hardening_pass_2026_09_03"
     },
     {
       "relation": "contains",
@@ -44782,5 +44802,5 @@
       "source_file": "Docs/PocketBase/README.md"
     }
   ],
-  "built_at_commit": "65d35c7e59094bac89b3f06032d26382f5dab9c0"
+  "built_at_commit": "8b7d25cc3e3aea4601a4f2eff80d345b78ac9807"
 }

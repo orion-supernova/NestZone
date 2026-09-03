@@ -600,7 +600,7 @@
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.d.ts": {
-    "mtime": 1788440718.3999643,
+    "mtime": 1788442701.8275895,
     "ast_hash": "4cc8998bdba4d949b9a0cd596303e365",
     "semantic_hash": ""
   },
@@ -635,13 +635,13 @@
     "semantic_hash": ""
   },
   "backend/convex/conversations.ts": {
-    "mtime": 1781866875.197039,
-    "ast_hash": "f57f42538c142a11a313fedc192b460f",
+    "mtime": 1788442557.7157168,
+    "ast_hash": "ba3d10b65773c907002c3d72be4a730e",
     "semantic_hash": ""
   },
   "backend/convex/homes.ts": {
-    "mtime": 1788440669.440819,
-    "ast_hash": "29ccea51f3870d510f4525e7cd6f32bc",
+    "mtime": 1788442557.7160375,
+    "ast_hash": "e1b87d562ca2fe02e01117504e3df649",
     "semantic_hash": ""
   },
   "backend/convex/http.ts": {
@@ -660,38 +660,38 @@
     "semantic_hash": ""
   },
   "backend/convex/movies.ts": {
-    "mtime": 1788440669.4409876,
-    "ast_hash": "74284d1599d745ef7ca6283c9f220eb8",
+    "mtime": 1788442557.7179563,
+    "ast_hash": "a7f371596046c856850c2f9b78593b17",
     "semantic_hash": ""
   },
   "backend/convex/notes.ts": {
-    "mtime": 1788440628.6975293,
-    "ast_hash": "4c02557d4329b26fd9ea8e629e97f964",
+    "mtime": 1788442557.716286,
+    "ast_hash": "a7f12772f903da59d96d5ff9fc0344da",
     "semantic_hash": ""
   },
   "backend/convex/polls.ts": {
-    "mtime": 1788440669.4404483,
-    "ast_hash": "2751e0cca635fda2b4f5e8e214efccd8",
+    "mtime": 1788442594.5894797,
+    "ast_hash": "e6cec3a7a29d61c284a8916d59930748",
     "semantic_hash": ""
   },
   "backend/convex/recipes.ts": {
-    "mtime": 1788440628.6971493,
-    "ast_hash": "5be5f07389e66ea27029bb0ec273cc6f",
+    "mtime": 1788442557.717028,
+    "ast_hash": "726436060a0d5602ff5f849e54435f93",
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1788440638.1309361,
-    "ast_hash": "708453ae3c2d2db61c6ac1ffd693a35d",
+    "mtime": 1788442535.1563144,
+    "ast_hash": "2a425b29749d679c35b82a748e520662",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
-    "mtime": 1788440628.6987746,
-    "ast_hash": "3d0bf8b9e0b1774c1cafba1ab1fd63d6",
+    "mtime": 1788442557.717294,
+    "ast_hash": "d212e914d926a2096d6041c523d0bd5e",
     "semantic_hash": ""
   },
   "backend/convex/tasks.ts": {
-    "mtime": 1788440628.6984339,
-    "ast_hash": "61e56b3fc38e90d148c91ed247140d4c",
+    "mtime": 1788442557.7165837,
+    "ast_hash": "97b5abcc046dbc44b178d2750783519b",
     "semantic_hash": ""
   },
   "backend/convex/users.ts": {
@@ -735,8 +735,8 @@
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
-    "mtime": 1788440833.5311167,
-    "ast_hash": "8e81063a216fb608cddd4308eee6d8a9",
+    "mtime": 1788442778.8678808,
+    "ast_hash": "0d0d376d1015ff3054daf3c8d835f437",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/iOS-Migration-Guide.md": {

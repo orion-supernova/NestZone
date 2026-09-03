@@ -48,7 +48,8 @@ export default defineSchema({
     invite_code: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_invite_code", ["invite_code"]),
 
   tasks: defineTable({
     pbId: v.optional(v.string()),
@@ -72,7 +73,8 @@ export default defineSchema({
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
     due_date: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"]),
 
   shopping_items: defineTable({
     pbId: v.optional(v.string()),
@@ -93,7 +95,8 @@ export default defineSchema({
     home_id: v.optional(v.id("homes")),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"]),
 
   notes: defineTable({
     pbId: v.optional(v.string()),
@@ -104,7 +107,8 @@ export default defineSchema({
     color: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"]),
 
   conversations: defineTable({
     pbId: v.optional(v.string()),
@@ -116,7 +120,8 @@ export default defineSchema({
     last_message_at: v.optional(v.number()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"]),
 
   messages: defineTable({
     pbId: v.optional(v.string()),
@@ -152,15 +157,16 @@ export default defineSchema({
     tags: v.optional(v.array(v.string())), // PB multi-select; kept loose for flexibility
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"]),
 
   polls: defineTable({
     pbId: v.optional(v.string()),
-    home_id: v.optional(v.id("homes")),
-    // PocketBase `polls.owner_id`: who created the poll. PB scoped update/delete
-    // to the owner. Optional because the 23 polls migrated from PocketBase were
-    // exported without it — see polls.ts `requirePollOwner` for the fallback.
-    owner_id: v.optional(v.id("users")),
+    // Required: the legacy PocketBase polls that lacked these were purged
+    // 2026-09-03, and polls:create always sets both. `requireDocHome` and
+    // `requirePollOwner` can therefore never hit an unattached/unowned poll.
+    home_id: v.id("homes"),
+    owner_id: v.id("users"),
     title: v.optional(v.string()),
     type: v.optional(
       v.union(v.literal("movie"), v.literal("recipe"), v.literal("generic")),
@@ -171,12 +177,13 @@ export default defineSchema({
     genre: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"]),
 
   poll_items: defineTable({
     pbId: v.optional(v.string()),
-    poll_id: v.optional(v.id("polls")),
-    external_id: v.optional(v.string()),
+    poll_id: v.id("polls"),
+    external_id: v.string(),
     label: v.optional(v.string()),
     thumbnail_url: v.optional(v.string()),
     payload: v.optional(v.any()), // PB json
@@ -189,15 +196,19 @@ export default defineSchema({
 
   poll_votes: defineTable({
     pbId: v.optional(v.string()),
-    poll_id: v.optional(v.id("polls")),
-    target_external_id: v.optional(v.string()),
-    vote: v.optional(v.boolean()),
-    user_id: v.optional(v.id("users")),
+    // Required: 60 migrated votes had a null user_id, so they counted toward
+    // tallies while belonging to nobody. Purged 2026-09-03; polls:vote always
+    // takes the voter from the authenticated session.
+    poll_id: v.id("polls"),
+    target_external_id: v.string(),
+    vote: v.boolean(),
+    user_id: v.id("users"),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   })
     .index("by_pbId", ["pbId"])
-    .index("by_poll", ["poll_id"]),
+    .index("by_poll", ["poll_id"])
+    .index("by_poll_user_target", ["poll_id", "user_id", "target_external_id"]),
 
   movies: defineTable({
     pbId: v.optional(v.string()),
@@ -210,7 +221,9 @@ export default defineSchema({
     genres: v.optional(v.any()), // PB json
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"])
+    .index("by_list", ["list_id"]),
 
   movie_lists: defineTable({
     pbId: v.optional(v.string()),
@@ -224,5 +237,6 @@ export default defineSchema({
     runtime: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_pbId", ["pbId"]),
+  }).index("by_pbId", ["pbId"])
+    .index("by_home", ["home_id"]),
 });

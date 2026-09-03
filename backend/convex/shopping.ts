@@ -15,7 +15,7 @@ export const listByHome = query({
     await requireHomeMember(ctx, homeId);
     return await ctx.db
       .query("shopping_items")
-      .filter((q) => q.eq(q.field("home_id"), homeId))
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect();
   },
 });

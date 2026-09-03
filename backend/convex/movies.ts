@@ -10,7 +10,7 @@ export const listsByHome = query({
     await requireHomeMember(ctx, homeId);
     return await ctx.db
       .query("movie_lists")
-      .filter((q) => q.eq(q.field("home_id"), homeId))
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect();
   },
 });
@@ -23,7 +23,7 @@ export const moviesInList = query({
     await requireDocHome(ctx, list, "List");
     return await ctx.db
       .query("movies")
-      .filter((q) => q.eq(q.field("list_id"), listId))
+      .withIndex("by_list", (q) => q.eq("list_id", listId))
       .collect();
   },
 });
@@ -91,7 +91,7 @@ export const byHome = query({
     await requireHomeMember(ctx, homeId);
     return await ctx.db
       .query("movies")
-      .filter((q) => q.eq(q.field("home_id"), homeId))
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect();
   },
 });
@@ -114,7 +114,7 @@ export const removeList = mutation({
     const list = await ctx.db.get(id);
     if (!list) return { ok: true };
     await requireDocHome(ctx, list, "List");
-    for (const m of await ctx.db.query("movies").filter((q) => q.eq(q.field("list_id"), id)).collect()) {
+    for (const m of await ctx.db.query("movies").withIndex("by_list", (q) => q.eq("list_id", id)).collect()) {
       await ctx.db.delete(m._id);
     }
     await ctx.db.delete(id);

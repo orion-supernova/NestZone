@@ -8,17 +8,15 @@ const pollType = v.union(v.literal("movie"), v.literal("recipe"), v.literal("gen
 const pollStatus = v.union(v.literal("draft"), v.literal("active"), v.literal("closed"));
 
 /**
- * Restores the PocketBase rule "polls update/delete: owner-only and home member".
+ * The PocketBase rule: "polls update/delete: owner-only and home member".
  *
- * Polls migrated from PocketBase have no `owner_id` (the field was not exported),
- * so for those we fall back to home membership — the behaviour they have had
- * since the migration. Every poll created on Convex records its owner and is
- * owner-only from here on. Backfill the migrated 23 from PocketBase to tighten.
+ * `owner_id` is required in the schema — the legacy PocketBase polls that had
+ * none were purged 2026-09-03 — so this is an unconditional owner check.
  */
 async function requirePollOwner(ctx: QueryCtx | MutationCtx, poll: Doc<"polls">) {
   const user = await requireUser(ctx);
   await requireDocHome(ctx, poll, "Poll");
-  if (poll.owner_id && poll.owner_id !== user._id) {
+  if (poll.owner_id !== user._id) {
     throw new Error("Only the poll owner can modify this poll");
   }
   return user;
@@ -30,7 +28,7 @@ export const listByHome = query({
     await requireHomeMember(ctx, homeId);
     return await ctx.db
       .query("polls")
-      .filter((q) => q.eq(q.field("home_id"), homeId))
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect();
   },
 });
@@ -71,7 +69,7 @@ export const create = mutation({
     items: v.optional(
       v.array(
         v.object({
-          external_id: v.optional(v.string()),
+          external_id: v.string(),
           label: v.optional(v.string()),
           thumbnail_url: v.optional(v.string()),
           payload: v.optional(v.any()),
@@ -126,12 +124,11 @@ export const vote = mutation({
 
     const existing = await ctx.db
       .query("poll_votes")
-      .withIndex("by_poll", (q) => q.eq("poll_id", args.pollId))
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("user_id"), user._id),
-          q.eq(q.field("target_external_id"), args.target_external_id),
-        ),
+      .withIndex("by_poll_user_target", (q) =>
+        q
+          .eq("poll_id", args.pollId)
+          .eq("user_id", user._id)
+          .eq("target_external_id", args.target_external_id),
       )
       .first();
 

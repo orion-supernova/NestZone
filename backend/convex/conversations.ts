@@ -10,7 +10,7 @@ export const listByHome = query({
     const user = await requireUser(ctx);
     const convos = await ctx.db
       .query("conversations")
-      .filter((q) => q.eq(q.field("home_id"), homeId))
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect();
     return convos.filter((c) => (c.participants ?? []).some((p) => p === user._id));
   },

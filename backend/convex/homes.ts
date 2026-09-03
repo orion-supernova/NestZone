@@ -61,7 +61,7 @@ export const join = mutation({
     const user = await requireUser(ctx);
     const home = await ctx.db
       .query("homes")
-      .filter((q) => q.eq(q.field("invite_code"), inviteCode))
+      .withIndex("by_invite_code", (q) => q.eq("invite_code", inviteCode))
       .first();
     if (!home) throw new Error("Invalid invite code");
 

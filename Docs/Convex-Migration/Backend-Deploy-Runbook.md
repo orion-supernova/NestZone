@@ -137,18 +137,65 @@ Applied to `backend/convex/` before the migration branch was committed.
    any‑home‑member. `owner_id` is back on the schema, `polls:create` records it, and
    `polls:remove` / `polls:setStatus` go through `requirePollOwner`. `polls:addItem` again
    requires the poll to be active, per the PB rule.
-   **Open item:** the 23 polls migrated from PocketBase have no `owner_id` and stay
-   member‑editable. To tighten, read `owner_id` per `pbId` from the live PocketBase and
-   patch the matching Convex docs (`by_pbId` index is still in place).
+   **Resolved by the data cleanup below:** rather than backfill, the 23 ownerless legacy
+   polls were purged and `owner_id` is now a required field, so `requirePollOwner` is an
+   unconditional owner check.
 
 4. **`homes:leave`** now asserts membership before patching (previously any authenticated
    user could touch any home's `updated`). **`movies:addMovie`** now rejects a `listId`
    that belongs to a different home than `homeId`.
 
-**Open data item:** 60 of 349 `poll_votes` have `user_id: null`, concentrated in 4 polls.
-The original audit reported "0 dangling relations" because that check skips nulls. Those
-votes count toward totals but belong to nobody. Source values are still in PocketBase.
+**Resolved by the data cleanup below.**
 
 **Intentionally not restored:** `polls.candidates`, `polls.config`, `polls.expires_at` and
 `poll_votes.item_id`. The client moved to `poll_items` / `target_external_id` and no Swift
 code reads any of them; all 349 votes carry `target_external_id`, so no votes were lost.
+
+## Data cleanup + indexing (2026‑09‑03, deployed)
+
+Run through a temporary `convex/maintenance.ts` holding `internalQuery`/`internalMutation`
+helpers — not publicly callable, invoked with `npx convex run` under the admin key — then
+deleted and redeployed. Live function list is now exactly the domain functions plus the
+four `auth:*` entries: no `debug:`, no `maintenance:`, no `migrate:`.
+
+**A full audit found more than the original one did.** The migration's own audit checked
+only for *dangling* references and so skipped nulls entirely. The real gaps were:
+
+| gap | rows | disposition |
+|---|---|---|
+| `polls.owner_id` null | 23 of 23 | **purged** (all polls) |
+| `poll_votes.user_id` null | 60 of 349 | **purged** |
+| `messages.sender_id` null | 4 of 62 | **kept** — real chat content, unrecoverable sender |
+| `shopping_items.created_by` null | 3 of 3 | **kept** — metadata only, access is via `home_id` |
+
+**Poll domain purged.** Every poll lacked `owner_id`, so "delete the ownerless ones" meant
+the whole poll history: 23 polls, 460 items, 349 votes. Accepted deliberately — poll
+history is disposable and new polls are cheap to recreate. Backed up first to
+`backend/data/poll-domain-backup-2026-09-03.json` (gitignored) via `dumpPollDomain`, so it
+is reversible.
+
+**Schema tightened** now that the tables are clean, which is what makes the bad states
+unrepresentable rather than merely absent:
+- `polls.home_id`, `polls.owner_id` → required
+- `poll_items.poll_id`, `poll_items.external_id` → required
+- `poll_votes.poll_id`, `poll_votes.user_id`, `poll_votes.target_external_id`,
+  `poll_votes.vote` → required
+- `messages.sender_id` and `shopping_items.created_by` stay optional **on purpose** —
+  live rows violate them and the missing values cannot be reconstructed. Making them
+  required would fail schema validation on push.
+
+**11 indexes added, 12 table scans removed.** Every `listByHome` was doing
+`.filter(q => q.eq(q.field("home_id"), homeId))`, which reads the whole table on every
+call — including on live subscriptions, so the cost recurred on every reactive update.
+New indexes: `by_home` on tasks / shopping_items / notes / conversations / recipes /
+polls / movies / movie_lists, `by_list` on movies, `by_invite_code` on homes, and
+`by_poll_user_target` on poll_votes (which also collapsed the vote-lookup from an indexed
+read plus a filter into a single compound-index read).
+
+`homes:listMine` still scans `homes` (5 rows) and filters on the `members` array —
+Convex cannot index array containment, so this needs a join table if homes ever grow.
+
+**Not done:** `returns:` validators on the ~50 public functions. The Convex lint asks for
+them and they are worth adding, but a wrong return validator rejects a valid response at
+runtime, so it is a change to make deliberately with the client in front of you — not as
+a drive-by during a data cleanup.
