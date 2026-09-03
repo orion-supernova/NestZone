@@ -125,14 +125,17 @@ export default defineSchema({
 
   messages: defineTable({
     pbId: v.optional(v.string()),
-    sender_id: v.optional(v.id("users")),
+    // Required: 4 senderless test messages migrated from PocketBase rendered
+    // with a blank name and no avatar; deleted 2026-09-03. messages:send always
+    // takes the sender from the authenticated session.
+    sender_id: v.id("users"),
+    conversation_id: v.id("conversations"),
     content: v.optional(v.string()),
     message_type: v.optional(
       v.union(v.literal("text"), v.literal("image"), v.literal("system")),
     ),
     file: v.optional(v.id("_storage")),
     read_by: v.optional(v.array(v.id("users"))),
-    conversation_id: v.optional(v.id("conversations")),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   })

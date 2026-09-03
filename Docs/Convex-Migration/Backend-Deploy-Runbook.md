@@ -165,7 +165,7 @@ only for *dangling* references and so skipped nulls entirely. The real gaps were
 |---|---|---|
 | `polls.owner_id` null | 23 of 23 | **purged** (all polls) |
 | `poll_votes.user_id` null | 60 of 349 | **purged** |
-| `messages.sender_id` null | 4 of 62 | **kept** — real chat content, unrecoverable sender |
+| `messages.sender_id` null | 4 of 62 | **purged** — see below |
 | `shopping_items.created_by` null | 3 of 3 | **kept** — metadata only, access is via `home_id` |
 
 **Poll domain purged.** Every poll lacked `owner_id`, so "delete the ownerless ones" meant
@@ -180,9 +180,12 @@ unrepresentable rather than merely absent:
 - `poll_items.poll_id`, `poll_items.external_id` → required
 - `poll_votes.poll_id`, `poll_votes.user_id`, `poll_votes.target_external_id`,
   `poll_votes.vote` → required
-- `messages.sender_id` and `shopping_items.created_by` stay optional **on purpose** —
-  live rows violate them and the missing values cannot be reconstructed. Making them
-  required would fail schema validation on push.
+- `messages.sender_id`, `messages.conversation_id` → required (see the senderless-message
+  cleanup below)
+- `shopping_items.created_by` stays optional **on purpose**: 3 live rows have no creator
+  and the value cannot be reconstructed, so requiring it would fail schema validation on
+  push. It is never rendered — `ShoppingItem.createdBy` is `String?` and no view reads it —
+  so those items display normally.
 
 **11 indexes added, 12 table scans removed.** Every `listByHome` was doing
 `.filter(q => q.eq(q.field("home_id"), homeId))`, which reads the whole table on every
@@ -199,3 +202,23 @@ Convex cannot index array containment, so this needs a join table if homes ever 
 them and they are worth adding, but a wrong return validator rejects a valid response at
 runtime, so it is a change to make deliberately with the client in front of you — not as
 a drive-by during a data cleanup.
+
+### Senderless messages purged (2026‑09‑03)
+
+The 4 `messages` rows with a null `sender_id` were deleted. Inspected first: all four were
+throwaway tests from Aug 2025 ("123", "test", "Amber", "Naber\*\*"), all in one
+conversation, and none was any conversation's `last_message` preview — so no real content
+was lost and no chat-list entry pointed at them. The cleanup mutation recomputed the
+affected conversation's `last_message` / `last_message_at` from the newest surviving
+message regardless, so the preview cannot go stale even if that had been the case.
+
+Messages went 62 → 58. `messages.sender_id` and `messages.conversation_id` are now
+**required**, which is what makes a senderless message unrepresentable rather than merely
+absent — `messages:send` has always taken the sender from the authenticated session, so
+nothing in the app could produce one anyway.
+
+**`shopping_items.created_by` deliberately left alone.** All 3 rows lack it, but the field
+is never displayed (`ShoppingItem.createdBy` is `String?`, no view reads it) and access is
+governed by `home_id`, not by the creator — so the items render and function normally.
+Deleting real shopping-list content to tidy an invisible metadata field would be a net
+loss, and the field must stay `v.optional` for schema validation to pass.

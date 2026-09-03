@@ -600,7 +600,7 @@
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.d.ts": {
-    "mtime": 1788442701.8275895,
+    "mtime": 1788443814.322808,
     "ast_hash": "4cc8998bdba4d949b9a0cd596303e365",
     "semantic_hash": ""
   },
@@ -680,8 +680,8 @@
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1788442535.1563144,
-    "ast_hash": "2a425b29749d679c35b82a748e520662",
+    "mtime": 1788443776.666689,
+    "ast_hash": "2f9bac93fc518f8c9973fccc8c83fa3b",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
@@ -735,8 +735,8 @@
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
-    "mtime": 1788442778.8678808,
-    "ast_hash": "0d0d376d1015ff3054daf3c8d835f437",
+    "mtime": 1788443860.0033882,
+    "ast_hash": "85f55036f0ac631235d2aff8e5d99790",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/iOS-Migration-Guide.md": {
