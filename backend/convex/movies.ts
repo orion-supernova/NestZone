@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireHomeMember, requireDocHome } from "./lib/auth";
+import { requireRef, requireSameHome, cascadeDeleteMovieList } from "./lib/relations";
 
 const listType = v.union(v.literal("wishlist"), v.literal("watched"), v.literal("custom"));
 
@@ -64,11 +65,10 @@ export const addMovie = mutation({
   },
   handler: async (ctx, args) => {
     await requireHomeMember(ctx, args.homeId);
-    // The list must belong to the same home, or a member of home A could file
-    // movies into home B's list.
-    const list = await ctx.db.get(args.listId);
-    if (!list) throw new Error("List not found");
-    if (list.home_id !== args.homeId) throw new Error("List belongs to another home");
+    // The list must exist and belong to the same home, or a member of home A
+    // could file movies into home B's list.
+    const list = await requireRef(ctx, args.listId, "List");
+    requireSameHome(list, args.homeId, "List");
     const now = Date.now();
     return await ctx.db.insert("movies", {
       home_id: args.homeId,
@@ -114,10 +114,7 @@ export const removeList = mutation({
     const list = await ctx.db.get(id);
     if (!list) return { ok: true };
     await requireDocHome(ctx, list, "List");
-    for (const m of await ctx.db.query("movies").withIndex("by_list", (q) => q.eq("list_id", id)).collect()) {
-      await ctx.db.delete(m._id);
-    }
-    await ctx.db.delete(id);
+    await cascadeDeleteMovieList(ctx, id);
     return { ok: true };
   },
 });

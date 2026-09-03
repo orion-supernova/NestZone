@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { cascadeDeletePoll } from "./lib/relations";
 import { Doc } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
 
@@ -177,13 +178,7 @@ export const remove = mutation({
     const poll = await ctx.db.get(pollId);
     if (!poll) return { ok: true };
     await requirePollOwner(ctx, poll);
-    for (const it of await ctx.db.query("poll_items").withIndex("by_poll", (q) => q.eq("poll_id", pollId)).collect()) {
-      await ctx.db.delete(it._id);
-    }
-    for (const vt of await ctx.db.query("poll_votes").withIndex("by_poll", (q) => q.eq("poll_id", pollId)).collect()) {
-      await ctx.db.delete(vt._id);
-    }
-    await ctx.db.delete(pollId);
+    await cascadeDeletePoll(ctx, pollId);
     return { ok: true };
   },
 });

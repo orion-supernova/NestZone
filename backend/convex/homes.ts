@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { cascadeDeleteHome } from "./lib/relations";
 
 /** Homes the current user belongs to. */
 export const listMine = query({
@@ -79,13 +80,20 @@ export const leave = mutation({
   handler: async (ctx, { homeId }) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
-    await ctx.db.patch(homeId, {
-      members: (home.members ?? []).filter((m) => m !== user._id),
-      updated: Date.now(),
-    });
+    const remaining = (home.members ?? []).filter((m) => m !== user._id);
+
+    // Last member out takes the home and everything in it. Otherwise the rows
+    // survive with nobody able to satisfy requireHomeMember — permanently
+    // unreadable data that no code path could ever reach or clean up again.
+    if (remaining.length === 0) {
+      const removed = await cascadeDeleteHome(ctx, homeId);
+      return { ok: true, deletedHome: true, removed };
+    }
+
+    await ctx.db.patch(homeId, { members: remaining, updated: Date.now() });
     await ctx.db.patch(user._id, {
       home_id: (user.home_id ?? []).filter((h) => h !== homeId),
     });
-    return { ok: true };
+    return { ok: true, deletedHome: false };
   },
 });

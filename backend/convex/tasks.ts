@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { requireMembers } from "./lib/relations";
 
 const priority = v.union(v.literal("low"), v.literal("medium"), v.literal("high"));
 const taskType = v.union(
@@ -33,7 +34,10 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, args.homeId);
+    const home = await requireHomeMember(ctx, args.homeId);
+    if (args.assigned_to) {
+      await requireMembers(ctx, home, [args.assigned_to], "Task assignee");
+    }
     const now = Date.now();
     return await ctx.db.insert("tasks", {
       home_id: args.homeId,
@@ -67,7 +71,10 @@ export const update = mutation({
     const user = await requireUser(ctx);
     const task = await ctx.db.get(id);
     if (!task) throw new Error("Task not found");
-    await requireDocHome(ctx, task, "Task");
+    const home = await requireDocHome(ctx, task, "Task");
+    if (fields.assigned_to) {
+      await requireMembers(ctx, home, [fields.assigned_to], "Task assignee");
+    }
     await ctx.db.patch(id, { ...fields, updated_by: user._id, updated: Date.now() });
     return await ctx.db.get(id);
   },

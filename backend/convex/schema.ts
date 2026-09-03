@@ -1,9 +1,20 @@
 // Nestzone — Convex schema migrated from PocketBase.
 //
 // Notes:
-// - Every relation field is v.optional(...) on purpose: the importer inserts
-//   docs first WITHOUT relations (pass 1), then patches them (pass 2). This is
-//   required because the data has cycles (users <-> homes, conversations <-> messages).
+// - Relation fields were all v.optional(...) during the import, because the
+//   two-pass importer inserted docs without relations first (the data has cycles:
+//   users <-> homes, conversations <-> messages) and patched them afterwards.
+//   That importer is retired, so as of 2026-09-03 every relation that the data
+//   actually populates is REQUIRED. The ones still optional are deliberate:
+//     users.home_id      — a brand-new signup belongs to no home yet
+//     tasks.updated_by   — never-edited task
+//     tasks.assigned_to  — unassigned task
+//     shopping_items.created_by / updated_by — 3 migrated rows have no creator
+//                          and the value cannot be reconstructed
+//     messages.read_by   — nobody has read it yet
+//     *.image / *.file / users.avatar — optional _storage attachments
+// - `v.id()` is only a TYPE: Convex does not verify the target exists and has no
+//   ON DELETE CASCADE. Integrity is enforced in code — see convex/lib/relations.ts.
 // - `pbId` keeps the original PocketBase id so the importer can remap relations
 //   and so you can cross-check after migration. You can drop it once you're happy.
 // - Timestamps `created` / `updated` are epoch-ms numbers carried over from PB.
@@ -44,7 +55,7 @@ export default defineSchema({
     pbId: v.optional(v.string()),
     name: v.optional(v.string()),
     address: v.optional(v.object({ lat: v.number(), lng: v.number() })), // PB geoPoint
-    members: v.optional(v.array(v.id("users"))),
+    members: v.array(v.id("users")),
     invite_code: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
@@ -55,12 +66,12 @@ export default defineSchema({
     pbId: v.optional(v.string()),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
-    created_by: v.optional(v.id("users")),
+    created_by: v.id("users"),
     updated_by: v.optional(v.id("users")),
     assigned_to: v.optional(v.id("users")),
     is_completed: v.optional(v.boolean()),
     image: v.optional(v.id("_storage")),
-    home_id: v.optional(v.id("homes")),
+    home_id: v.id("homes"),
     priority: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
     type: v.optional(
       v.union(
@@ -92,7 +103,7 @@ export default defineSchema({
     ),
     created_by: v.optional(v.id("users")),
     updated_by: v.optional(v.id("users")),
-    home_id: v.optional(v.id("homes")),
+    home_id: v.id("homes"),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
@@ -101,8 +112,8 @@ export default defineSchema({
   notes: defineTable({
     pbId: v.optional(v.string()),
     description: v.optional(v.string()),
-    created_by: v.optional(v.id("users")),
-    home_id: v.optional(v.id("homes")),
+    created_by: v.id("users"),
+    home_id: v.id("homes"),
     image: v.optional(v.id("_storage")),
     color: v.optional(v.string()),
     created: v.optional(v.number()),
@@ -112,8 +123,8 @@ export default defineSchema({
 
   conversations: defineTable({
     pbId: v.optional(v.string()),
-    participants: v.optional(v.array(v.id("users"))),
-    home_id: v.optional(v.id("homes")),
+    participants: v.array(v.id("users")),
+    home_id: v.id("homes"),
     is_group_chat: v.optional(v.boolean()),
     title: v.optional(v.string()),
     last_message: v.optional(v.string()),
@@ -155,8 +166,8 @@ export default defineSchema({
       v.union(v.literal("easy"), v.literal("medium"), v.literal("hard")),
     ),
     image: v.optional(v.id("_storage")),
-    home_id: v.optional(v.id("homes")),
-    created_by: v.optional(v.id("users")),
+    home_id: v.id("homes"),
+    created_by: v.id("users"),
     tags: v.optional(v.array(v.string())), // PB multi-select; kept loose for flexibility
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
@@ -216,8 +227,8 @@ export default defineSchema({
   movies: defineTable({
     pbId: v.optional(v.string()),
     imdb_id: v.optional(v.string()),
-    home_id: v.optional(v.id("homes")),
-    list_id: v.optional(v.id("movie_lists")),
+    home_id: v.id("homes"),
+    list_id: v.id("movie_lists"),
     title: v.optional(v.string()),
     year: v.optional(v.number()),
     poster: v.optional(v.string()),
@@ -230,7 +241,7 @@ export default defineSchema({
 
   movie_lists: defineTable({
     pbId: v.optional(v.string()),
-    home_id: v.optional(v.id("homes")),
+    home_id: v.id("homes"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     type: v.optional(

@@ -222,3 +222,48 @@ is never displayed (`ShoppingItem.createdBy` is `String?`, no view reads it) and
 governed by `home_id`, not by the creator — so the items render and function normally.
 Deleting real shopping-list content to tidy an invisible metadata field would be a net
 loss, and the field must stay `v.optional` for schema validation to pass.
+
+## Referential integrity (2026‑09‑03)
+
+**Convex has no foreign keys.** `v.id("table")` is a *type*: it is not checked against the
+target table on write, and there is no `ON DELETE CASCADE`. Every relation therefore has to
+be validated in code when written and cleaned up when its parent goes away. That lives in
+`convex/lib/relations.ts`:
+
+| helper | use |
+|---|---|
+| `requireRef(ctx, id, label)` | load a referenced doc or throw — before storing any `v.id()` |
+| `requireSameHome(doc, homeId, label)` | referenced doc must live in the expected home |
+| `requireMembers(ctx, home, userIds, label)` | every named user exists *and* is a member |
+| `cascadeDeleteConversation` / `cascadeDeletePoll` / `cascadeDeleteMovieList` / `cascadeDeleteHome` | delete a parent and all its children |
+
+**Rule: never call a bare `ctx.db.delete` on a row that owns children — use a cascade.**
+
+**Holes this closed.** A relation audit of the live data came back clean (0 dangling refs,
+0 cross‑home refs, 0 memberless homes, 0 non‑member participants), so nothing needed
+repairing — but the *code* could still create all of them:
+
+1. **`conversations:create` never validated `participants`.** It accepted any
+   `v.id("users")` array and stored it verbatim. Naming a user from another home would
+   then let them through `messages:assertParticipant` and hand them the entire
+   conversation — the cross‑home leak the migration off PocketBase existed to fix. Now
+   every participant must exist and be a member of the conversation's home.
+2. **`tasks:create` / `tasks:update` never validated `assigned_to`** — a task could be
+   assigned to a deleted user or to someone outside the household.
+3. **`homes:leave` could strand an entire home.** When the last member left, the home and
+   all its tasks, notes, shopping items, recipes, conversations, messages, polls and movie
+   lists stayed in the database with nobody able to satisfy `requireHomeMember` — data no
+   code path could ever read, write or clean up again. The last member out now triggers
+   `cascadeDeleteHome`, which also scrubs the home from every user's `home_id` mirror.
+   It returns `{ deletedHome: true, removed: {...} }` so the client can tell the two cases
+   apart.
+
+**13 more relation fields are now required** (`homes.members`, `tasks.home_id/created_by`,
+`shopping_items.home_id`, `notes.home_id/created_by`, `conversations.home_id/participants`,
+`recipes.home_id/created_by`, `movies.home_id/list_id`, `movie_lists.home_id`). Schema
+validation passing on deploy is the proof that every live row satisfies them.
+
+Still optional **on purpose** — see the header comment in `schema.ts` for the full list.
+The one that matters: **`users.home_id` must stay optional**, because a brand‑new signup
+belongs to no home until they create or join one. Making it required would break
+registration.

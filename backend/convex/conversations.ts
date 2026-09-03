@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { requireMembers } from "./lib/relations";
 
 /** Conversations in a home that the current user participates in. */
 export const listByHome = query({
@@ -25,8 +26,12 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, args.homeId);
+    const home = await requireHomeMember(ctx, args.homeId);
     const participants = Array.from(new Set([user._id, ...args.participants]));
+    // Every participant must exist and be a member of this home. Without this a
+    // caller could name any user id and hand them read access to the whole
+    // conversation via messages:assertParticipant.
+    await requireMembers(ctx, home, participants, "Conversation participants");
     const now = Date.now();
     const id = await ctx.db.insert("conversations", {
       home_id: args.homeId,
