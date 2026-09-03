@@ -6,22 +6,38 @@ struct PocketBaseErrorResponse: Codable {
     let data: [String: String]
 }
 
+// Convex shape: _id, optional profile fields, numeric ms timestamps. (Type name kept
+// for source compatibility across the app; no longer PocketBase-specific.)
 struct PocketBaseUser: Codable {
     let id: String
-    let email: String?  // Made optional since not all users have email exposed
+    let email: String?
     let name: String?
     let avatar: String?
     let home_id: [String]
-    let created: String
-    let updated: String
-    let verified: Bool
-    let emailVisibility: Bool
-    
+    let created: Double?
+    let updated: Double?
+
     enum CodingKeys: String, CodingKey {
-        case id, name, avatar, created, updated, verified
-        case email  // Now optional
-        case home_id
-        case emailVisibility = "emailVisibility"
+        case id = "_id"
+        case email, name, avatar, home_id, created, updated
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        email = try c.decodeIfPresent(String.self, forKey: .email)
+        name = try c.decodeIfPresent(String.self, forKey: .name)
+        avatar = try c.decodeIfPresent(String.self, forKey: .avatar)
+        home_id = (try c.decodeIfPresent([String].self, forKey: .home_id)) ?? []
+        created = try c.decodeIfPresent(Double.self, forKey: .created)
+        updated = try c.decodeIfPresent(Double.self, forKey: .updated)
+    }
+
+    // Memberwise init for local construction / previews.
+    init(id: String, email: String? = nil, name: String? = nil, avatar: String? = nil,
+         home_id: [String] = [], created: Double? = nil, updated: Double? = nil) {
+        self.id = id; self.email = email; self.name = name; self.avatar = avatar
+        self.home_id = home_id; self.created = created; self.updated = updated
     }
 }
 
@@ -33,36 +49,7 @@ struct PocketBaseListResponse<T: Codable>: Codable {
     let items: [T]
 }
 
-// MARK: - Home Collection
-struct Home: Codable, Identifiable {
-    let id: String
-    let name: String
-    let address: GeoPoint?
-    let members: [String]  // User IDs
-    let inviteCode: String?
-    let created: String
-    let updated: String
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case address
-        case members
-        case inviteCode = "invite_code"
-        case created
-        case updated
-    }
-}
-
-struct GeoPoint: Codable {
-    let lat: Double
-    let lng: Double
-    
-    enum CodingKeys: String, CodingKey {
-        case lat
-        case lng = "lon"
-    }
-}
+// NOTE: `Home` and `GeoPoint` moved to Network/Convex/ConvexModels.swift (Convex shape).
 
 // MARK: - Task Collection
 struct PocketBaseTask: Codable {
@@ -74,12 +61,12 @@ struct PocketBaseTask: Codable {
     let assignedTo: String?  // User ID
     let isCompleted: Bool
     let image: String?
-    let homeId: String  // Related Home
+    let homeId: String?  // Related Home
     let priority: TaskPriority
     let type: TaskType
-    let created: String
-    let updated: String
-    let dueDate: String?
+    let created: Double?
+    let updated: Double?
+    let dueDate: Double?
     
     enum TaskType: String, Codable {
         case cleaning = "cleaning"
@@ -95,7 +82,7 @@ struct PocketBaseTask: Codable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case title
         case description
         case createdBy = "created_by"
@@ -122,19 +109,19 @@ struct ShoppingItem: Codable {
     let category: ShoppingCategory
     let createdBy: String?  // User ID
     let updatedBy: String?  // User ID
-    let homeId: String  // Related Home
-    let created: String
-    let updated: String
-    
+    let homeId: String?  // Related Home
+    let created: Double?
+    let updated: Double?
+
     enum ShoppingCategory: String, Codable, CaseIterable {
         case groceries = "groceries"
         case household = "household"
         case cleaning = "cleaning"
         case other = "other"
     }
-    
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case name
         case description
         case quantity
@@ -148,24 +135,24 @@ struct ShoppingItem: Codable {
     }
 }
 
-// MARK: - Note Collection
+// MARK: - Note Collection (Convex shape: _id, numeric ms timestamps)
 struct PocketBaseNote: Codable, Identifiable {
     let id: String
     let description: String
     let createdBy: String?  // User ID
-    let homeId: String  // Related Home
+    let homeId: String?  // Related Home
     let image: String?
-    let color: String?  // Add color field
-    let created: String
-    let updated: String
-    
+    let color: String?
+    let created: Double?
+    let updated: Double?
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case description
         case createdBy = "created_by"
         case homeId = "home_id"
         case image
-        case color  // Add color field
+        case color
         case created
         case updated
     }
@@ -175,16 +162,16 @@ struct PocketBaseNote: Codable, Identifiable {
 struct PocketBaseConversation: Codable, Identifiable, Hashable {
     let id: String
     let participants: [String]  // User IDs
-    let homeId: String  // Related Home
+    let homeId: String?  // Related Home
     let isGroupChat: Bool
     let title: String?
     let lastMessage: String?
-    let lastMessageAt: String?
-    let created: String
-    let updated: String
-    
+    let lastMessageAt: Double?
+    let created: Double?
+    let updated: Double?
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case participants
         case homeId = "home_id"
         case isGroupChat = "is_group_chat"
@@ -193,6 +180,28 @@ struct PocketBaseConversation: Codable, Identifiable, Hashable {
         case lastMessageAt = "last_message_at"
         case created
         case updated
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        participants = (try c.decodeIfPresent([String].self, forKey: .participants)) ?? []
+        homeId = try c.decodeIfPresent(String.self, forKey: .homeId)
+        isGroupChat = (try c.decodeIfPresent(Bool.self, forKey: .isGroupChat)) ?? false
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        lastMessage = try c.decodeIfPresent(String.self, forKey: .lastMessage)
+        lastMessageAt = try c.decodeIfPresent(Double.self, forKey: .lastMessageAt)
+        created = try c.decodeIfPresent(Double.self, forKey: .created)
+        updated = try c.decodeIfPresent(Double.self, forKey: .updated)
+    }
+
+    // Memberwise init for previews / local construction.
+    init(id: String, participants: [String], homeId: String?, isGroupChat: Bool,
+         title: String? = nil, lastMessage: String? = nil, lastMessageAt: Double? = nil,
+         created: Double? = nil, updated: Double? = nil) {
+        self.id = id; self.participants = participants; self.homeId = homeId
+        self.isGroupChat = isGroupChat; self.title = title; self.lastMessage = lastMessage
+        self.lastMessageAt = lastMessageAt; self.created = created; self.updated = updated
     }
     
     // Hashable conformance
@@ -207,15 +216,15 @@ struct PocketBaseConversation: Codable, Identifiable, Hashable {
 
 struct PocketBaseMessage: Codable, Identifiable, Hashable {
     let id: String
-    let conversationId: String  // Related Conversation
+    let conversationId: String?  // Related Conversation
     let senderId: String  // User ID
     let content: String
     let messageType: MessageType
     let file: String?  // Can be image, video, gif, document, etc.
     let readBy: [String]  // User IDs who have read this message
-    let created: String
-    let updated: String
-    
+    let created: Double?
+    let updated: Double?
+
     enum MessageType: String, Codable {
         case text = "text"
         case image = "image"
@@ -225,27 +234,43 @@ struct PocketBaseMessage: Codable, Identifiable, Hashable {
         case audio = "audio"
         case system = "system"
     }
-    
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case conversationId = "conversation_id"
         case senderId = "sender_id"
         case content
         case messageType = "message_type"
-        case file = "file"  // Generic file field for all media types
+        case file = "file"
         case readBy = "read_by"
         case created
         case updated
     }
-    
-    // Hashable conformance
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        conversationId = try c.decodeIfPresent(String.self, forKey: .conversationId)
+        senderId = (try c.decodeIfPresent(String.self, forKey: .senderId)) ?? ""
+        content = (try c.decodeIfPresent(String.self, forKey: .content)) ?? ""
+        messageType = (try c.decodeIfPresent(MessageType.self, forKey: .messageType)) ?? .text
+        file = try c.decodeIfPresent(String.self, forKey: .file)
+        readBy = (try c.decodeIfPresent([String].self, forKey: .readBy)) ?? []
+        created = try c.decodeIfPresent(Double.self, forKey: .created)
+        updated = try c.decodeIfPresent(Double.self, forKey: .updated)
     }
-    
-    static func == (lhs: PocketBaseMessage, rhs: PocketBaseMessage) -> Bool {
-        return lhs.id == rhs.id
+
+    // Memberwise init for previews / local construction.
+    init(id: String, conversationId: String?, senderId: String, content: String,
+         messageType: MessageType, file: String?, readBy: [String],
+         created: Double? = nil, updated: Double? = nil) {
+        self.id = id; self.conversationId = conversationId; self.senderId = senderId
+        self.content = content; self.messageType = messageType; self.file = file
+        self.readBy = readBy; self.created = created; self.updated = updated
     }
+
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    static func == (lhs: PocketBaseMessage, rhs: PocketBaseMessage) -> Bool { lhs.id == rhs.id }
 }
 
 struct MessageReadStatus: Codable, Identifiable {
@@ -354,19 +379,19 @@ struct Recipe: Codable, Identifiable {
     let servings: Int?
     let difficulty: Difficulty?
     let image: String?
-    let homeId: String
+    let homeId: String?
     let createdBy: String?
-    let created: String
-    let updated: String
-    
+    let created: Double?
+    let updated: Double?
+
     enum Difficulty: String, Codable, CaseIterable {
         case easy = "easy"
         case medium = "medium"
         case hard = "hard"
     }
-    
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case title
         case description
         case ingredients

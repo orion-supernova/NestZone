@@ -2,7 +2,7 @@ import SwiftUI
 
 struct NewMessageView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @State private var messageText = ""
     @State private var groupTitle = ""
     @State private var isLoading = false
@@ -219,25 +219,18 @@ struct NewMessageView: View {
             
             print("DEBUG: Conversation created with ID: \(conversation.id)")
             
-            // Send initial message
-            let message = try await messagesManager.sendMessage(
+            // Send initial message (sender is the authenticated user, server-side).
+            try await messagesManager.sendMessage(
                 conversationId: conversation.id,
-                senderId: currentUser.id,
                 content: messageText.trimmingCharacters(in: .whitespacesAndNewlines)
             )
-            
-            print("DEBUG: Message sent with ID: \(message.id)")
-            
+
             onMessageSent?(conversation)
             dismiss()
             
         } catch {
             print("DEBUG: Error creating group chat: \(error)")
-            if let pocketBaseError = error as? PocketBaseManager.PocketBaseError {
-                errorMessage = LocalizationManager.messagesNewGroupErrorCreationFailed(pocketBaseError.localizedDescription)
-            } else {
-                errorMessage = LocalizationManager.messagesNewGroupErrorCreationFailed(error.localizedDescription)
-            }
+            errorMessage = LocalizationManager.messagesNewGroupErrorCreationFailed(error.localizedDescription)
         }
         
         isLoading = false

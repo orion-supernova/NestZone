@@ -71,8 +71,8 @@ class SampleRecipeLoader {
                 image: nil,
                 homeId: "explore", // Mark as explore recipes
                 createdBy: nil,
-                created: now,
-                updated: now
+                created: nil,
+                updated: nil
             )
         }
     }

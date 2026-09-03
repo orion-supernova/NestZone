@@ -937,5 +937,5 @@ struct RainbowNewItemSheet: View {
 
 #Preview {
     ShoppingListView()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

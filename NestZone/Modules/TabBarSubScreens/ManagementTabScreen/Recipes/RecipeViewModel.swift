@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import ConvexMobile
 
 @MainActor
 class RecipeViewModel: ObservableObject {
@@ -35,8 +36,7 @@ class RecipeViewModel: ObservableObject {
         }
     }
     
-    private let pocketBase = PocketBaseManager.shared
-    private var authManager: PocketBaseAuthManager?
+    private var authManager: ConvexAuthManager?
     private var homeChangeObserver: NSObjectProtocol?
     
     let allowedTags: [String] = [
@@ -88,26 +88,17 @@ class RecipeViewModel: ObservableObject {
             return
         }
         
-        let filter = "home_id = '\(homeId)'"
-        let sort = "-created"
-        
-        let response: PocketBaseListResponse<Recipe> = try await pocketBase.getCollection(
-            "recipes",
-            responseType: PocketBaseListResponse<Recipe>.self,
-            filter: filter,
-            sort: sort
+        let items: [Recipe] = try await Convex.once(
+            "recipes:listByHome", args: ["homeId": homeId], as: [Recipe].self
         )
-        if !response.items.isEmpty {
-            recipes = response.items
-        }
-        // else keep current recipes (e.g., right after create, when rules hide the new item temporarily)
+        recipes = items.sorted { ($0.created ?? 0) > ($1.created ?? 0) }
     }
     
     func refresh() async {
         await loadRecipes()
     }
     
-    func setAuthManager(_ auth: PocketBaseAuthManager) {
+    func setAuthManager(_ auth: ConvexAuthManager) {
         self.authManager = auth
     }
     
@@ -127,45 +118,35 @@ class RecipeViewModel: ObservableObject {
             return
         }
         
-        guard let userId = authManager?.currentUser?.id else {
-            errorMessage = LocalizationManager.recipeErrorMissingAuth
-            return
-        }
-        
+        // Auth is implicit in the Convex client; created_by is set server-side.
         do {
             let normalizedTags: [String] = tags
                 .map { $0.lowercased() }
                 .filter { allowedTags.contains($0) }
-            
-            var data: [String: Any] = [
+
+            var data: [String: ConvexEncodable?] = [
+                "homeId": homeId,
                 "title": title,
-                "home_id": homeId,
-                "created_by": userId
             ]
-            
-            if !normalizedTags.isEmpty { data["tags"] = normalizedTags }
+            if !normalizedTags.isEmpty { data["tags"] = normalizedTags.map { $0 as ConvexEncodable? } }
             if let description, !description.isEmpty { data["description"] = description }
-            if let prepTime { data["prep_time"] = prepTime }
-            if let cookTime { data["cook_time"] = cookTime }
-            if let servings { data["servings"] = servings }
+            if let prepTime { data["prep_time"] = Double(prepTime) }
+            if let cookTime { data["cook_time"] = Double(cookTime) }
+            if let servings { data["servings"] = Double(servings) }
             if let difficulty { data["difficulty"] = difficulty.rawValue }
-            if let ingredients, !ingredients.isEmpty { data["ingredients"] = ingredients }
-            if let steps, !steps.isEmpty { data["steps"] = steps }
-            
-            let created: Recipe = try await pocketBase.createRecord(
-                in: "recipes",
-                data: data,
-                responseType: Recipe.self
-            )
+            if let ingredients, !ingredients.isEmpty { data["ingredients"] = ingredients.map { $0 as ConvexEncodable? } }
+            if let steps, !steps.isEmpty { data["steps"] = steps.map { $0 as ConvexEncodable? } }
+
+            let created: Recipe = try await Convex.client.mutation("recipes:create", with: data)
             recipes.insert(created, at: 0)
         } catch {
             errorMessage = LocalizationManager.recipeErrorAddRecipe(error.localizedDescription)
         }
     }
-    
+
     func deleteRecipe(_ recipe: Recipe) async {
         do {
-            try await pocketBase.deleteRecord(from: "recipes", id: recipe.id)
+            try await Convex.client.mutation("recipes:remove", with: ["id": recipe.id])
             try await loadRecipesFromBackend()
         } catch {
             errorMessage = LocalizationManager.recipeErrorDeleteRecipe(error.localizedDescription)

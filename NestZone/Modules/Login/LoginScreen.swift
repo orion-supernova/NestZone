@@ -3,7 +3,7 @@ import SwiftUI
 struct LoginScreen: View {
     // MARK: - Properties
     @StateObject private var viewModel = LoginViewModel()
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @State private var email = ""
     @State private var password = ""
     
@@ -73,5 +73,5 @@ struct LoginScreen: View {
 // MARK: - Preview
 #Preview {
     LoginScreen()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

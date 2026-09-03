@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import ConvexMobile
 
 @MainActor
 class NotesViewModel: ObservableObject {
@@ -7,8 +8,7 @@ class NotesViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
-    private let pocketBase = PocketBaseManager.shared
-    private var authManager: PocketBaseAuthManager?
+    private var authManager: ConvexAuthManager?
     private var userCache: [String: PocketBaseUser] = [:] // Cache for user information
     private var homeChangeObserver: NSObjectProtocol?
     
@@ -37,7 +37,7 @@ class NotesViewModel: ObservableObject {
         }
     }
     
-    func setAuthManager(_ authManager: PocketBaseAuthManager) {
+    func setAuthManager(_ authManager: ConvexAuthManager) {
         self.authManager = authManager
     }
     
@@ -65,44 +65,25 @@ class NotesViewModel: ObservableObject {
             notes = []
             return
         }
-        
-        let filter = "home_id = '\(homeId)'"
-        let sort = "-created"
-        
-        let response: PocketBaseListResponse<PocketBaseNote> = try await pocketBase.getCollection(
-            "notes",
-            responseType: PocketBaseListResponse<PocketBaseNote>.self,
-            filter: filter,
-            sort: sort
+
+        let items: [PocketBaseNote] = try await Convex.once(
+            "notes:listByHome", args: ["homeId": homeId], as: [PocketBaseNote].self
         )
-        
-        notes = response.items
+        // Newest first (server returns insertion order).
+        notes = items.sorted { ($0.created ?? 0) > ($1.created ?? 0) }
     }
-    
+
     private func loadUsersForNotes() async throws {
-        // Get unique user IDs from notes
-        let userIds = Set(notes.compactMap { $0.createdBy })
-        
-        // Fetch users in batches to avoid too many requests
-        for userId in userIds {
-            if userCache[userId] == nil {
-                do {
-                    // Use getCollection with filter to get a specific user
-                    let filter = "id = '\(userId)'"
-                    let response: PocketBaseListResponse<PocketBaseUser> = try await pocketBase.getCollection(
-                        "users",
-                        responseType: PocketBaseListResponse<PocketBaseUser>.self,
-                        filter: filter
-                    )
-                    
-                    if let user = response.items.first {
-                        userCache[userId] = user
-                    }
-                } catch {
-                    print("Error loading user \(userId): \(error)")
-                }
-            }
-        }
+        // Get unique user IDs from notes that aren't cached yet.
+        let missing = Set(notes.compactMap { $0.createdBy }).filter { userCache[$0] == nil }
+        guard !missing.isEmpty else { return }
+
+        let users: [PocketBaseUser] = try await Convex.once(
+            "users:byIds",
+            args: ["ids": missing.map { $0 as ConvexEncodable? }],
+            as: [PocketBaseUser].self
+        )
+        for user in users { userCache[user.id] = user }
     }
     
     func refreshData() async {
@@ -116,58 +97,45 @@ class NotesViewModel: ObservableObject {
         }
         
         do {
-            let noteData: [String: Any] = [
+            try await Convex.client.mutation("notes:create", with: [
+                "homeId": homeId,
                 "description": text,
-                "home_id": homeId,
-                "created_by": authManager?.currentUser?.id ?? "",
-                "color": color
-            ]
-            
-            let _: PocketBaseNote = try await pocketBase.createRecord(
-                in: "notes",
-                data: noteData,
-                responseType: PocketBaseNote.self
-            )
-            
+                "color": color,
+            ])
+
             // Refresh notes after adding
             try await loadNotesFromBackend()
             try await loadUsersForNotes()
-            
+
         } catch {
             errorMessage = "Failed to add note: \(error.localizedDescription)"
         }
     }
-    
+
     func updateNote(_ note: PocketBaseNote, text: String) async {
         do {
-            let updatedData: [String: Any] = [
-                "description": text
-            ]
-            
-            let _: PocketBaseNote = try await pocketBase.updateRecord(
-                in: "notes",
-                id: note.id,
-                data: updatedData,
-                responseType: PocketBaseNote.self
-            )
-            
+            try await Convex.client.mutation("notes:update", with: [
+                "id": note.id,
+                "description": text,
+            ])
+
             // Refresh notes after update
             try await loadNotesFromBackend()
             try await loadUsersForNotes()
-            
+
         } catch {
             errorMessage = "Failed to update note: \(error.localizedDescription)"
         }
     }
-    
+
     func deleteNote(_ note: PocketBaseNote) async {
         do {
-            try await pocketBase.deleteRecord(from: "notes", id: note.id)
-            
+            try await Convex.client.mutation("notes:remove", with: ["id": note.id])
+
             // Refresh notes after deletion
             try await loadNotesFromBackend()
             try await loadUsersForNotes()
-            
+
         } catch {
             errorMessage = "Failed to delete note: \(error.localizedDescription)"
         }

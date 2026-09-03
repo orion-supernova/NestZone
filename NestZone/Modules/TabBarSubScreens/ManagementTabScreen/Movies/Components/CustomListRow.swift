@@ -75,8 +75,8 @@ struct CustomListRow: View {
         description: "The best scary movies of all time",
         type: .custom,
         isPreset: false,
-        created: "",
-        updated: ""
+        created: nil,
+        updated: nil
     )
     
     CustomListRow(

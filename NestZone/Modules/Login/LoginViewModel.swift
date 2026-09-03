@@ -15,10 +15,10 @@ class LoginViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     // MARK: - Public Methods
-    func login(authManager: PocketBaseAuthManager, email: String, password: String) async {
+    func login(authManager: ConvexAuthManager, email: String, password: String) async {
         isLoading = true
         do {
-            try await authManager.login(email: email, password: password)
+            try await authManager.signIn(email: email, password: password)
         } catch let error {
             errorMessage = error.localizedDescription
         }

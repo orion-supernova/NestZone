@@ -180,7 +180,7 @@ struct EditNoteSheet: View {
         homeId: "home-id",
         image: nil,
         color: "purple",
-        created: "2023-01-01T00:00:00.000Z",
-        updated: "2023-01-01T00:00:00.000Z"
+        created: nil,
+        updated: nil
     ))
 }

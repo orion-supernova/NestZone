@@ -1,4 +1,17 @@
+# macOS
+.DS_Store
+**/.DS_Store
 
+# Xcode
 NestZone.xcodeproj/xcuserdata/muratcankoc.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
-
 *.xcuserstate
+
+# PocketBase -> Convex migration source data.
+# Contains production PII: real user emails/names, chat message bodies and home
+# invite codes (an invite code grants membership via homes:join). Keep local only.
+backend/data/
+
+# graphify generated artifacts. graph.json / GRAPH_REPORT.md are tracked on purpose
+# (CLAUDE.md workflow depends on them); the AST cache and dated snapshots are not.
+graphify-out/cache/
+graphify-out/20*/

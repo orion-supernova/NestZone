@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		54F0C6022DEEF45F00026F84 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 54F0C6012DEEF45F00026F84 /* Alamofire */; };
+		C09E000000000000000000C1 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = C09E000000000000000000A1 /* ConvexMobile */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,7 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				54F0C6022DEEF45F00026F84 /* Alamofire in Frameworks */,
+				C09E000000000000000000C1 /* ConvexMobile in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,7 +130,7 @@
 			);
 			name = NestZone;
 			packageProductDependencies = (
-				54F0C6012DEEF45F00026F84 /* Alamofire */,
+				C09E000000000000000000A1 /* ConvexMobile */,
 			);
 			productName = NestZone;
 			productReference = 54F0C1AF2DECACBC00026F84 /* NestZone.app */;
@@ -215,7 +215,7 @@
 			mainGroup = 54F0C1A62DECACBC00026F84;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				54F0C6002DEEF45F00026F84 /* XCRemoteSwiftPackageReference "Alamofire" */,
+				C09E000000000000000000B1 /* XCRemoteSwiftPackageReference "convex-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 54F0C1B02DECACBC00026F84 /* Products */;
@@ -592,21 +592,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		54F0C6002DEEF45F00026F84 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+		C09E000000000000000000B1 /* XCRemoteSwiftPackageReference "convex-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			repositoryURL = "https://github.com/get-convex/convex-swift.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 5.10.2;
+				minimumVersion = 0.8.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		54F0C6012DEEF45F00026F84 /* Alamofire */ = {
+		C09E000000000000000000A1 /* ConvexMobile */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54F0C6002DEEF45F00026F84 /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = Alamofire;
+			package = C09E000000000000000000B1 /* XCRemoteSwiftPackageReference "convex-swift" */;
+			productName = ConvexMobile;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

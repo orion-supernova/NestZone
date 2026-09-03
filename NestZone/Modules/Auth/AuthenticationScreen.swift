@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AuthenticationScreen: View {
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = AuthenticationViewModel()
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
@@ -424,5 +424,5 @@ struct AuthenticationScreen: View {
 
 #Preview {
     AuthenticationScreen()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

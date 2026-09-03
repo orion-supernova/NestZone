@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CreateHomeView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = HomeManagementViewModel()
     
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
@@ -160,5 +160,5 @@ struct CreateHomeView: View {
 
 #Preview {
     CreateHomeView()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

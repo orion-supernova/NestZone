@@ -814,26 +814,9 @@ class WhatToWatchViewModel: ObservableObject {
     }
     
     private func getCurrentUserId() async -> String {
-        guard let token = await PocketBaseManager.shared.getAuthToken() else {
-            return "NO_TOKEN"
-        }
-        
-        let components = token.split(separator: ".")
-        guard components.count >= 2 else {
-            return "INVALID_TOKEN"
-        }
-        
-        let payloadString = String(components[1])
-        let paddingLength = 4 - payloadString.count % 4
-        let paddedPayload = payloadString + String(repeating: "=", count: paddingLength % 4)
-        
-        guard let payloadData = Data(base64Encoded: paddedPayload),
-              let payloadJSON = try? JSONSerialization.jsonObject(with: payloadData) as? [String: Any],
-              let userId = payloadJSON["id"] as? String else {
-            return "PARSE_FAILED"
-        }
-        
-        return userId
+        // Identity comes from the authenticated Convex session (`users:me`).
+        let me: NZUser? = try? await Convex.once("users:me", as: NZUser?.self)
+        return me?.id ?? ""
     }
     
     func continuePoll() {

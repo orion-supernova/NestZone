@@ -2,7 +2,7 @@ import SwiftUI
 
 struct JoinHomeView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = HomeManagementViewModel()
     
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
@@ -150,5 +150,5 @@ struct JoinHomeView: View {
 
 #Preview {
     JoinHomeView()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

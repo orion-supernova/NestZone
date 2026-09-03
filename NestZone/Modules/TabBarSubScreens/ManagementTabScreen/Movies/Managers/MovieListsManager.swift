@@ -1,189 +1,118 @@
 import Foundation
+import ConvexMobile
 
-final class MovieListsManager: @unchecked Sendable {
+@MainActor
+final class MovieListsManager {
     static let shared = MovieListsManager()
     private init() {}
-    
-    private let pocketBase = PocketBaseManager.shared
-    
-    private struct PBListResponse<T: Codable>: Codable {
-        let page: Int?
-        let perPage: Int?
-        let totalItems: Int?
-        let items: [T]
+
+    enum MoviesError: LocalizedError {
+        case noHome
+        var errorDescription: String? { "No home selected" }
     }
-    
-    private struct HomeLite: Codable {
-        let id: String
+
+    private func currentHomeId() throws -> String {
+        guard let id = HomeSelectionManager.shared.selectedHomeId else { throw MoviesError.noHome }
+        return id
     }
-    
-    private func encode(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
-    }
-    
-    private func encodeFilter(_ filter: String) -> String {
-        // Use standard URL encoding for the entire filter
-        return filter.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? filter
-    }
-    
-    private func getCurrentHomeId() async throws -> String {
-        // Get the first home for the user
-        let endpoint = "/api/collections/homes/records?perPage=1"
-        let response: PBListResponse<HomeLite> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<HomeLite>.self)
-        guard let homeId = response.items.first?.id else {
-            throw PocketBaseManager.PocketBaseError.notFound
-        }
-        return homeId
-    }
-    
+
     // MARK: - Movie Lists
-    
+
     func fetchMovieLists() async throws -> [MovieList] {
-        let homeId = try await getCurrentHomeId()
-        let filterRaw = "home_id = '\(homeId)'"
-        let endpoint = "/api/collections/movie_lists/records?filter=\(encodeFilter(filterRaw))&sort=created"
-        let response: PBListResponse<MovieList> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<MovieList>.self)
-        return response.items
+        let homeId = try currentHomeId()
+        let lists: [MovieList] = try await Convex.once(
+            "movies:listsByHome", args: ["homeId": homeId], as: [MovieList].self
+        )
+        return lists.sorted { ($0.created ?? 0) < ($1.created ?? 0) }
     }
-    
+
     func createPresetList(type: MovieListType) async throws -> MovieList {
-        let homeId = try await getCurrentHomeId()
-        
-        let params: [String: Any] = [
-            "home_id": homeId,
+        let homeId = try currentHomeId()
+        return try await Convex.client.mutation("movies:createList", with: [
+            "homeId": homeId,
             "name": type.displayName,
             "description": getPresetDescription(for: type),
             "type": type.rawValue,
-            "is_preset": true
-        ]
-        
-        return try await pocketBase.createRecord(in: "movie_lists", data: params, responseType: MovieList.self)
+            "is_preset": true,
+        ])
     }
-    
+
     func createCustomList(name: String, description: String) async throws -> MovieList {
-        let homeId = try await getCurrentHomeId()
-        
-        let params: [String: Any] = [
-            "home_id": homeId,
+        let homeId = try currentHomeId()
+        return try await Convex.client.mutation("movies:createList", with: [
+            "homeId": homeId,
             "name": name,
             "description": description,
             "type": MovieListType.custom.rawValue,
-            "is_preset": false
-        ]
-        
-        return try await pocketBase.createRecord(in: "movie_lists", data: params, responseType: MovieList.self)
+            "is_preset": false,
+        ])
     }
-    
+
     func deleteList(listId: String) async throws {
-        // First delete all movies in this list
-        try await deleteAllMoviesInList(listId: listId)
-        
-        // Then delete the list itself
-        try await pocketBase.deleteRecord(from: "movie_lists", id: listId)
+        // Server removes the list and all its movies.
+        try await Convex.client.mutation("movies:removeList", with: ["id": listId])
     }
-    
-    private func deleteAllMoviesInList(listId: String) async throws {
-        let movies = try await fetchMoviesForList(listId: listId)
-        for movie in movies {
-            try await pocketBase.deleteRecord(from: "movies", id: movie.id)
-        }
-    }
-    
+
     func addMovieToList(movie: Movie, listId: String) async throws {
-        let homeId = try await getCurrentHomeId()
-        
-        // Check if movie already exists in this specific list
-        let filterRaw = "imdb_id = '\(movie.id)' && list_id = '\(listId)'"
-        let checkEndpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&perPage=1"
-        let checkResponse: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: checkEndpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
-        
-        if checkResponse.items.isEmpty {
-            // Movie doesn't exist in this list, create new record
-            let params: [String: Any] = [
-                "imdb_id": movie.id,
-                "title": movie.title,
-                "year": movie.year ?? NSNull(),
-                "poster": movie.poster ?? NSNull(),
-                "genres": movie.genres,
-                "home_id": homeId,
-                "list_id": listId  // Single relation
-            ]
-            
-            let _: StoredMovie = try await pocketBase.createRecord(in: "movies", data: params, responseType: StoredMovie.self)
-            print("✅ Added \(movie.title) to list \(listId)")
-        } else {
-            print("ℹ️ Movie \(movie.title) already exists in list \(listId)")
-        }
+        let homeId = try currentHomeId()
+        // Skip if the movie is already in this list.
+        if try await isMovieInList(imdbId: movie.id, listId: listId) { return }
+        var args: [String: ConvexEncodable?] = [
+            "homeId": homeId,
+            "listId": listId,
+            "imdb_id": movie.id,
+            "title": movie.title,
+            "genres": movie.genres.map { $0 as ConvexEncodable? },
+        ]
+        if let year = movie.year { args["year"] = Double(year) }
+        if let poster = movie.poster { args["poster"] = poster }
+        try await Convex.client.mutation("movies:addMovie", with: args)
     }
 
     func removeMovieFromList(movieId: String, listId: String) async throws {
-        // First get all movies for this specific list
         let listMovies = try await fetchMoviesForList(listId: listId)
-        
-        // Find the movie in this list by IMDb ID or record ID
-        guard let recordToDelete = listMovies.first(where: { 
-            $0.imdbId == movieId || $0.id == movieId 
-        }) else {
-            print("⚠️ Movie with id \(movieId) not found in list \(listId)")
+        guard let record = listMovies.first(where: { $0.imdbId == movieId || $0.id == movieId }) else {
             return
         }
-        
-        // Delete the found record
-        try await pocketBase.deleteRecord(from: "movies", id: recordToDelete.id)
-        print("🗑️ Removed movie from list \(listId) (recordId: \(recordToDelete.id), imdb: \(recordToDelete.imdbId))")
+        try await Convex.client.mutation("movies:removeMovie", with: ["id": record.id])
     }
-    
+
     // MARK: - Movies
-    
+
     func fetchMoviesForList(listId: String) async throws -> [StoredMovie] {
-        let filterRaw = "list_id = '\(listId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&sort=-created"
-        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
-        return response.items
+        let movies: [StoredMovie] = try await Convex.once(
+            "movies:moviesInList", args: ["listId": listId], as: [StoredMovie].self
+        )
+        return movies.sorted { ($0.created ?? 0) > ($1.created ?? 0) }
     }
-    
+
     func fetchAllMoviesForHome() async throws -> [StoredMovie] {
-        let homeId = try await getCurrentHomeId()
-        let filterRaw = "home_id = '\(homeId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&sort=-created"
-        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
-        return response.items
+        let homeId = try currentHomeId()
+        return try await Convex.once("movies:byHome", args: ["homeId": homeId], as: [StoredMovie].self)
     }
-    
+
     func getMovieCountForList(listId: String) async throws -> Int {
-        let filterRaw = "list_id = '\(listId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&perPage=1"
-        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
-        return response.totalItems ?? 0
+        try await fetchMoviesForList(listId: listId).count
     }
-    
+
     func isMovieInList(imdbId: String, listId: String) async throws -> Bool {
-        let filterRaw = "imdb_id = '\(imdbId)' && list_id = '\(listId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))&perPage=1"
-        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
-        return !response.items.isEmpty
+        try await fetchMoviesForList(listId: listId).contains { $0.imdbId == imdbId }
     }
-    
+
     func getListsForMovie(imdbId: String) async throws -> [String] {
-        let homeId = try await getCurrentHomeId()
-        let filterRaw = "imdb_id = '\(imdbId)' && home_id = '\(homeId)'"
-        let endpoint = "/api/collections/movies/records?filter=\(encodeFilter(filterRaw))"
-        let response: PBListResponse<StoredMovie> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<StoredMovie>.self)
-        return response.items.map { $0.listId }
+        let homeId = try currentHomeId()
+        let all: [StoredMovie] = try await Convex.once(
+            "movies:byHome", args: ["homeId": homeId], as: [StoredMovie].self
+        )
+        return all.filter { $0.imdbId == imdbId }.compactMap { $0.listId }
     }
 
     func updateListDescription(listId: String, newDescription: String) async throws -> MovieList {
-        let params: [String: Any] = [
-            "description": newDescription
-        ]
-        return try await pocketBase.updateRecord(in: "movie_lists", id: listId, data: params, responseType: MovieList.self)
+        try await Convex.client.mutation("movies:updateList", with: ["id": listId, "description": newDescription])
     }
 
     func updateListName(listId: String, newName: String) async throws -> MovieList {
-        let params: [String: Any] = [
-            "name": newName
-        ]
-        return try await pocketBase.updateRecord(in: "movie_lists", id: listId, data: params, responseType: MovieList.self)
+        try await Convex.client.mutation("movies:updateList", with: ["id": listId, "name": newName])
     }
 
     func getPresetDescription(for type: MovieListType) -> String {

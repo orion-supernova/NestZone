@@ -80,8 +80,8 @@ struct ChatMessagesList: View {
                         messageType: .text,
                         file: nil,
                         readBy: ["user1", "user2"],
-                        created: "2025-01-01T10:00:00Z",
-                        updated: "2025-01-01T10:00:00Z"
+                        created: nil,
+                        updated: nil
                     ),
                     PocketBaseMessage(
                         id: "2",
@@ -91,8 +91,8 @@ struct ChatMessagesList: View {
                         messageType: .text,
                         file: nil,
                         readBy: ["user2"],
-                        created: "2025-01-01T10:05:00Z",
-                        updated: "2025-01-01T10:05:00Z"
+                        created: nil,
+                        updated: nil
                     ),
                     PocketBaseMessage(
                         id: "3",
@@ -102,8 +102,8 @@ struct ChatMessagesList: View {
                         messageType: .text,
                         file: nil,
                         readBy: ["user2", "user1"],
-                        created: "2025-01-01T10:10:00Z",
-                        updated: "2025-01-01T10:10:00Z"
+                        created: nil,
+                        updated: nil
                     )
                 ],
                 conversation: PocketBaseConversation(
@@ -113,9 +113,9 @@ struct ChatMessagesList: View {
                     isGroupChat: true,
                     title: "Family Chat",
                     lastMessage: "Good morning!",
-                    lastMessageAt: "2025-01-01T10:10:00Z",
-                    created: "2025-01-01T00:00:00Z",
-                    updated: "2025-01-01T10:10:00Z"
+                    lastMessageAt: nil,
+                    created: nil,
+                    updated: nil
                 ),
                 currentUserId: "user1",
                 isInputFocused: $isInputFocused

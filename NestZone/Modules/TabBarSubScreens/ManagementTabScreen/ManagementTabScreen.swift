@@ -3,7 +3,7 @@ import SwiftUI
 struct ManagementTabScreen: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = ManagementTabViewModel()
     
     @State private var animateCards = false
@@ -81,5 +81,5 @@ struct ManagementTabScreen: View {
 
 #Preview {
     ManagementTabScreen()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

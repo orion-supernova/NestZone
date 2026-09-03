@@ -51,11 +51,11 @@ struct ReadReceiptsSheet: View {
     }
     
     private func formatMessageTime() -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: message.created) else {
+        guard let ms = message.created else {
             return "Unknown time"
         }
-        
+        let date = Date(convexMillis: ms)
+
         let displayFormatter = DateFormatter()
         displayFormatter.dateStyle = .medium
         displayFormatter.timeStyle = .short
@@ -133,8 +133,8 @@ struct ReadReceiptRow: View {
             messageType: .text,
             file: nil,
             readBy: ["user1", "user2", "user3"],
-            created: "2025-01-01T12:00:00Z",
-            updated: "2025-01-01T12:00:00Z"
+            created: nil,
+            updated: nil
         ),
         readByUsers: [
             PocketBaseUser(
@@ -142,22 +142,14 @@ struct ReadReceiptRow: View {
                 email: "sarah@example.com",
                 name: "Sarah Johnson",
                 avatar: nil,
-                home_id: ["home1"],
-                created: "2025-01-01T00:00:00Z",
-                updated: "2025-01-01T00:00:00Z",
-                verified: true,
-                emailVisibility: false
+                home_id: ["home1"]
             ),
             PocketBaseUser(
                 id: "user3",
                 email: "mike@example.com",
                 name: "Mike Chen",
                 avatar: nil,
-                home_id: ["home1"],
-                created: "2025-01-01T00:00:00Z",
-                updated: "2025-01-01T00:00:00Z",
-                verified: true,
-                emailVisibility: false
+                home_id: ["home1"]
             )
         ]
     )

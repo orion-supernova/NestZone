@@ -3,7 +3,7 @@ import SwiftUI
 struct HomeTabScreen: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = HomeTabViewModel()
     @EnvironmentObject var tabNavigationHelper: TabNavigationHelper
     
@@ -85,7 +85,7 @@ struct HomeTabScreen: View {
 struct SimpleHeaderView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @EnvironmentObject private var viewModel: HomeTabViewModel
     
     var body: some View {
@@ -451,6 +451,6 @@ struct NavigableStatCard: View {
 
 #Preview {
     HomeTabScreen()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
         .environmentObject(TabNavigationHelper())
 }

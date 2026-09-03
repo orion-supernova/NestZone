@@ -3,7 +3,7 @@ import SwiftUI
 struct NotesView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = NotesViewModel()
     @State private var showingNewNote = false
     @State private var selectedNote: PocketBaseNote?

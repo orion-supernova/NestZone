@@ -68,9 +68,9 @@ struct ChatHeader: View {
             isGroupChat: true,
             title: "Family Chat",
             lastMessage: "Hello everyone!",
-            lastMessageAt: "2025-01-01T00:00:00Z",
-            created: "2025-01-01T00:00:00Z",
-            updated: "2025-01-01T00:00:00Z"
+            lastMessageAt: nil,
+            created: nil,
+            updated: nil
         )
     ) {
         // Back action

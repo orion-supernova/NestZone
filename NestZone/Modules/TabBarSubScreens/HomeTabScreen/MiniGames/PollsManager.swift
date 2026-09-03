@@ -1,16 +1,23 @@
 import Foundation
+import ConvexMobile
 
 struct User: Codable, Identifiable {
     let id: String
     let name: String
     let email: String?
     let avatar: String?
-    
+
     enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case email
-        case avatar
+        case id = "_id"
+        case name, email, avatar
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = (try c.decodeIfPresent(String.self, forKey: .name)) ?? "Member"
+        email = try c.decodeIfPresent(String.self, forKey: .email)
+        avatar = try c.decodeIfPresent(String.self, forKey: .avatar)
     }
 }
 
@@ -18,33 +25,38 @@ struct Poll: Codable, Identifiable {
     let id: String
     let homeId: String?
     let title: String?
+    let type: String?
     let status: String?
     let genre: String?
-    let created: String?
-    let updated: String?
-    
+    let created: Double?
+    let updated: Double?
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case homeId = "home_id"
-        case title
-        case status
-        case genre
-        case created
-        case updated
+        case title, type, status, genre, created, updated
     }
+}
+
+/// Decoded shape of `polls:detail` — poll + items + all votes + the caller's votes.
+struct PollDetail: Codable {
+    let poll: Poll
+    let items: [PollItem]
+    let votes: [PollVote]
+    let myVotes: [PollVote]
 }
 
 struct PollItem: Codable, Identifiable {
     let id: String
-    let pollId: String
+    let pollId: String?
     let entityType: String?
     let externalId: String
     let label: String?
     let thumbnailUrl: String?
     let order: Int?
-    
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case pollId = "poll_id"
         case entityType = "entity_type"
         case externalId = "external_id"
@@ -52,302 +64,171 @@ struct PollItem: Codable, Identifiable {
         case thumbnailUrl = "thumbnail_url"
         case order
     }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        pollId = try c.decodeIfPresent(String.self, forKey: .pollId)
+        entityType = try c.decodeIfPresent(String.self, forKey: .entityType)
+        externalId = (try c.decodeIfPresent(String.self, forKey: .externalId)) ?? ""
+        label = try c.decodeIfPresent(String.self, forKey: .label)
+        thumbnailUrl = try c.decodeIfPresent(String.self, forKey: .thumbnailUrl)
+        order = try c.decodeIfPresent(Int.self, forKey: .order)
+    }
 }
 
 struct PollVote: Codable, Identifiable {
     let id: String
-    let pollId: String
+    let pollId: String?
     let targetExternalId: String?
     let vote: Bool
     let userId: String
-    
+
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "_id"
         case pollId = "poll_id"
         case targetExternalId = "target_external_id"
         case vote
         case userId = "user_id"
     }
-    
-    // Helper computed property for backward compatibility
-    var imdbId: String {
-        return targetExternalId ?? ""
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        pollId = try c.decodeIfPresent(String.self, forKey: .pollId)
+        targetExternalId = try c.decodeIfPresent(String.self, forKey: .targetExternalId)
+        vote = (try c.decodeIfPresent(Bool.self, forKey: .vote)) ?? false
+        userId = (try c.decodeIfPresent(String.self, forKey: .userId)) ?? ""
     }
+
+    // Helper computed property for backward compatibility
+    var imdbId: String { targetExternalId ?? "" }
 }
 
-final class PollsManager: @unchecked Sendable {
+@MainActor
+final class PollsManager {
     static let shared = PollsManager()
     private init() {}
-    
-    private let pocketBase = PocketBaseManager.shared
-    
-    private struct PBListResponse<T: Codable>: Codable {
-        let page: Int?
-        let perPage: Int?
-        let totalItems: Int?
-        let items: [T]
+
+    enum PollsError: LocalizedError {
+        case noHome
+        var errorDescription: String? { "No home selected" }
     }
-    
-    private struct HomeLite: Codable {
-        let id: String
+
+    private func currentHomeId(_ provided: String?) throws -> String {
+        if let provided { return provided }
+        guard let id = HomeSelectionManager.shared.selectedHomeId else { throw PollsError.noHome }
+        return id
     }
-    
-    private func encode(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
+
+    private func moviePolls(homeId: String) async throws -> [Poll] {
+        let polls: [Poll] = try await Convex.once(
+            "polls:listByHome", args: ["homeId": homeId], as: [Poll].self
+        )
+        return polls
+            .filter { $0.type == "movie" }
+            .sorted { ($0.created ?? 0) > ($1.created ?? 0) }
     }
-    
-    // MARK: - Public API
-    
+
+    private func detail(pollId: String) async throws -> PollDetail {
+        try await Convex.once("polls:detail", args: ["pollId": pollId], as: PollDetail.self)
+    }
+
+    // MARK: - Polls
+
     func getActivePoll(homeId: String? = nil) async throws -> Poll? {
-        let home = try await resolveHomeIdIfNeeded(homeId)
-        let filterRaw = "home_id = '\(home)' && status = 'active' && type = 'movie'"
-        let endpoint = "/api/collections/polls/records?filter=\(encode(filterRaw))&sort=-created&perPage=1"
-        
-        print("🔍 DEBUG getActivePoll:")
-        print("  - Home ID: \(home)")
-        print("  - Filter: \(filterRaw)")
-        print("  - Endpoint: \(endpoint)")
-        
-        let response: PBListResponse<Poll> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<Poll>.self)
-        
-        print("🔍 DEBUG getActivePoll results:")
-        print("  - Total polls found: \(response.items.count)")
-        for (index, poll) in response.items.enumerated() {
-            print("  - Poll \(index): id=\(poll.id), status=\(poll.status ?? "nil"), title=\(poll.title ?? "nil")")
-        }
-        
-        return response.items.first
+        let home = try currentHomeId(homeId)
+        return try await moviePolls(homeId: home).first { $0.status == "active" }
     }
-    
+
     func getRecentPoll(homeId: String? = nil) async throws -> Poll? {
-        let home = try await resolveHomeIdIfNeeded(homeId)
-        let filterRaw = "home_id = '\(home)' && type = 'movie'"
-        let endpoint = "/api/collections/polls/records?filter=\(encode(filterRaw))&sort=-created&perPage=1"
-        
-        print("🔍 DEBUG getRecentPoll:")
-        print("  - Home ID: \(home)")
-        print("  - Filter: \(filterRaw)")
-        print("  - Endpoint: \(endpoint)")
-        
-        let response: PBListResponse<Poll> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<Poll>.self)
-        
-        print("🔍 DEBUG getRecentPoll results:")
-        print("  - Total polls found: \(response.items.count)")
-        for (index, poll) in response.items.enumerated() {
-            print("  - Poll \(index): id=\(poll.id), status=\(poll.status ?? "nil"), title=\(poll.title ?? "nil")")
-        }
-        
-        return response.items.first
+        let home = try currentHomeId(homeId)
+        return try await moviePolls(homeId: home).first
     }
-    
+
     func getPreviousPolls(homeId: String? = nil, limit: Int = 10) async throws -> [Poll] {
-        let home = try await resolveHomeIdIfNeeded(homeId)
-        let filterRaw = "home_id = '\(home)' && status = 'closed' && type = 'movie'"
-        let endpoint = "/api/collections/polls/records?filter=\(encode(filterRaw))&sort=-created&perPage=\(limit)"
-        
-        print("🔍 DEBUG getPreviousPolls:")
-        print("  - Home ID: \(home)")
-        print("  - Filter: \(filterRaw)")
-        print("  - Endpoint: \(endpoint)")
-        
-        let response: PBListResponse<Poll> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<Poll>.self)
-        
-        print("🔍 DEBUG getPreviousPolls results:")
-        print("  - Total polls found: \(response.items.count)")
-        for (index, poll) in response.items.enumerated() {
-            print("  - Poll \(index): id=\(poll.id), status='\(poll.status ?? "nil")', title='\(poll.title ?? "nil")'")
-        }
-        
-        return response.items
+        let home = try currentHomeId(homeId)
+        return Array(try await moviePolls(homeId: home).filter { $0.status == "closed" }.prefix(limit))
     }
-    
+
     func createPoll(homeId: String? = nil, title: String, candidates: [Movie], genre: String? = nil) async throws -> Poll {
-        let home = try await resolveHomeIdIfNeeded(homeId)
-        let userId = await getCurrentUserId()
-        
-        // STEP 1: Create the poll (no candidates array)
-        var params: [String: Any] = [
-            "home_id": home,
-            "owner_id": userId,
-            "type": "movie",
-            "title": title,
-            "status": "active"
-        ]
-        if let genre { params["genre"] = genre }
-        let createdPoll: Poll = try await pocketBase.createRecord(in: "polls", data: params, responseType: Poll.self)
-        
-        // STEP 2: Create poll_items for ALL movies (no payload)
-        for (index, movie) in candidates.enumerated() {
-            let itemParams: [String: Any] = [
-                "poll_id": createdPoll.id,
-                "entity_type": "movie",
+        let home = try currentHomeId(homeId)
+        let items: [ConvexEncodable?] = candidates.enumerated().map { index, movie in
+            ([
                 "external_id": movie.id,
                 "label": movie.title,
                 "thumbnail_url": movie.poster ?? "",
-                "order": index
-            ]
-            
-            do {
-                let _: PollItem = try await pocketBase.createRecord(in: "poll_items", data: itemParams, responseType: PollItem.self)
-                print("✅ Created poll item for: \(movie.title)")
-            } catch {
-                print("❌ Failed to create poll item for \(movie.title): \(error)")
-                // Don't fail the entire poll creation for one item
-            }
+                "order": Double(index),
+            ] as [String: ConvexEncodable?]) as ConvexEncodable?
         }
-        
-        return createdPoll
+        var args: [String: ConvexEncodable?] = [
+            "homeId": home,
+            "title": title,
+            "type": "movie",
+            "items": items,
+        ]
+        if let genre { args["genre"] = genre }
+        return try await Convex.client.mutation("polls:create", with: args)
     }
-    
+
     func addMovieToPoll(pollId: String, movie: Movie, order: Int) async throws {
-        let itemParams: [String: Any] = [
-            "poll_id": pollId,
-            "entity_type": "movie",
+        try await Convex.client.mutation("polls:addItem", with: [
+            "pollId": pollId,
             "external_id": movie.id,
             "label": movie.title,
             "thumbnail_url": movie.poster ?? "",
-            "order": order
-        ]
-        
-        let _: PollItem = try await pocketBase.createRecord(in: "poll_items", data: itemParams, responseType: PollItem.self)
+            "order": Double(order),
+        ])
     }
 
     func fetchPollItems(pollId: String) async throws -> [PollItem] {
-        let filterRaw = "poll_id = '\(pollId)'"
-        let endpoint = "/api/collections/poll_items/records?filter=\(encode(filterRaw))&sort=order&perPage=200"
-        let response: PBListResponse<PollItem> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<PollItem>.self)
-        print("📊 Fetched \(response.items.count) poll items for poll \(pollId)")
-        return response.items
+        try await detail(pollId: pollId).items
     }
-    
-    // Helper to resolve a poll_item by external (IMDB) id
-    private func findPollItem(pollId: String, imdbId: String) async throws -> PollItem? {
-        let filterRaw = "poll_id = '\(pollId)' && external_id = '\(imdbId)'"
-        let endpoint = "/api/collections/poll_items/records?filter=\(encode(filterRaw))&perPage=1"
-        print("🔍 Looking for poll item: pollId=\(pollId), imdbId=\(imdbId)")
-        print("🔍 Filter: \(filterRaw)")
-        let response: PBListResponse<PollItem> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<PollItem>.self)
-        if let item = response.items.first {
-            print("✅ Found poll item: id=\(item.id), external_id=\(item.externalId), order=\(item.order ?? -1)")
-        } else {
-            print("❌ No poll item found for imdbId=\(imdbId)")
-        }
-        return response.items.first
-    }
-    
+
     func submitVote(pollId: String, imdbId: String, vote: Bool, userId: String? = nil) async throws {
-        print("🗳️ SUBMIT VOTE: pollId=\(pollId), imdbId=\(imdbId), vote=\(vote)")
-        
-        let userIdToUse: String
-        if let userId = userId {
-            userIdToUse = userId
-        } else {
-            userIdToUse = await getCurrentUserId()
-        }
-        print("🗳️ User ID: \(userIdToUse)")
-        
-        // Remove item_id entirely since target_external_id is working correctly
-        // and provides all the identification we need
-        let params: [String: Any] = [
-            "poll_id": pollId,
+        // Voter identity is taken from the authenticated session server-side.
+        try await Convex.client.mutation("polls:vote", with: [
+            "pollId": pollId,
             "target_external_id": imdbId,
             "vote": vote,
-            "user_id": userIdToUse
-        ]
-        
-        do {
-            let _: PollVote = try await pocketBase.createRecord(in: "poll_votes", data: params, responseType: PollVote.self)
-            print("✅ Vote submitted: \(vote ? "YES" : "NO") for \(imdbId)")
-        } catch {
-            print("❌ Failed to submit vote for \(imdbId): \(error)")
-            throw error
-        }
+        ])
     }
-    
+
     func fetchVotes(pollId: String) async throws -> [PollVote] {
-        let filterRaw = "poll_id = '\(pollId)'"
-        let endpoint = "/api/collections/poll_votes/records?filter=\(encode(filterRaw))&perPage=200"
-        let response: PBListResponse<PollVote> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<PollVote>.self)
-        return response.items
+        try await detail(pollId: pollId).votes
     }
-    
+
     func fetchUserVotes(pollId: String, userId: String? = nil) async throws -> [PollVote] {
-        let userIdToUse: String
-        if let userId = userId {
-            userIdToUse = userId
-        } else {
-            userIdToUse = await getCurrentUserId()
-        }
-        
-        let filterRaw = "poll_id = '\(pollId)' && user_id = '\(userIdToUse)'"
-        let endpoint = "/api/collections/poll_votes/records?filter=\(encode(filterRaw))&perPage=200"
-        
-        print("🔍 DEBUG fetchUserVotes:")
-        print("  - Poll ID: \(pollId)")
-        print("  - User ID to filter: '\(userIdToUse)'")
-        print("  - Filter: \(filterRaw)")
-        print("  - Encoded filter: \(encode(filterRaw))")
-        print("  - Full endpoint: \(endpoint)")
-        
-        let response: PBListResponse<PollVote> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<PollVote>.self)
-        
-        print("🔍 DEBUG fetchUserVotes results:")
-        print("  - Total items returned: \(response.items.count)")
-        for (index, vote) in response.items.enumerated() {
-            print("  - Vote \(index): user='\(vote.userId)', target='\(vote.targetExternalId ?? "nil")', vote=\(vote.vote)")
-        }
-        
-        let filteredVotes = response.items.filter { $0.userId == userIdToUse }
-        print("🔍 DEBUG after client-side filtering:")
-        print("  - Filtered items count: \(filteredVotes.count)")
-        
-        if response.items.count != filteredVotes.count {
-            print("⚠️ WARNING: Server-side filtering failed! Expected \(filteredVotes.count) items but got \(response.items.count)")
-            print("⚠️ Using client-side filtered results instead")
-            return filteredVotes
-        }
-        
-        return response.items
+        // `myVotes` is already scoped to the authenticated user.
+        try await detail(pollId: pollId).myVotes
     }
-    
+
     func closePoll(pollId: String) async throws {
-        let _: Poll = try await pocketBase.updateRecord(in: "polls", id: pollId, data: ["status": "closed"], responseType: Poll.self)
+        try await Convex.client.mutation("polls:setStatus", with: ["pollId": pollId, "status": "closed"])
     }
-    
+
     func deletePoll(pollId: String) async throws {
-        print("🗑️ Deleting poll: \(pollId)")
-        
-        // With foreign key relations, just delete the poll - related records will cascade delete
-        try await pocketBase.deleteRecord(from: "polls", id: pollId)
-        print("✅ Poll deleted successfully: \(pollId)")
+        // Server cascades item + vote deletion.
+        try await Convex.client.mutation("polls:remove", with: ["pollId": pollId])
     }
-    
+
     func getHouseMemberCount(homeId: String? = nil) async throws -> Int {
-        let home = try await resolveHomeIdIfNeeded(homeId)
-        let endpoint = "/api/collections/homes/records/\(home)"
-        
-        struct HomeDetail: Codable {
-            let members: [String]
-        }
-        
-        let homeDetail: HomeDetail = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: HomeDetail.self)
-        return homeDetail.members.count
+        let home = try currentHomeId(homeId)
+        let homeDoc: Home = try await Convex.once("homes:get", args: ["homeId": home], as: Home.self)
+        return homeDoc.members.count
     }
-    
+
     // MARK: - Helpers
-    
+
     func fetchUsers(userIds: [String]) async throws -> [User] {
         guard !userIds.isEmpty else { return [] }
-        
-        // Create filter for multiple user IDs
-        let filterParts = userIds.map { "id='\($0)'" }
-        let filterRaw = "(\(filterParts.joined(separator: " || ")))"
-        let endpoint = "/api/collections/users/records?filter=\(encode(filterRaw))&perPage=100"
-        
-        let response: PBListResponse<User> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<User>.self)
-        return response.items
+        return try await Convex.once(
+            "users:byIds",
+            args: ["ids": userIds.map { $0 as ConvexEncodable? }],
+            as: [User].self
+        )
     }
-    
+
     func voteCounts(for votes: [PollVote]) -> [String: (yes: Int, no: Int)] {
         var map: [String: (yes: Int, no: Int)] = [:]
         for v in votes {
@@ -357,69 +238,23 @@ final class PollsManager: @unchecked Sendable {
         }
         return map
     }
-    
+
     func getMatches(votes: [PollVote], houseMemberCount: Int) -> [String] {
         let counts = voteCounts(for: votes)
-        let majorityThreshold = max(2, Int(ceil(Double(houseMemberCount) * 0.6))) // 60% of house members or minimum 2
-        
-        return counts.compactMap { (imdbId, count) in
-            // A movie is a match if it has majority yes votes AND more yes than no
-            if count.yes >= majorityThreshold && count.yes > count.no {
-                return imdbId
-            }
-            return nil
+        let majorityThreshold = max(2, Int(ceil(Double(houseMemberCount) * 0.6)))
+        return counts.compactMap { imdbId, count in
+            (count.yes >= majorityThreshold && count.yes > count.no) ? imdbId : nil
         }
     }
-    
+
     func getPollWinner(pollId: String) async throws -> Movie? {
         let votes = try await fetchVotes(pollId: pollId)
         if votes.isEmpty { return nil }
-        
         let counts = voteCounts(for: votes)
-        
-        // Find the movie with the most yes votes (and more yes than no)
         let winner = counts
             .filter { $0.value.yes > $0.value.no }
             .max { lhs, rhs in lhs.value.yes < rhs.value.yes }
-        
         guard let winnerImdbId = winner?.key else { return nil }
         return await MovieAPI.shared.getDetails(imdbID: winnerImdbId)
-    }
-    
-    private func resolveHomeIdIfNeeded(_ provided: String?) async throws -> String {
-        if let provided { return provided }
-        // Fallback to first home
-        let endpoint = "/api/collections/homes/records?perPage=1"
-        let response: PBListResponse<HomeLite> = try await pocketBase.request(endpoint: endpoint, requiresAuth: true, responseType: PBListResponse<HomeLite>.self)
-        guard let id = response.items.first?.id else {
-            throw PocketBaseManager.PocketBaseError.notFound
-        }
-        return id
-    }
-    
-    private func getCurrentUserId() async -> String {
-        // Extract user ID from the JWT token stored in PocketBaseManager
-        guard let token = await pocketBase.getAuthToken() else {
-            return ""
-        }
-        
-        // Parse JWT token to extract user ID
-        let components = token.split(separator: ".")
-        guard components.count >= 2 else {
-            return ""
-        }
-        
-        let payloadString = String(components[1])
-        // Add padding if needed
-        let paddingLength = 4 - payloadString.count % 4
-        let paddedPayload = payloadString + String(repeating: "=", count: paddingLength % 4)
-        
-        guard let payloadData = Data(base64Encoded: paddedPayload),
-              let payloadJSON = try? JSONSerialization.jsonObject(with: payloadData) as? [String: Any],
-              let userId = payloadJSON["id"] as? String else {
-            return ""
-        }
-        
-        return userId
     }
 }

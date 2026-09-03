@@ -303,6 +303,27 @@ the current app keeps working. Keep both backends up through one TestFlight cycl
 
 ---
 
+## 10b. Troubleshooting: `InvalidAccountId` on sign‑in
+
+```
+Uncaught Error: InvalidAccountId
+  at retrieveAccount (@convex-dev/auth/.../implementation/index.ts)
+  at authorize (@convex-dev/auth/.../providers/Password.ts)
+```
+
+**Cause:** `signIn` (flow `"signIn"`) was called for an email that has **no password
+account**. This is expected for every migrated user on their first login — they have a
+profile but no credential (PocketBase bcrypt hashes were not imported).
+
+**Fix:** call the **sign‑up** flow the first time:
+`signIn(provider:"password", params:[... ,"flow":"signUp"])`. That creates the password
+credential and auto‑links it to the migrated `users` doc by email (see §3). Afterwards,
+`flow:"signIn"` works normally.
+
+**UX implication:** route the 7 migrated users (and any new user) through *Register*, not
+*Login*, the first time. A good pattern: on `InvalidAccountId`, prompt "No account yet —
+create a password" and retry with `flow:"signUp"`.
+
 ## 11. Gotchas checklist
 
 - [ ] Decode `_id` / `_creationTime`, not `id`. Pass ids back as plain `String`.

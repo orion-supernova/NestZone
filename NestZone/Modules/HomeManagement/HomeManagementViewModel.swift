@@ -9,150 +9,60 @@ class HomeManagementViewModel: ObservableObject {
     @Published var homeCreated = false
     @Published var homeJoined = false
     
-    private let pocketBase = PocketBaseManager.shared
-    
-    func createHome(name: String, address: String?, authManager: PocketBaseAuthManager) async {
-        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+    func createHome(name: String, address: String?, authManager: ConvexAuthManager) async {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
             showErrorMessage(LocalizationManager.homeManagementHomeNameEmpty)
             return
         }
-        
+
         isLoading = true
         errorMessage = nil
-        
+
         do {
-            guard let userId = authManager.currentUser?.id else {
-                throw PocketBaseManager.PocketBaseError.unauthorized
-            }
-            
-            // 1. Create the home
-            var parameters: [String: Any] = [
-                "name": name.trimmingCharacters(in: .whitespacesAndNewlines),
-                "members": [userId],
-                "invite_code": UUID().uuidString
-            ]
-            
-            if let address = address, !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                parameters["address"] = address.trimmingCharacters(in: .whitespacesAndNewlines)
-            }
-            
-            // First get the user to make sure they exist
-            let _: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(userId)",
-                method: .get,
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            // Then create the home with the verified user ID
-            let newHome: Home = try await pocketBase.createRecord(
-                in: "homes",
-                data: parameters,
-                responseType: Home.self
-            )
-            
-            // Finally update user's home_id array
-            let currentUser: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(userId)",
-                method: .get,
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            var updatedHomeIds = currentUser.home_id
-            updatedHomeIds.append(newHome.id)
-            
-            let _: PocketBaseUser = try await pocketBase.updateRecord(
-                in: "users",
-                id: userId,
-                data: ["home_id": updatedHomeIds],
-                responseType: PocketBaseUser.self
-            )
-            
+            // `homes:create` inserts the home with the caller as the sole member and
+            // mirrors the membership onto the user, all server-side, in one transaction.
+            // (Free-text `address` isn't sent — the Convex schema expects a {lat,lng}
+            //  geopoint; address capture is a follow-up.)
+            try await Convex.client.mutation("homes:create", with: ["name": trimmed])
+
             withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                 homeCreated = true
             }
-            
         } catch {
             showErrorMessage(error.localizedDescription)
         }
-        
+
         isLoading = false
     }
-    
-    func joinHome(inviteCode: String, authManager: PocketBaseAuthManager) async {
-        guard !inviteCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+
+    func joinHome(inviteCode: String, authManager: ConvexAuthManager) async {
+        let code = inviteCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !code.isEmpty else {
             showErrorMessage(LocalizationManager.homeManagementInviteCodeEmpty)
             return
         }
-        
+
         isLoading = true
         errorMessage = nil
-        
+
         do {
-            guard let userId = authManager.currentUser?.id else {
-                throw PocketBaseManager.PocketBaseError.unauthorized
-            }
-            
-            // 1. Find the home with the invite code
-            let response: PocketBaseListResponse<Home> = try await pocketBase.request(
-                endpoint: "/api/collections/homes/records",
-                method: .get,
-                parameters: ["filter": "invite_code = '\(inviteCode.trimmingCharacters(in: .whitespacesAndNewlines))'"],
-                requiresAuth: true,
-                responseType: PocketBaseListResponse<Home>.self
-            )
-            
-            guard let home = response.items.first else {
-                showErrorMessage(LocalizationManager.homeManagementInvalidInviteCode)
-                isLoading = false
-                return
-            }
-            
-            // Check if user is already a member
-            if home.members.contains(userId) {
-                showErrorMessage(LocalizationManager.homeManagementAlreadyMember)
-                isLoading = false
-                return
-            }
-            
-            // 2. Add user to home members using updateRecord
-            var updatedMembers = home.members
-            updatedMembers.append(userId)
-            
-            let _: Home = try await pocketBase.updateRecord(
-                in: "homes",
-                id: home.id,
-                data: ["members": updatedMembers],
-                responseType: Home.self
-            )
-            
-            // 3. Update user's home_id array using updateRecord
-            let currentUser: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(userId)",
-                method: .get,
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            var updatedHomeIds = currentUser.home_id
-            updatedHomeIds.append(home.id)
-            
-            let _: PocketBaseUser = try await pocketBase.updateRecord(
-                in: "users",
-                id: userId,
-                data: ["home_id": updatedHomeIds],
-                responseType: PocketBaseUser.self
-            )
-            
+            // `homes:join` validates the invite code and updates both home.members and
+            // user.home_id server-side. An invalid code throws "Invalid invite code".
+            try await Convex.client.mutation("homes:join", with: ["inviteCode": code])
+
             withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                 homeJoined = true
             }
-            
         } catch {
-            showErrorMessage(error.localizedDescription)
+            let text = String(describing: error)
+            if text.contains("Invalid invite code") {
+                showErrorMessage(LocalizationManager.homeManagementInvalidInviteCode)
+            } else {
+                showErrorMessage(error.localizedDescription)
+            }
         }
-        
+
         isLoading = false
     }
     

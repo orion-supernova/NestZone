@@ -7,7 +7,7 @@ struct NoHomesView: View {
     @State private var showJoinHome = false
     @State private var animateContent = false
     @EnvironmentObject var homeManager: HomeSelectionManager
-    @EnvironmentObject var authManager: PocketBaseAuthManager
+    @EnvironmentObject var authManager: ConvexAuthManager
     
     var body: some View {
         GeometryReader { geometry in

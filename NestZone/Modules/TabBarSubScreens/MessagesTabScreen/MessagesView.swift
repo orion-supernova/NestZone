@@ -3,13 +3,12 @@ import SwiftUI
 struct MessagesView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = MessageListViewModel()
     @State private var showingNewMessage = false
     @State private var selectedConversation: PocketBaseConversation?
     @State private var currentHome: Home?
     
-    private let pocketBase = PocketBaseManager.shared
     
     var body: some View {
         NavigationStack {
@@ -253,36 +252,13 @@ struct MessagesView: View {
     }
     
     private func loadCurrentHome() async {
-        guard let currentUserId = authManager.currentUser?.id else { return }
-        
-        do {
-            // Get user's home ID
-            let userResponse: PocketBaseUser = try await pocketBase.request(
-                endpoint: "/api/collections/users/records/\(currentUserId)",
-                requiresAuth: true,
-                responseType: PocketBaseUser.self
-            )
-            
-            guard let homeId = userResponse.home_id.first else {
-                print("DEBUG: MessagesView - User has no home")
-                return
-            }
-            
-            // Fetch the home details
-            let home: Home = try await pocketBase.request(
-                endpoint: "/api/collections/homes/records/\(homeId)",
-                requiresAuth: true,
-                responseType: Home.self
-            )
-            
-            await MainActor.run {
-                currentHome = home
-                print("DEBUG: MessagesView - Loaded home: \(home.name)")
-            }
-            
-        } catch {
-            print("DEBUG: MessagesView - Error loading home: \(error)")
+        // Prefer the already-selected home; fall back to the user's first home.
+        if let home = HomeSelectionManager.shared.selectedHome {
+            currentHome = home
+            return
         }
+        let homes: [Home] = (try? await Convex.once("homes:listMine", as: [Home].self)) ?? []
+        currentHome = homes.first
     }
 }
 
@@ -373,16 +349,11 @@ struct ConversationCard: View {
     }
     
     private func formatDate() -> String {
-        guard let lastMessageAt = conversation.lastMessageAt,
-              !lastMessageAt.isEmpty else {
+        guard let lastMessageAt = conversation.lastMessageAt else {
             return ""
         }
-        
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: lastMessageAt) else {
-            return ""
-        }
-        
+        let date = Date(convexMillis: lastMessageAt)
+
         let displayFormatter = DateFormatter()
         displayFormatter.dateFormat = "HH:mm"
         return displayFormatter.string(from: date)
@@ -392,6 +363,6 @@ struct ConversationCard: View {
 #Preview {
     NavigationStack {
         MessagesView()
-            .environmentObject(PocketBaseAuthManager())
+            .environmentObject(ConvexAuthManager())
     }
 }

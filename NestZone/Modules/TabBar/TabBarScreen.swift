@@ -6,7 +6,7 @@ struct TabBarScreen: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var localizationManager = LocalizationManager.shared
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @EnvironmentObject private var homeManager: HomeSelectionManager
     @StateObject private var tabNavigationHelper = TabNavigationHelper()
     @State private var isLoadingHomes = true

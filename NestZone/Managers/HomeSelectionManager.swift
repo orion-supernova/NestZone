@@ -21,62 +21,39 @@ class HomeSelectionManager: ObservableObject {
     @Published var availableHomes: [Home] = []
     
     private let selectedHomeIdKey = "selectedHomeId"
-    private let pocketBase = PocketBaseManager.shared
-    
+
     private init() {
         // Try to load the last selected home ID
         loadPersistedSelection()
     }
-    
+
     var selectedHomeId: String? {
         selectedHome?.id
     }
-    
-    // Fetch all homes for the current user
-    func fetchUserHomes(authManager: PocketBaseAuthManager) async throws {
-        guard let userId = authManager.currentUser?.id else {
-            throw PocketBaseManager.PocketBaseError.unauthorized
-        }
-        
-        // Fetch user details to get home_ids
-        let userResponse: PocketBaseUser = try await pocketBase.request(
-            endpoint: "/api/collections/users/records/\(userId)",
-            method: .get,
-            requiresAuth: true,
-            responseType: PocketBaseUser.self
-        )
-        
-        // If user has no homes, return empty
-        guard !userResponse.home_id.isEmpty else {
-            self.availableHomes = []
+
+    // Fetch all homes for the current user via Convex `homes:listMine`.
+    // The `authManager` param is retained for source compatibility with call sites;
+    // authentication is implicit in the shared Convex client.
+    func fetchUserHomes(authManager: ConvexAuthManager) async throws {
+        let homes: [Home] = try await Convex.once("homes:listMine", as: [Home].self)
+
+        self.availableHomes = homes
+
+        // If user has no homes, clear any stale selection.
+        guard !homes.isEmpty else {
             self.selectedHome = nil
             clearPersistedSelection()
             return
         }
-        
-        // Fetch homes using OR filter for multiple IDs
-        // Format: id='id1' || id='id2' || id='id3'
-        let filterConditions = userResponse.home_id.map { "id='\($0)'" }
-        let filter = filterConditions.joined(separator: " || ")
-        
-        let response: PocketBaseListResponse<Home> = try await pocketBase.request(
-            endpoint: "/api/collections/homes/records",
-            method: .get,
-            parameters: ["filter": filter],
-            requiresAuth: true,
-            responseType: PocketBaseListResponse<Home>.self
-        )
-        
-        self.availableHomes = response.items
-        
+
         // If there's a persisted selection, try to find it in available homes
         if let persistedId = UserDefaults.standard.string(forKey: selectedHomeIdKey),
-           let home = response.items.first(where: { $0.id == persistedId }) {
+           let home = homes.first(where: { $0.id == persistedId }) {
             self.selectedHome = home
         }
         // If only one home, auto-select it
-        else if response.items.count == 1 {
-            selectHome(response.items[0])
+        else if homes.count == 1 {
+            selectHome(homes[0])
         }
         // If multiple homes and no valid selection, selectedHome remains nil
         // This will trigger the home selection UI

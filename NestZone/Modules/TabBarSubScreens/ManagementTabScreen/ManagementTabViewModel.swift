@@ -14,7 +14,6 @@ class ManagementTabViewModel: ObservableObject {
     @Published var pendingItems = 0
     @Published var totalEstimatedCost: Double = 0.0
     
-    private let pocketBase = PocketBaseManager.shared
     private var homeChangeObserver: NSObjectProtocol?
     
     init() {
@@ -67,18 +66,11 @@ class ManagementTabViewModel: ObservableObject {
             return
         }
         
-        let filter = "home_id = '\(homeId)'"
-        let sort = "-created"
-        
-        let response: PocketBaseListResponse<ShoppingItem> = try await pocketBase.getCollection(
-            "shopping_items",
-            responseType: PocketBaseListResponse<ShoppingItem>.self,
-            filter: filter,
-            sort: sort
+        let items: [ShoppingItem] = try await Convex.once(
+            "shopping:listByHome", args: ["homeId": homeId], as: [ShoppingItem].self
         )
-        
-        shoppingItems = response.items
-        
+        shoppingItems = items.sorted { ($0.created ?? 0) > ($1.created ?? 0) }
+
         // Group by category
         categories = Dictionary(grouping: shoppingItems) { $0.category }
     }
@@ -108,86 +100,58 @@ class ManagementTabViewModel: ObservableObject {
     
     func toggleItemCompletion(_ item: ShoppingItem) async {
         do {
-            let updatedData = ["is_purchased": !item.isPurchased]
-            let _: ShoppingItem = try await pocketBase.updateRecord(
-                in: "shopping_items",
-                id: item.id,
-                data: updatedData,
-                responseType: ShoppingItem.self
-            )
-            
-            // Refresh items after update
+            try await Convex.client.mutation("shopping:setPurchased", with: [
+                "id": item.id,
+                "is_purchased": !item.isPurchased,
+            ])
             try await loadShoppingItems()
             calculateStatistics()
-            
         } catch {
             errorMessage = LocalizationManager.managementErrorUpdateItem(error.localizedDescription)
         }
     }
-    
+
     func addItem(name: String, description: String?, quantity: Double?, category: ShoppingItem.ShoppingCategory) async {
         guard let homeId = HomeSelectionManager.shared.selectedHomeId else {
             errorMessage = "No home selected"
             return
         }
-        
+
         do {
-            let itemData: [String: Any] = [
+            try await Convex.client.mutation("shopping:create", with: [
+                "homeId": homeId,
                 "name": name,
                 "description": description ?? "",
                 "quantity": quantity ?? 1.0,
-                "is_purchased": false,
                 "category": category.rawValue,
-                "home_id": homeId
-            ]
-            
-            let _: ShoppingItem = try await pocketBase.createRecord(
-                in: "shopping_items",
-                data: itemData,
-                responseType: ShoppingItem.self
-            )
-            
-            // Refresh items after adding
+            ])
             try await loadShoppingItems()
             calculateStatistics()
-            
         } catch {
             errorMessage = LocalizationManager.managementErrorAddItem(error.localizedDescription)
         }
     }
-    
+
     func deleteItem(_ item: ShoppingItem) async {
         do {
-            try await pocketBase.deleteRecord(from: "shopping_items", id: item.id)
-            
-            // Refresh items after deletion
+            try await Convex.client.mutation("shopping:remove", with: ["id": item.id])
             try await loadShoppingItems()
             calculateStatistics()
-            
         } catch {
             errorMessage = LocalizationManager.managementErrorDeleteItem(error.localizedDescription)
         }
     }
-    
+
     func updateItem(_ item: ShoppingItem, name: String, description: String?, quantity: Double?) async {
         do {
-            let updatedData: [String: Any] = [
+            try await Convex.client.mutation("shopping:update", with: [
+                "id": item.id,
                 "name": name,
                 "description": description ?? "",
-                "quantity": quantity ?? 1.0
-            ]
-            
-            let _: ShoppingItem = try await pocketBase.updateRecord(
-                in: "shopping_items",
-                id: item.id,
-                data: updatedData,
-                responseType: ShoppingItem.self
-            )
-            
-            // Refresh items after update
+                "quantity": quantity ?? 1.0,
+            ])
             try await loadShoppingItems()
             calculateStatistics()
-            
         } catch {
             errorMessage = LocalizationManager.managementErrorUpdateItem(error.localizedDescription)
         }

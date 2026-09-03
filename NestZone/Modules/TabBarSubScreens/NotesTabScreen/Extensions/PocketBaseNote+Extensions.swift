@@ -10,9 +10,9 @@ extension PocketBaseNote {
     }
     
     var date: Date {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: created) ?? Date()
+        // Convex stores `created` as epoch-ms (Double).
+        guard let ms = created else { return Date() }
+        return Date(timeIntervalSince1970: ms / 1000)
     }
     
     var formattedDate: String {

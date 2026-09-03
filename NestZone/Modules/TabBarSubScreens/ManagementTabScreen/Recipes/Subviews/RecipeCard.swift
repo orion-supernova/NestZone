@@ -122,5 +122,5 @@ struct RecipeCard: View {
 }
 
 #Preview {
-    RecipeCard(recipe: Recipe(id: "", title: "", description: "", ingredients: [""], steps: [], tags: [], prepTime: 3, cookTime: 5, servings: 7, difficulty: .easy, image: "", homeId: "", createdBy: "", created: "", updated: ""))
+    RecipeCard(recipe: Recipe(id: "", title: "", description: "", ingredients: [""], steps: [], tags: [], prepTime: 3, cookTime: 5, servings: 7, difficulty: .easy, image: "", homeId: "", createdBy: "", created: nil, updated: nil))
 }

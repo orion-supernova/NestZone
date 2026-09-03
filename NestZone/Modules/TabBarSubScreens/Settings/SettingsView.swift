@@ -8,7 +8,7 @@ struct SettingsView: View {
     @State private var isShowingSwitchHomeSheet = false
     @State private var isShowingJoinHomeSheet = false
     @StateObject private var localizationManager = LocalizationManager.shared
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @EnvironmentObject private var homeManager: HomeSelectionManager
     
     var body: some View {

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HomeSelectionView: View {
     @EnvironmentObject private var homeManager: HomeSelectionManager
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
     @State private var animateContent = false
@@ -158,5 +158,5 @@ struct HomeSelectionCard: View {
 #Preview {
     HomeSelectionView()
         .environmentObject(HomeSelectionManager.shared)
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

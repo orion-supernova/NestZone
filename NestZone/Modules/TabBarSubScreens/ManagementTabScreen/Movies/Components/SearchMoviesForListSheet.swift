@@ -75,8 +75,8 @@ struct SearchLoadingView: View {
         description: "Movies to watch",
         type: .wishlist,
         isPreset: true,
-        created: "",
-        updated: ""
+        created: nil,
+        updated: nil
     )
     
     SearchMoviesForListSheet(currentList: sampleList) { movie in

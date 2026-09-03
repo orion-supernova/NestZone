@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HomeSetupFlow: View {
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @StateObject private var viewModel = HomeManagementViewModel()
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
@@ -165,5 +165,5 @@ struct HomeSetupCard: View {
 
 #Preview {
     HomeSetupFlow()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
 }

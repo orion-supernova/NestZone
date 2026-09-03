@@ -337,8 +337,8 @@ struct MovieCardView: View {
         description: "Movies I want to watch",
         type: .wishlist,
         isPreset: true,
-        created: "",
-        updated: ""
+        created: nil,
+        updated: nil
     )
     
     MovieListDetailView(movieList: sampleList, viewModel: MovieListsViewModel())

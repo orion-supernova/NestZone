@@ -4,7 +4,7 @@ struct RecipeListView: View {
     @StateObject private var viewModel = RecipeViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showingNewRecipe = false
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @State private var showingExplore = false
     
     private let columns = [

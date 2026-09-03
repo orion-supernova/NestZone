@@ -3,7 +3,7 @@ import SwiftUI
 struct ModuleHubHeaderView: View {
     @AppStorage("selectedTheme") private var selectedTheme = AppTheme.basic
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var authManager: PocketBaseAuthManager
+    @EnvironmentObject private var authManager: ConvexAuthManager
     @State private var pulseAnimation = false
     
     var body: some View {
@@ -73,6 +73,6 @@ struct ModuleHubHeaderView: View {
 
 #Preview {
     ModuleHubHeaderView()
-        .environmentObject(PocketBaseAuthManager())
+        .environmentObject(ConvexAuthManager())
         .padding()
 }

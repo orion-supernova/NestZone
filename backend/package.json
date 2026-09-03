@@ -1,0 +1,21 @@
+{
+  "name": "nestzone-convex-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nestzone backend on self-hosted Convex (migrated from PocketBase).",
+  "scripts": {
+    "deploy": "convex deploy",
+    "dev": "convex dev",
+    "import": "node scripts/run-migration.mjs",
+    "logs": "convex logs"
+  },
+  "dependencies": {
+    "@convex-dev/auth": "^0.0.87",
+    "@auth/core": "0.37.0",
+    "convex": "^1.27.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

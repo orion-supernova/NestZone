@@ -159,10 +159,10 @@ struct MessageBubble: View {
     }
 
     private func formatTime() -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: message.created) else {
+        guard let ms = message.created else {
             return ""
         }
+        let date = Date(convexMillis: ms)
         let now = Date()
         let calendar = Calendar.current
 
@@ -259,8 +259,8 @@ struct UserAvatar: View {
                 messageType: .text,
                 file: nil,
                 readBy: ["user1", "user2", "user3"],
-                created: "2025-01-01T12:00:00Z",
-                updated: "2025-01-01T12:00:00Z"
+                created: nil,
+                updated: nil
             ),
             previousMessage: nil,
             nextMessage: nil,
@@ -272,9 +272,9 @@ struct UserAvatar: View {
                 isGroupChat: true,
                 title: "Family Chat",
                 lastMessage: "Hello",
-                lastMessageAt: "2025-01-01T12:00:00Z",
-                created: "2025-01-01T00:00:00Z",
-                updated: "2025-01-01T12:00:00Z"
+                lastMessageAt: nil,
+                created: nil,
+                updated: nil
             )
         )
         
@@ -287,8 +287,8 @@ struct UserAvatar: View {
                 messageType: .text,
                 file: nil,
                 readBy: ["user2"],
-                created: "2025-01-01T12:05:00Z",
-                updated: "2025-01-01T12:05:00Z"
+                created: nil,
+                updated: nil
             ),
             previousMessage: PocketBaseMessage(
                 id: "1",
@@ -298,8 +298,8 @@ struct UserAvatar: View {
                 messageType: .text,
                 file: nil,
                 readBy: ["user1", "user2", "user3"],
-                created: "2025-01-01T12:00:00Z",
-                updated: "2025-01-01T12:00:00Z"
+                created: nil,
+                updated: nil
             ),
             nextMessage: nil,
             isCurrentUser: true,
@@ -310,9 +310,9 @@ struct UserAvatar: View {
                 isGroupChat: true,
                 title: "Family Chat",
                 lastMessage: "Hello",
-                lastMessageAt: "2025-01-01T12:05:00Z",
-                created: "2025-01-01T00:00:00Z",
-                updated: "2025-01-01T12:05:00Z"
+                lastMessageAt: nil,
+                created: nil,
+                updated: nil
             )
         )
     }

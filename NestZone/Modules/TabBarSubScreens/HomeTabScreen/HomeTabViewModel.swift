@@ -21,7 +21,6 @@ class HomeTabViewModel: ObservableObject {
     @Published var noteChange = 0
     @Published var completedTasksChange = 0
     
-    private let pocketBase = PocketBaseManager.shared
     private var homeChangeObserver: NSObjectProtocol?
     
     init() {
@@ -93,111 +92,7 @@ class HomeTabViewModel: ObservableObject {
     
     private func handleLoadError(_ error: Error) async {
         print("DEBUG: Handling load error:", error)
-        
-        // Check if this is a permissions error (403)
-        if let pocketBaseError = error as? PocketBaseManager.PocketBaseError,
-           case .forbidden = pocketBaseError {
-            
-            print("DEBUG: Detected permissions error - loading mock data for development")
-            showingPermissionsError = true
-            
-            // Load mock data for development
-            loadMockData()
-            
-            errorMessage = "Backend permissions issue detected. Using mock data for development. Please configure PocketBase to allow authenticated users to access tasks."
-            
-        } else {
-            errorMessage = error.localizedDescription
-        }
-    }
-    
-    private func loadMockData() {
-        // Create mock tasks for development/demo purposes
-        let mockHomeId = HomeSelectionManager.shared.selectedHomeId ?? "mock_home"
-        
-        let mockTasks = [
-            PocketBaseTask(
-                id: "mock1",
-                title: "Clean Kitchen",
-                description: "Deep clean the kitchen including dishes and counters",
-                createdBy: "user1",
-                updatedBy: nil,
-                assignedTo: "user1",
-                isCompleted: false,
-                image: nil,
-                homeId: mockHomeId,
-                priority: .high,
-                type: .cleaning,
-                created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400)),
-                updated: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400)),
-                dueDate: ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
-            ),
-            PocketBaseTask(
-                id: "mock2",
-                title: "Buy Groceries",
-                description: "Weekly grocery shopping - milk, bread, fruits",
-                createdBy: "user2",
-                updatedBy: nil,
-                assignedTo: "user2",
-                isCompleted: true,
-                image: nil,
-                homeId: mockHomeId,
-                priority: .medium,
-                type: .shopping,
-                created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-172800)),
-                updated: ISO8601DateFormatter().string(from: Date()),
-                dueDate: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400))
-            ),
-            PocketBaseTask(
-                id: "mock3",
-                title: "Fix Leaky Faucet",
-                description: "Repair the bathroom faucet that's been dripping",
-                createdBy: "user1",
-                updatedBy: nil,
-                assignedTo: "user3",
-                isCompleted: false,
-                image: nil,
-                homeId: mockHomeId,
-                priority: .high,
-                type: .maintenance,
-                created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-259200)),
-                updated: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-259200)),
-                dueDate: ISO8601DateFormatter().string(from: Date().addingTimeInterval(172800))
-            ),
-            PocketBaseTask(
-                id: "mock4",
-                title: "Plan Weekly Menu",
-                description: "Plan meals for the upcoming week",
-                createdBy: "user2",
-                updatedBy: nil,
-                assignedTo: "user1",
-                isCompleted: false,
-                image: nil,
-                homeId: mockHomeId,
-                priority: .low,
-                type: .general,
-                created: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-43200)),
-                updated: ISO8601DateFormatter().string(from: Date().addingTimeInterval(-43200)),
-                dueDate: ISO8601DateFormatter().string(from: Date().addingTimeInterval(43200))
-            )
-        ]
-        
-        tasks = mockTasks
-        
-        // Mock statistics - make them more realistic based on actual mock data
-        messageCount = 0 // Will be set to noteCount in loadCurrentWeekStats
-        shoppingListCount = 5
-        issueCount = mockTasks.filter { $0.priority == .high && !$0.isCompleted }.count // Count actual high priority incomplete tasks
-        noteCount = 8
-        
-        messageChange = 0 // Will be set to noteChange in loadCurrentWeekStats  
-        shoppingChange = -1
-        issueChange = 0 // More realistic default
-        noteChange = 2
-        completedTasksChange = 1 // One task completed this week
-        
-        print("DEBUG: Loaded \(tasks.count) mock tasks for development")
-        print("DEBUG: Mock issues count: \(issueCount)")
+        errorMessage = error.localizedDescription
     }
     
     private func loadTasks() async throws {
@@ -206,26 +101,18 @@ class HomeTabViewModel: ObservableObject {
             return
         }
         
-        let filter = "home_id = '\(homeId)'"
-        let sort = "-created"
-        
-        print("DEBUG: Loading tasks with filter: \(filter)")
-        
-        do {
-            let response: PocketBaseListResponse<PocketBaseTask> = try await pocketBase.getCollection(
-                "tasks",
-                responseType: PocketBaseListResponse<PocketBaseTask>.self,
-                filter: filter,
-                sort: sort
-            )
-            
-            tasks = Array(response.items.prefix(10)) // Show latest 10 tasks
-            print("DEBUG: Loaded \(tasks.count) tasks")
-            
-        } catch {
-            // Re-throw the error so it can be handled by the calling function
-            throw error
-        }
+        let items: [PocketBaseTask] = try await Convex.once(
+            "tasks:listByHome", args: ["homeId": homeId], as: [PocketBaseTask].self
+        )
+        // Newest first, latest 10.
+        tasks = Array(items.sorted { ($0.created ?? 0) > ($1.created ?? 0) }.prefix(10))
+    }
+
+    /// Count items whose `created` ms falls within [start, end).
+    private func countCreated<T>(_ items: [T], from start: Date, to end: Date,
+                                 _ created: (T) -> Double?) -> Int {
+        let lo = start.convexMillis, hi = end.convexMillis
+        return items.filter { let c = created($0) ?? 0; return c >= lo && c < hi }.count
     }
     
     private func loadStatistics() async throws {
@@ -253,8 +140,8 @@ class HomeTabViewModel: ObservableObject {
             // Calculate completed tasks change
             calculateCompletedTasksChange()
         } catch {
-            // If we can't load stats due to permissions, use mock data
-            print("DEBUG: Failed to load statistics, using mock data:", error)
+            // Stats are best-effort: a failure here must not blank the task list.
+            print("DEBUG: Failed to load statistics, zeroing counters:", error)
             
             // Clear statistics
             messageCount = 0
@@ -273,89 +160,49 @@ class HomeTabViewModel: ObservableObject {
         }
     }
     
+    // Cached lists for the current stats pass, so current/previous week share one fetch.
+    private var statsShopping: [ShoppingItem] = []
+    private var statsNotes: [PocketBaseNote] = []
+    private var statsTasks: [PocketBaseTask] = []
+
     private func loadCurrentWeekStats(homeId: String) async throws {
-        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        let weekAgoString = ISO8601DateFormatter().string(from: weekAgo)
-        
-        do {
-            // Shopping Lists
-            let shoppingFilter = "home_id = '\(homeId)' && created >= '\(weekAgoString)'"
-            let shoppingResponse: PocketBaseListResponse<ShoppingItem> = try await pocketBase.getCollection(
-                "shopping_items",
-                responseType: PocketBaseListResponse<ShoppingItem>.self,
-                filter: shoppingFilter
-            )
-            shoppingListCount = shoppingResponse.totalItems
-            
-            // Notes
-            let notesFilter = "home_id = '\(homeId)' && created >= '\(weekAgoString)'"
-            let notesResponse: PocketBaseListResponse<PocketBaseNote> = try await pocketBase.getCollection(
-                "notes",
-                responseType: PocketBaseListResponse<PocketBaseNote>.self,
-                filter: notesFilter
-            )
-            noteCount = notesResponse.totalItems
-            
-            // Issues (high priority tasks)
-            let issueFilter = "home_id = '\(homeId)' && priority = 'high' && is_completed = false"
-            let issueResponse: PocketBaseListResponse<PocketBaseTask> = try await pocketBase.getCollection(
-                "tasks",
-                responseType: PocketBaseListResponse<PocketBaseTask>.self,
-                filter: issueFilter
-            )
-            issueCount = issueResponse.totalItems
-            
-            // Messages (use notes count - they're the same for now)
-            messageCount = noteCount
-            
-        } catch {
-            print("Error loading current week stats: \(error)")
-            throw error
-        }
+        // One fetch each; window counting happens client-side on `created` ms.
+        async let shopping: [ShoppingItem] = Convex.once(
+            "shopping:listByHome", args: ["homeId": homeId], as: [ShoppingItem].self)
+        async let notes: [PocketBaseNote] = Convex.once(
+            "notes:listByHome", args: ["homeId": homeId], as: [PocketBaseNote].self)
+        async let tasksList: [PocketBaseTask] = Convex.once(
+            "tasks:listByHome", args: ["homeId": homeId], as: [PocketBaseTask].self)
+        statsShopping = try await shopping
+        statsNotes = try await notes
+        statsTasks = try await tasksList
+
+        let now = Date()
+        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now) ?? now
+
+        shoppingListCount = countCreated(statsShopping, from: weekAgo, to: now) { $0.created }
+        noteCount = countCreated(statsNotes, from: weekAgo, to: now) { $0.created }
+        issueCount = statsTasks.filter { $0.priority == .high && !$0.isCompleted }.count
+        messageCount = noteCount
     }
-    
+
     private func loadPreviousWeekStats(homeId: String) async throws {
-        let twoWeeksAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
-        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        
-        let twoWeeksAgoString = ISO8601DateFormatter().string(from: twoWeeksAgo)
-        let weekAgoString = ISO8601DateFormatter().string(from: weekAgo)
-        
-        do {
-            // Previous week shopping
-            let prevShoppingFilter = "home_id = '\(homeId)' && created >= '\(twoWeeksAgoString)' && created < '\(weekAgoString)'"
-            let prevShoppingResponse: PocketBaseListResponse<ShoppingItem> = try await pocketBase.getCollection(
-                "shopping_items",
-                responseType: PocketBaseListResponse<ShoppingItem>.self,
-                filter: prevShoppingFilter
-            )
-            shoppingChange = shoppingListCount - prevShoppingResponse.totalItems
-            
-            // Previous week notes
-            let prevNotesFilter = "home_id = '\(homeId)' && created >= '\(twoWeeksAgoString)' && created < '\(weekAgoString)'"
-            let prevNotesResponse: PocketBaseListResponse<PocketBaseNote> = try await pocketBase.getCollection(
-                "notes",
-                responseType: PocketBaseListResponse<PocketBaseNote>.self,
-                filter: prevNotesFilter
-            )
-            noteChange = noteCount - prevNotesResponse.totalItems
-            
-            // Messages change (same as notes for now)
-            messageChange = noteChange
-            
-            // Issues change - calculate based on actual previous week high priority tasks
-            let prevIssueFilter = "home_id = '\(homeId)' && priority = 'high' && is_completed = false && created >= '\(twoWeeksAgoString)' && created < '\(weekAgoString)'"
-            let prevIssueResponse: PocketBaseListResponse<PocketBaseTask> = try await pocketBase.getCollection(
-                "tasks",
-                responseType: PocketBaseListResponse<PocketBaseTask>.self,
-                filter: prevIssueFilter
-            )
-            issueChange = issueCount - prevIssueResponse.totalItems
-            
-        } catch {
-            print("Error loading previous week stats: \(error)")
-            throw error
-        }
+        let now = Date()
+        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now) ?? now
+        let twoWeeksAgo = Calendar.current.date(byAdding: .day, value: -14, to: now) ?? now
+
+        let prevShopping = countCreated(statsShopping, from: twoWeeksAgo, to: weekAgo) { $0.created }
+        shoppingChange = shoppingListCount - prevShopping
+
+        let prevNotes = countCreated(statsNotes, from: twoWeeksAgo, to: weekAgo) { $0.created }
+        noteChange = noteCount - prevNotes
+        messageChange = noteChange
+
+        let prevIssues = statsTasks.filter {
+            $0.priority == .high && !$0.isCompleted
+                && countCreated([$0], from: twoWeeksAgo, to: weekAgo, { $0.created }) == 1
+        }.count
+        issueChange = issueCount - prevIssues
     }
     
     private func calculateCompletedTasksChange() {
@@ -364,17 +211,17 @@ class HomeTabViewModel: ObservableObject {
         let weekAgo = calendar.date(byAdding: .day, value: -7, to: today) ?? today
         let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: today) ?? today
         
-        let formatter = ISO8601DateFormatter()
-        
         // Count tasks completed this week (updated this week with isCompleted = true)
         let thisWeekCompleted = tasks.filter { task in
-            guard task.isCompleted, let updatedDate = formatter.date(from: task.updated) else { return false }
+            guard task.isCompleted, let ms = task.updated else { return false }
+            let updatedDate = Date(convexMillis: ms)
             return updatedDate >= weekAgo && updatedDate <= today
         }.count
-        
+
         // Count tasks completed last week
         let lastWeekCompleted = tasks.filter { task in
-            guard task.isCompleted, let updatedDate = formatter.date(from: task.updated) else { return false }
+            guard task.isCompleted, let ms = task.updated else { return false }
+            let updatedDate = Date(convexMillis: ms)
             return updatedDate >= twoWeeksAgo && updatedDate < weekAgo
         }.count
         
@@ -386,9 +233,9 @@ class HomeTabViewModel: ObservableObject {
     }
     
     func toggleTaskCompletion(_ task: PocketBaseTask) async {
-        // Don't try to update if we're using mock data
+        // Offline/permission-denied path: reflect the toggle locally only.
         if showingPermissionsError {
-            // Just update the local mock data
+            // Update the in-memory copy so the row still responds
             if let index = tasks.firstIndex(where: { $0.id == task.id }) {
                 tasks[index] = PocketBaseTask(
                     id: task.id,
@@ -403,25 +250,20 @@ class HomeTabViewModel: ObservableObject {
                     priority: task.priority,
                     type: task.type,
                     created: task.created,
-                    updated: ISO8601DateFormatter().string(from: Date()),
+                    updated: Date().convexMillis,
                     dueDate: task.dueDate
                 )
             }
             return
         }
-        
+
         do {
-            let updatedData = ["is_completed": !task.isCompleted]
-            let _: PocketBaseTask = try await pocketBase.updateRecord(
-                in: "tasks",
-                id: task.id,
-                data: updatedData,
-                responseType: PocketBaseTask.self
-            )
-            
+            try await Convex.client.mutation("tasks:update", with: [
+                "id": task.id,
+                "is_completed": !task.isCompleted,
+            ])
             // Refresh tasks after update
             try await loadTasks()
-            
         } catch {
             errorMessage = "Failed to update task: \(error.localizedDescription)"
         }
@@ -433,9 +275,9 @@ class HomeTabViewModel: ObservableObject {
     }
     
     func getTimeLeftText(_ task: PocketBaseTask) -> String {
-        if let dueDateString = task.dueDate {
-            let formatter = ISO8601DateFormatter()
-            if let dueDate = formatter.date(from: dueDateString) {
+        if let dueMs = task.dueDate {
+            let dueDate = Date(convexMillis: dueMs)
+            do {
                 let now = Date()
                 let components = Calendar.current.dateComponents([.hour, .day], from: now, to: dueDate)
                 
