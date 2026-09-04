@@ -34,7 +34,12 @@ only place that knows the shape of the whole app.
 - **Writes are optimistic.** Mutate state, fire the effect, and let the live
   subscription confirm or correct it. No manual rollback.
 - **Strings** live in `Resources/Localizable.xcstrings`, reached through `L10n`.
-  Nothing user-visible is a literal.
+  Nothing user-visible is a literal. The catalog is **hand-maintained**: add a
+  case to `L10n.swift` and the matching entry in Xcode's String Catalog editor.
+  Automatic extraction is off (`SWIFT_EMIT_LOC_STRINGS = NO`) on purpose —
+  `L10n.r(_:_:)` hides the key behind a parameter, so the extractor cannot see it
+  and re-adds every English default as its own key on each build. Turning it back
+  on re-pollutes the catalog with hundreds of duplicates.
 - **Colours** are `static let` constants in `Palette`. Never build a `Color` or
   gradient inside a `body`.
 - **Glass goes on things that float** — cards, controls, bars. Never on a
@@ -43,7 +48,22 @@ only place that knows the shape of the whole app.
   Keys are camelCase with no dots (a `.` defeats key-value observation). Mutate
   through `withLock`.
 - Errors surface as `AppError`, which maps to copy a person can act on. Raw
-  server strings never reach the UI.
+  server strings never reach the UI — but `ConvexConnection.mapped` keeps the
+  server's message on the error and logs it, so failures stay diagnosable.
+- **Enums decode leniently** (`decodeLenient`). A list is decoded as one array,
+  so an unrecognised value must degrade its own field rather than throw and blank
+  the screen.
+- **Convex Auth rotates the refresh token on every exchange.** A successful
+  restore consumes the stored token and returns a replacement, so two concurrent
+  restores destroy the session — `ConvexAppleAuthProvider` serialises them behind
+  a semaphore. Clear the stored token **only** when the server explicitly rejects
+  it; a network failure must leave it in place and retry, or a two-second blip
+  signs the user out permanently.
+- **Sign-out unregisters the push token first**, while there is still an identity
+  to authorise the mutation with.
+- **Mutation arguments are camelCase (`homeId`); document fields are snake_case
+  (`home_id`).** Check the handler in `backend/convex/` before adding a call —
+  Convex validates strictly and rejects the whole request on a name mismatch.
 
 ## Commands
 
@@ -58,6 +78,16 @@ xcodebuild test -scheme NestZone -destination 'platform=iOS Simulator,name=iPhon
 cd backend && npx tsc --noEmit -p tsconfig.json   # typecheck
 cd backend && npx convex deploy                   # deploy
 cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in the app
+
+# APNs. The auth key is team-wide, not per-app: one .p8 signs for every app
+# under the same Team ID, and the bundle id travels per-request in `apns-topic`.
+#   npx convex env set APNS_KEY_ID    <10-char id, from the .p8 filename>
+#   npx convex env set APNS_TEAM_ID   <10-char Apple Developer team id>
+#   npx convex env set APNS_BUNDLE_ID com.walhallaa.NestZone
+#   npx convex env set -- APNS_KEY_P8 "$(cat AuthKey_XXXXXXXXXX.p8)"
+# Push is a quiet no-op until all four are set. To check a key without sending
+# a real push, sign a JWT and POST to a fake device: `BadDeviceToken` means the
+# credentials are good, `InvalidProviderToken` means they are not.
 ```
 
 ## Backend notes

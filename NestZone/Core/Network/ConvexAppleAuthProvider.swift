@@ -47,6 +47,15 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     private let actionClient: ConvexClient
     private let tokenStore: KeychainTokenStore
 
+    /// Serialises refresh-token exchanges.
+    ///
+    /// Convex Auth **rotates** the refresh token: every successful exchange
+    /// consumes the stored one and returns a replacement. Two concurrent
+    /// restores would therefore both present the same token, the second would be
+    /// rejected as already-used, and the session would be destroyed — which is
+    /// exactly what a fast relaunch or a second window used to do.
+    private let refreshGate = AsyncSemaphore()
+
     public init(deploymentUrl: String) {
         actionClient = ConvexClient(deploymentUrl: deploymentUrl)
         tokenStore = KeychainTokenStore()
@@ -72,24 +81,49 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     }
 
     /// Silent restore: exchange the cached refresh token for a fresh JWT.
+    ///
+    /// The stored token is cleared **only** when the server explicitly rejects
+    /// it. A network failure leaves it in place: the difference between "this
+    /// session is over" and "we could not reach the server just now" is the
+    /// difference between signing someone out and asking again in a moment.
     public func loginFromCache(
         onIdToken: @Sendable @escaping (String?) -> Void
     ) async throws -> ConvexAuthTokens {
+        await refreshGate.wait()
+
         guard let refresh = tokenStore.refreshToken else {
+            await refreshGate.signal()
             throw ConvexAuthError.noCachedSession
         }
-        let result: SignInActionResult = try await actionClient.action(
-            "auth:signIn",
-            with: ["refreshToken": refresh]
-        )
+
+        let result: SignInActionResult
         do {
-            return try persist(result, onIdToken: onIdToken)
+            result = try await actionClient.action(
+                "auth:signIn",
+                with: ["refreshToken": refresh]
+            )
         } catch {
-            // Refresh token rejected or expired — drop it so we don't loop.
+            await refreshGate.signal()
+            // Could not complete the exchange. The token may or may not have
+            // been consumed server-side, but discarding it here guarantees a
+            // sign-out, whereas keeping it only risks one wasted retry.
+            throw ConvexAuthError.unreachable
+        }
+
+        do {
+            let tokens = try persist(result, onIdToken: onIdToken)
+            await refreshGate.signal()
+            return tokens
+        } catch {
+            // The server answered and said no. Drop it so we don't loop.
             tokenStore.refreshToken = nil
+            await refreshGate.signal()
             throw error
         }
     }
+
+    /// Whether a silent restore is even worth attempting.
+    public var hasStoredSession: Bool { tokenStore.refreshToken != nil }
 
     public func extractIdToken(from authResult: ConvexAuthTokens) -> String {
         authResult.token
@@ -125,6 +159,9 @@ private struct SignInActionResult: Decodable {
 
 public enum ConvexAuthError: LocalizedError, Sendable {
     case noCachedSession
+    /// The exchange could not be completed — offline, or the backend was
+    /// restarting. Distinct from rejection, because it must not sign anyone out.
+    case unreachable
     case noTokens
     case rejectedByServer(String)
 
@@ -132,6 +169,8 @@ public enum ConvexAuthError: LocalizedError, Sendable {
         switch self {
         case .noCachedSession:
             String(localized: "auth.noCachedSession", defaultValue: "No saved session to restore.")
+        case .unreachable:
+            String(localized: "error.offline", defaultValue: "You're offline. We'll retry when you're back.")
         case .noTokens:
             String(localized: "auth.noTokens", defaultValue: "Sign in failed. Please try again.")
         case let .rejectedByServer(message):
@@ -163,5 +202,32 @@ public enum ConvexAuthError: LocalizedError, Sendable {
             ))
         }
         return AppError(error)
+    }
+}
+
+
+/// Minimal async semaphore, so one refresh happens at a time.
+///
+/// `DispatchSemaphore` would block a cooperative thread, which is exactly what
+/// Swift concurrency forbids.
+actor AsyncSemaphore {
+    private var isTaken = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        guard isTaken else {
+            isTaken = true
+            return
+        }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func signal() {
+        guard let next = waiters.first else {
+            isTaken = false
+            return
+        }
+        waiters.removeFirst()
+        next.resume()
     }
 }

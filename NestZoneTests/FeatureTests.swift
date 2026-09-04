@@ -327,7 +327,7 @@ struct MovieNightTests {
         #expect(votes.value[0] == ("dune", true))
     }
 
-    @Test("Closing a poll clears the deck and cancels the detail subscription")
+    @Test("Closing a poll clears the deck and moves the round into history")
     func closedPollResets() async {
         var state = MovieNightFeature.State(homeID: "h1", memberCount: 2)
         state.poll = Poll(id: "p1")
@@ -335,13 +335,156 @@ struct MovieNightTests {
         state.swiped = ["dune"]
 
         let store = TestStore(initialState: state) { MovieNightFeature() }
+        let closed = Poll(id: "p1", status: .closed)
 
-        await store.send(.pollsUpdated([Poll(id: "p1", status: .closed)])) {
+        await store.send(.pollsUpdated([closed])) {
             $0.isLoading = false
             $0.poll = nil
             $0.detail = nil
             $0.deck = []
             $0.swiped = []
+            // A finished round is still worth showing under "Previous rounds".
+            $0.history = [closed]
         }
+    }
+
+    @Test("History is closed rounds only, newest first")
+    func historyOrdering() async {
+        let older = Poll(id: "p1", status: .closed, created: Timestamp(milliseconds: 1000))
+        let newer = Poll(id: "p2", status: .closed, created: Timestamp(milliseconds: 2000))
+        let live = Poll(id: "p3", status: .active, created: Timestamp(milliseconds: 3000))
+
+        let store = TestStore(
+            initialState: MovieNightFeature.State(homeID: "h1", memberCount: 2)
+        ) {
+            MovieNightFeature()
+        } withDependencies: {
+            // Finishes immediately rather than `.never`: an open poll makes the
+            // reducer subscribe to its detail, and `TestStore` requires every
+            // effect it starts to complete before the test ends.
+            $0.polls.detail = { _ in
+                AsyncThrowingStream { $0.finish() }
+            }
+        }
+
+        await store.send(.pollsUpdated([older, live, newer])) {
+            $0.isLoading = false
+            $0.history = [newer, older]
+            $0.poll = live
+        }
+        #expect(store.state.hasActivePoll)
+    }
+}
+
+
+@MainActor
+@Suite("Session restore")
+struct SessionRestoreTests {
+
+    /// Convex Auth rotates the refresh token on every exchange, so a restore
+    /// that fails mid-flight can strand a perfectly good session. Treating that
+    /// as a sign-out is the bug these cover.
+    @Test("A network failure shows the offline screen, not the sign-in screen")
+    func transientFailureIsNotASignOut() async {
+        let store = TestStore(initialState: AppFeature.State()) {
+            AppFeature()
+        } withDependencies: {
+            $0.auth.restoreSession = { .transientFailure }
+        }
+
+        await store.send(.sessionRestoreFinished(.transientFailure)) {
+            $0.isRestoringSession = false
+            $0.restoreFailedOffline = true
+        }
+        await store.send(.authStatusChanged(.unauthenticated)) {
+            $0.status = .unauthenticated
+        }
+        #expect(store.state.screen == .offline)
+    }
+
+    @Test("No stored session really does mean signed out")
+    func noSessionShowsSignIn() async {
+        let store = TestStore(initialState: AppFeature.State()) { AppFeature() }
+
+        await store.send(.sessionRestoreFinished(.noSession)) {
+            $0.isRestoringSession = false
+        }
+        await store.send(.authStatusChanged(.unauthenticated)) {
+            $0.status = .unauthenticated
+        }
+        #expect(store.state.screen == .signedOut)
+    }
+
+    @Test("Retrying from the offline screen goes back through the restore")
+    func retryReattempts() async {
+        let attempts = LockIsolated(0)
+        var state = AppFeature.State()
+        state.isRestoringSession = false
+        state.restoreFailedOffline = true
+
+        let store = TestStore(initialState: state) {
+            AppFeature()
+        } withDependencies: {
+            $0.auth.restoreSession = {
+                attempts.withValue { $0 += 1 }
+                return .restored
+            }
+        }
+
+        await store.send(.retryRestoreTapped) {
+            $0.isRestoringSession = true
+            $0.restoreFailedOffline = false
+        }
+        await store.receive(\.sessionRestoreFinished) {
+            $0.isRestoringSession = false
+            $0.restoreFailedOffline = false
+        }
+        #expect(attempts.value == 1)
+    }
+
+    @Test("A restored session clears the offline state")
+    func restoredClearsOffline() async {
+        var state = AppFeature.State()
+        state.restoreFailedOffline = true
+        let store = TestStore(initialState: state) { AppFeature() }
+
+        await store.send(.sessionRestoreFinished(.restored)) {
+            $0.isRestoringSession = false
+            $0.restoreFailedOffline = false
+        }
+    }
+}
+
+@MainActor
+@Suite("Sign out")
+struct SignOutTests {
+
+    @Test("Signing out hands the push token over so the device stops receiving")
+    func signOutUnregistersDevice() async {
+        let handed = LockIsolated<[String?]>([])
+        var state = SettingsFeature.State(homeID: "h1")
+        state.pushToken = "abc123"
+
+        let store = TestStore(initialState: state) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+        }
+
+        await store.send(.signOutConfirmed)
+        #expect(handed.value == ["abc123"])
+    }
+
+    @Test("A device with no push token still signs out cleanly")
+    func signOutWithoutToken() async {
+        let handed = LockIsolated<[String?]>([])
+        let store = TestStore(initialState: SettingsFeature.State(homeID: "h1")) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+        }
+
+        await store.send(.signOutConfirmed)
+        #expect(handed.value == [String?.none])
     }
 }

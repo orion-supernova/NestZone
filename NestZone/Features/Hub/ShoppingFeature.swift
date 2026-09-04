@@ -11,6 +11,10 @@ public struct ShoppingFeature: Sendable {
         public var isLoading = true
         public var draft = ""
         public var draftCategory: ShoppingItem.Category = .groceries
+        @Shared(.shoppingGrouped) public var isGrouped: Bool
+        /// Categories the user has collapsed. Not persisted — a collapse is a
+        /// "get this out of my way for now", not a preference.
+        public var collapsed: Set<ShoppingItem.Category> = []
         @Presents public var alert: AlertState<Action.Alert>?
 
         public init(homeID: HomeID) { self.homeID = homeID }
@@ -36,6 +40,35 @@ public struct ShoppingFeature: Sendable {
         public var canAdd: Bool {
             !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
+
+        /// Everything outstanding, newest first — the flat view.
+        public var pendingFlat: [ShoppingItem] {
+            items
+                .filter { !$0.isPurchased }
+                .sorted { Timestamp.newestFirst($0.created, $1.created) }
+        }
+
+        public var totalCount: Int { items.count }
+        public var doneCount: Int { items.filter(\.isPurchased).count }
+        public var leftCount: Int { totalCount - doneCount }
+
+        /// How far through the shop you are, for the header ring.
+        public var progress: Double {
+            guard totalCount > 0 else { return 0 }
+            return Double(doneCount) / Double(totalCount)
+        }
+
+        public func isCollapsed(_ category: ShoppingItem.Category) -> Bool {
+            collapsed.contains(category)
+        }
+
+        public func doneCount(in category: ShoppingItem.Category) -> Int {
+            items.filter { $0.category == category && $0.isPurchased }.count
+        }
+
+        public func totalCount(in category: ShoppingItem.Category) -> Int {
+            items.filter { $0.category == category }.count
+        }
     }
 
     public enum Action: BindableAction {
@@ -46,6 +79,8 @@ public struct ShoppingFeature: Sendable {
         case togglePurchased(ShoppingItemID)
         case deleteTapped(ShoppingItemID)
         case clearPurchasedTapped
+        case viewModeToggled(grouped: Bool)
+        case categoryToggled(ShoppingItem.Category)
         case writeFailed(AppError)
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
@@ -120,6 +155,18 @@ public struct ShoppingFeature: Sendable {
                 } catch: { error, send in
                     await send(.writeFailed(AppError(error)))
                 }
+
+            case let .viewModeToggled(grouped):
+                state.$isGrouped.withLock { $0 = grouped }
+                return .none
+
+            case let .categoryToggled(category):
+                if state.collapsed.contains(category) {
+                    state.collapsed.remove(category)
+                } else {
+                    state.collapsed.insert(category)
+                }
+                return .none
 
             case .clearPurchasedTapped:
                 guard !state.purchased.isEmpty else { return .none }

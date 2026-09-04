@@ -22,6 +22,8 @@ public struct MovieNightFeature: Sendable {
         public var currentUserID: UserID?
 
         public var poll: Poll?
+        /// Every closed round for this home, newest first.
+        public var history: [Poll] = []
         public var detail: PollDetail?
         public var isStarting = false
         public var isLoading = true
@@ -64,6 +66,7 @@ public struct MovieNightFeature: Sendable {
     public enum Destination {
         case pickKind(PollKindFeature)
         case summary(PollSummaryFeature)
+        case history(PollHistoryFeature)
     }
 
     public enum Action {
@@ -78,6 +81,7 @@ public struct MovieNightFeature: Sendable {
         case swiped(PollItem, isYes: Bool)
         case voteFailed(AppError)
         case summaryTapped
+        case historyTapped
         case endRoundTapped
         case roundEnded
         case destination(PresentationAction<Destination.Action>)
@@ -110,6 +114,9 @@ public struct MovieNightFeature: Sendable {
 
             case let .pollsUpdated(polls):
                 state.isLoading = false
+                state.history = polls
+                    .filter { !$0.isOpen }
+                    .sorted { Timestamp.newestFirst($0.created, $1.created) }
                 let open = polls.first(where: \.isOpen)
                 let changed = open?.id != state.poll?.id
                 state.poll = open
@@ -209,6 +216,14 @@ public struct MovieNightFeature: Sendable {
                 state.destination = .summary(PollSummaryFeature.State(
                     detail: detail,
                     memberCount: state.memberCount
+                ))
+                return .none
+
+            case .historyTapped:
+                state.destination = .history(PollHistoryFeature.State(
+                    polls: state.history,
+                    memberCount: state.memberCount,
+                    currentUserID: state.currentUserID
                 ))
                 return .none
 
@@ -445,3 +460,120 @@ public enum MovieGenre: String, CaseIterable, Hashable, Sendable, Identifiable {
 // Navigation state is `Equatable` so parent states compare cleanly;
 // declared here rather than via the deprecated `@Reducer(state:)` argument.
 extension MovieNightFeature.Destination.State: Equatable {}
+
+
+/// Rounds that have finished, and what won them.
+///
+/// The old app had this as "Previous Polls" and it went missing in the rewrite.
+/// Winners are resolved lazily, one live `polls:detail` subscription at a time,
+/// rather than the old version's loop that fetched every poll's detail up front
+/// before the list could render.
+@Reducer
+public struct PollHistoryFeature: Sendable {
+    @ObservableState
+    public struct State: Equatable {
+        public var polls: [Poll]
+        public var memberCount: Int
+        public var currentUserID: UserID?
+        /// pollID → the film everyone agreed on, once resolved.
+        public var winners: [PollID: PollItem] = [:]
+        public var expanded: PollID?
+        @Presents public var alert: AlertState<Action.Alert>?
+
+        public init(polls: [Poll], memberCount: Int, currentUserID: UserID?) {
+            self.polls = polls
+            self.memberCount = memberCount
+            self.currentUserID = currentUserID
+        }
+
+        public func canDelete(_ poll: Poll) -> Bool { poll.isOwned(by: currentUserID) }
+    }
+
+    public enum Action {
+        case pollTapped(PollID)
+        case detailLoaded(PollID, PollDetail)
+        case deleteTapped(PollID)
+        case deleteConfirmed(PollID)
+        case failed(AppError)
+        case alert(PresentationAction<Alert>)
+
+        public enum Alert: Equatable {
+            case confirmDelete(PollID)
+        }
+    }
+
+    private enum CancelID: Hashable { case detail(PollID) }
+
+    @Dependency(\.polls) var polls
+
+    public init() {}
+
+    public var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .pollTapped(id):
+                // Collapse if it was already open.
+                guard state.expanded != id else {
+                    state.expanded = nil
+                    return .none
+                }
+                state.expanded = id
+                // Only fetch a winner the first time a round is opened.
+                guard state.winners[id] == nil else { return .none }
+                return .run { send in
+                    for try await detail in polls.detail(id) {
+                        await send(.detailLoaded(id, detail))
+                        break   // history is settled; one value is enough
+                    }
+                } catch: { error, send in
+                    await send(.failed(AppError(error)))
+                }
+                .cancellable(id: CancelID.detail(id), cancelInFlight: true)
+
+            case let .detailLoaded(id, detail):
+                state.winners[id] = detail.matches(memberCount: state.memberCount).first
+                    ?? detail.scoreboard.first?.item
+                return .none
+
+            case let .deleteTapped(id):
+                state.alert = .confirmDeletePoll(id)
+                return .none
+
+            case let .alert(.presented(.confirmDelete(id))), let .deleteConfirmed(id):
+                state.polls.removeAll { $0.id == id }
+                state.winners[id] = nil
+                return .run { send in
+                    try await polls.remove(id)
+                } catch: { error, send in
+                    await send(.failed(AppError(error)))
+                }
+
+            case let .failed(error):
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .alert:
+                return .none
+            }
+        }
+        .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+extension AlertState where Action == PollHistoryFeature.Action.Alert {
+    static func confirmDeletePoll(_ id: PollID) -> Self {
+        AlertState {
+            TextState(String(localized: L10n.previousPollsDeleteAlert))
+        } actions: {
+            ButtonState(role: .destructive, action: .confirmDelete(id)) {
+                TextState(String(localized: L10n.commonDelete))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.previousPollsDeleteMessage))
+        }
+    }
+}

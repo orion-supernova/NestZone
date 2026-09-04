@@ -299,15 +299,20 @@ struct RecipeDetailView: View {
 
     @ViewBuilder
     private var actions: some View {
-        if store.canSaveToHome {
-            PrimaryButton(
-                L10n.recipesExploreAddToMyRecipes,
-                symbol: "plus",
-                isLoading: store.isSaving
-            ) { store.send(.saveToHomeTapped) }
-        } else if !store.recipe.steps.isEmpty {
-            PrimaryButton(L10n.recipesDetailStartCooking, symbol: "flame.fill") {
-                store.send(.startCookingTapped)
+        VStack(spacing: Metrics.stackSpacing) {
+            // Cooking and saving are independent: a recipe you are browsing in
+            // Explore is just as cookable as one you already own, and gating
+            // cooking behind "save it first" was wrong.
+            if store.canCook {
+                PrimaryButton(L10n.recipesDetailStartCooking, symbol: "flame.fill") {
+                    store.send(.beginCookingTapped)
+                }
+            }
+            if store.canSaveToHome {
+                SecondaryButton(L10n.recipesExploreAddToMyRecipes, symbol: "plus") {
+                    store.send(.saveToHomeTapped)
+                }
+                .disabled(store.isSaving)
             }
         }
     }
@@ -330,58 +335,244 @@ private struct Fact: View {
     }
 }
 
-/// Full-screen, one step at a time — for when your hands are covered in flour.
+/// Full-screen cooking, in two phases: gather everything, then work the steps.
+///
+/// You cannot start the steps until every ingredient is ticked off — that is the
+/// point of the first phase, and it is how the old app worked. The timer is new:
+/// the old one had a timer button wired to nothing.
 struct CookingModeView: View {
     @Bindable var store: StoreOf<RecipeDetailFeature>
 
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(spacing: Metrics.sectionSpacing) {
-            ProgressView(
-                value: Double(store.step + 1),
-                total: Double(max(store.recipe.steps.count, 1))
-            )
-            .tint(theme.accent)
+        VStack(spacing: Metrics.stackSpacing) {
+            header
+            progress
 
-            Text(L10n.recipesCookingStepsProgress(store.step + 1, store.recipe.steps.count))
+            switch store.phase {
+            case .ingredients: ingredients
+            case .cooking: steps
+            }
+
+            controls
+        }
+        .padding(Metrics.screenPadding)
+        .animation(Motion.spring, value: store.phase)
+        .animation(Motion.spring, value: store.step)
+        // Cooking is hands-free by nature; a screen that sleeps mid-step is the
+        // most annoying thing this view could do.
+        .persistentSystemOverlays(.hidden)
+        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .alert($store.scope(state: \.alert, action: \.alert))
+    }
+
+    private var header: some View {
+        HStack {
+            IconButton(symbol: "xmark", label: L10n.commonClose) {
+                store.send(.quitCookingTapped)
+            }
+
+            Spacer(minLength: 0)
+
+            VStack(spacing: 2) {
+                Text(store.phase == .ingredients
+                    ? L10n.recipesCookingPrepareIngredients
+                    : L10n.recipesCookingCookRecipe)
+                    .font(.headline)
+                Text(store.recipe.title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 0)
+
+            // Balances the close button so the title stays centred.
+            Color.clear.frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
+        }
+    }
+
+    private var progress: some View {
+        VStack(spacing: 6) {
+            HStack {
+                Text(L10n.recipesCookingProgressLabel)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(store.phase == .ingredients
+                    ? L10n.recipesCookingIngredientsProgress(
+                        store.checkedIngredients.count, store.recipe.ingredients.count)
+                    : L10n.recipesCookingStepsProgress(
+                        store.step + 1, max(store.recipe.steps.count, 1)))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(theme.accent)
+                    .contentTransition(.numericText())
+            }
+            ProgressView(value: store.progress)
+                .tint(theme.accent)
+        }
+        .animation(Motion.spring, value: store.progress)
+    }
+
+    private var ingredients: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            Text(L10n.recipesCookingCheckIngredientsInstruction)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
 
+            ScrollView {
+                GlassGroup {
+                    VStack(spacing: 8) {
+                        ForEach(Array(store.recipe.ingredients.enumerated()), id: \.offset) { index, item in
+                            let isChecked = store.checkedIngredients.contains(index)
+                            Button { store.send(.ingredientToggled(index)) } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                                        .font(.title3)
+                                        .foregroundStyle(isChecked ? Palette.success : Color.secondary)
+                                        .contentTransition(.symbolEffect(.replace))
+                                    Text(item)
+                                        .font(.subheadline)
+                                        .strikethrough(isChecked, color: .secondary)
+                                        .foregroundStyle(isChecked ? .secondary : .primary)
+                                        .multilineTextAlignment(.leading)
+                                    Spacer(minLength: 0)
+                                }
+                                .padding(.horizontal, Metrics.cardPadding)
+                                .padding(.vertical, 10)
+                                .contentShape(.rect)
+                            }
+                            .buttonStyle(.pressable)
+                            .glassCard(cornerRadius: Metrics.tightRadius)
+                            .sensoryFeedback(.selection, trigger: isChecked)
+                        }
+                    }
+                }
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+        .frame(maxHeight: .infinity)
+        .transition(.opacity)
+    }
+
+    private var steps: some View {
+        VStack(spacing: Metrics.stackSpacing) {
             TabView(selection: Binding(
                 get: { store.step },
                 set: { store.send(.stepChanged($0)) }
             )) {
                 ForEach(Array(store.recipe.steps.enumerated()), id: \.offset) { index, step in
-                    VStack(spacing: 18) {
+                    VStack(spacing: 16) {
                         Text(L10n.recipesCookingStepCardTitle(index + 1, store.recipe.steps.count))
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(theme.accent)
                         Text(step)
                             .font(.title3)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 8)
                         Spacer(minLength: 0)
                     }
-                    .padding(Metrics.screenPadding)
+                    .padding(Metrics.cardPadding)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .glassCard()
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, 2)
                     .tag(index)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
 
-            SecondaryButton(L10n.commonClose, symbol: "xmark") {
-                store.send(.stopCookingTapped)
+            timerBar
+        }
+        .frame(maxHeight: .infinity)
+        .transition(.opacity)
+    }
+
+    /// Reads a duration out of the step text so a timer is one tap, not a
+    /// number-entry exercise with floury hands.
+    @ViewBuilder
+    private var timerBar: some View {
+        if store.timer.isRunning {
+            HStack(spacing: 12) {
+                Image(systemName: "timer")
+                    .font(.title3)
+                    .foregroundStyle(theme.accent)
+                    .symbolEffect(.pulse, options: .repeating)
+
+                Text(store.timer.formatted)
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .contentTransition(.numericText(countsDown: true))
+
+                ProgressView(value: store.timer.progress)
+                    .tint(theme.accent)
+
+                Button { store.send(.timerStopped) } label: {
+                    Text(L10n.recipesTimerStop).font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.glass)
+                .controlSize(.small)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .glassEffect(.regular, in: .capsule)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        } else {
+            HStack(spacing: 8) {
+                if let suggested = store.state.suggestedDuration {
+                    Button { store.send(.timerRequested(seconds: suggested.seconds)) } label: {
+                        Label {
+                            Text(L10n.recipesTimerMinutes(max(suggested.seconds / 60, 1)))
+                        } icon: {
+                            Image(systemName: "timer")
+                        }
+                        .font(.subheadline.weight(.semibold))
+                    }
+                    .buttonStyle(.glassProminent)
+                    .controlSize(.small)
+                    .tint(theme.accent)
+                }
+                ForEach([5, 10, 20], id: \.self) { minutes in
+                    Button { store.send(.timerRequested(seconds: minutes * 60)) } label: {
+                        Text(L10n.recipesTimerMinutes(minutes))
+                            .font(.subheadline)
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                }
+                Spacer(minLength: 0)
+            }
+            .animation(Motion.spring, value: store.step)
+        }
+    }
+
+    private var controls: some View {
+        HStack(spacing: 12) {
+            switch store.phase {
+            case .ingredients:
+                PrimaryButton(
+                    L10n.recipesCookingStartCookingButton,
+                    symbol: "play.fill"
+                ) { store.send(.startStepsTapped) }
+                    .disabled(!store.allIngredientsChecked)
+                    .opacity(store.allIngredientsChecked ? 1 : 0.5)
+
+            case .cooking:
+                SecondaryButton(L10n.recipesCookingBackButton, symbol: "chevron.left") {
+                    store.send(.previousStepTapped)
+                }
+                .disabled(store.step == 0)
+                .opacity(store.step == 0 ? 0.4 : 1)
+
+                PrimaryButton(
+                    store.isLastStep
+                        ? L10n.recipesCookingFinishButton
+                        : L10n.recipesCookingNextStepButton,
+                    symbol: store.isLastStep ? "checkmark" : "chevron.right"
+                ) { store.send(.nextStepTapped) }
             }
         }
-        .padding(Metrics.screenPadding)
-        // Cooking is hands-free by nature; letting the screen sleep mid-step is
-        // the single most annoying thing this screen could do.
-        .persistentSystemOverlays(.hidden)
-        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .animation(Motion.spring, value: store.allIngredientsChecked)
     }
 }
 

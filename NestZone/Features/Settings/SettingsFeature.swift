@@ -1,5 +1,7 @@
 import ComposableArchitecture
 import Foundation
+import UIKit
+import UserNotifications
 
 @Reducer
 public struct SettingsFeature: Sendable {
@@ -10,6 +12,17 @@ public struct SettingsFeature: Sendable {
         public var user: User?
         public var members: IdentifiedArrayOf<User> = []
         public var didCopyInviteCode = false
+        /// Kept so sign-out can tell the backend to stop pushing to this device.
+        public var pushToken: String?
+        public var notificationStatus: UNAuthorizationStatus = .notDetermined
+        public var isSendingTestPush = false
+
+        /// `.denied` can only be undone in Settings.app, so the row becomes a
+        /// link there rather than a toggle that would silently do nothing.
+        public var notificationsDenied: Bool { notificationStatus == .denied }
+        public var notificationsOn: Bool {
+            [.authorized, .provisional, .ephemeral].contains(notificationStatus)
+        }
 
         @Shared(.theme) public var theme: AppTheme
         @Shared(.language) public var language: AppLanguage
@@ -32,6 +45,12 @@ public struct SettingsFeature: Sendable {
 
     public enum Action: BindableAction {
         case task
+        case notificationStatusLoaded(UNAuthorizationStatus)
+        case notificationsToggled(Bool)
+        case openSystemSettingsTapped
+        case sendTestPushTapped
+        case testPushFinished
+        case pushTokenChanged(String?)
         case membersUpdated([User])
         case editNameTapped
         case themeSelected(AppTheme)
@@ -53,6 +72,7 @@ public struct SettingsFeature: Sendable {
         public enum Delegate: Equatable {
             case switchHomeRequested
             case languageChanged(AppLanguage)
+            case notificationsEnabled
         }
     }
 
@@ -62,6 +82,9 @@ public struct SettingsFeature: Sendable {
     @Dependency(\.auth) var auth
     @Dependency(\.continuousClock) var clock
     @Dependency(\.pasteboard) var pasteboard
+    @Dependency(\.push) var push
+    @Dependency(\.devices) var devices
+    @Dependency(\.openURL) var openURL
 
     public init() {}
 
@@ -71,15 +94,61 @@ public struct SettingsFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .task:
-                return .run { [homeID = state.homeID] send in
-                    for try await members in homes.members(homeID) {
-                        await send(.membersUpdated(members))
+                return .merge(
+                    .run { [homeID = state.homeID] send in
+                        for try await members in homes.members(homeID) {
+                            await send(.membersUpdated(members))
+                        }
+                    } catch: { _, _ in
+                        // A membership list that fails to load is not worth an
+                        // alert on a settings screen; the section stays empty.
                     }
-                } catch: { _, _ in
-                    // A membership list that fails to load is not worth an
-                    // alert on a settings screen; the section just stays empty.
+                    .cancellable(id: CancelID.members, cancelInFlight: true),
+
+                    .run { send in
+                        await send(.notificationStatusLoaded(push.authorizationStatus()))
+                    }
+                )
+
+            case let .notificationStatusLoaded(status):
+                state.notificationStatus = status
+                return .none
+
+            case let .notificationsToggled(isOn):
+                guard isOn else {
+                    // iOS gives no API to revoke permission; only Settings.app
+                    // can. Send them there rather than pretending.
+                    return .send(.openSystemSettingsTapped)
                 }
-                .cancellable(id: CancelID.members, cancelInFlight: true)
+                return .run { send in
+                    let granted = await push.requestAuthorization()
+                    await send(.notificationStatusLoaded(push.authorizationStatus()))
+                    if granted { await send(.delegate(.notificationsEnabled)) }
+                }
+
+            case .openSystemSettingsTapped:
+                return .run { _ in
+                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                    await openURL(url)
+                }
+
+            case .sendTestPushTapped:
+                guard !state.isSendingTestPush else { return .none }
+                state.isSendingTestPush = true
+                return .run { send in
+                    try await devices.sendTestToSelf()
+                    await send(.testPushFinished)
+                } catch: { error, send in
+                    await send(.testPushFinished)
+                }
+
+            case .testPushFinished:
+                state.isSendingTestPush = false
+                return .none
+
+            case let .pushTokenChanged(token):
+                state.pushToken = token
+                return .none
 
             case let .membersUpdated(members):
                 state.members = IdentifiedArray(uniqueElements: members)
@@ -121,7 +190,9 @@ public struct SettingsFeature: Sendable {
                 return .none
 
             case .alert(.presented(.confirmSignOut)), .signOutConfirmed:
-                return .run { _ in await auth.signOut() }
+                return .run { [token = state.pushToken] _ in
+                    await auth.signOut(token)
+                }
 
             case .destination(.presented(.editName(.finished))):
                 state.destination = nil

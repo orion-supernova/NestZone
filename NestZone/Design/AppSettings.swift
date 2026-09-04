@@ -40,6 +40,12 @@ extension SharedKey where Self == AppStorageKey<Bool>.Default {
         Self[.appStorage("appIncludeAdultTitles"), default: false]
     }
 
+    /// Shopping list grouped by category (the default) versus one flat list.
+    /// Remembered, because people reliably prefer one or the other.
+    public static var shoppingGrouped: Self {
+        Self[.appStorage("appShoppingGrouped"), default: true]
+    }
+
     /// Set once the intro has been seen, so it never shows twice.
     public static var hasCompletedOnboarding: Self {
         Self[.appStorage("appHasCompletedOnboarding"), default: false]

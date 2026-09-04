@@ -132,51 +132,26 @@ struct ComposeNoteSheet: View {
     @Bindable var store: StoreOf<ComposeNoteFeature>
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.theme) private var theme
     @FocusState private var isFocused: Bool
+
+    private var color: StickyColor { StickyColor.parse(store.color) }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                Backdrop(tint: StickyColor.parse(store.color).paper)
+                Backdrop(tint: color.paper)
 
-                VStack(spacing: Metrics.stackSpacing) {
-                    TextEditor(text: $store.body_)
-                        .focused($isFocused)
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.85))
-                        .tint(.black.opacity(0.6))
-                        .scrollContentBackground(.hidden)
-                        .padding(12)
-                        .frame(minHeight: 170)
-                        .background(StickyColor.parse(store.color).paper)
-                        .clipShape(.rect(cornerRadius: 2))
-                        .shadow(color: .black.opacity(0.18), radius: 4, x: 1, y: 3)
-                        .overlay(alignment: .topLeading) {
-                            if store.body_.isEmpty {
-                                Text(L10n.notesComposePlaceholder)
-                                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.black.opacity(0.35))
-                                    .padding(.horizontal, 18)
-                                    .padding(.vertical, 20)
-                                    .allowsHitTesting(false)
-                            }
-                        }
-
-                    colorPicker
-
-                    if let error = store.inlineError {
-                        Label { Text(error) } icon: {
-                            Image(systemName: "exclamationmark.circle.fill")
-                        }
-                        .font(.caption)
-                        .foregroundStyle(Palette.danger)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                ScrollView {
+                    VStack(spacing: Metrics.sectionSpacing) {
+                        preview
+                        editor
+                        colorPicker
+                        inlineError
                     }
-
-                    Spacer(minLength: 0)
+                    .padding(Metrics.screenPadding)
                 }
-                .padding(Metrics.screenPadding)
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollDismissesKeyboard(.interactively)
                 .animation(Motion.spring, value: store.color)
             }
             .navigationTitle(Text(store.isEditing ? L10n.notesEditTitle : L10n.notesComposeTitle))
@@ -197,38 +172,112 @@ struct ComposeNoteSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationBackground(.regularMaterial)
         .onAppear { isFocused = true }
     }
 
+    /// The actual note, live. Seeing the thing you are making is what made the
+    /// old composer feel friendly, and it costs nothing to keep.
+    private var preview: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.notesPreviewLabel)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            StickyNote(
+                text: store.body_.isEmpty
+                    ? String(localized: L10n.notesPreviewPlaceholder)
+                    : store.body_,
+                color: color,
+                // Stable while composing, so the preview does not re-tilt on
+                // every keystroke.
+                seed: store.editing?.id.rawValue ?? "compose"
+            ) {
+                HStack(spacing: 4) {
+                    Text(L10n.notesAuthorYou)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.65))
+                    Spacer(minLength: 0)
+                    Text(L10n.notesPreviewNow)
+                        .font(.system(size: 10, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.45))
+                }
+            }
+            .frame(width: 190)
+            .opacity(store.body_.isEmpty ? 0.75 : 1)
+            .frame(maxWidth: .infinity)
+        }
+        .animation(Motion.fade, value: store.body_.isEmpty)
+    }
+
+    private var editor: some View {
+        TextEditor(text: $store.body_)
+            .focused($isFocused)
+            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .scrollContentBackground(.hidden)
+            .padding(12)
+            .frame(minHeight: 130)
+            .glassCard(cornerRadius: Metrics.tightRadius)
+            .overlay(alignment: .topLeading) {
+                if store.body_.isEmpty {
+                    Text(L10n.notesComposePlaceholder)
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 20)
+                        .allowsHitTesting(false)
+                }
+            }
+    }
+
     private var colorPicker: some View {
-        HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(L10n.notesColorLabel)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            Spacer(minLength: 0)
-            ForEach(StickyColor.allCases) { swatch in
-                let isSelected = swatch == StickyColor.parse(store.color)
-                Button { store.send(.colorSelected(swatch.storedValue)) } label: {
-                    Circle()
-                        .fill(swatch.paper)
-                        .frame(width: 26, height: 26)
-                        .overlay {
+
+            FlowLayout(spacing: 8) {
+                ForEach(StickyColor.allCases) { swatch in
+                    let isSelected = swatch == color
+                    Button { store.send(.colorSelected(swatch.storedValue)) } label: {
+                        HStack(spacing: 7) {
+                            Circle()
+                                .fill(swatch.paper)
+                                .frame(width: 16, height: 16)
+                                .overlay(Circle().strokeBorder(.black.opacity(0.12), lineWidth: 1))
+                            Text(swatch.displayName)
+                                .font(.subheadline.weight(.medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .foregroundStyle(.primary)
+                        .background {
                             if isSelected {
-                                Image(systemName: "checkmark")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(.black.opacity(0.7))
+                                Capsule().fill(swatch.paper.opacity(0.55))
                             }
                         }
-                        .overlay(Circle().strokeBorder(.black.opacity(0.12), lineWidth: 1))
-                        .scaleEffect(isSelected ? 1.18 : 1)
+                        .glassEffect(isSelected ? .identity : .regular.interactive(), in: .capsule)
+                    }
+                    .buttonStyle(.pressable)
+                    .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
                 }
-                .buttonStyle(.pressable)
-                .accessibilityLabel(Text(swatch.rawValue))
-                .accessibilityAddTraits(isSelected ? [.isSelected] : [])
             }
         }
         .animation(Motion.spring, value: store.color)
+    }
+
+    @ViewBuilder
+    private var inlineError: some View {
+        if let error = store.inlineError {
+            Label { Text(error) } icon: {
+                Image(systemName: "exclamationmark.circle.fill")
+            }
+            .font(.caption)
+            .foregroundStyle(Palette.danger)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
     }
 }

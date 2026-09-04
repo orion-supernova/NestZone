@@ -17,9 +17,11 @@ public struct AuthClient: Sendable {
     /// whether this is a first authorization and the backend creates the account
     /// keyed on Apple's stable `sub`.
     public var signInWithApple: @Sendable (AppleCredential) async throws -> Void
-    public var signOut: @Sendable () async -> Void
-    /// Restores a cached session. Returns whether one was found.
-    public var restoreSession: @Sendable () async -> Bool = { false }
+    /// Signs out. Takes the device's push token so the backend can stop sending
+    /// this household's notifications to a device nobody is signed in on.
+    public var signOut: @Sendable (_ pushToken: String?) async -> Void
+    /// Attempts a silent restore from the Keychain.
+    public var restoreSession: @Sendable () async -> RestoreOutcome = { .noSession }
     public var updateDisplayName: @Sendable (String) async throws -> Void
 }
 
@@ -36,6 +38,15 @@ public struct AppleCredential: Equatable, Sendable {
         self.identityToken = identityToken
         self.displayName = displayName
     }
+}
+
+/// Why a silent restore did or did not produce a session.
+public enum RestoreOutcome: Equatable, Sendable {
+    case restored
+    /// Nothing in the Keychain — a genuinely signed-out device.
+    case noSession
+    /// A session exists but could not be exchanged right now.
+    case transientFailure
 }
 
 public enum AuthStatus: Equatable, Sendable {
@@ -79,12 +90,23 @@ extension AuthClient: DependencyKey {
                     throw ConvexAuthError.mapped(error)
                 }
             },
-            signOut: {
+            signOut: { pushToken in
+                // Unregister first: after `logout()` there is no identity left
+                // to authorise the mutation with.
+                if let pushToken {
+                    try? await connection.mutate(
+                        "push:unregisterDevice", args: ["token": pushToken]
+                    )
+                }
                 await connection.client.logout()
             },
             restoreSession: {
-                if case .success = await connection.client.loginFromCache() { return true }
-                return false
+                guard connection.authProvider.hasStoredSession else { return .noSession }
+                if case .success = await connection.client.loginFromCache() { return .restored }
+                // A stored session that failed to restore is far more likely to
+                // be a bad moment than a real sign-out, so say so and let the
+                // caller retry rather than showing the sign-in screen.
+                return .transientFailure
             },
             updateDisplayName: { name in
                 let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)

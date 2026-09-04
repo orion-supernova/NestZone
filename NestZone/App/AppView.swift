@@ -20,6 +20,13 @@ public struct AppView: View {
                 AuthView(store: store.scope(state: \.auth, action: \.auth))
                     .transition(.opacity)
 
+            case .offline:
+                // A stored session that could not be exchanged. Showing the
+                // sign-in screen here would be a lie — and signing in again is
+                // not the fix.
+                OfflineView { store.send(.retryRestoreTapped) }
+                    .transition(.opacity)
+
             case .choosingHome:
                 HomeManagementView(store: store.scope(state: \.homeGate, action: \.homeGate))
                     .transition(.opacity)
@@ -39,6 +46,39 @@ public struct AppView: View {
         // rather than left in the old language.
         .id(store.language)
         .task { await store.send(.task).finish() }
+    }
+}
+
+/// Shown when a saved session exists but the server could not be reached.
+struct OfflineView: View {
+    let retry: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        ZStack {
+            Backdrop(tint: theme.accent)
+            VStack(spacing: Metrics.sectionSpacing) {
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 40, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+                    .frame(width: 96, height: 96)
+                    .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
+
+                VStack(spacing: 8) {
+                    Text(L10n.commonOfflineTitle)
+                        .font(.system(.title2, design: .rounded, weight: .bold))
+                    Text(L10n.commonOfflineMessage)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                PrimaryButton(L10n.commonRetry, symbol: "arrow.clockwise", action: retry)
+                    .padding(.horizontal, Metrics.screenPadding)
+            }
+            .padding(Metrics.screenPadding)
+        }
     }
 }
 

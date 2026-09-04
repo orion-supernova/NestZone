@@ -156,6 +156,10 @@ public struct MovieListFeature: Sendable {
         public var savedIDs: Set<String> = []
         @Shared(.includeAdultTitles) public var includeAdultTitles: Bool
 
+        /// Search lives behind an explicit "Add movies" button rather than an
+        /// always-on search bar, so the list reads as a collection first.
+        public var isSearchPresented = false
+        @Presents public var detail: MovieInfoFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
         public init(homeID: HomeID, list: MovieList) {
@@ -172,8 +176,12 @@ public struct MovieListFeature: Sendable {
         case searchResponse([Movie])
         case addTapped(Movie)
         case removeTapped(StoredMovieID)
+        case addMoviesTapped
+        case searchDismissed
+        case movieTapped(StoredMovie)
         case failed(AppError)
         case binding(BindingAction<State>)
+        case detail(PresentationAction<MovieInfoFeature.Action>)
         case alert(PresentationAction<Alert>)
 
         public enum Alert: Equatable {}
@@ -260,17 +268,81 @@ public struct MovieListFeature: Sendable {
                     await send(.failed(AppError(error)))
                 }
 
+            case .addMoviesTapped:
+                state.isSearchPresented = true
+                return .none
+
+            case .searchDismissed:
+                state.isSearchPresented = false
+                state.searchText = ""
+                state.results = []
+                return .cancel(id: CancelID.search)
+
+            case let .movieTapped(stored):
+                state.detail = MovieInfoFeature.State(movie: stored.asMovie)
+                return .none
+
             case let .failed(error):
                 state.isSearching = false
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
 
-            case .binding, .alert:
+            case .binding, .detail, .alert:
                 return .none
             }
         }
+        .ifLet(\.$detail, action: \.detail) { MovieInfoFeature() }
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+/// Everything TMDb knows about one film, fetched on demand.
+@Reducer
+public struct MovieInfoFeature: Sendable {
+    @ObservableState
+    public struct State: Equatable {
+        public var movie: Movie
+        public var extras: MovieExtras?
+        public var isLoading = true
+
+        public init(movie: Movie) { self.movie = movie }
+    }
+
+    public enum Action: Equatable {
+        case task
+        case loaded(MovieDetails)
+        case failed(AppError)
+    }
+
+    @Dependency(\.catalog) var catalog
+
+    public init() {}
+
+    public var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .task:
+                // One request: the server appends credits and keywords rather
+                // than making the client ask three times.
+                return .run { [id = state.movie.id] send in
+                    await send(.loaded(try await catalog.details(id)))
+                } catch: { error, send in
+                    await send(.failed(AppError(error)))
+                }
+
+            case let .loaded(details):
+                state.isLoading = false
+                state.movie = details.movie
+                state.extras = details.extras
+                return .none
+
+            case .failed:
+                // The poster and title are already on screen; detail is a bonus.
+                state.isLoading = false
+                return .none
+            }
+        }
     }
 }
 

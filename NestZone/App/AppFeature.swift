@@ -17,6 +17,9 @@ public struct AppFeature: Sendable {
         /// True until the cached-session restore finishes, so the auth screen
         /// never flashes on a signed-in launch.
         public var isRestoringSession = true
+        /// A stored session exists but could not be exchanged. The user is not
+        /// signed out — the network is just unavailable.
+        public var restoreFailedOffline = false
 
         public var auth = AuthFeature.State()
         public var homeGate = HomeManagementFeature.State()
@@ -35,7 +38,9 @@ public struct AppFeature: Sendable {
 
         public var screen: Screen {
             if isRestoringSession || status == .unknown { return .launching }
-            if status == .unauthenticated { return .signedOut }
+            if status == .unauthenticated {
+                return restoreFailedOffline ? .offline : .signedOut
+            }
             // Stay on the launch screen until the home list has actually
             // arrived. Otherwise every launch flashes the "Let's get started"
             // picker for as long as the round trip takes, because an empty list
@@ -45,7 +50,7 @@ public struct AppFeature: Sendable {
         }
 
         public enum Screen: Equatable {
-            case launching, signedOut, choosingHome, main
+            case launching, signedOut, offline, choosingHome, main
         }
     }
 
@@ -53,16 +58,22 @@ public struct AppFeature: Sendable {
         case task
         case authStatusChanged(AuthStatus)
         case currentUserChanged(User?)
-        case sessionRestoreFinished
+        case sessionRestoreFinished(RestoreOutcome)
         case languageChanged(AppLanguage)
+        case deviceTokenReceived(String)
+        case deviceRegistrationFailed
+        case retryRestoreTapped
         case auth(AuthFeature.Action)
         case homeGate(HomeManagementFeature.Action)
         case main(MainFeature.Action)
     }
 
-    private enum CancelID { case authState, currentUser }
+    private enum CancelID { case authState, currentUser, deviceToken }
 
     @Dependency(\.auth) var authClient
+    @Dependency(\.continuousClock) var clock
+    @Dependency(\.push) var push
+    @Dependency(\.devices) var devices
 
     public init() {}
 
@@ -84,9 +95,20 @@ public struct AppFeature: Sendable {
 
                     .run { send in
                         // Silent restore from the Keychain refresh token.
-                        // Whatever the outcome, the launch gate opens.
-                        _ = await authClient.restoreSession()
-                        await send(.sessionRestoreFinished)
+                        //
+                        // Retried, because Convex Auth rotates the token on
+                        // every exchange: a restore that fails mid-flight can
+                        // leave a perfectly good session stranded, and giving up
+                        // on the first try signs the user out for what is often
+                        // a two-second network blip.
+                        var outcome = await authClient.restoreSession()
+                        var attempt = 1
+                        while outcome == .transientFailure, attempt <= 3 {
+                            try? await clock.sleep(for: .seconds(attempt))
+                            outcome = await authClient.restoreSession()
+                            attempt += 1
+                        }
+                        await send(.sessionRestoreFinished(outcome))
                     }
                 )
 
@@ -114,14 +136,29 @@ public struct AppFeature: Sendable {
                         // Start loading homes as soon as we are signed in, not
                         // when the picker happens to mount — the picker is what
                         // we are trying to avoid showing.
-                        .send(.homeGate(.task))
+                        .send(.homeGate(.task)),
+
+                        // Only ask iOS for a token if the user has already
+                        // agreed to notifications. Registering does not prompt,
+                        // but there is no point holding a token we cannot use.
+                        .run { send in
+                            guard await push.authorizationStatus() != .notDetermined else { return }
+                            await push.registerForRemoteNotifications()
+                            for await token in push.deviceTokens() {
+                                await send(.deviceTokenReceived(token))
+                            }
+                        }
+                        .cancellable(id: CancelID.deviceToken, cancelInFlight: true)
                     )
 
                 case .unauthenticated:
                     state.currentUser = nil
                     state.main = nil
                     state.homeGate = HomeManagementFeature.State()
-                    return .cancel(id: CancelID.currentUser)
+                    return .merge(
+                        .cancel(id: CancelID.currentUser),
+                        .cancel(id: CancelID.deviceToken)
+                    )
 
                 default:
                     return .none
@@ -133,13 +170,35 @@ public struct AppFeature: Sendable {
                 state.main?.propagateSession()
                 return .none
 
-            case .sessionRestoreFinished:
+            case let .sessionRestoreFinished(outcome):
                 state.isRestoringSession = false
+                // Distinguish "signed out" from "could not reach the server".
+                // Only the first should show the sign-in screen.
+                state.restoreFailedOffline = outcome == .transientFailure
                 return .none
 
             case let .languageChanged(language):
                 L10n.apply(language)
                 return .none
+
+            case let .deviceTokenReceived(token):
+                state.main?.settings.pushToken = token
+                return .run { send in
+                    try await devices.register(token, APNSEnvironment.current)
+                } catch: { _, send in
+                    // A device that cannot register simply gets no pushes.
+                    await send(.deviceRegistrationFailed)
+                }
+
+            case .deviceRegistrationFailed:
+                return .none
+
+            case .retryRestoreTapped:
+                state.isRestoringSession = true
+                state.restoreFailedOffline = false
+                return .run { send in
+                    await send(.sessionRestoreFinished(authClient.restoreSession()))
+                }
 
             // Keep the tab container in step with the open home. Building it
             // here rather than in the view means tab state survives a redraw
@@ -155,6 +214,17 @@ public struct AppFeature: Sendable {
             case let .main(.settings(.delegate(.languageChanged(language)))):
                 return .send(.languageChanged(language))
 
+            // Permission was just granted in Settings — start listening for the
+            // token now rather than waiting for the next launch.
+            case .main(.settings(.delegate(.notificationsEnabled))):
+                return .run { send in
+                    await push.registerForRemoteNotifications()
+                    for await token in push.deviceTokens() {
+                        await send(.deviceTokenReceived(token))
+                    }
+                }
+                .cancellable(id: CancelID.deviceToken, cancelInFlight: true)
+
             case .auth, .main:
                 return .none
             }
@@ -162,6 +232,7 @@ public struct AppFeature: Sendable {
         .ifLet(\.main, action: \.main) { MainFeature() }
     }
 
+    /// The device token, held so a later sign-out can unregister it.
     /// Creates, updates or tears down the tab container to match the open home.
     private func syncMain(_ state: inout State) -> Effect<Action> {
         // Read before mutating: `selectedHome` reads `state` while the

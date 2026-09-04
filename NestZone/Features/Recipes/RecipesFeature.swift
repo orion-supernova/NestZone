@@ -186,8 +186,16 @@ public struct RecipeDetailFeature: Sendable {
         public var homeID: HomeID
         public var checkedIngredients: Set<Int> = []
         public var isCooking = false
+        /// Cooking runs in two phases, the way the old app did it: gather
+        /// everything first, then work through the steps. You cannot start
+        /// cooking until every ingredient is checked off.
+        public var phase: Phase = .ingredients
         public var step = 0
         public var isSaving = false
+        public var timer = StepTimer()
+        @Presents public var alert: AlertState<Action.Alert>?
+
+        public enum Phase: Equatable, Sendable { case ingredients, cooking }
 
         public init(recipe: Recipe, homeID: HomeID) {
             self.recipe = recipe
@@ -196,22 +204,94 @@ public struct RecipeDetailFeature: Sendable {
 
         /// A bundled sample can be saved into the home; a saved one can't.
         public var canSaveToHome: Bool { recipe.isSample }
+
+        /// There is something to walk through. Independent of whether the
+        /// recipe is saved.
+        public var canCook: Bool { !recipe.steps.isEmpty }
+
+        /// True once everything is gathered — and vacuously true for a recipe
+        /// that lists no ingredients, which would otherwise strand the cook in
+        /// phase one with a button that could never enable.
+        public var allIngredientsChecked: Bool {
+            recipe.ingredients.isEmpty
+                || checkedIngredients.count == recipe.ingredients.count
+        }
+
+        public var progress: Double {
+            switch phase {
+            case .ingredients:
+                guard !recipe.ingredients.isEmpty else { return 0 }
+                return Double(checkedIngredients.count) / Double(recipe.ingredients.count)
+            case .cooking:
+                guard !recipe.steps.isEmpty else { return 0 }
+                return Double(step + 1) / Double(recipe.steps.count)
+            }
+        }
+
+        public var isLastStep: Bool { step >= recipe.steps.count - 1 }
+
+        public var currentStepText: String {
+            recipe.steps.indices.contains(step) ? recipe.steps[step] : ""
+        }
+
+        /// A duration mentioned in the current step, if there is one, so the
+        /// timer can be offered with the right value already filled in.
+        public var suggestedDuration: StepDuration? {
+            StepDuration.firstMatch(in: currentStepText)
+        }
+    }
+
+    /// A countdown attached to the step you are on.
+    public struct StepTimer: Equatable, Sendable {
+        public var totalSeconds: Int = 0
+        public var remainingSeconds: Int = 0
+        public var isRunning = false
+
+        public init() {}
+
+        public var isFinished: Bool { isRunning == false && totalSeconds > 0 && remainingSeconds == 0 }
+
+        public var formatted: String {
+            let minutes = remainingSeconds / 60
+            let seconds = remainingSeconds % 60
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+
+        public var progress: Double {
+            guard totalSeconds > 0 else { return 0 }
+            return Double(totalSeconds - remainingSeconds) / Double(totalSeconds)
+        }
     }
 
     public enum Action: Equatable {
         case ingredientToggled(Int)
-        case startCookingTapped
-        case stopCookingTapped
+        case beginCookingTapped
+        case startStepsTapped
+        case quitCookingTapped
+        case quitConfirmed
         case stepChanged(Int)
+        case nextStepTapped
+        case previousStepTapped
+        case timerRequested(seconds: Int)
+        case timerTicked
+        case timerStopped
+        case timerFinished
         case saveToHomeTapped
         case saved
         case deleteTapped
         case deleted
         case failed(AppError)
+        case alert(PresentationAction<Alert>)
+
+        public enum Alert: Equatable { case confirmQuit }
     }
+
+    private enum CancelID { case timer }
 
     @Dependency(\.recipes) var recipes
     @Dependency(\.dismiss) var dismiss
+    @Dependency(\.continuousClock) var clock
+    @Dependency(\.push) var push
 
     public init() {}
 
@@ -226,18 +306,108 @@ public struct RecipeDetailFeature: Sendable {
                 }
                 return .none
 
-            case .startCookingTapped:
+            case .beginCookingTapped:
                 state.isCooking = true
+                state.step = 0
+                state.checkedIngredients = []
+                // Nothing to gather means nothing to show in phase one.
+                state.phase = state.recipe.ingredients.isEmpty ? .cooking : .ingredients
+                return .none
+
+            case .startStepsTapped:
+                guard state.allIngredientsChecked else { return .none }
+                state.phase = .cooking
                 state.step = 0
                 return .none
 
-            case .stopCookingTapped:
-                state.isCooking = false
+            case .quitCookingTapped:
+                // Leaving loses the session, so it asks first.
+                state.alert = .confirmQuitCooking()
                 return .none
 
+            case .alert(.presented(.confirmQuit)), .quitConfirmed:
+                state.isCooking = false
+                state.phase = .ingredients
+                state.timer = StepTimer()
+                return .merge(
+                    .cancel(id: CancelID.timer),
+                    .run { _ in await push.cancelTimer() }
+                )
+
             case let .stepChanged(step):
-                state.step = max(0, min(step, state.recipe.steps.count - 1))
-                return .none
+                state.step = max(0, min(step, max(state.recipe.steps.count - 1, 0)))
+                // A timer belongs to the step it was started on.
+                state.timer = StepTimer()
+                return .merge(
+                    .cancel(id: CancelID.timer),
+                    .run { _ in await push.cancelTimer() }
+                )
+
+            case .nextStepTapped:
+                guard !state.isLastStep else {
+                    state.isCooking = false
+                    state.phase = .ingredients
+                    state.timer = StepTimer()
+                    return .merge(
+                        .cancel(id: CancelID.timer),
+                        .run { _ in await push.cancelTimer() }
+                    )
+                }
+                return .send(.stepChanged(state.step + 1))
+
+            case .previousStepTapped:
+                guard state.step > 0 else { return .none }
+                return .send(.stepChanged(state.step - 1))
+
+            case let .timerRequested(seconds):
+                guard seconds > 0 else { return .none }
+                // Asking here rather than at launch: the prompt lands at the
+                // moment its purpose is self-evident.
+                state.timer = StepTimer()
+                state.timer.totalSeconds = seconds
+                state.timer.remainingSeconds = seconds
+                state.timer.isRunning = true
+                return .merge(
+                    // The on-screen countdown.
+                    .run { send in
+                        for await _ in clock.timer(interval: .seconds(1)) {
+                            await send(.timerTicked)
+                        }
+                    }
+                    .cancellable(id: CancelID.timer, cancelInFlight: true),
+
+                    // And a local notification, because the in-app clock stops
+                    // mattering the moment the cook switches away — which is
+                    // exactly when a timer earns its keep.
+                    .run { [step = state.currentStepText] _ in
+                        guard await push.requestAuthorization() else { return }
+                        await push.scheduleTimer(seconds, step)
+                    }
+                )
+
+            case .timerTicked:
+                guard state.timer.isRunning else { return .none }
+                state.timer.remainingSeconds -= 1
+                guard state.timer.remainingSeconds <= 0 else { return .none }
+                state.timer.remainingSeconds = 0
+                state.timer.isRunning = false
+                return .concatenate(
+                    .cancel(id: CancelID.timer),
+                    .send(.timerFinished)
+                )
+
+            case .timerStopped:
+                state.timer = StepTimer()
+                return .merge(
+                    .cancel(id: CancelID.timer),
+                    .run { _ in await push.cancelTimer() }
+                )
+
+            case .timerFinished:
+                // The notification already fired if we were backgrounded;
+                // clear it so a returning cook does not see a stale banner.
+                state.alert = .timerFinished()
+                return .run { _ in await push.cancelTimer() }
 
             case .saveToHomeTapped:
                 guard state.canSaveToHome, !state.isSaving else { return .none }
@@ -277,8 +447,69 @@ public struct RecipeDetailFeature: Sendable {
             case .deleted, .failed:
                 state.isSaving = false
                 return .none
+
+            case .alert:
+                return .none
             }
         }
+        .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+extension AlertState where Action == RecipeDetailFeature.Action.Alert {
+    static func confirmQuitCooking() -> Self {
+        AlertState {
+            TextState(String(localized: L10n.recipesCookingQuitAlertTitle))
+        } actions: {
+            ButtonState(role: .destructive, action: .confirmQuit) {
+                TextState(String(localized: L10n.recipesCookingQuitAlertQuitButton))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.recipesCookingQuitAlertMessage))
+        }
+    }
+
+    static func timerFinished() -> Self {
+        AlertState {
+            TextState(String(localized: L10n.recipesTimerDoneTitle))
+        } actions: {
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonOkButton))
+            }
+        } message: {
+            TextState(String(localized: L10n.recipesTimerDoneMessage))
+        }
+    }
+}
+
+/// A duration written into a recipe step, e.g. "simmer for 10 minutes".
+///
+/// Recipes phrase times in prose, so the timer reads the step rather than making
+/// the cook translate it into a number while their hands are full.
+public struct StepDuration: Equatable, Sendable {
+    public let seconds: Int
+    public let phrase: String
+
+    // Built per call: `Regex` is not `Sendable`, so it cannot be a shared
+    // static. Matching one short step string is cheap and only happens when the
+    // step changes.
+    private static var pattern: Regex<(Substring, Substring, Substring)> {
+        /(\d{1,3})\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?)/.ignoresCase()
+    }
+
+    public static func firstMatch(in text: String) -> StepDuration? {
+        guard let match = text.firstMatch(of: pattern) else { return nil }
+        guard let value = Int(match.1) else { return nil }
+        let unit = match.2.lowercased()
+        let multiplier = if unit.hasPrefix("h") { 3600 }
+            else if unit.hasPrefix("m") { 60 }
+            else { 1 }
+        let seconds = value * multiplier
+        guard (1...(6 * 3600)).contains(seconds) else { return nil }
+        return StepDuration(seconds: seconds, phrase: String(match.0))
     }
 }
 

@@ -16,12 +16,25 @@ public struct MovieNightView: View {
             .navigationTitle(Text(L10n.movienightTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if !store.hasActivePoll && !store.history.isEmpty {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button { store.send(.historyTapped) } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                        .accessibilityLabel(Text(L10n.previousPollsTitle))
+                    }
+                }
                 if store.hasActivePoll {
                     ToolbarItem(placement: .primaryAction) {
                         Menu {
                             Button { store.send(.summaryTapped) } label: {
                                 Label { Text(L10n.movienightMatchesTitle) } icon: {
                                     Image(systemName: "chart.bar")
+                                }
+                            }
+                            Button { store.send(.historyTapped) } label: {
+                                Label { Text(L10n.previousPollsTitle) } icon: {
+                                    Image(systemName: "clock.arrow.circlepath")
                                 }
                             }
                             if store.canEndRound {
@@ -46,6 +59,9 @@ public struct MovieNightView: View {
             .sheet(item: $store.scope(
                 state: \.destination?.summary, action: \.destination.summary
             )) { PollSummarySheet(store: $0) }
+            .sheet(item: $store.scope(
+                state: \.destination?.history, action: \.destination.history
+            )) { PollHistorySheet(store: $0) }
             .alert($store.scope(state: \.alert, action: \.alert))
     }
 
@@ -394,5 +410,156 @@ struct PollSummarySheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+
+/// Rounds that have already finished, with what won each one.
+struct PollHistorySheet: View {
+    @Bindable var store: StoreOf<PollHistoryFeature>
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if store.polls.isEmpty {
+                    EmptyStateView(
+                        title: L10n.previousPollsEmpty,
+                        message: L10n.previousPollsEmptyDescription,
+                        symbol: "clock.arrow.circlepath"
+                    )
+                } else {
+                    ScrollView {
+                        GlassGroup {
+                            VStack(spacing: Metrics.stackSpacing) {
+                                ForEach(Array(store.polls.enumerated()), id: \.element.id) { index, poll in
+                                    PollHistoryRow(
+                                        poll: poll,
+                                        winner: store.winners[poll.id],
+                                        isExpanded: store.expanded == poll.id,
+                                        canDelete: store.state.canDelete(poll)
+                                    ) {
+                                        store.send(.pollTapped(poll.id))
+                                    } onDelete: {
+                                        store.send(.deleteTapped(poll.id))
+                                    }
+                                    .appear(index)
+                                }
+                            }
+                            .padding(.horizontal, Metrics.screenPadding)
+                            .padding(.bottom, Metrics.sectionSpacing)
+                        }
+                    }
+                }
+            }
+            .background(Backdrop(tint: theme.accent))
+            .navigationTitle(Text(L10n.previousPollsTitle))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button { dismiss() } label: { Text(L10n.commonDone) }
+                }
+            }
+            .alert($store.scope(state: \.alert, action: \.alert))
+            .animation(Motion.spring, value: store.polls)
+            .animation(Motion.spring, value: store.expanded)
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
+private struct PollHistoryRow: View {
+    let poll: Poll
+    let winner: PollItem?
+    let isExpanded: Bool
+    let canDelete: Bool
+    let onTap: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    Image(systemName: "popcorn.fill")
+                        .font(.callout)
+                        .foregroundStyle(.tint)
+                        .frame(width: 38, height: 38)
+                        .background(.tint.opacity(0.14), in: .circle)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(poll.title ?? String(localized: L10n.previousPollsMoviePoll))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        if let created = poll.created {
+                            Text(created.date, format: .dateTime.day().month().year())
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "chevron.down")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(isExpanded ? 0 : -90))
+                }
+
+                if isExpanded {
+                    Divider()
+                    if let winner {
+                        HStack(spacing: 10) {
+                            RemoteImage(
+                                url: TMDbImageWidth.url(for: winner.thumbnailURL, width: .w185),
+                                targetSize: CGSize(width: 44, height: 66)
+                            )
+                            .frame(width: 44, height: 66)
+                            .clipShape(.rect(cornerRadius: 6, style: .continuous))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.previousPollsWinner)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                Text(winner.label ?? "")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(2)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .transition(.opacity)
+                    } else {
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.small)
+                            Text(L10n.previousPollsNoWinner)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .padding(Metrics.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+        .glassCard(interactive: true)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            if canDelete {
+                Button(role: .destructive, action: onDelete) {
+                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
+                }
+            }
+        }
+        .contextMenu {
+            if canDelete {
+                Button(role: .destructive, action: onDelete) {
+                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
+                }
+            }
+        }
     }
 }

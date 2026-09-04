@@ -1,6 +1,10 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+
+// Shown as the notification title; the body carries what actually changed.
+const NOTIFY_TITLE = "New note";
 
 export const listByHome = query({
   args: { homeId: v.id("homes") },
@@ -24,7 +28,7 @@ export const create = mutation({
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
     const now = Date.now();
-    return await ctx.db.insert("notes", {
+    const createdId = await ctx.db.insert("notes", {
       home_id: args.homeId,
       description: args.description,
       color: args.color,
@@ -33,6 +37,18 @@ export const create = mutation({
       created: now,
       updated: now,
     });
+
+    // Tell the rest of the household. Scheduled rather than awaited: a mutation
+    // must not block on APNs, and a failed push must never roll back the write.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId: args.homeId,
+      actor: user._id,
+      title: user.name ? `${user.name} left a note` : NOTIFY_TITLE,
+      body: args.description.slice(0, 120),
+      category: "notes",
+    });
+
+    return createdId;
   },
 });
 

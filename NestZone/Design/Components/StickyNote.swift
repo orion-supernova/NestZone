@@ -29,6 +29,20 @@ public enum StickyColor: String, CaseIterable, Sendable, Identifiable {
     /// The value written to the server.
     public var storedValue: String { rawValue }
 
+    /// Friendly name, the way the old composer labelled them — "Sunny Yellow"
+    /// reads better in a picker than "yellow".
+    public var displayName: LocalizedStringResource {
+        switch self {
+        case .yellow: L10n.notesColorYellow
+        case .orange: L10n.notesColorOrange
+        case .pink: L10n.notesColorPink
+        case .red: L10n.notesColorRed
+        case .green: L10n.notesColorGreen
+        case .blue: L10n.notesColorBlue
+        case .purple: L10n.notesColorPurple
+        }
+    }
+
     /// Accepts a legacy colour name, one of ours, or a hex string.
     public static func parse(_ raw: String?) -> StickyColor {
         guard let raw, !raw.isEmpty else { return .yellow }

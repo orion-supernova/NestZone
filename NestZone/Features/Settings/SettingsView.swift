@@ -21,6 +21,7 @@ public struct SettingsView: View {
             profileSection
             homeSection
             appearanceSection
+            notificationsSection
             preferencesSection
             accountSection
         }
@@ -165,6 +166,55 @@ public struct SettingsView: View {
         } footer: {
             Text(L10n.settingsAppearanceThemeFooter)
         }
+    }
+
+    private var notificationsSection: some View {
+        Section {
+            if store.notificationsDenied {
+                Button { store.send(.openSystemSettingsTapped) } label: {
+                    Label {
+                        Text(L10n.settingsNotificationsOpenSettings)
+                    } icon: {
+                        Image(systemName: "bell.slash")
+                    }
+                }
+            } else {
+                Toggle(isOn: Binding(
+                    get: { store.notificationsOn },
+                    set: { store.send(.notificationsToggled($0)) }
+                )) {
+                    Label {
+                        Text(L10n.settingsNotificationsToggle)
+                    } icon: {
+                        Image(systemName: "bell.badge")
+                    }
+                }
+            }
+
+            if store.notificationsOn {
+                Button { store.send(.sendTestPushTapped) } label: {
+                    HStack {
+                        Label {
+                            Text(L10n.settingsNotificationsSendTest)
+                        } icon: {
+                            Image(systemName: "paperplane")
+                        }
+                        Spacer(minLength: 0)
+                        if store.isSendingTestPush {
+                            ProgressView().controlSize(.small)
+                        }
+                    }
+                }
+                .disabled(store.isSendingTestPush)
+            }
+        } header: {
+            Text(L10n.settingsNotificationsTitle)
+        } footer: {
+            Text(store.notificationsDenied
+                ? L10n.settingsNotificationsDenied
+                : L10n.settingsNotificationsFooter)
+        }
+        .animation(Motion.spring, value: store.notificationStatus)
     }
 
     private var preferencesSection: some View {

@@ -2868,4 +2868,153 @@ public enum L10n {
         r("notes_edit_hint", "Touch and hold to edit")
     }
 
+    /// Preview
+    public static var notesPreviewLabel: LocalizedStringResource {
+        r("notes_preview_label", "Preview")
+    }
+
+    /// Your note will appear here…
+    public static var notesPreviewPlaceholder: LocalizedStringResource {
+        r("notes_preview_placeholder", "Your note will appear here…")
+    }
+
+    /// Now
+    public static var notesPreviewNow: LocalizedStringResource {
+        r("notes_preview_now", "Now")
+    }
+
+    /// Sunny Yellow
+    public static var notesColorYellow: LocalizedStringResource {
+        r("notes_color_yellow", "Sunny Yellow")
+    }
+
+    /// Vibrant Orange
+    public static var notesColorOrange: LocalizedStringResource {
+        r("notes_color_orange", "Vibrant Orange")
+    }
+
+    /// Sweet Pink
+    public static var notesColorPink: LocalizedStringResource {
+        r("notes_color_pink", "Sweet Pink")
+    }
+
+    /// Warm Red
+    public static var notesColorRed: LocalizedStringResource {
+        r("notes_color_red", "Warm Red")
+    }
+
+    /// Fresh Green
+    public static var notesColorGreen: LocalizedStringResource {
+        r("notes_color_green", "Fresh Green")
+    }
+
+    /// Ocean Blue
+    public static var notesColorBlue: LocalizedStringResource {
+        r("notes_color_blue", "Ocean Blue")
+    }
+
+    /// Royal Purple
+    public static var notesColorPurple: LocalizedStringResource {
+        r("notes_color_purple", "Royal Purple")
+    }
+
+    /// Timer
+    public static var recipesTimerTitle: LocalizedStringResource {
+        r("recipes_timer_title", "Timer")
+    }
+
+    /// Start timer
+    public static var recipesTimerStart: LocalizedStringResource {
+        r("recipes_timer_start", "Start timer")
+    }
+
+    /// Stop
+    public static var recipesTimerStop: LocalizedStringResource {
+        r("recipes_timer_stop", "Stop")
+    }
+
+    /// Time's up
+    public static var recipesTimerDoneTitle: LocalizedStringResource {
+        r("recipes_timer_done_title", "Time's up")
+    }
+
+    /// Your timer for this step has finished.
+    public static var recipesTimerDoneMessage: LocalizedStringResource {
+        r("recipes_timer_done_message", "Your timer for this step has finished.")
+    }
+
+    /// This step mentions %@. Start a timer?
+    public static func recipesTimerSuggested(_ a0: String) -> LocalizedStringResource {
+        r("recipes_timer_suggested", "This step mentions \(a0). Start a timer?")
+    }
+
+    /// Custom
+    public static var recipesTimerCustom: LocalizedStringResource {
+        r("recipes_timer_custom", "Custom")
+    }
+
+    /// %lld min
+    public static func recipesTimerMinutes(_ a0: Int) -> LocalizedStringResource {
+        r("recipes_timer_minutes", "\(a0) min")
+    }
+
+    /// About this film
+    public static var moviesDetailTitle: LocalizedStringResource {
+        r("movies_detail_title", "About this film")
+    }
+
+    /// Cast
+    public static var moviesDetailCast: LocalizedStringResource {
+        r("movies_detail_cast", "Cast")
+    }
+
+    /// Directed by
+    public static var moviesDetailDirector: LocalizedStringResource {
+        r("movies_detail_director", "Directed by")
+    }
+
+    /// Runtime
+    public static var moviesDetailRuntime: LocalizedStringResource {
+        r("movies_detail_runtime", "Runtime")
+    }
+
+    /// Rating
+    public static var moviesDetailRating: LocalizedStringResource {
+        r("movies_detail_rating", "Rating")
+    }
+
+    /// Search for a film to add
+    public static var moviesSearchPrompt: LocalizedStringResource {
+        r("movies_search_prompt", "Search for a film to add")
+    }
+
+    /// Previous rounds
+    public static var movienightHistoryTitle: LocalizedStringResource {
+        r("movienight_history_title", "Previous rounds")
+    }
+
+    /// Household activity
+    public static var settingsNotificationsToggle: LocalizedStringResource {
+        r("settings_notifications_toggle", "Household activity")
+    }
+
+    /// Get a notification when someone adds a task, a shopping item or a note.
+    public static var settingsNotificationsFooter: LocalizedStringResource {
+        r("settings_notifications_footer", "Get a notification when someone adds a task, a shopping item or a note.")
+    }
+
+    /// Notifications are off for NestZone. Turn them on in Settings.
+    public static var settingsNotificationsDenied: LocalizedStringResource {
+        r("settings_notifications_denied", "Notifications are off for NestZone. Turn them on in Settings.")
+    }
+
+    /// Open Settings
+    public static var settingsNotificationsOpenSettings: LocalizedStringResource {
+        r("settings_notifications_open_settings", "Open Settings")
+    }
+
+    /// Send a test notification
+    public static var settingsNotificationsSendTest: LocalizedStringResource {
+        r("settings_notifications_send_test", "Send a test notification")
+    }
 }

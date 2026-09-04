@@ -51,6 +51,31 @@ export default defineSchema({
     .index("email", ["email"])
     .index("by_pbId", ["pbId"]),
 
+  // One row per device that has agreed to receive pushes. A user can have
+  // several (phone, iPad), and a token can move between users if a device is
+  // handed on — `by_token` exists so re-registration replaces rather than
+  // duplicates.
+  push_tokens: defineTable({
+    user_id: v.id("users"),
+    /// Hex device token from `didRegisterForRemoteNotificationsWithDeviceToken`.
+    token: v.string(),
+    /// Which APNs gateway this token is valid on. A sandbox token is rejected
+    /// by the production gateway and vice versa, so it must be stored.
+    environment: v.union(v.literal("sandbox"), v.literal("production")),
+    created: v.number(),
+    updated: v.number(),
+  })
+    .index("by_user", ["user_id"])
+    .index("by_token", ["token"]),
+
+  // The signed APNs provider JWT, cached. Apple rejects a provider that mints
+  // tokens more than once every 20 minutes (`TooManyProviderTokenUpdates`), and
+  // actions are stateless, so the token has to live somewhere.
+  apns_credentials: defineTable({
+    jwt: v.string(),
+    issued: v.number(),
+  }),
+
   homes: defineTable({
     pbId: v.optional(v.string()),
     name: v.optional(v.string()),
