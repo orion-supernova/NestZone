@@ -10,6 +10,11 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
     public var createdBy: UserID?
     public var updatedBy: UserID?
     public var homeID: HomeID?
+    /// Set when the item came from a recipe. The title travels with it so the
+    /// list can head a group without subscribing to recipes, and still reads
+    /// correctly after the recipe itself is gone.
+    public var recipeID: RecipeID?
+    public var recipeTitle: String?
     public var created: Timestamp?
     public var updated: Timestamp?
 
@@ -27,6 +32,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         case createdBy = "created_by"
         case updatedBy = "updated_by"
         case homeID = "home_id"
+        case recipeID = "recipe_id"
+        case recipeTitle = "recipe_title"
         case created, updated
     }
 
@@ -41,6 +48,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         createdBy = try c.decodeIfPresent(UserID.self, forKey: .createdBy)
         updatedBy = try c.decodeIfPresent(UserID.self, forKey: .updatedBy)
         homeID = try c.decodeIfPresent(HomeID.self, forKey: .homeID)
+        recipeID = try c.decodeIfPresent(RecipeID.self, forKey: .recipeID)
+        recipeTitle = try c.decodeIfPresent(String.self, forKey: .recipeTitle)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
     }
@@ -55,6 +64,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         createdBy: UserID? = nil,
         updatedBy: UserID? = nil,
         homeID: HomeID? = nil,
+        recipeID: RecipeID? = nil,
+        recipeTitle: String? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
     ) {
@@ -67,6 +78,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         self.createdBy = createdBy
         self.updatedBy = updatedBy
         self.homeID = homeID
+        self.recipeID = recipeID
+        self.recipeTitle = recipeTitle
         self.created = created
         self.updated = updated
     }

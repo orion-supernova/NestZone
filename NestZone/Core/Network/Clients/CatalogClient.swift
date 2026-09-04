@@ -56,7 +56,7 @@ extension CatalogClient: DependencyKey {
                 "includeAdult": request.includeAdult,
             ]
             if let query = request.query { args["query"] = query }
-            if let year = request.year { args["year"] = year }
+            if let year = request.year { args["year"] = year.convexNumber }
             return try await ConvexConnection.shared.act(
                 "catalog:discover", args: args, as: [Movie].self
             )

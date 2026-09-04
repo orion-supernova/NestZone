@@ -29,7 +29,11 @@ public struct MainFeature: Sendable {
             self.homeID = homeID
             self.home = home
             self.user = user
-            self.homeTab = HomeFeature.State(homeID: homeID, user: user)
+            var homeTab = HomeFeature.State(homeID: homeID, user: user)
+            // Read from `home` directly: `memberCount` is a computed property on
+            // `self`, which is not fully initialised yet.
+            homeTab.memberCount = max(home?.members.count ?? 1, 1)
+            self.homeTab = homeTab
             self.hub = HubFeature.State(homeID: homeID)
             self.notes = NotesFeature.State(homeID: homeID, currentUserID: user?.id)
             self.messages = MessagesFeature.State(homeID: homeID, currentUserID: user?.id)
@@ -44,6 +48,9 @@ public struct MainFeature: Sendable {
     public enum HomePath {
         case tasks(TasksFeature)
         case movieNight(MovieNightFeature)
+        /// Reached from tonight's dinner card, which is the one place on the
+        /// Home tab that points at a specific recipe.
+        case recipeDetail(RecipeDetailFeature)
     }
 
     public enum Tab: String, CaseIterable, Hashable, Sendable {
@@ -97,7 +104,8 @@ public struct MainFeature: Sendable {
 
             // The Home tab is a summary; its tiles are shortcuts into the tab or
             // screen that actually owns the data.
-            case .home(.delegate(.openShoppingList)):
+            case .home(.delegate(.openShoppingList)),
+                 .homePath(.element(id: _, action: .recipeDetail(.delegate(.openShoppingList)))):
                 state.selectedTab = .hub
                 state.hub.path.append(.shopping(ShoppingFeature.State(homeID: state.homeID)))
                 return .none
@@ -108,6 +116,12 @@ public struct MainFeature: Sendable {
 
             case .home(.delegate(.openTasks)):
                 state.homePath.append(.tasks(TasksFeature.State(homeID: state.homeID)))
+                return .none
+
+            case let .home(.delegate(.openRecipe(recipe))):
+                state.homePath.append(
+                    .recipeDetail(RecipeDetailFeature.State(recipe: recipe, homeID: state.homeID))
+                )
                 return .none
 
             case .home(.delegate(.openMovieNight)):
@@ -133,6 +147,7 @@ extension MainFeature.State {
     /// Keeps the per-tab copies of the session in step.
     public mutating func propagateSession() {
         homeTab.user = user
+        homeTab.memberCount = memberCount
         notes.currentUserID = user?.id
         messages.currentUserID = user?.id
         settings.user = user

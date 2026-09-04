@@ -63,6 +63,70 @@ export const create = mutation({
   },
 });
 
+/// Everything a recipe needs, in one round trip.
+///
+/// One mutation rather than one per ingredient: a twelve-line recipe was
+/// twelve writes, twelve subscription pushes and twelve notifications. Names
+/// already on the list and not yet bought are skipped, so sending the same
+/// recipe twice does not double it up.
+export const createFromRecipe = mutation({
+  args: {
+    homeId: v.id("homes"),
+    recipeId: v.id("recipes"),
+    recipeTitle: v.string(),
+    names: v.array(v.string()),
+    category: v.optional(category),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    await requireHomeMember(ctx, args.homeId);
+
+    const existing = await ctx.db
+      .query("shopping_items")
+      .withIndex("by_home", (q) => q.eq("home_id", args.homeId))
+      .collect();
+    const outstanding = new Set(
+      existing
+        .filter((it) => !it.is_purchased)
+        .map((it) => (it.name ?? "").trim().toLowerCase()),
+    );
+
+    const now = Date.now();
+    const wanted = args.names
+      .map((n) => n.trim())
+      .filter((n) => n.length > 0)
+      .filter((n) => !outstanding.has(n.toLowerCase()));
+
+    for (const name of wanted) {
+      await ctx.db.insert("shopping_items", {
+        home_id: args.homeId,
+        name,
+        category: args.category ?? "groceries",
+        is_purchased: false,
+        recipe_id: args.recipeId,
+        recipe_title: args.recipeTitle,
+        created_by: user._id,
+        updated_by: user._id,
+        created: now,
+        updated: now,
+      });
+    }
+
+    if (wanted.length > 0) {
+      // One notification for the batch, not one per ingredient.
+      await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+        homeId: args.homeId,
+        actor: user._id,
+        title: user.name ? `${user.name} added` : NOTIFY_TITLE,
+        body: `${wanted.length} ${wanted.length === 1 ? "item" : "items"} for ${args.recipeTitle}`,
+        category: "shopping",
+      });
+    }
+
+    return { added: wanted.length, skipped: args.names.length - wanted.length };
+  },
+});
+
 export const setPurchased = mutation({
   args: { id: v.id("shopping_items"), is_purchased: v.boolean() },
   handler: async (ctx, { id, is_purchased }) => {

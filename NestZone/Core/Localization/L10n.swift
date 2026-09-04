@@ -2698,6 +2698,329 @@ public enum L10n {
         r("recipes_detail_start_preparing", "Start preparing")
     }
 
+
+    /// Remove all
+    public static var shoppingRemoveAll: LocalizedStringResource {
+        r("shopping_remove_all", "Remove all")
+    }
+
+    /// Remove %lld items?
+    public static func shoppingClearGroupTitle(_ a0: Int) -> LocalizedStringResource {
+        r("shopping_clear_group_title", "Remove \(a0) items?")
+    }
+
+    /// Everything under “%@” leaves the list, bought or not.
+    public static func shoppingClearGroupMessage(_ a0: String) -> LocalizedStringResource {
+        r("shopping_clear_group_message", "Everything under “\(a0)” leaves the list, bought or not.")
+    }
+
+// MARK: - Dinner
+
+    /// How are you deciding?
+    public static var dinnerRouteTitle: LocalizedStringResource {
+        r("dinner_route_title", "How are you deciding?")
+    }
+
+    /// Set it now
+    public static var dinnerRouteSet: LocalizedStringResource {
+        r("dinner_route_set", "Set it now")
+    }
+
+    /// Decide for the household — no vote.
+    public static var dinnerRouteSetSubtitle: LocalizedStringResource {
+        r("dinner_route_set_subtitle", "Decide for the household — no vote.")
+    }
+
+    /// Ask everyone
+    public static var dinnerRouteVote: LocalizedStringResource {
+        r("dinner_route_vote", "Ask everyone")
+    }
+
+    /// Put a few options up and let the house pick.
+    public static var dinnerRouteVoteSubtitle: LocalizedStringResource {
+        r("dinner_route_vote_subtitle", "Put a few options up and let the house pick.")
+    }
+
+    /// Dinner round
+    public static var dinnerRoundTitle: LocalizedStringResource {
+        r("dinner_round_title", "Dinner round")
+    }
+
+    /// Pick what goes on the ballot
+    public static var dinnerRoundPickCandidates: LocalizedStringResource {
+        r("dinner_round_pick_candidates", "Pick what goes on the ballot")
+    }
+
+    /// Start the round
+    public static var dinnerRoundStart: LocalizedStringResource {
+        r("dinner_round_start", "Start the round")
+    }
+
+    /// %lld on the ballot
+    public static func dinnerRoundSelected(_ a0: Int) -> LocalizedStringResource {
+        r("dinner_round_selected", "\(a0) on the ballot")
+    }
+
+    /// Pick at least two
+    public static var dinnerRoundNeedsTwo: LocalizedStringResource {
+        r("dinner_round_needs_two", "Pick at least two")
+    }
+
+    /// Add
+    public static var dinnerRoundAddCustom: LocalizedStringResource {
+        r("dinner_round_add_custom", "Add")
+    }
+
+    /// A round is already running
+    public static var dinnerRoundOpen: LocalizedStringResource {
+        r("dinner_round_open", "A round is already running")
+    }
+
+    /// Open it to cast your vote.
+    public static var dinnerRoundOpenHint: LocalizedStringResource {
+        r("dinner_round_open_hint", "Open it to cast your vote.")
+    }
+
+
+    /// Something else
+    public static var dinnerSourceCustom: LocalizedStringResource {
+        r("dinner_source_custom", "Something else")
+    }
+
+    /// What are you making?
+    public static var dinnerCustomLabel: LocalizedStringResource {
+        r("dinner_custom_label", "What are you making?")
+    }
+
+    /// Leftovers, pasta, whatever's in the fridge
+    public static var dinnerCustomPlaceholder: LocalizedStringResource {
+        r("dinner_custom_placeholder", "Leftovers, pasta, whatever's in the fridge")
+    }
+
+
+    /// Your recipes
+    public static var dinnerSourceSaved: LocalizedStringResource {
+        r("dinner_source_saved", "Your recipes")
+    }
+
+    /// Explore
+    public static var dinnerSourceExplore: LocalizedStringResource {
+        r("dinner_source_explore", "Explore")
+    }
+
+    /// Dinner is already decided
+    public static var dinnerAlreadyDecided: LocalizedStringResource {
+        r("dinner_already_decided", "Dinner is already decided")
+    }
+
+    /// Choosing again replaces it.
+    public static var dinnerAlreadyDecidedHint: LocalizedStringResource {
+        r("dinner_already_decided_hint", "Choosing again replaces it.")
+    }
+
+    /// All
+    public static var dinnerFilterAll: LocalizedStringResource {
+        r("dinner_filter_all", "All")
+    }
+
+
+    /// Tonight
+    public static var dinnerTonightTitle: LocalizedStringResource {
+        r("dinner_tonight_title", "Tonight")
+    }
+    /// What's for dinner?
+    public static var dinnerEmptyTitle: LocalizedStringResource {
+        r("dinner_empty_title", "What's for dinner?")
+    }
+    /// Cook something, order in, or go out.
+    public static var dinnerEmptySubtitle: LocalizedStringResource {
+        r("dinner_empty_subtitle", "Cook something, order in, or go out.")
+    }
+    /// Decide dinner
+    public static var dinnerDecideButton: LocalizedStringResource {
+        r("dinner_decide_button", "Decide dinner")
+    }
+    /// Change
+    public static var dinnerChangeButton: LocalizedStringResource {
+        r("dinner_change_button", "Change")
+    }
+    /// Clear dinner
+    public static var dinnerClearButton: LocalizedStringResource {
+        r("dinner_clear_button", "Clear dinner")
+    }
+    /// Cook at home
+    public static var dinnerKindCook: LocalizedStringResource {
+        r("dinner_kind_cook", "Cook at home")
+    }
+    /// Order in
+    public static var dinnerKindOrder: LocalizedStringResource {
+        r("dinner_kind_order", "Order in")
+    }
+    /// Go out
+    public static var dinnerKindOut: LocalizedStringResource {
+        r("dinner_kind_out", "Go out")
+    }
+    /// Pick something from your recipes
+    public static var dinnerKindCookSubtitle: LocalizedStringResource {
+        r("dinner_kind_cook_subtitle", "Pick something from your recipes")
+    }
+    /// Pick a cuisine, and where from
+    public static var dinnerKindOrderSubtitle: LocalizedStringResource {
+        r("dinner_kind_order_subtitle", "Pick a cuisine, and where from")
+    }
+    /// Pick a cuisine, and where to
+    public static var dinnerKindOutSubtitle: LocalizedStringResource {
+        r("dinner_kind_out_subtitle", "Pick a cuisine, and where to")
+    }
+    /// Choose a cuisine
+    public static var dinnerChooseCuisine: LocalizedStringResource {
+        r("dinner_choose_cuisine", "Choose a cuisine")
+    }
+    /// Choose a recipe
+    public static var dinnerChooseRecipe: LocalizedStringResource {
+        r("dinner_choose_recipe", "Choose a recipe")
+    }
+    /// Where from
+    public static var dinnerPlaceOrder: LocalizedStringResource {
+        r("dinner_place_order", "Where from")
+    }
+    /// Where to
+    public static var dinnerPlaceOut: LocalizedStringResource {
+        r("dinner_place_out", "Where to")
+    }
+    /// Optional
+    public static var dinnerPlacePlaceholder: LocalizedStringResource {
+        r("dinner_place_placeholder", "Optional")
+    }
+    /// That's dinner
+    public static var dinnerSetButton: LocalizedStringResource {
+        r("dinner_set_button", "That's dinner")
+    }
+    /// No recipes saved yet
+    public static var dinnerNoRecipes: LocalizedStringResource {
+        r("dinner_no_recipes", "No recipes saved yet")
+    }
+    /// Ordering in
+    public static var dinnerOrderingIn: LocalizedStringResource {
+        r("dinner_ordering_in", "Ordering in")
+    }
+    /// Going out
+    public static var dinnerGoingOut: LocalizedStringResource {
+        r("dinner_going_out", "Going out")
+    }
+    /// Plan for tonight
+    public static var recipesDetailPlanTonight: LocalizedStringResource {
+        r("recipes_detail_plan_tonight", "Plan for tonight")
+    }
+    /// On tonight's menu
+    public static var recipesDetailPlannedTonight: LocalizedStringResource {
+        r("recipes_detail_planned_tonight", "On tonight's menu")
+    }
+    /// Turkish
+    public static var cuisineTurkish: LocalizedStringResource {
+        r("cuisine_turkish", "Turkish")
+    }
+    /// Italian
+    public static var cuisineItalian: LocalizedStringResource {
+        r("cuisine_italian", "Italian")
+    }
+    /// Chinese
+    public static var cuisineChinese: LocalizedStringResource {
+        r("cuisine_chinese", "Chinese")
+    }
+    /// Japanese
+    public static var cuisineJapanese: LocalizedStringResource {
+        r("cuisine_japanese", "Japanese")
+    }
+    /// Indian
+    public static var cuisineIndian: LocalizedStringResource {
+        r("cuisine_indian", "Indian")
+    }
+    /// Mexican
+    public static var cuisineMexican: LocalizedStringResource {
+        r("cuisine_mexican", "Mexican")
+    }
+    /// Thai
+    public static var cuisineThai: LocalizedStringResource {
+        r("cuisine_thai", "Thai")
+    }
+    /// Mediterranean
+    public static var cuisineMediterranean: LocalizedStringResource {
+        r("cuisine_mediterranean", "Mediterranean")
+    }
+    /// American
+    public static var cuisineAmerican: LocalizedStringResource {
+        r("cuisine_american", "American")
+    }
+    /// Korean
+    public static var cuisineKorean: LocalizedStringResource {
+        r("cuisine_korean", "Korean")
+    }
+    /// Seafood
+    public static var cuisineSeafood: LocalizedStringResource {
+        r("cuisine_seafood", "Seafood")
+    }
+    /// Something else
+    public static var cuisineOther: LocalizedStringResource {
+        r("cuisine_other", "Something else")
+    }
+
+
+    /// Add the missing %lld
+    public static func recipesDetailAddMissing(_ a0: Int) -> LocalizedStringResource {
+        r("recipes_detail_add_missing", "Add the missing \(a0)")
+    }
+
+    /// %1$lld of %2$lld already on your list
+    public static func recipesDetailOnListCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("recipes_detail_on_list_count", "\(a0) of \(a1) already on your list")
+    }
+
+    /// Go to shopping list
+    public static var recipesDetailGoToList: LocalizedStringResource {
+        r("recipes_detail_go_to_list", "Go to shopping list")
+    }
+
+    /// %lld items added
+    public static func recipesDetailAddedCount(_ a0: Int) -> LocalizedStringResource {
+        r("recipes_detail_added_count", "\(a0) items added")
+    }
+
+    /// Everything is on the list
+    public static var recipesDetailAllOnList: LocalizedStringResource {
+        r("recipes_detail_all_on_list", "Everything is on the list")
+    }
+
+    /// Set it now
+    public static var dinnerSetDirectly: LocalizedStringResource {
+        r("dinner_set_directly", "Set it now")
+    }
+
+    /// Decide for the household — no vote.
+    public static var dinnerSetDirectlyHint: LocalizedStringResource {
+        r("dinner_set_directly_hint", "Decide for the household — no vote.")
+    }
+
+    /// Add to shopping list
+    public static var recipesDetailAddToShopping: LocalizedStringResource {
+        r("recipes_detail_add_to_shopping", "Add to shopping list")
+    }
+
+    /// Added to the list
+    public static var recipesDetailAddedToShopping: LocalizedStringResource {
+        r("recipes_detail_added_to_shopping", "Added to the list")
+    }
+
+    /// Already on the list
+    public static var recipesDetailAlreadyOnList: LocalizedStringResource {
+        r("recipes_detail_already_on_list", "Already on the list")
+    }
+
+    /// For %@
+    public static func shoppingForRecipe(_ a0: String) -> LocalizedStringResource {
+        r("shopping_for_recipe", "For \(a0)")
+    }
+
     /// Servings
     public static var recipesNewRecipeServingsPicker: LocalizedStringResource {
         r("recipes_new_recipe_servings_picker", "Servings")

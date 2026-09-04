@@ -18,4 +18,14 @@ extension KeyedDecodingContainer {
         guard let raw = try? decodeIfPresent(T.RawValue.self, forKey: key) else { return fallback }
         return T(rawValue: raw) ?? fallback
     }
+
+    /// The same leniency for a field that is genuinely optional: absent and
+    /// unrecognised both come back as `nil` rather than throwing.
+    func decodeLenientIfPresent<T: RawRepresentable & Decodable>(
+        _ type: T.Type,
+        forKey key: Key
+    ) -> T? where T.RawValue: Decodable {
+        guard let raw = try? decodeIfPresent(T.RawValue.self, forKey: key) else { return nil }
+        return T(rawValue: raw)
+    }
 }

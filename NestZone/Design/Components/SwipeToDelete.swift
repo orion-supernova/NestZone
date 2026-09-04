@@ -71,7 +71,11 @@ public struct SwipeToDelete<Content: View>: View {
         // label, not on the padding that makes up most of the row.
         .contentShape(.rect)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-        .gesture(drag)
+        // Simultaneous, not exclusive: `.gesture` wins the touch outright and
+        // the enclosing ScrollView never sees the pan, so a list of these rows
+        // cannot be scrolled by starting on one. Sharing it lets the scroll
+        // view take the vertical drags this gesture deliberately ignores.
+        .simultaneousGesture(drag)
         .onChange(of: isRevealed) { _, revealed in
             guard !didCommit else { return }
             withAnimation(Motion.spring) { offset = revealed ? -actionWidth : 0 }
@@ -111,10 +115,13 @@ public struct SwipeToDelete<Content: View>: View {
             .onChanged { value in
                 guard !didCommit else { return }
                 if !isTracking {
-                    // Let the ScrollView have anything that is mostly vertical.
-                    guard abs(value.translation.width) > abs(value.translation.height) else {
-                        return
-                    }
+                    // Claim the drag only once it is clearly sideways: a small
+                    // horizontal wobble at the start of a scroll must not pull
+                    // the row open. Below the threshold, neither direction has
+                    // won yet, so do nothing at all.
+                    let width = abs(value.translation.width)
+                    let height = abs(value.translation.height)
+                    guard width > height * 1.5, width > 16 else { return }
                     isTracking = true
                 }
                 let base = isRevealed ? -actionWidth : 0

@@ -30,6 +30,7 @@ public struct ShoppingView: View {
                     .padding(.top, 48)
                 } else {
                     header
+                    mealSections
                     viewModeToggle
                     if store.isGrouped {
                         pendingSections
@@ -70,7 +71,6 @@ public struct ShoppingView: View {
             }
         }
         .task { await store.send(.task).finish() }
-        .onDisappear { store.send(.screenLeft) }
         .alert($store.scope(state: \.alert, action: \.alert))
         .animation(Motion.spring, value: store.items)
     }
@@ -166,18 +166,24 @@ public struct ShoppingView: View {
         .transition(.opacity)
     }
 
-    private var pendingSections: some View {
-        ForEach(store.pendingByCategory, id: \.category) { group in
-            let isCollapsed = store.state.isCollapsed(group.category)
+    /// Everything that came over from a recipe, under the meal it belongs to.
+    ///
+    /// Above the aisles on purpose: a meal is a thing you are shopping *for*,
+    /// and splitting its ingredients across four category headings is exactly
+    /// what makes a recipe hard to shop.
+    @ViewBuilder
+    private var mealSections: some View {
+        ForEach(store.mealGroups, id: \.recipeID) { group in
+            let isCollapsed = store.state.isCollapsed(meal: group.recipeID)
             VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-                CategoryHeader(
-                    category: group.category,
-                    done: store.state.doneCount(in: group.category),
-                    total: store.state.totalCount(in: group.category),
-                    isCollapsed: isCollapsed
-                ) {
-                    store.send(.categoryToggled(group.category))
-                }
+                MealHeader(
+                    title: group.title,
+                    done: store.state.doneCount(inMeal: group.recipeID),
+                    total: store.state.totalCount(inMeal: group.recipeID),
+                    isCollapsed: isCollapsed,
+                    onToggle: { store.send(.mealToggled(group.recipeID)) },
+                    onClear: { store.send(.clearMealTapped(group.recipeID)) }
+                )
                 .padding(.horizontal, Metrics.screenPadding)
 
                 if !isCollapsed {
@@ -196,9 +202,52 @@ public struct ShoppingView: View {
                         }
                         .padding(.horizontal, Metrics.screenPadding)
                     }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    // Grown from under its own header rather than slid in from
+                    // the top: a `.move(edge: .top)` transition animates from
+                    // outside the section's bounds, so the rows swept up across
+                    // the header above on the way in and out.
+                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
                 }
             }
+            .clipped()
+            .animation(Motion.spring, value: isCollapsed)
+        }
+    }
+
+    private var pendingSections: some View {
+        ForEach(store.pendingByCategory, id: \.category) { group in
+            let isCollapsed = store.state.isCollapsed(group.category)
+            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+                CategoryHeader(
+                    category: group.category,
+                    done: store.state.doneCount(in: group.category),
+                    total: store.state.totalCount(in: group.category),
+                    isCollapsed: isCollapsed,
+                    onToggle: { store.send(.categoryToggled(group.category)) },
+                    onClear: { store.send(.clearCategoryTapped(group.category)) }
+                )
+                .padding(.horizontal, Metrics.screenPadding)
+
+                if !isCollapsed {
+                    GlassGroup {
+                        VStack(spacing: 8) {
+                            ForEach(group.items) { item in
+                                ShoppingRow(
+                                    item: item,
+                                    showsCategory: false,
+                                    revealedID: $revealedItemID,
+                                    glass: glass,
+                                    onToggle: { store.send(.togglePurchased(item.id)) },
+                                    onDelete: { store.send(.deleteTapped(item.id)) }
+                                )
+                            }
+                        }
+                        .padding(.horizontal, Metrics.screenPadding)
+                    }
+                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
+                }
+            }
+            .clipped()
             .animation(Motion.spring, value: isCollapsed)
         }
     }
@@ -354,8 +403,10 @@ private struct CategoryHeader: View {
     let total: Int
     let isCollapsed: Bool
     let onToggle: () -> Void
+    let onClear: () -> Void
 
     var body: some View {
+        HStack(spacing: 4) {
         Button(action: onToggle) {
             HStack(spacing: 10) {
                 Image(systemName: category.symbol)
@@ -378,15 +429,93 @@ private struct CategoryHeader: View {
 
                 Image(systemName: "chevron.down")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Palette.accessory)
                     .rotationEffect(.degrees(isCollapsed ? -90 : 0))
             }
             .padding(.vertical, 4)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .animation(Motion.spring, value: isCollapsed)
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text(isCollapsed ? L10n.commonSeeAll : L10n.commonClose))
+
+            GroupMenu(onClear: onClear)
+        }
+        .animation(Motion.spring, value: isCollapsed)
+    }
+}
+
+/// The destructive action a group header carries. Its own control, because a
+/// `Button` inside another `Button`'s label never receives a tap.
+private struct GroupMenu: View {
+    let onClear: () -> Void
+
+    var body: some View {
+        Menu {
+            Button(role: .destructive, action: onClear) {
+                Label { Text(L10n.shoppingRemoveAll) } icon: {
+                    Image(systemName: "trash")
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(Palette.accessoryStrong)
+                .frame(width: 36, height: 36)
+                .contentShape(.rect)
+        }
+        .accessibilityLabel(Text(L10n.shoppingRemoveAll))
+    }
+}
+
+
+/// A meal's shopping, foldable and with its own progress — the aisle headers'
+/// twin, for the rows that came from a recipe rather than a category.
+private struct MealHeader: View {
+    let title: String
+    let done: Int
+    let total: Int
+    let isCollapsed: Bool
+    let onToggle: () -> Void
+    let onClear: () -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+        Button(action: onToggle) {
+            HStack(spacing: 10) {
+                Image(systemName: "fork.knife")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.tint)
+                    .frame(width: 28, height: 28)
+                    .background(.tint.opacity(0.14), in: .circle)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(L10n.shoppingForRecipe(title))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    Text(L10n.shoppingCategoryCompletedItems(done, total))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.down")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Palette.accessory)
+                    .rotationEffect(.degrees(isCollapsed ? -90 : 0))
+            }
+            .padding(.vertical, 4)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(Text(isCollapsed ? L10n.commonSeeAll : L10n.commonClose))
+
+            GroupMenu(onClear: onClear)
+        }
+        .animation(Motion.spring, value: isCollapsed)
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The app's visual identities.
 ///
@@ -84,6 +85,29 @@ public enum Palette {
     public static let amber = Color(hex: "F59E0B")
     public static let lemon = Color(hex: "FDE047")
     public static let mint = Color(hex: "34D399")
+
+    /// Chevrons, disclosure arrows, overflow dots — the small glyphs that say
+    /// "there is more here" and carry no other information.
+    ///
+    /// Not `.tertiary`: over glass that is legible on a light ground and very
+    /// nearly invisible on a dark one, because the hierarchy styles are tuned
+    /// against opaque system backgrounds rather than a blurred one. These two
+    /// are fixed alpha over white and black respectively, which holds up in
+    /// both appearances and under every theme. Built from a dynamic `UIColor`
+    /// and stored, so a `body` never allocates one.
+    public static let accessory = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 1, alpha: 0.55)
+            : UIColor(white: 0, alpha: 0.35)
+    })
+
+    /// The same idea for a glyph that is also a control — an overflow menu —
+    /// where "there is more here" has to read as tappable.
+    public static let accessoryStrong = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 1, alpha: 0.78)
+            : UIColor(white: 0, alpha: 0.55)
+    })
 
     /// Semantic colours. These resolve per-appearance on their own, which is why
     /// the app no longer needs a light and a dark value for everything.

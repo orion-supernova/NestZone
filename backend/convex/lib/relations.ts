@@ -116,7 +116,9 @@ export async function cascadeDeleteHome(
 ): Promise<Record<string, number>> {
   const removed: Record<string, number> = {};
 
-  const simple = ["tasks", "shopping_items", "notes", "recipes", "movies"] as const;
+  const simple = [
+    "tasks", "shopping_items", "notes", "recipes", "movies", "meal_plans",
+  ] as const;
   for (const table of simple) {
     const rows = await ctx.db
       .query(table)

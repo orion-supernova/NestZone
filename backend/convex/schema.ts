@@ -129,6 +129,13 @@ export default defineSchema({
     created_by: v.optional(v.id("users")),
     updated_by: v.optional(v.id("users")),
     home_id: v.id("homes"),
+    // Set when the item came from a recipe's ingredient list, so the shopping
+    // list can group "everything for Sunday's lasagne" and point back at it.
+    // The title is denormalised on purpose: the shopping screen subscribes to
+    // items only, and a group heading must not cost it a second subscription
+    // or break when the recipe is later deleted.
+    recipe_id: v.optional(v.id("recipes")),
+    recipe_title: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
@@ -198,6 +205,31 @@ export default defineSchema({
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
     .index("by_home", ["home_id"]),
+
+  // What the household is eating, one row per home per day. The winner of a
+  // "what should we cook" round writes one, and so does planning a recipe by
+  // hand. `date` is a plain YYYY-MM-DD string in the home's own reckoning: the
+  // question is "what are we eating tonight", which is a calendar day, not an
+  // instant, and an epoch stamp would put half the household on yesterday.
+  meal_plans: defineTable({
+    home_id: v.id("homes"),
+    // Dinner is a decision before it is a dish: cook something, order it in, or
+    // go out. Only `cook` carries a recipe; the other two carry a cuisine and,
+    // if anyone has decided, where from.
+    kind: v.union(v.literal("cook"), v.literal("order"), v.literal("out")),
+    recipe_id: v.optional(v.id("recipes")),
+    // Cooking something that is not a recipe — leftovers, a family dish nobody
+    // has written down. Carries the name so the card has something to show.
+    title: v.optional(v.string()),
+    cuisine: v.optional(v.string()),
+    place: v.optional(v.string()),
+    date: v.string(),
+    planned_by: v.optional(v.id("users")),
+    created: v.optional(v.number()),
+    updated: v.optional(v.number()),
+  })
+    .index("by_home", ["home_id"])
+    .index("by_home_date", ["home_id", "date"]),
 
   polls: defineTable({
     pbId: v.optional(v.string()),

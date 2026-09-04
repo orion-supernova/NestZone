@@ -15,6 +15,9 @@ public struct ShoppingFeature: Sendable {
         /// Categories the user has collapsed. Not persisted — a collapse is a
         /// "get this out of my way for now", not a preference.
         public var collapsed: Set<ShoppingItem.Category> = []
+        /// Meals the user has folded away. Same reasoning as `collapsed`: a
+        /// fifteen-ingredient recipe pushes the rest of the shop off screen.
+        public var collapsedMeals: Set<RecipeID> = []
         /// Swiped away, but not yet sent to the server. The row is already gone
         /// from `items`; if the undo window closes without a tap, this is what
         /// gets deleted for real. One at a time — a second swipe commits the
@@ -27,13 +30,40 @@ public struct ShoppingFeature: Sendable {
         /// Outstanding items, grouped by category and ordered so the aisles read
         /// in a stable order rather than by whatever the dictionary yields.
         public var pendingByCategory: [(category: ShoppingItem.Category, items: [ShoppingItem])] {
-            let pending = items.filter { !$0.isPurchased }
+            let pending = unsourced
             return ShoppingItem.Category.allCases.compactMap { category in
                 let matching = pending
                     .filter { $0.category == category }
                     .sorted { Timestamp.newestFirst($0.created, $1.created) }
                 return matching.isEmpty ? nil : (category, matching)
             }
+        }
+
+        /// Outstanding items that came from a recipe, gathered under it.
+        ///
+        /// Grouped by id but titled from the item, so a meal still reads
+        /// correctly after its recipe has been deleted. Newest meal first —
+        /// what you are shopping for now is what you just added.
+        public var mealGroups: [(recipeID: RecipeID, title: String, items: [ShoppingItem])] {
+            let sourced = items.filter { !$0.isPurchased && $0.recipeID != nil }
+            let byRecipe = Dictionary(grouping: sourced) { $0.recipeID! }
+            return byRecipe
+                .map { id, group in
+                    (
+                        recipeID: id,
+                        title: group.first?.recipeTitle ?? "",
+                        items: group.sorted { Timestamp.newestFirst($0.created, $1.created) }
+                    )
+                }
+                .sorted { lhs, rhs in
+                    Timestamp.newestFirst(lhs.items.first?.created, rhs.items.first?.created)
+                }
+        }
+
+        /// Everything a meal group does not already cover, so an item appears
+        /// under its recipe or under its aisle — never twice.
+        private var unsourced: [ShoppingItem] {
+            items.filter { !$0.isPurchased && $0.recipeID == nil }
         }
 
         public var purchased: [ShoppingItem] {
@@ -48,9 +78,7 @@ public struct ShoppingFeature: Sendable {
 
         /// Everything outstanding, newest first — the flat view.
         public var pendingFlat: [ShoppingItem] {
-            items
-                .filter { !$0.isPurchased }
-                .sorted { Timestamp.newestFirst($0.created, $1.created) }
+            unsourced.sorted { Timestamp.newestFirst($0.created, $1.created) }
         }
 
         public var totalCount: Int { items.count }
@@ -65,6 +93,20 @@ public struct ShoppingFeature: Sendable {
 
         public func isCollapsed(_ category: ShoppingItem.Category) -> Bool {
             collapsed.contains(category)
+        }
+
+        public func isCollapsed(meal recipeID: RecipeID) -> Bool {
+            collapsedMeals.contains(recipeID)
+        }
+
+        /// Counts across the whole meal, bought or not, so a folded row still
+        /// says how far through it you are.
+        public func doneCount(inMeal recipeID: RecipeID) -> Int {
+            items.filter { $0.recipeID == recipeID && $0.isPurchased }.count
+        }
+
+        public func totalCount(inMeal recipeID: RecipeID) -> Int {
+            items.filter { $0.recipeID == recipeID }.count
         }
 
         public func doneCount(in category: ShoppingItem.Category) -> Int {
@@ -85,16 +127,20 @@ public struct ShoppingFeature: Sendable {
         case deleteTapped(ShoppingItemID)
         case undoDeleteTapped
         case deleteWindowClosed(ShoppingItemID)
-        case screenLeft
         case clearPurchasedTapped
+        case clearCategoryTapped(ShoppingItem.Category)
+        case clearMealTapped(RecipeID)
         case viewModeToggled(grouped: Bool)
         case categoryToggled(ShoppingItem.Category)
+        case mealToggled(RecipeID)
         case writeFailed(AppError)
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
 
         public enum Alert: Equatable {
             case confirmClearPurchased
+            case confirmClearCategory(ShoppingItem.Category)
+            case confirmClearMeal(RecipeID)
         }
     }
 
@@ -203,14 +249,6 @@ public struct ShoppingFeature: Sendable {
                 state.pendingDeletion = nil
                 return commit(id)
 
-            // Leaving the screen tears down the timer with it, which would drop
-            // the delete on the floor and let the row reappear. Send it now and
-            // give up the rest of the window.
-            case .screenLeft:
-                guard let item = state.pendingDeletion else { return .none }
-                state.pendingDeletion = nil
-                return .merge(.cancel(id: CancelID.undo), commit(item.id))
-
             case let .viewModeToggled(grouped):
                 state.$isGrouped.withLock { $0 = grouped }
                 return .none
@@ -223,10 +261,46 @@ public struct ShoppingFeature: Sendable {
                 }
                 return .none
 
+            case let .mealToggled(recipeID):
+                if state.collapsedMeals.contains(recipeID) {
+                    state.collapsedMeals.remove(recipeID)
+                } else {
+                    state.collapsedMeals.insert(recipeID)
+                }
+                return .none
+
             case .clearPurchasedTapped:
                 guard !state.purchased.isEmpty else { return .none }
                 state.alert = .confirmClearPurchased()
                 return .none
+
+            case let .clearCategoryTapped(category):
+                let items = state.items.filter { $0.category == category && $0.recipeID == nil }
+                guard !items.isEmpty else { return .none }
+                state.alert = .confirmClearGroup(
+                    name: String(localized: category.title),
+                    count: items.count,
+                    action: .confirmClearCategory(category)
+                )
+                return .none
+
+            case let .clearMealTapped(recipeID):
+                let items = state.items.filter { $0.recipeID == recipeID }
+                guard let name = items.first?.recipeTitle, !items.isEmpty else { return .none }
+                state.alert = .confirmClearGroup(
+                    name: name,
+                    count: items.count,
+                    action: .confirmClearMeal(recipeID)
+                )
+                return .none
+
+            case let .alert(.presented(.confirmClearCategory(category))):
+                // An aisle heading only ever covers items that came from no
+                // recipe; a meal's ingredients belong to the meal.
+                return removeAll(&state) { $0.category == category && $0.recipeID == nil }
+
+            case let .alert(.presented(.confirmClearMeal(recipeID))):
+                return removeAll(&state) { $0.recipeID == recipeID }
 
             case .alert(.presented(.confirmClearPurchased)):
                 let ids = state.purchased.map(\.id)
@@ -257,6 +331,27 @@ public struct ShoppingFeature: Sendable {
 }
 
 extension ShoppingFeature {
+    /// Clears a whole group in one go: optimistic, and concurrent rather than a
+    /// serial round trip per row.
+    private func removeAll(
+        _ state: inout State,
+        where matches: (ShoppingItem) -> Bool
+    ) -> Effect<Action> {
+        let ids = state.items.filter(matches).map(\.id)
+        guard !ids.isEmpty else { return .none }
+        for id in ids { state.items.remove(id: id) }
+        return .run { send in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for id in ids {
+                    group.addTask { try await shopping.remove(id) }
+                }
+                try await group.waitForAll()
+            }
+        } catch: { error, send in
+            await send(.writeFailed(AppError(error)))
+        }
+    }
+
     /// The write the swipe was always going to make, once nobody has undone it.
     private func commit(_ id: ShoppingItemID) -> Effect<Action> {
         .run { send in
@@ -268,6 +363,23 @@ extension ShoppingFeature {
 }
 
 extension AlertState where Action == ShoppingFeature.Action.Alert {
+    /// Emptying a whole aisle or a whole meal. It says how many and from what,
+    /// because "remove all" on a folded group is otherwise a leap of faith.
+    static func confirmClearGroup(name: String, count: Int, action: Action) -> Self {
+        AlertState {
+            TextState(String(localized: L10n.shoppingClearGroupTitle(count)))
+        } actions: {
+            ButtonState(role: .destructive, action: action) {
+                TextState(String(localized: L10n.shoppingRemoveAll))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.shoppingClearGroupMessage(name)))
+        }
+    }
+
     static func confirmClearPurchased() -> Self {
         AlertState {
             TextState(String(localized: L10n.shoppingClearPurchased))

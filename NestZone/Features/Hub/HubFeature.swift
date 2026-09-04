@@ -95,6 +95,28 @@ public struct HubFeature: Sendable {
                 }
                 return .none
 
+            // Leaving the shopping list with a swipe still inside its undo
+            // window. The screen cannot do this itself: `onDisappear` fires
+            // after the pop, so the action arrived at an element that no longer
+            // existed and the delete was dropped (with a runtime warning). Here
+            // the element is still in the stack — parent reducers run before
+            // `forEach` — so the write can be read off it and sent.
+            case let .path(.popFrom(id)):
+                guard case let .shopping(shopping) = state.path[id: id],
+                      let pending = shopping.pendingDeletion else { return .none }
+                return .run { _ in
+                    try await shoppingClient.remove(pending.id)
+                } catch: { _, _ in
+                    // The row is already gone from a screen that is going away.
+                }
+
+            // A recipe asking for the shopping list: pop back to the Hub and
+            // push the list, rather than stacking one module inside another.
+            case let .path(.element(id: id, action: .recipes(.delegate(.openShoppingList)))):
+                state.path.pop(from: id)
+                state.path.append(.shopping(ShoppingFeature.State(homeID: state.homeID)))
+                return .none
+
             case .path:
                 return .none
             }

@@ -63,9 +63,17 @@ public struct RecipesFeature: Sendable {
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<Alert>)
+        case delegate(Delegate)
 
         public enum Alert: Equatable {
             case confirmDelete(RecipeID)
+        }
+
+        @CasePathable
+        public enum Delegate: Equatable {
+            /// Relayed from an open recipe: the tab container owns navigation,
+            /// and the shopping list lives under a different module.
+            case openShoppingList
         }
     }
 
@@ -151,7 +159,13 @@ public struct RecipesFeature: Sendable {
                 state.destination = nil
                 return .none
 
-            case .binding, .destination, .alert:
+            case .destination(.presented(.detail(.delegate(.openShoppingList)))):
+                // Close the recipe on the way, so coming back from the list
+                // does not land on a screen the person has finished with.
+                state.destination = nil
+                return .send(.delegate(.openShoppingList))
+
+            case .binding, .destination, .alert, .delegate:
                 return .none
             }
         }
@@ -192,6 +206,21 @@ public struct RecipeDetailFeature: Sendable {
         public var phase: Phase = .ingredients
         public var step = 0
         public var isSaving = false
+        /// What the last "add to shopping list" did, held briefly so the button
+        /// can say so instead of opening an alert. `0` means everything was
+        /// already outstanding.
+        public var addedToList: Int?
+        public var isAddingToList = false
+        /// Outstanding shopping-list names for this home, lowercased. Live, so
+        /// the screen can say what it would actually add rather than offering
+        /// to add twelve things that are already in the trolley.
+        public var onList: Set<String> = []
+        /// True while this recipe is what the household is cooking tonight.
+        /// Read from the live meal plan rather than only set by this screen —
+        /// arriving from tonight's card and being offered "plan for tonight"
+        /// for the meal already planned made no sense at all.
+        public var isTonightsDinner = false
+        public var isPlanning = false
         public var timer = StepTimer()
         @Presents public var alert: AlertState<Action.Alert>?
 
@@ -200,6 +229,24 @@ public struct RecipeDetailFeature: Sendable {
         public init(recipe: Recipe, homeID: HomeID) {
             self.recipe = recipe
             self.homeID = homeID
+        }
+
+        /// Ingredient lines this recipe needs that are not already outstanding.
+        public var missingIngredients: [String] {
+            recipe.ingredients.filter { !onList.contains(Self.listKey($0)) }
+        }
+
+        public var ingredientsOnList: Int {
+            recipe.ingredients.count - missingIngredients.count
+        }
+
+        public var isFullyOnList: Bool {
+            !recipe.ingredients.isEmpty && missingIngredients.isEmpty
+        }
+
+        /// Matched the way the server matches: trimmed and case-folded.
+        static func listKey(_ name: String) -> String {
+            name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         }
 
         /// A bundled sample can be saved into the home; a saved one can't.
@@ -264,6 +311,7 @@ public struct RecipeDetailFeature: Sendable {
     }
 
     public enum Action: Equatable {
+        case task
         case ingredientToggled(Int)
         case allIngredientsToggled
         case beginCookingTapped
@@ -277,19 +325,36 @@ public struct RecipeDetailFeature: Sendable {
         case timerTicked
         case timerStopped
         case timerFinished
+        case shoppingUpdated([ShoppingItem])
+        case mealsUpdated([MealPlan])
+        case goToShoppingTapped
+        case planTonightTapped
+        case plannedTonight
+        case addToShoppingTapped
+        case addedToShopping(Int)
+        case addConfirmationExpired
         case saveToHomeTapped
         case saved
         case deleteTapped
         case deleted
         case failed(AppError)
         case alert(PresentationAction<Alert>)
+        case delegate(Delegate)
 
         public enum Alert: Equatable { case confirmQuit }
+
+        @CasePathable
+        public enum Delegate: Equatable {
+            /// Bubbled to the tab container, which owns navigation.
+            case openShoppingList
+        }
     }
 
-    private enum CancelID { case timer }
+    private enum CancelID { case timer, addConfirmation, shopping, meals }
 
     @Dependency(\.recipes) var recipes
+    @Dependency(\.shopping) var shopping
+    @Dependency(\.meals) var meals
     @Dependency(\.dismiss) var dismiss
     @Dependency(\.continuousClock) var clock
     @Dependency(\.push) var push
@@ -299,6 +364,48 @@ public struct RecipeDetailFeature: Sendable {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .task:
+                // A sample is not in any home's list, so there is nothing to
+                // compare it against until it is saved.
+                guard !state.recipe.isSample else { return .none }
+                return .merge(
+                    .run { [homeID = state.homeID] send in
+                        for try await items in shopping.byHome(homeID) {
+                            await send(.shoppingUpdated(items))
+                        }
+                    } catch: { _, _ in
+                        // Without this the screen simply offers to add
+                        // everything, which is what it did before it knew any
+                        // better.
+                    }
+                    .cancellable(id: CancelID.shopping, cancelInFlight: true),
+
+                    .run { [homeID = state.homeID] send in
+                        for try await plans in meals.fromDate(homeID, MealDate.today) {
+                            await send(.mealsUpdated(plans))
+                        }
+                    } catch: { _, _ in
+                    }
+                    .cancellable(id: CancelID.meals, cancelInFlight: true)
+                )
+
+            case let .shoppingUpdated(items):
+                state.onList = Set(
+                    items
+                        .filter { !$0.isPurchased }
+                        .map { State.listKey($0.name) }
+                )
+                return .none
+
+            case let .mealsUpdated(plans):
+                state.isTonightsDinner = plans.contains {
+                    $0.date == MealDate.today && $0.recipe?.id == state.recipe.id
+                }
+                return .none
+
+            case .goToShoppingTapped:
+                return .send(.delegate(.openShoppingList))
+
             case let .ingredientToggled(index):
                 if state.checkedIngredients.contains(index) {
                     state.checkedIngredients.remove(index)
@@ -327,6 +434,90 @@ public struct RecipeDetailFeature: Sendable {
                 guard state.allIngredientsChecked else { return .none }
                 state.phase = .cooking
                 state.step = 0
+                return .none
+
+            // Tonight is one row per home per day, so this replaces whatever
+            // was decided rather than adding to it.
+            case .planTonightTapped:
+                guard !state.isPlanning, !state.isTonightsDinner else { return .none }
+                state.isPlanning = true
+                let decision = DinnerDecision(
+                    homeID: state.homeID,
+                    kind: .cook,
+                    recipeID: state.recipe.id
+                )
+                return .run { send in
+                    try await meals.set(decision)
+                    await send(.plannedTonight)
+                } catch: { error, send in
+                    await send(.failed(AppError(error)))
+                }
+
+            case .plannedTonight:
+                state.isPlanning = false
+                state.isTonightsDinner = true
+                return .none
+
+            // The ingredient lines go over as written — they are free text, not
+            // structured quantities, so "2 cloves garlic" becomes exactly that.
+            // The server skips anything already outstanding.
+            case .addToShoppingTapped:
+                guard !state.isAddingToList, !state.recipe.ingredients.isEmpty else { return .none }
+                state.isAddingToList = true
+                return .run { [
+                    recipe = state.recipe,
+                    homeID = state.homeID,
+                    missing = state.missingIngredients
+                ] send in
+                    // An Explore recipe is bundled with the app, so its id is
+                    // not a `recipes` document id and the mutation's `v.id()`
+                    // validator rejects the whole request. Saving it first is
+                    // both the fix and what a cook shopping for it wants.
+                    var recipeID = recipe.id
+                    if recipe.isSample {
+                        recipeID = try await recipes.create(
+                            NewRecipe(
+                                title: recipe.title,
+                                summary: recipe.summary,
+                                ingredients: recipe.ingredients,
+                                steps: recipe.steps,
+                                tags: recipe.tags,
+                                prepTime: recipe.prepTime,
+                                cookTime: recipe.cookTime,
+                                servings: recipe.servings,
+                                difficulty: recipe.difficulty,
+                                homeID: homeID
+                            )
+                        ).id
+                    }
+
+                    let added = try await shopping.addFromRecipe(
+                        RecipeIngredients(
+                            recipeID: recipeID,
+                            recipeTitle: recipe.title,
+                            // Only what is actually missing: the server would
+                            // skip the rest anyway, and the count it returns is
+                            // what the toast reports.
+                            names: missing.isEmpty ? recipe.ingredients : missing,
+                            homeID: homeID
+                        )
+                    )
+                    await send(.addedToShopping(added))
+                } catch: { error, send in
+                    await send(.failed(AppError(error)))
+                }
+
+            case let .addedToShopping(count):
+                state.isAddingToList = false
+                state.addedToList = count
+                return .run { send in
+                    try await clock.sleep(for: .seconds(2))
+                    await send(.addConfirmationExpired)
+                }
+                .cancellable(id: CancelID.addConfirmation, cancelInFlight: true)
+
+            case .addConfirmationExpired:
+                state.addedToList = nil
                 return .none
 
             case .quitCookingTapped:
@@ -434,7 +625,7 @@ public struct RecipeDetailFeature: Sendable {
                     homeID: state.homeID
                 )
                 return .run { send in
-                    try await recipes.create(new)
+                    _ = try await recipes.create(new)
                     await send(.saved)
                 } catch: { error, send in
                     await send(.failed(AppError(error)))
@@ -453,11 +644,22 @@ public struct RecipeDetailFeature: Sendable {
                     await send(.failed(AppError(error)))
                 }
 
-            case .deleted, .failed:
+            case .deleted:
                 state.isSaving = false
                 return .none
 
-            case .alert:
+            // Every one of these paths used to reset its flag and return, which
+            // is why a rejected write looked exactly like a button that did
+            // nothing at all.
+            case let .failed(error):
+                state.isSaving = false
+                state.isAddingToList = false
+                state.isPlanning = false
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .alert, .delegate:
                 return .none
             }
         }
@@ -624,7 +826,7 @@ public struct ComposeRecipeFeature: Sendable {
                     homeID: state.homeID
                 )
                 return .run { send in
-                    try await recipes.create(new)
+                    _ = try await recipes.create(new)
                     await send(.finished)
                 } catch: { error, send in
                     await send(.failed(AppError(error)))

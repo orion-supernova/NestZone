@@ -177,6 +177,7 @@ public struct MovieNightFeature: Sendable {
                     let id = try await pollsClient.create(
                         homeID,
                         title,
+                        .movie,
                         query.query,
                         movies.prefix(30).map(PollCandidate.init)
                     )

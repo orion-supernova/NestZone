@@ -101,7 +101,7 @@ private struct ConversationRow: View {
                 if let timestamp {
                     Text(timestamp.date, format: .relative(presentation: .numeric))
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(Palette.accessory)
                 }
             }
             .padding(Metrics.cardPadding)

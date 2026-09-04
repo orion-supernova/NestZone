@@ -129,7 +129,7 @@ private struct ListRow: View {
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Palette.accessory)
             }
             .padding(Metrics.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)

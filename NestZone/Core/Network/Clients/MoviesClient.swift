@@ -63,7 +63,7 @@ extension MoviesClient: DependencyKey {
                 "title": movie.title,
                 "genres": movie.genres.map { $0 as ConvexEncodable? },
             ]
-            if let year = movie.year { args["year"] = year }
+            if let year = movie.year { args["year"] = year.convexNumber }
             if let poster = movie.poster { args["poster"] = poster }
             try await ConvexConnection.shared.mutate("movies:addMovie", args: args)
         },

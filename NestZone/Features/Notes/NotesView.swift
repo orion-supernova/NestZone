@@ -224,7 +224,7 @@ struct ComposeNoteSheet: View {
                 if store.body_.isEmpty {
                     Text(L10n.notesComposePlaceholder)
                         .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(Palette.accessory)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 20)
                         .allowsHitTesting(false)

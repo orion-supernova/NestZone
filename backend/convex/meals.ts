@@ -1,0 +1,116 @@
+import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
+import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+
+// What is for dinner, by calendar day.
+//
+// Three shapes, one row: cook a recipe, order in, or go out. A cook plan is a
+// pointer, and the recipe is read through on the way out so the Home tab can
+// show and open it without subscribing to the whole recipe collection. A cook
+// plan whose recipe has since been deleted is dropped rather than returned
+// half-empty — there would be nothing to show or open.
+
+const mealKind = v.union(v.literal("cook"), v.literal("order"), v.literal("out"));
+
+export const forHome = query({
+  args: { homeId: v.id("homes"), from: v.string() },
+  handler: async (ctx, { homeId, from }) => {
+    await requireHomeMember(ctx, homeId);
+    const plans = await ctx.db
+      .query("meal_plans")
+      .withIndex("by_home_date", (q) => q.eq("home_id", homeId).gte("date", from))
+      .collect();
+
+    const resolved = await Promise.all(
+      plans.map(async (plan) => {
+        if (plan.kind !== "cook") return { ...plan, recipe: null };
+        // A cook plan with a name and no recipe stands on its own.
+        if (!plan.recipe_id) return { ...plan, recipe: null };
+        const recipe = await ctx.db.get(plan.recipe_id);
+        return recipe ? { ...plan, recipe } : null;
+      }),
+    );
+    return resolved
+      .filter((p): p is NonNullable<typeof p> => p !== null)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  },
+});
+
+export const set = mutation({
+  args: {
+    homeId: v.id("homes"),
+    date: v.string(),
+    kind: mealKind,
+    recipeId: v.optional(v.id("recipes")),
+    title: v.optional(v.string()),
+    cuisine: v.optional(v.string()),
+    place: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    await requireHomeMember(ctx, args.homeId);
+
+    if (args.kind === "cook") {
+      // Either a recipe or a name — "leftovers" is a perfectly good answer to
+      // what is for dinner, and does not deserve a recipe row.
+      if (!args.recipeId && !args.title?.trim()) {
+        throw new Error("Cooking needs a recipe or a name");
+      }
+      if (args.recipeId) {
+        const recipe = await ctx.db.get(args.recipeId);
+        if (!recipe) throw new Error("Recipe not found");
+        // A plan may only point at a recipe this home can actually see.
+        await requireDocHome(ctx, recipe, "Recipe");
+      }
+    } else if (!args.cuisine && !args.place) {
+      throw new Error("Ordering in or going out needs a cuisine or a place");
+    }
+
+    const fields = {
+      kind: args.kind,
+      // Cleared rather than left behind: switching from cooking to a takeaway
+      // must not leave last night's recipe hanging off the row.
+      recipe_id: args.kind === "cook" ? args.recipeId : undefined,
+      // A typed name belongs to a recipe-less cook plan only; picking a recipe
+      // later must not leave the old text behind it.
+      title: args.kind === "cook" && !args.recipeId ? args.title?.trim() : undefined,
+      cuisine: args.kind === "cook" ? undefined : args.cuisine,
+      place: args.kind === "cook" ? undefined : args.place,
+      planned_by: user._id,
+    };
+
+    // One dinner per day: deciding again replaces rather than stacks up.
+    const existing = await ctx.db
+      .query("meal_plans")
+      .withIndex("by_home_date", (q) =>
+        q.eq("home_id", args.homeId).eq("date", args.date),
+      )
+      .unique();
+
+    const now = Date.now();
+    if (existing) {
+      await ctx.db.patch(existing._id, { ...fields, updated: now });
+      return existing._id;
+    }
+    return await ctx.db.insert("meal_plans", {
+      home_id: args.homeId,
+      date: args.date,
+      ...fields,
+      created: now,
+      updated: now,
+    });
+  },
+});
+
+export const clear = mutation({
+  args: { homeId: v.id("homes"), date: v.string() },
+  handler: async (ctx, { homeId, date }) => {
+    await requireHomeMember(ctx, homeId);
+    const existing = await ctx.db
+      .query("meal_plans")
+      .withIndex("by_home_date", (q) => q.eq("home_id", homeId).eq("date", date))
+      .unique();
+    if (existing) await ctx.db.delete(existing._id);
+    return { ok: true };
+  },
+});

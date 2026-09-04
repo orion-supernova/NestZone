@@ -277,6 +277,294 @@ struct SettingsHomeTests {
 }
 
 @MainActor
+@Suite("Recipe shopping")
+struct RecipeShoppingTests {
+
+    private static let recipe = Recipe(
+        id: "r1", title: "Lasagne",
+        ingredients: ["500g beef mince", "2 cloves garlic", "Pasta sheets"],
+        homeID: "h1"
+    )
+
+    @Test("The screen counts what is already outstanding, not what is bought")
+    func countsOnlyOutstanding() async {
+        var state = RecipeDetailFeature.State(recipe: Self.recipe, homeID: "h1")
+        let store = TestStore(initialState: state) { RecipeDetailFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.shoppingUpdated([
+            ShoppingItem(id: "s1", name: "2 cloves garlic", homeID: "h1"),
+            // Bought already, so it is not on the list any more in the sense
+            // that matters — it needs buying again.
+            ShoppingItem(id: "s2", name: "Pasta sheets", isPurchased: true, homeID: "h1"),
+        ]))
+
+        #expect(store.state.ingredientsOnList == 1)
+        #expect(store.state.missingIngredients == ["500g beef mince", "Pasta sheets"])
+        #expect(!store.state.isFullyOnList)
+
+        state = store.state
+        #expect(!state.isFullyOnList)
+    }
+
+    @Test("Only the missing lines are sent")
+    func sendsOnlyWhatIsMissing() async {
+        let sent = LockIsolated<[[String]]>([])
+        let store = TestStore(
+            initialState: RecipeDetailFeature.State(recipe: Self.recipe, homeID: "h1")
+        ) {
+            RecipeDetailFeature()
+        } withDependencies: {
+            $0.shopping.addFromRecipe = { batch in
+                sent.withValue { $0.append(batch.names) }
+                return batch.names.count
+            }
+            $0.continuousClock = TestClock()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.shoppingUpdated([
+            ShoppingItem(id: "s1", name: "  2 CLOVES GARLIC ", homeID: "h1")
+        ]))
+        await store.send(.addToShoppingTapped)
+        await store.receive(\.addedToShopping)
+
+        // Case and padding are folded the way the server folds them.
+        #expect(sent.value == [["500g beef mince", "Pasta sheets"]])
+    }
+
+    @Test("A rejected write says so instead of looking like a dead button")
+    func failureSurfaces() async {
+        struct Boom: Error {}
+        let store = TestStore(
+            initialState: RecipeDetailFeature.State(recipe: Self.recipe, homeID: "h1")
+        ) {
+            RecipeDetailFeature()
+        } withDependencies: {
+            $0.shopping.addFromRecipe = { _ in throw Boom() }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.addToShoppingTapped)
+        await store.receive(\.failed)
+        #expect(store.state.alert != nil, "the failure has to reach the person")
+        #expect(!store.state.isAddingToList)
+    }
+}
+
+@MainActor
+@Suite("Dinner")
+struct DinnerTests {
+
+    @Test("A candidate survives the round trip through a poll item's external id")
+    func candidateRoundTrips() {
+        let recipe = DinnerCandidate(Recipe(id: "r1", title: "Lasagne", homeID: "h1"))
+        #expect(recipe.id == "recipe:r1")
+        let back = DinnerCandidate(externalID: recipe.id, label: "Lasagne")
+        #expect(back?.kind == .recipe)
+        #expect(back?.value == "r1")
+
+        // A typed meal can contain a colon; only the first one separates.
+        let typed = DinnerCandidate(kind: .custom, value: "Pizza: the good place", label: "Pizza: the good place")
+        let typedBack = DinnerCandidate(externalID: typed.id, label: typed.label)
+        #expect(typedBack?.value == "Pizza: the good place")
+
+        let cuisine = DinnerCandidate(Cuisine.thai)
+        #expect(DinnerCandidate(externalID: cuisine.id, label: nil)?.value == "thai")
+    }
+
+    @Test("A winning candidate becomes the right kind of plan")
+    func winnerBecomesAPlan() {
+        let recipe = DinnerCandidate(Recipe(id: "r1", title: "Lasagne", homeID: "h1"))
+        let cooked = recipe.decision(homeID: "h1", kind: .cook)
+        #expect(cooked.kind == .cook)
+        #expect(cooked.recipeID == "r1")
+
+        // A cuisine cannot be cooked, so a cook round that lands on one is an
+        // order rather than a plan pointing at nothing.
+        let cuisine = DinnerCandidate(Cuisine.indian)
+        #expect(cuisine.decision(homeID: "h1", kind: .cook).kind == .order)
+        #expect(cuisine.decision(homeID: "h1", kind: .out).kind == .out)
+
+        let typed = DinnerCandidate(kind: .custom, value: "Leftovers", label: "Leftovers")
+        #expect(typed.decision(homeID: "h1", kind: .cook).title == "Leftovers")
+        #expect(typed.decision(homeID: "h1", kind: .out).place == "Leftovers")
+    }
+
+    @Test("Switching kind mid-flow drops what belonged to the old one")
+    func switchingKindClearsTheAnswer() async {
+        let store = TestStore(initialState: DinnerFeature.State(homeID: "h1")) {
+            DinnerFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.routeChosen(.set))
+        await store.send(.kindChosen(.cook))
+        await store.send(.recipeChosen(Recipe(id: "r1", title: "Lasagne", homeID: "h1")))
+        #expect(store.state.canSave)
+
+        await store.send(.kindChosen(.order))
+        #expect(store.state.selection == nil, "a recipe cannot be ordered in")
+        #expect(!store.state.canSave)
+    }
+
+    @Test("A round needs at least two things to choose between")
+    func roundNeedsTwo() async {
+        let store = TestStore(initialState: DinnerFeature.State(homeID: "h1")) {
+            DinnerFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.routeChosen(.vote))
+        await store.send(.kindChosen(.cook))
+        #expect(!store.state.canStartRound)
+
+        await store.send(.ballotToggled(DinnerCandidate(Cuisine.thai)))
+        #expect(!store.state.canStartRound, "one option is not a choice")
+
+        await store.send(.ballotToggled(DinnerCandidate(Cuisine.indian)))
+        #expect(store.state.canStartRound)
+
+        // Tapping an option again takes it back off the ballot.
+        await store.send(.ballotToggled(DinnerCandidate(Cuisine.indian)))
+        #expect(store.state.ballot.count == 1)
+    }
+
+        @Test("A calendar day, not an instant — dinner belongs to the household's own date")
+    func dateKeyIsLocal() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Istanbul")!
+        // 9pm in Istanbul is still the previous day in UTC.
+        let evening = calendar.date(from: DateComponents(
+            year: 2026, month: 9, day: 4, hour: 21, minute: 30
+        ))!
+        #expect(MealDate.key(evening, calendar: calendar) == "2026-09-04")
+    }
+
+    @Test("Cooking needs a recipe; ordering in needs a cuisine")
+    func saveRules() {
+        var state = DinnerFeature.State(homeID: "h1")
+        #expect(!state.canSave)
+
+        state.kind = .cook
+        #expect(!state.canSave)
+        state.selectedCuisine = .italian
+        #expect(!state.canSave, "a cuisine does not make a recipe")
+        state.selection = Recipe(id: "r1", title: "Lasagne", homeID: "h1")
+        #expect(state.canSave)
+
+        state.kind = .order
+        state.selectedCuisine = nil
+        #expect(!state.canSave, "a recipe does not make a takeaway")
+        state.selectedCuisine = .indian
+        #expect(state.canSave)
+    }
+
+    @Test("An empty shelf opens on the catalogue instead")
+    func emptyShelfFallsBackToExplore() async {
+        let sample = Recipe(id: "x1", title: "Menemen", homeID: Recipe.exploreHomeID)
+        let store = TestStore(initialState: DinnerFeature.State(homeID: "h1")) {
+            DinnerFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.kindChosen(.cook))
+        await store.send(.samplesLoaded([sample]))
+        await store.send(.recipesUpdated([]))
+        #expect(store.state.source == .explore)
+
+        // And back to your own shelf once there is something on it.
+        await store.send(.sourceChanged(.saved))
+        #expect(store.state.source == .saved)
+    }
+
+    @Test("Filters narrow by tag, and only offer tags the candidates carry")
+    func tagFiltersFollowTheCandidates() async {
+        let dinner = Recipe(
+            id: "x1", title: "Lasagne", tags: ["dinner", "comfort"],
+            homeID: Recipe.exploreHomeID
+        )
+        let breakfast = Recipe(
+            id: "x2", title: "Menemen", tags: ["breakfast"],
+            homeID: Recipe.exploreHomeID
+        )
+        let store = TestStore(initialState: DinnerFeature.State(homeID: "h1")) {
+            DinnerFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.samplesLoaded([dinner, breakfast]))
+        await store.send(.sourceChanged(.explore))
+        #expect(store.state.availableTags == ["breakfast", "dinner", "comfort"]
+            .filter(store.state.availableTags.contains))
+        #expect(!store.state.availableTags.contains("vegan"), "no candidate carries it")
+
+        await store.send(.tagToggled("dinner"))
+        #expect(store.state.matchingRecipes.map(\.id) == ["x1"])
+    }
+
+    @Test("A typed meal is an answer too, and never competes with a chosen recipe")
+    func customMealIsAnAnswer() async {
+        let store = TestStore(initialState: DinnerFeature.State(homeID: "h1")) {
+            DinnerFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.kindChosen(.cook))
+        await store.send(.recipeChosen(Recipe(id: "r1", title: "Lasagne", homeID: "h1")))
+        #expect(store.state.canSave)
+
+        // Switching to a typed name lets go of the recipe.
+        await store.send(.sourceChanged(.custom))
+        #expect(store.state.selection == nil)
+        #expect(!store.state.canSave, "an empty field is not an answer")
+
+        await store.send(.binding(.set(\.customTitle, "  Leftovers  ")))
+        #expect(store.state.canSave)
+        #expect(store.state.trimmedCustomTitle == "Leftovers")
+
+        // And back the other way, the typed name is dropped.
+        await store.send(.sourceChanged(.saved))
+        #expect(store.state.customTitle.isEmpty)
+    }
+
+    @Test("Re-deciding opens on what was already chosen")
+    func reopeningPrefills() {
+        let plan = MealPlan(
+            id: "m1", kind: .order, cuisine: .thai, place: "Bangkok Kitchen",
+            date: MealDate.today
+        )
+        let state = DinnerFeature.State(homeID: "h1", existing: plan)
+        #expect(state.selectedCuisine == .thai)
+        #expect(state.place == "Bangkok Kitchen")
+
+        // Prefilled, but landing on the kind picker rather than inside the kind
+        // chosen last time — which left "order in" behind a Back button.
+        #expect(state.kind == nil)
+        #expect(state.prefilledKind == .order)
+
+        // A typed meal reopens on its own tab rather than on an empty shelf.
+        let typed = MealPlan(id: "m2", kind: .cook, title: "Leftovers", date: MealDate.today)
+        let reopened = DinnerFeature.State(homeID: "h1", existing: typed)
+        #expect(reopened.source == .custom)
+        #expect(reopened.customTitle == "Leftovers")
+    }
+
+    @Test("Only today's plan is tonight's dinner")
+    func tonightIsToday() {
+        let today = MealPlan(id: "m1", kind: .out, cuisine: .turkish, date: MealDate.today)
+        let tomorrow = MealPlan(id: "m2", kind: .cook, date: "2099-01-01")
+
+        var state = HomeFeature.State(homeID: "h1")
+        state.meals = [today, tomorrow]
+        #expect(state.tonight?.id == "m1")
+
+        state.meals = [tomorrow]
+        #expect(state.tonight == nil)
+    }
+}
+
+@MainActor
 @Suite("Shopping list")
 struct ShoppingTests {
 
@@ -347,24 +635,127 @@ struct ShoppingTests {
         #expect(removed.value.isEmpty)
     }
 
-    @Test("Leaving the screen sends the held delete instead of dropping it")
-    func leavingCommitsThePendingDelete() async {
+    @Test("Popping the screen commits a delete still inside its undo window")
+    func poppingCommitsThePendingDelete() async {
         let removed = LockIsolated<[ShoppingItemID]>([])
-        let clock = TestClock()
-        let store = Self.listStore(removed, clock)
+        var shopping = ShoppingFeature.State(homeID: "h1")
+        shopping.pendingDeletion = Self.milk
 
-        await store.send(.itemsUpdated([Self.milk])) {
-            $0.isLoading = false
-            $0.items = [Self.milk]
+        var hub = HubFeature.State(homeID: "h1")
+        hub.path.append(.shopping(shopping))
+        let id = hub.path.ids[0]
+
+        let store = TestStore(initialState: hub) {
+            HubFeature()
+        } withDependencies: {
+            $0.shopping.remove = { itemID in removed.withValue { $0.append(itemID) } }
         }
-        await store.send(.deleteTapped("s1")) {
-            $0.items.remove(id: "s1")
-            $0.pendingDeletion = Self.milk
-        }
-        await store.send(.screenLeft) {
-            $0.pendingDeletion = nil
-        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        // The screen cannot do this itself: `onDisappear` runs after the pop,
+        // when the element the action addresses is already gone.
+        await store.send(.path(.popFrom(id: id)))
         #expect(removed.value == ["s1"])
+    }
+
+    @Test("Ingredients from a recipe are shopped under the meal, not scattered by aisle")
+    func recipeItemsGroupUnderTheirMeal() async {
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        }
+        let loose = ShoppingItem(id: "s1", name: "Milk", category: .groceries, homeID: "h1")
+        let garlic = ShoppingItem(
+            id: "s2", name: "2 cloves garlic", category: .groceries,
+            homeID: "h1", recipeID: "r1", recipeTitle: "Lasagne"
+        )
+        let beef = ShoppingItem(
+            id: "s3", name: "500g beef mince", category: .groceries,
+            homeID: "h1", recipeID: "r1", recipeTitle: "Lasagne"
+        )
+
+        await store.send(.itemsUpdated([loose, garlic, beef])) {
+            $0.isLoading = false
+            $0.items = [loose, garlic, beef]
+        }
+
+        let meals = store.state.mealGroups
+        #expect(meals.count == 1)
+        #expect(meals.first?.title == "Lasagne")
+        #expect(meals.first?.items.count == 2)
+
+        // And an item belongs to exactly one place on the screen.
+        #expect(store.state.pendingFlat.map(\.id) == ["s1"])
+        #expect(store.state.pendingByCategory.flatMap(\.items).map(\.id) == ["s1"])
+    }
+
+    @Test("Clearing an aisle leaves a meal's ingredients alone")
+    func clearingACategorySparesMeals() async {
+        let removed = LockIsolated<[ShoppingItemID]>([])
+        let loose = ShoppingItem(id: "s1", name: "Milk", category: .groceries, homeID: "h1")
+        let alsoLoose = ShoppingItem(id: "s2", name: "Bread", category: .groceries, homeID: "h1")
+        let forMeal = ShoppingItem(
+            id: "s3", name: "Pasta sheets", category: .groceries,
+            homeID: "h1", recipeID: "r1", recipeTitle: "Lasagne"
+        )
+        let cleaning = ShoppingItem(id: "s4", name: "Bleach", category: .cleaning, homeID: "h1")
+
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.remove = { id in removed.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.itemsUpdated([loose, alsoLoose, forMeal, cleaning]))
+        await store.send(.clearCategoryTapped(.groceries))
+        #expect(store.state.alert != nil, "a bulk delete asks first")
+        #expect(removed.value.isEmpty)
+
+        await store.send(.alert(.presented(.confirmClearCategory(.groceries))))
+        #expect(Set(removed.value) == ["s1", "s2"])
+        #expect(store.state.items.ids.contains("s3"), "the meal keeps its ingredient")
+        #expect(store.state.items.ids.contains("s4"))
+    }
+
+    @Test("Clearing a meal takes the whole meal, bought or not")
+    func clearingAMealTakesEverything() async {
+        let removed = LockIsolated<[ShoppingItemID]>([])
+        let pending = ShoppingItem(
+            id: "s1", name: "Pasta sheets", homeID: "h1",
+            recipeID: "r1", recipeTitle: "Lasagne"
+        )
+        let bought = ShoppingItem(
+            id: "s2", name: "Beef mince", isPurchased: true, homeID: "h1",
+            recipeID: "r1", recipeTitle: "Lasagne"
+        )
+        let other = ShoppingItem(id: "s3", name: "Milk", homeID: "h1")
+
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.remove = { id in removed.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.itemsUpdated([pending, bought, other]))
+        await store.send(.clearMealTapped("r1"))
+        await store.send(.alert(.presented(.confirmClearMeal("r1"))))
+
+        #expect(Set(removed.value) == ["s1", "s2"])
+        #expect(store.state.items.ids == ["s3"])
+    }
+
+    @Test("A meal folds away like an aisle does")
+    func mealsCollapse() async {
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.mealToggled("r1"))
+        #expect(store.state.isCollapsed(meal: "r1"))
+        await store.send(.mealToggled("r1"))
+        #expect(!store.state.isCollapsed(meal: "r1"))
     }
 
     @Test("Adding clears the field immediately so the next item can be typed")

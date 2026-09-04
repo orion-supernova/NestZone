@@ -8,14 +8,24 @@ public struct HomeFeature: Sendable {
     public struct State: Equatable {
         public var homeID: HomeID
         public var user: User?
+        /// How many people have to agree for a dinner round to match.
+        public var memberCount = 1
         public var stats: HomeStats = .empty
         public var tasks: IdentifiedArrayOf<HouseTask> = []
+        /// Planned meals from today onwards, soonest first.
+        public var meals: [MealPlan] = []
         public var isLoading = true
+        @Presents public var dinner: DinnerFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
         public init(homeID: HomeID, user: User? = nil) {
             self.homeID = homeID
             self.user = user
+        }
+
+        /// What the household is eating tonight, if anyone has said.
+        public var tonight: MealPlan? {
+            meals.first { $0.date == MealDate.today }
         }
 
         /// Newest first, capped — the Home tab is a summary, not the task list.
@@ -30,8 +40,12 @@ public struct HomeFeature: Sendable {
         case task
         case statsUpdated(HomeStats)
         case tasksUpdated([HouseTask])
+        case mealsUpdated([MealPlan])
         case loadFailed(AppError)
         case taskToggled(TaskID)
+        case decideDinnerTapped
+        case clearDinnerTapped
+        case dinner(PresentationAction<DinnerFeature.Action>)
         case toggleFailed(AppError)
         /// Bubbled to the tab container, which owns navigation.
         case delegate(Delegate)
@@ -43,15 +57,17 @@ public struct HomeFeature: Sendable {
             case openMessages
             case openMovieNight
             case openTasks
+            case openRecipe(Recipe)
         }
 
         public enum Alert: Equatable {}
     }
 
-    private enum CancelID { case stats, tasks }
+    private enum CancelID { case stats, tasks, meals }
 
     @Dependency(\.stats) var statsClient
     @Dependency(\.tasks) var tasksClient
+    @Dependency(\.meals) var mealsClient
 
     public init() {}
 
@@ -74,6 +90,16 @@ public struct HomeFeature: Sendable {
                     .cancellable(id: CancelID.stats, cancelInFlight: true),
 
                     .run { [homeID = state.homeID] send in
+                        for try await meals in mealsClient.fromDate(homeID, MealDate.today) {
+                            await send(.mealsUpdated(meals))
+                        }
+                    } catch: { _, _ in
+                        // No dinner plan is the normal case, and a card that
+                        // cannot load is not worth an alert over the whole tab.
+                    }
+                    .cancellable(id: CancelID.meals, cancelInFlight: true),
+
+                    .run { [homeID = state.homeID] send in
                         for try await tasks in tasksClient.byHome(homeID) {
                             await send(.tasksUpdated(tasks))
                         }
@@ -86,6 +112,10 @@ public struct HomeFeature: Sendable {
             case let .statsUpdated(stats):
                 state.isLoading = false
                 state.stats = stats
+                return .none
+
+            case let .mealsUpdated(meals):
+                state.meals = meals
                 return .none
 
             case let .tasksUpdated(tasks):
@@ -118,10 +148,32 @@ public struct HomeFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            case .delegate, .alert:
+            // Re-deciding opens on what was already chosen rather than blank.
+            case .decideDinnerTapped:
+                state.dinner = DinnerFeature.State(
+                    homeID: state.homeID,
+                    memberCount: state.memberCount,
+                    existing: state.tonight
+                )
+                return .none
+
+            case .clearDinnerTapped:
+                return .run { [homeID = state.homeID] _ in
+                    try await mealsClient.clear(homeID, MealDate.today)
+                } catch: { _, _ in
+                    // The live subscription is the source of truth; a failed
+                    // clear simply leaves the card where it was.
+                }
+
+            case .dinner(.presented(.delegate(.finished))):
+                state.dinner = nil
+                return .none
+
+            case .dinner, .delegate, .alert:
                 return .none
             }
         }
+        .ifLet(\.$dinner, action: \.dinner) { DinnerFeature() }
         .ifLet(\.$alert, action: \.alert)
     }
 }

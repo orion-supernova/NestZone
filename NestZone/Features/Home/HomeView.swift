@@ -15,9 +15,10 @@ public struct HomeView: View {
         ScrollView {
             LazyVStack(spacing: Metrics.sectionSpacing) {
                 greeting.appear(0)
-                statsGrid.appear(1)
-                movieNightCard.appear(2)
-                tasksSection.appear(3)
+                tonightCard.appear(1)
+                statsGrid.appear(2)
+                movieNightCard.appear(3)
+                tasksSection.appear(4)
             }
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, Metrics.scrollBottomInset)
@@ -27,6 +28,9 @@ public struct HomeView: View {
         .navigationTitle(Text(L10n.tabBarHome))
         .navigationBarTitleDisplayMode(.inline)
         .task { await store.send(.task).finish() }
+        .sheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
+            DinnerSheet(store: $0)
+        }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
 
@@ -40,6 +44,45 @@ public struct HomeView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 4)
+    }
+
+    // MARK: - Tonight
+
+    /// What the household is doing about dinner, or an invitation to decide.
+    ///
+    /// Top of the tab on purpose: it is the question a shared home asks itself
+    /// every single day, and the answer changes what the shopping list and the
+    /// recipes are for.
+    private var tonightCard: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            SectionHeader(L10n.dinnerTonightTitle, symbol: "moon.stars.fill") {
+                if store.tonight != nil {
+                    Button { store.send(.decideDinnerTapped) } label: {
+                        Text(L10n.dinnerChangeButton)
+                            .font(.footnote.weight(.semibold))
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                }
+            }
+
+            Group {
+                if let plan = store.tonight {
+                    DinnerPlanCard(plan: plan) {
+                        if let recipe = plan.recipe {
+                            store.send(.delegate(.openRecipe(recipe)))
+                        } else {
+                            store.send(.decideDinnerTapped)
+                        }
+                    }
+                    .transition(.scale(scale: 0.96).combined(with: .opacity))
+                } else {
+                    UndecidedDinnerCard { store.send(.decideDinnerTapped) }
+                        .transition(.scale(scale: 0.96).combined(with: .opacity))
+                }
+            }
+            .animation(Motion.spring, value: store.tonight)
+        }
     }
 
     // MARK: - Stats
@@ -113,7 +156,7 @@ public struct HomeView: View {
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(Palette.accessory)
                 }
                 .padding(Metrics.cardPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)

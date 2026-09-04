@@ -5,7 +5,10 @@ import ConvexMobile
 @DependencyClient
 public struct RecipesClient: Sendable {
     public var byHome: @Sendable (HomeID) -> AsyncThrowingStream<[Recipe], any Error> = { _ in .never }
-    public var create: @Sendable (NewRecipe) async throws -> Void
+    /// Creates a recipe and hands back the stored document. The id matters when
+    /// something has to point at it straight away — planning an Explore recipe
+    /// for tonight saves it first, then plans the copy that now has an id.
+    public var create: @Sendable (NewRecipe) async throws -> Recipe
     public var remove: @Sendable (RecipeID) async throws -> Void
     /// The starter recipes bundled with the app, in the current language.
     public var samples: @Sendable () async -> [Recipe] = { [] }
@@ -71,11 +74,13 @@ extension RecipesClient: DependencyKey {
                 "tags": recipe.tags.map { $0 as ConvexEncodable? },
             ]
             if let summary = recipe.summary, !summary.isEmpty { args["description"] = summary }
-            if let prep = recipe.prepTime { args["prep_time"] = prep }
-            if let cook = recipe.cookTime { args["cook_time"] = cook }
-            if let servings = recipe.servings { args["servings"] = servings }
+            if let prep = recipe.prepTime { args["prep_time"] = prep.convexNumber }
+            if let cook = recipe.cookTime { args["cook_time"] = cook.convexNumber }
+            if let servings = recipe.servings { args["servings"] = servings.convexNumber }
             if let difficulty = recipe.difficulty { args["difficulty"] = difficulty.rawValue }
-            try await ConvexConnection.shared.mutate("recipes:create", args: args)
+            return try await ConvexConnection.shared.mutate(
+                "recipes:create", args: args, as: Recipe.self
+            )
         },
         remove: { id in
             try await ConvexConnection.shared.mutate("recipes:remove", args: ["id": id])

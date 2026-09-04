@@ -187,6 +187,17 @@ struct RecipeDetailView: View {
         }
         .animation(Motion.spring, value: store.isCooking)
         .background(Backdrop(tint: theme.accent))
+        .task { await store.send(.task).finish() }
+        .alert($store.scope(state: \.alert, action: \.alert))
+        .safeAreaInset(edge: .bottom) {
+            if let added = store.addedToList {
+                AddedToListToast(count: added) { store.send(.goToShoppingTapped) }
+                    .padding(.horizontal, Metrics.screenPadding)
+                    .padding(.bottom, 8)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Motion.spring, value: store.addedToList)
         .navigationTitle(Text(store.recipe.title))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -297,6 +308,22 @@ struct RecipeDetailView: View {
         }
     }
 
+    /// Confirmation lives on the button for a couple of seconds rather than in
+    /// an alert — nothing here needs acknowledging.
+    /// Three states, and the button says which it is in: nothing on the list,
+    /// some of it on the list, all of it.
+    private var addToListTitle: LocalizedStringResource {
+        if store.isFullyOnList { return L10n.recipesDetailGoToList }
+        if store.ingredientsOnList > 0 {
+            return L10n.recipesDetailAddMissing(store.missingIngredients.count)
+        }
+        return L10n.recipesDetailAddToShopping
+    }
+
+    private var addToListSymbol: String {
+        store.isFullyOnList ? "cart" : "cart.badge.plus"
+    }
+
     @ViewBuilder
     private var actions: some View {
         VStack(spacing: Metrics.stackSpacing) {
@@ -316,6 +343,54 @@ struct RecipeDetailView: View {
                     store.send(.beginCookingTapped)
                 }
             }
+            // Only for a recipe the home actually has — a bundled sample has no
+            // id a meal plan could point at until it is saved — and only when
+            // it is not already on tonight's menu, where the offer was noise.
+            if !store.canSaveToHome, !store.isTonightsDinner {
+                SecondaryButton(L10n.recipesDetailPlanTonight, symbol: "moon.stars.fill") {
+                    store.send(.planTonightTapped)
+                }
+                .disabled(store.isPlanning)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            } else if store.isTonightsDinner {
+                // Said, not offered.
+                Label {
+                    Text(L10n.recipesDetailPlannedTonight)
+                } icon: {
+                    Image(systemName: "moon.stars.fill")
+                }
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .transition(.opacity)
+            }
+
+            // Sending the ingredients over is useful whether or not the recipe
+            // is saved, and whether or not you cook it today.
+            if !store.recipe.ingredients.isEmpty {
+                VStack(spacing: 6) {
+                    SecondaryButton(addToListTitle, symbol: addToListSymbol) {
+                        store.send(store.isFullyOnList ? .goToShoppingTapped : .addToShoppingTapped)
+                    }
+                    .disabled(store.isAddingToList)
+
+                    // What the button would leave behind, said before it is
+                    // tapped rather than after.
+                    if store.ingredientsOnList > 0 {
+                        Text(store.isFullyOnList
+                            ? L10n.recipesDetailAllOnList
+                            : L10n.recipesDetailOnListCount(
+                                store.ingredientsOnList, store.recipe.ingredients.count
+                            ))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .contentTransition(.numericText())
+                            .transition(.opacity)
+                    }
+                }
+                .animation(Motion.spring, value: store.ingredientsOnList)
+            }
             if store.canSaveToHome {
                 SecondaryButton(L10n.recipesExploreAddToMyRecipes, symbol: "plus") {
                     store.send(.saveToHomeTapped)
@@ -323,6 +398,7 @@ struct RecipeDetailView: View {
                 .disabled(store.isSaving)
             }
         }
+        .animation(Motion.spring, value: store.isTonightsDinner)
     }
 }
 
@@ -736,5 +812,44 @@ struct ComposeRecipeSheet: View {
         } header: {
             Text(title)
         }
+    }
+}
+
+
+/// Confirms a batch of ingredients landing on the shopping list, and offers the
+/// one thing a person wants next.
+private struct AddedToListToast: View {
+    let count: Int
+    let goToList: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: count > 0 ? "checkmark.circle.fill" : "cart")
+                .font(.callout)
+                .foregroundStyle(count > 0 ? Palette.success : Color.secondary)
+                .symbolEffect(.bounce, options: .nonRepeating, value: count)
+
+            Text(count > 0
+                ? L10n.recipesDetailAddedCount(count)
+                : L10n.recipesDetailAlreadyOnList)
+                .font(.subheadline)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            Button(action: goToList) {
+                Text(L10n.recipesDetailGoToList)
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .contentShape(.capsule)
+            }
+            .buttonStyle(.pressable)
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 4)
+        .padding(.vertical, 6)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .accessibilityElement(children: .combine)
     }
 }

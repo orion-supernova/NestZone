@@ -504,7 +504,7 @@ private struct PollHistoryRow: View {
 
                     Image(systemName: "chevron.down")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(Palette.accessory)
                         .rotationEffect(.degrees(isExpanded ? 0 : -90))
                 }
 

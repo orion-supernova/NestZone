@@ -8,8 +8,10 @@ public struct PollsClient: Sendable {
     /// Live detail for one poll. This is what makes the swipe game multiplayer:
     /// another member's vote arrives here without anyone refreshing.
     public var detail: @Sendable (PollID) -> AsyncThrowingStream<PollDetail, any Error> = { _ in .never }
-    /// Creates a movie round and returns its id.
-    public var create: @Sendable (HomeID, String, String?, [PollCandidate]) async throws -> PollID
+    /// Creates a round and returns its id. `kind` is the *entity* being voted
+    /// on — a movie night and a dinner round share every line of this machinery
+    /// and differ only here.
+    public var create: @Sendable (HomeID, String, Poll.Kind, String?, [PollCandidate]) async throws -> PollID
     public var addItem: @Sendable (PollID, PollCandidate, Int?) async throws -> Void
     public var vote: @Sendable (PollID, String, Bool) async throws -> Void
     public var close: @Sendable (PollID) async throws -> Void
@@ -54,13 +56,11 @@ extension PollsClient: DependencyKey {
                 to: "polls:detail", args: ["pollId": pollID], as: PollDetail.self
             )
         },
-        create: { homeID, title, genre, candidates in
+        create: { homeID, title, kind, genre, candidates in
             var args: [String: ConvexEncodable?] = [
                 "homeId": homeID,
                 "title": title,
-                // Required by the server, and it is the *entity* kind: this app
-                // only ever votes on movies.
-                "type": Poll.Kind.movie.rawValue,
+                "type": kind.rawValue,
                 "items": candidates.map { $0.arguments as ConvexEncodable? },
             ]
             if let genre { args["genre"] = genre }
@@ -73,7 +73,7 @@ extension PollsClient: DependencyKey {
         addItem: { pollID, candidate, order in
             var args = candidate.arguments
             args["pollId"] = pollID
-            if let order { args["order"] = order }
+            if let order { args["order"] = order.convexNumber }
             try await ConvexConnection.shared.mutate("polls:addItem", args: args)
         },
         vote: { pollID, externalID, isYes in

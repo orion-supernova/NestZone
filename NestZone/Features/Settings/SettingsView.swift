@@ -60,7 +60,7 @@ public struct SettingsView: View {
                     Spacer(minLength: 0)
                     Image(systemName: "pencil")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(Palette.accessory)
                 }
                 .padding(.vertical, 4)
             }
@@ -118,7 +118,7 @@ public struct SettingsView: View {
                 LabeledContent {
                     Image(systemName: "chevron.right")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(Palette.accessory)
                 } label: {
                     // One home is managed, several are switched between — but
                     // both open the same sheet, which is also the only way to
