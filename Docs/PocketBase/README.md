@@ -1,3 +1,8 @@
+> **HISTORICAL.** PocketBase is retired; the backend is Convex. Kept as a
+> record of the original schema for cross-checking migrated data.
+
+---
+
 PocketBase generic Polls (REST, no realtime)
 
 Overview

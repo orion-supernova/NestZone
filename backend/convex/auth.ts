@@ -14,6 +14,7 @@
 import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import { convexAuth, createAccount, retrieveAccount } from "@convex-dev/auth/server";
 import { verifyAppleIdentityToken } from "./lib/apple";
+import { DatabaseWriter } from "./_generated/server";
 
 const APPLE_PROVIDER_ID = "apple";
 
@@ -91,10 +92,21 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 
       const email = args.profile.email as string | undefined;
       const name = args.profile.name as string | undefined;
-      const linkable = args.shouldLinkViaEmail === true;
+
+      // `createAccount` takes this as `shouldLinkViaEmail`, but the library
+      // hands it to THIS callback renamed to `shouldLink`. Reading
+      // `args.shouldLinkViaEmail` here always produced `undefined`, so the
+      // linking branch below never ran once and every migrated PocketBase user
+      // who signed in with Apple got a second account and lost their homes —
+      // precisely the failure the comment above describes.
+      const linkable = args.shouldLink === true;
+
+      // The callback is typed against `AnyDataModel`, so `ctx.db` knows nothing
+      // about our tables or the `email` index. The cast restores the real schema.
+      const db = ctx.db as unknown as DatabaseWriter;
 
       if (email && linkable) {
-        const existing = await ctx.db
+        const existing = await db
           .query("users")
           .withIndex("email", (q) => q.eq("email", email))
           .first();
@@ -105,13 +117,13 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
             patch.emailVerificationTime = Date.now();
           }
           if (Object.keys(patch).length > 0) {
-            await ctx.db.patch(existing._id, patch as any);
+            await db.patch(existing._id, patch as any);
           }
           return existing._id;
         }
       }
 
-      return await ctx.db.insert("users", {
+      return await db.insert("users", {
         email,
         name,
         emailVerificationTime: email && linkable ? Date.now() : undefined,

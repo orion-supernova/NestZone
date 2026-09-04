@@ -2,33 +2,28 @@
 //  NestZoneApp.swift
 //  NestZone
 //
-//  Created by muratcankoc on 01/06/2025.
-//
 
+import ComposableArchitecture
 import SwiftUI
 
+/// The app target is a shell. Everything real lives in `Packages/NestZoneKit`,
+/// which builds and previews without the app around it.
 @main
 struct NestZoneApp: App {
-    @StateObject private var authManager = ConvexAuthManager()
-    @StateObject private var homeManager = HomeSelectionManager.shared
+    /// One store for the process. `Store` is reference-typed, so this is a
+    /// stable root rather than something SwiftUI may recreate.
+    @MainActor
+    private static let store = Store(initialState: AppFeature.State()) {
+        #if DEBUG
+        AppFeature()._printChanges(.actionLabels)
+        #else
+        AppFeature()
+        #endif
+    }
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if authManager.isBootstrapping {
-                    // Restoring a cached Convex session — avoid flashing the auth screen.
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                } else if authManager.currentUser == nil {
-                    AuthenticationScreen()
-                        .environmentObject(authManager)
-                        .environmentObject(homeManager)
-                } else {
-                    TabBarScreen()
-                        .environmentObject(authManager)
-                        .environmentObject(homeManager)
-                }
-            }
+            AppView(store: Self.store)
         }
     }
 }

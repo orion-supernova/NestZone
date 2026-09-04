@@ -1,3 +1,16 @@
+> **HISTORICAL — superseded.** This was the playbook for the PocketBase → Convex
+> move, written before the app was migrated. The migration is done, and the app
+> has since been rebuilt on TCA, so the code shapes below (`Convex.once`,
+> `PocketBase*` model names, `HomeSelectionManager`, `LocalizationManager`) no
+> longer exist. Keep it for the reasoning and the backend function contracts;
+> read `CLAUDE.md` for how the client works now.
+>
+> In particular, **do not copy the `Convex.once` pattern** — subscribing, taking
+> the first value and unsubscribing was exactly the mistake the rebuild removed.
+> Every read is a live subscription now.
+
+---
+
 # NestZone iOS — PocketBase → Convex migration guide
 
 This guide explains how to move the **iOS app** off PocketBase REST + SSE and onto
