@@ -11,6 +11,10 @@ public struct SettingsFeature: Sendable {
         public var home: Home?
         public var user: User?
         public var members: IdentifiedArrayOf<User> = []
+        /// Every home the user belongs to. Copied down by `AppFeature` from the
+        /// single app-wide `homes:listMine` subscription rather than fetched
+        /// again here.
+        public var homes: IdentifiedArrayOf<Home> = []
         public var didCopyInviteCode = false
         /// Kept so sign-out can tell the backend to stop pushing to this device.
         public var pushToken: String?
@@ -36,11 +40,26 @@ public struct SettingsFeature: Sendable {
             self.home = home
             self.user = user
         }
+
+        /// Belonging to more than one home turns "Manage Home" into
+        /// "Switch Home"; the sheet behind it is the same either way.
+        public var hasMultipleHomes: Bool { homes.count > 1 }
+
+        /// Keeps the sheet's copy of the list in step while it is open, so a
+        /// home left on another device stops being offered here.
+        public mutating func applyHomes(_ homes: IdentifiedArrayOf<Home>) {
+            self.homes = homes
+            if case var .manageHomes(manage) = destination {
+                manage.homes = homes
+                destination = .manageHomes(manage)
+            }
+        }
     }
 
     @Reducer
     public enum Destination {
         case editName(EditNameFeature)
+        case manageHomes(ManageHomesFeature)
     }
 
     public enum Action: BindableAction {
@@ -57,7 +76,7 @@ public struct SettingsFeature: Sendable {
         case languageSelected(AppLanguage)
         case copyInviteCodeTapped
         case inviteCodeCopyExpired
-        case switchHomeTapped
+        case manageHomesTapped
         case signOutTapped
         case signOutConfirmed
         case binding(BindingAction<State>)
@@ -69,8 +88,9 @@ public struct SettingsFeature: Sendable {
             case confirmSignOut
         }
 
+        @CasePathable
         public enum Delegate: Equatable {
-            case switchHomeRequested
+            case homeSwitched(HomeID)
             case languageChanged(AppLanguage)
             case notificationsEnabled
         }
@@ -182,8 +202,21 @@ public struct SettingsFeature: Sendable {
                 state.didCopyInviteCode = false
                 return .none
 
-            case .switchHomeTapped:
-                return .send(.delegate(.switchHomeRequested))
+            case .manageHomesTapped:
+                state.destination = .manageHomes(
+                    ManageHomesFeature.State(homes: state.homes, currentHomeID: state.homeID)
+                )
+                return .none
+
+            // Switching rebuilds the tab container around the new home, which
+            // takes this screen with it — so the sheet is dismissed first.
+            case let .destination(.presented(.manageHomes(.delegate(.switchRequested(id))))):
+                state.destination = nil
+                return .send(.delegate(.homeSwitched(id)))
+
+            case .destination(.presented(.manageHomes(.delegate(.dismissRequested)))):
+                state.destination = nil
+                return .none
 
             case .signOutTapped:
                 state.alert = .confirmSignOut()

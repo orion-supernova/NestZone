@@ -206,10 +206,13 @@ public struct AppFeature: Sendable {
             case .homeGate:
                 return syncMain(&state)
 
-            case .main(.settings(.delegate(.switchHomeRequested))):
-                state.homeGate.$selectedHomeIDRaw.homeID = nil
-                state.main = nil
-                return .none
+            // Switching from the Settings sheet. The old path cleared the
+            // selection and let the full-screen gate take over, which the gate
+            // undoes the moment its subscription yields a single home — so a
+            // user with one home saw the picker flash and come straight back.
+            case let .main(.settings(.delegate(.homeSwitched(id)))):
+                state.homeGate.$selectedHomeIDRaw.homeID = id
+                return syncMain(&state)
 
             case let .main(.settings(.delegate(.languageChanged(language)))):
                 return .send(.languageChanged(language))
@@ -239,6 +242,7 @@ public struct AppFeature: Sendable {
         // assignments below need exclusive access to it.
         let selected = state.selectedHome
         let user = state.currentUser
+        let homes = state.homeGate.homes
         guard let home = selected else {
             state.main = nil
             return .none
@@ -250,6 +254,9 @@ public struct AppFeature: Sendable {
             state.main?.user = user
             state.main?.propagateSession()
         }
+        // Settings offers the whole list — switch, join, leave — off this one
+        // subscription rather than opening a second one of its own.
+        state.main?.settings.applyHomes(homes)
         return .none
     }
 }

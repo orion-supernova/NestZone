@@ -7,6 +7,9 @@ public struct ShoppingView: View {
     @Environment(\.theme) private var theme
     @FocusState private var isComposerFocused: Bool
     @Namespace private var glass
+    /// The row with its delete button showing, if any. Held here rather than in
+    /// each row so opening one closes the last, as the system list does.
+    @State private var revealedItemID: ShoppingItemID?
 
     public init(store: StoreOf<ShoppingFeature>) {
         self.store = store
@@ -40,7 +43,18 @@ public struct ShoppingView: View {
         }
         .background(Backdrop(tint: theme.accent))
         .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom) { composer }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 8) {
+                if let pending = store.pendingDeletion {
+                    UndoToast(L10n.shoppingItemDeleted(pending.name)) {
+                        store.send(.undoDeleteTapped)
+                    }
+                    .padding(.horizontal, Metrics.screenPadding)
+                }
+                composer
+            }
+            .animation(Motion.spring, value: store.pendingDeletion)
+        }
         .navigationTitle(Text(L10n.managementModuleShoppingTitle))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -56,6 +70,7 @@ public struct ShoppingView: View {
             }
         }
         .task { await store.send(.task).finish() }
+        .onDisappear { store.send(.screenLeft) }
         .alert($store.scope(state: \.alert, action: \.alert))
         .animation(Motion.spring, value: store.items)
     }
@@ -139,10 +154,11 @@ public struct ShoppingView: View {
                     ShoppingRow(
                         item: item,
                         showsCategory: true,
+                        revealedID: $revealedItemID,
+                        glass: glass,
                         onToggle: { store.send(.togglePurchased(item.id)) },
                         onDelete: { store.send(.deleteTapped(item.id)) }
                     )
-                    .glassEffectID(item.id.rawValue, in: glass)
                 }
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -171,10 +187,11 @@ public struct ShoppingView: View {
                                 ShoppingRow(
                                     item: item,
                                     showsCategory: false,
+                                    revealedID: $revealedItemID,
+                                    glass: glass,
                                     onToggle: { store.send(.togglePurchased(item.id)) },
                                     onDelete: { store.send(.deleteTapped(item.id)) }
                                 )
-                                .glassEffectID(item.id.rawValue, in: glass)
                             }
                         }
                         .padding(.horizontal, Metrics.screenPadding)
@@ -199,10 +216,11 @@ public struct ShoppingView: View {
                             ShoppingRow(
                                 item: item,
                                 showsCategory: false,
+                                revealedID: $revealedItemID,
+                                glass: glass,
                                 onToggle: { store.send(.togglePurchased(item.id)) },
                                 onDelete: { store.send(.deleteTapped(item.id)) }
                             )
-                            .glassEffectID(item.id.rawValue, in: glass)
                         }
                     }
                     .padding(.horizontal, Metrics.screenPadding)
@@ -262,10 +280,24 @@ private struct ShoppingRow: View {
     /// The flat view has no section headers, so each row says which aisle it is
     /// in. In the grouped view that would just repeat the header.
     var showsCategory: Bool = false
+    @Binding var revealedID: ShoppingItemID?
+    let glass: Namespace.ID
     let onToggle: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
+        SwipeToDelete(
+            isRevealed: Binding(
+                get: { revealedID == item.id },
+                set: { revealedID = $0 ? item.id : nil }
+            ),
+            onDelete: onDelete
+        ) {
+            card
+        }
+    }
+
+    private var card: some View {
         HStack(spacing: 12) {
             Button(action: onToggle) {
                 Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
@@ -308,12 +340,8 @@ private struct ShoppingRow: View {
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard(cornerRadius: Metrics.tightRadius)
+        .glassEffectID(item.id.rawValue, in: glass)
         .animation(Motion.spring, value: item.isPurchased)
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive, action: onDelete) {
-                Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
-            }
-        }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(item.isPurchased ? [.isButton, .isSelected] : .isButton)
     }

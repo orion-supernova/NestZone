@@ -44,6 +44,9 @@ public struct Chip: View {
                 isSelected ? .identity : .regular.interactive(),
                 in: .capsule
             )
+            // An unselected chip draws no background, so without a content
+            // shape only the label glyphs are tappable.
+            .contentShape(.capsule)
         }
         .buttonStyle(.pressable)
         .animation(Motion.spring, value: isSelected)

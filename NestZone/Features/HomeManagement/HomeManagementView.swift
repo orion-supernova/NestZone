@@ -58,7 +58,7 @@ public struct HomeManagementView: View {
                         ChoiceCard(
                             title: L10n.homeSetupCreateHomeTitle,
                             subtitle: L10n.homeSetupCreateHomeSubtitle,
-                            symbol: "house.badge.plus",
+                            symbol: "house.and.flag",
                             tint: theme.accent
                         ) { store.send(.createTapped) }
                         .appear(1)
@@ -94,8 +94,12 @@ public struct HomeManagementView: View {
                 GlassGroup {
                     VStack(spacing: Metrics.stackSpacing) {
                         ForEach(Array(store.homes.enumerated()), id: \.element.id) { index, home in
-                            HomeRow(home: home) { store.send(.homeSelected(home.id)) }
-                                .appear(index + 1)
+                            HomeRow(
+                                home: home,
+                                onSelect: { store.send(.homeSelected(home.id)) },
+                                onRemove: { store.send(.leaveTapped(home.id)) }
+                            )
+                            .appear(index + 1)
                         }
                     }
                 }
@@ -152,35 +156,61 @@ private struct ChoiceCard: View {
     }
 }
 
+/// Two controls side by side rather than one: a `Button` inside another
+/// `Button`'s label never receives taps, so the menu that leaves or deletes the
+/// home has to sit next to the card's action, not inside it.
 private struct HomeRow: View {
     let home: Home
-    let action: () -> Void
+    let onSelect: () -> Void
+    let onRemove: () -> Void
+
+    /// The last member out takes the home with them, so the menu says so.
+    private var isSoleMember: Bool { home.members.count <= 1 }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Image(systemName: "house.fill")
-                    .font(.title3)
-                    .foregroundStyle(.tint)
-                    .frame(width: 44, height: 44)
-                    .background(.tint.opacity(0.14), in: .circle)
+        HStack(spacing: 8) {
+            Button(action: onSelect) {
+                HStack(spacing: 14) {
+                    Image(systemName: "house.fill")
+                        .font(.title3)
+                        .foregroundStyle(.tint)
+                        .frame(width: 44, height: 44)
+                        .background(.tint.opacity(0.14), in: .circle)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(home.name).font(.headline)
-                    Text(L10n.settingsMembersCount(home.members.count))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(home.name).font(.headline)
+                        Text(L10n.settingsMembersCount(home.members.count))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
             }
-            .padding(Metrics.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(.rect)
+            .buttonStyle(.pressable)
+
+            Menu {
+                Button(role: .destructive, action: onRemove) {
+                    Label {
+                        Text(isSoleMember
+                            ? L10n.homeDeleteConfirmAction
+                            : L10n.homeLeaveConfirmAction)
+                    } icon: {
+                        Image(systemName: isSoleMember
+                            ? "trash"
+                            : "rectangle.portrait.and.arrow.right")
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 40, height: 40)
+                    .contentShape(.rect)
+            }
         }
-        .buttonStyle(.pressable)
+        .padding(Metrics.cardPadding)
         .glassCard(interactive: true)
     }
 }

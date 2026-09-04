@@ -32,6 +32,9 @@ public struct SettingsView: View {
         .sheet(item: $store.scope(state: \.destination?.editName, action: \.destination.editName)) {
             EditNameSheet(store: $0)
         }
+        .sheet(item: $store.scope(state: \.destination?.manageHomes, action: \.destination.manageHomes)) {
+            ManageHomesSheet(store: $0)
+        }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
 
@@ -111,9 +114,22 @@ public struct SettingsView: View {
                 }
             }
 
-            Button { store.send(.switchHomeTapped) } label: {
-                Label { Text(L10n.homeSelectionSwitchTitle) } icon: {
-                    Image(systemName: "arrow.left.arrow.right")
+            Button { store.send(.manageHomesTapped) } label: {
+                LabeledContent {
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                } label: {
+                    // One home is managed, several are switched between — but
+                    // both open the same sheet, which is also the only way to
+                    // leave or delete a home.
+                    Label {
+                        Text(store.hasMultipleHomes
+                            ? L10n.homeSelectionSwitchTitle
+                            : L10n.manageHomesButton)
+                    } icon: {
+                        Image(systemName: "arrow.left.arrow.right")
+                    }
                 }
             }
         } header: {

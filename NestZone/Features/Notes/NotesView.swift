@@ -259,6 +259,7 @@ struct ComposeNoteSheet: View {
                             }
                         }
                         .glassEffect(isSelected ? .identity : .regular.interactive(), in: .capsule)
+                        .contentShape(.capsule)
                     }
                     .buttonStyle(.pressable)
                     .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)

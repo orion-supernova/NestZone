@@ -91,7 +91,7 @@ struct CreateHomeSheet: View {
         FormSheet(
             title: L10n.homeSetupCreateHomeTitle,
             subtitle: L10n.createHomeSubtitle,
-            symbol: "house.badge.plus",
+            symbol: "house.and.flag",
             submitTitle: L10n.createHomeButton,
             successTitle: L10n.createHomeSuccessMessage,
             isSubmitting: store.isSubmitting,

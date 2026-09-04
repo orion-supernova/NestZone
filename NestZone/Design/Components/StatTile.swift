@@ -55,6 +55,12 @@ public struct StatTile: View {
         }
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
+        // Without this the tile answers a tap only where a glyph actually is:
+        // `glassCard` is a `glassEffect`, a rendering pass that contributes no
+        // hit region, so the 16pt padding ring and the gaps between the icon,
+        // the number and the label are all dead. On a tile this size that reads
+        // as the card being broken rather than as a near miss.
+        .contentShape(.rect)
         .glassCard(cornerRadius: Metrics.tightRadius)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(title))

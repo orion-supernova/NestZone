@@ -163,6 +163,16 @@ public enum L10n {
         r("common_delete", "Delete")
     }
 
+    /// Undo
+    public static var commonUndo: LocalizedStringResource {
+        r("common_undo", "Undo")
+    }
+
+    /// Deleted “%@”
+    public static func shoppingItemDeleted(_ a0: String) -> LocalizedStringResource {
+        r("shopping_item_deleted", "Deleted “\(a0)”")
+    }
+
     /// Back
     public static var commonBack: LocalizedStringResource {
         r("common_back", "Back")
@@ -821,6 +831,16 @@ public enum L10n {
     /// Start Cooking
     public static var recipesCookingStartCookingButton: LocalizedStringResource {
         r("recipes_cooking_start_cooking_button", "Start Cooking")
+    }
+
+    /// Mark all
+    public static var recipesCookingMarkAll: LocalizedStringResource {
+        r("recipes_cooking_mark_all", "Mark all")
+    }
+
+    /// Clear all
+    public static var recipesCookingClearAll: LocalizedStringResource {
+        r("recipes_cooking_clear_all", "Clear all")
     }
 
     /// Back
@@ -2671,6 +2691,11 @@ public enum L10n {
     /// Start cooking
     public static var recipesDetailStartCooking: LocalizedStringResource {
         r("recipes_detail_start_cooking", "Start cooking")
+    }
+
+    /// Start preparing
+    public static var recipesDetailStartPreparing: LocalizedStringResource {
+        r("recipes_detail_start_preparing", "Start preparing")
     }
 
     /// Servings

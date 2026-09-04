@@ -15,6 +15,11 @@ public struct ShoppingFeature: Sendable {
         /// Categories the user has collapsed. Not persisted — a collapse is a
         /// "get this out of my way for now", not a preference.
         public var collapsed: Set<ShoppingItem.Category> = []
+        /// Swiped away, but not yet sent to the server. The row is already gone
+        /// from `items`; if the undo window closes without a tap, this is what
+        /// gets deleted for real. One at a time — a second swipe commits the
+        /// first, the way a mail client does.
+        public var pendingDeletion: ShoppingItem?
         @Presents public var alert: AlertState<Action.Alert>?
 
         public init(homeID: HomeID) { self.homeID = homeID }
@@ -78,6 +83,9 @@ public struct ShoppingFeature: Sendable {
         case addTapped
         case togglePurchased(ShoppingItemID)
         case deleteTapped(ShoppingItemID)
+        case undoDeleteTapped
+        case deleteWindowClosed(ShoppingItemID)
+        case screenLeft
         case clearPurchasedTapped
         case viewModeToggled(grouped: Bool)
         case categoryToggled(ShoppingItem.Category)
@@ -90,9 +98,14 @@ public struct ShoppingFeature: Sendable {
         }
     }
 
-    private enum CancelID { case items }
+    private enum CancelID { case items, undo }
+
+    /// How long a swipe stays undoable. Long enough to notice the mistake,
+    /// short enough that leaving the screen rarely cuts it short.
+    private static let undoWindow: Duration = .seconds(5)
 
     @Dependency(\.shopping) var shopping
+    @Dependency(\.continuousClock) var clock
 
     public init() {}
 
@@ -113,7 +126,14 @@ public struct ShoppingFeature: Sendable {
 
             case let .itemsUpdated(items):
                 state.isLoading = false
-                state.items = IdentifiedArray(uniqueElements: items)
+                var incoming = IdentifiedArray(uniqueElements: items)
+                // A row inside its undo window is gone as far as this screen is
+                // concerned, but the server still has it — so the next live push
+                // would otherwise put it straight back.
+                if let pending = state.pendingDeletion {
+                    incoming.remove(id: pending.id)
+                }
+                state.items = incoming
                 return .none
 
             case let .loadFailed(error):
@@ -150,11 +170,46 @@ public struct ShoppingFeature: Sendable {
                 }
 
             case let .deleteTapped(id):
-                return .run { send in
-                    try await shopping.remove(id)
-                } catch: { error, send in
-                    await send(.writeFailed(AppError(error)))
-                }
+                guard let item = state.items[id: id] else { return .none }
+                // The row goes now — waiting for the server reads as a swipe
+                // that did not take — but the write is held back until the undo
+                // window closes, so undo cancels it rather than reversing it.
+                state.items.remove(id: id)
+                let superseded = state.pendingDeletion
+                state.pendingDeletion = item
+
+                return .merge(
+                    // A second swipe ends the first one's window; that item was
+                    // offered back and the offer was not taken.
+                    superseded.map { commit($0.id) } ?? .none,
+
+                    .run { send in
+                        try await clock.sleep(for: Self.undoWindow)
+                        await send(.deleteWindowClosed(item.id))
+                    }
+                    .cancellable(id: CancelID.undo, cancelInFlight: true)
+                )
+
+            case .undoDeleteTapped:
+                guard let item = state.pendingDeletion else { return .none }
+                state.pendingDeletion = nil
+                // Nothing was ever sent, so this is the whole restore. The live
+                // subscription still holds the item and will agree.
+                state.items.append(item)
+                return .cancel(id: CancelID.undo)
+
+            case let .deleteWindowClosed(id):
+                guard state.pendingDeletion?.id == id else { return .none }
+                state.pendingDeletion = nil
+                return commit(id)
+
+            // Leaving the screen tears down the timer with it, which would drop
+            // the delete on the floor and let the row reappear. Send it now and
+            // give up the rest of the window.
+            case .screenLeft:
+                guard let item = state.pendingDeletion else { return .none }
+                state.pendingDeletion = nil
+                return .merge(.cancel(id: CancelID.undo), commit(item.id))
 
             case let .viewModeToggled(grouped):
                 state.$isGrouped.withLock { $0 = grouped }
@@ -198,6 +253,17 @@ public struct ShoppingFeature: Sendable {
             }
         }
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+extension ShoppingFeature {
+    /// The write the swipe was always going to make, once nobody has undone it.
+    private func commit(_ id: ShoppingItemID) -> Effect<Action> {
+        .run { send in
+            try await shopping.remove(id)
+        } catch: { error, send in
+            await send(.writeFailed(AppError(error)))
+        }
     }
 }
 

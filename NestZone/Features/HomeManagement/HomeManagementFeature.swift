@@ -114,7 +114,11 @@ public struct HomeManagementFeature: Sendable {
                 guard let home = state.homes[id: id] else { return .none }
                 // For the last member the server cascades the whole home away,
                 // so the prompt has to say "delete", not "leave".
-                state.alert = .confirmLeave(home, isSoleMember: home.members.count <= 1)
+                state.alert = .confirmLeave(
+                    home,
+                    isSoleMember: home.members.count <= 1,
+                    confirm: .confirmLeave(id)
+                )
                 return .none
 
             case let .alert(.presented(.confirmLeave(id))),
@@ -146,16 +150,19 @@ public struct HomeManagementFeature: Sendable {
     }
 }
 
-extension AlertState where Action == HomeManagementFeature.Action.Alert {
+extension AlertState {
     /// Leaving is destructive and, for the last member, irreversible — so it
     /// always asks, and says which of the two is about to happen.
-    static func confirmLeave(_ home: Home, isSoleMember: Bool) -> Self {
+    ///
+    /// Generic over the action it sends: the gate and the Settings sheet both
+    /// offer this, and the wording is the part worth keeping in one place.
+    static func confirmLeave(_ home: Home, isSoleMember: Bool, confirm: Action) -> Self {
         AlertState {
             TextState(String(localized: isSoleMember
                 ? L10n.homeDeleteConfirmTitle
                 : L10n.homeLeaveConfirmTitle))
         } actions: {
-            ButtonState(role: .destructive, action: .confirmLeave(home.id)) {
+            ButtonState(role: .destructive, action: confirm) {
                 TextState(String(localized: isSoleMember
                     ? L10n.homeDeleteConfirmAction
                     : L10n.homeLeaveConfirmAction))

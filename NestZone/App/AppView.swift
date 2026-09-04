@@ -106,6 +106,17 @@ struct LaunchView: View {
 /// `Tab(value:)` and `tabBarMinimizeBehavior` are iOS 26: the bar collapses out
 /// of the way as you scroll and expands again on the way back, which is why the
 /// content below no longer needs a hand-tuned bottom inset.
+///
+/// Messages is deliberately absent. The feature is out of scope for now but its
+/// reducer, view, client and backend are all still here and still wired into
+/// `MainFeature` — putting the tab back is this block, and nothing else:
+///
+///     Tab(value: MainFeature.Tab.messages) {
+///         MessagesView(store: store.scope(state: \.messages, action: \.messages))
+///     } label: {
+///         tabLabel(.messages)
+///     }
+///     .accessibilityIdentifier("MessagesTab")
 struct MainView: View {
     @Bindable var store: StoreOf<MainFeature>
 
@@ -145,13 +156,6 @@ struct MainView: View {
                 tabLabel(.notes)
             }
             .accessibilityIdentifier("NotesTab")
-
-            Tab(value: MainFeature.Tab.messages) {
-                MessagesView(store: store.scope(state: \.messages, action: \.messages))
-            } label: {
-                tabLabel(.messages)
-            }
-            .accessibilityIdentifier("MessagesTab")
 
             Tab(value: MainFeature.Tab.settings) {
                 NavigationStack {

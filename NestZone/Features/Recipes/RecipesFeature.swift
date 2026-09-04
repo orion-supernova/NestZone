@@ -265,6 +265,7 @@ public struct RecipeDetailFeature: Sendable {
 
     public enum Action: Equatable {
         case ingredientToggled(Int)
+        case allIngredientsToggled
         case beginCookingTapped
         case startStepsTapped
         case quitCookingTapped
@@ -304,6 +305,14 @@ public struct RecipeDetailFeature: Sendable {
                 } else {
                     state.checkedIngredients.insert(index)
                 }
+                return .none
+
+            // One tap for a cook who already has everything out, and the way
+            // back for one who tapped it by accident.
+            case .allIngredientsToggled:
+                state.checkedIngredients = state.allIngredientsChecked
+                    ? []
+                    : Set(state.recipe.ingredients.indices)
                 return .none
 
             case .beginCookingTapped:

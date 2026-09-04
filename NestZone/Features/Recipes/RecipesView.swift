@@ -304,7 +304,15 @@ struct RecipeDetailView: View {
             // Explore is just as cookable as one you already own, and gating
             // cooking behind "save it first" was wrong.
             if store.canCook {
-                PrimaryButton(L10n.recipesDetailStartCooking, symbol: "flame.fill") {
+                // Cooking opens on the ingredient checklist, so unless there is
+                // nothing to gather, this button does not start the cooking —
+                // it starts the prep. The one at the end of the checklist is
+                // what starts the cooking.
+                let gathers = !store.recipe.ingredients.isEmpty
+                PrimaryButton(
+                    gathers ? L10n.recipesDetailStartPreparing : L10n.recipesDetailStartCooking,
+                    symbol: gathers ? "checklist" : "flame.fill"
+                ) {
                     store.send(.beginCookingTapped)
                 }
             }
@@ -418,9 +426,23 @@ struct CookingModeView: View {
 
     private var ingredients: some View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            Text(L10n.recipesCookingCheckIngredientsInstruction)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(L10n.recipesCookingCheckIngredientsInstruction)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
+                Spacer(minLength: 0)
+
+                Button { store.send(.allIngredientsToggled) } label: {
+                    Text(store.allIngredientsChecked
+                        ? L10n.recipesCookingClearAll
+                        : L10n.recipesCookingMarkAll)
+                        .font(.footnote.weight(.semibold))
+                }
+                .buttonStyle(.glass)
+                .controlSize(.small)
+                .animation(Motion.spring, value: store.allIngredientsChecked)
+            }
 
             ScrollView {
                 GlassGroup {

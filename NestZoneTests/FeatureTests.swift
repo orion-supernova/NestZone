@@ -149,14 +149,223 @@ struct HomeManagementTests {
             $0.$selectedHomeIDRaw.withLock { $0 = "h1" }
         }
         await store.send(.leaveTapped("h1")) {
-            $0.alert = .confirmLeave(home, isSoleMember: true)
+            $0.alert = .confirmLeave(home, isSoleMember: true, confirm: .confirmLeave("h1"))
         }
+    }
+}
+
+@MainActor
+@Suite("Manage homes")
+struct ManageHomesTests {
+
+    static let nest = Home(id: "h1", name: "The Nest", members: ["me", "you"])
+    static let cabin = Home(id: "h2", name: "The Cabin", members: ["me"])
+
+    @Test("Picking another home asks the parent to switch instead of clearing the selection")
+    func switchingDelegatesUpwards() async {
+        let store = TestStore(
+            initialState: ManageHomesFeature.State(
+                homes: [Self.nest, Self.cabin], currentHomeID: "h1"
+            )
+        ) {
+            ManageHomesFeature()
+        }
+
+        await store.send(.homeTapped("h2"))
+        await store.receive(\.delegate.switchRequested)
+    }
+
+    @Test("Tapping the home already open just closes the sheet")
+    func tappingTheOpenHomeDismisses() async {
+        let store = TestStore(
+            initialState: ManageHomesFeature.State(homes: [Self.nest], currentHomeID: "h1")
+        ) {
+            ManageHomesFeature()
+        }
+
+        await store.send(.homeTapped("h1"))
+        await store.receive(\.delegate.dismissRequested)
+    }
+
+    @Test("Leaving as the last member warns that the home will be deleted, then deletes it")
+    func leavingAsksFirst() async {
+        let left = LockIsolated<[HomeID]>([])
+        let store = TestStore(
+            initialState: ManageHomesFeature.State(
+                homes: [Self.nest, Self.cabin], currentHomeID: "h1"
+            )
+        ) {
+            ManageHomesFeature()
+        } withDependencies: {
+            $0.homes.leave = { id in left.withValue { $0.append(id) } }
+        }
+
+        await store.send(.leaveTapped("h2")) {
+            $0.alert = .confirmLeave(Self.cabin, isSoleMember: true, confirm: .confirmLeave("h2"))
+        }
+        #expect(left.value.isEmpty)
+
+        await store.send(.alert(.presented(.confirmLeave("h2")))) {
+            $0.alert = nil
+            $0.leavingID = "h2"
+            $0.homes.remove(id: "h2")
+        }
+        await store.receive(\.leaveFinished) {
+            $0.leavingID = nil
+        }
+        #expect(left.value == ["h2"])
+    }
+}
+
+@MainActor
+@Suite("Settings home management")
+struct SettingsHomeTests {
+
+    @Test("A single home still opens the manage sheet — it is the only way out of a home")
+    func oneHomeStillManages() async {
+        var state = SettingsFeature.State(homeID: "h1", home: ManageHomesTests.nest)
+        state.applyHomes([ManageHomesTests.nest])
+
+        let store = TestStore(initialState: state) { SettingsFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        #expect(store.state.hasMultipleHomes == false)
+        await store.send(.manageHomesTapped) {
+            $0.destination = .manageHomes(
+                ManageHomesFeature.State(homes: [ManageHomesTests.nest], currentHomeID: "h1")
+            )
+        }
+    }
+
+    @Test("Switching closes the sheet and hands the new home to the app")
+    func switchingBubblesUp() async {
+        var state = SettingsFeature.State(homeID: "h1", home: ManageHomesTests.nest)
+        state.applyHomes([ManageHomesTests.nest, ManageHomesTests.cabin])
+        state.destination = .manageHomes(
+            ManageHomesFeature.State(
+                homes: [ManageHomesTests.nest, ManageHomesTests.cabin], currentHomeID: "h1"
+            )
+        )
+
+        let store = TestStore(initialState: state) { SettingsFeature() }
+
+        await store.send(.destination(.presented(.manageHomes(.delegate(.switchRequested("h2")))))) {
+            $0.destination = nil
+        }
+        await store.receive(\.delegate.homeSwitched)
+    }
+
+    @Test("A live home-list update reaches the sheet while it is open")
+    func homeListUpdatesReachTheSheet() {
+        var state = SettingsFeature.State(homeID: "h1", home: ManageHomesTests.nest)
+        state.applyHomes([ManageHomesTests.nest, ManageHomesTests.cabin])
+        state.destination = .manageHomes(
+            ManageHomesFeature.State(
+                homes: [ManageHomesTests.nest, ManageHomesTests.cabin], currentHomeID: "h1"
+            )
+        )
+
+        // The other home was left on another device.
+        state.applyHomes([ManageHomesTests.nest])
+
+        guard case let .manageHomes(manage) = state.destination else {
+            Issue.record("the sheet should still be open")
+            return
+        }
+        #expect(manage.homes.ids == ["h1"])
     }
 }
 
 @MainActor
 @Suite("Shopping list")
 struct ShoppingTests {
+
+    private static let milk = ShoppingItem(id: "s1", name: "Milk", homeID: "h1")
+    private static let eggs = ShoppingItem(id: "s2", name: "Eggs", homeID: "h1")
+
+    private static func listStore(
+        _ removed: LockIsolated<[ShoppingItemID]>,
+        _ clock: TestClock<Duration>
+    ) -> TestStoreOf<ShoppingFeature> {
+        TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.remove = { id in removed.withValue { $0.append(id) } }
+            $0.continuousClock = clock
+        }
+    }
+
+    @Test("A swipe drops the row at once but holds the write open for undo")
+    func deleteIsHeldForUndo() async {
+        let removed = LockIsolated<[ShoppingItemID]>([])
+        let clock = TestClock()
+        let store = Self.listStore(removed, clock)
+
+        await store.send(.itemsUpdated([Self.milk, Self.eggs])) {
+            $0.isLoading = false
+            $0.items = [Self.milk, Self.eggs]
+        }
+
+        await store.send(.deleteTapped("s1")) {
+            $0.items.remove(id: "s1")
+            $0.pendingDeletion = Self.milk
+        }
+        #expect(removed.value.isEmpty)
+
+        // The server still has the item, so a live push arriving mid-window
+        // must not put the row back.
+        await store.send(.itemsUpdated([Self.milk, Self.eggs]))
+        #expect(store.state.items.ids == ["s2"])
+
+        await clock.advance(by: .seconds(5))
+        await store.receive(\.deleteWindowClosed) {
+            $0.pendingDeletion = nil
+        }
+        #expect(removed.value == ["s1"])
+    }
+
+    @Test("Undo cancels the write rather than reversing it")
+    func undoCancelsTheDelete() async {
+        let removed = LockIsolated<[ShoppingItemID]>([])
+        let clock = TestClock()
+        let store = Self.listStore(removed, clock)
+
+        await store.send(.itemsUpdated([Self.milk, Self.eggs])) {
+            $0.isLoading = false
+            $0.items = [Self.milk, Self.eggs]
+        }
+        await store.send(.deleteTapped("s1")) {
+            $0.items.remove(id: "s1")
+            $0.pendingDeletion = Self.milk
+        }
+        await store.send(.undoDeleteTapped) {
+            $0.pendingDeletion = nil
+            $0.items.append(Self.milk)
+        }
+
+        await clock.advance(by: .seconds(30))
+        #expect(removed.value.isEmpty)
+    }
+
+    @Test("Leaving the screen sends the held delete instead of dropping it")
+    func leavingCommitsThePendingDelete() async {
+        let removed = LockIsolated<[ShoppingItemID]>([])
+        let clock = TestClock()
+        let store = Self.listStore(removed, clock)
+
+        await store.send(.itemsUpdated([Self.milk])) {
+            $0.isLoading = false
+            $0.items = [Self.milk]
+        }
+        await store.send(.deleteTapped("s1")) {
+            $0.items.remove(id: "s1")
+            $0.pendingDeletion = Self.milk
+        }
+        await store.send(.screenLeft) {
+            $0.pendingDeletion = nil
+        }
+        #expect(removed.value == ["s1"])
+    }
 
     @Test("Adding clears the field immediately so the next item can be typed")
     func addClearsDraft() async {
