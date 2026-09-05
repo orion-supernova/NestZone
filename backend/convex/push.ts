@@ -260,6 +260,16 @@ async function deliver(
       response.status === 410 ||
       (response.status === 400 && text.includes("BadDeviceToken"))
     ) {
+      // Logged, not swallowed. A dropped token used to disappear without a
+      // trace, which made "nobody got the notification" indistinguishable from
+      // "nobody was sent one" — and the two have completely different fixes.
+      // `BadDeviceToken` on a token the device really did hand us almost always
+      // means the wrong gateway: a sandbox token posted to production or the
+      // reverse.
+      console.warn(
+        `APNs ${response.status} dropping ${device.environment} token ` +
+          `(${device.token.length / 2} bytes, ${device.token.slice(0, 8)}…): ${text}`,
+      );
       await ctx.runMutation(internal.push.dropToken, { id: device.id });
       return "dropped";
     }
