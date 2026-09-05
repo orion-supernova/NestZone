@@ -48,10 +48,72 @@ export const create = mutation({
       created: now,
       updated: now,
     });
+    // Every home starts with the two lists the Movies screen is built around.
+    //
+    // The pre-refactor client created these itself, from its own localized
+    // strings, so the names froze in whatever language the app happened to be
+    // in at signup — which is why older homes have English rows that never
+    // translate. Creating them here fixes both halves: a home made since the
+    // refactor got no lists at all, and the name below is only a label for
+    // anyone reading the table. The app renders these two from `type`, so what
+    // a person sees follows their language rather than the row.
+    for (const preset of PRESET_LISTS) {
+      await ctx.db.insert("movie_lists", {
+        home_id: homeId,
+        name: preset.name,
+        type: preset.type,
+        is_preset: true,
+        created: now,
+        updated: now,
+      });
+    }
+
     // Mirror PB behaviour: track the user's home membership on the user too.
     const homes = new Set([...(user.home_id ?? []), homeId]);
     await ctx.db.patch(user._id, { home_id: [...homes] });
     return await ctx.db.get(homeId);
+  },
+});
+
+/** The built-in movie lists, in the order the Movies screen shows them. */
+const PRESET_LISTS = [
+  { type: "wishlist", name: "Wishlist" },
+  { type: "watched", name: "Watched" },
+] as const;
+
+/**
+ * Gives a home its built-in lists if it has none.
+ *
+ * For the homes made in the window where nothing created them — the refactor
+ * dropped the client-side seeding before the server picked it up — so those
+ * households are not left with a Movies screen that cannot save anything.
+ * Idempotent: it adds only what is missing, so calling it repeatedly is safe.
+ */
+export const ensurePresetLists = mutation({
+  args: { homeId: v.id("homes") },
+  handler: async (ctx, { homeId }) => {
+    await requireHomeMember(ctx, homeId);
+    const existing = await ctx.db
+      .query("movie_lists")
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
+      .collect();
+    const present = new Set(existing.map((l) => l.type));
+
+    const now = Date.now();
+    let added = 0;
+    for (const preset of PRESET_LISTS) {
+      if (present.has(preset.type)) continue;
+      await ctx.db.insert("movie_lists", {
+        home_id: homeId,
+        name: preset.name,
+        type: preset.type,
+        is_preset: true,
+        created: now,
+        updated: now,
+      });
+      added++;
+    }
+    return { added };
   },
 });
 

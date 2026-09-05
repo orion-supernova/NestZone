@@ -1433,3 +1433,64 @@ struct MovieHandoffTests {
         #expect(store.state.history.map(\.id) == ["p2"])
     }
 }
+
+@MainActor
+@Suite("Built-in movie lists")
+struct PresetListTests {
+
+    @Test("A built-in list is named from its kind, not from the stored text")
+    func presetsLocaliseFromKind() {
+        // The row's `name` is whatever language the app was in when it was
+        // written; `kind` is the key that survives a language change.
+        let wishlist = MovieList(id: "l1", name: "Wishlist", kind: .wishlist, isPreset: true)
+        #expect(wishlist.displayName == String(localized: L10n.movieListsWishlistTitle))
+
+        let watched = MovieList(id: "l2", name: "Watched", kind: .watched, isPreset: true)
+        #expect(watched.displayName == String(localized: L10n.movieListsWatchedTitle))
+    }
+
+    @Test("A list someone named themselves keeps its name")
+    func customListsKeepTheirName() {
+        let custom = MovieList(id: "l3", name: "Date night", summary: "For Fridays", kind: .custom)
+        #expect(custom.displayName == "Date night")
+        #expect(custom.displaySummary == "For Fridays")
+        // And an empty description stays absent rather than becoming a label.
+        let bare = MovieList(id: "l4", name: "Later", summary: "", kind: .custom)
+        #expect(bare.displaySummary == nil)
+    }
+
+    @Test("A home with no built-in lists repairs itself on first look")
+    func emptyHomeGetsItsPresets() async {
+        let asked = LockIsolated<[HomeID]>([])
+        let store = TestStore(initialState: MoviesFeature.State(homeID: "h1")) {
+            MoviesFeature()
+        } withDependencies: {
+            $0.movies.ensurePresetLists = { id in asked.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.listsUpdated([]))
+        #expect(asked.value == ["h1"])
+    }
+
+    @Test("A home that already has them is left alone")
+    func seededHomeIsNotTouched() async {
+        let asked = LockIsolated<[HomeID]>([])
+        let store = TestStore(initialState: MoviesFeature.State(homeID: "h1")) {
+            MoviesFeature()
+        } withDependencies: {
+            $0.movies.ensurePresetLists = { id in asked.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.listsUpdated([
+            MovieList(id: "l1", name: "Wishlist", kind: .wishlist, isPreset: true),
+            MovieList(id: "l2", name: "Watched", kind: .watched, isPreset: true),
+        ]))
+        #expect(asked.value.isEmpty)
+
+        // And a later push must not turn into a write per update.
+        await store.send(.listsUpdated([]))
+        #expect(asked.value.isEmpty, "only the first look repairs; the rest just render")
+    }
+}

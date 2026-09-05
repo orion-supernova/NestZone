@@ -164,6 +164,31 @@ public struct MovieList: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+extension MovieList {
+    /// What to call this list on screen.
+    ///
+    /// A built-in list's `name` is whatever text happened to be written when
+    /// the row was made — "Wishlist", "Watched" — and it stayed in that language
+    /// forever, so switching the app to Turkish left two English rows sitting at
+    /// the top of the Movies screen. The row already carries the key that fixes
+    /// it: `kind`. The stored name is the fallback for a list a person named
+    /// themselves, which is the only kind whose text is really theirs.
+    ///
+    /// Nothing has to be migrated for this, and nothing has to be written back:
+    /// the English `name` stays in the database as a label for anyone reading
+    /// the table directly, and the app simply stops rendering it.
+    public var displayName: String {
+        kind == .custom ? name : String(localized: kind.title)
+    }
+
+    /// The same for the line under it.
+    public var displaySummary: String? {
+        guard kind == .custom else { return String(localized: kind.subtitle) }
+        guard let summary, !summary.isEmpty else { return nil }
+        return summary
+    }
+}
+
 /// A movie saved into one of the home's lists.
 public struct StoredMovie: Codable, Identifiable, Hashable, Sendable {
     public let id: StoredMovieID

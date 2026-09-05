@@ -118,8 +118,8 @@ private struct ListRow: View {
                     .background(list.kind.tint.opacity(0.14), in: .rect(cornerRadius: 12, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(list.name).font(.headline).foregroundStyle(.primary)
-                    if let summary = list.summary, !summary.isEmpty {
+                    Text(list.displayName).font(.headline).foregroundStyle(.primary)
+                    if let summary = list.displaySummary {
                         Text(summary)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -165,7 +165,7 @@ struct MovieListView: View {
         }
         .background(Backdrop(tint: theme.accent))
         .scrollEdgeEffectStyle(.soft, for: .top)
-        .navigationTitle(Text(store.list.name))
+        .navigationTitle(Text(store.list.displayName))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -202,8 +202,8 @@ struct MovieListView: View {
                 )
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(store.list.name).font(.headline)
-                if let summary = store.list.summary, !summary.isEmpty {
+                Text(store.list.displayName).font(.headline)
+                if let summary = store.list.displaySummary {
                     Text(summary)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -353,7 +353,7 @@ private struct ListChip: View {
                         .font(.caption.weight(.semibold))
                         .contentTransition(.symbolEffect(.replace))
                 }
-                Text(list.name).font(.subheadline.weight(.medium)).lineLimit(1)
+                Text(list.displayName).font(.subheadline.weight(.medium)).lineLimit(1)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)

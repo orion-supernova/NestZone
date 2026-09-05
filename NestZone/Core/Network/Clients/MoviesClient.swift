@@ -14,6 +14,9 @@ public struct MoviesClient: Sendable {
     public var removeList: @Sendable (MovieListID) async throws -> Void
     public var addMovie: @Sendable (HomeID, MovieListID, Movie) async throws -> Void
     public var removeMovie: @Sendable (StoredMovieID) async throws -> Void
+    /// Gives a home its built-in lists if it has none. Idempotent — the server
+    /// adds only what is missing.
+    public var ensurePresetLists: @Sendable (HomeID) async throws -> Void
 }
 
 extension MoviesClient: DependencyKey {
@@ -69,6 +72,11 @@ extension MoviesClient: DependencyKey {
         },
         removeMovie: { id in
             try await ConvexConnection.shared.mutate("movies:removeMovie", args: ["id": id])
+        },
+        ensurePresetLists: { homeID in
+            try await ConvexConnection.shared.mutate(
+                "homes:ensurePresetLists", args: ["homeId": homeID]
+            )
         }
     )
 

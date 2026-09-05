@@ -70,9 +70,23 @@ public struct MoviesFeature: Sendable {
                 .cancellable(id: CancelID.lists, cancelInFlight: true)
 
             case let .listsUpdated(lists):
+                let wasLoading = state.isLoading
                 state.isLoading = false
                 state.lists = IdentifiedArray(uniqueElements: lists)
-                return .none
+                // A home with no built-in lists has nowhere to save a film —
+                // not from here, and not from a poll's matches either. Homes
+                // made in the window between the client dropping the seeding
+                // and the server taking it over are in exactly that state, so
+                // the first look at this screen repairs them. Only on the first
+                // push: the subscription then reports the new lists, and
+                // asking again on every push would be a write per update.
+                guard wasLoading, state.presets.isEmpty else { return .none }
+                return .run { [homeID = state.homeID] _ in
+                    try await movies.ensurePresetLists(homeID)
+                } catch: { _, _ in
+                    // Nothing to say: the screen works without them, it just
+                    // has no quick collections to offer.
+                }
 
             case let .loadFailed(error):
                 state.isLoading = false
@@ -524,6 +538,16 @@ extension MovieList.Kind {
         switch self {
         case .wishlist: L10n.movieListsWishlistTitle
         case .watched: L10n.movieListsWatchedTitle
+        case .custom: L10n.movieListsCustomLists
+        }
+    }
+
+    /// The line under the name on a built-in list. `.custom` has none — a list
+    /// a person made carries whatever description they wrote.
+    public var subtitle: LocalizedStringResource {
+        switch self {
+        case .wishlist: L10n.movieListsWishlistSubtitle
+        case .watched: L10n.movieListsWatchedSubtitle
         case .custom: L10n.movieListsCustomLists
         }
     }
