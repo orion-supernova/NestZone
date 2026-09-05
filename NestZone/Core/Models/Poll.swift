@@ -131,6 +131,21 @@ public struct PollItem: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+extension PollItem {
+    /// The catalogue movie this candidate stands for.
+    ///
+    /// A poll item carries only what the deck needed to draw a card — the TMDb
+    /// id, a title and a poster path. That id is enough for `catalog:details`
+    /// to fill in the rest, which is what lets a film agreed on in a round be
+    /// opened and filed without searching for it again.
+    ///
+    /// Only meaningful on a `.movie` round; a dinner round's items are recipes
+    /// and cuisines.
+    public var asMovie: Movie {
+        Movie(id: externalID, title: label ?? "", poster: thumbnailURL)
+    }
+}
+
 public struct PollVote: Codable, Identifiable, Hashable, Sendable {
     public let id: String
     public var pollID: PollID?
@@ -203,15 +218,50 @@ extension PollDetail {
             .sorted { ($0.order ?? 0) < ($1.order ?? 0) }
     }
 
-    /// Yes-votes per candidate, for the summary sheet's ranking.
+    /// How many *people* said yes to each candidate, best first.
+    ///
+    /// People, not votes: counted raw, a member who swiped the same card twice
+    /// counted twice, which `matches` already guarded against and this did not —
+    /// so the ranking could disagree with the agreement it sits next to, and
+    /// "2 of 2 said yes" could mean one person swiping twice.
     public var scoreboard: [(item: PollItem, yes: Int)] {
-        var yesCounts: [String: Int] = [:]
+        var yesVoters: [String: Set<UserID>] = [:]
         for vote in votes where vote.isYes {
-            yesCounts[vote.targetExternalID, default: 0] += 1
+            yesVoters[vote.targetExternalID, default: []].insert(vote.userID)
         }
         return items
-            .map { ($0, yesCounts[$0.externalID] ?? 0) }
+            .map { ($0, yesVoters[$0.externalID]?.count ?? 0) }
             .sorted { $0.1 > $1.1 }
+    }
+
+    /// Everyone who cast a vote of any kind.
+    public var voterCount: Int { Set(votes.map(\.userID)).count }
+
+    /// How a round actually turned out.
+    ///
+    /// The history sheet used to take the first unanimous match and, failing
+    /// that, fall back to whatever topped the scoreboard — then label it
+    /// "Winner". That crowned one person's single swipe in a two-person home,
+    /// and in a round where nobody swiped right at all it crowned a film with
+    /// no votes whatsoever, because `scoreboard` lists every candidate
+    /// including the ones on zero. It also showed only the first agreement when
+    /// a household had agreed on several.
+    public func outcome(memberCount: Int) -> PollOutcome {
+        let agreed = matches(memberCount: memberCount)
+        guard agreed.isEmpty else {
+            return PollOutcome(result: .agreed(agreed), voters: voterCount, memberCount: memberCount)
+        }
+        // Only candidates somebody actually wanted; the rest are not "closest",
+        // they are untouched.
+        let supported = scoreboard.filter { $0.yes > 0 }
+        guard let best = supported.first?.yes else {
+            return PollOutcome(result: .nothing, voters: voterCount, memberCount: memberCount)
+        }
+        return PollOutcome(
+            result: .closest(supported.filter { $0.yes == best }.map(\.item), yes: best),
+            voters: voterCount,
+            memberCount: memberCount
+        )
     }
 
     /// Candidates the caller has not swiped yet.
@@ -221,4 +271,47 @@ extension PollDetail {
             .filter { !seen.contains($0.externalID) }
             .sorted { ($0.order ?? 0) < ($1.order ?? 0) }
     }
+}
+
+/// What a finished round came to, and how much of the household took part.
+///
+/// Three genuinely different endings, which the app used to collapse into one
+/// word. "Winner" is only honest for the first of them.
+public struct PollOutcome: Equatable, Sendable {
+    public enum Result: Equatable, Sendable {
+        /// Every member of the home swiped right on these. There can be more
+        /// than one, and all of them are worth showing — the household agreed
+        /// on a shortlist, not a single film.
+        case agreed([PollItem])
+        /// Nobody carried the whole house. The best-supported candidates, and
+        /// how many people that was. Tied candidates all appear.
+        case closest([PollItem], yes: Int)
+        /// Not one right-swipe in the entire round.
+        case nothing
+    }
+
+    public var result: Result
+    /// How many people cast a vote of any kind.
+    public var voters: Int
+    /// How many could have.
+    public var memberCount: Int
+
+    public init(result: Result, voters: Int, memberCount: Int) {
+        self.result = result
+        self.voters = voters
+        self.memberCount = memberCount
+    }
+
+    /// The candidates worth putting on screen, whichever ending this is.
+    public var items: [PollItem] {
+        switch result {
+        case let .agreed(items): items
+        case let .closest(items, _): items
+        case .nothing: []
+        }
+    }
+
+    /// The round closed before everyone had their say. Worth saying out loud:
+    /// it is the reason a round can end with nothing agreed.
+    public var isPartialTurnout: Bool { voters < memberCount }
 }

@@ -111,6 +111,79 @@ struct PollTests {
         #expect(detail.matches(memberCount: 2).isEmpty)
     }
 
+    @Test("One person voting alone is not an agreement")
+    func loneVoterIsNotAWinner() {
+        // Exactly what the history sheet used to crown: in a home of three, one
+        // member swiped right on one film and it was reported as the winner.
+        let detail = detail(votes: [("dune", "a", true), ("barbie", "a", false)])
+        let outcome = detail.outcome(memberCount: 3)
+
+        guard case let .closest(items, yes) = outcome.result else {
+            Issue.record("one voter out of three cannot carry the house")
+            return
+        }
+        #expect(items.map(\.externalID) == ["dune"])
+        #expect(yes == 1)
+        #expect(outcome.isPartialTurnout, "and the sheet should say only one person voted")
+        #expect(outcome.voters == 1)
+    }
+
+    @Test("A household that agreed on several keeps all of them")
+    func everyAgreementSurvives() {
+        let detail = detail(votes: [
+            ("dune", "a", true), ("dune", "b", true),
+            ("barbie", "a", true), ("barbie", "b", true),
+            ("tenet", "a", true), ("tenet", "b", false),
+        ])
+        guard case let .agreed(items) = detail.outcome(memberCount: 2).result else {
+            Issue.record("expected an agreement")
+            return
+        }
+        // Both, not just the first — the sheet used to show one and drop the rest.
+        #expect(Set(items.map(\.externalID)) == ["dune", "barbie"])
+    }
+
+    @Test("A round nobody swiped right in has no winner at all")
+    func noRightSwipesMeansNothing() {
+        // `scoreboard` lists every candidate including the ones on zero, so the
+        // old fallback crowned a film with no votes whatsoever.
+        let detail = detail(votes: [("dune", "a", false), ("barbie", "a", false)])
+        guard case .nothing = detail.outcome(memberCount: 2).result else {
+            Issue.record("nothing was voted for, so nothing won")
+            return
+        }
+    }
+
+    @Test("A solo household agreeing with itself is a real agreement")
+    func singleMemberHomeCanAgree() {
+        let detail = detail(votes: [("dune", "a", true)])
+        guard case let .agreed(items) = detail.outcome(memberCount: 1).result else {
+            Issue.record("one member is the whole household")
+            return
+        }
+        #expect(items.map(\.externalID) == ["dune"])
+        #expect(!detail.outcome(memberCount: 1).isPartialTurnout)
+    }
+
+    @Test("Ties at the top all show, rather than an arbitrary one")
+    func tiedRunnersUpAllShow() {
+        let detail = detail(votes: [
+            ("dune", "a", true), ("barbie", "b", true),
+        ])
+        guard case let .closest(items, yes) = detail.outcome(memberCount: 3).result else {
+            Issue.record("expected a near miss")
+            return
+        }
+        #expect(Set(items.map(\.externalID)) == ["dune", "barbie"])
+        #expect(yes == 1)
+    }
+
+    @Test("The scoreboard counts people, not swipes")
+    func scoreboardCountsPeople() {
+        let detail = detail(votes: [("dune", "a", true), ("dune", "a", true)])
+        #expect(detail.scoreboard.first(where: { $0.item.externalID == "dune" })?.yes == 1)
+    }
+
     @Test("Scoreboard ranks by yes-votes")
     func scoreboardOrder() {
         let detail = detail(votes: [

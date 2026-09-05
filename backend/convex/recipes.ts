@@ -38,12 +38,35 @@ export const create = mutation({
     difficulty: v.optional(difficulty),
     image: v.optional(v.id("_storage")),
     tags: v.optional(v.array(v.string())),
+    // Set by the paths that adopt a bundled Explore recipe into the home. Three
+    // of them exist — "add to my recipes", "plan it for tonight" and "send its
+    // ingredients to the list" — and every one of them used to insert a fresh
+    // copy, so a household that cooked the same dish twice ended up with the
+    // same dish on the shelf three times. Hand-written recipes leave this off:
+    // two of your own called "Soup" are two recipes, not a mistake.
+    dedupeByTitle: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
+    const { homeId, dedupeByTitle, ...rest } = args;
+
+    if (dedupeByTitle) {
+      const wanted = rest.title.trim().toLowerCase();
+      const existing = await ctx.db
+        .query("recipes")
+        .withIndex("by_home", (q) => q.eq("home_id", homeId))
+        .collect();
+      const match = existing.find(
+        (r) => (r.title ?? "").trim().toLowerCase() === wanted,
+      );
+      // The caller wanted a recipe in this home with this title, and there is
+      // one. Handing it back is both the honest answer and the id the caller
+      // needs to point a meal plan or a shopping batch at.
+      if (match) return match;
+    }
+
     const now = Date.now();
-    const { homeId, ...rest } = args;
     const id = await ctx.db.insert("recipes", {
       ...rest,
       home_id: homeId,
@@ -63,5 +86,25 @@ export const remove = mutation({
     await requireDocHome(ctx, recipe, "Recipe");
     await ctx.db.delete(id);
     return { ok: true };
+  },
+});
+
+/// Deletes a recipe and every duplicate copy of it in one write.
+///
+/// Same reasoning as `shopping:removeMany`: one delete per id meant one
+/// subscription push per delete, and a shelf that had collapsed three copies
+/// into one row watched two of them reappear before vanishing again.
+export const removeMany = mutation({
+  args: { ids: v.array(v.id("recipes")) },
+  handler: async (ctx, { ids }) => {
+    let removed = 0;
+    for (const id of ids) {
+      const recipe = await ctx.db.get(id);
+      if (!recipe) continue;
+      await requireDocHome(ctx, recipe, "Recipe");
+      await ctx.db.delete(id);
+      removed++;
+    }
+    return { removed };
   },
 });

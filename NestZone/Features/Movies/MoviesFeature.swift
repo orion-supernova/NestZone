@@ -279,7 +279,9 @@ public struct MovieListFeature: Sendable {
                 return .cancel(id: CancelID.search)
 
             case let .movieTapped(stored):
-                state.detail = MovieInfoFeature.State(movie: stored.asMovie)
+                state.detail = MovieInfoFeature.State(
+                    homeID: state.homeID, movie: stored.asMovie
+                )
                 return .none
 
             case let .failed(error):
@@ -297,25 +299,69 @@ public struct MovieListFeature: Sendable {
     }
 }
 
-/// Everything TMDb knows about one film, fetched on demand.
+/// Everything TMDb knows about one film — and where the household keeps it.
+///
+/// This is the one screen a movie can be reached from anywhere, so it is also
+/// where a film gets filed. A poll's matches, the round history and the lists
+/// themselves all present it, which is what connects "we agreed on this" to
+/// "it's on our watchlist" without a separate search for a film the app was
+/// already showing you.
 @Reducer
 public struct MovieInfoFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
+        public var homeID: HomeID
         public var movie: Movie
         public var extras: MovieExtras?
         public var isLoading = true
+        /// The home's lists, live — so a list made on another device is
+        /// offered here without reopening the sheet.
+        public var lists: IdentifiedArrayOf<MovieList> = []
+        /// Which lists already hold this film, and the row to delete to undo
+        /// that. One `movies:byHome` subscription answers it for every list at
+        /// once.
+        public var savedIn: [MovieListID: StoredMovieID] = [:]
+        /// Lists with a write in flight, so a chip cannot be double-tapped into
+        /// two rows.
+        public var busy: Set<MovieListID> = []
+        @Presents public var alert: AlertState<Action.Alert>?
 
-        public init(movie: Movie) { self.movie = movie }
+        public init(homeID: HomeID, movie: Movie) {
+            self.homeID = homeID
+            self.movie = movie
+        }
+
+        /// Presets first — Wishlist, then Watched — and custom lists after, in
+        /// the order the Movies screen shows them.
+        public var orderedLists: [MovieList] {
+            lists.filter { $0.kind == .wishlist }
+                + lists.filter { $0.kind == .watched }
+                + lists.filter { $0.kind == .custom }
+                    .sorted { Timestamp.newestFirst($1.created, $0.created) }
+        }
+
+        public func isSaved(in list: MovieList) -> Bool { savedIn[list.id] != nil }
+        public func isBusy(_ list: MovieList) -> Bool { busy.contains(list.id) }
     }
 
     public enum Action: Equatable {
         case task
         case loaded(MovieDetails)
         case failed(AppError)
+        case listsUpdated([MovieList])
+        case savedUpdated([StoredMovie])
+        case listToggled(MovieList)
+        case writeFinished(MovieListID)
+        case writeFailed(MovieListID, AppError)
+        case alert(PresentationAction<Alert>)
+
+        public enum Alert: Equatable {}
     }
 
+    private enum CancelID { case lists, saved }
+
     @Dependency(\.catalog) var catalog
+    @Dependency(\.movies) var movies
 
     public init() {}
 
@@ -323,13 +369,32 @@ public struct MovieInfoFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .task:
-                // One request: the server appends credits and keywords rather
-                // than making the client ask three times.
-                return .run { [id = state.movie.id] send in
-                    await send(.loaded(try await catalog.details(id)))
-                } catch: { error, send in
-                    await send(.failed(AppError(error)))
-                }
+                return .merge(
+                    // One request: the server appends credits and keywords
+                    // rather than making the client ask three times.
+                    .run { [id = state.movie.id] send in
+                        await send(.loaded(try await catalog.details(id)))
+                    } catch: { error, send in
+                        await send(.failed(AppError(error)))
+                    },
+
+                    .run { [homeID = state.homeID] send in
+                        for try await lists in movies.lists(homeID) {
+                            await send(.listsUpdated(lists))
+                        }
+                    } catch: { _, _ in
+                        // No lists means no save chips, which is the same thing
+                        // the screen shows before they arrive.
+                    }
+                    .cancellable(id: CancelID.lists, cancelInFlight: true),
+
+                    .run { [homeID = state.homeID] send in
+                        for try await saved in movies.allMovies(homeID) {
+                            await send(.savedUpdated(saved))
+                        }
+                    } catch: { _, _ in }
+                        .cancellable(id: CancelID.saved, cancelInFlight: true)
+                )
 
             case let .loaded(details):
                 state.isLoading = false
@@ -341,8 +406,56 @@ public struct MovieInfoFeature: Sendable {
                 // The poster and title are already on screen; detail is a bonus.
                 state.isLoading = false
                 return .none
+
+            case let .listsUpdated(lists):
+                state.lists = IdentifiedArray(uniqueElements: lists)
+                return .none
+
+            case let .savedUpdated(saved):
+                // Only this film, keyed by the list it sits in.
+                state.savedIn = Dictionary(
+                    saved
+                        .filter { $0.imdbID == state.movie.id }
+                        .compactMap { row in row.listID.map { ($0, row.id) } },
+                    // A list that somehow holds the film twice keeps the first
+                    // row; removing that one lets the live push surface the
+                    // other rather than silently doing nothing.
+                    uniquingKeysWith: { first, _ in first }
+                )
+                return .none
+
+            case let .listToggled(list):
+                guard !state.isBusy(list) else { return .none }
+                state.busy.insert(list.id)
+                let stored = state.savedIn[list.id]
+                return .run { [homeID = state.homeID, movie = state.movie] send in
+                    if let stored {
+                        try await movies.removeMovie(stored)
+                    } else {
+                        try await movies.addMovie(homeID, list.id, movie)
+                    }
+                    await send(.writeFinished(list.id))
+                } catch: { error, send in
+                    await send(.writeFailed(list.id, AppError(error)))
+                }
+
+            case let .writeFinished(id):
+                // The `movies:byHome` subscription is what flips the chip; this
+                // only releases the tap.
+                state.busy.remove(id)
+                return .none
+
+            case let .writeFailed(id, error):
+                state.busy.remove(id)
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .alert:
+                return .none
             }
         }
+        .ifLet(\.$alert, action: \.alert)
     }
 }
 

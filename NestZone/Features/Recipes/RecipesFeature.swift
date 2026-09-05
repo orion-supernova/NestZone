@@ -8,13 +8,31 @@ public struct RecipesFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
         public var homeID: HomeID
+        /// Exactly what the server sent, duplicates and all. Kept so the visible
+        /// shelf can be rebuilt whenever the delete mask changes without waiting
+        /// for another push — a failed delete has nothing new to push.
+        public var stored: [Recipe] = []
+        /// The shelf as the screen shows it: one row per dish, duplicate copies
+        /// already collapsed away. `duplicates` remembers what was collapsed so
+        /// deleting the row deletes every copy behind it.
         public var saved: IdentifiedArrayOf<Recipe> = []
         public var samples: IdentifiedArrayOf<Recipe> = []
         public var isLoading = true
+        /// The bundled catalogue is read off disk, which is fast but not
+        /// instant. Without this the Explore tab spent that moment showing the
+        /// "no recipes yet" empty state, complete with an Add button.
+        public var isLoadingSamples = true
         public var tab: Tab = .mine
         public var searchText = ""
         public var difficultyFilter: Recipe.Difficulty?
         public var maxMinutes: Int?
+        /// Every stored copy behind a visible row, keyed by the row's id and
+        /// including it. Usually one entry.
+        public var duplicates: [RecipeID: [RecipeID]] = [:]
+        /// Rows deleted on screen whose write has not landed yet. Same job as
+        /// the shopping list's: the live subscription still has them until the
+        /// server confirms, and without the mask each push puts them back.
+        public var hidden: Set<RecipeID> = []
 
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
@@ -42,6 +60,52 @@ public struct RecipesFeature: Sendable {
         public var hasActiveFilters: Bool {
             difficultyFilter != nil || maxMinutes != nil
         }
+
+        /// Whether the list is still waiting on the source the current tab reads.
+        public var isWaiting: Bool { tab == .mine ? isLoading : isLoadingSamples }
+
+        /// A row's stored copies, for a delete that has to take all of them.
+        public func copies(of id: RecipeID) -> [RecipeID] { duplicates[id] ?? [id] }
+
+        /// Re-derives the visible shelf from what the server last sent, minus
+        /// whatever is currently hidden.
+        mutating func rebuildShelf() {
+            let collapsed = Self.collapsingDuplicates(stored.filter { !hidden.contains($0.id) })
+            duplicates = collapsed.duplicates
+            saved = IdentifiedArray(uniqueElements: collapsed.rows)
+        }
+
+        /// Collapses copies of the same dish into the one that was saved first.
+        ///
+        /// Three separate paths adopted a bundled recipe by inserting a fresh
+        /// row — "add to my recipes", "plan it for tonight", and sending its
+        /// ingredients to the shopping list — so a household that used two of
+        /// them ended up with the same dish on the shelf twice. `recipes:create`
+        /// no longer makes new copies, and this folds away the ones already
+        /// made: the oldest row survives, because that is the one meal plans and
+        /// shopping batches already point at.
+        static func collapsingDuplicates(
+            _ recipes: [Recipe]
+        ) -> (rows: [Recipe], duplicates: [RecipeID: [RecipeID]]) {
+            var survivors: [Recipe] = []
+            var byKey: [String: RecipeID] = [:]
+            var duplicates: [RecipeID: [RecipeID]] = [:]
+
+            // Oldest first, so the survivor of each group is the original.
+            for recipe in recipes.sorted(by: { Timestamp.newestFirst($1.created, $0.created) }) {
+                let key = recipe.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                // A recipe with no title at all is its own row; folding those
+                // together would merge unrelated drafts.
+                if !key.isEmpty, let survivor = byKey[key] {
+                    duplicates[survivor, default: [survivor]].append(recipe.id)
+                    continue
+                }
+                if !key.isEmpty { byKey[key] = recipe.id }
+                survivors.append(recipe)
+                duplicates[recipe.id] = [recipe.id]
+            }
+            return (survivors, duplicates)
+        }
     }
 
     @Reducer
@@ -59,6 +123,7 @@ public struct RecipesFeature: Sendable {
         case composeTapped
         case clearFiltersTapped
         case deleteTapped(RecipeID)
+        case deleteFailed([RecipeID], AppError)
         case writeFailed(AppError)
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
@@ -106,10 +171,15 @@ public struct RecipesFeature: Sendable {
 
             case let .savedUpdated(recipes):
                 state.isLoading = false
-                state.saved = IdentifiedArray(uniqueElements: recipes)
+                state.stored = recipes
+                // Anything the server has already dropped no longer needs
+                // hiding.
+                state.hidden.formIntersection(Set(recipes.map(\.id)))
+                state.rebuildShelf()
                 return .none
 
             case let .samplesLoaded(recipes):
+                state.isLoadingSamples = false
                 state.samples = IdentifiedArray(uniqueElements: recipes)
                 return .none
 
@@ -121,7 +191,11 @@ public struct RecipesFeature: Sendable {
 
             case let .recipeTapped(recipe):
                 state.destination = .detail(
-                    RecipeDetailFeature.State(recipe: recipe, homeID: state.homeID)
+                    RecipeDetailFeature.State(
+                        recipe: recipe,
+                        homeID: state.homeID,
+                        duplicateIDs: state.copies(of: recipe.id)
+                    )
                 )
                 return .none
 
@@ -143,11 +217,25 @@ public struct RecipesFeature: Sendable {
                 return .none
 
             case let .alert(.presented(.confirmDelete(id))):
+                // Every stored copy of the dish, not just the row on screen —
+                // deleting one and leaving its twin behind is how a "deleted"
+                // recipe used to come straight back.
+                let ids = state.copies(of: id)
+                for copy in ids { state.hidden.insert(copy) }
+                state.rebuildShelf()
                 return .run { send in
-                    try await recipesClient.remove(id)
+                    try await recipesClient.removeMany(ids)
                 } catch: { error, send in
-                    await send(.writeFailed(AppError(error)))
+                    await send(.deleteFailed(ids, AppError(error)))
                 }
+
+            case let .deleteFailed(ids, error):
+                // The write never happened, so the rows are still there. There
+                // will be no push to tell us that, hence the rebuild from what
+                // the server last sent.
+                for id in ids { state.hidden.remove(id) }
+                state.rebuildShelf()
+                return .send(.writeFailed(error))
 
             case let .writeFailed(error):
                 guard !error.isSilent else { return .none }
@@ -198,6 +286,14 @@ public struct RecipeDetailFeature: Sendable {
     public struct State: Equatable {
         public var recipe: Recipe
         public var homeID: HomeID
+        /// Every stored copy of this dish, including the one on screen.
+        ///
+        /// Deleting only the row that was opened used to leave a duplicate
+        /// behind, which then took its place on the shelf — so the recipe
+        /// appeared to come back from the dead. Defaults to just this one for
+        /// callers that arrive without a shelf behind them, such as tonight's
+        /// dinner card.
+        public var duplicateIDs: [RecipeID]
         public var checkedIngredients: Set<Int> = []
         public var isCooking = false
         /// Cooking runs in two phases, the way the old app did it: gather
@@ -226,9 +322,10 @@ public struct RecipeDetailFeature: Sendable {
 
         public enum Phase: Equatable, Sendable { case ingredients, cooking }
 
-        public init(recipe: Recipe, homeID: HomeID) {
+        public init(recipe: Recipe, homeID: HomeID, duplicateIDs: [RecipeID]? = nil) {
             self.recipe = recipe
             self.homeID = homeID
+            self.duplicateIDs = duplicateIDs ?? [recipe.id]
         }
 
         /// Ingredient lines this recipe needs that are not already outstanding.
@@ -475,7 +572,7 @@ public struct RecipeDetailFeature: Sendable {
                     // both the fix and what a cook shopping for it wants.
                     var recipeID = recipe.id
                     if recipe.isSample {
-                        recipeID = try await recipes.create(
+                        recipeID = try await recipes.adopt(
                             NewRecipe(
                                 title: recipe.title,
                                 summary: recipe.summary,
@@ -625,7 +722,7 @@ public struct RecipeDetailFeature: Sendable {
                     homeID: state.homeID
                 )
                 return .run { send in
-                    _ = try await recipes.create(new)
+                    _ = try await recipes.adopt(new)
                     await send(.saved)
                 } catch: { error, send in
                     await send(.failed(AppError(error)))
@@ -636,9 +733,9 @@ public struct RecipeDetailFeature: Sendable {
                 return .run { _ in await dismiss() }
 
             case .deleteTapped:
-                let id = state.recipe.id
+                let ids = state.duplicateIDs
                 return .run { send in
-                    try await recipes.remove(id)
+                    try await recipes.removeMany(ids)
                     await send(.deleted)
                 } catch: { error, send in
                     await send(.failed(AppError(error)))

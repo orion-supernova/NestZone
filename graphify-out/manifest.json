@@ -115,8 +115,8 @@
     "semantic_hash": ""
   },
   "backend/convex/movies.ts": {
-    "mtime": 1788444638.9651067,
-    "ast_hash": "e59ec9374db83fb01a85933f5101362f",
+    "mtime": 1788600932.690385,
+    "ast_hash": "a8c54aa2a027861bfd30d8e7a6489759",
     "semantic_hash": ""
   },
   "backend/convex/notes.ts": {
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "backend/convex/recipes.ts": {
-    "mtime": 1788444638.9658468,
-    "ast_hash": "726436060a0d5602ff5f849e54435f93",
+    "mtime": 1788596184.5144818,
+    "ast_hash": "796f0af167e2fde6735ef5eabea10f0b",
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
-    "mtime": 1788523422.4229047,
-    "ast_hash": "12291d33facdeb3a1b73595a910bd211",
+    "mtime": 1788596165.9581523,
+    "ast_hash": "31d597b868c67125c71b431aa3f5e6fa",
     "semantic_hash": ""
   },
   "backend/convex/tasks.ts": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1788532173.538492,
-    "ast_hash": "6e1abee52e1bad9ed3d8cafb54550d97",
+    "mtime": 1788601094.3542273,
+    "ast_hash": "75aa8ef787858a51dfcc43f471280891",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Poll.swift": {
-    "mtime": 1788509234.1122663,
-    "ast_hash": "1aeebee4b5870ed31166e1425f9fd891",
+    "mtime": 1788601017.8961697,
+    "ast_hash": "e162a4c643390bba8ce01e4ce372b027",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Recipe.swift": {
@@ -340,13 +340,13 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/RecipesClient.swift": {
-    "mtime": 1788530269.1867955,
-    "ast_hash": "9d4029ebbbfbe27ed8cbab176bade700",
+    "mtime": 1788596230.4955773,
+    "ast_hash": "a049927c78a51e414c5aa445d008bc79",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/ShoppingClient.swift": {
-    "mtime": 1788523471.750446,
-    "ast_hash": "0b03a9d4d73befd75e364416c3b322e3",
+    "mtime": 1788596208.9133167,
+    "ast_hash": "c9472d5dfc3a0085cf06d223813302c2",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/StatsClient.swift": {
@@ -465,8 +465,8 @@
     "semantic_hash": ""
   },
   "NestZone/Design/Theme.swift": {
-    "mtime": 1788532738.7977846,
-    "ast_hash": "e86f3ecd0a735506b11b1ffda8cb0a1d",
+    "mtime": 1788596542.0390449,
+    "ast_hash": "2ecca7ccd6b9e02f061243033e8e09f1",
     "semantic_hash": ""
   },
   "NestZone/Features/Auth/AuthFeature.swift": {
@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/HubFeature.swift": {
-    "mtime": 1788530953.5266268,
-    "ast_hash": "c301e00420a9e9a3b2f4a1207252cee0",
+    "mtime": 1788600174.8138056,
+    "ast_hash": "5c46406ce47abbb03016a6b7ca9c8e98",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/HubView.swift": {
@@ -520,13 +520,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/ShoppingFeature.swift": {
-    "mtime": 1788532173.5388582,
-    "ast_hash": "930e2ded42d19f5c7771565075b20a11",
+    "mtime": 1788599244.2963097,
+    "ast_hash": "64045fb15b1a4d701ddba1fcee5e7652",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/ShoppingView.swift": {
-    "mtime": 1788532753.9043684,
-    "ast_hash": "cc0cc435b36b4305d20834386b75e417",
+    "mtime": 1788596318.272116,
+    "ast_hash": "25a3b9eebb4d53079f079478f41e7d57",
     "semantic_hash": ""
   },
   "NestZone/Features/Messages/MessagesFeature.swift": {
@@ -540,23 +540,23 @@
     "semantic_hash": ""
   },
   "NestZone/Features/MovieNight/MovieNightFeature.swift": {
-    "mtime": 1788530341.3236275,
-    "ast_hash": "75d94aefdee9f00fc7d4526910d4ff6a",
+    "mtime": 1788601051.2206097,
+    "ast_hash": "1f3b762a5692a4580c7335e6451104c9",
     "semantic_hash": ""
   },
   "NestZone/Features/MovieNight/MovieNightView.swift": {
-    "mtime": 1788532738.826356,
-    "ast_hash": "e647eac75ca52a53473c413a7935b6e5",
+    "mtime": 1788601083.6299605,
+    "ast_hash": "614e2e8590e3d63e703175c2e5f58276",
     "semantic_hash": ""
   },
   "NestZone/Features/Movies/MoviesFeature.swift": {
-    "mtime": 1788510137.1534996,
-    "ast_hash": "41b3cc6f3c8da53da8712b4d7d0beedf",
+    "mtime": 1788600964.193614,
+    "ast_hash": "1bcd0598ad99ccd933c951873fe9cae9",
     "semantic_hash": ""
   },
   "NestZone/Features/Movies/MoviesView.swift": {
-    "mtime": 1788532738.8374856,
-    "ast_hash": "b5397420ca05dc25eb2815c8d9a3b0b6",
+    "mtime": 1788601131.3120477,
+    "ast_hash": "79777d5e26de194b0b55e121358b3d12",
     "semantic_hash": ""
   },
   "NestZone/Features/Notes/NotesFeature.swift": {
@@ -570,13 +570,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Recipes/RecipesFeature.swift": {
-    "mtime": 1788531034.594205,
-    "ast_hash": "6cdbd4340818b4c7d43c43fd78ce45d6",
+    "mtime": 1788596398.4613366,
+    "ast_hash": "2446694035b46262ec522a6ae30f2e8e",
     "semantic_hash": ""
   },
   "NestZone/Features/Recipes/RecipesView.swift": {
-    "mtime": 1788531034.6224065,
-    "ast_hash": "25524df82e4775b37985db4d1fb0b710",
+    "mtime": 1788596417.2344756,
+    "ast_hash": "4b50be1d4e1f27f383642e10510e2bbd",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/Pasteboard.swift": {
@@ -615,13 +615,13 @@
     "semantic_hash": ""
   },
   "NestZoneTests/CoreLogicTests.swift": {
-    "mtime": 1788509234.129649,
-    "ast_hash": "33353da5bdc0d2a0657a1b198df39470",
+    "mtime": 1788600506.2565935,
+    "ast_hash": "40a605063b5d4a34cacb0e9f61c86d89",
     "semantic_hash": ""
   },
   "NestZoneTests/FeatureTests.swift": {
-    "mtime": 1788532273.9734309,
-    "ast_hash": "afd04459d2c9da67748c61c987ffd3f5",
+    "mtime": 1788601178.2284071,
+    "ast_hash": "477f540d2f3052a83ef7eddeb2bc6882",
     "semantic_hash": ""
   },
   "NestZoneUITests/LaunchUITests.swift": {
@@ -705,8 +705,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Dinner/DinnerFeature.swift": {
-    "mtime": 1788530982.1354115,
-    "ast_hash": "699be645d0355a856dd8a3566ab7a449",
+    "mtime": 1788596241.6814623,
+    "ast_hash": "10b44982ba3445ca591e6bb2f707e4c1",
     "semantic_hash": ""
   },
   "NestZone/Features/Dinner/DinnerView.swift": {

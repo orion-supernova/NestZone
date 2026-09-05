@@ -9,7 +9,14 @@ public struct RecipesClient: Sendable {
     /// something has to point at it straight away — planning an Explore recipe
     /// for tonight saves it first, then plans the copy that now has an id.
     public var create: @Sendable (NewRecipe) async throws -> Recipe
+    /// Adopts a bundled Explore recipe into the home, or hands back the copy
+    /// the home already has. Every path that adopted one used to insert a fresh
+    /// row, so cooking the same dish twice left it on the shelf twice.
+    public var adopt: @Sendable (NewRecipe) async throws -> Recipe
     public var remove: @Sendable (RecipeID) async throws -> Void
+    /// A recipe and its duplicate copies, in one write — one push instead of
+    /// one per row.
+    public var removeMany: @Sendable ([RecipeID]) async throws -> Void
     /// The starter recipes bundled with the app, in the current language.
     public var samples: @Sendable () async -> [Recipe] = { [] }
 }
@@ -51,6 +58,38 @@ public struct NewRecipe: Equatable, Sendable {
     }
 }
 
+/// The one place `recipes:create` is called from.
+///
+/// `dedupeByTitle` separates the two things a create can mean: writing a recipe
+/// somebody typed, which may legitimately share a title with another, and
+/// adopting a bundled one into the home, where a second copy is never what was
+/// wanted.
+private func createRecipe(_ recipe: NewRecipe, dedupeByTitle: Bool) async throws -> Recipe {
+    let trimmed = recipe.title.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+        throw AppError.validation(String(
+            localized: "validation.recipeTitleEmpty",
+            defaultValue: "Give the recipe a title."
+        ))
+    }
+    var args: [String: ConvexEncodable?] = [
+        "title": trimmed,
+        "homeId": recipe.homeID,
+        "ingredients": recipe.ingredients.map { $0 as ConvexEncodable? },
+        "steps": recipe.steps.map { $0 as ConvexEncodable? },
+        "tags": recipe.tags.map { $0 as ConvexEncodable? },
+    ]
+    if let summary = recipe.summary, !summary.isEmpty { args["description"] = summary }
+    if let prep = recipe.prepTime { args["prep_time"] = prep.convexNumber }
+    if let cook = recipe.cookTime { args["cook_time"] = cook.convexNumber }
+    if let servings = recipe.servings { args["servings"] = servings.convexNumber }
+    if let difficulty = recipe.difficulty { args["difficulty"] = difficulty.rawValue }
+    if dedupeByTitle { args["dedupeByTitle"] = true }
+    return try await ConvexConnection.shared.mutate(
+        "recipes:create", args: args, as: Recipe.self
+    )
+}
+
 extension RecipesClient: DependencyKey {
     public static let liveValue = RecipesClient(
         byHome: { homeID in
@@ -58,32 +97,17 @@ extension RecipesClient: DependencyKey {
                 to: "recipes:listByHome", args: ["homeId": homeID], as: [Recipe].self
             )
         },
-        create: { recipe in
-            let trimmed = recipe.title.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else {
-                throw AppError.validation(String(
-                    localized: "validation.recipeTitleEmpty",
-                    defaultValue: "Give the recipe a title."
-                ))
-            }
-            var args: [String: ConvexEncodable?] = [
-                "title": trimmed,
-                "homeId": recipe.homeID,
-                "ingredients": recipe.ingredients.map { $0 as ConvexEncodable? },
-                "steps": recipe.steps.map { $0 as ConvexEncodable? },
-                "tags": recipe.tags.map { $0 as ConvexEncodable? },
-            ]
-            if let summary = recipe.summary, !summary.isEmpty { args["description"] = summary }
-            if let prep = recipe.prepTime { args["prep_time"] = prep.convexNumber }
-            if let cook = recipe.cookTime { args["cook_time"] = cook.convexNumber }
-            if let servings = recipe.servings { args["servings"] = servings.convexNumber }
-            if let difficulty = recipe.difficulty { args["difficulty"] = difficulty.rawValue }
-            return try await ConvexConnection.shared.mutate(
-                "recipes:create", args: args, as: Recipe.self
-            )
-        },
+        create: { try await createRecipe($0, dedupeByTitle: false) },
+        adopt: { try await createRecipe($0, dedupeByTitle: true) },
         remove: { id in
             try await ConvexConnection.shared.mutate("recipes:remove", args: ["id": id])
+        },
+        removeMany: { ids in
+            guard !ids.isEmpty else { return }
+            try await ConvexConnection.shared.mutate(
+                "recipes:removeMany",
+                args: ["ids": ids.map { $0 as ConvexEncodable? }]
+            )
         },
         samples: { await SampleRecipeLoader.load() }
     )

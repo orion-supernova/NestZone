@@ -579,6 +579,7 @@ struct ShoppingTests {
             ShoppingFeature()
         } withDependencies: {
             $0.shopping.remove = { id in removed.withValue { $0.append(id) } }
+            $0.shopping.removeMany = { ids in removed.withValue { $0.append(contentsOf: ids) } }
             $0.continuousClock = clock
         }
     }
@@ -596,6 +597,7 @@ struct ShoppingTests {
 
         await store.send(.deleteTapped("s1")) {
             $0.items.remove(id: "s1")
+            $0.hidden.insert("s1")
             $0.pendingDeletion = Self.milk
         }
         #expect(removed.value.isEmpty)
@@ -624,10 +626,12 @@ struct ShoppingTests {
         }
         await store.send(.deleteTapped("s1")) {
             $0.items.remove(id: "s1")
+            $0.hidden.insert("s1")
             $0.pendingDeletion = Self.milk
         }
         await store.send(.undoDeleteTapped) {
             $0.pendingDeletion = nil
+            $0.hidden.remove("s1")
             $0.items.append(Self.milk)
         }
 
@@ -702,7 +706,7 @@ struct ShoppingTests {
         let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
             ShoppingFeature()
         } withDependencies: {
-            $0.shopping.remove = { id in removed.withValue { $0.append(id) } }
+            $0.shopping.removeMany = { ids in removed.withValue { $0.append(contentsOf: ids) } }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
@@ -733,7 +737,7 @@ struct ShoppingTests {
         let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
             ShoppingFeature()
         } withDependencies: {
-            $0.shopping.remove = { id in removed.withValue { $0.append(id) } }
+            $0.shopping.removeMany = { ids in removed.withValue { $0.append(contentsOf: ids) } }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
@@ -743,6 +747,80 @@ struct ShoppingTests {
 
         #expect(Set(removed.value) == ["s1", "s2"])
         #expect(store.state.items.ids == ["s3"])
+    }
+
+    @Test("A cleared group stays cleared while the writes are still in flight")
+    func clearedGroupDoesNotFlickerBack() async {
+        let removed = LockIsolated<[ShoppingItemID]>([])
+        let loose = ShoppingItem(id: "s1", name: "Milk", category: .groceries, homeID: "h1")
+        let alsoLoose = ShoppingItem(id: "s2", name: "Bread", category: .groceries, homeID: "h1")
+        let cleaning = ShoppingItem(id: "s3", name: "Bleach", category: .cleaning, homeID: "h1")
+
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.removeMany = { ids in removed.withValue { $0.append(contentsOf: ids) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.itemsUpdated([loose, alsoLoose, cleaning]))
+        await store.send(.clearCategoryTapped(.groceries))
+        await store.send(.alert(.presented(.confirmClearCategory(.groceries))))
+        #expect(store.state.items.ids == ["s3"])
+
+        // The write has not landed yet, so the server pushes the rows it still
+        // has. This is what used to put the emptied aisle back on screen and
+        // then drain it a row at a time.
+        await store.send(.itemsUpdated([loose, alsoLoose, cleaning]))
+        #expect(store.state.items.ids == ["s3"], "the group stays gone")
+
+        // Once the deletes land, the mask has nothing left to hide.
+        await store.send(.itemsUpdated([cleaning]))
+        #expect(store.state.hidden.isEmpty)
+    }
+
+    @Test("A swipe whose write fails puts the row back")
+    func failedSwipeRestoresTheRow() async {
+        let clock = TestClock()
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.remove = { _ in throw AppError.server("nope") }
+            $0.continuousClock = clock
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.itemsUpdated([Self.milk, Self.eggs]))
+        await store.send(.deleteTapped("s1"))
+        await clock.advance(by: .seconds(5))
+        await store.receive(\.deleteWindowClosed)
+        await store.receive(\.deleteCommitFailed)
+
+        #expect(store.state.items.ids.contains("s1"), "the row is back")
+        #expect(store.state.hidden.isEmpty, "and no longer masked against the live push")
+    }
+
+    @Test("A group that fails to clear comes back rather than vanishing silently")
+    func failedClearRestoresTheRows() async {
+        let loose = ShoppingItem(id: "s1", name: "Milk", category: .groceries, homeID: "h1")
+
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.removeMany = { _ in throw AppError.server("nope") }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.itemsUpdated([loose]))
+        await store.send(.clearCategoryTapped(.groceries))
+        await store.send(.alert(.presented(.confirmClearCategory(.groceries))))
+        #expect(store.state.items.isEmpty)
+
+        await store.receive(\.clearFailed)
+        #expect(store.state.hidden.isEmpty, "the rows are no longer hidden")
+        // And the next push puts them back, because nothing masks them now.
+        await store.send(.itemsUpdated([loose]))
+        #expect(store.state.items.ids == ["s1"])
     }
 
     @Test("A meal folds away like an aisle does")
@@ -770,7 +848,11 @@ struct ShoppingTests {
             $0.shopping.create = { item in created.withValue { $0.append(item.name) } }
         }
 
-        await store.send(.addTapped) { $0.draft = "" }
+        await store.send(.addTapped) {
+            $0.draft = ""
+            $0.pendingAdds = 1
+        }
+        await store.receive(\.addFinished) { $0.pendingAdds = 0 }
         #expect(created.value == ["Milk"])
     }
 
@@ -1086,5 +1168,268 @@ struct SignOutTests {
 
         await store.send(.signOutConfirmed)
         #expect(handed.value == [String?.none])
+    }
+}
+
+@MainActor
+@Suite("Saved recipes")
+struct SavedRecipeTests {
+
+    private static func copy(_ id: RecipeID, _ title: String, at millis: Double) -> Recipe {
+        Recipe(id: id, title: title, homeID: "h1", created: Timestamp(milliseconds: millis))
+    }
+
+    @Test("Copies of the same dish collapse to the one that was saved first")
+    func duplicatesCollapse() async {
+        let store = TestStore(initialState: RecipesFeature.State(homeID: "h1")) {
+            RecipesFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        // What "plan it for tonight" and "add to my recipes" used to leave
+        // behind: the same bundled recipe, inserted twice. Casing and stray
+        // whitespace are the same dish too.
+        await store.send(.savedUpdated([
+            Self.copy("r1", "Lasagne", at: 100),
+            Self.copy("r2", " lasagne ", at: 200),
+            Self.copy("r3", "Soup", at: 300),
+        ]))
+
+        #expect(store.state.saved.ids == ["r1", "r3"], "the original survives")
+        #expect(store.state.copies(of: "r1") == ["r1", "r2"])
+        #expect(store.state.copies(of: "r3") == ["r3"])
+    }
+
+    @Test("Deleting a row deletes every copy behind it")
+    func deleteTakesEveryCopy() async {
+        let removed = LockIsolated<[RecipeID]>([])
+        let store = TestStore(initialState: RecipesFeature.State(homeID: "h1")) {
+            RecipesFeature()
+        } withDependencies: {
+            $0.recipes.removeMany = { ids in removed.withValue { $0.append(contentsOf: ids) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.savedUpdated([
+            Self.copy("r1", "Lasagne", at: 100),
+            Self.copy("r2", "Lasagne", at: 200),
+        ]))
+        await store.send(.deleteTapped("r1"))
+        #expect(store.state.alert != nil, "a delete asks first")
+
+        await store.send(.alert(.presented(.confirmDelete("r1"))))
+        #expect(removed.value == ["r1", "r2"], "the twin goes too, or it takes the row's place")
+        #expect(store.state.saved.isEmpty, "the row goes now, not when the server answers")
+
+        // The server still has both until the write lands.
+        await store.send(.savedUpdated([
+            Self.copy("r1", "Lasagne", at: 100),
+            Self.copy("r2", "Lasagne", at: 200),
+        ]))
+        #expect(store.state.saved.isEmpty, "the shelf does not flicker the row back")
+    }
+
+    @Test("A delete that fails puts the recipe back")
+    func failedDeleteRestoresTheRow() async {
+        let store = TestStore(initialState: RecipesFeature.State(homeID: "h1")) {
+            RecipesFeature()
+        } withDependencies: {
+            $0.recipes.removeMany = { _ in throw AppError.server("nope") }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.savedUpdated([Self.copy("r1", "Lasagne", at: 100)]))
+        // Through the confirmation, not around it: a presented action with no
+        // presented alert is not a thing the app can send.
+        await store.send(.deleteTapped("r1"))
+        await store.send(.alert(.presented(.confirmDelete("r1"))))
+        #expect(store.state.saved.isEmpty)
+
+        await store.receive(\.deleteFailed)
+        #expect(store.state.saved.ids == ["r1"], "rebuilt from what the server last sent")
+    }
+
+    @Test("Opening a recipe carries its copies, so deleting from inside takes them all")
+    func detailKnowsItsCopies() async {
+        let store = TestStore(initialState: RecipesFeature.State(homeID: "h1")) {
+            RecipesFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        let original = Self.copy("r1", "Lasagne", at: 100)
+        await store.send(.savedUpdated([original, Self.copy("r2", "Lasagne", at: 200)]))
+        await store.send(.recipeTapped(original))
+
+        #expect(store.state.destination?.detail?.duplicateIDs == ["r1", "r2"])
+    }
+
+    @Test("Explore waits for the bundled catalogue instead of claiming it is empty")
+    func exploreShowsNoFalseEmptyState() async {
+        var state = RecipesFeature.State(homeID: "h1")
+        state.tab = .explore
+        let store = TestStore(initialState: state) { RecipesFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        #expect(store.state.isWaiting, "the catalogue has not been read off disk yet")
+
+        await store.send(.samplesLoaded([Self.copy("s1", "Menemen", at: 1)]))
+        #expect(!store.state.isWaiting, "and now it can say the shelf is empty, or show it")
+    }
+}
+
+@MainActor
+@Suite("Hub navigation")
+struct HubNavigationTests {
+
+    private static func hubWithRecipesOpen() -> HubFeature.State {
+        var state = HubFeature.State(homeID: "h1")
+        state.path.append(.recipes(RecipesFeature.State(homeID: "h1")))
+        return state
+    }
+
+    @Test("Going to the list from a recipe unwinds the stack before pushing")
+    func recipeHandoffUnwindsFirst() async {
+        let clock = TestClock()
+        let state = Self.hubWithRecipesOpen()
+        let id = state.path.ids[0]
+
+        let store = TestStore(initialState: state) { HubFeature() } withDependencies: {
+            $0.continuousClock = clock
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.path(.element(id: id, action: .recipes(.delegate(.openShoppingList)))))
+        // Popping and pushing together is what left the recipe on screen while
+        // the state said "shopping", so nothing may be pushed yet.
+        #expect(store.state.path.isEmpty)
+
+        await clock.advance(by: .milliseconds(350))
+        await store.receive(\.showShoppingList)
+        #expect(store.state.path.count == 1)
+        guard case .shopping = store.state.path.first else {
+            Issue.record("expected the shopping list on the stack")
+            return
+        }
+    }
+
+    @Test("Tapping another module mid-unwind wins over the deferred push")
+    func handoffDoesNotYankYouBack() async {
+        let clock = TestClock()
+        let state = Self.hubWithRecipesOpen()
+        let id = state.path.ids[0]
+
+        let store = TestStore(initialState: state) { HubFeature() } withDependencies: {
+            $0.continuousClock = clock
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.path(.element(id: id, action: .recipes(.delegate(.openShoppingList)))))
+        await store.send(.moduleTapped(.movies))
+
+        await clock.advance(by: .milliseconds(350))
+        await store.receive(\.showShoppingList)
+        #expect(store.state.path.count == 1)
+        guard case .movies = store.state.path.first else {
+            Issue.record("the person went to Movies; the list must not pull them away")
+            return
+        }
+    }
+}
+
+@MainActor
+@Suite("Saving a film from a round")
+struct MovieHandoffTests {
+
+    private static let dune = PollItem(
+        id: "i1", externalID: "438631", label: "Dune", thumbnailURL: "/dune.jpg"
+    )
+    private static let wishlist = MovieList(id: "l1", name: "Wishlist", kind: .wishlist)
+    private static let watched = MovieList(id: "l2", name: "Watched", kind: .watched)
+
+    @Test("A poll candidate carries enough to open it as a film")
+    func candidateBecomesAMovie() {
+        let movie = Self.dune.asMovie
+        // The TMDb id is the whole point — `catalog:details` fills in the rest.
+        #expect(movie.id == "438631")
+        #expect(movie.title == "Dune")
+        #expect(movie.poster == "/dune.jpg")
+    }
+
+    @Test("A film already on a list shows as saved there and nowhere else")
+    func membershipComesFromTheLiveList() async {
+        let store = TestStore(
+            initialState: MovieInfoFeature.State(homeID: "h1", movie: Self.dune.asMovie)
+        ) { MovieInfoFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.listsUpdated([Self.wishlist, Self.watched]))
+        await store.send(.savedUpdated([
+            StoredMovie(id: "s1", imdbID: "438631", title: "Dune", homeID: "h1", listID: "l1"),
+            // Another film on the other list must not tick this one.
+            StoredMovie(id: "s2", imdbID: "999", title: "Barbie", homeID: "h1", listID: "l2"),
+        ]))
+
+        #expect(store.state.isSaved(in: Self.wishlist))
+        #expect(!store.state.isSaved(in: Self.watched))
+    }
+
+    @Test("A chip files the film, and files it once")
+    func chipSavesAndUnsaves() async {
+        let added = LockIsolated<[MovieListID]>([])
+        let removed = LockIsolated<[StoredMovieID]>([])
+
+        let store = TestStore(
+            initialState: MovieInfoFeature.State(homeID: "h1", movie: Self.dune.asMovie)
+        ) { MovieInfoFeature() } withDependencies: {
+            $0.movies.addMovie = { _, listID, _ in added.withValue { $0.append(listID) } }
+            $0.movies.removeMovie = { id in removed.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.listsUpdated([Self.wishlist]))
+        await store.send(.listToggled(Self.wishlist))
+        #expect(store.state.isBusy(Self.wishlist), "a second tap must not add it twice")
+        await store.receive(\.writeFinished)
+        #expect(added.value == ["l1"])
+        #expect(!store.state.isBusy(Self.wishlist))
+
+        // Once the subscription confirms it, the same chip takes it back off.
+        await store.send(.savedUpdated([
+            StoredMovie(id: "s1", imdbID: "438631", title: "Dune", homeID: "h1", listID: "l1"),
+        ]))
+        await store.send(.listToggled(Self.wishlist))
+        await store.receive(\.writeFinished)
+        #expect(removed.value == ["s1"])
+    }
+
+    @Test("Presets come before custom lists")
+    func listOrder() async {
+        let custom = MovieList(id: "l3", name: "Date night", kind: .custom)
+        let store = TestStore(
+            initialState: MovieInfoFeature.State(homeID: "h1", movie: Self.dune.asMovie)
+        ) { MovieInfoFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.listsUpdated([custom, Self.watched, Self.wishlist]))
+        #expect(store.state.orderedLists.map(\.id) == ["l1", "l2", "l3"])
+    }
+
+    @Test("A dinner vote is not a previous movie round")
+    func dinnerRoundsStayOutOfMovieNight() async {
+        let store = TestStore(
+            initialState: MovieNightFeature.State(homeID: "h1", memberCount: 2)
+        ) { MovieNightFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        // Same machinery, different `kind`. Without the filter an open dinner
+        // vote made this screen believe a film round was running.
+        await store.send(.pollsUpdated([
+            Poll(id: "p1", kind: .recipe, status: .active),
+            Poll(id: "p2", kind: .movie, status: .closed),
+            Poll(id: "p3", kind: .recipe, status: .closed),
+        ]))
+
+        #expect(!store.state.hasActivePoll)
+        #expect(store.state.history.map(\.id) == ["p2"])
     }
 }

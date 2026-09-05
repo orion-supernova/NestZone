@@ -3156,6 +3156,46 @@ public enum L10n {
         r("movienight_previous_rounds", "Previous rounds")
     }
 
+    /// Rounding up the films…
+    public static var movienightBuildingDeck: LocalizedStringResource {
+        r("movienight_building_deck", "Rounding up the films…")
+    }
+
+    /// %1$lld of %2$lld left
+    public static func movienightRemaining(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("movienight_remaining", "\(a0) of \(a1) left")
+    }
+
+    /// Pass
+    public static var movienightPass: LocalizedStringResource {
+        r("movienight_pass", "Pass")
+    }
+
+    /// Would watch
+    public static var movienightWouldWatch: LocalizedStringResource {
+        r("movienight_would_watch", "Would watch")
+    }
+
+    /// No one agreed — best was %1$lld of %2$lld
+    public static func previousPollsClosest(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("previous_polls_closest", "No one agreed — best was \(a0) of \(a1)")
+    }
+
+    /// Nobody swiped right on anything
+    public static var previousPollsNothing: LocalizedStringResource {
+        r("previous_polls_nothing", "Nobody swiped right on anything")
+    }
+
+    /// Only %1$lld of %2$lld people voted
+    public static func previousPollsTurnout(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("previous_polls_turnout", "Only \(a0) of \(a1) people voted")
+    }
+
+    /// Save to a list
+    public static var moviesSaveToList: LocalizedStringResource {
+        r("movies_save_to_list", "Save to a list")
+    }
+
     /// Conversation
     public static var messagesConversationUntitled: LocalizedStringResource {
         r("messages_conversation_untitled", "Conversation")

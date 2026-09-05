@@ -5,6 +5,9 @@ public struct RecipesView: View {
     @Bindable var store: StoreOf<RecipesFeature>
 
     @Environment(\.theme) private var theme
+    /// The card with its delete button showing, if any. Held here so opening
+    /// one closes the last, as a system list does.
+    @State private var revealedID: RecipeID?
 
     public init(store: StoreOf<RecipesFeature>) {
         self.store = store
@@ -48,7 +51,10 @@ public struct RecipesView: View {
 
     @ViewBuilder
     private var results: some View {
-        if store.isLoading && store.tab == .mine {
+        // Both tabs load: Explore reads the bundled catalogue off disk, and
+        // showing "no recipes yet" for that moment was a lie with an Add button
+        // attached to it.
+        if store.isWaiting {
             SkeletonList(rows: 4, height: 96)
                 .padding(.horizontal, Metrics.screenPadding)
         } else if store.visible.isEmpty {
@@ -57,8 +63,28 @@ public struct RecipesView: View {
             GlassGroup {
                 VStack(spacing: Metrics.stackSpacing) {
                     ForEach(Array(store.visible.enumerated()), id: \.element.id) { index, recipe in
-                        RecipeCard(recipe: recipe) { store.send(.recipeTapped(recipe)) }
+                        // Only the home's own shelf: an Explore recipe is
+                        // bundled with the app and there is nothing to delete.
+                        if store.tab == .mine {
+                            SwipeToDelete(
+                                cornerRadius: Metrics.cardRadius,
+                                isRevealed: Binding(
+                                    get: { revealedID == recipe.id },
+                                    set: { revealedID = $0 ? recipe.id : nil }
+                                ),
+                                onDelete: { store.send(.deleteTapped(recipe.id)) }
+                            ) {
+                                RecipeCard(
+                                    recipe: recipe,
+                                    action: { store.send(.recipeTapped(recipe)) },
+                                    onDelete: { store.send(.deleteTapped(recipe.id)) }
+                                )
+                            }
                             .appear(index)
+                        } else {
+                            RecipeCard(recipe: recipe) { store.send(.recipeTapped(recipe)) }
+                                .appear(index)
+                        }
                     }
                 }
                 .padding(.horizontal, Metrics.screenPadding)
@@ -118,6 +144,8 @@ public struct RecipesView: View {
 private struct RecipeCard: View {
     let recipe: Recipe
     let action: () -> Void
+    /// Nil for a bundled Explore recipe, which the home does not own.
+    var onDelete: (() -> Void)?
 
     var body: some View {
         Button(action: action) {
@@ -169,6 +197,13 @@ private struct RecipeCard: View {
         }
         .buttonStyle(.pressable)
         .glassCard(interactive: true)
+        .contextMenu {
+            if let onDelete {
+                Button(role: .destructive, action: onDelete) {
+                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
+                }
+            }
+        }
     }
 }
 

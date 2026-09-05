@@ -334,8 +334,47 @@ struct AddMoviesSheet: View {
 }
 
 /// Poster, plot, cast — fetched when the sheet opens.
+/// One list, as a toggle. Deliberately not `Chip`: this one carries the list's
+/// own symbol and tint, and has a third state — a write in flight — that a
+/// filter pill has no use for.
+private struct ListChip: View {
+    let list: MovieList
+    let isSaved: Bool
+    let isBusy: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if isBusy {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Image(systemName: isSaved ? "checkmark" : list.kind.symbol)
+                        .font(.caption.weight(.semibold))
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                Text(list.name).font(.subheadline.weight(.medium)).lineLimit(1)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .foregroundStyle(isSaved ? Color.white : Color.primary)
+            .background {
+                if isSaved { Capsule().fill(list.kind.tint) }
+            }
+            .glassEffect(isSaved ? .identity : .regular.interactive(), in: .capsule)
+            // An unselected chip draws no background, so without a content
+            // shape only the label glyphs are tappable.
+            .contentShape(.capsule)
+        }
+        .buttonStyle(.pressable)
+        .disabled(isBusy)
+        .animation(Motion.spring, value: isSaved)
+        .accessibilityAddTraits(isSaved ? [.isSelected, .isButton] : .isButton)
+    }
+}
+
 struct MovieInfoSheet: View {
-    let store: StoreOf<MovieInfoFeature>
+    @Bindable var store: StoreOf<MovieInfoFeature>
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
@@ -364,13 +403,15 @@ struct MovieInfoSheet: View {
                     }
                     .appear(1)
 
+                    saveRow.appear(2)
+
                     if let extras = store.extras {
-                        facts(extras).appear(2)
+                        facts(extras).appear(3)
                         if let plot = extras.plot, !plot.isEmpty {
-                            Text(plot).font(.callout).appear(3)
+                            Text(plot).font(.callout).appear(4)
                         }
                         if !extras.cast.isEmpty {
-                            castRow(extras).appear(4)
+                            castRow(extras).appear(5)
                         }
                     } else if store.isLoading {
                         SkeletonList(rows: 2, height: 56)
@@ -388,8 +429,40 @@ struct MovieInfoSheet: View {
                 }
             }
             .task { await store.send(.task).finish() }
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
         .presentationDetents([.large])
+    }
+
+    /// Where the household keeps this film.
+    ///
+    /// The whole point of the sheet being reachable from a poll: agreeing on a
+    /// film and then having to go and search for it again to save it was the
+    /// gap. Each chip toggles — tap to file it, tap again to take it off — and
+    /// the state comes from the live `movies:byHome` subscription, so a list
+    /// filled on someone else's phone is already ticked here.
+    @ViewBuilder
+    private var saveRow: some View {
+        if !store.orderedLists.isEmpty {
+            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+                SectionHeader(L10n.moviesSaveToList, symbol: "bookmark")
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(store.orderedLists) { list in
+                            ListChip(
+                                list: list,
+                                isSaved: store.state.isSaved(in: list),
+                                isBusy: store.state.isBusy(list)
+                            ) {
+                                store.send(.listToggled(list))
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 2)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
     }
 
     private func facts(_ extras: MovieExtras) -> some View {

@@ -167,3 +167,27 @@ export const remove = mutation({
     return { ok: true };
   },
 });
+
+/// Clears a whole group — an aisle, a meal, everything already bought — in one
+/// write.
+///
+/// One mutation rather than one `remove` per row. Fired individually, each
+/// delete landed on its own and pushed its own `listByHome` update, so a client
+/// that had optimistically dropped the whole group watched the survivors flicker
+/// back in and then disappear one at a time. A single transaction means a single
+/// push, and the group is gone in one frame.
+export const removeMany = mutation({
+  args: { ids: v.array(v.id("shopping_items")) },
+  handler: async (ctx, { ids }) => {
+    let removed = 0;
+    for (const id of ids) {
+      const item = await ctx.db.get(id);
+      // Already gone — another member got there first, which is not an error.
+      if (!item) continue;
+      await requireDocHome(ctx, item, "Item");
+      await ctx.db.delete(id);
+      removed++;
+    }
+    return { removed };
+  },
+});

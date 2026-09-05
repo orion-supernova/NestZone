@@ -69,6 +69,20 @@ export const addMovie = mutation({
     // could file movies into home B's list.
     const list = await requireRef(ctx, args.listId, "List");
     requireSameHome(list, args.homeId, "List");
+
+    // Already filed here? Hand back the row rather than a second copy of it.
+    // Saving the same film twice is now one tap away from several screens — a
+    // poll's matches, its history, a search result — and two people reaching
+    // for it at once should still leave one row.
+    if (args.imdb_id) {
+      const existing = await ctx.db
+        .query("movies")
+        .withIndex("by_list", (q) => q.eq("list_id", args.listId))
+        .collect();
+      const match = existing.find((m) => m.imdb_id === args.imdb_id);
+      if (match) return match._id;
+    }
+
     const now = Date.now();
     return await ctx.db.insert("movies", {
       home_id: args.homeId,

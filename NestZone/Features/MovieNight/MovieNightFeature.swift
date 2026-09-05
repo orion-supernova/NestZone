@@ -67,6 +67,9 @@ public struct MovieNightFeature: Sendable {
         case pickKind(PollKindFeature)
         case summary(PollSummaryFeature)
         case history(PollHistoryFeature)
+        /// A film from the round, opened. Everything the app knows about it,
+        /// plus the household's lists to file it into.
+        case movieInfo(MovieInfoFeature)
     }
 
     public enum Action {
@@ -80,6 +83,7 @@ public struct MovieNightFeature: Sendable {
         case startFailed(AppError)
         case swiped(PollItem, isYes: Bool)
         case voteFailed(AppError)
+        case matchTapped(PollItem)
         case summaryTapped
         case historyTapped
         case endRoundTapped
@@ -114,10 +118,16 @@ public struct MovieNightFeature: Sendable {
 
             case let .pollsUpdated(polls):
                 state.isLoading = false
-                state.history = polls
+                // Only movie rounds. `polls:listByHome` carries dinner votes
+                // too — they are the same machinery with a different `kind` —
+                // so without this a household deciding what to eat made this
+                // screen believe a film round was open, and listed those votes
+                // among the previous rounds.
+                let rounds = polls.filter { $0.kind == .movie }
+                state.history = rounds
                     .filter { !$0.isOpen }
                     .sorted { Timestamp.newestFirst($0.created, $1.created) }
-                let open = polls.first(where: \.isOpen)
+                let open = rounds.first(where: \.isOpen)
                 let changed = open?.id != state.poll?.id
                 state.poll = open
 
@@ -212,9 +222,16 @@ public struct MovieNightFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
+            case let .matchTapped(item):
+                state.destination = .movieInfo(MovieInfoFeature.State(
+                    homeID: state.homeID, movie: item.asMovie
+                ))
+                return .none
+
             case .summaryTapped:
                 guard let detail = state.detail else { return .none }
                 state.destination = .summary(PollSummaryFeature.State(
+                    homeID: state.homeID,
                     detail: detail,
                     memberCount: state.memberCount
                 ))
@@ -222,6 +239,7 @@ public struct MovieNightFeature: Sendable {
 
             case .historyTapped:
                 state.destination = .history(PollHistoryFeature.State(
+                    homeID: state.homeID,
                     polls: state.history,
                     memberCount: state.memberCount,
                     currentUserID: state.currentUserID
@@ -389,10 +407,13 @@ public struct PollKindFeature: Sendable {
 public struct PollSummaryFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
+        public var homeID: HomeID
         public var detail: PollDetail
         public var memberCount: Int
+        @Presents public var movieInfo: MovieInfoFeature.State?
 
-        public init(detail: PollDetail, memberCount: Int) {
+        public init(homeID: HomeID, detail: PollDetail, memberCount: Int) {
+            self.homeID = homeID
             self.detail = detail
             self.memberCount = memberCount
         }
@@ -400,13 +421,20 @@ public struct PollSummaryFeature: Sendable {
         public var scoreboard: [(item: PollItem, yes: Int)] { detail.scoreboard }
         public var matches: [PollItem] { detail.matches(memberCount: memberCount) }
 
+        // Hand-written because `scoreboard` is a tuple array and cannot be
+        // synthesised; the stored properties are what actually identify it.
         public static func == (lhs: Self, rhs: Self) -> Bool {
-            lhs.detail == rhs.detail && lhs.memberCount == rhs.memberCount
+            lhs.homeID == rhs.homeID
+                && lhs.detail == rhs.detail
+                && lhs.memberCount == rhs.memberCount
+                && lhs.movieInfo == rhs.movieInfo
         }
     }
 
     public enum Action: Equatable {
         case doneTapped
+        case movieTapped(PollItem)
+        case movieInfo(PresentationAction<MovieInfoFeature.Action>)
     }
 
     @Dependency(\.dismiss) var dismiss
@@ -414,12 +442,22 @@ public struct PollSummaryFeature: Sendable {
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .doneTapped:
                 return .run { _ in await dismiss() }
+
+            case let .movieTapped(item):
+                state.movieInfo = MovieInfoFeature.State(
+                    homeID: state.homeID, movie: item.asMovie
+                )
+                return .none
+
+            case .movieInfo:
+                return .none
             }
         }
+        .ifLet(\.$movieInfo, action: \.movieInfo) { MovieInfoFeature() }
     }
 }
 
@@ -473,15 +511,26 @@ extension MovieNightFeature.Destination.State: Equatable {}
 public struct PollHistoryFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
+        public var homeID: HomeID
         public var polls: [Poll]
         public var memberCount: Int
         public var currentUserID: UserID?
-        /// pollID → the film everyone agreed on, once resolved.
-        public var winners: [PollID: PollItem] = [:]
+        /// pollID → how the round actually ended, once resolved. Nil means it
+        /// has not been read yet, which is a different thing from a round that
+        /// ended in no agreement — the sheet used to show the same spinner for
+        /// both.
+        public var outcomes: [PollID: PollOutcome] = [:]
         public var expanded: PollID?
+        @Presents public var movieInfo: MovieInfoFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
-        public init(polls: [Poll], memberCount: Int, currentUserID: UserID?) {
+        public init(
+            homeID: HomeID,
+            polls: [Poll],
+            memberCount: Int,
+            currentUserID: UserID?
+        ) {
+            self.homeID = homeID
             self.polls = polls
             self.memberCount = memberCount
             self.currentUserID = currentUserID
@@ -495,6 +544,8 @@ public struct PollHistoryFeature: Sendable {
         case detailLoaded(PollID, PollDetail)
         case deleteTapped(PollID)
         case deleteConfirmed(PollID)
+        case movieTapped(PollItem)
+        case movieInfo(PresentationAction<MovieInfoFeature.Action>)
         case failed(AppError)
         case alert(PresentationAction<Alert>)
 
@@ -519,8 +570,8 @@ public struct PollHistoryFeature: Sendable {
                     return .none
                 }
                 state.expanded = id
-                // Only fetch a winner the first time a round is opened.
-                guard state.winners[id] == nil else { return .none }
+                // Only read a closed round's result the first time it is opened.
+                guard state.outcomes[id] == nil else { return .none }
                 return .run { send in
                     for try await detail in polls.detail(id) {
                         await send(.detailLoaded(id, detail))
@@ -532,17 +583,25 @@ public struct PollHistoryFeature: Sendable {
                 .cancellable(id: CancelID.detail(id), cancelInFlight: true)
 
             case let .detailLoaded(id, detail):
-                state.winners[id] = detail.matches(memberCount: state.memberCount).first
-                    ?? detail.scoreboard.first?.item
+                state.outcomes[id] = detail.outcome(memberCount: state.memberCount)
                 return .none
 
             case let .deleteTapped(id):
                 state.alert = .confirmDeletePoll(id)
                 return .none
 
+            case let .movieTapped(item):
+                state.movieInfo = MovieInfoFeature.State(
+                    homeID: state.homeID, movie: item.asMovie
+                )
+                return .none
+
+            case .movieInfo:
+                return .none
+
             case let .alert(.presented(.confirmDelete(id))), let .deleteConfirmed(id):
                 state.polls.removeAll { $0.id == id }
-                state.winners[id] = nil
+                state.outcomes[id] = nil
                 return .run { send in
                     try await polls.remove(id)
                 } catch: { error, send in
@@ -558,6 +617,7 @@ public struct PollHistoryFeature: Sendable {
                 return .none
             }
         }
+        .ifLet(\.$movieInfo, action: \.movieInfo) { MovieInfoFeature() }
         .ifLet(\.$alert, action: \.alert)
     }
 }

@@ -436,7 +436,10 @@ public struct DinnerFeature: Sendable {
                     // has an id. Which is what the cook wanted anyway.
                     var recipeID = chosen?.id
                     if kind == .cook, let chosen, chosen.isSample {
-                        recipeID = try await recipesClient.create(
+                        // `adopt`, not `create`: planning the same bundled dish
+                        // a second time must land on the copy the home already
+                        // has rather than stacking up another one.
+                        recipeID = try await recipesClient.adopt(
                             NewRecipe(
                                 title: chosen.title,
                                 summary: chosen.summary,

@@ -115,6 +115,16 @@ public enum Palette {
     public static let success = Color.green
     public static let warning = Color.orange
 
+    /// Sits behind a title laid over artwork — a swipe-deck poster, a hero
+    /// image. Fades to nothing at the top rather than cutting a hard black edge
+    /// across the picture the way a flat bar does. A stored constant, so the
+    /// card's `body` never allocates a gradient per frame.
+    public static let posterScrim = LinearGradient(
+        colors: [.clear, .black.opacity(0.35), .black.opacity(0.75)],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
     static let basicGradient = gradient(violet, indigo)
     static let cyberpunkGradient = gradient(magenta, neonGreen)
     static let retroWaveGradient = gradient(hotPink, ultraviolet)

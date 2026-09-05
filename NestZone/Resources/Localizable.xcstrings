@@ -5574,6 +5574,23 @@
         }
       }
     },
+    "movienight_building_deck": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rounding up the films…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filmler toplanıyor…"
+          }
+        }
+      }
+    },
     "movienight_close_poll": {
       "extractionState": "manual",
       "localizations": {
@@ -5676,6 +5693,23 @@
         }
       }
     },
+    "movienight_pass": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pass"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geç"
+          }
+        }
+      }
+    },
     "movienight_pick_genre": {
       "extractionState": "manual",
       "localizations": {
@@ -5706,6 +5740,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önceki turlar"
+          }
+        }
+      }
+    },
+    "movienight_remaining": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld left"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld filmden %1$lld tanesi kaldı"
           }
         }
       }
@@ -5774,6 +5825,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diğerleri bekleniyor…"
+          }
+        }
+      }
+    },
+    "movienight_would_watch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Would watch"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzlerim"
           }
         }
       }
@@ -5978,6 +6046,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni liste"
+          }
+        }
+      }
+    },
+    "movies_save_to_list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to a list"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir listeye kaydet"
           }
         }
       }
@@ -7155,6 +7240,23 @@
         }
       }
     },
+    "previous_polls_closest": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No one agreed — best was %1$lld of %2$lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kimse anlaşamadı — en iyisi %2$lld kişiden %1$lld"
+          }
+        }
+      }
+    },
     "previous_polls_delete_alert": {
       "extractionState": "manual",
       "localizations": {
@@ -7291,6 +7393,23 @@
         }
       }
     },
+    "previous_polls_nothing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody swiped right on anything"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kimse hiçbir şeye sağa kaydırmadı"
+          }
+        }
+      }
+    },
     "previous_polls_title": {
       "extractionState": "manual",
       "localizations": {
@@ -7304,6 +7423,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önceki Anketler"
+          }
+        }
+      }
+    },
+    "previous_polls_turnout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only %1$lld of %2$lld people voted"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld kişiden yalnızca %1$lld kişi oy verdi"
           }
         }
       }

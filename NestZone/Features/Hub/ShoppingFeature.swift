@@ -23,7 +23,34 @@ public struct ShoppingFeature: Sendable {
         /// gets deleted for real. One at a time — a second swipe commits the
         /// first, the way a mail client does.
         public var pendingDeletion: ShoppingItem?
+        /// Rows this screen is pretending are gone: one sitting out its undo
+        /// window, or a whole group whose deletes are still in flight.
+        ///
+        /// The server still has every one of them until its write lands, so
+        /// without this mask each live push puts them straight back — which is
+        /// exactly why clearing an aisle or a meal used to make the group
+        /// reappear and then vanish a row at a time. Self-clearing: once the
+        /// server stops sending a row, it no longer needs hiding.
+        public var hidden: Set<ShoppingItemID> = []
+        /// Groups whose clear is still in flight, so the header can say so
+        /// rather than leaving a destructive action looking like a no-op if the
+        /// network is slow.
+        public var clearing: Set<ClearTarget> = []
+        /// Items typed into the composer and not yet confirmed by the server.
+        /// They have no id until then, so they cannot be shown as rows — but
+        /// the send button can say the work is happening.
+        public var pendingAdds = 0
         @Presents public var alert: AlertState<Action.Alert>?
+
+        /// Which group a clear is working on. Nothing but an identity for the
+        /// busy indicator.
+        public enum ClearTarget: Hashable, Sendable {
+            case category(ShoppingItem.Category)
+            case meal(RecipeID)
+            case purchased
+        }
+
+        public func isClearing(_ target: ClearTarget) -> Bool { clearing.contains(target) }
 
         public init(homeID: HomeID) { self.homeID = homeID }
 
@@ -130,6 +157,10 @@ public struct ShoppingFeature: Sendable {
         case clearPurchasedTapped
         case clearCategoryTapped(ShoppingItem.Category)
         case clearMealTapped(RecipeID)
+        case deleteCommitFailed(ShoppingItem, AppError)
+        case clearFinished(State.ClearTarget)
+        case clearFailed(State.ClearTarget, [ShoppingItemID], AppError)
+        case addFinished
         case viewModeToggled(grouped: Bool)
         case categoryToggled(ShoppingItem.Category)
         case mealToggled(RecipeID)
@@ -173,12 +204,14 @@ public struct ShoppingFeature: Sendable {
             case let .itemsUpdated(items):
                 state.isLoading = false
                 var incoming = IdentifiedArray(uniqueElements: items)
-                // A row inside its undo window is gone as far as this screen is
-                // concerned, but the server still has it — so the next live push
-                // would otherwise put it straight back.
-                if let pending = state.pendingDeletion {
-                    incoming.remove(id: pending.id)
-                }
+                // Anything the server has already dropped no longer needs
+                // hiding; keeping it would leak the mask across a re-add.
+                state.hidden.formIntersection(incoming.ids)
+                // A row inside its undo window, or one whose group delete has
+                // not landed yet, is gone as far as this screen is concerned —
+                // but the server still has it, so the next live push would
+                // otherwise put it straight back.
+                for id in state.hidden { incoming.remove(id: id) }
                 state.items = incoming
                 return .none
 
@@ -199,11 +232,18 @@ public struct ShoppingFeature: Sendable {
                 // while this one is still in flight — the live subscription will
                 // slot it into the list when the server confirms.
                 state.draft = ""
+                state.pendingAdds += 1
                 return .run { send in
                     try await shopping.create(item)
+                    await send(.addFinished)
                 } catch: { error, send in
+                    await send(.addFinished)
                     await send(.writeFailed(AppError(error)))
                 }
+
+            case .addFinished:
+                state.pendingAdds = max(0, state.pendingAdds - 1)
+                return .none
 
             case let .togglePurchased(id):
                 guard let item = state.items[id: id] else { return .none }
@@ -221,13 +261,14 @@ public struct ShoppingFeature: Sendable {
                 // that did not take — but the write is held back until the undo
                 // window closes, so undo cancels it rather than reversing it.
                 state.items.remove(id: id)
+                state.hidden.insert(id)
                 let superseded = state.pendingDeletion
                 state.pendingDeletion = item
 
                 return .merge(
                     // A second swipe ends the first one's window; that item was
                     // offered back and the offer was not taken.
-                    superseded.map { commit($0.id) } ?? .none,
+                    superseded.map { commit($0) } ?? .none,
 
                     .run { send in
                         try await clock.sleep(for: Self.undoWindow)
@@ -239,15 +280,24 @@ public struct ShoppingFeature: Sendable {
             case .undoDeleteTapped:
                 guard let item = state.pendingDeletion else { return .none }
                 state.pendingDeletion = nil
+                state.hidden.remove(item.id)
                 // Nothing was ever sent, so this is the whole restore. The live
                 // subscription still holds the item and will agree.
                 state.items.append(item)
                 return .cancel(id: CancelID.undo)
 
             case let .deleteWindowClosed(id):
-                guard state.pendingDeletion?.id == id else { return .none }
+                guard let item = state.pendingDeletion, item.id == id else { return .none }
                 state.pendingDeletion = nil
-                return commit(id)
+                return commit(item)
+
+            case let .deleteCommitFailed(item, error):
+                // The write never happened, and the mask would otherwise keep
+                // hiding a row the server still has — a delete that quietly did
+                // not delete, until the screen was reopened.
+                state.hidden.remove(item.id)
+                state.items.append(item)
+                return .send(.writeFailed(error))
 
             case let .viewModeToggled(grouped):
                 state.$isGrouped.withLock { $0 = grouped }
@@ -297,25 +347,29 @@ public struct ShoppingFeature: Sendable {
             case let .alert(.presented(.confirmClearCategory(category))):
                 // An aisle heading only ever covers items that came from no
                 // recipe; a meal's ingredients belong to the meal.
-                return removeAll(&state) { $0.category == category && $0.recipeID == nil }
+                return clear(&state, target: .category(category)) {
+                    $0.category == category && $0.recipeID == nil
+                }
 
             case let .alert(.presented(.confirmClearMeal(recipeID))):
-                return removeAll(&state) { $0.recipeID == recipeID }
+                return clear(&state, target: .meal(recipeID)) { $0.recipeID == recipeID }
 
             case .alert(.presented(.confirmClearPurchased)):
-                let ids = state.purchased.map(\.id)
-                return .run { send in
-                    // Concurrently, not one after another: clearing a full week's
-                    // shop used to be a serial round trip per item.
-                    try await withThrowingTaskGroup(of: Void.self) { group in
-                        for id in ids {
-                            group.addTask { try await shopping.remove(id) }
-                        }
-                        try await group.waitForAll()
-                    }
-                } catch: { error, send in
-                    await send(.writeFailed(AppError(error)))
-                }
+                return clear(&state, target: .purchased, where: \.isPurchased)
+
+            case let .clearFinished(target):
+                state.clearing.remove(target)
+                return .none
+
+            case let .clearFailed(target, ids, error):
+                state.clearing.remove(target)
+                // The write never happened, so the rows are still there. Stop
+                // hiding them rather than leaving the group silently missing
+                // until the screen is reopened.
+                for id in ids { state.hidden.remove(id) }
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
 
             case let .writeFailed(error):
                 guard !error.isSilent else { return .none }
@@ -331,33 +385,44 @@ public struct ShoppingFeature: Sendable {
 }
 
 extension ShoppingFeature {
-    /// Clears a whole group in one go: optimistic, and concurrent rather than a
-    /// serial round trip per row.
-    private func removeAll(
+    /// Clears a whole group in one go.
+    ///
+    /// The rows go immediately and stay hidden until the write lands. Before,
+    /// this fired one `shopping:remove` per row: each landed separately, each
+    /// pushed its own `listByHome` update, and every one of those pushes put the
+    /// not-yet-deleted survivors back on screen — so an emptied aisle flickered
+    /// back and then drained a row at a time. It is one mutation now, so the
+    /// group is gone in one frame and comes back only if the write actually
+    /// failed.
+    private func clear(
         _ state: inout State,
+        target: State.ClearTarget,
         where matches: (ShoppingItem) -> Bool
     ) -> Effect<Action> {
         let ids = state.items.filter(matches).map(\.id)
         guard !ids.isEmpty else { return .none }
-        for id in ids { state.items.remove(id: id) }
+        for id in ids {
+            state.items.remove(id: id)
+            state.hidden.insert(id)
+        }
+        state.clearing.insert(target)
         return .run { send in
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                for id in ids {
-                    group.addTask { try await shopping.remove(id) }
-                }
-                try await group.waitForAll()
-            }
+            try await shopping.removeMany(ids)
+            await send(.clearFinished(target))
         } catch: { error, send in
-            await send(.writeFailed(AppError(error)))
+            await send(.clearFailed(target, ids, AppError(error)))
         }
     }
 
     /// The write the swipe was always going to make, once nobody has undone it.
-    private func commit(_ id: ShoppingItemID) -> Effect<Action> {
-        .run { send in
-            try await shopping.remove(id)
+    ///
+    /// Takes the whole item rather than its id so a failure can put the row
+    /// back: the screen dropped it optimistically and nothing else remembers it.
+    private func commit(_ item: ShoppingItem) -> Effect<Action> {
+        .run { _ in
+            try await shopping.remove(item.id)
         } catch: { error, send in
-            await send(.writeFailed(AppError(error)))
+            await send(.deleteCommitFailed(item, AppError(error)))
         }
     }
 }

@@ -59,13 +59,18 @@ public struct ShoppingView: View {
         .navigationTitle(Text(L10n.managementModuleShoppingTitle))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if !store.purchased.isEmpty {
+            if !store.purchased.isEmpty || store.state.isClearing(.purchased) {
                 ToolbarItem(placement: .primaryAction) {
                     Button(role: .destructive) {
                         store.send(.clearPurchasedTapped)
                     } label: {
-                        Image(systemName: "trash")
+                        if store.state.isClearing(.purchased) {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Image(systemName: "trash")
+                        }
                     }
+                    .disabled(store.state.isClearing(.purchased))
                     .accessibilityLabel(Text(L10n.shoppingClearPurchased))
                 }
             }
@@ -181,6 +186,7 @@ public struct ShoppingView: View {
                     done: store.state.doneCount(inMeal: group.recipeID),
                     total: store.state.totalCount(inMeal: group.recipeID),
                     isCollapsed: isCollapsed,
+                    isClearing: store.state.isClearing(.meal(group.recipeID)),
                     onToggle: { store.send(.mealToggled(group.recipeID)) },
                     onClear: { store.send(.clearMealTapped(group.recipeID)) }
                 )
@@ -223,6 +229,7 @@ public struct ShoppingView: View {
                     done: store.state.doneCount(in: group.category),
                     total: store.state.totalCount(in: group.category),
                     isCollapsed: isCollapsed,
+                    isClearing: store.state.isClearing(.category(group.category)),
                     onToggle: { store.send(.categoryToggled(group.category)) },
                     onClear: { store.send(.clearCategoryTapped(group.category)) }
                 )
@@ -306,14 +313,26 @@ public struct ShoppingView: View {
             .onSubmit { store.send(.addTapped) }
 
             Button { store.send(.addTapped) } label: {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .symbolRenderingMode(.hierarchical)
+                // An item has no id until the server answers, so it cannot be
+                // shown as a row yet. The button says the work is happening
+                // instead — before, typing and sending looked identical to
+                // typing and nothing at all.
+                if store.pendingAdds > 0 {
+                    ProgressView()
+                        .controlSize(.small)
+                        .frame(width: 28, height: 28)
+                } else {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.hierarchical)
+                        .frame(width: 28, height: 28)
+                }
             }
             .buttonStyle(.pressable)
             .disabled(!store.canAdd)
-            .opacity(store.canAdd ? 1 : 0.4)
+            .opacity(store.canAdd || store.pendingAdds > 0 ? 1 : 0.4)
             .animation(Motion.fade, value: store.canAdd)
+            .animation(Motion.fade, value: store.pendingAdds > 0)
             .accessibilityLabel(Text(L10n.commonAdd))
         }
         .padding(.horizontal, 12)
@@ -402,6 +421,7 @@ private struct CategoryHeader: View {
     let done: Int
     let total: Int
     let isCollapsed: Bool
+    let isClearing: Bool
     let onToggle: () -> Void
     let onClear: () -> Void
 
@@ -439,7 +459,7 @@ private struct CategoryHeader: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text(isCollapsed ? L10n.commonSeeAll : L10n.commonClose))
 
-            GroupMenu(onClear: onClear)
+            GroupMenu(isClearing: isClearing, onClear: onClear)
         }
         .animation(Motion.spring, value: isCollapsed)
     }
@@ -448,6 +468,10 @@ private struct CategoryHeader: View {
 /// The destructive action a group header carries. Its own control, because a
 /// `Button` inside another `Button`'s label never receives a tap.
 private struct GroupMenu: View {
+    /// True while this group's clear is still in flight. The rows are already
+    /// gone — this is here so a slow network reads as work in progress rather
+    /// than as a menu that did nothing.
+    var isClearing: Bool = false
     let onClear: () -> Void
 
     var body: some View {
@@ -458,12 +482,20 @@ private struct GroupMenu: View {
                 }
             }
         } label: {
-            Image(systemName: "ellipsis")
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(Palette.accessoryStrong)
-                .frame(width: 36, height: 36)
-                .contentShape(.rect)
+            Group {
+                if isClearing {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Image(systemName: "ellipsis")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Palette.accessoryStrong)
+                }
+            }
+            .frame(width: 36, height: 36)
+            .contentShape(.rect)
         }
+        .disabled(isClearing)
+        .animation(Motion.fade, value: isClearing)
         .accessibilityLabel(Text(L10n.shoppingRemoveAll))
     }
 }
@@ -476,6 +508,7 @@ private struct MealHeader: View {
     let done: Int
     let total: Int
     let isCollapsed: Bool
+    let isClearing: Bool
     let onToggle: () -> Void
     let onClear: () -> Void
 
@@ -514,7 +547,7 @@ private struct MealHeader: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text(isCollapsed ? L10n.commonSeeAll : L10n.commonClose))
 
-            GroupMenu(onClear: onClear)
+            GroupMenu(isClearing: isClearing, onClear: onClear)
         }
         .animation(Motion.spring, value: isCollapsed)
     }

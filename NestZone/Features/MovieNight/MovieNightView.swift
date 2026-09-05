@@ -10,11 +10,26 @@ public struct MovieNightView: View {
         self.store = store
     }
 
+    /// True while the deck is the screen.
+    ///
+    /// A swipe round is one big card, and it used to be squeezed into the
+    /// middle third of the display: the tab bar drew an opaque slab across the
+    /// bottom, the navigation bar drew one across the top, and the deck then
+    /// sized itself inside whatever was left. Both bars stand down for the
+    /// duration — the card runs full-bleed and its controls hover over it —
+    /// and come straight back for the idle and results screens, which are
+    /// ordinary pages and want their navigation.
+    private var isImmersive: Bool {
+        store.hasActivePoll && !store.isDeckFinished && !store.isLoading && !store.isStarting
+    }
+
     public var body: some View {
         content
             .background(Backdrop(tint: theme.accent))
             .navigationTitle(Text(L10n.movienightTitle))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(isImmersive ? .hidden : .automatic, for: .tabBar)
+            .toolbarBackgroundVisibility(isImmersive ? .hidden : .automatic, for: .navigationBar)
             .toolbar {
                 if !store.hasActivePoll && !store.history.isEmpty {
                     ToolbarItem(placement: .primaryAction) {
@@ -62,15 +77,20 @@ public struct MovieNightView: View {
             .sheet(item: $store.scope(
                 state: \.destination?.history, action: \.destination.history
             )) { PollHistorySheet(store: $0) }
+            .sheet(item: $store.scope(
+                state: \.destination?.movieInfo, action: \.destination.movieInfo
+            )) { MovieInfoSheet(store: $0) }
             .alert($store.scope(state: \.alert, action: \.alert))
     }
 
     @ViewBuilder
     private var content: some View {
         if store.isLoading {
-            LoadingView()
-        } else if store.isStarting {
             LoadingView(message: L10n.commonLoading)
+        } else if store.isStarting {
+            // Building a round means a TMDb round trip and then a write. A bare
+            // spinner said nothing about which of those was taking the time.
+            LoadingView(message: L10n.movienightBuildingDeck)
         } else if !store.hasActivePoll {
             idle
         } else if store.isDeckFinished {
@@ -78,6 +98,7 @@ public struct MovieNightView: View {
         } else {
             SwipeDeck(
                 items: store.remaining,
+                total: store.deck.count,
                 onSwipe: { item, isYes in store.send(.swiped(item, isYes: isYes)) }
             )
         }
@@ -113,10 +134,18 @@ public struct MovieNightView: View {
 
             Spacer(minLength: 0)
         }
+        // The tab bar hovers over the content, so the button needs room or it
+        // ends up underneath the glass.
+        .padding(.bottom, Metrics.scrollBottomInset)
     }
 
+    /// The end of a deck: what everyone agreed on, and the way out.
+    ///
+    /// Was a fixed `VStack` whose grid competed with the buttons under it for a
+    /// height neither could have. It scrolls now, and the actions ride in a
+    /// hovering bar rather than taking space from the posters.
     private var finished: some View {
-        VStack(spacing: Metrics.sectionSpacing) {
+        Group {
             if store.matches.isEmpty {
                 EmptyStateView(
                     title: L10n.movienightNoMatches,
@@ -124,14 +153,17 @@ public struct MovieNightView: View {
                     symbol: "hourglass"
                 )
             } else {
-                VStack(spacing: Metrics.stackSpacing) {
-                    SectionHeader(L10n.movienightMatchesTitle, symbol: "sparkles")
-                    ScrollView {
-                        LazyVGrid(
-                            columns: [GridItem(.adaptive(minimum: 104), spacing: Metrics.stackSpacing)],
-                            spacing: Metrics.stackSpacing
-                        ) {
-                            ForEach(store.matches) { item in
+                ScrollView {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 104), spacing: Metrics.stackSpacing)],
+                        spacing: Metrics.sectionSpacing
+                    ) {
+                        ForEach(store.matches) { item in
+                            // Agreeing on a film and then having to search for
+                            // it again to save it was the gap. The poster opens
+                            // it: everything TMDb knows, and the household's
+                            // lists to file it into.
+                            Button { store.send(.matchTapped(item)) } label: {
                                 PosterCard(
                                     title: item.label ?? "",
                                     year: nil,
@@ -140,44 +172,87 @@ public struct MovieNightView: View {
                                     isSaved: true
                                 ) {}
                             }
+                            .buttonStyle(.pressable)
                         }
                     }
+                    .padding(.horizontal, Metrics.screenPadding)
+                    .padding(.top, Metrics.stackSpacing)
+                    .padding(.bottom, Metrics.scrollBottomInset)
                 }
-                .padding(.horizontal, Metrics.screenPadding)
-            }
-
-            Text(L10n.movienightDeckDone)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-
-            if store.canEndRound {
-                SecondaryButton(L10n.movienightClosePoll, symbol: "stop.circle") {
-                    store.send(.endRoundTapped)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    SectionHeader(L10n.movienightMatchesTitle, symbol: "sparkles")
+                        .padding(.horizontal, Metrics.screenPadding)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.bar)
                 }
-                .padding(.horizontal, Metrics.screenPadding)
             }
         }
-        .padding(.vertical, Metrics.sectionSpacing)
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 10) {
+                Text(L10n.movienightDeckDone)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
+                if store.canEndRound {
+                    SecondaryButton(L10n.movienightClosePoll, symbol: "stop.circle") {
+                        store.send(.endRoundTapped)
+                    }
+                }
+            }
+            .padding(.horizontal, Metrics.screenPadding)
+            .padding(.bottom, 8)
+        }
     }
 }
 
-/// The card stack.
+/// The card stack, and the controls that hover over it.
 ///
 /// Only the top three cards are built. The old deck rendered every candidate —
 /// up to thirty full-size posters — behind the visible one.
 struct SwipeDeck: View {
     let items: [PollItem]
+    /// Everything the round started with, for the counter.
+    let total: Int
     let onSwipe: (PollItem, Bool) -> Void
 
+    /// Set by the hovering buttons. A tap has to leave the deck exactly the way
+    /// a drag does — the card owns its own offset, so the instruction is passed
+    /// down rather than the position being reached into.
+    @State private var command: Command?
+
+    struct Command: Equatable {
+        let id: String
+        let isYes: Bool
+    }
+
     private static let visibleCards = 3
+    /// Height kept clear at the bottom for the floating controls.
+    private static let controlsRoom: CGFloat = 92
 
     var body: some View {
         GeometryReader { geometry in
+            let insets = geometry.safeAreaInsets
+            // Only the safe area itself, plus a hair. The counter hovers over
+            // the poster rather than being given a band of its own — reserving
+            // one costs about ninety points of card on a phone, which is most
+            // of the difference between a full-bleed deck and a stamp.
+            let topRoom = insets.top + 8
+            let bottomRoom = max(insets.bottom, 12) + Self.controlsRoom
+            let size = Self.poster(fitting: CGSize(
+                width: geometry.size.width - 32,
+                height: geometry.size.height - topRoom - bottomRoom
+            ))
+
             ZStack {
-                ForEach(Array(items.prefix(Self.visibleCards).enumerated().reversed()), id: \.element.id) { index, item in
+                ForEach(
+                    Array(items.prefix(Self.visibleCards).enumerated().reversed()),
+                    id: \.element.id
+                ) { index, item in
                     SwipeCard(
                         item: item,
-                        size: CGSize(width: geometry.size.width - 48, height: geometry.size.height - 80),
+                        size: size,
+                        command: $command,
                         onSwipe: { isYes in onSwipe(item, isYes) }
                     )
                     // Cards behind peek out slightly, so the stack reads as a deck.
@@ -188,14 +263,98 @@ struct SwipeDeck: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.top, topRoom)
+            .padding(.bottom, bottomRoom)
             .animation(Motion.spring, value: items.map(\.id))
+            .overlay(alignment: .top) {
+                counter.padding(.top, insets.top + 6)
+            }
+            .overlay(alignment: .bottom) {
+                controls.padding(.bottom, max(insets.bottom, 12) + 12)
+            }
         }
+        .ignoresSafeArea()
+    }
+
+    /// How much of the round is left. A deck with no end in sight is the thing
+    /// that makes people stop swiping.
+    private var counter: some View {
+        Text(L10n.movienightRemaining(items.count, max(total, items.count)))
+            .font(.footnote.weight(.semibold))
+            .monospacedDigit()
+            .contentTransition(.numericText())
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .glassEffect(.regular, in: .capsule)
+            .animation(Motion.spring, value: items.count)
+            .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// Tap targets for the same two answers the swipe gives.
+    ///
+    /// Not everyone discovers a drag gesture, and nobody should have to make
+    /// one to say no thirty times.
+    private var controls: some View {
+        GlassGroup(spacing: 10) {
+            HStack(spacing: 28) {
+                SwipeButton(
+                    symbol: "hand.thumbsdown.fill",
+                    tint: Palette.danger,
+                    label: L10n.movienightPass
+                ) { fling(isYes: false) }
+
+                SwipeButton(
+                    symbol: "hand.thumbsup.fill",
+                    tint: Palette.success,
+                    label: L10n.movienightWouldWatch
+                ) { fling(isYes: true) }
+            }
+        }
+        .disabled(items.isEmpty)
+    }
+
+    private func fling(isYes: Bool) {
+        guard let top = items.first else { return }
+        command = Command(id: top.id, isYes: isYes)
+    }
+
+    /// Fits a 2:3 poster into the space available, so a small phone gets a
+    /// shorter card rather than a cropped one.
+    private static func poster(fitting available: CGSize) -> CGSize {
+        let width = max(available.width, 0)
+        let height = max(available.height, 0)
+        let ratio: CGFloat = 3.0 / 2.0
+        return width * ratio <= height
+            ? CGSize(width: width, height: width * ratio)
+            : CGSize(width: min(height / ratio, width), height: height)
+    }
+}
+
+/// One of the two answers, as a floating glass button.
+private struct SwipeButton: View {
+    let symbol: String
+    let tint: Color
+    let label: LocalizedStringResource
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 68, height: 68)
+                .contentShape(.circle)
+        }
+        .buttonStyle(.pressable)
+        .glassEffect(.regular.interactive(), in: .circle)
+        .accessibilityLabel(Text(label))
     }
 }
 
 private struct SwipeCard: View {
     let item: PollItem
     let size: CGSize
+    @Binding var command: SwipeDeck.Command?
     let onSwipe: (Bool) -> Void
 
     @State private var offset: CGSize = .zero
@@ -215,20 +374,26 @@ private struct SwipeCard: View {
                 targetSize: size
             )
             .frame(width: size.width, height: size.height)
-            .clipShape(.rect(cornerRadius: 24, style: .continuous))
+            .clipped()
 
             if let label = item.label {
                 Text(label)
-                    .font(.headline)
+                    .font(.title3.weight(.semibold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .lineLimit(2)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 18)
+                    .padding(.top, 48)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.black.opacity(0.45))
+                    // A gradient rather than a flat black bar: the title stays
+                    // readable over a bright poster without cutting a hard edge
+                    // across the artwork.
+                    .background(Palette.posterScrim)
             }
         }
         .frame(width: size.width, height: size.height)
-        .clipShape(.rect(cornerRadius: 24, style: .continuous))
+        .clipShape(.rect(cornerRadius: 28, style: .continuous))
+        .shadow(color: .black.opacity(0.22), radius: 18, y: 10)
         .overlay(alignment: .topLeading) { stamp(yes: true).opacity(yesOpacity) }
         .overlay(alignment: .topTrailing) { stamp(yes: false).opacity(noOpacity) }
         .offset(offset)
@@ -238,24 +403,37 @@ private struct SwipeCard: View {
                 .onChanged { offset = $0.translation }
                 .onEnded { value in
                     if abs(value.translation.width) > threshold {
-                        let isYes = value.translation.width > 0
-                        // Fling it off-screen in the direction of travel, then
-                        // report — so the card never snaps back before leaving.
-                        withAnimation(.easeOut(duration: 0.22)) {
-                            offset = CGSize(width: isYes ? 700 : -700, height: value.translation.height)
-                            isGone = true
-                        }
-                        onSwipe(isYes)
+                        depart(
+                            isYes: value.translation.width > 0,
+                            lift: value.translation.height
+                        )
                     } else {
                         withAnimation(Motion.spring) { offset = .zero }
                     }
                 }
         )
+        // The hovering buttons speak to the top card through this, so a tap and
+        // a drag leave the deck by exactly the same path.
+        .onChange(of: command) { _, new in
+            guard let new, new.id == item.id, !isGone else { return }
+            command = nil
+            depart(isYes: new.isYes, lift: -40)
+        }
         .sensoryFeedback(.impact(weight: .medium), trigger: isGone)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(item.label ?? ""))
-        .accessibilityAction(named: Text(L10n.commonAdd)) { onSwipe(true) }
-        .accessibilityAction(named: Text(L10n.commonRemove)) { onSwipe(false) }
+        .accessibilityAction(named: Text(L10n.movienightWouldWatch)) { onSwipe(true) }
+        .accessibilityAction(named: Text(L10n.movienightPass)) { onSwipe(false) }
+    }
+
+    /// Flings the card off in the direction of travel, then reports — so it
+    /// never snaps back before leaving.
+    private func depart(isYes: Bool, lift: CGFloat) {
+        withAnimation(.easeOut(duration: 0.24)) {
+            offset = CGSize(width: isYes ? 700 : -700, height: lift)
+            isGone = true
+        }
+        onSwipe(isYes)
     }
 
     private func stamp(yes: Bool) -> some View {
@@ -369,7 +547,7 @@ struct PollKindSheet: View {
 }
 
 struct PollSummarySheet: View {
-    let store: StoreOf<PollSummaryFeature>
+    @Bindable var store: StoreOf<PollSummaryFeature>
 
     var body: some View {
         NavigationStack {
@@ -377,9 +555,12 @@ struct PollSummarySheet: View {
                 if !store.matches.isEmpty {
                     Section {
                         ForEach(store.matches) { item in
-                            Label { Text(item.label ?? "") } icon: {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundStyle(Palette.success)
+                            Button { store.send(.movieTapped(item)) } label: {
+                                Label { Text(item.label ?? "") } icon: {
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .foregroundStyle(Palette.success)
+                                }
+                                .foregroundStyle(.primary)
                             }
                         }
                     } header: {
@@ -389,12 +570,14 @@ struct PollSummarySheet: View {
 
                 Section {
                     ForEach(store.scoreboard, id: \.item.id) { entry in
-                        LabeledContent {
-                            Text(entry.yes, format: .number)
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                        } label: {
-                            Text(entry.item.label ?? "")
+                        Button { store.send(.movieTapped(entry.item)) } label: {
+                            LabeledContent {
+                                Text(entry.yes, format: .number)
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                            } label: {
+                                Text(entry.item.label ?? "").foregroundStyle(.primary)
+                            }
                         }
                     }
                 } header: {
@@ -407,6 +590,9 @@ struct PollSummarySheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button { store.send(.doneTapped) } label: { Text(L10n.commonDone) }
                 }
+            }
+            .sheet(item: $store.scope(state: \.movieInfo, action: \.movieInfo)) {
+                MovieInfoSheet(store: $0)
             }
         }
         .presentationDetents([.medium, .large])
@@ -437,9 +623,10 @@ struct PollHistorySheet: View {
                                 ForEach(Array(store.polls.enumerated()), id: \.element.id) { index, poll in
                                     PollHistoryRow(
                                         poll: poll,
-                                        winner: store.winners[poll.id],
+                                        outcome: store.outcomes[poll.id],
                                         isExpanded: store.expanded == poll.id,
-                                        canDelete: store.state.canDelete(poll)
+                                        canDelete: store.state.canDelete(poll),
+                                        onMovieTapped: { store.send(.movieTapped($0)) }
                                     ) {
                                         store.send(.pollTapped(poll.id))
                                     } onDelete: {
@@ -463,6 +650,9 @@ struct PollHistorySheet: View {
                 }
             }
             .alert($store.scope(state: \.alert, action: \.alert))
+            .sheet(item: $store.scope(state: \.movieInfo, action: \.movieInfo)) {
+                MovieInfoSheet(store: $0)
+            }
             .animation(Motion.spring, value: store.polls)
             .animation(Motion.spring, value: store.expanded)
         }
@@ -470,11 +660,95 @@ struct PollHistorySheet: View {
     }
 }
 
+/// How a finished round ended, said accurately.
+///
+/// Replaces a single "Winner" line that was wrong in two ways at once: it showed
+/// only the first agreement when a household had agreed on several, and when
+/// there was no agreement at all it crowned whatever topped the scoreboard —
+/// so one person's lone swipe, in a home of three, was reported as the winner.
+private struct PollOutcomeView: View {
+    let outcome: PollOutcome
+    let onMovieTapped: (PollItem) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label { Text(headline) } icon: { Image(systemName: symbol) }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(tint)
+
+            if !outcome.items.isEmpty {
+                ScrollView(.horizontal) {
+                    HStack(alignment: .top, spacing: 10) {
+                        ForEach(outcome.items) { item in
+                            Button { onMovieTapped(item) } label: {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    RemoteImage(
+                                        url: TMDbImageWidth.url(for: item.thumbnailURL, width: .w185),
+                                        targetSize: CGSize(width: 64, height: 96)
+                                    )
+                                    .frame(width: 64, height: 96)
+                                    .clipShape(.rect(cornerRadius: 8, style: .continuous))
+
+                                    Text(item.label ?? "")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .frame(width: 64)
+                                .contentShape(.rect)
+                            }
+                            .buttonStyle(.pressable)
+                        }
+                    }
+                }
+                .scrollIndicators(.hidden)
+            }
+
+            // Why a round can end with nothing agreed, said rather than left
+            // for the reader to work out.
+            if outcome.isPartialTurnout {
+                Text(L10n.previousPollsTurnout(outcome.voters, outcome.memberCount))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var headline: LocalizedStringResource {
+        switch outcome.result {
+        case .agreed: L10n.movienightMatchesTitle
+        case let .closest(_, yes): L10n.previousPollsClosest(yes, outcome.memberCount)
+        case .nothing: L10n.previousPollsNothing
+        }
+    }
+
+    private var symbol: String {
+        switch outcome.result {
+        case .agreed: "checkmark.seal.fill"
+        case .closest: "chart.bar.fill"
+        case .nothing: "hand.thumbsdown"
+        }
+    }
+
+    private var tint: Color {
+        switch outcome.result {
+        case .agreed: Palette.success
+        case .closest, .nothing: .secondary
+        }
+    }
+}
+
 private struct PollHistoryRow: View {
     let poll: Poll
-    let winner: PollItem?
+    /// Nil until the round has been read — which is not the same as a round
+    /// that ended in no agreement, though the row used to show both as a
+    /// spinner labelled "no winner".
+    let outcome: PollOutcome?
     let isExpanded: Bool
     let canDelete: Bool
+    let onMovieTapped: (PollItem) -> Void
     let onTap: () -> Void
     let onDelete: () -> Void
 
@@ -510,31 +784,13 @@ private struct PollHistoryRow: View {
 
                 if isExpanded {
                     Divider()
-                    if let winner {
-                        HStack(spacing: 10) {
-                            RemoteImage(
-                                url: TMDbImageWidth.url(for: winner.thumbnailURL, width: .w185),
-                                targetSize: CGSize(width: 44, height: 66)
-                            )
-                            .frame(width: 44, height: 66)
-                            .clipShape(.rect(cornerRadius: 6, style: .continuous))
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L10n.previousPollsWinner)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                Text(winner.label ?? "")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(.primary)
-                                    .lineLimit(2)
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        .transition(.opacity)
+                    if let outcome {
+                        PollOutcomeView(outcome: outcome, onMovieTapped: onMovieTapped)
+                            .transition(.opacity)
                     } else {
                         HStack(spacing: 8) {
                             ProgressView().controlSize(.small)
-                            Text(L10n.previousPollsNoWinner)
+                            Text(L10n.commonLoading)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }

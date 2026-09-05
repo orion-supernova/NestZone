@@ -29,14 +29,20 @@ public struct HubFeature: Sendable {
         case task
         case countsUpdated(shopping: Int?, recipes: Int?, movies: Int?)
         case moduleTapped(HubModule)
+        case showShoppingList
         case path(StackActionOf<Path>)
     }
 
-    private enum CancelID { case shopping, recipes, movies }
+    private enum CancelID { case shopping, recipes, movies, handoff }
+
+    /// Roughly one navigation transition. There is no completion callback for a
+    /// `StackState` pop, so the push that follows one has to wait it out.
+    private static let unwind: Duration = .milliseconds(350)
 
     @Dependency(\.shopping) var shoppingClient
     @Dependency(\.recipes) var recipesClient
     @Dependency(\.movies) var moviesClient
+    @Dependency(\.continuousClock) var clock
 
     public init() {}
 
@@ -110,10 +116,32 @@ public struct HubFeature: Sendable {
                     // The row is already gone from a screen that is going away.
                 }
 
-            // A recipe asking for the shopping list: pop back to the Hub and
-            // push the list, rather than stacking one module inside another.
+            // A recipe asking for the shopping list: back out to the Hub, then
+            // push the list — rather than stacking one module inside another.
+            //
+            // Unwind first and push second, never both in one pass. The recipe
+            // screen presents its detail with `navigationDestination(item:)`
+            // *inside* the stack this `path` drives, so by the time this action
+            // arrives one destination is already being dismissed. Popping the
+            // recipe screen and pushing the list on top of that asked SwiftUI to
+            // unwind two levels and push a third in a single update, which it
+            // does not do: it left the recipe on screen while the state said
+            // "shopping", the detached views re-ran their `task` into elements
+            // that no longer existed, and a second tap went nowhere at all.
+            // Unwinding several levels at once is fine; it is the push in the
+            // same breath that it cannot reconcile.
             case let .path(.element(id: id, action: .recipes(.delegate(.openShoppingList)))):
                 state.path.pop(from: id)
+                return .run { send in
+                    try await clock.sleep(for: Self.unwind)
+                    await send(.showShoppingList)
+                }
+                .cancellable(id: CancelID.handoff, cancelInFlight: true)
+
+            case .showShoppingList:
+                // If the person went somewhere else while the pop was playing,
+                // leave them there rather than yanking them to the list.
+                guard state.path.isEmpty else { return .none }
                 state.path.append(.shopping(ShoppingFeature.State(homeID: state.homeID)))
                 return .none
 

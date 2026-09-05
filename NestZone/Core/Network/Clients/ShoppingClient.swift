@@ -13,6 +13,11 @@ public struct ShoppingClient: Sendable {
     public var setPurchased: @Sendable (ShoppingItemID, Bool) async throws -> Void
     public var update: @Sendable (ShoppingItemID, String, Double?, ShoppingItem.Category) async throws -> Void
     public var remove: @Sendable (ShoppingItemID) async throws -> Void
+    /// Clears a whole group — an aisle, a meal, the purchased pile — in one
+    /// write. One `remove` per row meant one live push per row, so a list that
+    /// had optimistically dropped the group watched it come back and then
+    /// disappear a row at a time.
+    public var removeMany: @Sendable ([ShoppingItemID]) async throws -> Void
 }
 
 public struct NewShoppingItem: Equatable, Sendable {
@@ -107,6 +112,16 @@ extension ShoppingClient: DependencyKey {
         },
         remove: { id in
             try await ConvexConnection.shared.mutate("shopping:remove", args: ["id": id])
+        },
+        removeMany: { ids in
+            guard !ids.isEmpty else { return }
+            try await ConvexConnection.shared.mutate(
+                "shopping:removeMany",
+                // `[ShoppingItemID]` is not `ConvexEncodable` — only
+                // `[ConvexEncodable?]` is, so the array is widened element by
+                // element, the same way `createFromRecipe` widens its names.
+                args: ["ids": ids.map { $0 as ConvexEncodable? }]
+            )
         }
     )
 
