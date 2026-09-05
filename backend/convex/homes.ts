@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { cascadeDeleteHome } from "./lib/relations";
+import { internal } from "./_generated/api";
 
 /** Homes the current user belongs to. */
 export const listMine = query({
@@ -128,11 +129,28 @@ export const join = mutation({
       .first();
     if (!home) throw new Error("Invalid invite code");
 
+    const wasAlreadyMember = (home.members ?? []).some((m) => m === user._id);
+
     const members = new Set([...(home.members ?? []), user._id]);
     await ctx.db.patch(home._id, { members: [...members], updated: Date.now() });
 
     const homes = new Set([...(user.home_id ?? []), home._id]);
     await ctx.db.patch(user._id, { home_id: [...homes] });
+
+    // Re-entering a code you are already a member of is a no-op, not an
+    // arrival, and must not announce one.
+    if (!wasAlreadyMember) {
+      await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+        homeId: home._id,
+        actor: user._id,
+        title: home.name ?? "NestZone",
+        body: user.name
+          ? `${user.name} joined the home`
+          : "Someone joined the home",
+        category: "home",
+      });
+    }
+
     return await ctx.db.get(home._id);
   },
 });

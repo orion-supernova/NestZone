@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 const difficulty = v.union(v.literal("easy"), v.literal("medium"), v.literal("hard"));
 
@@ -65,6 +66,17 @@ export const create = mutation({
       // needs to point a meal plan or a shopping batch at.
       if (match) return match;
     }
+
+    // Only a recipe that is genuinely new to the shelf. The dedupe branch
+    // above returns early, so adopting the same bundled recipe a second time
+    // stays silent.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId,
+      actor: user._id,
+      title: user.name ? `${user.name} added a recipe` : "New recipe",
+      body: rest.title,
+      category: "recipes",
+    });
 
     const now = Date.now();
     const id = await ctx.db.insert("recipes", {

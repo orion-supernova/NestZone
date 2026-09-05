@@ -198,98 +198,170 @@ async function providerToken(ctx: {
   return jwt;
 }
 
-type Payload = {
+type Alert = {
   title: string;
   body: string;
   /// Routes the tap. The app reads this to open the right tab.
   category?: string;
-  homeId?: string;
+  /// Groups related alerts on the lock screen. Defaults to the home, so a
+  /// household's activity stacks together.
   threadId?: string;
+  /// Set only to deliberately REPLACE an earlier notification.
+  collapseId?: string;
+};
+
+/// The shape every notifying action takes, so a caller writes the same thing
+/// whether it is addressing a home or a handful of people.
+const alertArgs = {
+  title: v.string(),
+  body: v.string(),
+  category: v.optional(v.string()),
+  threadId: v.optional(v.string()),
+  collapseId: v.optional(v.string()),
 };
 
 /**
+ * Posts one alert to one device.
+ *
+ * Per-device because APNs has no multi-device endpoint, and per-device errors
+ * because one dead token must not stop the rest of the household hearing about
+ * it.
+ */
+async function deliver(
+  ctx: { runMutation: (ref: any, args: any) => Promise<any> },
+  device: Device,
+  jwt: string,
+  topic: string,
+  body: unknown,
+  extraHeaders: Record<string, string>,
+): Promise<"sent" | "dropped" | "failed"> {
+  try {
+    const response = await fetch(
+      `${gateway(device.environment)}/3/device/${device.token}`,
+      {
+        method: "POST",
+        headers: {
+          authorization: `bearer ${jwt}`,
+          "apns-topic": topic,
+          "apns-push-type": "alert",
+          "apns-priority": "10",
+          ...extraHeaders,
+        },
+        body: JSON.stringify(body),
+      },
+    );
+
+    if (response.status === 200) return "sent";
+
+    const text = await response.text();
+    // 410 Unregistered / 400 BadDeviceToken mean the device is gone for good.
+    // Anything else is transient and worth keeping the token for.
+    if (
+      response.status === 410 ||
+      (response.status === 400 && text.includes("BadDeviceToken"))
+    ) {
+      await ctx.runMutation(internal.push.dropToken, { id: device.id });
+      return "dropped";
+    }
+    console.error(`APNs ${response.status} for device: ${text}`);
+    return "failed";
+  } catch (error) {
+    console.error(`APNs request failed: ${String(error)}`);
+    return "failed";
+  }
+}
+
+/** Sends one alert to a list of devices, in parallel. */
+async function fanOut(
+  ctx: {
+    runQuery: (ref: any, args: any) => Promise<any>;
+    runMutation: (ref: any, args: any) => Promise<any>;
+  },
+  devices: Device[],
+  alert: Alert,
+): Promise<{ sent: number; dropped: number }> {
+  if (devices.length === 0) return { sent: 0, dropped: 0 };
+
+  const jwt = await providerToken(ctx);
+  const topic = requireEnv("APNS_BUNDLE_ID");
+
+  const payload = {
+    aps: {
+      alert: { title: alert.title, body: alert.body },
+      sound: "default",
+      ...(alert.threadId ? { "thread-id": alert.threadId } : {}),
+    },
+    category: alert.category ?? "activity",
+  };
+
+  // A collapse id REPLACES whatever is already showing under the same id, so
+  // only a caller that genuinely means to supersede an earlier alert may set
+  // one. This used to be the category on every send, which meant the evening's
+  // second shopping item silently erased the first and the household saw one
+  // notification no matter how many things were added.
+  const headers: Record<string, string> = alert.collapseId
+    ? { "apns-collapse-id": alert.collapseId.slice(0, 64) }
+    : {};
+
+  const results = await Promise.all(
+    devices.map((device) => deliver(ctx, device, jwt, topic, payload, headers)),
+  );
+
+  return {
+    sent: results.filter((r) => r === "sent").length,
+    dropped: results.filter((r) => r === "dropped").length,
+  };
+}
+
+/**
  * Fans a notification out to every device in a home except the one that caused
- * it. Failures are per-device: one dead token must not stop the rest.
+ * it.
  */
 export const notifyHome = internalAction({
   args: {
     homeId: v.id("homes"),
     actor: v.optional(v.id("users")),
-    title: v.string(),
-    body: v.string(),
-    category: v.optional(v.string()),
-    threadId: v.optional(v.string()),
+    ...alertArgs,
   },
   handler: async (ctx, args) => {
-    if (!isConfigured()) return { sent: 0, dropped: 0, skipped: true };
+    if (!isConfigured()) return { sent: 0, dropped: 0 };
 
     const devices: Device[] = await ctx.runQuery(internal.push.tokensForHome, {
       homeId: args.homeId,
       exclude: args.actor,
     });
-    if (devices.length === 0) return { sent: 0, dropped: 0 };
+    return await fanOut(ctx, devices, {
+      ...args,
+      threadId: args.threadId ?? args.homeId,
+    });
+  },
+});
 
-    const jwt = await providerToken(ctx);
-    const topic = requireEnv("APNS_BUNDLE_ID");
+/**
+ * Fans out to a named set of people rather than to a whole home.
+ *
+ * Conversations are the case that needs it: the participants are a subset of
+ * the household, and notifying everyone would tell the rest that the chat
+ * exists.
+ */
+export const notifyUsers = internalAction({
+  args: {
+    userIds: v.array(v.id("users")),
+    actor: v.optional(v.id("users")),
+    ...alertArgs,
+  },
+  handler: async (ctx, args) => {
+    if (!isConfigured()) return { sent: 0, dropped: 0 };
 
-    const payload = {
-      aps: {
-        alert: { title: args.title, body: args.body },
-        sound: "default",
-        "thread-id": args.threadId ?? args.homeId,
-        // Lets iOS collapse a burst of shopping additions into one row rather
-        // than stacking five.
-        "collapse-id": undefined,
-      },
-      homeId: args.homeId,
-      category: args.category ?? "activity",
-    };
-
-    let sent = 0;
-    let dropped = 0;
-
-    await Promise.all(
-      devices.map(async (device) => {
-        try {
-          const response = await fetch(
-            `${gateway(device.environment)}/3/device/${device.token}`,
-            {
-              method: "POST",
-              headers: {
-                authorization: `bearer ${jwt}`,
-                "apns-topic": topic,
-                "apns-push-type": "alert",
-                "apns-priority": "10",
-                "apns-collapse-id": (args.category ?? "activity").slice(0, 64),
-              },
-              body: JSON.stringify(payload),
-            },
-          );
-
-          if (response.status === 200) {
-            sent++;
-            return;
-          }
-
-          const text = await response.text();
-          // 410 Unregistered / 400 BadDeviceToken mean the device is gone for
-          // good. Anything else is transient and worth keeping the token for.
-          if (
-            response.status === 410 ||
-            (response.status === 400 && text.includes("BadDeviceToken"))
-          ) {
-            await ctx.runMutation(internal.push.dropToken, { id: device.id });
-            dropped++;
-            return;
-          }
-          console.error(`APNs ${response.status} for device: ${text}`);
-        } catch (error) {
-          console.error(`APNs request failed: ${String(error)}`);
-        }
-      }),
-    );
-
-    return { sent, dropped };
+    const recipients = args.userIds.filter((id) => id !== args.actor);
+    const devices: Device[] = [];
+    for (const userId of recipients) {
+      const forUser: Device[] = await ctx.runQuery(internal.push.tokensForUser, {
+        userId,
+      });
+      devices.push(...forUser);
+    }
+    return await fanOut(ctx, devices, args);
   },
 });
 
@@ -350,51 +422,6 @@ export const notifyToUser = internalAction({
     const devices: Device[] = await ctx.runQuery(internal.push.tokensForUser, {
       userId: args.userId,
     });
-    if (devices.length === 0) return { sent: 0, dropped: 0 };
-
-    const jwt = await providerToken(ctx);
-    const topic = requireEnv("APNS_BUNDLE_ID");
-    let sent = 0;
-    let dropped = 0;
-
-    await Promise.all(
-      devices.map(async (device) => {
-        const response = await fetch(
-          `${gateway(device.environment)}/3/device/${device.token}`,
-          {
-            method: "POST",
-            headers: {
-              authorization: `bearer ${jwt}`,
-              "apns-topic": topic,
-              "apns-push-type": "alert",
-              "apns-priority": "10",
-            },
-            body: JSON.stringify({
-              aps: {
-                alert: { title: args.title, body: args.body },
-                sound: "default",
-              },
-              category: "test",
-            }),
-          },
-        );
-        if (response.status === 200) {
-          sent++;
-          return;
-        }
-        const text = await response.text();
-        if (
-          response.status === 410 ||
-          (response.status === 400 && text.includes("BadDeviceToken"))
-        ) {
-          await ctx.runMutation(internal.push.dropToken, { id: device.id });
-          dropped++;
-          return;
-        }
-        throw new Error(`APNs ${response.status}: ${text}`);
-      }),
-    );
-
-    return { sent, dropped };
+    return await fanOut(ctx, devices, { title: args.title, body: args.body, category: "test" });
   },
 });

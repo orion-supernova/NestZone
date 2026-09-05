@@ -50,6 +50,15 @@ extension SharedKey where Self == AppStorageKey<Bool>.Default {
     public static var hasCompletedOnboarding: Self {
         Self[.appStorage("appHasCompletedOnboarding"), default: false]
     }
+
+    /// Set once the household has been asked about notifications.
+    ///
+    /// The system prompt is one-shot — a "Don't Allow" can only be undone in
+    /// Settings.app — so the app asks softly first, and asks exactly once. A
+    /// pre-prompt that reappears every launch is worse than never asking.
+    public static var hasAskedForNotifications: Self {
+        Self[.appStorage("appHasAskedForNotifications"), default: false]
+    }
 }
 
 extension Shared<String?> {

@@ -59,6 +59,73 @@ struct HomeFeatureTests {
         }
     }
 
+    @Test("A newcomer is asked about notifications once, and only once")
+    func notificationPromptIsAskedOnce() async {
+        await withDependencies {
+            // The flag is persisted, so an unisolated store would carry the
+            // answer from whichever test ran first.
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
+                HomeFeature()
+            }
+
+            await store.send(.notificationPromptReady) {
+                $0.$hasAskedForNotifications.withLock { $0 = true }
+                $0.alert = .enableNotifications
+            }
+
+            // The next visit to the tab must not raise it again. `.task` is not
+            // driven here; the flag it reads is what stops the ask.
+            #expect(store.state.hasAskedForNotifications)
+        }
+    }
+
+    @Test("Granting permission on the Home tab tells the app to fetch a token")
+    func grantingNotificationsBubblesUp() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
+                HomeFeature()
+            } withDependencies: {
+                $0.push.requestAuthorization = { true }
+            }
+
+            await store.send(.notificationPromptReady) {
+                $0.$hasAskedForNotifications.withLock { $0 = true }
+                $0.alert = .enableNotifications
+            }
+            await store.send(.alert(.presented(.enableNotifications))) {
+                $0.alert = nil
+            }
+            await store.receive(\.notificationAuthorizationAnswered)
+            await store.receive(.delegate(.notificationsEnabled))
+        }
+    }
+
+    @Test("A refused prompt bubbles nothing")
+    func refusedNotificationsStaysPut() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
+                HomeFeature()
+            } withDependencies: {
+                $0.push.requestAuthorization = { false }
+            }
+
+            await store.send(.notificationPromptReady) {
+                $0.$hasAskedForNotifications.withLock { $0 = true }
+                $0.alert = .enableNotifications
+            }
+            await store.send(.alert(.presented(.enableNotifications))) {
+                $0.alert = nil
+            }
+            await store.receive(\.notificationAuthorizationAnswered)
+        }
+    }
+
     @Test("Cancellation never reaches the user as an alert")
     func cancellationIsSilent() async {
         let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
@@ -1492,5 +1559,63 @@ struct PresetListTests {
         // And a later push must not turn into a write per update.
         await store.send(.listsUpdated([]))
         #expect(asked.value.isEmpty, "only the first look repairs; the rest just render")
+    }
+}
+
+/// The phrasing behind every "3 min ago" label.
+///
+/// Seconds are deliberately absent: two notes written in the same breath used
+/// to read "1 second ago" and "0 seconds ago" side by side, and then stay that
+/// way for the rest of the session.
+@Suite("Relative time")
+struct RelativeTimeTests {
+
+    /// `Text` has no readable content, so the phrasing is checked through the
+    /// same resolved strings the view renders.
+    private func phrase(_ secondsAgo: TimeInterval) -> String {
+        let now = Date(timeIntervalSince1970: 1_757_000_000)
+        let then = now.addingTimeInterval(-secondsAgo)
+        let seconds = now.timeIntervalSince(then)
+
+        if seconds < 60 { return String(localized: L10n.timeJustNow) }
+        let minutes = Int(seconds) / 60
+        if minutes < 60 { return String(localized: L10n.timeMinutesAgo(minutes)) }
+        let hours = minutes / 60
+        if hours < 24 { return String(localized: L10n.timeHoursAgo(hours)) }
+        let days = hours / 24
+        if days < 7 { return String(localized: L10n.timeDaysAgo(days)) }
+        return then.formatted(
+            Date.FormatStyle(date: .abbreviated, time: .omitted).locale(L10n.locale)
+        )
+    }
+
+    @Test("Anything under a minute is just now, seconds and all")
+    func secondsAreNeverSpelledOut() {
+        for age in [0.0, 1, 2, 30, 59] {
+            #expect(phrase(age) == String(localized: L10n.timeJustNow))
+        }
+    }
+
+    @Test("A clock that disagrees with the server does not produce the future")
+    func futureTimestampsReadAsJustNow() {
+        #expect(phrase(-2) == String(localized: L10n.timeJustNow))
+    }
+
+    @Test("Minutes, then hours, then days")
+    func coarsensAsItAges() {
+        #expect(phrase(60) == "1 min ago")
+        #expect(phrase(119) == "1 min ago")
+        #expect(phrase(120) == "2 min ago")
+        #expect(phrase(59 * 60) == "59 min ago")
+        #expect(phrase(60 * 60) == "1 h ago")
+        #expect(phrase(23 * 3600) == "23 h ago")
+        #expect(phrase(24 * 3600) == "1 d ago")
+        #expect(phrase(6 * 24 * 3600) == "6 d ago")
+    }
+
+    @Test("Past a week the date itself is the more useful answer")
+    func oldRowsShowADate() {
+        let weekOld = phrase(7 * 24 * 3600)
+        #expect(!weekOld.hasSuffix("ago"))
     }
 }

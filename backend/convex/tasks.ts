@@ -92,6 +92,34 @@ export const update = mutation({
       await requireMembers(ctx, home, [fields.assigned_to], "Task assignee");
     }
     await ctx.db.patch(id, { ...fields, updated_by: user._id, updated: Date.now() });
+
+    // Only the transitions worth interrupting someone for. An edit to the
+    // title, or unticking a box that was already unticked, is not news.
+    const justCompleted = fields.is_completed === true && !task.is_completed;
+    if (justCompleted && task.home_id) {
+      await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+        homeId: task.home_id,
+        actor: user._id,
+        title: user.name ? `${user.name} finished a task` : "Task done",
+        body: task.title ?? "",
+        category: "tasks",
+      });
+    }
+
+    // Being handed a job is personal, so it goes to the assignee alone rather
+    // than to the whole household.
+    const justAssigned =
+      fields.assigned_to !== undefined && fields.assigned_to !== task.assigned_to;
+    if (justAssigned && fields.assigned_to) {
+      await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
+        userIds: [fields.assigned_to],
+        actor: user._id,
+        title: user.name ? `${user.name} assigned you a task` : "New task for you",
+        body: fields.title ?? task.title ?? "",
+        category: "tasks",
+      });
+    }
+
     return await ctx.db.get(id);
   },
 });

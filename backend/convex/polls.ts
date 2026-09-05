@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { cascadeDeletePoll } from "./lib/relations";
+import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
 
@@ -106,6 +107,17 @@ export const create = mutation({
         updated: now,
       });
     }
+
+    // Tell the rest of the household. Scheduled rather than awaited: a mutation
+    // must not block on APNs, and a failed push must never roll back the poll.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId: args.homeId,
+      actor: user._id,
+      title: user.name ? `${user.name} started a vote` : "New vote",
+      body: args.title,
+      category: "polls",
+    });
+
     return await ctx.db.get(pollId);
   },
 });

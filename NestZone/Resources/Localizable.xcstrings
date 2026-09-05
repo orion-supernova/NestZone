@@ -6560,6 +6560,74 @@
         }
       }
     },
+    "notifications_prompt_allow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aç"
+          }
+        }
+      }
+    },
+    "notifications_prompt_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get a notification when someone adds a task, a shopping item, a note or plans dinner. You can change this any time in Settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biri görev, alışveriş maddesi ya da not eklediğinde veya akşam yemeğini planladığında bildirim alın. Bunu istediğiniz zaman Ayarlar'dan değiştirebilirsiniz."
+          }
+        }
+      }
+    },
+    "notifications_prompt_not_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi değil"
+          }
+        }
+      }
+    },
+    "notifications_prompt_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep up with the household?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evden haberdar olun mu?"
+          }
+        }
+      }
+    },
     "poll_controls_exit_poll": {
       "extractionState": "manual",
       "localizations": {
@@ -10045,13 +10113,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Get a notification when someone adds a task, a shopping item or a note."
+            "value": "Get a notification when someone adds a task, a shopping item, a note, a recipe or a film, plans dinner, finishes a task or joins the home."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biri görev, alışveriş ürünü veya not eklediğinde bildirim al."
+            "value": "Biri görev, alışveriş maddesi, not, tarif ya da film eklediğinde, akşam yemeğini planladığında, bir görevi bitirdiğinde veya eve katıldığında bildirim alın."
           }
         }
       }
@@ -11497,6 +11565,146 @@
           "stringUnit": {
             "state": "translated",
             "value": "RetroWave"
+          }
+        }
+      }
+    },
+    "time_days_ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 d ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld d ago"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 gün önce"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün önce"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "time_hours_ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 h ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld h ago"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 sa önce"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sa önce"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "time_just_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az önce"
+          }
+        }
+      }
+    },
+    "time_minutes_ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 min ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld min ago"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 dk önce"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dk önce"
+                }
+              }
+            }
           }
         }
       }

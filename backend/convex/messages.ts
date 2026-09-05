@@ -5,10 +5,14 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser } from "./lib/auth";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { QueryCtx, MutationCtx } from "./_generated/server";
 
 const messageType = v.union(v.literal("text"), v.literal("image"), v.literal("system"));
+
+// Shown as the notification title when the sender has no name on their profile.
+const NOTIFY_TITLE = "New message";
 
 async function assertParticipant(
   ctx: QueryCtx | MutationCtx,
@@ -45,7 +49,7 @@ export const send = mutation({
     file: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const { user } = await assertParticipant(ctx, args.conversationId);
+    const { user, convo } = await assertParticipant(ctx, args.conversationId);
     const now = Date.now();
     const id = await ctx.db.insert("messages", {
       conversation_id: args.conversationId,
@@ -63,6 +67,23 @@ export const send = mutation({
       last_message_at: now,
       updated: now,
     });
+
+    // Only the people in this conversation, not the whole home — the rest of
+    // the household has no business knowing the chat exists. Scheduled rather
+    // than awaited: a mutation must not block on APNs, and a failed push must
+    // never roll back the message.
+    await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
+      userIds: convo.participants ?? [],
+      actor: user._id,
+      title: user.name ?? NOTIFY_TITLE,
+      body:
+        args.message_type === "image"
+          ? "Sent a photo"
+          : args.content.slice(0, 120),
+      category: "messages",
+      threadId: args.conversationId,
+    });
+
     return id;
   },
 });

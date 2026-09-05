@@ -99,7 +99,7 @@ private struct ConversationRow: View {
                 Spacer(minLength: 0)
 
                 if let timestamp {
-                    Text(timestamp.date, format: .relative(presentation: .numeric))
+                    RelativeTimeText(timestamp)
                         .font(.caption2)
                         .foregroundStyle(Palette.accessory)
                 }

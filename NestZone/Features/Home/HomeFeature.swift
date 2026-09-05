@@ -18,6 +18,11 @@ public struct HomeFeature: Sendable {
         @Presents public var dinner: DinnerFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
+        /// Whether the household has already been asked about notifications.
+        /// Persisted, so the soft ask happens once per install rather than on
+        /// every visit to this tab.
+        @Shared(.hasAskedForNotifications) public var hasAskedForNotifications: Bool
+
         public init(homeID: HomeID, user: User? = nil) {
             self.homeID = homeID
             self.user = user
@@ -47,6 +52,11 @@ public struct HomeFeature: Sendable {
         case clearDinnerTapped
         case dinner(PresentationAction<DinnerFeature.Action>)
         case toggleFailed(AppError)
+        /// The tab has settled and nobody has been asked about notifications
+        /// yet. Raised by an effect rather than from `.task` directly so the
+        /// prompt lands on a drawn screen, not a blank one.
+        case notificationPromptReady
+        case notificationAuthorizationAnswered(Bool)
         /// Bubbled to the tab container, which owns navigation.
         case delegate(Delegate)
         case alert(PresentationAction<Alert>)
@@ -58,9 +68,14 @@ public struct HomeFeature: Sendable {
             case openMovieNight
             case openTasks
             case openRecipe(Recipe)
+            /// Permission was just granted here. `AppFeature` answers by asking
+            /// iOS for a token and registering it with the backend.
+            case notificationsEnabled
         }
 
-        public enum Alert: Equatable {}
+        public enum Alert: Equatable {
+            case enableNotifications
+        }
     }
 
     private enum CancelID { case stats, tasks, meals }
@@ -68,6 +83,8 @@ public struct HomeFeature: Sendable {
     @Dependency(\.stats) var statsClient
     @Dependency(\.tasks) var tasksClient
     @Dependency(\.meals) var mealsClient
+    @Dependency(\.push) var push
+    @Dependency(\.continuousClock) var clock
 
     public init() {}
 
@@ -106,7 +123,22 @@ public struct HomeFeature: Sendable {
                     } catch: { error, send in
                         await send(.loadFailed(AppError(error)))
                     }
-                    .cancellable(id: CancelID.tasks, cancelInFlight: true)
+                    .cancellable(id: CancelID.tasks, cancelInFlight: true),
+
+                    // The one place a newcomer is asked about notifications.
+                    // Everyone lands here — creating a home and joining one both
+                    // end on this tab — and it is the first screen where the
+                    // ask means something, because there is finally a household
+                    // to be notified about.
+                    .run { [asked = state.hasAskedForNotifications] send in
+                        guard !asked else { return }
+                        // A permission sheet over a tab that has not finished
+                        // drawing reads as an ambush.
+                        try? await clock.sleep(for: .seconds(1.5))
+                        guard await push.authorizationStatus() == .notDetermined
+                        else { return }
+                        await send(.notificationPromptReady)
+                    }
                 )
 
             case let .statsUpdated(stats):
@@ -140,6 +172,25 @@ public struct HomeFeature: Sendable {
                 } catch: { error, send in
                     await send(.toggleFailed(AppError(error)))
                 }
+
+            case .notificationPromptReady:
+                // Marked as asked the moment the alert goes up, not when it is
+                // answered: dismissing it is an answer too, and iOS only ever
+                // shows its own prompt once.
+                state.$hasAskedForNotifications.withLock { $0 = true }
+                state.alert = .enableNotifications
+                return .none
+
+            case .alert(.presented(.enableNotifications)):
+                return .run { send in
+                    await send(.notificationAuthorizationAnswered(
+                        push.requestAuthorization()
+                    ))
+                }
+
+            case let .notificationAuthorizationAnswered(granted):
+                guard granted else { return .none }
+                return .send(.delegate(.notificationsEnabled))
 
             case let .toggleFailed(error):
                 // No manual rollback needed: the server's next push carries the
@@ -175,5 +226,27 @@ public struct HomeFeature: Sendable {
         }
         .ifLet(\.$dinner, action: \.dinner) { DinnerFeature() }
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+extension AlertState where Action == HomeFeature.Action.Alert {
+    /// The soft ask that stands in front of the system prompt.
+    ///
+    /// iOS shows its own prompt exactly once per install and a "Don't Allow"
+    /// is only reversible in Settings.app, so the reason comes first and the
+    /// real prompt only follows a yes.
+    static var enableNotifications: Self {
+        AlertState {
+            TextState(String(localized: L10n.notificationsPromptTitle))
+        } actions: {
+            ButtonState(action: .enableNotifications) {
+                TextState(String(localized: L10n.notificationsPromptAllow))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.notificationsPromptNotNow))
+            }
+        } message: {
+            TextState(String(localized: L10n.notificationsPromptMessage))
+        }
     }
 }

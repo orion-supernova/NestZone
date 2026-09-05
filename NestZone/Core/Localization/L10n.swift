@@ -3386,9 +3386,9 @@ public enum L10n {
         r("settings_notifications_toggle", "Household activity")
     }
 
-    /// Get a notification when someone adds a task, a shopping item or a note.
+    /// Get a notification when someone adds a task, a shopping item, a note, a recipe or a film, plans dinner, finishes a task or joins the home.
     public static var settingsNotificationsFooter: LocalizedStringResource {
-        r("settings_notifications_footer", "Get a notification when someone adds a task, a shopping item or a note.")
+        r("settings_notifications_footer", "Get a notification when someone adds a task, a shopping item, a note, a recipe or a film, plans dinner, finishes a task or joins the home.")
     }
 
     /// Notifications are off for NestZone. Turn them on in Settings.
@@ -3404,5 +3404,49 @@ public enum L10n {
     /// Send a test notification
     public static var settingsNotificationsSendTest: LocalizedStringResource {
         r("settings_notifications_send_test", "Send a test notification")
+    }
+
+    // MARK: - Relative time
+
+    /// Just now
+    public static var timeJustNow: LocalizedStringResource {
+        r("time_just_now", "Just now")
+    }
+
+    /// %lld min ago
+    public static func timeMinutesAgo(_ a0: Int) -> LocalizedStringResource {
+        r("time_minutes_ago", "\(a0) min ago")
+    }
+
+    /// %lld h ago
+    public static func timeHoursAgo(_ a0: Int) -> LocalizedStringResource {
+        r("time_hours_ago", "\(a0) h ago")
+    }
+
+    /// %lld d ago
+    public static func timeDaysAgo(_ a0: Int) -> LocalizedStringResource {
+        r("time_days_ago", "\(a0) d ago")
+    }
+
+    // MARK: - Notification permission prompt
+
+    /// Keep up with the household?
+    public static var notificationsPromptTitle: LocalizedStringResource {
+        r("notifications_prompt_title", "Keep up with the household?")
+    }
+
+    /// Get a notification when someone adds a task, a shopping item, a note or plans dinner. You can change this any time in Settings.
+    public static var notificationsPromptMessage: LocalizedStringResource {
+        r("notifications_prompt_message", "Get a notification when someone adds a task, a shopping item, a note or plans dinner. You can change this any time in Settings.")
+    }
+
+    /// Turn on
+    public static var notificationsPromptAllow: LocalizedStringResource {
+        r("notifications_prompt_allow", "Turn on")
+    }
+
+    /// Not now
+    public static var notificationsPromptNotNow: LocalizedStringResource {
+        r("notifications_prompt_not_now", "Not now")
     }
 }

@@ -69,7 +69,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "sendable",
-      "community": 96,
+      "community": 128,
       "norm_label": "sendable"
     },
     {
@@ -423,24 +423,44 @@
       "norm_label": "self"
     },
     {
-      "label": ".syncMain()",
+      "label": ".listenForDeviceToken()",
       "file_type": "code",
       "source_file": "NestZone/App/AppFeature.swift",
-      "source_location": "L240",
+      "source_location": "L231",
       "_origin": "ast",
-      "id": "app_appfeature_appfeature_syncmain",
+      "id": "app_appfeature_appfeature_listenfordevicetoken",
       "community": 11,
-      "norm_label": ".syncmain()"
+      "norm_label": ".listenfordevicetoken()"
+    },
+    {
+      "label": "Bool",
+      "file_type": "code",
+      "source_file": "NestZone/App/AppFeature.swift",
+      "source_location": "L231",
+      "_origin": "ast",
+      "id": "nestzone_app_appfeature_swift_bool",
+      "community": 11,
+      "norm_label": "bool"
     },
     {
       "label": "Effect",
       "file_type": "code",
       "source_file": "NestZone/App/AppFeature.swift",
-      "source_location": "L240",
+      "source_location": "L231",
       "_origin": "ast",
       "id": "nestzone_app_appfeature_swift_effect",
       "community": 11,
       "norm_label": "effect"
+    },
+    {
+      "label": ".syncMain()",
+      "file_type": "code",
+      "source_file": "NestZone/App/AppFeature.swift",
+      "source_location": "L248",
+      "_origin": "ast",
+      "id": "app_appfeature_appfeature_syncmain",
+      "community": 11,
+      "norm_label": ".syncmain()"
     },
     {
       "label": "AppView.swift",
@@ -480,7 +500,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "view",
-      "community": 134,
+      "community": 40,
       "norm_label": "view"
     },
     {
@@ -760,7 +780,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "app_mainfeature_tab",
-      "community": 139,
+      "community": 128,
       "norm_label": "tab"
     },
     {
@@ -790,7 +810,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "hashable",
-      "community": 4,
+      "community": 33,
       "norm_label": "hashable"
     },
     {
@@ -800,7 +820,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "app_mainfeature_tab_home",
-      "community": 139,
+      "community": 128,
       "norm_label": "home"
     },
     {
@@ -810,7 +830,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "app_mainfeature_tab_hub",
-      "community": 139,
+      "community": 128,
       "norm_label": "hub"
     },
     {
@@ -820,7 +840,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "app_mainfeature_tab_notes",
-      "community": 139,
+      "community": 128,
       "norm_label": "notes"
     },
     {
@@ -830,7 +850,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "app_mainfeature_tab_messages",
-      "community": 139,
+      "community": 128,
       "norm_label": "messages"
     },
     {
@@ -840,7 +860,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "app_mainfeature_tab_settings",
-      "community": 139,
+      "community": 128,
       "norm_label": "settings"
     },
     {
@@ -850,7 +870,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "nestzone_app_mainfeature_swift_localizedstringresource",
-      "community": 139,
+      "community": 128,
       "norm_label": "localizedstringresource"
     },
     {
@@ -1020,7 +1040,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "codable",
-      "community": 146,
+      "community": 4,
       "norm_label": "codable"
     },
     {
@@ -1090,7 +1110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "localization_l10n",
-      "community": 94,
+      "community": 2,
       "norm_label": "l10n.swift"
     },
     {
@@ -1101,7 +1121,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "synchronization",
-      "community": 94,
+      "community": 2,
       "norm_label": "synchronization"
     },
     {
@@ -1675,13 +1695,43 @@
       "norm_label": ".recipestimerminutes()"
     },
     {
+      "label": ".timeMinutesAgo()",
+      "file_type": "code",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3417",
+      "_origin": "ast",
+      "id": "localization_l10n_l10n_timeminutesago",
+      "community": 2,
+      "norm_label": ".timeminutesago()"
+    },
+    {
+      "label": ".timeHoursAgo()",
+      "file_type": "code",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3422",
+      "_origin": "ast",
+      "id": "localization_l10n_l10n_timehoursago",
+      "community": 2,
+      "norm_label": ".timehoursago()"
+    },
+    {
+      "label": ".timeDaysAgo()",
+      "file_type": "code",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3427",
+      "_origin": "ast",
+      "id": "localization_l10n_l10n_timedaysago",
+      "community": 2,
+      "norm_label": ".timedaysago()"
+    },
+    {
       "label": "AppError.swift",
       "file_type": "code",
       "source_file": "NestZone/Core/Models/AppError.swift",
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_apperror",
-      "community": 57,
+      "community": 94,
       "norm_label": "apperror.swift"
     },
     {
@@ -1901,7 +1951,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "models_home_codingkeys",
-      "community": 50,
+      "community": 142,
       "norm_label": "codingkeys"
     },
     {
@@ -1911,7 +1961,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "codingkey",
-      "community": 149,
+      "community": 142,
       "norm_label": "codingkey"
     },
     {
@@ -1921,7 +1971,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "models_home_codingkeys_id",
-      "community": 50,
+      "community": 142,
       "norm_label": "id"
     },
     {
@@ -1931,7 +1981,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_home_codingkeys_name",
-      "community": 50,
+      "community": 142,
       "norm_label": "name"
     },
     {
@@ -1941,7 +1991,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_home_codingkeys_address",
-      "community": 50,
+      "community": 142,
       "norm_label": "address"
     },
     {
@@ -1951,7 +2001,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "models_home_codingkeys_members",
-      "community": 50,
+      "community": 142,
       "norm_label": "members"
     },
     {
@@ -1961,7 +2011,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "models_home_codingkeys_invitecode",
-      "community": 50,
+      "community": 142,
       "norm_label": "invitecode"
     },
     {
@@ -1971,7 +2021,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "models_home_codingkeys_created",
-      "community": 50,
+      "community": 142,
       "norm_label": "created"
     },
     {
@@ -1981,7 +2031,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "models_home_codingkeys_updated",
-      "community": 50,
+      "community": 142,
       "norm_label": "updated"
     },
     {
@@ -2481,7 +2531,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "models_identifiers_convexid",
-      "community": 24,
+      "community": 133,
       "norm_label": "convexid"
     },
     {
@@ -2491,7 +2541,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "rawrepresentable",
-      "community": 24,
+      "community": 133,
       "norm_label": "rawrepresentable"
     },
     {
@@ -2501,7 +2551,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "expressiblebystringliteral",
-      "community": 24,
+      "community": 133,
       "norm_label": "expressiblebystringliteral"
     },
     {
@@ -2511,7 +2561,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "customstringconvertible",
-      "community": 24,
+      "community": 133,
       "norm_label": "customstringconvertible"
     },
     {
@@ -2521,7 +2571,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_core_models_identifiers_swift_string",
-      "community": 24,
+      "community": 133,
       "norm_label": "string"
     },
     {
@@ -2531,7 +2581,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "models_identifiers_convexid_init",
-      "community": 24,
+      "community": 133,
       "norm_label": ".init()"
     },
     {
@@ -2541,7 +2591,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "nestzone_core_models_identifiers_swift_decoder",
-      "community": 24,
+      "community": 133,
       "norm_label": "decoder"
     },
     {
@@ -2551,7 +2601,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "models_identifiers_convexid_encode",
-      "community": 24,
+      "community": 133,
       "norm_label": ".encode()"
     },
     {
@@ -2561,7 +2611,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "nestzone_core_models_identifiers_swift_encoder",
-      "community": 24,
+      "community": 133,
       "norm_label": "encoder"
     },
     {
@@ -3031,7 +3081,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "models_mealplan_cuisine",
-      "community": 18,
+      "community": 109,
       "norm_label": "cuisine"
     },
     {
@@ -3041,7 +3091,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_turkish",
-      "community": 18,
+      "community": 109,
       "norm_label": "turkish"
     },
     {
@@ -3051,7 +3101,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_italian",
-      "community": 18,
+      "community": 109,
       "norm_label": "italian"
     },
     {
@@ -3061,7 +3111,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_chinese",
-      "community": 18,
+      "community": 109,
       "norm_label": "chinese"
     },
     {
@@ -3071,7 +3121,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_japanese",
-      "community": 18,
+      "community": 109,
       "norm_label": "japanese"
     },
     {
@@ -3081,7 +3131,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_indian",
-      "community": 18,
+      "community": 109,
       "norm_label": "indian"
     },
     {
@@ -3091,7 +3141,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_mexican",
-      "community": 18,
+      "community": 109,
       "norm_label": "mexican"
     },
     {
@@ -3101,7 +3151,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_thai",
-      "community": 18,
+      "community": 109,
       "norm_label": "thai"
     },
     {
@@ -3111,7 +3161,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_mediterranean",
-      "community": 18,
+      "community": 109,
       "norm_label": "mediterranean"
     },
     {
@@ -3121,7 +3171,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_american",
-      "community": 18,
+      "community": 109,
       "norm_label": "american"
     },
     {
@@ -3131,7 +3181,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_korean",
-      "community": 18,
+      "community": 109,
       "norm_label": "korean"
     },
     {
@@ -3141,7 +3191,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_seafood",
-      "community": 18,
+      "community": 109,
       "norm_label": "seafood"
     },
     {
@@ -3151,7 +3201,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "models_mealplan_cuisine_other",
-      "community": 18,
+      "community": 109,
       "norm_label": "other"
     },
     {
@@ -3451,7 +3501,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "models_messaging_kind_text",
-      "community": 134,
+      "community": 40,
       "norm_label": "text"
     },
     {
@@ -3881,7 +3931,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "models_movie_kind",
-      "community": 146,
+      "community": 4,
       "norm_label": "kind"
     },
     {
@@ -3891,7 +3941,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "models_movie_kind_wishlist",
-      "community": 146,
+      "community": 4,
       "norm_label": "wishlist"
     },
     {
@@ -3901,7 +3951,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "models_movie_kind_watched",
-      "community": 146,
+      "community": 4,
       "norm_label": "watched"
     },
     {
@@ -3911,7 +3961,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "models_movie_kind_custom",
-      "community": 146,
+      "community": 4,
       "norm_label": "custom"
     },
     {
@@ -4311,7 +4361,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_poll",
-      "community": 96,
+      "community": 33,
       "norm_label": "poll.swift"
     },
     {
@@ -4401,7 +4451,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "models_poll_kind",
-      "community": 146,
+      "community": 128,
       "norm_label": "kind"
     },
     {
@@ -4411,7 +4461,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "models_poll_kind_movie",
-      "community": 146,
+      "community": 128,
       "norm_label": "movie"
     },
     {
@@ -4421,7 +4471,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "models_poll_kind_recipe",
-      "community": 146,
+      "community": 128,
       "norm_label": "recipe"
     },
     {
@@ -4431,7 +4481,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "models_poll_kind_generic",
-      "community": 146,
+      "community": 128,
       "norm_label": "generic"
     },
     {
@@ -4621,7 +4671,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "models_poll_pollitem",
-      "community": 96,
+      "community": 33,
       "norm_label": "pollitem"
     },
     {
@@ -4631,7 +4681,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "nestzone_core_models_poll_swift_int",
-      "community": 96,
+      "community": 33,
       "norm_label": "int"
     },
     {
@@ -4671,7 +4721,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "models_poll_codingkeys_label",
-      "community": 43,
+      "community": 96,
       "norm_label": "label"
     },
     {
@@ -4711,7 +4761,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "nestzone_core_models_poll_swift_movie",
-      "community": 96,
+      "community": 33,
       "norm_label": "movie"
     },
     {
@@ -4771,7 +4821,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "models_poll_polldetail",
-      "community": 96,
+      "community": 33,
       "norm_label": "polldetail"
     },
     {
@@ -4781,7 +4831,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "models_poll_polldetail_init",
-      "community": 96,
+      "community": 33,
       "norm_label": ".init()"
     },
     {
@@ -4791,7 +4841,7 @@
       "source_location": "L210",
       "_origin": "ast",
       "id": "models_poll_polldetail_matches",
-      "community": 96,
+      "community": 33,
       "norm_label": ".matches()"
     },
     {
@@ -4801,7 +4851,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "models_poll_polldetail_outcome",
-      "community": 96,
+      "community": 33,
       "norm_label": ".outcome()"
     },
     {
@@ -4811,7 +4861,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "nestzone_core_models_poll_swift_polloutcome",
-      "community": 96,
+      "community": 33,
       "norm_label": "polloutcome"
     },
     {
@@ -4821,7 +4871,7 @@
       "source_location": "L280",
       "_origin": "ast",
       "id": "models_poll_polloutcome",
-      "community": 96,
+      "community": 33,
       "norm_label": "polloutcome"
     },
     {
@@ -4831,7 +4881,7 @@
       "source_location": "L281",
       "_origin": "ast",
       "id": "models_poll_result",
-      "community": 96,
+      "community": 33,
       "norm_label": "result"
     },
     {
@@ -4841,7 +4891,7 @@
       "source_location": "L285",
       "_origin": "ast",
       "id": "models_poll_result_agreed",
-      "community": 96,
+      "community": 33,
       "norm_label": "agreed"
     },
     {
@@ -4851,7 +4901,7 @@
       "source_location": "L288",
       "_origin": "ast",
       "id": "models_poll_result_closest",
-      "community": 96,
+      "community": 33,
       "norm_label": "closest"
     },
     {
@@ -4861,7 +4911,7 @@
       "source_location": "L290",
       "_origin": "ast",
       "id": "models_poll_result_nothing",
-      "community": 96,
+      "community": 33,
       "norm_label": "nothing"
     },
     {
@@ -4871,7 +4921,7 @@
       "source_location": "L299",
       "_origin": "ast",
       "id": "models_poll_polloutcome_init",
-      "community": 96,
+      "community": 33,
       "norm_label": ".init()"
     },
     {
@@ -4881,7 +4931,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_recipe",
-      "community": 14,
+      "community": 51,
       "norm_label": "recipe.swift"
     },
     {
@@ -4891,7 +4941,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "models_recipe_recipe",
-      "community": 14,
+      "community": 51,
       "norm_label": "recipe"
     },
     {
@@ -4901,7 +4951,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "nestzone_core_models_recipe_swift_recipeid",
-      "community": 14,
+      "community": 51,
       "norm_label": "recipeid"
     },
     {
@@ -4911,7 +4961,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "nestzone_core_models_recipe_swift_string",
-      "community": 14,
+      "community": 51,
       "norm_label": "string"
     },
     {
@@ -4921,7 +4971,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "nestzone_core_models_recipe_swift_int",
-      "community": 14,
+      "community": 51,
       "norm_label": "int"
     },
     {
@@ -4931,7 +4981,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "difficulty",
-      "community": 14,
+      "community": 51,
       "norm_label": "difficulty"
     },
     {
@@ -4941,7 +4991,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "nestzone_core_models_recipe_swift_homeid",
-      "community": 14,
+      "community": 51,
       "norm_label": "homeid"
     },
     {
@@ -4951,7 +5001,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "nestzone_core_models_recipe_swift_userid",
-      "community": 14,
+      "community": 51,
       "norm_label": "userid"
     },
     {
@@ -4961,7 +5011,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "nestzone_core_models_recipe_swift_timestamp",
-      "community": 14,
+      "community": 51,
       "norm_label": "timestamp"
     },
     {
@@ -4971,7 +5021,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "models_recipe_difficulty",
-      "community": 14,
+      "community": 51,
       "norm_label": "difficulty"
     },
     {
@@ -4981,7 +5031,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "models_recipe_difficulty_easy",
-      "community": 14,
+      "community": 51,
       "norm_label": "easy"
     },
     {
@@ -4991,7 +5041,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "models_recipe_difficulty_medium",
-      "community": 14,
+      "community": 51,
       "norm_label": "medium"
     },
     {
@@ -5001,7 +5051,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "models_recipe_difficulty_hard",
-      "community": 14,
+      "community": 51,
       "norm_label": "hard"
     },
     {
@@ -5171,7 +5221,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "models_recipe_recipe_init",
-      "community": 14,
+      "community": 51,
       "norm_label": ".init()"
     },
     {
@@ -5181,7 +5231,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "nestzone_core_models_recipe_swift_decoder",
-      "community": 14,
+      "community": 51,
       "norm_label": "decoder"
     },
     {
@@ -5641,7 +5691,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_user",
-      "community": 148,
+      "community": 149,
       "norm_label": "user.swift"
     },
     {
@@ -6312,7 +6362,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "clients_devicesclient",
-      "community": 62,
+      "community": 160,
       "norm_label": "devicesclient.swift"
     },
     {
@@ -6322,7 +6372,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "clients_devicesclient_devicesclient",
-      "community": 62,
+      "community": 160,
       "norm_label": "devicesclient"
     },
     {
@@ -6332,7 +6382,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_devicesclient_swift_string",
-      "community": 62,
+      "community": 160,
       "norm_label": "string"
     },
     {
@@ -6342,7 +6392,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_devicesclient_swift_void",
-      "community": 62,
+      "community": 160,
       "norm_label": "void"
     },
     {
@@ -6352,7 +6402,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "clients_devicesclient_pushresult",
-      "community": 62,
+      "community": 7,
       "norm_label": "pushresult"
     },
     {
@@ -6362,7 +6412,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_devicesclient_swift_int",
-      "community": 62,
+      "community": 7,
       "norm_label": "int"
     },
     {
@@ -6372,7 +6422,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "clients_devicesclient_dependencyvalues",
-      "community": 62,
+      "community": 160,
       "norm_label": "dependencyvalues"
     },
     {
@@ -6382,7 +6432,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "clients_devicesclient_apnsenvironment",
-      "community": 62,
+      "community": 160,
       "norm_label": "apnsenvironment"
     },
     {
@@ -7052,7 +7102,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "clients_pollsclient_pollcandidate",
-      "community": 44,
+      "community": 162,
       "norm_label": "pollcandidate"
     },
     {
@@ -7062,7 +7112,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_pollsclient_swift_string",
-      "community": 44,
+      "community": 162,
       "norm_label": "string"
     },
     {
@@ -7072,7 +7122,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "clients_pollsclient_pollcandidate_init",
-      "community": 44,
+      "community": 162,
       "norm_label": ".init()"
     },
     {
@@ -7082,7 +7132,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_pollsclient_swift_movie",
-      "community": 44,
+      "community": 162,
       "norm_label": "movie"
     },
     {
@@ -7092,7 +7142,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_pollsclient_swift_convexencodable",
-      "community": 44,
+      "community": 162,
       "norm_label": "convexencodable"
     },
     {
@@ -7262,7 +7312,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "clients_shoppingclient",
-      "community": 7,
+      "community": 3,
       "norm_label": "shoppingclient.swift"
     },
     {
@@ -7272,7 +7322,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "clients_shoppingclient_shoppingclient",
-      "community": 7,
+      "community": 3,
       "norm_label": "shoppingclient"
     },
     {
@@ -7282,7 +7332,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_homeid",
-      "community": 7,
+      "community": 3,
       "norm_label": "homeid"
     },
     {
@@ -7292,7 +7342,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_asyncthrowingstream",
-      "community": 7,
+      "community": 3,
       "norm_label": "asyncthrowingstream"
     },
     {
@@ -7302,7 +7352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_shoppingitem",
-      "community": 7,
+      "community": 3,
       "norm_label": "shoppingitem"
     },
     {
@@ -7312,7 +7362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_error",
-      "community": 7,
+      "community": 3,
       "norm_label": "error"
     },
     {
@@ -7322,7 +7372,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_async",
-      "community": 7,
+      "community": 3,
       "norm_label": "async"
     },
     {
@@ -7332,7 +7382,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_void",
-      "community": 7,
+      "community": 3,
       "norm_label": "void"
     },
     {
@@ -7342,7 +7392,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_int",
-      "community": 7,
+      "community": 3,
       "norm_label": "int"
     },
     {
@@ -7352,7 +7402,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "clients_shoppingclient_newshoppingitem",
-      "community": 7,
+      "community": 3,
       "norm_label": "newshoppingitem"
     },
     {
@@ -7362,7 +7412,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_string",
-      "community": 7,
+      "community": 3,
       "norm_label": "string"
     },
     {
@@ -7372,7 +7422,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_double",
-      "community": 7,
+      "community": 3,
       "norm_label": "double"
     },
     {
@@ -7382,7 +7432,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "clients_shoppingclient_newshoppingitem_init",
-      "community": 7,
+      "community": 3,
       "norm_label": ".init()"
     },
     {
@@ -7392,7 +7442,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "clients_shoppingclient_recipeingredients",
-      "community": 7,
+      "community": 3,
       "norm_label": "recipeingredients"
     },
     {
@@ -7402,7 +7452,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_shoppingclient_swift_recipeid",
-      "community": 7,
+      "community": 3,
       "norm_label": "recipeid"
     },
     {
@@ -7412,7 +7462,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "clients_shoppingclient_recipeingredients_init",
-      "community": 7,
+      "community": 3,
       "norm_label": ".init()"
     },
     {
@@ -7422,7 +7472,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "clients_shoppingclient_addedcount",
-      "community": 7,
+      "community": 3,
       "norm_label": "addedcount"
     },
     {
@@ -7432,7 +7482,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "clients_shoppingclient_dependencyvalues",
-      "community": 7,
+      "community": 3,
       "norm_label": "dependencyvalues"
     },
     {
@@ -7442,7 +7492,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "clients_statsclient",
-      "community": 3,
+      "community": 62,
       "norm_label": "statsclient.swift"
     },
     {
@@ -7452,7 +7502,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "clients_statsclient_statsclient",
-      "community": 3,
+      "community": 62,
       "norm_label": "statsclient"
     },
     {
@@ -7462,7 +7512,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_statsclient_swift_homeid",
-      "community": 3,
+      "community": 62,
       "norm_label": "homeid"
     },
     {
@@ -7472,7 +7522,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_statsclient_swift_asyncthrowingstream",
-      "community": 3,
+      "community": 62,
       "norm_label": "asyncthrowingstream"
     },
     {
@@ -7482,7 +7532,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_statsclient_swift_homestats",
-      "community": 3,
+      "community": 62,
       "norm_label": "homestats"
     },
     {
@@ -7492,7 +7542,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_statsclient_swift_error",
-      "community": 3,
+      "community": 62,
       "norm_label": "error"
     },
     {
@@ -7502,7 +7552,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "clients_statsclient_dependencyvalues",
-      "community": 3,
+      "community": 62,
       "norm_label": "dependencyvalues"
     },
     {
@@ -8264,7 +8314,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "network_convexconnection_discarded",
-      "community": 7,
+      "community": 127,
       "norm_label": "discarded"
     },
     {
@@ -8274,7 +8324,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "network_convexconnection_discarded_init",
-      "community": 7,
+      "community": 127,
       "norm_label": ".init()"
     },
     {
@@ -8284,7 +8334,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "nestzone_core_network_convexconnection_swift_decoder",
-      "community": 7,
+      "community": 127,
       "norm_label": "decoder"
     },
     {
@@ -8364,7 +8414,7 @@
       "source_location": "L210",
       "_origin": "ast",
       "id": "network_convexconnection_convexid_convexencode",
-      "community": 24,
+      "community": 133,
       "norm_label": ".convexencode()"
     },
     {
@@ -8507,7 +8557,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "usernotifications",
-      "community": 60,
+      "community": 15,
       "norm_label": "usernotifications"
     },
     {
@@ -8667,7 +8717,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "network_samplerecipeloader",
-      "community": 144,
+      "community": 7,
       "norm_label": "samplerecipeloader.swift"
     },
     {
@@ -8677,7 +8727,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "network_samplerecipeloader_samplerecipeloader",
-      "community": 144,
+      "community": 7,
       "norm_label": "samplerecipeloader"
     },
     {
@@ -8687,7 +8737,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "network_samplerecipeloader_samplerecipeloader_load",
-      "community": 144,
+      "community": 7,
       "norm_label": ".load()"
     },
     {
@@ -8697,7 +8747,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "nestzone_core_network_samplerecipeloader_swift_recipe",
-      "community": 144,
+      "community": 7,
       "norm_label": "recipe"
     },
     {
@@ -8707,7 +8757,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "network_samplerecipeloader_cache",
-      "community": 144,
+      "community": 7,
       "norm_label": "cache"
     },
     {
@@ -8717,7 +8767,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "nestzone_core_network_samplerecipeloader_swift_string",
-      "community": 144,
+      "community": 7,
       "norm_label": "string"
     },
     {
@@ -8727,7 +8777,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "network_samplerecipeloader_cache_recipes",
-      "community": 144,
+      "community": 7,
       "norm_label": ".recipes()"
     },
     {
@@ -8737,7 +8787,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "network_samplerecipeloader_cache_store",
-      "community": 144,
+      "community": 7,
       "norm_label": ".store()"
     },
     {
@@ -8747,7 +8797,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "network_samplerecipeloader_samplerecipe",
-      "community": 144,
+      "community": 7,
       "norm_label": "samplerecipe"
     },
     {
@@ -8757,7 +8807,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "nestzone_core_network_samplerecipeloader_swift_int",
-      "community": 144,
+      "community": 7,
       "norm_label": "int"
     },
     {
@@ -8767,7 +8817,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "network_samplerecipeloader_recipe",
-      "community": 144,
+      "community": 7,
       "norm_label": "recipe"
     },
     {
@@ -8777,7 +8827,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "nestzone_core_network_samplerecipeloader_swift_bool",
-      "community": 144,
+      "community": 7,
       "norm_label": "bool"
     },
     {
@@ -8827,7 +8877,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "design_appsettings",
-      "community": 158,
+      "community": 62,
       "norm_label": "appsettings.swift"
     },
     {
@@ -8837,7 +8887,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "design_appsettings_sharedkey",
-      "community": 158,
+      "community": 62,
       "norm_label": "sharedkey"
     },
     {
@@ -8847,27 +8897,27 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "nestzone_design_appsettings_swift_self",
-      "community": 158,
+      "community": 62,
       "norm_label": "self"
     },
     {
       "label": "Shared<String?>",
       "file_type": "code",
       "source_file": "NestZone/Design/AppSettings.swift",
-      "source_location": "L55",
+      "source_location": "L64",
       "_origin": "ast",
       "id": "design_appsettings_shared_string",
-      "community": 158,
+      "community": 62,
       "norm_label": "shared<string?>"
     },
     {
       "label": "HomeID",
       "file_type": "code",
       "source_file": "NestZone/Design/AppSettings.swift",
-      "source_location": "L61",
+      "source_location": "L70",
       "_origin": "ast",
       "id": "nestzone_design_appsettings_swift_homeid",
-      "community": 158,
+      "community": 62,
       "norm_label": "homeid"
     },
     {
@@ -9537,7 +9587,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "components_glasstextfield",
-      "community": 141,
+      "community": 8,
       "norm_label": "glasstextfield.swift"
     },
     {
@@ -9547,7 +9597,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "components_glasstextfield_glasstextfield",
-      "community": 141,
+      "community": 8,
       "norm_label": "glasstextfield"
     },
     {
@@ -9557,7 +9607,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_design_components_glasstextfield_swift_localizedstringresource",
-      "community": 141,
+      "community": 8,
       "norm_label": "localizedstringresource"
     },
     {
@@ -9567,7 +9617,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "nestzone_design_components_glasstextfield_swift_string",
-      "community": 141,
+      "community": 8,
       "norm_label": "string"
     },
     {
@@ -9577,7 +9627,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "nestzone_design_components_glasstextfield_swift_bool",
-      "community": 141,
+      "community": 8,
       "norm_label": "bool"
     },
     {
@@ -9587,7 +9637,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "components_glasstextfield_glasstextfield_init",
-      "community": 141,
+      "community": 8,
       "norm_label": ".init()"
     },
     {
@@ -9597,7 +9647,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "nestzone_design_components_glasstextfield_swift_binding",
-      "community": 141,
+      "community": 8,
       "norm_label": "binding"
     },
     {
@@ -9679,6 +9729,177 @@
       "id": "components_loadingview_skeletonlist_init",
       "community": 104,
       "norm_label": ".init()"
+    },
+    {
+      "label": "RelativeTime.swift",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "components_relativetime",
+      "community": 2,
+      "norm_label": "relativetime.swift"
+    },
+    {
+      "label": "Observation",
+      "file_type": "code",
+      "type": "module",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "observation",
+      "community": 2,
+      "norm_label": "observation"
+    },
+    {
+      "label": "RelativeTimeClock",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "components_relativetime_relativetimeclock",
+      "community": 2,
+      "norm_label": "relativetimeclock"
+    },
+    {
+      "label": "Int",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "nestzone_design_components_relativetime_swift_int",
+      "community": 2,
+      "norm_label": "int"
+    },
+    {
+      "label": "Duration",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "nestzone_design_components_relativetime_swift_duration",
+      "community": 2,
+      "norm_label": "duration"
+    },
+    {
+      "label": "Task",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "nestzone_design_components_relativetime_swift_task",
+      "community": 2,
+      "norm_label": "task"
+    },
+    {
+      "label": "Void",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "nestzone_design_components_relativetime_swift_void",
+      "community": 2,
+      "norm_label": "void"
+    },
+    {
+      "label": "Never",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "nestzone_design_components_relativetime_swift_never",
+      "community": 2,
+      "norm_label": "never"
+    },
+    {
+      "label": "NSObjectProtocol",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "nsobjectprotocol",
+      "community": 2,
+      "norm_label": "nsobjectprotocol"
+    },
+    {
+      "label": ".init()",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "components_relativetime_relativetimeclock_init",
+      "community": 2,
+      "norm_label": ".init()"
+    },
+    {
+      "label": "RelativeTime",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L62",
+      "_origin": "ast",
+      "id": "components_relativetime_relativetime",
+      "community": 2,
+      "norm_label": "relativetime"
+    },
+    {
+      "label": ".text()",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "components_relativetime_relativetime_text",
+      "community": 2,
+      "norm_label": ".text()"
+    },
+    {
+      "label": "Date",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "nestzone_design_components_relativetime_swift_date",
+      "community": 2,
+      "norm_label": "date"
+    },
+    {
+      "label": "Text",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "text",
+      "community": 2,
+      "norm_label": "text"
+    },
+    {
+      "label": "RelativeTimeText",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L95",
+      "_origin": "ast",
+      "id": "components_relativetime_relativetimetext",
+      "community": 2,
+      "norm_label": "relativetimetext"
+    },
+    {
+      "label": ".init()",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L98",
+      "_origin": "ast",
+      "id": "components_relativetime_relativetimetext_init",
+      "community": 2,
+      "norm_label": ".init()"
+    },
+    {
+      "label": "Timestamp",
+      "file_type": "code",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L98",
+      "_origin": "ast",
+      "id": "nestzone_design_components_relativetime_swift_timestamp",
+      "community": 2,
+      "norm_label": "timestamp"
     },
     {
       "label": "RemoteImage.swift",
@@ -9826,7 +10047,7 @@
       "source_file": "NestZone/Design/Components/RemoteImage.swift",
       "source_location": "L104",
       "_origin": "ast",
-      "id": "task",
+      "id": "nestzone_design_components_remoteimage_swift_task",
       "community": 0,
       "norm_label": "task"
     },
@@ -10007,7 +10228,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "components_stattile",
-      "community": 86,
+      "community": 8,
       "norm_label": "stattile.swift"
     },
     {
@@ -10217,7 +10438,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "components_stickynote_stickynote",
-      "community": 109,
+      "community": 80,
       "norm_label": "stickynote"
     },
     {
@@ -10227,7 +10448,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "footer",
-      "community": 109,
+      "community": 80,
       "norm_label": "footer"
     },
     {
@@ -10237,7 +10458,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "nestzone_design_components_stickynote_swift_double",
-      "community": 109,
+      "community": 80,
       "norm_label": "double"
     },
     {
@@ -10247,7 +10468,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "components_stickynote_stickynote_init",
-      "community": 109,
+      "community": 80,
       "norm_label": ".init()"
     },
     {
@@ -10257,7 +10478,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "components_stickynote_stickynote_repin",
-      "community": 109,
+      "community": 80,
       "norm_label": ".repin()"
     },
     {
@@ -10267,7 +10488,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "components_stickynote_stickynote_restingangle",
-      "community": 109,
+      "community": 80,
       "norm_label": ".restingangle()"
     },
     {
@@ -10277,7 +10498,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "components_swipetodelete",
-      "community": 8,
+      "community": 79,
       "norm_label": "swipetodelete.swift"
     },
     {
@@ -11237,7 +11458,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "auth_authview",
-      "community": 62,
+      "community": 8,
       "norm_label": "authview.swift"
     },
     {
@@ -11248,7 +11469,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "authenticationservices",
-      "community": 62,
+      "community": 8,
       "norm_label": "authenticationservices"
     },
     {
@@ -11338,7 +11559,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "dinner_dinnerfeature",
-      "community": 145,
+      "community": 29,
       "norm_label": "dinnerfeature.swift"
     },
     {
@@ -11378,7 +11599,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "nestzone_features_dinner_dinnerfeature_swift_string",
-      "community": 142,
+      "community": 29,
       "norm_label": "string"
     },
     {
@@ -11428,7 +11649,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "nestzone_features_dinner_dinnerfeature_swift_recipe",
-      "community": 142,
+      "community": 29,
       "norm_label": "recipe"
     },
     {
@@ -11518,7 +11739,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_route",
-      "community": 142,
+      "community": 29,
       "norm_label": "route"
     },
     {
@@ -11528,7 +11749,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_route_set",
-      "community": 142,
+      "community": 29,
       "norm_label": "set"
     },
     {
@@ -11538,7 +11759,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_route_vote",
-      "community": 142,
+      "community": 29,
       "norm_label": "vote"
     },
     {
@@ -11558,7 +11779,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_source",
-      "community": 145,
+      "community": 29,
       "norm_label": "source"
     },
     {
@@ -11568,7 +11789,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_source_saved",
-      "community": 145,
+      "community": 29,
       "norm_label": "saved"
     },
     {
@@ -11578,7 +11799,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_source_explore",
-      "community": 145,
+      "community": 29,
       "norm_label": "explore"
     },
     {
@@ -11588,7 +11809,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_source_custom",
-      "community": 145,
+      "community": 29,
       "norm_label": "custom"
     },
     {
@@ -11598,7 +11819,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "nestzone_features_dinner_dinnerfeature_swift_localizedstringresource",
-      "community": 145,
+      "community": 29,
       "norm_label": "localizedstringresource"
     },
     {
@@ -11888,7 +12109,7 @@
       "source_location": "L209",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_alert",
-      "community": 145,
+      "community": 29,
       "norm_label": "alert"
     },
     {
@@ -11898,7 +12119,7 @@
       "source_location": "L211",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_delegate",
-      "community": 145,
+      "community": 29,
       "norm_label": "delegate"
     },
     {
@@ -11908,7 +12129,7 @@
       "source_location": "L213",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_delegate_finished",
-      "community": 145,
+      "community": 29,
       "norm_label": "finished"
     },
     {
@@ -11918,7 +12139,7 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_cancelid",
-      "community": 168,
+      "community": 29,
       "norm_label": "cancelid"
     },
     {
@@ -11928,7 +12149,7 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_cancelid_recipes",
-      "community": 168,
+      "community": 29,
       "norm_label": "recipes"
     },
     {
@@ -11938,7 +12159,7 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_cancelid_polls",
-      "community": 168,
+      "community": 29,
       "norm_label": "polls"
     },
     {
@@ -11948,7 +12169,7 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_cancelid_detail",
-      "community": 168,
+      "community": 29,
       "norm_label": "detail"
     },
     {
@@ -11988,7 +12209,7 @@
       "source_location": "L493",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_cuisine",
-      "community": 145,
+      "community": 29,
       "norm_label": "cuisine"
     },
     {
@@ -11998,7 +12219,7 @@
       "source_location": "L512",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_mealplan_kind",
-      "community": 145,
+      "community": 29,
       "norm_label": "mealplan.kind"
     },
     {
@@ -12008,7 +12229,7 @@
       "source_location": "L543",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_dinnercandidate",
-      "community": 142,
+      "community": 29,
       "norm_label": "dinnercandidate"
     },
     {
@@ -12018,7 +12239,7 @@
       "source_location": "L544",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_kind",
-      "community": 142,
+      "community": 29,
       "norm_label": "kind"
     },
     {
@@ -12028,7 +12249,7 @@
       "source_location": "L545",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_kind_recipe",
-      "community": 142,
+      "community": 29,
       "norm_label": "recipe"
     },
     {
@@ -12038,7 +12259,7 @@
       "source_location": "L545",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_kind_cuisine",
-      "community": 142,
+      "community": 29,
       "norm_label": "cuisine"
     },
     {
@@ -12048,7 +12269,7 @@
       "source_location": "L545",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_kind_custom",
-      "community": 142,
+      "community": 29,
       "norm_label": "custom"
     },
     {
@@ -12058,7 +12279,7 @@
       "source_location": "L555",
       "_origin": "ast",
       "id": "dinner_dinnerfeature_dinnercandidate_init",
-      "community": 142,
+      "community": 29,
       "norm_label": ".init()"
     },
     {
@@ -12068,7 +12289,7 @@
       "source_location": "L582",
       "_origin": "ast",
       "id": "pollcandidate",
-      "community": 142,
+      "community": 29,
       "norm_label": "pollcandidate"
     },
     {
@@ -12338,7 +12559,7 @@
       "source_location": "L785",
       "_origin": "ast",
       "id": "dinner_dinnerview_roundview",
-      "community": 134,
+      "community": 40,
       "norm_label": "roundview"
     },
     {
@@ -12348,7 +12569,7 @@
       "source_location": "L813",
       "_origin": "ast",
       "id": "dinner_dinnerview_roundview_ballotcard",
-      "community": 134,
+      "community": 40,
       "norm_label": ".ballotcard()"
     },
     {
@@ -12358,7 +12579,7 @@
       "source_location": "L813",
       "_origin": "ast",
       "id": "nestzone_features_dinner_dinnerview_swift_dinnercandidate",
-      "community": 134,
+      "community": 40,
       "norm_label": "dinnercandidate"
     },
     {
@@ -12368,7 +12589,7 @@
       "source_location": "L829",
       "_origin": "ast",
       "id": "dinner_dinnerview_roundview_votebuttons",
-      "community": 134,
+      "community": 40,
       "norm_label": ".votebuttons()"
     },
     {
@@ -12378,7 +12599,7 @@
       "source_location": "L840",
       "_origin": "ast",
       "id": "dinner_dinnerview_roundview_matchcard",
-      "community": 134,
+      "community": 40,
       "norm_label": ".matchcard()"
     },
     {
@@ -12398,7 +12619,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "home_homefeature",
-      "community": 6,
+      "community": 145,
       "norm_label": "homefeature.swift"
     },
     {
@@ -12512,10 +12733,20 @@
       "norm_label": "action"
     },
     {
+      "label": "Bool",
+      "file_type": "code",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "nestzone_features_home_homefeature_swift_bool",
+      "community": 120,
+      "norm_label": "bool"
+    },
+    {
       "label": ".init()",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L21",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "home_homefeature_state_init",
       "community": 120,
@@ -12525,7 +12756,7 @@
       "label": "ArraySlice",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L32",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "arrayslice",
       "community": 120,
@@ -12535,7 +12766,7 @@
       "label": "Action",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L39",
+      "source_location": "L44",
       "_origin": "ast",
       "id": "home_homefeature_action",
       "community": 6,
@@ -12545,7 +12776,7 @@
       "label": "task",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L40",
+      "source_location": "L45",
       "_origin": "ast",
       "id": "home_homefeature_action_task",
       "community": 6,
@@ -12555,7 +12786,7 @@
       "label": "statsUpdated",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L41",
+      "source_location": "L46",
       "_origin": "ast",
       "id": "home_homefeature_action_statsupdated",
       "community": 6,
@@ -12565,7 +12796,7 @@
       "label": "tasksUpdated",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L42",
+      "source_location": "L47",
       "_origin": "ast",
       "id": "home_homefeature_action_tasksupdated",
       "community": 6,
@@ -12575,7 +12806,7 @@
       "label": "mealsUpdated",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L43",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "home_homefeature_action_mealsupdated",
       "community": 6,
@@ -12585,7 +12816,7 @@
       "label": "loadFailed",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L44",
+      "source_location": "L49",
       "_origin": "ast",
       "id": "home_homefeature_action_loadfailed",
       "community": 6,
@@ -12595,7 +12826,7 @@
       "label": "taskToggled",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L45",
+      "source_location": "L50",
       "_origin": "ast",
       "id": "home_homefeature_action_tasktoggled",
       "community": 6,
@@ -12605,7 +12836,7 @@
       "label": "decideDinnerTapped",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L46",
+      "source_location": "L51",
       "_origin": "ast",
       "id": "home_homefeature_action_decidedinnertapped",
       "community": 6,
@@ -12615,7 +12846,7 @@
       "label": "clearDinnerTapped",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L47",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "home_homefeature_action_cleardinnertapped",
       "community": 6,
@@ -12625,7 +12856,7 @@
       "label": "dinner",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L48",
+      "source_location": "L53",
       "_origin": "ast",
       "id": "home_homefeature_action_dinner",
       "community": 6,
@@ -12635,17 +12866,37 @@
       "label": "toggleFailed",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L49",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "home_homefeature_action_togglefailed",
       "community": 6,
       "norm_label": "togglefailed"
     },
     {
+      "label": "notificationPromptReady",
+      "file_type": "code",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L58",
+      "_origin": "ast",
+      "id": "home_homefeature_action_notificationpromptready",
+      "community": 6,
+      "norm_label": "notificationpromptready"
+    },
+    {
+      "label": "notificationAuthorizationAnswered",
+      "file_type": "code",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "home_homefeature_action_notificationauthorizationanswered",
+      "community": 6,
+      "norm_label": "notificationauthorizationanswered"
+    },
+    {
       "label": "delegate",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L51",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "home_homefeature_action_delegate",
       "community": 6,
@@ -12655,7 +12906,7 @@
       "label": "alert",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L52",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "home_homefeature_action_alert",
       "community": 6,
@@ -12665,7 +12916,7 @@
       "label": "Delegate",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L54",
+      "source_location": "L64",
       "_origin": "ast",
       "id": "home_homefeature_delegate",
       "community": 150,
@@ -12675,7 +12926,7 @@
       "label": "openShoppingList",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L55",
+      "source_location": "L65",
       "_origin": "ast",
       "id": "home_homefeature_delegate_openshoppinglist",
       "community": 150,
@@ -12685,7 +12936,7 @@
       "label": "openNotes",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L56",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "home_homefeature_delegate_opennotes",
       "community": 150,
@@ -12695,7 +12946,7 @@
       "label": "openMessages",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L57",
+      "source_location": "L67",
       "_origin": "ast",
       "id": "home_homefeature_delegate_openmessages",
       "community": 150,
@@ -12705,7 +12956,7 @@
       "label": "openMovieNight",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L58",
+      "source_location": "L68",
       "_origin": "ast",
       "id": "home_homefeature_delegate_openmovienight",
       "community": 150,
@@ -12715,7 +12966,7 @@
       "label": "openTasks",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L59",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "home_homefeature_delegate_opentasks",
       "community": 150,
@@ -12725,67 +12976,87 @@
       "label": "openRecipe",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L60",
+      "source_location": "L70",
       "_origin": "ast",
       "id": "home_homefeature_delegate_openrecipe",
       "community": 150,
       "norm_label": "openrecipe"
     },
     {
+      "label": "notificationsEnabled",
+      "file_type": "code",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L73",
+      "_origin": "ast",
+      "id": "home_homefeature_delegate_notificationsenabled",
+      "community": 150,
+      "norm_label": "notificationsenabled"
+    },
+    {
       "label": "Alert",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L63",
+      "source_location": "L76",
       "_origin": "ast",
       "id": "home_homefeature_alert",
-      "community": 6,
+      "community": 145,
       "norm_label": "alert"
+    },
+    {
+      "label": "enableNotifications",
+      "file_type": "code",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L77",
+      "_origin": "ast",
+      "id": "home_homefeature_alert_enablenotifications",
+      "community": 145,
+      "norm_label": "enablenotifications"
     },
     {
       "label": "CancelID",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L66",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "home_homefeature_cancelid",
-      "community": 6,
+      "community": 145,
       "norm_label": "cancelid"
     },
     {
       "label": "stats",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L66",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "home_homefeature_cancelid_stats",
-      "community": 6,
+      "community": 145,
       "norm_label": "stats"
     },
     {
       "label": "tasks",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L66",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "home_homefeature_cancelid_tasks",
-      "community": 6,
+      "community": 145,
       "norm_label": "tasks"
     },
     {
       "label": "meals",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L66",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "home_homefeature_cancelid_meals",
-      "community": 6,
+      "community": 145,
       "norm_label": "meals"
     },
     {
       "label": ".init()",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L72",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "home_homefeature_homefeature_init",
       "community": 132,
@@ -12795,7 +13066,7 @@
       "label": "ReducerOf",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L74",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "nestzone_features_home_homefeature_swift_reducerof",
       "community": 132,
@@ -12805,11 +13076,21 @@
       "label": "Self",
       "file_type": "code",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
-      "source_location": "L74",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "nestzone_features_home_homefeature_swift_self",
-      "community": 132,
+      "community": 145,
       "norm_label": "self"
+    },
+    {
+      "label": "AlertState",
+      "file_type": "code",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L232",
+      "_origin": "ast",
+      "id": "home_homefeature_alertstate",
+      "community": 145,
+      "norm_label": "alertstate"
     },
     {
       "label": "HomeView.swift",
@@ -13698,7 +13979,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature",
-      "community": 111,
+      "community": 139,
       "norm_label": "managehomesfeature.swift"
     },
     {
@@ -13718,7 +13999,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_state",
-      "community": 111,
+      "community": 141,
       "norm_label": "state"
     },
     {
@@ -13728,7 +14009,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomesfeature_swift_identifiedarrayof",
-      "community": 111,
+      "community": 141,
       "norm_label": "identifiedarrayof"
     },
     {
@@ -13738,7 +14019,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomesfeature_swift_home",
-      "community": 111,
+      "community": 141,
       "norm_label": "home"
     },
     {
@@ -13748,7 +14029,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomesfeature_swift_homeid",
-      "community": 111,
+      "community": 141,
       "norm_label": "homeid"
     },
     {
@@ -13758,7 +14039,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomesfeature_swift_destination",
-      "community": 111,
+      "community": 141,
       "norm_label": "destination"
     },
     {
@@ -13768,7 +14049,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomesfeature_swift_alertstate",
-      "community": 111,
+      "community": 141,
       "norm_label": "alertstate"
     },
     {
@@ -13778,7 +14059,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomesfeature_swift_action",
-      "community": 111,
+      "community": 141,
       "norm_label": "action"
     },
     {
@@ -13788,7 +14069,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_state_init",
-      "community": 111,
+      "community": 141,
       "norm_label": ".init()"
     },
     {
@@ -13798,7 +14079,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_state_issolemember",
-      "community": 111,
+      "community": 141,
       "norm_label": ".issolemember()"
     },
     {
@@ -13808,7 +14089,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomesfeature_swift_bool",
-      "community": 111,
+      "community": 141,
       "norm_label": "bool"
     },
     {
@@ -13818,7 +14099,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_destination",
-      "community": 111,
+      "community": 139,
       "norm_label": "destination"
     },
     {
@@ -13828,7 +14109,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_destination_create",
-      "community": 111,
+      "community": 139,
       "norm_label": "create"
     },
     {
@@ -13838,7 +14119,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_destination_join",
-      "community": 111,
+      "community": 139,
       "norm_label": "join"
     },
     {
@@ -13958,7 +14239,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_alert",
-      "community": 111,
+      "community": 139,
       "norm_label": "alert"
     },
     {
@@ -13968,7 +14249,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_alert_confirmleave",
-      "community": 111,
+      "community": 139,
       "norm_label": "confirmleave"
     },
     {
@@ -13978,7 +14259,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_delegate",
-      "community": 111,
+      "community": 139,
       "norm_label": "delegate"
     },
     {
@@ -13988,7 +14269,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_delegate_switchrequested",
-      "community": 111,
+      "community": 139,
       "norm_label": "switchrequested"
     },
     {
@@ -13998,7 +14279,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_delegate_dismissrequested",
-      "community": 111,
+      "community": 139,
       "norm_label": "dismissrequested"
     },
     {
@@ -14038,7 +14319,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "homemanagement_managehomesfeature_managehomesfeature_destination_state",
-      "community": 111,
+      "community": 139,
       "norm_label": "managehomesfeature.destination.state"
     },
     {
@@ -14048,7 +14329,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "homemanagement_managehomessheet",
-      "community": 43,
+      "community": 96,
       "norm_label": "managehomessheet.swift"
     },
     {
@@ -14058,7 +14339,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "homemanagement_managehomessheet_managehomessheet",
-      "community": 43,
+      "community": 96,
       "norm_label": "managehomessheet"
     },
     {
@@ -14068,7 +14349,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomessheet_swift_storeof",
-      "community": 43,
+      "community": 96,
       "norm_label": "storeof"
     },
     {
@@ -14078,7 +14359,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "managehomesfeature",
-      "community": 43,
+      "community": 96,
       "norm_label": "managehomesfeature"
     },
     {
@@ -14088,7 +14369,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "homemanagement_managehomessheet_managehomessheet_row",
-      "community": 43,
+      "community": 96,
       "norm_label": ".row()"
     },
     {
@@ -14098,7 +14379,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomessheet_swift_home",
-      "community": 43,
+      "community": 96,
       "norm_label": "home"
     },
     {
@@ -14108,7 +14389,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "homemanagement_managehomessheet_managehomessheet_issolemember",
-      "community": 43,
+      "community": 96,
       "norm_label": ".issolemember()"
     },
     {
@@ -14118,7 +14399,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomessheet_swift_bool",
-      "community": 43,
+      "community": 96,
       "norm_label": "bool"
     },
     {
@@ -14128,7 +14409,7 @@
       "source_location": "L146",
       "_origin": "ast",
       "id": "homemanagement_managehomessheet_managehomessheet_destructivetitle",
-      "community": 43,
+      "community": 96,
       "norm_label": ".destructivetitle()"
     },
     {
@@ -14138,7 +14419,7 @@
       "source_location": "L146",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomessheet_swift_localizedstringresource",
-      "community": 43,
+      "community": 96,
       "norm_label": "localizedstringresource"
     },
     {
@@ -14148,7 +14429,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "homemanagement_managehomessheet_managehomessheet_destructivesymbol",
-      "community": 43,
+      "community": 96,
       "norm_label": ".destructivesymbol()"
     },
     {
@@ -14158,7 +14439,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "nestzone_features_homemanagement_managehomessheet_swift_string",
-      "community": 43,
+      "community": 96,
       "norm_label": "string"
     },
     {
@@ -14408,7 +14689,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "hub_hubfeature_hubmodule",
-      "community": 133,
+      "community": 128,
       "norm_label": "hubmodule"
     },
     {
@@ -14418,7 +14699,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "hub_hubfeature_hubmodule_shopping",
-      "community": 133,
+      "community": 128,
       "norm_label": "shopping"
     },
     {
@@ -14428,7 +14709,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "hub_hubfeature_hubmodule_recipes",
-      "community": 133,
+      "community": 128,
       "norm_label": "recipes"
     },
     {
@@ -14438,7 +14719,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "hub_hubfeature_hubmodule_movies",
-      "community": 133,
+      "community": 128,
       "norm_label": "movies"
     },
     {
@@ -14448,7 +14729,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "hub_hubfeature_hubmodule_maintenance",
-      "community": 133,
+      "community": 128,
       "norm_label": "maintenance"
     },
     {
@@ -14458,7 +14739,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "hub_hubfeature_hubmodule_finance",
-      "community": 133,
+      "community": 128,
       "norm_label": "finance"
     },
     {
@@ -14468,7 +14749,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "hub_hubfeature_hubmodule_calendar",
-      "community": 133,
+      "community": 128,
       "norm_label": "calendar"
     },
     {
@@ -14478,7 +14759,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "nestzone_features_hub_hubfeature_swift_localizedstringresource",
-      "community": 133,
+      "community": 128,
       "norm_label": "localizedstringresource"
     },
     {
@@ -14488,7 +14769,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "nestzone_features_hub_hubfeature_swift_color",
-      "community": 133,
+      "community": 128,
       "norm_label": "color"
     },
     {
@@ -14498,7 +14779,7 @@
       "source_location": "L209",
       "_origin": "ast",
       "id": "nestzone_features_hub_hubfeature_swift_bool",
-      "community": 133,
+      "community": 128,
       "norm_label": "bool"
     },
     {
@@ -14748,7 +15029,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "hub_shoppingfeature_cleartarget",
-      "community": 95,
+      "community": 128,
       "norm_label": "cleartarget"
     },
     {
@@ -14758,7 +15039,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "hub_shoppingfeature_cleartarget_category",
-      "community": 95,
+      "community": 128,
       "norm_label": "category"
     },
     {
@@ -14768,7 +15049,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "hub_shoppingfeature_cleartarget_meal",
-      "community": 95,
+      "community": 128,
       "norm_label": "meal"
     },
     {
@@ -14778,7 +15059,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "hub_shoppingfeature_cleartarget_purchased",
-      "community": 95,
+      "community": 128,
       "norm_label": "purchased"
     },
     {
@@ -15458,7 +15739,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "messages_messagesfeature_state",
-      "community": 51,
+      "community": 47,
       "norm_label": "state"
     },
     {
@@ -15468,7 +15749,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_homeid",
-      "community": 51,
+      "community": 47,
       "norm_label": "homeid"
     },
     {
@@ -15478,7 +15759,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_userid",
-      "community": 51,
+      "community": 47,
       "norm_label": "userid"
     },
     {
@@ -15488,7 +15769,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_identifiedarrayof",
-      "community": 51,
+      "community": 47,
       "norm_label": "identifiedarrayof"
     },
     {
@@ -15498,7 +15779,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_conversation",
-      "community": 51,
+      "community": 47,
       "norm_label": "conversation"
     },
     {
@@ -15508,7 +15789,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_user",
-      "community": 51,
+      "community": 47,
       "norm_label": "user"
     },
     {
@@ -15518,7 +15799,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_destination",
-      "community": 51,
+      "community": 47,
       "norm_label": "destination"
     },
     {
@@ -15528,7 +15809,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_alertstate",
-      "community": 51,
+      "community": 47,
       "norm_label": "alertstate"
     },
     {
@@ -15538,7 +15819,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_action",
-      "community": 51,
+      "community": 47,
       "norm_label": "action"
     },
     {
@@ -15548,7 +15829,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "messages_messagesfeature_state_init",
-      "community": 51,
+      "community": 47,
       "norm_label": ".init()"
     },
     {
@@ -15558,7 +15839,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "messages_messagesfeature_state_title",
-      "community": 51,
+      "community": 47,
       "norm_label": ".title()"
     },
     {
@@ -15568,7 +15849,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_string",
-      "community": 51,
+      "community": 47,
       "norm_label": "string"
     },
     {
@@ -15578,7 +15859,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "messages_messagesfeature_state_avatarmembers",
-      "community": 51,
+      "community": 47,
       "norm_label": ".avatarmembers()"
     },
     {
@@ -15588,7 +15869,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_avatarstack",
-      "community": 51,
+      "community": 47,
       "norm_label": "avatarstack"
     },
     {
@@ -15748,7 +16029,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "messages_messagesfeature_cancelid",
-      "community": 97,
+      "community": 47,
       "norm_label": "cancelid"
     },
     {
@@ -15758,7 +16039,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "messages_messagesfeature_cancelid_conversations",
-      "community": 97,
+      "community": 47,
       "norm_label": "conversations"
     },
     {
@@ -15768,7 +16049,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "messages_messagesfeature_cancelid_members",
-      "community": 51,
+      "community": 47,
       "norm_label": "members"
     },
     {
@@ -15818,7 +16099,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_message",
-      "community": 51,
+      "community": 47,
       "norm_label": "message"
     },
     {
@@ -15828,7 +16109,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_bool",
-      "community": 51,
+      "community": 47,
       "norm_label": "bool"
     },
     {
@@ -15838,7 +16119,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "messages_messagesfeature_state_ismine",
-      "community": 51,
+      "community": 47,
       "norm_label": ".ismine()"
     },
     {
@@ -15848,7 +16129,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "messages_messagesfeature_state_sendername",
-      "community": 51,
+      "community": 47,
       "norm_label": ".sendername()"
     },
     {
@@ -15858,7 +16139,7 @@
       "source_location": "L202",
       "_origin": "ast",
       "id": "messages_messagesfeature_state_startsgroup",
-      "community": 51,
+      "community": 47,
       "norm_label": ".startsgroup()"
     },
     {
@@ -15868,7 +16149,7 @@
       "source_location": "L202",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_int",
-      "community": 51,
+      "community": 47,
       "norm_label": "int"
     },
     {
@@ -15918,7 +16199,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "messages_messagesfeature_cancelid_messages",
-      "community": 97,
+      "community": 47,
       "norm_label": "messages"
     },
     {
@@ -15948,7 +16229,7 @@
       "source_location": "L294",
       "_origin": "ast",
       "id": "nestzone_features_messages_messagesfeature_swift_set",
-      "community": 51,
+      "community": 47,
       "norm_label": "set"
     },
     {
@@ -18488,7 +18769,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "movies_moviesview_movieinfosheet",
-      "community": 134,
+      "community": 35,
       "norm_label": "movieinfosheet"
     },
     {
@@ -18498,7 +18779,7 @@
       "source_location": "L377",
       "_origin": "ast",
       "id": "nestzone_features_movies_moviesview_swift_movieinfofeature",
-      "community": 134,
+      "community": 35,
       "norm_label": "movieinfofeature"
     },
     {
@@ -18508,7 +18789,7 @@
       "source_location": "L468",
       "_origin": "ast",
       "id": "movies_moviesview_movieinfosheet_facts",
-      "community": 134,
+      "community": 35,
       "norm_label": ".facts()"
     },
     {
@@ -18518,7 +18799,7 @@
       "source_location": "L468",
       "_origin": "ast",
       "id": "nestzone_features_movies_moviesview_swift_movieextras",
-      "community": 134,
+      "community": 35,
       "norm_label": "movieextras"
     },
     {
@@ -18528,7 +18809,7 @@
       "source_location": "L484",
       "_origin": "ast",
       "id": "movies_moviesview_movieinfosheet_fact",
-      "community": 134,
+      "community": 35,
       "norm_label": ".fact()"
     },
     {
@@ -18548,7 +18829,7 @@
       "source_location": "L484",
       "_origin": "ast",
       "id": "nestzone_features_movies_moviesview_swift_localizedstringresource",
-      "community": 134,
+      "community": 35,
       "norm_label": "localizedstringresource"
     },
     {
@@ -18558,7 +18839,7 @@
       "source_location": "L497",
       "_origin": "ast",
       "id": "movies_moviesview_movieinfosheet_castrow",
-      "community": 134,
+      "community": 35,
       "norm_label": ".castrow()"
     },
     {
@@ -19658,7 +19939,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "recipes_recipesfeature_cancelid",
-      "community": 73,
+      "community": 161,
       "norm_label": "cancelid"
     },
     {
@@ -19668,7 +19949,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "recipes_recipesfeature_cancelid_saved",
-      "community": 73,
+      "community": 161,
       "norm_label": "saved"
     },
     {
@@ -19718,7 +19999,7 @@
       "source_location": "L266",
       "_origin": "ast",
       "id": "recipes_recipesfeature_alertstate_confirmdeleterecipe",
-      "community": 140,
+      "community": 72,
       "norm_label": ".confirmdeleterecipe()"
     },
     {
@@ -19778,7 +20059,7 @@
       "source_location": "L345",
       "_origin": "ast",
       "id": "recipes_recipesfeature_state_listkey",
-      "community": 137,
+      "community": 72,
       "norm_label": ".listkey()"
     },
     {
@@ -20088,7 +20369,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "recipes_recipesfeature_cancelid_timer",
-      "community": 73,
+      "community": 161,
       "norm_label": "timer"
     },
     {
@@ -20098,7 +20379,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "recipes_recipesfeature_cancelid_addconfirmation",
-      "community": 73,
+      "community": 161,
       "norm_label": "addconfirmation"
     },
     {
@@ -20108,7 +20389,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "recipes_recipesfeature_cancelid_shopping",
-      "community": 73,
+      "community": 161,
       "norm_label": "shopping"
     },
     {
@@ -20118,7 +20399,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "recipes_recipesfeature_cancelid_meals",
-      "community": 73,
+      "community": 161,
       "norm_label": "meals"
     },
     {
@@ -21028,7 +21309,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "settings_settingsfeature_delegate",
-      "community": 60,
+      "community": 163,
       "norm_label": "delegate"
     },
     {
@@ -21038,7 +21319,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "settings_settingsfeature_delegate_homeswitched",
-      "community": 60,
+      "community": 163,
       "norm_label": "homeswitched"
     },
     {
@@ -21048,7 +21329,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "settings_settingsfeature_delegate_languagechanged",
-      "community": 60,
+      "community": 163,
       "norm_label": "languagechanged"
     },
     {
@@ -21058,7 +21339,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "settings_settingsfeature_delegate_notificationsenabled",
-      "community": 60,
+      "community": 163,
       "norm_label": "notificationsenabled"
     },
     {
@@ -21608,7 +21889,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "tasks_tasksfeature_cancelid",
-      "community": 110,
+      "community": 1,
       "norm_label": "cancelid"
     },
     {
@@ -21618,7 +21899,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "tasks_tasksfeature_cancelid_tasks",
-      "community": 110,
+      "community": 1,
       "norm_label": "tasks"
     },
     {
@@ -21628,7 +21909,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "tasks_tasksfeature_cancelid_members",
-      "community": 110,
+      "community": 1,
       "norm_label": "members"
     },
     {
@@ -22454,10 +22735,40 @@
       "norm_label": ".failedtoggleshowsalert()"
     },
     {
-      "label": ".cancellationIsSilent()",
+      "label": ".notificationPromptIsAskedOnce()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L62",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_homefeaturetests_notificationpromptisaskedonce",
+      "community": 132,
+      "norm_label": ".notificationpromptisaskedonce()"
+    },
+    {
+      "label": ".grantingNotificationsBubblesUp()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L84",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_homefeaturetests_grantingnotificationsbubblesup",
+      "community": 132,
+      "norm_label": ".grantingnotificationsbubblesup()"
+    },
+    {
+      "label": ".refusedNotificationsStaysPut()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L107",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_homefeaturetests_refusednotificationsstaysput",
+      "community": 132,
+      "norm_label": ".refusednotificationsstaysput()"
+    },
+    {
+      "label": ".cancellationIsSilent()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L129",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_homefeaturetests_cancellationissilent",
       "community": 132,
@@ -22467,7 +22778,7 @@
       "label": ".recentTasksAreCapped()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L73",
+      "source_location": "L140",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_homefeaturetests_recenttasksarecapped",
       "community": 132,
@@ -22477,7 +22788,7 @@
       "label": "HomeManagementTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L95",
+      "source_location": "L162",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_homemanagementtests",
       "community": 66,
@@ -22487,7 +22798,7 @@
       "label": ".singleHomeAutoSelects()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L99",
+      "source_location": "L166",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_homemanagementtests_singlehomeautoselects",
       "community": 66,
@@ -22497,7 +22808,7 @@
       "label": ".multipleHomesRequireAChoice()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L112",
+      "source_location": "L179",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_homemanagementtests_multiplehomesrequireachoice",
       "community": 66,
@@ -22507,7 +22818,7 @@
       "label": ".staleSelectionIsCleared()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L125",
+      "source_location": "L192",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_homemanagementtests_staleselectioniscleared",
       "community": 66,
@@ -22517,7 +22828,7 @@
       "label": ".lastMemberSeesDeleteWording()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L140",
+      "source_location": "L207",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_homemanagementtests_lastmemberseesdeletewording",
       "community": 66,
@@ -22527,7 +22838,7 @@
       "label": "ManageHomesTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L157",
+      "source_location": "L224",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_managehomestests",
       "community": 84,
@@ -22537,7 +22848,7 @@
       "label": ".switchingDelegatesUpwards()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L164",
+      "source_location": "L231",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_managehomestests_switchingdelegatesupwards",
       "community": 84,
@@ -22547,7 +22858,7 @@
       "label": ".tappingTheOpenHomeDismisses()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L178",
+      "source_location": "L245",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_managehomestests_tappingtheopenhomedismisses",
       "community": 84,
@@ -22557,7 +22868,7 @@
       "label": ".leavingAsksFirst()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L190",
+      "source_location": "L257",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_managehomestests_leavingasksfirst",
       "community": 84,
@@ -22567,7 +22878,7 @@
       "label": "SettingsHomeTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L220",
+      "source_location": "L287",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_settingshometests",
       "community": 84,
@@ -22577,7 +22888,7 @@
       "label": ".oneHomeStillManages()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L224",
+      "source_location": "L291",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_settingshometests_onehomestillmanages",
       "community": 84,
@@ -22587,7 +22898,7 @@
       "label": ".switchingBubblesUp()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L240",
+      "source_location": "L307",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_settingshometests_switchingbubblesup",
       "community": 84,
@@ -22597,7 +22908,7 @@
       "label": ".homeListUpdatesReachTheSheet()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L258",
+      "source_location": "L325",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_settingshometests_homelistupdatesreachthesheet",
       "community": 84,
@@ -22607,7 +22918,7 @@
       "label": "RecipeShoppingTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L279",
+      "source_location": "L346",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_recipeshoppingtests",
       "community": 140,
@@ -22617,7 +22928,7 @@
       "label": ".countsOnlyOutstanding()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L289",
+      "source_location": "L356",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_recipeshoppingtests_countsonlyoutstanding",
       "community": 140,
@@ -22627,7 +22938,7 @@
       "label": ".sendsOnlyWhatIsMissing()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L310",
+      "source_location": "L377",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_recipeshoppingtests_sendsonlywhatismissing",
       "community": 140,
@@ -22637,7 +22948,7 @@
       "label": ".failureSurfaces()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L336",
+      "source_location": "L403",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_recipeshoppingtests_failuresurfaces",
       "community": 140,
@@ -22647,7 +22958,7 @@
       "label": "DinnerTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L355",
+      "source_location": "L422",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests",
       "community": 65,
@@ -22657,7 +22968,7 @@
       "label": ".candidateRoundTrips()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L359",
+      "source_location": "L426",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_candidateroundtrips",
       "community": 65,
@@ -22667,7 +22978,7 @@
       "label": ".winnerBecomesAPlan()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L376",
+      "source_location": "L443",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_winnerbecomesaplan",
       "community": 65,
@@ -22677,7 +22988,7 @@
       "label": ".switchingKindClearsTheAnswer()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L394",
+      "source_location": "L461",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_switchingkindclearstheanswer",
       "community": 65,
@@ -22687,7 +22998,7 @@
       "label": ".roundNeedsTwo()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L411",
+      "source_location": "L478",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_roundneedstwo",
       "community": 65,
@@ -22697,7 +23008,7 @@
       "label": ".dateKeyIsLocal()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L433",
+      "source_location": "L500",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_datekeyislocal",
       "community": 18,
@@ -22707,7 +23018,7 @@
       "label": ".saveRules()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L444",
+      "source_location": "L511",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_saverules",
       "community": 65,
@@ -22717,7 +23028,7 @@
       "label": ".emptyShelfFallsBackToExplore()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L463",
+      "source_location": "L530",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_emptyshelffallsbacktoexplore",
       "community": 65,
@@ -22727,7 +23038,7 @@
       "label": ".tagFiltersFollowTheCandidates()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L481",
+      "source_location": "L548",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_tagfiltersfollowthecandidates",
       "community": 65,
@@ -22737,7 +23048,7 @@
       "label": ".customMealIsAnAnswer()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L506",
+      "source_location": "L573",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_custommealisananswer",
       "community": 65,
@@ -22747,7 +23058,7 @@
       "label": ".reopeningPrefills()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L531",
+      "source_location": "L598",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_reopeningprefills",
       "community": 65,
@@ -22757,7 +23068,7 @@
       "label": ".tonightIsToday()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L553",
+      "source_location": "L620",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_dinnertests_tonightistoday",
       "community": 65,
@@ -22767,7 +23078,7 @@
       "label": "ShoppingTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L567",
+      "source_location": "L634",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests",
       "community": 124,
@@ -22777,7 +23088,7 @@
       "label": ".listStore()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L574",
+      "source_location": "L641",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_liststore",
       "community": 124,
@@ -22787,7 +23098,7 @@
       "label": "LockIsolated",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L574",
+      "source_location": "L641",
       "_origin": "ast",
       "id": "lockisolated",
       "community": 11,
@@ -22797,7 +23108,7 @@
       "label": "ShoppingItemID",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L574",
+      "source_location": "L641",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_shoppingitemid",
       "community": 124,
@@ -22807,7 +23118,7 @@
       "label": "TestClock",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L574",
+      "source_location": "L641",
       "_origin": "ast",
       "id": "testclock",
       "community": 124,
@@ -22817,7 +23128,7 @@
       "label": "Duration",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L574",
+      "source_location": "L641",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_duration",
       "community": 124,
@@ -22827,7 +23138,7 @@
       "label": "TestStoreOf",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L574",
+      "source_location": "L641",
       "_origin": "ast",
       "id": "teststoreof",
       "community": 124,
@@ -22837,7 +23148,7 @@
       "label": "ShoppingFeature",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L574",
+      "source_location": "L641",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_shoppingfeature",
       "community": 124,
@@ -22847,7 +23158,7 @@
       "label": ".deleteIsHeldForUndo()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L587",
+      "source_location": "L654",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_deleteisheldforundo",
       "community": 124,
@@ -22857,7 +23168,7 @@
       "label": ".undoCancelsTheDelete()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L617",
+      "source_location": "L684",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_undocancelsthedelete",
       "community": 124,
@@ -22867,7 +23178,7 @@
       "label": ".poppingCommitsThePendingDelete()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L642",
+      "source_location": "L709",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_poppingcommitsthependingdelete",
       "community": 156,
@@ -22877,7 +23188,7 @@
       "label": ".recipeItemsGroupUnderTheirMeal()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L665",
+      "source_location": "L732",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_recipeitemsgroupundertheirmeal",
       "community": 124,
@@ -22887,7 +23198,7 @@
       "label": ".clearingACategorySparesMeals()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L695",
+      "source_location": "L762",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_clearingacategorysparesmeals",
       "community": 124,
@@ -22897,7 +23208,7 @@
       "label": ".clearingAMealTakesEverything()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L724",
+      "source_location": "L791",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_clearingamealtakeseverything",
       "community": 124,
@@ -22907,7 +23218,7 @@
       "label": ".clearedGroupDoesNotFlickerBack()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L752",
+      "source_location": "L819",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_clearedgroupdoesnotflickerback",
       "community": 124,
@@ -22917,7 +23228,7 @@
       "label": ".failedSwipeRestoresTheRow()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L782",
+      "source_location": "L849",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_failedswiperestorestherow",
       "community": 124,
@@ -22927,7 +23238,7 @@
       "label": ".failedClearRestoresTheRows()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L803",
+      "source_location": "L870",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_failedclearrestorestherows",
       "community": 124,
@@ -22937,7 +23248,7 @@
       "label": ".mealsCollapse()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L826",
+      "source_location": "L893",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_mealscollapse",
       "community": 124,
@@ -22947,7 +23258,7 @@
       "label": ".addClearsDraft()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L839",
+      "source_location": "L906",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_addclearsdraft",
       "community": 124,
@@ -22957,7 +23268,7 @@
       "label": ".blankDraftIsIgnored()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L859",
+      "source_location": "L926",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_blankdraftisignored",
       "community": 124,
@@ -22967,7 +23278,7 @@
       "label": ".groupingOrder()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L867",
+      "source_location": "L934",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_shoppingtests_groupingorder",
       "community": 124,
@@ -22977,7 +23288,7 @@
       "label": "NotesTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L887",
+      "source_location": "L954",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_notestests",
       "community": 157,
@@ -22987,7 +23298,7 @@
       "label": ".authorsResolvedInOneCall()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L891",
+      "source_location": "L958",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_notestests_authorsresolvedinonecall",
       "community": 157,
@@ -22997,7 +23308,7 @@
       "label": ".editPermission()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L926",
+      "source_location": "L993",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_notestests_editpermission",
       "community": 157,
@@ -23007,7 +23318,7 @@
       "label": ".search()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L939",
+      "source_location": "L1006",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_notestests_search",
       "community": 157,
@@ -23017,7 +23328,7 @@
       "label": "MovieNightTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L951",
+      "source_location": "L1018",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_movienighttests",
       "community": 52,
@@ -23027,7 +23338,7 @@
       "label": ".kindMapsToQuery()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L955",
+      "source_location": "L1022",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_movienighttests_kindmapstoquery",
       "community": 52,
@@ -23037,7 +23348,7 @@
       "label": ".personRoundsNeedInput()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L976",
+      "source_location": "L1043",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_movienighttests_personroundsneedinput",
       "community": 52,
@@ -23047,7 +23358,7 @@
       "label": ".swipeIsOptimistic()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L988",
+      "source_location": "L1055",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_movienighttests_swipeisoptimistic",
       "community": 52,
@@ -23057,7 +23368,7 @@
       "label": ".closedPollResets()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1012",
+      "source_location": "L1079",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_movienighttests_closedpollresets",
       "community": 52,
@@ -23067,7 +23378,7 @@
       "label": ".historyOrdering()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1033",
+      "source_location": "L1100",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_movienighttests_historyordering",
       "community": 52,
@@ -23077,7 +23388,7 @@
       "label": "SessionRestoreTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1062",
+      "source_location": "L1129",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_sessionrestoretests",
       "community": 11,
@@ -23087,7 +23398,7 @@
       "label": ".transientFailureIsNotASignOut()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1069",
+      "source_location": "L1136",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_sessionrestoretests_transientfailureisnotasignout",
       "community": 11,
@@ -23097,7 +23408,7 @@
       "label": ".noSessionShowsSignIn()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1087",
+      "source_location": "L1154",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_sessionrestoretests_nosessionshowssignin",
       "community": 11,
@@ -23107,7 +23418,7 @@
       "label": ".retryReattempts()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1100",
+      "source_location": "L1167",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_sessionrestoretests_retryreattempts",
       "community": 11,
@@ -23117,7 +23428,7 @@
       "label": ".restoredClearsOffline()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1127",
+      "source_location": "L1194",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_sessionrestoretests_restoredclearsoffline",
       "community": 11,
@@ -23127,7 +23438,7 @@
       "label": "SignOutTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1140",
+      "source_location": "L1207",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_signouttests",
       "community": 84,
@@ -23137,7 +23448,7 @@
       "label": ".signOutUnregistersDevice()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1144",
+      "source_location": "L1211",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_signouttests_signoutunregistersdevice",
       "community": 84,
@@ -23147,7 +23458,7 @@
       "label": ".signOutWithoutToken()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1160",
+      "source_location": "L1227",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_signouttests_signoutwithouttoken",
       "community": 84,
@@ -23157,7 +23468,7 @@
       "label": "SavedRecipeTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1174",
+      "source_location": "L1241",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_savedrecipetests",
       "community": 159,
@@ -23167,7 +23478,7 @@
       "label": ".copy()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1178",
+      "source_location": "L1245",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_savedrecipetests_copy",
       "community": 159,
@@ -23177,7 +23488,7 @@
       "label": "RecipeID",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1178",
+      "source_location": "L1245",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_recipeid",
       "community": 159,
@@ -23187,17 +23498,17 @@
       "label": "String",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1178",
+      "source_location": "L1245",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_string",
-      "community": 159,
+      "community": 2,
       "norm_label": "string"
     },
     {
       "label": "Double",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1178",
+      "source_location": "L1245",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_double",
       "community": 132,
@@ -23207,7 +23518,7 @@
       "label": "Recipe",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1178",
+      "source_location": "L1245",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_recipe",
       "community": 65,
@@ -23217,7 +23528,7 @@
       "label": ".duplicatesCollapse()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1182",
+      "source_location": "L1249",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_savedrecipetests_duplicatescollapse",
       "community": 159,
@@ -23227,7 +23538,7 @@
       "label": ".deleteTakesEveryCopy()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1203",
+      "source_location": "L1270",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_savedrecipetests_deletetakeseverycopy",
       "community": 159,
@@ -23237,7 +23548,7 @@
       "label": ".failedDeleteRestoresTheRow()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1232",
+      "source_location": "L1299",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_savedrecipetests_faileddeleterestorestherow",
       "community": 159,
@@ -23247,7 +23558,7 @@
       "label": ".detailKnowsItsCopies()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1252",
+      "source_location": "L1319",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_savedrecipetests_detailknowsitscopies",
       "community": 159,
@@ -23257,7 +23568,7 @@
       "label": ".exploreShowsNoFalseEmptyState()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1266",
+      "source_location": "L1333",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_savedrecipetests_exploreshowsnofalseemptystate",
       "community": 159,
@@ -23267,7 +23578,7 @@
       "label": "HubNavigationTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1280",
+      "source_location": "L1347",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_hubnavigationtests",
       "community": 156,
@@ -23277,7 +23588,7 @@
       "label": ".hubWithRecipesOpen()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1284",
+      "source_location": "L1351",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_hubnavigationtests_hubwithrecipesopen",
       "community": 156,
@@ -23287,7 +23598,7 @@
       "label": "HubFeature",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1284",
+      "source_location": "L1351",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_swift_hubfeature",
       "community": 156,
@@ -23297,7 +23608,7 @@
       "label": ".recipeHandoffUnwindsFirst()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1290",
+      "source_location": "L1357",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_hubnavigationtests_recipehandoffunwindsfirst",
       "community": 156,
@@ -23307,7 +23618,7 @@
       "label": ".handoffDoesNotYankYouBack()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1315",
+      "source_location": "L1382",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_hubnavigationtests_handoffdoesnotyankyouback",
       "community": 156,
@@ -23317,7 +23628,7 @@
       "label": "MovieHandoffTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1339",
+      "source_location": "L1406",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_moviehandofftests",
       "community": 107,
@@ -23327,7 +23638,7 @@
       "label": ".candidateBecomesAMovie()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1349",
+      "source_location": "L1416",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_moviehandofftests_candidatebecomesamovie",
       "community": 107,
@@ -23337,7 +23648,7 @@
       "label": ".membershipComesFromTheLiveList()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1358",
+      "source_location": "L1425",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_moviehandofftests_membershipcomesfromthelivelist",
       "community": 107,
@@ -23347,7 +23658,7 @@
       "label": ".chipSavesAndUnsaves()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1376",
+      "source_location": "L1443",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_moviehandofftests_chipsavesandunsaves",
       "community": 107,
@@ -23357,7 +23668,7 @@
       "label": ".listOrder()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1405",
+      "source_location": "L1472",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_moviehandofftests_listorder",
       "community": 107,
@@ -23367,7 +23678,7 @@
       "label": ".dinnerRoundsStayOutOfMovieNight()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1417",
+      "source_location": "L1484",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_moviehandofftests_dinnerroundsstayoutofmovienight",
       "community": 107,
@@ -23377,7 +23688,7 @@
       "label": "PresetListTests",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1437",
+      "source_location": "L1504",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_presetlisttests",
       "community": 112,
@@ -23387,7 +23698,7 @@
       "label": ".presetsLocaliseFromKind()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1441",
+      "source_location": "L1508",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_presetlisttests_presetslocalisefromkind",
       "community": 112,
@@ -23397,7 +23708,7 @@
       "label": ".customListsKeepTheirName()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1452",
+      "source_location": "L1519",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_presetlisttests_customlistskeeptheirname",
       "community": 112,
@@ -23407,7 +23718,7 @@
       "label": ".emptyHomeGetsItsPresets()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1462",
+      "source_location": "L1529",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_presetlisttests_emptyhomegetsitspresets",
       "community": 112,
@@ -23417,11 +23728,81 @@
       "label": ".seededHomeIsNotTouched()",
       "file_type": "code",
       "source_file": "NestZoneTests/FeatureTests.swift",
-      "source_location": "L1476",
+      "source_location": "L1543",
       "_origin": "ast",
       "id": "nestzonetests_featuretests_presetlisttests_seededhomeisnottouched",
       "community": 112,
       "norm_label": ".seededhomeisnottouched()"
+    },
+    {
+      "label": "RelativeTimeTests",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1570",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_relativetimetests",
+      "community": 2,
+      "norm_label": "relativetimetests"
+    },
+    {
+      "label": ".phrase()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1575",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_relativetimetests_phrase",
+      "community": 2,
+      "norm_label": ".phrase()"
+    },
+    {
+      "label": "TimeInterval",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1575",
+      "_origin": "ast",
+      "id": "timeinterval",
+      "community": 2,
+      "norm_label": "timeinterval"
+    },
+    {
+      "label": ".secondsAreNeverSpelledOut()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1592",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_relativetimetests_secondsareneverspelledout",
+      "community": 2,
+      "norm_label": ".secondsareneverspelledout()"
+    },
+    {
+      "label": ".futureTimestampsReadAsJustNow()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1599",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_relativetimetests_futuretimestampsreadasjustnow",
+      "community": 2,
+      "norm_label": ".futuretimestampsreadasjustnow()"
+    },
+    {
+      "label": ".coarsensAsItAges()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1604",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_relativetimetests_coarsensasitages",
+      "community": 2,
+      "norm_label": ".coarsensasitages()"
+    },
+    {
+      "label": ".oldRowsShowADate()",
+      "file_type": "code",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1616",
+      "_origin": "ast",
+      "id": "nestzonetests_featuretests_relativetimetests_oldrowsshowadate",
+      "community": 2,
+      "norm_label": ".oldrowsshowadate()"
     },
     {
       "label": "LaunchUITests.swift",
@@ -24018,7 +24399,7 @@
       "label": "listMine",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "convex_homes_listmine",
       "community": 152,
@@ -24028,7 +24409,7 @@
       "label": "get",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast",
       "id": "convex_homes_get",
       "community": 152,
@@ -24038,7 +24419,7 @@
       "label": "members",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "convex_homes_members",
       "community": 152,
@@ -24048,7 +24429,7 @@
       "label": "create",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L34",
+      "source_location": "L35",
       "_origin": "ast",
       "id": "convex_homes_create",
       "community": 152,
@@ -24058,7 +24439,7 @@
       "label": "PRESET_LISTS",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L79",
+      "source_location": "L80",
       "_origin": "ast",
       "id": "convex_homes_preset_lists",
       "community": 152,
@@ -24068,7 +24449,7 @@
       "label": "ensurePresetLists",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L92",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "convex_homes_ensurepresetlists",
       "community": 152,
@@ -24078,7 +24459,7 @@
       "label": "join",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L121",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "convex_homes_join",
       "community": 152,
@@ -24088,7 +24469,7 @@
       "label": "leave",
       "file_type": "code",
       "source_file": "backend/convex/homes.ts",
-      "source_location": "L140",
+      "source_location": "L158",
       "_origin": "ast",
       "id": "convex_homes_leave",
       "community": 152,
@@ -24301,34 +24682,34 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "convex_meals",
-      "community": 90,
+      "community": 93,
       "norm_label": "meals.ts"
     },
     {
       "label": "mealKind",
       "file_type": "code",
       "source_file": "backend/convex/meals.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "convex_meals_mealkind",
-      "community": 90,
+      "community": 93,
       "norm_label": "mealkind"
     },
     {
       "label": "forHome",
       "file_type": "code",
       "source_file": "backend/convex/meals.ts",
-      "source_location": "L15",
+      "source_location": "L16",
       "_origin": "ast",
       "id": "convex_meals_forhome",
-      "community": 90,
+      "community": 93,
       "norm_label": "forhome"
     },
     {
       "label": "set",
       "file_type": "code",
       "source_file": "backend/convex/meals.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "convex_meals_set",
       "community": 10,
@@ -24338,10 +24719,10 @@
       "label": "clear",
       "file_type": "code",
       "source_file": "backend/convex/meals.ts",
-      "source_location": "L105",
+      "source_location": "L136",
       "_origin": "ast",
       "id": "convex_meals_clear",
-      "community": 90,
+      "community": 93,
       "norm_label": "clear"
     },
     {
@@ -24358,7 +24739,7 @@
       "label": "messageType",
       "file_type": "code",
       "source_file": "backend/convex/messages.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "convex_messages_messagetype",
       "community": 90,
@@ -24368,7 +24749,7 @@
       "label": "assertParticipant()",
       "file_type": "code",
       "source_file": "backend/convex/messages.ts",
-      "source_location": "L13",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "convex_messages_assertparticipant",
       "community": 90,
@@ -24378,7 +24759,7 @@
       "label": "listByConversation",
       "file_type": "code",
       "source_file": "backend/convex/messages.ts",
-      "source_location": "L27",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "convex_messages_listbyconversation",
       "community": 90,
@@ -24388,7 +24769,7 @@
       "label": "send",
       "file_type": "code",
       "source_file": "backend/convex/messages.ts",
-      "source_location": "L40",
+      "source_location": "L44",
       "_origin": "ast",
       "id": "convex_messages_send",
       "community": 90,
@@ -24398,7 +24779,7 @@
       "label": "markRead",
       "file_type": "code",
       "source_file": "backend/convex/messages.ts",
-      "source_location": "L71",
+      "source_location": "L92",
       "_origin": "ast",
       "id": "convex_messages_markread",
       "community": 90,
@@ -24418,7 +24799,7 @@
       "label": "listType",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L6",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "convex_movies_listtype",
       "community": 92,
@@ -24428,7 +24809,7 @@
       "label": "listsByHome",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L8",
+      "source_location": "L10",
       "_origin": "ast",
       "id": "convex_movies_listsbyhome",
       "community": 92,
@@ -24438,7 +24819,7 @@
       "label": "moviesInList",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L19",
+      "source_location": "L21",
       "_origin": "ast",
       "id": "convex_movies_moviesinlist",
       "community": 92,
@@ -24448,7 +24829,7 @@
       "label": "createList",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L32",
+      "source_location": "L34",
       "_origin": "ast",
       "id": "convex_movies_createlist",
       "community": 92,
@@ -24458,7 +24839,7 @@
       "label": "addMovie",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L56",
+      "source_location": "L58",
       "_origin": "ast",
       "id": "convex_movies_addmovie",
       "community": 92,
@@ -24468,7 +24849,7 @@
       "label": "byHome",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L102",
+      "source_location": "L116",
       "_origin": "ast",
       "id": "convex_movies_byhome",
       "community": 92,
@@ -24478,7 +24859,7 @@
       "label": "updateList",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L113",
+      "source_location": "L127",
       "_origin": "ast",
       "id": "convex_movies_updatelist",
       "community": 92,
@@ -24488,7 +24869,7 @@
       "label": "removeList",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L125",
+      "source_location": "L139",
       "_origin": "ast",
       "id": "convex_movies_removelist",
       "community": 92,
@@ -24498,7 +24879,7 @@
       "label": "removeMovie",
       "file_type": "code",
       "source_file": "backend/convex/movies.ts",
-      "source_location": "L136",
+      "source_location": "L150",
       "_origin": "ast",
       "id": "convex_movies_removemovie",
       "community": 92,
@@ -24511,7 +24892,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "convex_notes",
-      "community": 117,
+      "community": 90,
       "norm_label": "notes.ts"
     },
     {
@@ -24521,7 +24902,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "convex_notes_listbyhome",
-      "community": 117,
+      "community": 90,
       "norm_label": "listbyhome"
     },
     {
@@ -24531,7 +24912,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "convex_notes_create",
-      "community": 117,
+      "community": 90,
       "norm_label": "create"
     },
     {
@@ -24541,7 +24922,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "convex_notes_update",
-      "community": 117,
+      "community": 90,
       "norm_label": "update"
     },
     {
@@ -24551,7 +24932,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "convex_notes_remove",
-      "community": 117,
+      "community": 90,
       "norm_label": "remove"
     },
     {
@@ -24568,7 +24949,7 @@
       "label": "pollType",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "_origin": "ast",
       "id": "convex_polls_polltype",
       "community": 93,
@@ -24578,7 +24959,7 @@
       "label": "pollStatus",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "_origin": "ast",
       "id": "convex_polls_pollstatus",
       "community": 93,
@@ -24588,7 +24969,7 @@
       "label": "requirePollOwner()",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast",
       "id": "convex_polls_requirepollowner",
       "community": 93,
@@ -24598,7 +24979,7 @@
       "label": "listByHome",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast",
       "id": "convex_polls_listbyhome",
       "community": 93,
@@ -24608,7 +24989,7 @@
       "label": "detail",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "_origin": "ast",
       "id": "convex_polls_detail",
       "community": 93,
@@ -24618,7 +24999,7 @@
       "label": "create",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L64",
+      "source_location": "L65",
       "_origin": "ast",
       "id": "convex_polls_create",
       "community": 93,
@@ -24628,7 +25009,7 @@
       "label": "vote",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L114",
+      "source_location": "L126",
       "_origin": "ast",
       "id": "convex_polls_vote",
       "community": 93,
@@ -24638,7 +25019,7 @@
       "label": "addItem",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L153",
+      "source_location": "L165",
       "_origin": "ast",
       "id": "convex_polls_additem",
       "community": 93,
@@ -24648,7 +25029,7 @@
       "label": "remove",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L175",
+      "source_location": "L187",
       "_origin": "ast",
       "id": "convex_polls_remove",
       "community": 93,
@@ -24658,7 +25039,7 @@
       "label": "setStatus",
       "file_type": "code",
       "source_file": "backend/convex/polls.ts",
-      "source_location": "L186",
+      "source_location": "L198",
       "_origin": "ast",
       "id": "convex_polls_setstatus",
       "community": 93,
@@ -24795,30 +25176,70 @@
       "norm_label": "providertoken()"
     },
     {
-      "label": "Payload",
+      "label": "Alert",
       "file_type": "code",
       "source_file": "backend/convex/push.ts",
       "source_location": "L201",
       "_origin": "ast",
-      "id": "convex_push_payload",
+      "id": "convex_push_alert",
       "community": 123,
-      "norm_label": "payload"
+      "norm_label": "alert"
+    },
+    {
+      "label": "alertArgs",
+      "file_type": "code",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L215",
+      "_origin": "ast",
+      "id": "convex_push_alertargs",
+      "community": 123,
+      "norm_label": "alertargs"
+    },
+    {
+      "label": "deliver()",
+      "file_type": "code",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L230",
+      "_origin": "ast",
+      "id": "convex_push_deliver",
+      "community": 123,
+      "norm_label": "deliver()"
+    },
+    {
+      "label": "fanOut()",
+      "file_type": "code",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L275",
+      "_origin": "ast",
+      "id": "convex_push_fanout",
+      "community": 123,
+      "norm_label": "fanout()"
     },
     {
       "label": "notifyHome",
       "file_type": "code",
       "source_file": "backend/convex/push.ts",
-      "source_location": "L214",
+      "source_location": "L320",
       "_origin": "ast",
       "id": "convex_push_notifyhome",
       "community": 123,
       "norm_label": "notifyhome"
     },
     {
+      "label": "notifyUsers",
+      "file_type": "code",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L347",
+      "_origin": "ast",
+      "id": "convex_push_notifyusers",
+      "community": 123,
+      "norm_label": "notifyusers"
+    },
+    {
       "label": "sendTestToSelf",
       "file_type": "code",
       "source_file": "backend/convex/push.ts",
-      "source_location": "L302",
+      "source_location": "L374",
       "_origin": "ast",
       "id": "convex_push_sendtesttoself",
       "community": 123,
@@ -24828,7 +25249,7 @@
       "label": "currentUserId",
       "file_type": "code",
       "source_file": "backend/convex/push.ts",
-      "source_location": "L324",
+      "source_location": "L396",
       "_origin": "ast",
       "id": "convex_push_currentuserid",
       "community": 123,
@@ -24838,7 +25259,7 @@
       "label": "tokensForUser",
       "file_type": "code",
       "source_file": "backend/convex/push.ts",
-      "source_location": "L332",
+      "source_location": "L404",
       "_origin": "ast",
       "id": "convex_push_tokensforuser",
       "community": 123,
@@ -24848,7 +25269,7 @@
       "label": "notifyToUser",
       "file_type": "code",
       "source_file": "backend/convex/push.ts",
-      "source_location": "L347",
+      "source_location": "L419",
       "_origin": "ast",
       "id": "convex_push_notifytouser",
       "community": 123,
@@ -24861,67 +25282,67 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "convex_recipes",
-      "community": 93,
+      "community": 158,
       "norm_label": "recipes.ts"
     },
     {
       "label": "difficulty",
       "file_type": "code",
       "source_file": "backend/convex/recipes.ts",
-      "source_location": "L5",
+      "source_location": "L6",
       "_origin": "ast",
       "id": "convex_recipes_difficulty",
-      "community": 93,
+      "community": 158,
       "norm_label": "difficulty"
     },
     {
       "label": "listByHome",
       "file_type": "code",
       "source_file": "backend/convex/recipes.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "convex_recipes_listbyhome",
-      "community": 93,
+      "community": 158,
       "norm_label": "listbyhome"
     },
     {
       "label": "get",
       "file_type": "code",
       "source_file": "backend/convex/recipes.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast",
       "id": "convex_recipes_get",
-      "community": 93,
+      "community": 158,
       "norm_label": "get"
     },
     {
       "label": "create",
       "file_type": "code",
       "source_file": "backend/convex/recipes.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast",
       "id": "convex_recipes_create",
-      "community": 93,
+      "community": 158,
       "norm_label": "create"
     },
     {
       "label": "remove",
       "file_type": "code",
       "source_file": "backend/convex/recipes.ts",
-      "source_location": "L81",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "convex_recipes_remove",
-      "community": 93,
+      "community": 158,
       "norm_label": "remove"
     },
     {
       "label": "removeMany",
       "file_type": "code",
       "source_file": "backend/convex/recipes.ts",
-      "source_location": "L97",
+      "source_location": "L109",
       "_origin": "ast",
       "id": "convex_recipes_removemany",
-      "community": 93,
+      "community": 158,
       "norm_label": "removemany"
     },
     {
@@ -24941,7 +25362,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "convex_shopping",
-      "community": 91,
+      "community": 144,
       "norm_label": "shopping.ts"
     },
     {
@@ -24951,7 +25372,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "convex_shopping_category",
-      "community": 91,
+      "community": 144,
       "norm_label": "category"
     },
     {
@@ -24961,7 +25382,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "convex_shopping_listbyhome",
-      "community": 91,
+      "community": 144,
       "norm_label": "listbyhome"
     },
     {
@@ -24971,7 +25392,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "convex_shopping_create",
-      "community": 91,
+      "community": 144,
       "norm_label": "create"
     },
     {
@@ -24981,7 +25402,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "convex_shopping_createfromrecipe",
-      "community": 91,
+      "community": 144,
       "norm_label": "createfromrecipe"
     },
     {
@@ -24991,7 +25412,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "convex_shopping_setpurchased",
-      "community": 91,
+      "community": 144,
       "norm_label": "setpurchased"
     },
     {
@@ -25001,7 +25422,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "convex_shopping_update",
-      "community": 91,
+      "community": 144,
       "norm_label": "update"
     },
     {
@@ -25011,7 +25432,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "convex_shopping_remove",
-      "community": 91,
+      "community": 144,
       "norm_label": "remove"
     },
     {
@@ -25021,7 +25442,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "convex_shopping_removemany",
-      "community": 91,
+      "community": 144,
       "norm_label": "removemany"
     },
     {
@@ -25118,7 +25539,7 @@
       "label": "remove",
       "file_type": "code",
       "source_file": "backend/convex/tasks.ts",
-      "source_location": "L99",
+      "source_location": "L127",
       "_origin": "ast",
       "id": "convex_tasks_remove",
       "community": 117,
@@ -26201,7 +26622,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "generated_api_internal",
-      "community": 117,
+      "community": 93,
       "norm_label": "internal"
     },
     {
@@ -27666,6 +28087,16 @@
       "confidence_score": 1.0,
       "source": "app_appfeature_appfeature",
       "target": "app_appfeature_appfeature_init"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/App/AppFeature.swift",
+      "source_location": "L231",
+      "weight": 1.0,
+      "source": "app_appfeature_appfeature",
+      "target": "app_appfeature_appfeature_listenfordevicetoken",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -30115,6 +30546,17 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/App/AppFeature.swift",
+      "source_location": "L231",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "source": "app_appfeature_appfeature_listenfordevicetoken",
+      "target": "app_appfeature_action",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/App/AppFeature.swift",
       "source_location": "L154",
       "weight": 1.0,
       "context": "generic_arg",
@@ -30151,6 +30593,28 @@
       "confidence_score": 1.0,
       "source": "app_appfeature_cancelid",
       "target": "app_appfeature_cancelid_devicetoken"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/App/AppFeature.swift",
+      "source_location": "L231",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "app_appfeature_appfeature_listenfordevicetoken",
+      "target": "nestzone_app_appfeature_swift_bool",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/App/AppFeature.swift",
+      "source_location": "L231",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "app_appfeature_appfeature_listenfordevicetoken",
+      "target": "nestzone_app_appfeature_swift_effect",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -30312,6 +30776,17 @@
       "confidence_score": 1.0,
       "source": "components_loadingview",
       "target": "swiftui"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "components_relativetime",
+      "target": "swiftui",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -30883,6 +31358,17 @@
       "confidence_score": 1.0,
       "source": "components_loadingview_skeletonlist",
       "target": "view"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L101",
+      "weight": 1.0,
+      "context": "field",
+      "source": "components_relativetime_relativetimetext",
+      "target": "view",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -34334,6 +34820,36 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3427",
+      "weight": 1.0,
+      "source": "localization_l10n_l10n",
+      "target": "localization_l10n_l10n_timedaysago",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3422",
+      "weight": 1.0,
+      "source": "localization_l10n_l10n",
+      "target": "localization_l10n_l10n_timehoursago",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3417",
+      "weight": 1.0,
+      "source": "localization_l10n_l10n",
+      "target": "localization_l10n_l10n_timeminutesago",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
       "source_location": "L1187",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -34932,6 +35448,39 @@
       "confidence_score": 1.0,
       "source": "localization_l10n_l10n_shoppingitemdeleted",
       "target": "localization_l10n_l10n_r"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3428",
+      "weight": 1.0,
+      "source": "localization_l10n_l10n_timedaysago",
+      "target": "localization_l10n_l10n_r",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3423",
+      "weight": 1.0,
+      "source": "localization_l10n_l10n_timehoursago",
+      "target": "localization_l10n_l10n_r",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3418",
+      "weight": 1.0,
+      "source": "localization_l10n_l10n_timeminutesago",
+      "target": "localization_l10n_l10n_r",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -35729,6 +36278,39 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3427",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "localization_l10n_l10n_timedaysago",
+      "target": "nestzone_core_localization_l10n_swift_localizedstringresource",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3422",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "localization_l10n_l10n_timehoursago",
+      "target": "nestzone_core_localization_l10n_swift_localizedstringresource",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3417",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "localization_l10n_l10n_timeminutesago",
+      "target": "nestzone_core_localization_l10n_swift_localizedstringresource",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
       "source_location": "L1187",
       "weight": 1.0,
       "context": "return_type",
@@ -36048,6 +36630,39 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3427",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "localization_l10n_l10n_timedaysago",
+      "target": "nestzone_core_localization_l10n_swift_int",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3422",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "localization_l10n_l10n_timehoursago",
+      "target": "nestzone_core_localization_l10n_swift_int",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
+      "source_location": "L3417",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "localization_l10n_l10n_timeminutesago",
+      "target": "nestzone_core_localization_l10n_swift_int",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Core/Localization/L10n.swift",
       "source_location": "L1187",
       "weight": 1.0,
       "context": "parameter_type",
@@ -36131,6 +36746,72 @@
       "weight": 1.0,
       "source": "homemanagement_managehomessheet_managehomessheet_row",
       "target": "localization_l10n_l10n_settingsmemberscount"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetime_text",
+      "target": "localization_l10n_l10n_timeminutesago"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1582",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_phrase",
+      "target": "localization_l10n_l10n_timeminutesago"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetime_text",
+      "target": "localization_l10n_l10n_timehoursago"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1584",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_phrase",
+      "target": "localization_l10n_l10n_timehoursago"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetime_text",
+      "target": "localization_l10n_l10n_timedaysago"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1586",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_phrase",
+      "target": "localization_l10n_l10n_timedaysago"
     },
     {
       "relation": "contains",
@@ -42465,6 +43146,28 @@
       "target": "models_timestamps_timestamp_newestfirst"
     },
     {
+      "relation": "references",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetime_text",
+      "target": "models_timestamps_date"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1588",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_phrase",
+      "target": "models_timestamps_date"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Core/Models/User.swift",
@@ -47410,6 +48113,17 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_relativetime",
+      "target": "uikit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "NestZone/Design/Theme.swift",
       "source_location": "L2",
       "weight": 1.0,
@@ -47537,6 +48251,17 @@
       "confidence_score": 1.0,
       "source": "network_pushclient_pushclient",
       "target": "network_pushclient_pushtokenbroker_stream"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZone/Core/Network/PushClient.swift",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "network_pushclient_pushclient",
+      "target": "timeinterval"
     },
     {
       "relation": "references",
@@ -49404,6 +50129,220 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "components_relativetime",
+      "target": "components_relativetime_relativetime",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "components_relativetime",
+      "target": "components_relativetime_relativetimeclock",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "components_relativetime",
+      "target": "components_relativetime_relativetimetext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "components_relativetime",
+      "target": "observation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetimeclock",
+      "target": "components_relativetime_relativetimeclock_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L28",
+      "weight": 1.0,
+      "context": "field",
+      "source": "components_relativetime_relativetimeclock",
+      "target": "nestzone_design_components_relativetime_swift_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L24",
+      "weight": 1.0,
+      "context": "field",
+      "source": "components_relativetime_relativetimeclock",
+      "target": "nestzone_design_components_relativetime_swift_int",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L30",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "source": "components_relativetime_relativetimeclock",
+      "target": "nestzone_design_components_relativetime_swift_never",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L30",
+      "weight": 1.0,
+      "context": "field",
+      "source": "components_relativetime_relativetimeclock",
+      "target": "nestzone_design_components_relativetime_swift_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L30",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "source": "components_relativetime_relativetimeclock",
+      "target": "nestzone_design_components_relativetime_swift_void",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L31",
+      "weight": 1.0,
+      "context": "field",
+      "source": "components_relativetime_relativetimeclock",
+      "target": "nsobjectprotocol",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetime_text",
+      "target": "nestzone_design_components_relativetime_swift_int",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetimeclock_init",
+      "target": "nestzone_design_components_relativetime_swift_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetime",
+      "target": "components_relativetime_relativetime_text",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L63",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "components_relativetime_relativetime_text",
+      "target": "nestzone_design_components_relativetime_swift_date",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetime_text",
+      "target": "text",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L96",
+      "weight": 1.0,
+      "context": "field",
+      "source": "components_relativetime_relativetimetext",
+      "target": "nestzone_design_components_relativetime_swift_date",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L99",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "components_relativetime_relativetimetext_init",
+      "target": "nestzone_design_components_relativetime_swift_date",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L99",
+      "weight": 1.0,
+      "source": "components_relativetime_relativetimetext",
+      "target": "components_relativetime_relativetimetext_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Design/Components/RelativeTime.swift",
+      "source_location": "L98",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "components_relativetime_relativetimetext_init",
+      "target": "nestzone_design_components_relativetime_swift_timestamp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "NestZone/Design/Components/RemoteImage.swift",
       "source_location": "L168",
       "weight": 1.0,
@@ -49793,9 +50732,9 @@
       "source_location": "L104",
       "weight": 1.0,
       "context": "field",
-      "confidence_score": 1.0,
       "source": "components_remoteimage_imageloader",
-      "target": "task"
+      "target": "nestzone_design_components_remoteimage_swift_task",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -54004,6 +54943,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L232",
+      "weight": 1.0,
+      "source": "home_homefeature",
+      "target": "home_homefeature_alertstate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
       "source_location": "L51",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -54111,6 +55060,28 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_homefeaturetests_grantingnotificationsbubblesup",
+      "target": "home_homefeature_homefeature"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_homefeaturetests_notificationpromptisaskedonce",
+      "target": "home_homefeature_homefeature"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L17",
       "weight": 1.0,
       "source": "nestzonetests_featuretests_homefeaturetests_optimistictoggle",
@@ -54125,6 +55096,17 @@
       "source_location": "L82",
       "weight": 1.0,
       "source": "nestzonetests_featuretests_homefeaturetests_recenttasksarecapped",
+      "target": "home_homefeature_homefeature"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L112",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_homefeaturetests_refusednotificationsstaysput",
       "target": "home_homefeature_homefeature"
     },
     {
@@ -54169,6 +55151,17 @@
       "confidence_score": 1.0,
       "source": "home_homefeature_state",
       "target": "nestzone_features_home_homefeature_swift_alertstate"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L24",
+      "weight": 1.0,
+      "context": "field",
+      "source": "home_homefeature_state",
+      "target": "nestzone_features_home_homefeature_swift_bool",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -54343,6 +55336,26 @@
       "relation": "case_of",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "home_homefeature_action",
+      "target": "home_homefeature_action_notificationauthorizationanswered",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "home_homefeature_action",
+      "target": "home_homefeature_action_notificationpromptready",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
       "source_location": "L31",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -54388,6 +55401,16 @@
       "confidence_score": 1.0,
       "source": "home_homefeature_action",
       "target": "home_homefeature_action_togglefailed"
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "home_homefeature_delegate",
+      "target": "home_homefeature_delegate_notificationsenabled",
+      "confidence_score": 1.0
     },
     {
       "relation": "case_of",
@@ -54453,6 +55476,16 @@
       "relation": "case_of",
       "confidence": "EXTRACTED",
       "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "home_homefeature_alert",
+      "target": "home_homefeature_alert_enablenotifications",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "case_of",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
       "source_location": "L66",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -54478,6 +55511,17 @@
       "confidence_score": 1.0,
       "source": "home_homefeature_cancelid",
       "target": "home_homefeature_cancelid_tasks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZone/Features/Home/HomeFeature.swift",
+      "source_location": "L238",
+      "weight": 1.0,
+      "context": "field",
+      "source": "home_homefeature_alertstate",
+      "target": "nestzone_features_home_homefeature_swift_self",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -67776,9 +68820,9 @@
       "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L1437",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "nestzonetests_featuretests",
-      "target": "nestzonetests_featuretests_presetlisttests",
-      "confidence_score": 1.0
+      "target": "nestzonetests_featuretests_presetlisttests"
     },
     {
       "relation": "contains",
@@ -67789,6 +68833,16 @@
       "confidence_score": 1.0,
       "source": "nestzonetests_featuretests",
       "target": "nestzonetests_featuretests_recipeshoppingtests"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1570",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests",
+      "target": "nestzonetests_featuretests_relativetimetests",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -67864,6 +68918,26 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_homefeaturetests",
+      "target": "nestzonetests_featuretests_homefeaturetests_grantingnotificationsbubblesup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_homefeaturetests",
+      "target": "nestzonetests_featuretests_homefeaturetests_notificationpromptisaskedonce",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L11",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -67879,6 +68953,16 @@
       "confidence_score": 1.0,
       "source": "nestzonetests_featuretests_homefeaturetests",
       "target": "nestzonetests_featuretests_homefeaturetests_recenttasksarecapped"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_homefeaturetests",
+      "target": "nestzonetests_featuretests_homefeaturetests_refusednotificationsstaysput",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -68945,6 +70029,17 @@
       "target": "nestzonetests_featuretests_savedrecipetests_copy"
     },
     {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1575",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "nestzonetests_featuretests_relativetimetests_phrase",
+      "target": "nestzonetests_featuretests_swift_string",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "NestZoneTests/FeatureTests.swift",
@@ -69085,9 +70180,9 @@
       "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L1452",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "nestzonetests_featuretests_presetlisttests",
-      "target": "nestzonetests_featuretests_presetlisttests_customlistskeeptheirname",
-      "confidence_score": 1.0
+      "target": "nestzonetests_featuretests_presetlisttests_customlistskeeptheirname"
     },
     {
       "relation": "method",
@@ -69095,9 +70190,9 @@
       "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L1462",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "nestzonetests_featuretests_presetlisttests",
-      "target": "nestzonetests_featuretests_presetlisttests_emptyhomegetsitspresets",
-      "confidence_score": 1.0
+      "target": "nestzonetests_featuretests_presetlisttests_emptyhomegetsitspresets"
     },
     {
       "relation": "method",
@@ -69105,9 +70200,9 @@
       "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L1441",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "nestzonetests_featuretests_presetlisttests",
-      "target": "nestzonetests_featuretests_presetlisttests_presetslocalisefromkind",
-      "confidence_score": 1.0
+      "target": "nestzonetests_featuretests_presetlisttests_presetslocalisefromkind"
     },
     {
       "relation": "method",
@@ -69115,8 +70210,113 @@
       "source_file": "NestZoneTests/FeatureTests.swift",
       "source_location": "L1476",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "nestzonetests_featuretests_presetlisttests",
-      "target": "nestzonetests_featuretests_presetlisttests_seededhomeisnottouched",
+      "target": "nestzonetests_featuretests_presetlisttests_seededhomeisnottouched"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1604",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests",
+      "target": "nestzonetests_featuretests_relativetimetests_coarsensasitages",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1599",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests",
+      "target": "nestzonetests_featuretests_relativetimetests_futuretimestampsreadasjustnow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1616",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests",
+      "target": "nestzonetests_featuretests_relativetimetests_oldrowsshowadate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1575",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests",
+      "target": "nestzonetests_featuretests_relativetimetests_phrase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1592",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests",
+      "target": "nestzonetests_featuretests_relativetimetests_secondsareneverspelledout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1606",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_coarsensasitages",
+      "target": "nestzonetests_featuretests_relativetimetests_phrase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1601",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_futuretimestampsreadasjustnow",
+      "target": "nestzonetests_featuretests_relativetimetests_phrase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1618",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_oldrowsshowadate",
+      "target": "nestzonetests_featuretests_relativetimetests_phrase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1575",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "nestzonetests_featuretests_relativetimetests_phrase",
+      "target": "timeinterval",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "NestZoneTests/FeatureTests.swift",
+      "source_location": "L1595",
+      "weight": 1.0,
+      "source": "nestzonetests_featuretests_relativetimetests_secondsareneverspelledout",
+      "target": "nestzonetests_featuretests_relativetimetests_phrase",
       "confidence_score": 1.0
     },
     {
@@ -69721,6 +70921,50 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "backend/convex/homes.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "convex_homes",
+      "target": "generated_api",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/meals.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "convex_meals",
+      "target": "generated_api",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/messages.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "convex_messages",
+      "target": "generated_api",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/movies.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "convex_movies",
+      "target": "generated_api",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "backend/convex/notes.ts",
       "source_location": "L3",
       "weight": 1.0,
@@ -69732,12 +70976,34 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "backend/convex/polls.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "convex_polls",
+      "target": "generated_api",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "backend/convex/push.ts",
       "source_location": "L27",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "convex_push",
       "target": "generated_api"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/recipes.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "convex_recipes",
+      "target": "generated_api",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -70390,9 +71656,9 @@
       "source_file": "backend/convex/homes.ts",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_homes",
-      "target": "convex_homes_ensurepresetlists",
-      "confidence_score": 1.0
+      "target": "convex_homes_ensurepresetlists"
     },
     {
       "relation": "contains",
@@ -70450,8 +71716,19 @@
       "source_file": "backend/convex/homes.ts",
       "source_location": "L79",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "convex_homes",
-      "target": "convex_homes_preset_lists",
+      "target": "convex_homes_preset_lists"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/homes.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "convex_homes",
+      "target": "generated_api_internal",
       "confidence_score": 1.0
     },
     {
@@ -70774,6 +72051,17 @@
       "confidence_score": 1.0,
       "source": "convex_messages_assertparticipant",
       "target": "lib_auth_requireuser"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/movies.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "convex_movies",
+      "target": "lib_auth_requireuser",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -71341,6 +72629,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/convex/meals.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "convex_meals",
+      "target": "generated_api_internal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/meals.ts",
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -71407,6 +72706,17 @@
       "confidence_score": 1.0,
       "source": "convex_messages",
       "target": "convex_messages_send"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/messages.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "convex_messages",
+      "target": "generated_api_internal",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -71519,6 +72829,17 @@
       "confidence_score": 1.0,
       "source": "convex_movies",
       "target": "convex_movies_updatelist"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/movies.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "convex_movies",
+      "target": "generated_api_internal",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -71720,6 +73041,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/convex/polls.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "convex_polls",
+      "target": "generated_api_internal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/polls.ts",
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -71741,6 +73073,26 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/convex/push.ts",
+      "source_location": "L201",
+      "weight": 1.0,
+      "source": "convex_push",
+      "target": "convex_push_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L215",
+      "weight": 1.0,
+      "source": "convex_push",
+      "target": "convex_push_alertargs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/push.ts",
       "source_location": "L152",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -71756,6 +73108,16 @@
       "confidence_score": 1.0,
       "source": "convex_push",
       "target": "convex_push_currentuserid"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L230",
+      "weight": 1.0,
+      "source": "convex_push",
+      "target": "convex_push_deliver",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -71786,6 +73148,16 @@
       "confidence_score": 1.0,
       "source": "convex_push",
       "target": "convex_push_environment"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L275",
+      "weight": 1.0,
+      "source": "convex_push",
+      "target": "convex_push_fanout",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -71831,11 +73203,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/convex/push.ts",
-      "source_location": "L201",
+      "source_location": "L347",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "convex_push",
-      "target": "convex_push_payload"
+      "target": "convex_push_notifyusers",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -71988,11 +73360,44 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/convex/push.ts",
+      "source_location": "L240",
+      "weight": 1.0,
+      "source": "convex_push_deliver",
+      "target": "convex_push_gateway",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L286",
+      "weight": 1.0,
+      "source": "convex_push_fanout",
+      "target": "convex_push_requireenv",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/push.ts",
       "source_location": "L190",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "convex_push_providertoken",
       "target": "convex_push_requireenv"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/push.ts",
+      "source_location": "L285",
+      "weight": 1.0,
+      "source": "convex_push_fanout",
+      "target": "convex_push_providertoken",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -72053,6 +73458,17 @@
       "confidence_score": 1.0,
       "source": "convex_recipes",
       "target": "convex_recipes_removemany"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/convex/recipes.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "convex_recipes",
+      "target": "generated_api_internal",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -73474,5 +74890,5 @@
       "source_file": "Docs/PocketBase/README.md"
     }
   ],
-  "built_at_commit": "fb46aaeb8ca2d8d5761beae3fd059fc09110f52c"
+  "built_at_commit": "a9a8c0abace77b7db634104dfb474e165a3c1128"
 }

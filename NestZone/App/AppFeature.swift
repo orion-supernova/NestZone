@@ -141,14 +141,7 @@ public struct AppFeature: Sendable {
                         // Only ask iOS for a token if the user has already
                         // agreed to notifications. Registering does not prompt,
                         // but there is no point holding a token we cannot use.
-                        .run { send in
-                            guard await push.authorizationStatus() != .notDetermined else { return }
-                            await push.registerForRemoteNotifications()
-                            for await token in push.deviceTokens() {
-                                await send(.deviceTokenReceived(token))
-                            }
-                        }
-                        .cancellable(id: CancelID.deviceToken, cancelInFlight: true)
+                        listenForDeviceToken(onlyIfAlreadyAuthorized: true)
                     )
 
                 case .unauthenticated:
@@ -217,22 +210,37 @@ public struct AppFeature: Sendable {
             case let .main(.settings(.delegate(.languageChanged(language)))):
                 return .send(.languageChanged(language))
 
-            // Permission was just granted in Settings — start listening for the
+            // Permission was just granted — in Settings, or by the prompt the
+            // Home tab puts in front of a newcomer. Start listening for the
             // token now rather than waiting for the next launch.
-            case .main(.settings(.delegate(.notificationsEnabled))):
-                return .run { send in
-                    await push.registerForRemoteNotifications()
-                    for await token in push.deviceTokens() {
-                        await send(.deviceTokenReceived(token))
-                    }
-                }
-                .cancellable(id: CancelID.deviceToken, cancelInFlight: true)
+            case .main(.settings(.delegate(.notificationsEnabled))),
+                 .main(.home(.delegate(.notificationsEnabled))):
+                return listenForDeviceToken()
 
             case .auth, .main:
                 return .none
             }
         }
         .ifLet(\.main, action: \.main) { MainFeature() }
+    }
+
+    /// Asks iOS for an APNs token and forwards every token it hands back.
+    ///
+    /// Long-lived: iOS can reissue a token at any point in a session, and the
+    /// backend has to hear about the new one or the device goes quiet.
+    private func listenForDeviceToken(
+        onlyIfAlreadyAuthorized: Bool = false
+    ) -> Effect<Action> {
+        .run { send in
+            if onlyIfAlreadyAuthorized {
+                guard await push.authorizationStatus() != .notDetermined else { return }
+            }
+            await push.registerForRemoteNotifications()
+            for await token in push.deviceTokens() {
+                await send(.deviceTokenReceived(token))
+            }
+        }
+        .cancellable(id: CancelID.deviceToken, cancelInFlight: true)
     }
 
     /// The device token, held so a later sign-out can unregister it.

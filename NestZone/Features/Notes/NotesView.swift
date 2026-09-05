@@ -106,7 +106,7 @@ private struct NoteCard: View {
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 if let created = note.created {
-                    Text(created.date, format: .relative(presentation: .numeric))
+                    RelativeTimeText(created)
                         .font(.system(size: 10, design: .rounded))
                         .foregroundStyle(.black.opacity(0.45))
                         .lineLimit(1)

@@ -2,6 +2,8 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireRef, requireSameHome, cascadeDeleteMovieList } from "./lib/relations";
+import { internal } from "./_generated/api";
+import { requireUser } from "./lib/auth";
 
 const listType = v.union(v.literal("wishlist"), v.literal("watched"), v.literal("custom"));
 
@@ -64,6 +66,7 @@ export const addMovie = mutation({
     genres: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
     // The list must exist and belong to the same home, or a member of home A
     // could file movies into home B's list.
@@ -82,6 +85,17 @@ export const addMovie = mutation({
       const match = existing.find((m) => m.imdb_id === args.imdb_id);
       if (match) return match._id;
     }
+
+    // Only for a film that is actually new to the list — the early return
+    // above means "already filed here" never reaches this, so nobody is told
+    // twice about the same film.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId: args.homeId,
+      actor: user._id,
+      title: user.name ? `${user.name} added a film` : "New film on the list",
+      body: list.name ? `${args.title} — ${list.name}` : args.title,
+      category: "movies",
+    });
 
     const now = Date.now();
     return await ctx.db.insert("movies", {

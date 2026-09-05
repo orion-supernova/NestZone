@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 // What is for dinner, by calendar day.
 //
@@ -79,6 +80,17 @@ export const set = mutation({
       planned_by: user._id,
     };
 
+    // What the notification says the household is eating. A cook plan names
+    // the recipe it points at; the other two name where the food is coming
+    // from.
+    const recipeTitle = args.recipeId
+      ? (await ctx.db.get(args.recipeId))?.title
+      : undefined;
+    const what =
+      args.kind === "cook"
+        ? (recipeTitle ?? args.title?.trim() ?? "dinner")
+        : (args.place ?? args.cuisine ?? "dinner");
+
     // One dinner per day: deciding again replaces rather than stacks up.
     const existing = await ctx.db
       .query("meal_plans")
@@ -86,6 +98,25 @@ export const set = mutation({
         q.eq("home_id", args.homeId).eq("date", args.date),
       )
       .unique();
+
+    // Tell the rest of the household. Scheduled rather than awaited: a
+    // mutation must not block on APNs, and a failed push must never roll back
+    // the plan. Collapsed on the day, because re-deciding tonight's dinner
+    // should replace the earlier answer rather than stack a second one beside
+    // it.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId: args.homeId,
+      actor: user._id,
+      title: user.name ? `${user.name} planned dinner` : "Dinner is planned",
+      body:
+        args.kind === "cook"
+          ? `Cooking ${what}`
+          : args.kind === "order"
+            ? `Ordering ${what}`
+            : `Going out: ${what}`,
+      category: "meals",
+      collapseId: `meal-${args.homeId}-${args.date}`,
+    });
 
     const now = Date.now();
     if (existing) {
