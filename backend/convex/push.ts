@@ -141,6 +141,19 @@ export const tokensForHome = internalQuery({
   },
 });
 
+/**
+ * The token turned out to live on the other gateway. Remember that, so the
+ * next send goes straight there instead of paying for a rejection first.
+ */
+export const correctTokenEnvironment = internalMutation({
+  args: { id: v.id("push_tokens"), environment },
+  handler: async (ctx, { id, environment }) => {
+    const row = await ctx.db.get(id);
+    if (!row) return;
+    await ctx.db.patch(id, { environment, updated: Date.now() });
+  },
+});
+
 /** APNs told us a token is dead; stop sending to it. */
 export const dropToken = internalMutation({
   args: { id: v.id("push_tokens") },
@@ -227,6 +240,29 @@ const alertArgs = {
  * because one dead token must not stop the rest of the household hearing about
  * it.
  */
+async function post(
+  env: "sandbox" | "production",
+  token: string,
+  jwt: string,
+  topic: string,
+  body: unknown,
+  extraHeaders: Record<string, string>,
+): Promise<{ status: number; text: string }> {
+  const response = await fetch(`${gateway(env)}/3/device/${token}`, {
+    method: "POST",
+    headers: {
+      authorization: `bearer ${jwt}`,
+      "apns-topic": topic,
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      ...extraHeaders,
+    },
+    body: JSON.stringify(body),
+  });
+  if (response.status === 200) return { status: 200, text: "" };
+  return { status: response.status, text: await response.text() };
+}
+
 async function deliver(
   ctx: { runMutation: (ref: any, args: any) => Promise<any> },
   device: Device,
@@ -236,44 +272,57 @@ async function deliver(
   extraHeaders: Record<string, string>,
 ): Promise<"sent" | "dropped" | "failed"> {
   try {
-    const response = await fetch(
-      `${gateway(device.environment)}/3/device/${device.token}`,
-      {
-        method: "POST",
-        headers: {
-          authorization: `bearer ${jwt}`,
-          "apns-topic": topic,
-          "apns-push-type": "alert",
-          "apns-priority": "10",
-          ...extraHeaders,
-        },
-        body: JSON.stringify(body),
-      },
+    const first = await post(
+      device.environment,
+      device.token,
+      jwt,
+      topic,
+      body,
+      extraHeaders,
     );
+    if (first.status === 200) return "sent";
 
-    if (response.status === 200) return "sent";
+    // 410 Unregistered is the app being gone from the device. That is final on
+    // either gateway, and the token is genuinely dead.
+    if (first.status === 410) {
+      console.warn(`APNs 410 dropping token ${device.token.slice(0, 8)}…`);
+      await ctx.runMutation(internal.push.dropToken, { id: device.id });
+      return "dropped";
+    }
 
-    const text = await response.text();
-    // 410 Unregistered / 400 BadDeviceToken mean the device is gone for good.
-    // Anything else is transient and worth keeping the token for.
-    if (
-      response.status === 410 ||
-      (response.status === 400 && text.includes("BadDeviceToken"))
-    ) {
-      // Logged, not swallowed. A dropped token used to disappear without a
-      // trace, which made "nobody got the notification" indistinguishable from
-      // "nobody was sent one" — and the two have completely different fixes.
-      // `BadDeviceToken` on a token the device really did hand us almost always
-      // means the wrong gateway: a sandbox token posted to production or the
-      // reverse.
+    // `BadDeviceToken` almost never means a malformed token — it means a real
+    // token posted to the wrong gateway. The client has to guess sandbox or
+    // production from its build configuration, and it guesses wrong for whole
+    // classes of build, so ask the other gateway before writing the device off.
+    // Getting this wrong is expensive: it deletes the only way to reach a phone.
+    if (first.status === 400 && first.text.includes("BadDeviceToken")) {
+      const other = device.environment === "sandbox" ? "production" : "sandbox";
+      const retry = await post(other, device.token, jwt, topic, body, extraHeaders);
+
+      if (retry.status === 200) {
+        console.warn(
+          `APNs token ${device.token.slice(0, 8)}… was registered as ` +
+            `${device.environment} but lives on ${other}; corrected.`,
+        );
+        await ctx.runMutation(internal.push.correctTokenEnvironment, {
+          id: device.id,
+          environment: other,
+        });
+        return "sent";
+      }
+
+      // Rejected by both. Now it really is a dead token.
       console.warn(
-        `APNs ${response.status} dropping ${device.environment} token ` +
-          `(${device.token.length / 2} bytes, ${device.token.slice(0, 8)}…): ${text}`,
+        `APNs dropping token ${device.token.slice(0, 8)}… ` +
+          `(${device.token.length / 2} bytes): ` +
+          `${device.environment} ${first.status} ${first.text}; ` +
+          `${other} ${retry.status} ${retry.text}`,
       );
       await ctx.runMutation(internal.push.dropToken, { id: device.id });
       return "dropped";
     }
-    console.error(`APNs ${response.status} for device: ${text}`);
+
+    console.error(`APNs ${first.status} for device: ${first.text}`);
     return "failed";
   } catch (error) {
     console.error(`APNs request failed: ${String(error)}`);

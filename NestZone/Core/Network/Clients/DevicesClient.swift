@@ -49,17 +49,25 @@ extension DependencyValues {
 /// Which APNs gateway this build's tokens belong to.
 ///
 /// A token minted against the sandbox gateway is rejected by production and vice
-/// versa, so the environment travels with the token. Debug builds and TestFlight
-/// are sandbox; only an App Store build is production.
+/// versa, so the environment travels with the token.
+///
+/// What decides it is the `aps-environment` entitlement in the provisioning
+/// profile, and only a development profile carries `development`. TestFlight is
+/// signed with an App Store distribution profile like any other release, so its
+/// tokens are **production** tokens.
+///
+/// This used to answer "sandbox" for TestFlight, on the strength of its receipt
+/// being named `sandboxReceipt` — but that is StoreKit's sandbox, not APNs's,
+/// and the two have nothing to do with each other. Every push to a TestFlight
+/// build was posted to the wrong gateway, came back `BadDeviceToken`, and took
+/// the device's token down with it. The server double-checks the answer now
+/// rather than trusting it, so a wrong guess here degrades to one wasted
+/// request instead of a silently unreachable phone.
 public enum APNSEnvironment {
     public static var current: String {
         #if DEBUG
         return "sandbox"
         #else
-        // TestFlight ships with a sandbox push entitlement even in Release.
-        if Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" {
-            return "sandbox"
-        }
         return "production"
         #endif
     }
