@@ -3406,6 +3406,16 @@ public enum L10n {
         r("settings_notifications_send_test", "Send a test notification")
     }
 
+    /// This device
+    public static var settingsNotificationsDevice: LocalizedStringResource {
+        r("settings_notifications_device", "This device")
+    }
+
+    /// Not registered
+    public static var settingsNotificationsNoDevice: LocalizedStringResource {
+        r("settings_notifications_no_device", "Not registered")
+    }
+
     // MARK: - Relative time
 
     /// Just now

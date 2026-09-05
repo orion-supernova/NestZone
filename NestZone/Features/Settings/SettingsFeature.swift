@@ -28,6 +28,21 @@ public struct SettingsFeature: Sendable {
             [.authorized, .provisional, .ephemeral].contains(notificationStatus)
         }
 
+        /// Enough of this device's APNs token to recognise it in the backend,
+        /// plus the two facts that decide whether a push can land: how long the
+        /// token is, and which gateway it was registered against.
+        ///
+        /// Permission being granted does not mean iOS ever handed over a token
+        /// — registration can fail on its own — and until that token reaches
+        /// the server this device is simply not in the fan-out.
+        public var pushTokenSummary: String {
+            guard let pushToken else {
+                return String(localized: L10n.settingsNotificationsNoDevice)
+            }
+            return "\(pushToken.prefix(8))… · \(pushToken.count / 2)B · "
+                + APNSEnvironment.current
+        }
+
         @Shared(.theme) public var theme: AppTheme
         @Shared(.language) public var language: AppLanguage
         @Shared(.includeAdultTitles) public var includeAdultTitles: Bool

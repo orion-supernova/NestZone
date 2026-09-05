@@ -10107,6 +10107,23 @@
         }
       }
     },
+    "settings_notifications_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihaz"
+          }
+        }
+      }
+    },
     "settings_notifications_footer": {
       "extractionState": "manual",
       "localizations": {
@@ -10120,6 +10137,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Biri görev, alışveriş maddesi, not, tarif ya da film eklediğinde, akşam yemeğini planladığında, bir görevi bitirdiğinde veya eve katıldığında bildirim alın."
+          }
+        }
+      }
+    },
+    "settings_notifications_no_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not registered"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayıtlı değil"
           }
         }
       }

@@ -222,6 +222,26 @@ public struct SettingsView: View {
                     }
                 }
                 .disabled(store.isSendingTestPush)
+
+                // Whether this particular device is actually reachable.
+                //
+                // "Notifications are on" and "the server can reach this phone"
+                // are different claims, and only the second one delivers
+                // anything. A device whose token never arrived looks identical
+                // to a working one from this screen, which turned a five-minute
+                // question — which of these rows is my phone? — into an
+                // afternoon of guessing.
+                LabeledContent {
+                    Text(store.pushTokenSummary)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(store.pushToken == nil ? .red : .secondary)
+                } label: {
+                    Label {
+                        Text(L10n.settingsNotificationsDevice)
+                    } icon: {
+                        Image(systemName: "iphone.gen3.radiowaves.left.and.right")
+                    }
+                }
             }
         } header: {
             Text(L10n.settingsNotificationsTitle)
