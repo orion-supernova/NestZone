@@ -1867,6 +1867,105 @@ struct MessagesTests {
         #expect(state.title(for: group) != " Chat")
     }
 
+    @Test("Editing rewrites the bubble, and puts it back if the server refuses")
+    func editThroughTheComposer() async {
+        let saved = LockIsolated<[String]>([])
+        var state = chat()
+        state.messages = [Message(id: "m1", senderID: "me", content: "helo", readBy: ["me"])]
+
+        let store = TestStore(initialState: state) { ChatFeature() } withDependencies: {
+            $0.messages.edit = { _, text in saved.withValue { $0.append(text) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.editTapped("m1"))
+        // The composer is loaded with the message, not left empty.
+        #expect(store.state.draft == "helo")
+        #expect(store.state.isEditing)
+
+        await store.send(.binding(.set(\.draft, "hello")))
+        await store.send(.sendTapped)
+        await store.finish()
+
+        #expect(saved.value == ["hello"])
+        #expect(store.state.messages[id: MessageID("m1")]?.content == "hello")
+        #expect(!store.state.isEditing)
+        #expect(store.state.draft.isEmpty)
+        // An edit is not a new message.
+        #expect(store.state.pending.isEmpty)
+        #expect(store.state.ordered.count == 1)
+    }
+
+    @Test("A rejected edit restores the original text")
+    func failedEditRestores() async {
+        var state = chat()
+        state.messages = [Message(id: "m1", senderID: "me", content: "original", readBy: ["me"])]
+
+        let store = TestStore(initialState: state) { ChatFeature() } withDependencies: {
+            $0.messages.edit = { _, _ in throw AppError.server("no") }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.editTapped("m1"))
+        await store.send(.binding(.set(\.draft, "rewritten")))
+        await store.send(.sendTapped)
+        #expect(store.state.messages[id: MessageID("m1")]?.content == "rewritten")
+
+        await store.receive(\.editFailed, timeout: .seconds(5))
+        #expect(store.state.messages[id: MessageID("m1")]?.content == "original")
+        #expect(store.state.alert != nil)
+    }
+
+    @Test("A deleted message goes at once, and comes back if the delete fails")
+    func deleteIsOptimistic() async {
+        let outcome = LockIsolated(true)
+        var state = chat()
+        state.messages = [
+            Message(id: "m1", senderID: "me", content: "one", readBy: ["me"]),
+            Message(id: "m2", senderID: "me", content: "two", readBy: ["me"]),
+        ]
+
+        let store = TestStore(initialState: state) { ChatFeature() } withDependencies: {
+            $0.messages.delete = { _ in
+                if !outcome.value { throw AppError.server("no") }
+            }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.deleteTapped("m1"))
+        #expect(store.state.ordered.map(\.id) == [MessageID("m2")])
+        await store.finish()
+
+        // A push that still carries the row must not blink it back on screen.
+        await store.send(.messagesUpdated(Array(state.messages)))
+        #expect(store.state.ordered.map(\.id) == [MessageID("m2")])
+
+        // Once the server has really dropped it, the hold is released.
+        await store.send(.messagesUpdated([state.messages[1]]))
+        #expect(store.state.deleting.isEmpty)
+
+        // A failed delete has no push coming to undo it, so it restores itself.
+        outcome.setValue(false)
+        await store.send(.deleteTapped("m2"))
+        #expect(store.state.ordered.isEmpty)
+        await store.receive(\.deleteFailed, timeout: .seconds(5))
+        #expect(store.state.ordered.map(\.id) == [MessageID("m2")])
+    }
+
+    @Test("Only your own delivered messages offer edit and delete")
+    func whatCanBeModified() {
+        var state = chat()
+        let mine = Message(id: "m1", senderID: "me", content: "mine")
+        let theirs = Message(id: "m2", senderID: "them", content: "theirs")
+        state.messages = [mine, theirs]
+        state.pending = [.init(id: "pending:1", content: "in flight", senderID: "me")]
+
+        #expect(state.canModify(mine))
+        #expect(!state.canModify(theirs))
+        // Nothing to edit or delete about a message the server has not stored.
+        #expect(!state.canModify(state.pending[0].message))
+    }
+
     @Test("Renaming a thread reaches the list it was opened from")
     func renameReachesTheList() async {
         let renamed = Conversation(

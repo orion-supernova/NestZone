@@ -3224,6 +3224,10 @@ public enum L10n {
         r("messages_group_default_title", "\(a0) Chat")
     }
 
+    public static var messagesEditingBanner: LocalizedStringResource {
+        r("messages_editing_banner", "Editing message")
+    }
+
     public static var messagesRenameTitle: LocalizedStringResource {
         r("messages_rename_title", "Rename chat")
     }

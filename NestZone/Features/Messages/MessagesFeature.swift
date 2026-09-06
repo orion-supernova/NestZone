@@ -246,6 +246,14 @@ public struct ChatFeature: Sendable {
         /// cannot carry input.
         public var isRenaming = false
         public var renameDraft = ""
+        /// The message the composer is rewriting, if any. Editing borrows the
+        /// composer rather than opening an alert: a message can be paragraphs
+        /// long, and a one-line alert field is no place to rework it.
+        public var editing: MessageID?
+        /// Deleted here, not yet gone on the server. Filtered out of the thread
+        /// and out of incoming pushes, which would otherwise resurrect them
+        /// between the mutation landing and the subscription catching up.
+        public var deleting: Set<MessageID> = []
         @Presents public var alert: AlertState<Action.Alert>?
 
         /// Names the next optimistic bubble. A counter rather than a UUID so the
@@ -268,12 +276,21 @@ public struct ChatFeature: Sendable {
         /// Oldest first, which is the order a chat reads in, with anything still
         /// in flight tacked on the end — it is by definition the newest.
         public var ordered: [Message] {
-            messages.sorted { Timestamp.newestFirst($1.created, $0.created) }
+            messages.filter { !deleting.contains($0.id) }
+                .sorted { Timestamp.newestFirst($1.created, $0.created) }
                 + pending.map(\.message)
         }
 
         public var canSend: Bool {
             !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+
+        public var isEditing: Bool { editing != nil }
+
+        /// Only your own words, and only once they exist on the server — there
+        /// is nothing to edit or delete about a bubble still in flight.
+        public func canModify(_ message: Message) -> Bool {
+            isMine(message) && pending[id: message.id] == nil
         }
 
         /// Which side of the thread a bubble sits on: yours right, theirs left.
@@ -328,6 +345,11 @@ public struct ChatFeature: Sendable {
         case retryTapped(MessageID)
         case sendSucceeded(local: MessageID, server: MessageID)
         case sendFailed(local: MessageID, AppError)
+        case editTapped(MessageID)
+        case editCancelled
+        case editFailed(MessageID, String, AppError)
+        case deleteTapped(MessageID)
+        case deleteFailed(MessageID, AppError)
         case renameTapped
         case renameSubmitted
         case renameFinished(Conversation)
@@ -373,6 +395,16 @@ public struct ChatFeature: Sendable {
             case let .messagesUpdated(messages):
                 state.isLoading = false
                 state.messages = IdentifiedArray(uniqueElements: messages)
+                // A delete that has landed drops out of the push; anything still
+                // arriving is a row the server has not removed yet, and stays
+                // hidden rather than blinking back onto the screen.
+                state.deleting.formIntersection(state.messages.ids)
+                // Editing something that has since been deleted elsewhere would
+                // leave the composer pointed at nothing.
+                if let editing = state.editing, state.messages[id: editing] == nil {
+                    state.editing = nil
+                    state.draft = ""
+                }
                 // A bubble the server has now sent back stops being optimistic.
                 let confirmed = state.messages.ids
                 state.pending.removeAll { pending in
@@ -393,6 +425,22 @@ public struct ChatFeature: Sendable {
             case .sendTapped:
                 guard state.canSend else { return .none }
                 let text = state.draft.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                // The composer is rewriting an existing message rather than
+                // writing a new one.
+                if let id = state.editing {
+                    let previous = state.messages[id: id]?.content ?? ""
+                    state.editing = nil
+                    state.draft = ""
+                    guard text != previous else { return .none }
+                    state.messages[id: id]?.content = text
+                    return .run { _ in
+                        try await messagesClient.edit(id, text)
+                    } catch: { error, send in
+                        await send(.editFailed(id, previous, AppError(error)))
+                    }
+                }
+
                 // Clear immediately: the field must be ready for the next line
                 // before the round trip completes.
                 state.draft = ""
@@ -428,6 +476,50 @@ public struct ChatFeature: Sendable {
                 // already cleared, so a failed send lost what you wrote.
                 state.pending[id: local]?.failed = true
                 guard case .validation = error else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case let .editTapped(id):
+                guard let message = state.messages[id: id], state.canModify(message) else {
+                    return .none
+                }
+                state.editing = id
+                state.draft = message.content
+                return .none
+
+            case .editCancelled:
+                state.editing = nil
+                state.draft = ""
+                return .none
+
+            case let .editFailed(id, previous, error):
+                state.messages[id: id]?.content = previous
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case let .deleteTapped(id):
+                guard let message = state.messages[id: id], state.canModify(message) else {
+                    return .none
+                }
+                // Gone from the thread now; the subscription makes it official.
+                state.deleting.insert(id)
+                if state.editing == id {
+                    state.editing = nil
+                    state.draft = ""
+                }
+                return .run { _ in
+                    try await messagesClient.delete(id)
+                } catch: { error, send in
+                    await send(.deleteFailed(id, AppError(error)))
+                }
+
+            case let .deleteFailed(id, error):
+                // Nothing changed on the server, so no push is coming to put it
+                // back. It has to be restored here or it is gone until the next
+                // unrelated write.
+                state.deleting.remove(id)
+                guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
 

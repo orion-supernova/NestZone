@@ -142,7 +142,11 @@ struct ChatView: View {
                                     && !store.state.isMine(message),
                                 isPending: store.state.isPending(message),
                                 hasFailed: store.state.hasFailed(message),
-                                retry: { store.send(.retryTapped(message.id)) }
+                                canModify: store.state.canModify(message),
+                                isBeingEdited: store.editing == message.id,
+                                retry: { store.send(.retryTapped(message.id)) },
+                                edit: { store.send(.editTapped(message.id)) },
+                                delete: { store.send(.deleteTapped(message.id)) }
                             )
                             .id(message.id)
                         }
@@ -151,16 +155,22 @@ struct ChatView: View {
                     .padding(.vertical, Metrics.stackSpacing)
                 }
             }
+            // Opens on the newest message. `defaultScrollAnchor` is resolved
+            // during layout, unlike a `scrollTo` fired from `onAppear`: that ran
+            // before the thread had been measured, which is what left a band of
+            // empty space above the first bubble on returning to the tab, and
+            // why the smallest scroll made it snap back.
+            .defaultScrollAnchor(.bottom)
             .onChange(of: store.state.ordered.last?.id) { _, _ in
                 scrollToNewest(proxy, animated: true)
             }
-            // `onChange` does not fire for the value a view starts with, so the
-            // first page of history — which arrives before the thread is on
-            // screen — left the chat parked at the oldest message it had.
-            .onAppear { scrollToNewest(proxy, animated: false) }
         }
         .background(Backdrop(tint: theme.accent))
+        // Swipe the keyboard down, or tap anywhere off the composer to put it
+        // away. `simultaneousGesture` so the tap does not eat scrolling or the
+        // bubbles' own context menus.
         .scrollDismissesKeyboard(.interactively)
+        .simultaneousGesture(TapGesture().onEnded { isComposerFocused = false })
         .safeAreaInset(edge: .bottom) { composer }
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -190,37 +200,65 @@ struct ChatView: View {
         )
     }
 
-    private func scrollToNewest(_ proxy: ScrollViewProxy, animated: Bool) {
+    private func scrollToNewest(_ proxy: ScrollViewProxy, animated: Bool = true) {
         guard let last = store.state.ordered.last else { return }
-        guard animated else {
-            proxy.scrollTo(last.id, anchor: .bottom)
-            return
-        }
         withAnimation(Motion.spring) { proxy.scrollTo(last.id, anchor: .bottom) }
     }
 
     private var composer: some View {
-        HStack(spacing: 10) {
-            TextField(text: $store.draft, axis: .vertical) {
-                Text(L10n.messagesComposePlaceholder)
+        VStack(spacing: 6) {
+            // Says what the composer is about to do, and offers the way out.
+            // Without it, an edit in progress is indistinguishable from a draft.
+            if store.isEditing {
+                HStack(spacing: 8) {
+                    Image(systemName: "pencil")
+                    Text(L10n.messagesEditingBanner)
+                    Spacer(minLength: 0)
+                    Button { store.send(.editCancelled) } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .symbolRenderingMode(.hierarchical)
+                    }
+                    .buttonStyle(.pressable)
+                    .accessibilityLabel(Text(L10n.commonCancel))
+                }
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            .focused($isComposerFocused)
-            .lineLimit(1...5)
 
-            Button { store.send(.sendTapped) } label: {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .symbolRenderingMode(.hierarchical)
+            HStack(spacing: 10) {
+                TextField(text: $store.draft, axis: .vertical) {
+                    Text(L10n.messagesComposePlaceholder)
+                }
+                .focused($isComposerFocused)
+                .lineLimit(1...5)
+
+                Button { store.send(.sendTapped) } label: {
+                    Image(systemName: store.isEditing
+                        ? "checkmark.circle.fill"
+                        : "arrow.up.circle.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .buttonStyle(.pressable)
+                .disabled(!store.canSend)
+                .opacity(store.canSend ? 1 : 0.4)
+                .animation(Motion.fade, value: store.canSend)
+                .accessibilityLabel(Text(store.isEditing
+                    ? L10n.commonSave
+                    : L10n.messagesComposePlaceholder))
             }
-            .buttonStyle(.pressable)
-            .disabled(!store.canSend)
-            .opacity(store.canSend ? 1 : 0.4)
-            .animation(Motion.fade, value: store.canSend)
-            .accessibilityLabel(Text(L10n.messagesComposePlaceholder))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .glassEffect(.regular.interactive(), in: .capsule)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .glassEffect(.regular.interactive(), in: .capsule)
+        .animation(Motion.spring, value: store.isEditing)
+        // Editing starts from a context menu, not from the composer, so the
+        // keyboard has to be sent for.
+        .onChange(of: store.editing) { _, editing in
+            if editing != nil { isComposerFocused = true }
+        }
         .padding(.horizontal, Metrics.screenPadding)
         .padding(.bottom, 8)
     }
@@ -234,7 +272,12 @@ private struct MessageBubble: View {
     /// Drawn before the server has confirmed it, and dimmed to say so.
     let isPending: Bool
     let hasFailed: Bool
+    /// Your own words, already on the server — the only thing worth a menu.
+    let canModify: Bool
+    let isBeingEdited: Bool
     let retry: () -> Void
+    let edit: () -> Void
+    let delete: () -> Void
 
     @Environment(\.theme) private var theme
 
@@ -286,7 +329,27 @@ private struct MessageBubble: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
+        .contextMenu {
+            if canModify {
+                Button { edit() } label: {
+                    Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
+                }
+                Button(role: .destructive) { delete() } label: {
+                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
+                }
+            }
+        }
         .animation(Motion.fade, value: isPending)
+        // Marks which bubble the composer is currently rewriting.
+        .overlay(alignment: isMine ? .topLeading : .topTrailing) {
+            if isBeingEdited {
+                Image(systemName: "pencil.circle.fill")
+                    .font(.caption)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .padding(4)
+            }
+        }
         .transition(.move(edge: isMine ? .trailing : .leading).combined(with: .opacity))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("\(senderName): \(message.content)"))

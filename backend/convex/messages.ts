@@ -92,6 +92,69 @@ export const send = mutation({
   },
 });
 
+/**
+ * The author of a message, or a throw.
+ *
+ * Participation is not enough: anyone in the thread could otherwise rewrite or
+ * delete anybody else's words.
+ */
+async function assertAuthor(ctx: MutationCtx, messageId: Id<"messages">) {
+  const user = await requireUser(ctx);
+  const message = await ctx.db.get(messageId);
+  if (!message) throw new Error("Message not found");
+  if (message.sender_id !== user._id) {
+    throw new Error("You can only change your own messages");
+  }
+  // Still has to be a thread they belong to -- membership can have been lost
+  // since the message was written.
+  const { convo } = await assertParticipant(ctx, message.conversation_id);
+  return { user, message, convo };
+}
+
+/**
+ * Repoint a conversation's preview at whatever is newest now.
+ *
+ * The list is ordered by `last_message_at` and shows `last_message`, so editing
+ * or deleting the newest message leaves the row quoting text that no longer
+ * exists -- or text that was never the latest.
+ */
+async function refreshPreview(ctx: MutationCtx, conversationId: Id<"conversations">) {
+  const [newest] = await ctx.db
+    .query("messages")
+    .withIndex("by_conversation", (q) => q.eq("conversation_id", conversationId))
+    .order("desc")
+    .take(1);
+  await ctx.db.patch(conversationId, {
+    last_message: newest?.content,
+    last_message_at: newest?.created,
+    updated: Date.now(),
+  });
+}
+
+/** Rewrite one of your own messages. */
+export const edit = mutation({
+  args: { messageId: v.id("messages"), content: v.string() },
+  handler: async (ctx, { messageId, content }) => {
+    const { message } = await assertAuthor(ctx, messageId);
+    const trimmed = content.trim();
+    if (!trimmed) throw new Error("Message is empty");
+    await ctx.db.patch(messageId, { content: trimmed, updated: Date.now() });
+    await refreshPreview(ctx, message.conversation_id);
+    return await ctx.db.get(messageId);
+  },
+});
+
+/** Delete one of your own messages. `remove`, because `delete` is a keyword. */
+export const remove = mutation({
+  args: { messageId: v.id("messages") },
+  handler: async (ctx, { messageId }) => {
+    const { message } = await assertAuthor(ctx, messageId);
+    await ctx.db.delete(messageId);
+    await refreshPreview(ctx, message.conversation_id);
+    return { ok: true };
+  },
+});
+
 /** Mark messages as read by the current user. */
 export const markRead = mutation({
   args: { conversationId: v.id("conversations") },

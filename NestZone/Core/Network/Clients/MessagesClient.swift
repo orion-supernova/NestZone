@@ -14,6 +14,10 @@ public struct MessagesClient: Sendable {
     /// its optimistic twin sit side by side.
     public var send: @Sendable (ConversationID, String) async throws -> MessageID
     public var markRead: @Sendable (ConversationID) async throws -> Void
+    /// Rewrites one of your own messages.
+    public var edit: @Sendable (MessageID, String) async throws -> Void
+    /// Deletes one of your own messages.
+    public var delete: @Sendable (MessageID) async throws -> Void
     /// Renames a thread. An empty title clears it, putting the conversation back
     /// on its default name.
     public var rename: @Sendable (ConversationID, String) async throws -> Conversation
@@ -58,6 +62,23 @@ extension MessagesClient: DependencyKey {
         markRead: { conversationID in
             try await ConvexConnection.shared.mutate(
                 "messages:markRead", args: ["conversationId": conversationID]
+            )
+        },
+        edit: { messageID, content in
+            let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else {
+                throw AppError.validation(String(
+                    localized: "validation.messageEmpty",
+                    defaultValue: "Type a message first."
+                ))
+            }
+            try await ConvexConnection.shared.mutate(
+                "messages:edit", args: ["messageId": messageID, "content": trimmed]
+            )
+        },
+        delete: { messageID in
+            try await ConvexConnection.shared.mutate(
+                "messages:remove", args: ["messageId": messageID]
             )
         },
         rename: { conversationID, title in

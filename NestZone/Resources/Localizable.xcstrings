@@ -4418,6 +4418,23 @@
         }
       }
     },
+    "messages_editing_banner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editing message"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesaj düzenleniyor"
+          }
+        }
+      }
+    },
     "messages_empty_state_subtitle": {
       "extractionState": "manual",
       "localizations": {
