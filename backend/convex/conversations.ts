@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { requireMembers } from "./lib/relations";
 
@@ -17,12 +18,19 @@ export const listByHome = query({
   },
 });
 
+/** Same people, in any order. */
+function sameParticipants(a: Id<"users">[], b: Id<"users">[]): boolean {
+  if (a.length !== b.length) return false;
+  const set = new Set(a);
+  return b.every((id) => set.has(id));
+}
+
 export const create = mutation({
   args: {
     homeId: v.id("homes"),
     participants: v.array(v.id("users")),
     title: v.optional(v.string()),
-    is_group_chat: v.optional(v.boolean()),
+    isGroupChat: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -32,12 +40,33 @@ export const create = mutation({
     // caller could name any user id and hand them read access to the whole
     // conversation via messages:assertParticipant.
     await requireMembers(ctx, home, participants, "Conversation participants");
+    if (participants.length < 2) {
+      throw new Error("A conversation needs somebody else in it");
+    }
+    const isGroupChat = args.isGroupChat ?? participants.length > 2;
+
+    // Messaging the same person twice reopens the thread you already have with
+    // them instead of stacking a second empty one beside it — two 1:1 threads
+    // with identical participants are indistinguishable in the list, and half
+    // the history ends up in each. Groups are exempt: a household may well want
+    // several named chats among the same people.
+    if (!isGroupChat) {
+      const existing = await ctx.db
+        .query("conversations")
+        .withIndex("by_home", (q) => q.eq("home_id", args.homeId))
+        .collect();
+      const already = existing.find(
+        (c) => !c.is_group_chat && sameParticipants(c.participants ?? [], participants),
+      );
+      if (already) return already;
+    }
+
     const now = Date.now();
     const id = await ctx.db.insert("conversations", {
       home_id: args.homeId,
       participants,
       title: args.title,
-      is_group_chat: args.is_group_chat ?? participants.length > 2,
+      is_group_chat: isGroupChat,
       created: now,
       updated: now,
     });

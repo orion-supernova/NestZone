@@ -120,6 +120,10 @@ struct ChatView: View {
     @FocusState private var isComposerFocused: Bool
 
     var body: some View {
+        // Sorted once per render. `startsGroup` used to reach for `ordered`
+        // itself, which re-sorted the whole thread for every bubble on screen.
+        let thread = store.state.ordered
+
         ScrollViewReader { proxy in
             ScrollView {
                 // Bubbles are the one place in the app with many glass shapes
@@ -129,13 +133,16 @@ struct ChatView: View {
                 // blobs.
                 GlassEffectContainer(spacing: 0) {
                     LazyVStack(spacing: 4) {
-                        ForEach(Array(store.state.ordered.enumerated()), id: \.element.id) { index, message in
+                        ForEach(Array(thread.enumerated()), id: \.element.id) { index, message in
                             MessageBubble(
                                 message: message,
                                 isMine: store.state.isMine(message),
                                 senderName: store.state.senderName(for: message),
-                                showsSender: store.state.startsGroup(at: index)
-                                    && !store.state.isMine(message)
+                                showsSender: store.state.startsGroup(at: index, in: thread)
+                                    && !store.state.isMine(message),
+                                isPending: store.state.isPending(message),
+                                hasFailed: store.state.hasFailed(message),
+                                retry: { store.send(.retryTapped(message.id)) }
                             )
                             .id(message.id)
                         }
@@ -144,10 +151,13 @@ struct ChatView: View {
                     .padding(.vertical, Metrics.stackSpacing)
                 }
             }
-            .onChange(of: store.messages) { _, _ in
-                guard let last = store.state.ordered.last else { return }
-                withAnimation(Motion.spring) { proxy.scrollTo(last.id, anchor: .bottom) }
+            .onChange(of: store.state.ordered.last?.id) { _, _ in
+                scrollToNewest(proxy, animated: true)
             }
+            // `onChange` does not fire for the value a view starts with, so the
+            // first page of history — which arrives before the thread is on
+            // screen — left the chat parked at the oldest message it had.
+            .onAppear { scrollToNewest(proxy, animated: false) }
         }
         .background(Backdrop(tint: theme.accent))
         .scrollDismissesKeyboard(.interactively)
@@ -156,6 +166,15 @@ struct ChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await store.send(.task).finish() }
         .alert($store.scope(state: \.alert, action: \.alert))
+    }
+
+    private func scrollToNewest(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard let last = store.state.ordered.last else { return }
+        guard animated else {
+            proxy.scrollTo(last.id, anchor: .bottom)
+            return
+        }
+        withAnimation(Motion.spring) { proxy.scrollTo(last.id, anchor: .bottom) }
     }
 
     private var composer: some View {
@@ -190,6 +209,10 @@ private struct MessageBubble: View {
     let isMine: Bool
     let senderName: String
     let showsSender: Bool
+    /// Drawn before the server has confirmed it, and dimmed to say so.
+    let isPending: Bool
+    let hasFailed: Bool
+    let retry: () -> Void
 
     @Environment(\.theme) private var theme
 
@@ -221,11 +244,32 @@ private struct MessageBubble: View {
                     in: .rect(cornerRadius: 18, style: .continuous)
                 )
                 .frame(maxWidth: 280, alignment: isMine ? .trailing : .leading)
+                .opacity(isPending && !hasFailed ? 0.55 : 1)
+
+            // A send that failed keeps its bubble and says so, rather than
+            // taking the text down with it.
+            if hasFailed {
+                Button(action: retry) {
+                    Label {
+                        Text(L10n.messagesChatMessageFailed)
+                    } icon: {
+                        Image(systemName: "arrow.clockwise.circle.fill")
+                    }
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(Palette.danger)
+                    .padding(.horizontal, 12)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.pressable)
+            }
         }
         .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
+        .animation(Motion.fade, value: isPending)
         .transition(.move(edge: isMine ? .trailing : .leading).combined(with: .opacity))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("\(senderName): \(message.content)"))
+        .accessibilityValue(hasFailed ? Text(L10n.messagesChatMessageFailed) : Text(""))
+        .accessibilityAction(named: Text(L10n.commonRetry)) { if hasFailed { retry() } }
     }
 }
 
@@ -238,6 +282,18 @@ struct NewConversationSheet: View {
         NavigationStack {
             Form {
                 Section {
+                    // A one-person household has nobody to start a thread with,
+                    // and an empty picker with a dead Create button does not say
+                    // so. The invite code is the actual next step.
+                    if store.hasNobodyToMessage {
+                        Label {
+                            Text(L10n.messagesNobodyToMessage)
+                        } icon: {
+                            Image(systemName: "person.badge.plus")
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+
                     ForEach(store.selectableMembers) { member in
                         Button { store.send(.memberToggled(member.id)) } label: {
                             HStack(spacing: 12) {

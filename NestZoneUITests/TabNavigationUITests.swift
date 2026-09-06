@@ -29,9 +29,7 @@ final class TabNavigationUITests: XCTestCase {
     func testEveryTabOpens() throws {
         try requireSignedIn()
 
-        // No "MessagesTab": the tab is hidden, though the feature behind it
-        // is still built and still covered by the reducer tests.
-        for identifier in ["HomeTab", "HubTab", "NotesTab", "SettingsTab"] {
+        for identifier in ["HomeTab", "HubTab", "NotesTab", "MessagesTab", "SettingsTab"] {
             let tab = app.buttons[identifier]
             XCTAssertTrue(tab.waitForExistence(timeout: 5), "\(identifier) is missing")
             tab.tap()

@@ -126,6 +126,16 @@ public struct HomeView: View {
                         symbol: "exclamationmark.triangle.fill",
                         tint: Palette.warning
                     ) { store.send(.delegate(.openTasks)) }
+
+                    // `stats:forHome` has counted unread messages since the
+                    // server took the tiles over; nothing had ever displayed it.
+                    StatTile(
+                        title: L10n.homeStatsMessagesTitle,
+                        value: store.stats.unreadMessages,
+                        change: store.stats.messagesChange,
+                        symbol: "bubble.left.and.bubble.right.fill",
+                        tint: Palette.accessory
+                    ) { store.send(.delegate(.openMessages)) }
                 }
             }
             .redacted(reason: store.isLoading ? .placeholder : [])

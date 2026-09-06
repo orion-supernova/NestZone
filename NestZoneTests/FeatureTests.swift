@@ -1619,3 +1619,257 @@ struct RelativeTimeTests {
         #expect(!weekOld.hasSuffix("ago"))
     }
 }
+
+// MARK: - Messages
+
+@MainActor
+@Suite("Messages")
+struct MessagesTests {
+
+    private func chat(
+        _ conversation: Conversation = Conversation(id: "c1", participants: ["me", "them"]),
+        me: UserID? = "me",
+        draft: String = ""
+    ) -> ChatFeature.State {
+        var state = ChatFeature.State(
+            conversation: conversation,
+            title: "Them",
+            currentUserID: me,
+            members: [User(id: "me", name: "Me"), User(id: "them", name: "Them")]
+        )
+        state.draft = draft
+        return state
+    }
+
+    @Test("A sent message is on screen before the server has heard of it")
+    func sendIsOptimistic() async {
+        let store = TestStore(initialState: chat(draft: "hello")) { ChatFeature() } withDependencies: {
+            $0.messages.send = { _, _ in "m1" }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.sendTapped) {
+            $0.draft = ""
+            $0.pendingSeq = 1
+            $0.pending = [.init(id: "pending:1", content: "hello", senderID: "me")]
+        }
+        // The bubble is in the thread immediately, ahead of any subscription push.
+        #expect(store.state.ordered.map(\.content) == ["hello"])
+        #expect(store.state.isPending(store.state.ordered[0]))
+
+        await store.receive(\.sendSucceeded)
+        // Still shown — it is retired by its echo, not by the reply.
+        #expect(store.state.pending.count == 1)
+        #expect(store.state.pending[0].serverID == MessageID("m1"))
+
+        await store.send(.messagesUpdated([
+            Message(id: "m1", senderID: "me", content: "hello", readBy: ["me"])
+        ]))
+        #expect(store.state.pending.isEmpty)
+        #expect(store.state.ordered.map(\.id) == [MessageID("m1")])
+    }
+
+    @Test("An echo that beats the reply does not leave the message on screen twice")
+    func echoBeatsTheReply() async {
+        // The mutation is held open so the subscription genuinely wins the race:
+        // Convex commits the write before it answers the caller, so the push can
+        // and does arrive first.
+        let reply = AsyncStream<Void>.makeStream()
+        let store = TestStore(initialState: chat(draft: "hi")) { ChatFeature() } withDependencies: {
+            $0.messages.send = { _, _ in
+                for await _ in reply.stream { break }
+                return "m1"
+            }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.sendTapped)
+        await store.send(.messagesUpdated([
+            Message(id: "m1", senderID: "me", content: "hi", readBy: ["me"])
+        ]))
+        // The optimistic bubble has no server id yet, so the push cannot retire
+        // it — this is the moment the message was on screen twice.
+        #expect(store.state.ordered.count == 2)
+
+        reply.continuation.finish()
+        await store.receive(\.sendSucceeded)
+
+        #expect(store.state.pending.isEmpty)
+        #expect(store.state.ordered.count == 1)
+    }
+
+    @Test("A failed send keeps the text, and can be retried")
+    func failedSendKeepsTheText() async {
+        let attempts = LockIsolated(0)
+        let store = TestStore(initialState: chat(draft: "important")) { ChatFeature() } withDependencies: {
+            $0.messages.send = { _, _ in
+                let n = attempts.withValue { $0 += 1; return $0 }
+                if n == 1 { throw AppError.server("nope") }
+                return "m1"
+            }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.sendTapped)
+        await store.receive(\.sendFailed)
+
+        // Not swallowed with the cleared draft: the words are still on screen.
+        #expect(store.state.ordered.map(\.content) == ["important"])
+        #expect(store.state.hasFailed(store.state.ordered[0]))
+
+        await store.send(.retryTapped("pending:1"))
+        await store.receive(\.sendSucceeded)
+        #expect(!store.state.hasFailed(store.state.ordered[0]))
+        #expect(attempts.value == 2)
+    }
+
+    @Test("Read receipts are sent for unread messages only")
+    func readReceiptsDoNotLoop() async {
+        let marked = LockIsolated(0)
+        let store = TestStore(initialState: chat()) { ChatFeature() } withDependencies: {
+            $0.messages.markRead = { _ in marked.withValue { $0 += 1 } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        let unread = Message(id: "m1", senderID: "them", content: "yo", readBy: ["them"])
+        await store.send(.messagesUpdated([unread]))
+        await store.finish()
+        #expect(marked.value == 1)
+
+        // markRead writes, the write pushes the subscription, and the push must
+        // not answer with another markRead.
+        var read = unread
+        read.readBy = ["them", "me"]
+        await store.send(.messagesUpdated([read]))
+        await store.finish()
+        #expect(marked.value == 1)
+
+        // My own messages were never unread to begin with.
+        await store.send(.messagesUpdated([
+            read, Message(id: "m2", senderID: "me", content: "hey", readBy: ["me"]),
+        ]))
+        await store.finish()
+        #expect(marked.value == 1)
+    }
+
+    @Test("Bubbles read oldest first, with anything in flight last")
+    func threadOrder() {
+        var state = chat()
+        state.messages = [
+            Message(id: "m2", senderID: "me", content: "second", created: .init(milliseconds: 200)),
+            Message(id: "m1", senderID: "them", content: "first", created: .init(milliseconds: 100)),
+        ]
+        state.pending = [.init(id: "pending:1", content: "third", senderID: "me")]
+        #expect(state.ordered.map(\.content) == ["first", "second", "third"])
+
+        let thread = state.ordered
+        #expect(state.startsGroup(at: 0, in: thread))
+        #expect(state.startsGroup(at: 1, in: thread))   // them -> me
+        #expect(!state.startsGroup(at: 2, in: thread))  // me -> me
+    }
+
+    @Test("Creating a conversation opens it, without waiting for the subscription")
+    func createOpensTheThread() async {
+        let made = Conversation(id: "c9", participants: ["me", "them"], isGroupChat: false)
+        var state = MessagesFeature.State(homeID: "h1", currentUserID: "me")
+        state.members = [User(id: "me", name: "Me"), User(id: "them", name: "Them")]
+        state.destination = .compose(NewConversationFeature.State(
+            homeID: "h1", currentUserID: "me", members: state.members
+        ))
+
+        let store = TestStore(initialState: state) { MessagesFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.destination(.presented(.compose(.finished(made))))) {
+            $0.destination = nil
+            $0.conversations = [made]
+        }
+        #expect(store.state.path.count == 1)
+        guard case let .chat(chat) = store.state.path[0] else {
+            Issue.record("expected the new conversation to be pushed")
+            return
+        }
+        #expect(chat.conversation.id == ConversationID("c9"))
+        #expect(chat.title == "Them")
+    }
+
+    @Test("Members arriving late reach the thread that is already open")
+    func membersReachOpenChats() async {
+        var state = MessagesFeature.State(homeID: "h1", currentUserID: "me")
+        let conversation = Conversation(id: "c1", participants: ["me", "them"])
+        // Opened before `homes:members` had yielded — the title falls back.
+        state.path.append(.chat(ChatFeature.State(
+            conversation: conversation,
+            title: state.title(for: conversation),
+            currentUserID: "me",
+            members: []
+        )))
+
+        let store = TestStore(initialState: state) { MessagesFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.membersUpdated([User(id: "me", name: "Me"), User(id: "them", name: "Them")]))
+
+        guard case let .chat(chat) = store.state.path[0] else {
+            Issue.record("expected a chat on the stack")
+            return
+        }
+        #expect(chat.members.count == 2)
+        #expect(chat.title == "Them")
+        #expect(chat.senderName(for: Message(id: "m1", senderID: "them", content: "x")) == "Them")
+    }
+
+    @Test("You are never in your own participant picker")
+    func pickerExcludesYou() {
+        let state = NewConversationFeature.State(
+            homeID: "h1",
+            currentUserID: "me",
+            members: [User(id: "me", name: "Me"), User(id: "them", name: "Them")]
+        )
+        #expect(state.selectableMembers.map(\.id) == [UserID("them")])
+        #expect(!state.hasNobodyToMessage)
+        #expect(!state.canSubmit)
+
+        let alone = NewConversationFeature.State(
+            homeID: "h1", currentUserID: "me", members: [User(id: "me", name: "Me")]
+        )
+        #expect(alone.hasNobodyToMessage)
+    }
+
+    @Test("Two people is a chat; three is a group")
+    func groupThreshold() async {
+        let sent = LockIsolated<[(HomeID, [UserID], String?, Bool)]>([])
+        let store = TestStore(
+            initialState: NewConversationFeature.State(
+                homeID: "h1",
+                currentUserID: "me",
+                members: [
+                    User(id: "me", name: "Me"),
+                    User(id: "a", name: "A"),
+                    User(id: "b", name: "B"),
+                ]
+            )
+        ) { NewConversationFeature() } withDependencies: {
+            $0.messages.createConversation = { home, participants, title, isGroup in
+                sent.withValue { $0.append((home, participants, title, isGroup)) }
+                return Conversation(id: "c1", participants: participants, isGroupChat: isGroup)
+            }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.memberToggled("a"))
+        #expect(!store.state.isGroup)
+        await store.send(.memberToggled("b"))
+        #expect(store.state.isGroup)
+
+        await store.send(.submitTapped)
+        await store.receive(\.finished)
+        // Not left stuck mid-submit for a parent that keeps the state around.
+        #expect(!store.state.isSubmitting)
+
+        let call = sent.value[0]
+        #expect(call.1 == [UserID("a"), UserID("b"), UserID("me")])
+        #expect(call.2 == nil)      // a blank group name is not sent
+        #expect(call.3)
+    }
+}

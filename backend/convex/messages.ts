@@ -45,17 +45,24 @@ export const send = mutation({
   args: {
     conversationId: v.id("conversations"),
     content: v.string(),
-    message_type: v.optional(messageType),
+    messageType: v.optional(messageType),
     file: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const { user, convo } = await assertParticipant(ctx, args.conversationId);
+    const kind = args.messageType ?? "text";
+    // A blank bubble is not a message. The composer already refuses to send one;
+    // this is so a retry, a paste of whitespace or a future client cannot.
+    const content = args.content.trim();
+    if (!content && kind === "text" && !args.file) {
+      throw new Error("Message is empty");
+    }
     const now = Date.now();
     const id = await ctx.db.insert("messages", {
       conversation_id: args.conversationId,
       sender_id: user._id,
-      content: args.content,
-      message_type: args.message_type ?? "text",
+      content,
+      message_type: kind,
       file: args.file,
       read_by: [user._id],
       created: now,
@@ -63,7 +70,7 @@ export const send = mutation({
     });
     // Keep conversation preview in sync (drives the chat list ordering).
     await ctx.db.patch(args.conversationId, {
-      last_message: args.content,
+      last_message: content,
       last_message_at: now,
       updated: now,
     });
@@ -76,10 +83,7 @@ export const send = mutation({
       userIds: convo.participants ?? [],
       actor: user._id,
       title: user.name ?? NOTIFY_TITLE,
-      body:
-        args.message_type === "image"
-          ? "Sent a photo"
-          : args.content.slice(0, 120),
+      body: kind === "image" ? "Sent a photo" : content.slice(0, 120),
       category: "messages",
       threadId: args.conversationId,
     });

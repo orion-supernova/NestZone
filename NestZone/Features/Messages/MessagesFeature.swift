@@ -44,6 +44,29 @@ public struct MessagesFeature: Sendable {
                 )
             }
         }
+
+        /// Hands the session down to every chat already on the stack.
+        ///
+        /// A chat takes its copy of the roster when it is pushed. Members and the
+        /// signed-in user both arrive asynchronously, so without this a thread
+        /// opened before either landed would keep drawing "Member" over every
+        /// bubble — and, with no `currentUserID`, would draw the user's own
+        /// messages as somebody else's, left-aligned and in glass.
+        mutating func propagateToOpenChats() {
+            for id in path.ids {
+                guard case var .chat(chat) = path[id: id] else { continue }
+                chat.members = members
+                chat.currentUserID = currentUserID
+                chat.title = title(for: chat.conversation)
+                path[id: id] = .chat(chat)
+            }
+        }
+
+        /// Mirrors the session in, then down. Called by `MainFeature`.
+        public mutating func apply(currentUserID: UserID?) {
+            self.currentUserID = currentUserID
+            propagateToOpenChats()
+        }
     }
 
     @Reducer
@@ -109,6 +132,7 @@ public struct MessagesFeature: Sendable {
 
             case let .membersUpdated(members):
                 state.members = IdentifiedArray(uniqueElements: members)
+                state.propagateToOpenChats()
                 return .none
 
             case let .loadFailed(error):
@@ -134,8 +158,21 @@ public struct MessagesFeature: Sendable {
                 ))
                 return .none
 
-            case .destination(.presented(.compose(.finished))):
+            // A conversation you just made opens straight into its thread —
+            // being dropped back on the list to hunt for the row you just
+            // created is what made the sheet feel like it had done nothing.
+            // The row is inserted here rather than waited for: the subscription
+            // will confirm it a moment later, and re-sending the same id into an
+            // `IdentifiedArray` overwrites rather than duplicates.
+            case let .destination(.presented(.compose(.finished(conversation)))):
                 state.destination = nil
+                state.conversations[id: conversation.id] = conversation
+                state.path.append(.chat(ChatFeature.State(
+                    conversation: conversation,
+                    title: state.title(for: conversation),
+                    currentUserID: state.currentUserID,
+                    members: state.members
+                )))
                 return .none
 
             case .path, .destination, .alert:
@@ -156,6 +193,23 @@ public struct ChatFeature: Sendable {
     /// whole thread made the first paint scale with the conversation's age.
     static let messageWindow = 100
 
+    /// A bubble that exists on this device only, until the live subscription
+    /// echoes it back.
+    public struct Pending: Identifiable, Equatable, Sendable {
+        /// Namespaced so it can never collide with a Convex document id, which
+        /// lets pending and confirmed bubbles share one `[Message]` for display.
+        public let id: MessageID
+        public var content: String
+        public var senderID: UserID
+        /// Filled in when the mutation returns. Identifies this bubble's echo.
+        public var serverID: MessageID?
+        public var failed = false
+
+        public var message: Message {
+            Message(id: id, senderID: senderID, content: content)
+        }
+    }
+
     @ObservableState
     public struct State: Equatable {
         public var conversation: Conversation
@@ -163,9 +217,15 @@ public struct ChatFeature: Sendable {
         public var currentUserID: UserID?
         public var members: IdentifiedArrayOf<User>
         public var messages: IdentifiedArrayOf<Message> = []
+        public var pending: IdentifiedArrayOf<Pending> = []
         public var isLoading = true
         public var draft = ""
         @Presents public var alert: AlertState<Action.Alert>?
+
+        /// Names the next optimistic bubble. A counter rather than a UUID so the
+        /// reducer stays a pure function of its state and needs no clock or
+        /// randomness to be testable.
+        var pendingSeq = 0
 
         public init(
             conversation: Conversation,
@@ -179,9 +239,11 @@ public struct ChatFeature: Sendable {
             self.members = members
         }
 
-        /// Oldest first, which is the order a chat reads in.
+        /// Oldest first, which is the order a chat reads in, with anything still
+        /// in flight tacked on the end — it is by definition the newest.
         public var ordered: [Message] {
             messages.sorted { Timestamp.newestFirst($1.created, $0.created) }
+                + pending.map(\.message)
         }
 
         public var canSend: Bool {
@@ -192,6 +254,14 @@ public struct ChatFeature: Sendable {
             message.senderID == currentUserID
         }
 
+        public func isPending(_ message: Message) -> Bool {
+            pending[id: message.id] != nil
+        }
+
+        public func hasFailed(_ message: Message) -> Bool {
+            pending[id: message.id]?.failed == true
+        }
+
         public func senderName(for message: Message) -> String {
             members[id: message.senderID]?.displayName
                 ?? String(localized: L10n.notesAuthorMember)
@@ -199,10 +269,21 @@ public struct ChatFeature: Sendable {
 
         /// Whether this message starts a new run from the same person, which is
         /// the only time the sender's name and avatar are drawn.
-        public func startsGroup(at index: Int) -> Bool {
-            let list = ordered
-            guard index > 0 else { return true }
+        ///
+        /// Takes the list rather than reaching for `ordered`: called once per row,
+        /// it used to re-sort the entire thread for every bubble on screen.
+        public func startsGroup(at index: Int, in list: [Message]) -> Bool {
+            guard index > 0, index < list.count else { return true }
             return list[index - 1].senderID != list[index].senderID
+        }
+
+        /// Whether anything here is still unread by me. Guards the read receipt:
+        /// `markRead` writes, every write pushes the subscription, and answering
+        /// every push with another `markRead` is a round trip per message for as
+        /// long as the thread is open.
+        var hasUnread: Bool {
+            guard let me = currentUserID else { return false }
+            return messages.contains { $0.senderID != me && !$0.isRead(by: me) }
         }
     }
 
@@ -211,7 +292,9 @@ public struct ChatFeature: Sendable {
         case messagesUpdated([Message])
         case loadFailed(AppError)
         case sendTapped
-        case sendFailed(AppError)
+        case retryTapped(MessageID)
+        case sendSucceeded(local: MessageID, server: MessageID)
+        case sendFailed(local: MessageID, AppError)
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
 
@@ -231,23 +314,28 @@ public struct ChatFeature: Sendable {
             switch action {
             case .task:
                 let id = state.conversation.id
-                return .merge(
-                    .run { send in
-                        for try await messages in messagesClient.messages(id, Self.messageWindow) {
-                            await send(.messagesUpdated(messages))
-                        }
-                    } catch: { error, send in
-                        await send(.loadFailed(AppError(error)))
+                // No `markRead` here: the first push arrives immediately and
+                // answers it, and firing both sent the same mutation twice on
+                // every open.
+                return .run { send in
+                    for try await messages in messagesClient.messages(id, Self.messageWindow) {
+                        await send(.messagesUpdated(messages))
                     }
-                    .cancellable(id: CancelID.messages, cancelInFlight: true),
-
-                    .run { _ in try? await messagesClient.markRead(id) }
-                )
+                } catch: { error, send in
+                    await send(.loadFailed(AppError(error)))
+                }
+                .cancellable(id: CancelID.messages, cancelInFlight: true)
 
             case let .messagesUpdated(messages):
                 state.isLoading = false
                 state.messages = IdentifiedArray(uniqueElements: messages)
-                // Anything arriving while the thread is open is read on arrival.
+                // A bubble the server has now sent back stops being optimistic.
+                let confirmed = state.messages.ids
+                state.pending.removeAll { pending in
+                    guard let server = pending.serverID else { return false }
+                    return confirmed.contains(server)
+                }
+                guard state.hasUnread else { return .none }
                 return .run { [id = state.conversation.id] _ in
                     try? await messagesClient.markRead(id)
                 }
@@ -260,18 +348,42 @@ public struct ChatFeature: Sendable {
 
             case .sendTapped:
                 guard state.canSend else { return .none }
-                let text = state.draft
+                let text = state.draft.trimmingCharacters(in: .whitespacesAndNewlines)
                 // Clear immediately: the field must be ready for the next line
                 // before the round trip completes.
                 state.draft = ""
-                return .run { [id = state.conversation.id] send in
-                    try await messagesClient.send(id, text)
-                } catch: { error, send in
-                    await send(.sendFailed(AppError(error)))
-                }
+                state.pendingSeq += 1
+                let local = MessageID("pending:\(state.pendingSeq)")
+                state.pending.append(Pending(
+                    id: local,
+                    content: text,
+                    senderID: state.currentUserID ?? ""
+                ))
+                return send(text, local: local, in: state.conversation.id)
 
-            case let .sendFailed(error):
-                guard !error.isSilent else { return .none }
+            case let .retryTapped(local):
+                guard let entry = state.pending[id: local], entry.failed else { return .none }
+                state.pending[id: local]?.failed = false
+                return send(entry.content, local: local, in: state.conversation.id)
+
+            case let .sendSucceeded(local, server):
+                // The echo can beat the mutation's own reply. If the message is
+                // already in the list, the bubble goes now; otherwise the id is
+                // parked and the next push retires it. Without both, a message
+                // that arrived early would sit on screen twice, forever.
+                if state.messages[id: server] != nil {
+                    state.pending.remove(id: local)
+                } else {
+                    state.pending[id: local]?.serverID = server
+                }
+                return .none
+
+            case let .sendFailed(local, error):
+                // The bubble stays put, marked, and can be tapped to retry —
+                // the text was previously dropped on the floor with the draft
+                // already cleared, so a failed send lost what you wrote.
+                state.pending[id: local]?.failed = true
+                guard case .validation = error else { return .none }
                 state.alert = .failure(error)
                 return .none
 
@@ -280,6 +392,19 @@ public struct ChatFeature: Sendable {
             }
         }
         .ifLet(\.$alert, action: \.alert)
+    }
+
+    private func send(
+        _ text: String,
+        local: MessageID,
+        in conversation: ConversationID
+    ) -> Effect<Action> {
+        .run { send in
+            let server = try await messagesClient.send(conversation, text)
+            await send(.sendSucceeded(local: local, server: server))
+        } catch: { error, send in
+            await send(.sendFailed(local: local, AppError(error)))
+        }
     }
 }
 
@@ -314,13 +439,17 @@ public struct NewConversationFeature: Sendable {
         public var isGroup: Bool { selected.count > 1 }
 
         public var canSubmit: Bool { !isSubmitting && !selected.isEmpty }
+
+        /// There is nobody else in the home to talk to yet. Distinct from "you
+        /// have not picked anyone", which is what a disabled Create button says.
+        public var hasNobodyToMessage: Bool { selectableMembers.isEmpty }
     }
 
     public enum Action: Equatable, BindableAction {
         case memberToggled(UserID)
         case submitTapped
         case failed(AppError)
-        case finished
+        case finished(Conversation)
         case binding(BindingAction<State>)
     }
 
@@ -345,18 +474,20 @@ public struct NewConversationFeature: Sendable {
                 guard state.canSubmit else { return .none }
                 state.isSubmitting = true
                 state.inlineError = nil
-                var participants = Array(state.selected)
+                // Sorted so the request is reproducible; `Set` has no order and
+                // an unstable participant list makes a failure hard to read back.
+                var participants = state.selected.sorted { $0.rawValue < $1.rawValue }
                 if let me = state.currentUserID { participants.append(me) }
                 return .run { [
                     homeID = state.homeID,
                     participants,
-                    title = state.title,
+                    title = state.title.trimmingCharacters(in: .whitespacesAndNewlines),
                     isGroup = state.isGroup
                 ] send in
-                    try await messages.createConversation(
+                    let conversation = try await messages.createConversation(
                         homeID, participants, title.isEmpty ? nil : title, isGroup
                     )
-                    await send(.finished)
+                    await send(.finished(conversation))
                 } catch: { error, send in
                     await send(.failed(AppError(error)))
                 }
@@ -366,7 +497,13 @@ public struct NewConversationFeature: Sendable {
                 state.inlineError = error.errorDescription
                 return .none
 
-            case .finished, .binding:
+            case .finished:
+                // The sheet is on its way out, but a parent that keeps this
+                // state around must not find it stuck mid-submit.
+                state.isSubmitting = false
+                return .none
+
+            case .binding:
                 return .none
             }
         }

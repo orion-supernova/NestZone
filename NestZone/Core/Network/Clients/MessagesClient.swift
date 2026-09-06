@@ -8,9 +8,16 @@ public struct MessagesClient: Sendable {
     /// Live messages in a thread. `limit` caps the window the server sends —
     /// the chat screen only ever renders the tail.
     public var messages: @Sendable (ConversationID, Int) -> AsyncThrowingStream<[Message], any Error> = { _, _ in .never }
-    public var send: @Sendable (ConversationID, String) async throws -> Void
+    /// Returns the stored message's id. The composer draws the bubble before the
+    /// round trip finishes, and this id is what tells it which bubble the live
+    /// subscription has since echoed back — without it a confirmed message and
+    /// its optimistic twin sit side by side.
+    public var send: @Sendable (ConversationID, String) async throws -> MessageID
     public var markRead: @Sendable (ConversationID) async throws -> Void
-    public var createConversation: @Sendable (HomeID, [UserID], String?, Bool) async throws -> Void
+    /// Returns the conversation — the new one, or the 1:1 thread that already
+    /// existed with these people, which the server reopens rather than
+    /// duplicating.
+    public var createConversation: @Sendable (HomeID, [UserID], String?, Bool) async throws -> Conversation
 }
 
 extension MessagesClient: DependencyKey {
@@ -29,10 +36,16 @@ extension MessagesClient: DependencyKey {
         },
         send: { conversationID, content in
             let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { return }
-            try await ConvexConnection.shared.mutate(
+            guard !trimmed.isEmpty else {
+                throw AppError.validation(String(
+                    localized: "validation.messageEmpty",
+                    defaultValue: "Type a message first."
+                ))
+            }
+            return try await ConvexConnection.shared.mutate(
                 "messages:send",
-                args: ["conversationId": conversationID, "content": trimmed, "message_type": "text"]
+                args: ["conversationId": conversationID, "content": trimmed, "messageType": "text"],
+                as: MessageID.self
             )
         },
         markRead: { conversationID in
@@ -43,11 +56,15 @@ extension MessagesClient: DependencyKey {
         createConversation: { homeID, participants, title, isGroup in
             var args: [String: ConvexEncodable?] = [
                 "homeId": homeID,
+                // `[UserID]` is not `ConvexEncodable`; `[ConvexEncodable?]` is,
+                // so the array is widened element by element.
                 "participants": participants.map { $0 as ConvexEncodable? },
-                "is_group_chat": isGroup,
+                "isGroupChat": isGroup,
             ]
             if let title, !title.isEmpty { args["title"] = title }
-            try await ConvexConnection.shared.mutate("conversations:create", args: args)
+            return try await ConvexConnection.shared.mutate(
+                "conversations:create", args: args, as: Conversation.self
+            )
         }
     )
 

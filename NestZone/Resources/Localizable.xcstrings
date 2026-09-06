@@ -3296,6 +3296,23 @@
         }
       }
     },
+    "home_stats_messages_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unread"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okunmamış"
+          }
+        }
+      }
+    },
     "home_stats_notes_title": {
       "extractionState": "manual",
       "localizations": {
@@ -4754,6 +4771,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Henüz mesaj yok"
+          }
+        }
+      }
+    },
+    "messages_nobody_to_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're the only one here. Invite someone from Settings and they'll show up in this list."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burada tek kişi sensin. Ayarlar'dan birini davet et, bu listede görünsün."
           }
         }
       }

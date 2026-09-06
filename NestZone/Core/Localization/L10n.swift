@@ -269,6 +269,10 @@ public enum L10n {
     }
 
     /// Tasks Done
+    public static var homeStatsMessagesTitle: LocalizedStringResource {
+        r("home_stats_messages_title", "Unread")
+    }
+
     public static var homeStatsTasksDoneTitle: LocalizedStringResource {
         r("home_stats_tasks_done_title", "Tasks Done")
     }
@@ -3214,6 +3218,10 @@ public enum L10n {
     /// Who's in it?
     public static var messagesPickPeople: LocalizedStringResource {
         r("messages_pick_people", "Who's in it?")
+    }
+
+    public static var messagesNobodyToMessage: LocalizedStringResource {
+        r("messages_nobody_to_message", "You're the only one here. Invite someone from Settings and they'll show up in this list.")
     }
 
     /// Group name (optional)

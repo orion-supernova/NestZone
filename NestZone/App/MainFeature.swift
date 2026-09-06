@@ -114,6 +114,10 @@ public struct MainFeature: Sendable {
                 state.selectedTab = .notes
                 return .none
 
+            case .home(.delegate(.openMessages)):
+                state.selectedTab = .messages
+                return .none
+
             case .home(.delegate(.openTasks)):
                 state.homePath.append(.tasks(TasksFeature.State(homeID: state.homeID)))
                 return .none
@@ -132,9 +136,6 @@ public struct MainFeature: Sendable {
                 )))
                 return .none
 
-            // `openMessages` is answered by nobody while the Messages tab is
-            // hidden — selecting a tab the bar does not show would leave the
-            // TabView on a blank selection. Restore the case alongside the tab.
             case .homePath, .home, .hub, .notes, .messages, .settings:
                 return .none
             }
@@ -149,7 +150,9 @@ extension MainFeature.State {
         homeTab.user = user
         homeTab.memberCount = memberCount
         notes.currentUserID = user?.id
-        messages.currentUserID = user?.id
+        // Not a bare assignment: a chat already pushed onto the Messages stack
+        // holds its own copy of the session, and needs the new one too.
+        messages.apply(currentUserID: user?.id)
         settings.user = user
         settings.home = home
     }
