@@ -152,7 +152,7 @@ extension MainFeature.State {
         notes.currentUserID = user?.id
         // Not a bare assignment: a chat already pushed onto the Messages stack
         // holds its own copy of the session, and needs the new one too.
-        messages.apply(currentUserID: user?.id)
+        messages.apply(currentUserID: user?.id, homeName: home?.name)
         settings.user = user
         settings.home = home
     }

@@ -3220,6 +3220,22 @@ public enum L10n {
         r("messages_pick_people", "Who's in it?")
     }
 
+    public static func messagesGroupDefaultTitle(_ a0: String) -> LocalizedStringResource {
+        r("messages_group_default_title", "\(a0) Chat")
+    }
+
+    public static var messagesRenameTitle: LocalizedStringResource {
+        r("messages_rename_title", "Rename chat")
+    }
+
+    public static var messagesRenameMessage: LocalizedStringResource {
+        r("messages_rename_message", "Leave it empty to go back to the default name.")
+    }
+
+    public static var messagesRenamePlaceholder: LocalizedStringResource {
+        r("messages_rename_placeholder", "Chat name")
+    }
+
     public static var messagesNobodyToMessage: LocalizedStringResource {
         r("messages_nobody_to_message", "You're the only one here. Invite someone from Settings and they'll show up in this list.")
     }

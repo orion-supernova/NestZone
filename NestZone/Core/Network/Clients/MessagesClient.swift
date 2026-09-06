@@ -14,6 +14,9 @@ public struct MessagesClient: Sendable {
     /// its optimistic twin sit side by side.
     public var send: @Sendable (ConversationID, String) async throws -> MessageID
     public var markRead: @Sendable (ConversationID) async throws -> Void
+    /// Renames a thread. An empty title clears it, putting the conversation back
+    /// on its default name.
+    public var rename: @Sendable (ConversationID, String) async throws -> Conversation
     /// Returns the conversation — the new one, or the 1:1 thread that already
     /// existed with these people, which the server reopens rather than
     /// duplicating.
@@ -30,7 +33,11 @@ extension MessagesClient: DependencyKey {
         messages: { conversationID, limit in
             ConvexConnection.shared.subscribe(
                 to: "messages:listByConversation",
-                args: ["conversationId": conversationID, "limit": limit],
+                // `.convexNumber`, not a bare `Int`: `v.number()` is
+                // `v.float64()` and convex-swift encodes `Int` as an int64,
+                // which the validator rejects outright — every chat failed to
+                // load a single message.
+                args: ["conversationId": conversationID, "limit": limit.convexNumber],
                 as: [Message].self
             )
         },
@@ -51,6 +58,16 @@ extension MessagesClient: DependencyKey {
         markRead: { conversationID in
             try await ConvexConnection.shared.mutate(
                 "messages:markRead", args: ["conversationId": conversationID]
+            )
+        },
+        rename: { conversationID, title in
+            try await ConvexConnection.shared.mutate(
+                "conversations:rename",
+                args: [
+                    "conversationId": conversationID,
+                    "title": title.trimmingCharacters(in: .whitespacesAndNewlines),
+                ],
+                as: Conversation.self
             )
         },
         createConversation: { homeID, participants, title, isGroup in

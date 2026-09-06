@@ -164,8 +164,30 @@ struct ChatView: View {
         .safeAreaInset(edge: .bottom) { composer }
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { store.send(.renameTapped) } label: {
+                    Image(systemName: "pencil")
+                }
+                .accessibilityLabel(Text(L10n.messagesRenameTitle))
+            }
+        }
         .task { await store.send(.task).finish() }
         .alert($store.scope(state: \.alert, action: \.alert))
+        // A plain `.alert` rather than `AlertState`, which has nowhere to put a
+        // text field.
+        .alert(
+            Text(L10n.messagesRenameTitle),
+            isPresented: $store.isRenaming,
+            actions: {
+                TextField(text: $store.renameDraft) {
+                    Text(L10n.messagesRenamePlaceholder)
+                }
+                Button { store.send(.renameSubmitted) } label: { Text(L10n.commonSave) }
+                Button(role: .cancel) {} label: { Text(L10n.commonCancel) }
+            },
+            message: { Text(L10n.messagesRenameMessage) }
+        )
     }
 
     private func scrollToNewest(_ proxy: ScrollViewProxy, animated: Bool) {

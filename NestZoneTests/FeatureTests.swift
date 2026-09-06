@@ -1819,6 +1819,117 @@ struct MessagesTests {
         #expect(chat.senderName(for: Message(id: "m1", senderID: "them", content: "x")) == "Them")
     }
 
+    @Test("Your bubbles are on the right, theirs on the left")
+    func bubbleSides() {
+        var state = chat()
+        let mine = Message(id: "m1", senderID: "me", content: "mine")
+        let theirs = Message(id: "m2", senderID: "them", content: "theirs")
+        state.messages = [mine, theirs]
+        #expect(state.isMine(mine))
+        #expect(!state.isMine(theirs))
+
+        // A bubble still in flight is yours by construction: deciding on
+        // senderID alone put your own message on the left until the session
+        // had propagated.
+        var noSession = chat(me: nil)
+        noSession.pending = [.init(id: "pending:1", content: "sending", senderID: "")]
+        #expect(noSession.isMine(noSession.ordered[0]))
+        #expect(!noSession.isMine(theirs))
+    }
+
+    @Test("An untitled group is named after the house, not its roster")
+    func groupTitleIsTheHouse() {
+        var state = MessagesFeature.State(homeID: "h1", currentUserID: "me")
+        state.homeName = "Walhalla"
+        state.members = [
+            User(id: "me", name: "Me"),
+            User(id: "a", name: "Ada"),
+            User(id: "b", name: "Grace"),
+        ]
+
+        let group = Conversation(
+            id: "c1", participants: ["me", "a", "b"], isGroupChat: true
+        )
+        #expect(state.title(for: group) == "Walhalla Chat")
+
+        // A 1:1 is still named after the person — short, and the useful answer.
+        let direct = Conversation(id: "c2", participants: ["me", "a"])
+        #expect(state.title(for: direct) == "Ada")
+
+        // A name the household chose always wins.
+        var named = group
+        named.title = "Kitchen"
+        #expect(state.title(for: named) == "Kitchen")
+
+        // No home name yet: a generic fallback, never an empty title.
+        state.homeName = nil
+        #expect(!state.title(for: group).isEmpty)
+        #expect(state.title(for: group) != " Chat")
+    }
+
+    @Test("Renaming a thread reaches the list it was opened from")
+    func renameReachesTheList() async {
+        let renamed = Conversation(
+            id: "c1", participants: ["me", "them"], isGroupChat: true, title: "Kitchen"
+        )
+        var state = MessagesFeature.State(homeID: "h1", currentUserID: "me")
+        state.homeName = "Walhalla"
+        state.conversations = [Conversation(id: "c1", participants: ["me", "them"], isGroupChat: true)]
+        state.path.append(.chat(ChatFeature.State(
+            conversation: state.conversations[0],
+            title: "Walhalla Chat",
+            currentUserID: "me",
+            members: []
+        )))
+
+        let store = TestStore(initialState: state) { MessagesFeature() } withDependencies: {
+            $0.messages.rename = { _, _ in renamed }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.path(.element(id: 0, action: .chat(.renameTapped))))
+        guard case let .chat(seeded) = store.state.path[0] else {
+            Issue.record("expected a chat on the stack")
+            return
+        }
+        // Seeded with what is on screen, so renaming is an edit, not a retype.
+        #expect(seeded.renameDraft == "Walhalla Chat")
+        #expect(seeded.isRenaming)
+
+        await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.renameDraft, "Kitchen"))))))
+        await store.send(.path(.element(id: 0, action: .chat(.renameSubmitted))))
+        // Generous timeouts: these ride on a real effect, and the default is
+        // short enough to flake when the whole suite is running at once.
+        await store.receive(\.path[id: 0].chat.renameFinished, timeout: .seconds(5))
+        await store.receive(\.path[id: 0].chat.delegate.renamed, timeout: .seconds(5))
+
+        #expect(store.state.conversations[id: ConversationID("c1")]?.title == "Kitchen")
+        guard case let .chat(after) = store.state.path[0] else { return }
+        #expect(after.title == "Kitchen")
+        #expect(!after.isRenaming)
+    }
+
+    @Test("Renaming to the name already on screen is not a write")
+    func renamingToTheDefaultIsANoOp() async {
+        let calls = LockIsolated(0)
+        var state = chat()
+        state.title = "Walhalla Chat"   // the default, not a stored title
+
+        let store = TestStore(initialState: state) { ChatFeature() } withDependencies: {
+            $0.messages.rename = { _, _ in
+                calls.withValue { $0 += 1 }
+                return Conversation(id: "c1")
+            }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.renameTapped)
+        await store.send(.renameSubmitted)
+        await store.finish()
+        // Accepting the prefilled default must not pin it as a real title.
+        #expect(calls.value == 0)
+    }
+
     @Test("You are never in your own participant picker")
     func pickerExcludesYou() {
         let state = NewConversationFeature.State(

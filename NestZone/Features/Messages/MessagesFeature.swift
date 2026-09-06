@@ -8,6 +8,8 @@ public struct MessagesFeature: Sendable {
     public struct State: Equatable {
         public var homeID: HomeID
         public var currentUserID: UserID?
+        /// Names an untitled group chat. `MainFeature` keeps it current.
+        public var homeName: String?
         public var conversations: IdentifiedArrayOf<Conversation> = []
         public var members: IdentifiedArrayOf<User> = []
         public var isLoading = true
@@ -27,10 +29,22 @@ public struct MessagesFeature: Sendable {
             }
         }
 
-        /// A 1:1 chat is named after the other person; a group keeps its title.
+        /// What a thread is called.
+        ///
+        /// A name the household chose always wins. Failing that a 1:1 is named
+        /// after the other person — which is the useful answer, and short. A
+        /// group is named after the house: listing every member produced titles
+        /// like "Ada, Grace and Alan" that only got longer as the home grew, and
+        /// read as a list of people rather than as the name of a place to talk.
         public func title(for conversation: Conversation) -> String {
             if let title = conversation.title, !title.isEmpty { return title }
             let others = conversation.counterparts(excluding: currentUserID)
+            if conversation.isGroupChat || others.count > 1 {
+                guard let homeName, !homeName.isEmpty else {
+                    return String(localized: L10n.messagesConversationCardHouseholdChat)
+                }
+                return String(localized: L10n.messagesGroupDefaultTitle(homeName))
+            }
             let names = others.compactMap { members[id: $0]?.displayName }
             if names.isEmpty { return String(localized: L10n.messagesConversationUntitled) }
             return names.formatted(.list(type: .and))
@@ -63,8 +77,9 @@ public struct MessagesFeature: Sendable {
         }
 
         /// Mirrors the session in, then down. Called by `MainFeature`.
-        public mutating func apply(currentUserID: UserID?) {
+        public mutating func apply(currentUserID: UserID?, homeName: String?) {
             self.currentUserID = currentUserID
+            self.homeName = homeName
             propagateToOpenChats()
         }
     }
@@ -175,6 +190,12 @@ public struct MessagesFeature: Sendable {
                 )))
                 return .none
 
+            // The list row has to follow the thread's new name without waiting
+            // for the subscription; the push confirms it a moment later.
+            case let .path(.element(id: _, action: .chat(.delegate(.renamed(conversation))))):
+                state.conversations[id: conversation.id] = conversation
+                return .none
+
             case .path, .destination, .alert:
                 return .none
             }
@@ -220,6 +241,11 @@ public struct ChatFeature: Sendable {
         public var pending: IdentifiedArrayOf<Pending> = []
         public var isLoading = true
         public var draft = ""
+        /// Renaming runs in an alert with a text field, so the draft and the
+        /// presentation flag live here rather than in an `AlertState`, which
+        /// cannot carry input.
+        public var isRenaming = false
+        public var renameDraft = ""
         @Presents public var alert: AlertState<Action.Alert>?
 
         /// Names the next optimistic bubble. A counter rather than a UUID so the
@@ -250,8 +276,15 @@ public struct ChatFeature: Sendable {
             !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
 
+        /// Which side of the thread a bubble sits on: yours right, theirs left.
+        ///
+        /// Anything still in flight is yours by construction. Deciding that on
+        /// `senderID` alone would put your own message on the left for as long
+        /// as `currentUserID` is nil — which it is until the session propagates.
         public func isMine(_ message: Message) -> Bool {
-            message.senderID == currentUserID
+            if pending[id: message.id] != nil { return true }
+            guard let currentUserID else { return false }
+            return message.senderID == currentUserID
         }
 
         public func isPending(_ message: Message) -> Bool {
@@ -295,10 +328,21 @@ public struct ChatFeature: Sendable {
         case retryTapped(MessageID)
         case sendSucceeded(local: MessageID, server: MessageID)
         case sendFailed(local: MessageID, AppError)
+        case renameTapped
+        case renameSubmitted
+        case renameFinished(Conversation)
+        case renameFailed(AppError)
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
+        case delegate(Delegate)
 
         public enum Alert: Equatable {}
+
+        @CasePathable
+        public enum Delegate: Equatable {
+            /// Bubbled so the conversation list can follow the new name.
+            case renamed(Conversation)
+        }
     }
 
     private enum CancelID { case messages }
@@ -387,7 +431,40 @@ public struct ChatFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            case .binding, .alert:
+            case .renameTapped:
+                // Seeded with the name on screen, so renaming is an edit rather
+                // than a retype — including when that name is the default.
+                state.renameDraft = state.title
+                state.isRenaming = true
+                return .none
+
+            case .renameSubmitted:
+                state.isRenaming = false
+                let title = state.renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                // Clearing the name is allowed: it puts the thread back on its
+                // default. But a rename to exactly the default is a no-op, not a
+                // reason to pin that text as a real title.
+                let wanted = title == state.title ? state.conversation.title ?? "" : title
+                guard wanted != state.conversation.title ?? "" else { return .none }
+                return .run { [id = state.conversation.id] send in
+                    await send(.renameFinished(try await messagesClient.rename(id, wanted)))
+                } catch: { error, send in
+                    await send(.renameFailed(AppError(error)))
+                }
+
+            case let .renameFinished(conversation):
+                state.conversation = conversation
+                state.title = conversation.title?.isEmpty == false
+                    ? conversation.title!
+                    : state.title
+                return .send(.delegate(.renamed(conversation)))
+
+            case let .renameFailed(error):
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .binding, .alert, .delegate:
                 return .none
             }
         }

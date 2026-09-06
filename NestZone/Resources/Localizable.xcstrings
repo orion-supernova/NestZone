@@ -4452,6 +4452,23 @@
         }
       }
     },
+    "messages_group_default_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Chat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Sohbeti"
+          }
+        }
+      }
+    },
     "messages_group_name_optional": {
       "extractionState": "manual",
       "localizations": {
@@ -4822,6 +4839,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Okundu"
+          }
+        }
+      }
+    },
+    "messages_rename_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave it empty to go back to the default name."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan ada dönmek için boş bırak."
+          }
+        }
+      }
+    },
+    "messages_rename_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat name"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbet adı"
+          }
+        }
+      }
+    },
+    "messages_rename_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename chat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbeti yeniden adlandır"
           }
         }
       }

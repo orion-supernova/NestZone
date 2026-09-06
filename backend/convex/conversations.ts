@@ -1,4 +1,5 @@
 import { query, mutation } from "./_generated/server";
+import { QueryCtx, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
@@ -15,6 +16,40 @@ export const listByHome = query({
       .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect();
     return convos.filter((c) => (c.participants ?? []).some((p) => p === user._id));
+  },
+});
+
+/** The current user, or a throw, plus the conversation they are a participant of. */
+async function assertParticipant(
+  ctx: QueryCtx | MutationCtx,
+  conversationId: Id<"conversations">,
+) {
+  const user = await requireUser(ctx);
+  const convo = await ctx.db.get(conversationId);
+  if (!convo) throw new Error("Conversation not found");
+  if (!(convo.participants ?? []).some((p) => p === user._id)) {
+    throw new Error("Not a participant of this conversation");
+  }
+  return { user, convo };
+}
+
+/**
+ * Rename a thread. An empty title clears it, which puts the conversation back on
+ * its default name rather than leaving it called "".
+ */
+export const rename = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    title: v.optional(v.string()),
+  },
+  handler: async (ctx, { conversationId, title }) => {
+    await assertParticipant(ctx, conversationId);
+    const trimmed = title?.trim();
+    await ctx.db.patch(conversationId, {
+      title: trimmed ? trimmed : undefined,
+      updated: Date.now(),
+    });
+    return await ctx.db.get(conversationId);
   },
 });
 
