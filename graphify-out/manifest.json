@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1788721848.7712681,
-    "ast_hash": "168b2a3200ce0e6216010fc5db393ac8",
+    "mtime": 1788779908.489113,
+    "ast_hash": "83fb4ced2aba0643bf9b64b8ad99c99b",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1788698179.1696248,
-    "ast_hash": "0916bd403374ad52e3d6beab646d2832",
+    "mtime": 1788780472.4808583,
+    "ast_hash": "4bfa0aad967be381660d445b9a7bcdc0",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "backend/convex/lib/relations.ts": {
-    "mtime": 1788698179.168014,
-    "ast_hash": "264eac293a3183e9cb4d5c7fe645cf66",
+    "mtime": 1788771933.2758598,
+    "ast_hash": "512515cf0b9248065dc363e2ded582c6",
     "semantic_hash": ""
   },
   "backend/convex/lib/apple.ts": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1788722215.0092297,
-    "ast_hash": "666ccae25b4afac37e6b2e44ba972a58",
+    "mtime": 1788773334.6132634,
+    "ast_hash": "cb942d9b973ea6180c697a090ad4b9e8",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1788769907.0269237,
-    "ast_hash": "56268541dd0d32674aed61f281119ea1",
+    "mtime": 1788780078.2389343,
+    "ast_hash": "81c09aac8ce87f130950c0a53bdae777",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -260,8 +260,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Identifiers.swift": {
-    "mtime": 1788698179.1851127,
-    "ast_hash": "0c057f1ffcd49fd32c37745c74c02c5c",
+    "mtime": 1788772174.4268796,
+    "ast_hash": "60ad8f874f8dbbc0ea428fe2073802ac",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Messaging.swift": {
@@ -465,8 +465,8 @@
     "semantic_hash": ""
   },
   "NestZone/Design/Theme.swift": {
-    "mtime": 1788723713.3813767,
-    "ast_hash": "543ef1871aa0d80e22be72e7e2f42906",
+    "mtime": 1788772174.4272556,
+    "ast_hash": "7dabe3104fc948f1bd69dbf790a052ad",
     "semantic_hash": ""
   },
   "NestZone/Features/Auth/AuthFeature.swift": {
@@ -510,13 +510,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/HubFeature.swift": {
-    "mtime": 1788698179.191045,
-    "ast_hash": "5c46406ce47abbb03016a6b7ca9c8e98",
+    "mtime": 1788773334.6126332,
+    "ast_hash": "dcf5901cc3d32f97b3e664ad288261b4",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/HubView.swift": {
-    "mtime": 1788698179.191161,
-    "ast_hash": "2f1270824cbc5aea9b759cad9709ad00",
+    "mtime": 1788773334.6129758,
+    "ast_hash": "bf3aea0946306e8859d289108c3071b4",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/ShoppingFeature.swift": {
@@ -530,13 +530,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Messages/MessagesFeature.swift": {
-    "mtime": 1788720770.4153275,
-    "ast_hash": "76f047e4be57883d44dcae75c0dd5873",
+    "mtime": 1788771023.6617787,
+    "ast_hash": "2825e4735a1fd912c3768dbdc6b1a859",
     "semantic_hash": ""
   },
   "NestZone/Features/Messages/MessagesView.swift": {
-    "mtime": 1788720845.9247527,
-    "ast_hash": "76bf2c07d80fedbfb8c7705e76adb3b2",
+    "mtime": 1788771033.5513937,
+    "ast_hash": "184c10e98e0df5e6978e30090ec36861",
     "semantic_hash": ""
   },
   "NestZone/Features/MovieNight/MovieNightFeature.swift": {
@@ -615,13 +615,13 @@
     "semantic_hash": ""
   },
   "NestZoneTests/CoreLogicTests.swift": {
-    "mtime": 1788722365.7601664,
-    "ast_hash": "297b7d3e73f5f4b840a9e7b6560fa103",
+    "mtime": 1788781020.8748364,
+    "ast_hash": "2d203ce1ba40c0078326592caef4bc12",
     "semantic_hash": ""
   },
   "NestZoneTests/FeatureTests.swift": {
-    "mtime": 1788769936.609809,
-    "ast_hash": "70d447c26d6d4b36aae1d772dd3374a7",
+    "mtime": 1788780315.7678804,
+    "ast_hash": "6ac6fcbe02f6660ac60f598e919188bd",
     "semantic_hash": ""
   },
   "NestZoneUITests/LaunchUITests.swift": {
@@ -645,8 +645,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/LenientDecoding.swift": {
-    "mtime": 1788698179.1851783,
-    "ast_hash": "01cd6a8d40044abfc444d833921145c1",
+    "mtime": 1788772316.5525062,
+    "ast_hash": "c7ae32c6566528160fb70348f125a768",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/DevicesClient.swift": {
@@ -747,6 +747,51 @@
   "NestZone/Features/Contributions/ContributionsView.swift": {
     "mtime": 1788723713.4016116,
     "ast_hash": "0430a1408e757811a2c085f3505d3f49",
+    "semantic_hash": ""
+  },
+  "NestZone/Core/Models/Finance.swift": {
+    "mtime": 1788780950.113026,
+    "ast_hash": "3c7bf4a58d8a8292e9fc6eb1eb34f2c4",
+    "semantic_hash": ""
+  },
+  "NestZone/Core/Network/Clients/FinanceClient.swift": {
+    "mtime": 1788780011.2190175,
+    "ast_hash": "360b9b2f3f088eaf1e7a5384047272d6",
+    "semantic_hash": ""
+  },
+  "NestZone/Design/Components/FinanceCharts.swift": {
+    "mtime": 1788780039.357408,
+    "ast_hash": "605d976284764a525361eb9cd861fde7",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Finance/FinanceComposers.swift": {
+    "mtime": 1788780039.3563435,
+    "ast_hash": "e8c7a9c72a21df703482285147653c7f",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Finance/FinanceFeature.swift": {
+    "mtime": 1788780866.9850028,
+    "ast_hash": "2d12ef5004c3b4641c4cc77bb926a302",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Finance/FinanceSheets.swift": {
+    "mtime": 1788781019.564749,
+    "ast_hash": "00372ae880f0022ee24fa520ae93a4d7",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Finance/FinanceView.swift": {
+    "mtime": 1788780845.1834977,
+    "ast_hash": "a41962234a8e210c524e8725ba9bc8da",
+    "semantic_hash": ""
+  },
+  "backend/convex/finance.ts": {
+    "mtime": 1788781019.5651217,
+    "ast_hash": "c6851eb98ddb84ae4c96d012d4e8f358",
+    "semantic_hash": ""
+  },
+  "backend/convex/crons.ts": {
+    "mtime": 1788779960.4938574,
+    "ast_hash": "5018490492fb1254d279fdccb7b3e7c5",
     "semantic_hash": ""
   }
 }
