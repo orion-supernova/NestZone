@@ -262,6 +262,29 @@ public struct FinanceFeature: Sendable {
                 .sorted { $0.progress.progress > $1.progress.progress }
         }
 
+        /// What the calendar is costing, newest first.
+        ///
+        /// Comes off the summary whole — the server scopes it to this screen's
+        /// currency and totals each event over the event, not over the month on
+        /// the scrubber. Which is the point: an expense for a party is dated to
+        /// the party, so a deposit paid two months early is invisible in every
+        /// month somebody would think to look in.
+        public var eventRows: [EventSpend] { summary.events }
+
+        /// Only worth a card once there is something in it.
+        public var hasEventSpend: Bool { !summary.events.isEmpty }
+
+        /// The title to print under a ledger row that was spent on something in
+        /// the calendar. `nil` for ordinary money, and for a row whose event has
+        /// since been deleted — the expense outlives the link.
+        public func eventLabel(for expense: Expense) -> String? {
+            guard expense.eventID != nil else { return nil }
+            guard let title = expense.eventTitle?.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ), !title.isEmpty else { return nil }
+            return title
+        }
+
         /// Categories with no ceiling yet, for the "add a budget" menu.
         public var unbudgetedCategories: [SpendCategory] {
             let taken = Set(budgets.map(\.category))
@@ -359,15 +382,28 @@ public struct FinanceFeature: Sendable {
         case settleUpTapped
         case writeFailed(AppError)
 
+        case eventTapped(EventID, CalendarDay)
+
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<Alert>)
+        case delegate(Delegate)
 
         /// Nothing to decide: the only alert this screen raises is a failure,
         /// and both destructive confirmations live inside the sheet that
         /// offered them — confirming a delete next to the thing being deleted
         /// beats confirming it on a screen the sheet has just uncovered.
         public enum Alert: Equatable {}
+
+        public enum Delegate: Equatable {
+            /// Open the event this money was spent on.
+            ///
+            /// A delegate rather than navigation this screen does itself: the
+            /// calendar is a sibling module on the Hub's stack, and Finance
+            /// does not get to know that. It says which event; the Hub knows
+            /// where events are shown.
+            case openEvent(EventID, CalendarDay)
+        }
     }
 
     private enum CancelID { case summary, expenses, bills, budgets, members, undo }
@@ -766,7 +802,10 @@ public struct FinanceFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            case .binding, .destination, .alert:
+            case let .eventTapped(eventID, day):
+                return .send(.delegate(.openEvent(eventID, day)))
+
+            case .binding, .destination, .alert, .delegate:
                 return .none
             }
         }

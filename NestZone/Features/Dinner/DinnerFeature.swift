@@ -219,11 +219,15 @@ public struct DinnerFeature: Sendable {
         case saved
         case voteFailed(DinnerCandidate.ID, AppError)
         case failed(AppError)
+        case endRoundTapped
+        case roundEnded
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
         case delegate(Delegate)
 
-        public enum Alert: Equatable {}
+        public enum Alert: Equatable {
+            case confirmEndRound
+        }
 
         @CasePathable
         public enum Delegate: Equatable {
@@ -552,11 +556,63 @@ public struct DinnerFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
+            // MARK: Calling it off
+            //
+            // An open round used to be a one-way door. `hasOpenRound` swaps the
+            // whole screen for the deck, so once a poll existed there was no
+            // route picker, no kind picker and no way to just decide dinner —
+            // and if the household voted the deck down to nothing without
+            // agreeing, the only thing left was an hourglass with no button
+            // under it. Closing the round is what puts the screen back.
+
+            case .endRoundTapped:
+                state.alert = .confirmEndRound()
+                return .none
+
+            case .alert(.presented(.confirmEndRound)):
+                guard let pollID = state.poll?.id else { return .none }
+                return .run { send in
+                    try await pollsClient.close(pollID)
+                    await send(.roundEnded)
+                } catch: { error, send in
+                    // Nothing moved optimistically: the round ends when the
+                    // server says it has, and the live `polls:listByHome`
+                    // subscription is what actually clears it.
+                    await send(.failed(AppError(error)))
+                }
+
+            case .roundEnded:
+                // The subscription drops `poll` on its next push, which is what
+                // brings the pickers back. Clearing the ballot here stops the
+                // candidates from the round just closed reappearing pre-ticked
+                // in the next one.
+                state.ballot = []
+                state.voted = []
+                state.detail = nil
+                return .none
+
             case .binding, .alert, .delegate:
                 return .none
             }
         }
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+extension AlertState where Action == DinnerFeature.Action.Alert {
+    static func confirmEndRound() -> Self {
+        AlertState {
+            TextState(String(localized: L10n.dinnerRoundEnd))
+        } actions: {
+            ButtonState(role: .destructive, action: .confirmEndRound) {
+                TextState(String(localized: L10n.dinnerRoundEnd))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.dinnerRoundEndMessage))
+        }
     }
 }
 

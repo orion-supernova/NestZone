@@ -63,6 +63,20 @@ struct DinnerSheet: View {
                         }
                     }
                 }
+                // An open round takes the whole screen, so without this there
+                // is no way back to deciding dinner yourself — closing it is
+                // the only door out, and it has to be reachable at every point
+                // of the round rather than only once the deck runs dry.
+                ToolbarItem(placement: .primaryAction) {
+                    if store.hasOpenRound {
+                        Button(role: .destructive) { store.send(.endRoundTapped) } label: {
+                            Label { Text(L10n.dinnerRoundEnd) } icon: {
+                                Image(systemName: "stop.circle")
+                            }
+                            .labelStyle(.iconOnly)
+                        }
+                    }
+                }
             }
             .safeAreaInset(edge: .bottom) { bottomAction }
         }
@@ -1030,6 +1044,14 @@ private struct RoundView: View {
             Text(L10n.dinnerRoundOpenHint)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            // The dead end this screen used to be: everyone has voted, nothing
+            // was agreed, and the hourglass had no button under it.
+            SecondaryButton(L10n.dinnerRoundEnd, symbol: "stop.circle") {
+                store.send(.endRoundTapped)
+            }
+            .padding(.top, 8)
         }
     }
 }

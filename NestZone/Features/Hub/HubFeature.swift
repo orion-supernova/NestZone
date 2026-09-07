@@ -192,6 +192,23 @@ public struct HubFeature: Sendable {
                 }
                 .cancellable(id: CancelID.handoff, cancelInFlight: true)
 
+            // Money spent on a party, opened at the party. Finance and the
+            // calendar are siblings on this stack and neither knows the other
+            // exists — Finance says which event, and the Hub, which put both
+            // screens here, is the one place that knows where events are shown.
+            //
+            // A plain push rather than the pop-and-wait dance above: the
+            // calendar goes *on top* of the ledger, so nothing is unwinding
+            // while it arrives, and the back button lands where it should.
+            case let .path(.element(id: _, action: .finance(.delegate(.openEvent(eventID, day))))):
+                state.path.append(.calendar(CalendarFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.currentUserID,
+                    day: day,
+                    openingEventID: eventID
+                )))
+                return .none
+
             case .showShoppingList:
                 // If the person went somewhere else while the pop was playing,
                 // leave them there rather than yanking them to the list.

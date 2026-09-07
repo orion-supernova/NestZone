@@ -54,6 +54,11 @@ public struct CalendarFeature: Sendable {
         /// Only what involves the viewer — they are expected, they answered, or
         /// they wrote it.
         public var onlyMine = false
+        /// Events I am invited to and have not answered.
+        public var needsAnswer = false
+        /// Events with a budget, a menu or a ticket — the ones with work on
+        /// them.
+        public var withPlan = false
 
         /// Swiped away, but not yet sent. Already gone from `occurrences`; if
         /// the undo window closes without a tap, this is what gets deleted for
@@ -193,8 +198,59 @@ public struct CalendarFeature: Sendable {
         /// Whether anything passes the filters, which is a different question
         /// from whether the household has any events.
         public var isFiltering: Bool {
-            kindFilter != nil || onlyMine
+            kindFilter != nil || onlyMine || needsAnswer || withPlan
                 || !search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+
+        /// How many occurrences survive the filters, out of how many the window
+        /// holds.
+        ///
+        /// Said out loud because a filter that removes nothing and a filter that
+        /// is broken look identical otherwise: the chip lights up, a few dots
+        /// quietly leave the grid, and there is no way to tell "3 of 3" from
+        /// "the button does nothing". Both of these filters are frequently
+        /// no-ops on real data — `onlyMine` counts anything you *created*, so
+        /// in a household where you enter every event it excludes nobody.
+        public var visibleCount: Int {
+            var seen = Set<EventOccurrence.ID>()
+            for ids in dayIndex.values { seen.formUnion(ids) }
+            return seen.count
+        }
+
+        public var totalCount: Int { occurrences.count }
+
+        /// Filters are on and they have hidden everything in the window.
+        public var isFilteredEmpty: Bool {
+            isFiltering && totalCount > 0 && visibleCount == 0
+        }
+
+        /// What was typed, trimmed. Empty means nobody is searching.
+        public var needle: String {
+            search.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        public var isSearchActive: Bool { !needle.isEmpty }
+
+        /// Every event that survives the filters, across the whole window,
+        /// soonest first.
+        ///
+        /// Searching is a "find it" action, not a "browse this month" one, and
+        /// this is what the search box was missing. The needle always reached
+        /// `reindex`, so matches were filtered correctly — but in month and week
+        /// mode the only list on screen is the *selected day's*. Typing the name
+        /// of a party three weeks out therefore emptied the list you were
+        /// looking at, changed some dots you were not, and left the match
+        /// unreachable without knowing which cell to tap. Which reads, exactly
+        /// as reported, as search doing nothing.
+        public var matches: [EventOccurrence] {
+            var seen = Set<EventOccurrence.ID>()
+            var found: [EventOccurrence] = []
+            for ids in dayIndex.values {
+                for id in ids where seen.insert(id).inserted {
+                    if let occurrence = occurrences[id: id] { found.append(occurrence) }
+                }
+            }
+            return found.sorted { $0.start < $1.start }
         }
 
         public func occurrences(on day: CalendarDay) -> [EventOccurrence] {
@@ -244,12 +300,61 @@ public struct CalendarFeature: Sendable {
 
         /// The kinds actually present in the window, for the filter row.
         /// Offering all nineteen when three are in use is a menu, not a filter.
+        ///
+        /// And nothing at all when only one kind is in use: a chip that keeps
+        /// every event it is shown beside is a control that cannot do anything,
+        /// which is the whole reason these read as broken.
         public var presentKinds: [EventKind] {
             var seen: [EventKind] = []
             for occurrence in occurrences where !seen.contains(occurrence.kind) {
                 seen.append(occurrence.kind)
             }
+            guard seen.count > 1 else { return [] }
             return seen.sorted { $0.rawValue < $1.rawValue }
+        }
+
+        // The rule every chip below follows: a filter is offered only when it
+        // would change what is on screen. A household where nobody uses the
+        // invite list has no "just mine" to draw, and one where nothing is
+        // planned has no "has a plan" — and an always-present control that
+        // never removes a row is indistinguishable from one that is broken.
+
+        /// Whether any event in the window is *not* mine, i.e. whether the
+        /// toggle has anything to hide.
+        public var canFilterMine: Bool {
+            currentUserID != nil && occurrences.contains { !$0.isMine(currentUserID) }
+        }
+
+        public func needsMyAnswer(_ occurrence: EventOccurrence) -> Bool {
+            guard let me = currentUserID else { return false }
+            return occurrence.attendees.contains(me) && occurrence.rsvp(of: me) == nil
+        }
+
+        public var canFilterNeedsAnswer: Bool {
+            occurrences.contains { needsMyAnswer($0) }
+        }
+
+        /// Something has been organised on it: money, a menu or a ticket.
+        public func isPlanned(_ occurrence: EventOccurrence) -> Bool {
+            occurrence.budget != nil
+                || !occurrence.recipeIDs.isEmpty
+                || occurrence.url?.isEmpty == false
+        }
+
+        public var canFilterPlanned: Bool {
+            let planned = occurrences.count { isPlanned($0) }
+            return planned > 0 && planned < occurrences.count
+        }
+
+        /// Whether the filter row has anything worth drawing. An active filter
+        /// always keeps it on screen, or turning one on could hide the control
+        /// that turns it off.
+        public var showsFilterRow: Bool {
+            isFiltering
+                || !presentKinds.isEmpty
+                || canFilterMine
+                || canFilterNeedsAnswer
+                || canFilterPlanned
         }
 
         public func member(_ id: UserID?) -> User? { id.flatMap { members[id: $0] } }
@@ -296,6 +401,12 @@ public struct CalendarFeature: Sendable {
 
         case kindFilterTapped(EventKind?)
         case onlyMineToggled
+        case needsAnswerToggled
+        case withPlanToggled
+        /// One control that undoes every filter at once. Clearing them one by
+        /// one means knowing which are on, and the kind chip only clears by
+        /// finding and tapping the active one again.
+        case filtersCleared
 
         case addTapped
         case addOnDayTapped(CalendarDay)
@@ -456,6 +567,25 @@ public struct CalendarFeature: Sendable {
 
             case .onlyMineToggled:
                 state.onlyMine.toggle()
+                reindex(&state)
+                return .none
+
+            case .needsAnswerToggled:
+                state.needsAnswer.toggle()
+                reindex(&state)
+                return .none
+
+            case .withPlanToggled:
+                state.withPlan.toggle()
+                reindex(&state)
+                return .none
+
+            case .filtersCleared:
+                state.kindFilter = nil
+                state.onlyMine = false
+                state.needsAnswer = false
+                state.withPlan = false
+                state.search = ""
                 reindex(&state)
                 return .none
 
@@ -693,6 +823,8 @@ public struct CalendarFeature: Sendable {
         let needle = state.search.trimmingCharacters(in: .whitespacesAndNewlines)
         let kind = state.kindFilter
         let onlyMine = state.onlyMine
+        let needsAnswer = state.needsAnswer
+        let withPlan = state.withPlan
         let me = state.currentUserID
         let calendar = Calendar.current
 
@@ -701,7 +833,9 @@ public struct CalendarFeature: Sendable {
         // sorted without a second pass.
         for occurrence in state.occurrences {
             if let kind, occurrence.kind != kind { continue }
-            if onlyMine, !occurrence.involves(me) { continue }
+            if onlyMine, !occurrence.isMine(me) { continue }
+            if needsAnswer, !state.needsMyAnswer(occurrence) { continue }
+            if withPlan, !state.isPlanned(occurrence) { continue }
             if !needle.isEmpty {
                 let matches = occurrence.title.localizedCaseInsensitiveContains(needle)
                     || (occurrence.location?.localizedCaseInsensitiveContains(needle) ?? false)

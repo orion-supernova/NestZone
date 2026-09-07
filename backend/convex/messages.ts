@@ -14,6 +14,15 @@ const messageType = v.union(v.literal("text"), v.literal("image"), v.literal("sy
 // Shown as the notification title when the sender has no name on their profile.
 const NOTIFY_TITLE = "New message";
 
+/**
+ * How far back opening a conversation marks it read.
+ *
+ * Exported because `stats:forHome` must count unread over exactly this window.
+ * A badge counted over a wider one is a badge that opening the chat cannot
+ * clear, which is how it gets permanently stuck.
+ */
+export const READ_WINDOW = 200;
+
 async function assertParticipant(
   ctx: QueryCtx | MutationCtx,
   conversationId: Id<"conversations">,
@@ -164,13 +173,15 @@ export const markRead = mutation({
       .query("messages")
       .withIndex("by_conversation", (q) => q.eq("conversation_id", conversationId))
       .order("desc")
-      .take(200);
-    for (const m of unread) {
-      const readBy = m.read_by ?? [];
-      if (!readBy.some((u) => u === user._id)) {
-        await ctx.db.patch(m._id, { read_by: [...readBy, user._id] });
-      }
-    }
+      .take(READ_WINDOW);
+    // Two hundred patches, in one round rather than end to end. Awaited one at
+    // a time this is the worst instance of the pattern that timed out
+    // `events:stockUp` — and it runs every time somebody opens a busy chat.
+    await Promise.all(
+      unread
+        .filter((m) => !(m.read_by ?? []).some((u) => u === user._id))
+        .map((m) => ctx.db.patch(m._id, { read_by: [...(m.read_by ?? []), user._id] })),
+    );
     return { ok: true };
   },
 });

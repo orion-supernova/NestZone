@@ -48,4 +48,23 @@ extension KeyedDecodingContainer {
         }
         return fallback
     }
+
+    /// The same, for a number that is genuinely optional — a budget nobody set,
+    /// a serving count nobody filled in.
+    ///
+    /// `contains(_:)` cannot answer this question, which is what the three call
+    /// sites that used it got wrong. Convex writes an absent field as an
+    /// explicit `null`, and a key holding `null` is just as *present* as one
+    /// holding a number, so `contains(.budget) ? decodeNumber(...) : nil` came
+    /// back as a budget of **zero** for every event that had none. A zero
+    /// budget is not the absence of one: it makes the plan's ring read as
+    /// overspent the instant a penny is logged, and prints "of 0,00" beside the
+    /// total. Asking for the value is the only way to tell the two apart.
+    func decodeNumberIfPresent(forKey key: Key) -> Int? {
+        if let exact = (try? decodeIfPresent(Int.self, forKey: key)) ?? nil { return exact }
+        if let loose = (try? decodeIfPresent(Double.self, forKey: key)) ?? nil, loose.isFinite {
+            return Int(loose.rounded())
+        }
+        return nil
+    }
 }

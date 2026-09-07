@@ -295,6 +295,13 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
     /// owner: deleting the event clears this and leaves the expense alone,
     /// because the money still moved.
     public var eventID: EventID?
+    /// What that event is called, read through by `finance:listExpenses` on the
+    /// way out. Not stored on the expense: the ledger reads its rows anyway, so
+    /// one lookup per distinct event buys the label without a copy that goes
+    /// stale when the party is renamed. `nil` when the event has since been
+    /// deleted — the money still moved, so the row stays and only its label
+    /// goes.
+    public var eventTitle: String?
     public var createdBy: UserID?
     public var created: Timestamp?
     public var updated: Timestamp?
@@ -308,6 +315,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         case spentAt = "spent_at"
         case billID = "bill_id"
         case eventID = "event_id"
+        case eventTitle = "event_title"
         case createdBy = "created_by"
         case created, updated
     }
@@ -328,6 +336,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
             ?? Timestamp(milliseconds: 0)
         billID = try c.decodeIfPresent(BillID.self, forKey: .billID)
         eventID = try c.decodeIfPresent(EventID.self, forKey: .eventID)
+        eventTitle = try c.decodeIfPresent(String.self, forKey: .eventTitle)
         createdBy = try c.decodeIfPresent(UserID.self, forKey: .createdBy)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
@@ -347,6 +356,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         spentAt: Timestamp = Timestamp(Date()),
         billID: BillID? = nil,
         eventID: EventID? = nil,
+        eventTitle: String? = nil,
         createdBy: UserID? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
@@ -364,6 +374,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         self.spentAt = spentAt
         self.billID = billID
         self.eventID = eventID
+        self.eventTitle = eventTitle
         self.createdBy = createdBy
         self.created = created
         self.updated = updated
@@ -624,10 +635,18 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
     public var series: [SpendPoint]
     public var categories: [CategoryTotal]
     public var budgets: [BudgetProgress]
+    /// What the calendar is costing: one row per event that has been budgeted
+    /// or spent on, in this screen's currency.
+    ///
+    /// Not month-scoped, unlike everything above it. An expense for an event is
+    /// dated to the event, so a deposit paid in March for an April party falls
+    /// in neither month somebody would think to look in. What a party cost is a
+    /// total over the party, not over whichever month the scrubber is on.
+    public var events: [EventSpend]
 
     enum CodingKeys: String, CodingKey {
         case year, month, currency, currencies, monthTotal, previousMonthTotal, expenseCount
-        case members, transfers, series, categories, budgets
+        case members, transfers, series, categories, budgets, events
     }
 
     public init(from decoder: any Decoder) throws {
@@ -644,6 +663,7 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
         series = try c.decodeIfPresent([SpendPoint].self, forKey: .series) ?? []
         categories = try c.decodeIfPresent([CategoryTotal].self, forKey: .categories) ?? []
         budgets = try c.decodeIfPresent([BudgetProgress].self, forKey: .budgets) ?? []
+        events = (try? c.decodeIfPresent([EventSpend].self, forKey: .events)) ?? []
     }
 
     public init(
@@ -658,7 +678,8 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
         transfers: [Transfer] = [],
         series: [SpendPoint] = [],
         categories: [CategoryTotal] = [],
-        budgets: [BudgetProgress] = []
+        budgets: [BudgetProgress] = [],
+        events: [EventSpend] = []
     ) {
         self.year = year
         self.month = month
@@ -672,9 +693,93 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
         self.series = series
         self.categories = categories
         self.budgets = budgets
+        self.events = events
     }
 
     public static let empty = FinanceSummary()
+}
+
+/// What one event in the calendar has cost the household.
+///
+/// The bridge between the two halves of the app that both hold money and never
+/// showed each other's: an event keeps its cap on its own document, its spend
+/// lives in the ledger as ordinary expenses carrying an `event_id`, and until
+/// this row existed neither was visible from Finance.
+public struct EventSpend: Codable, Identifiable, Hashable, Sendable {
+    public let eventID: EventID
+    public var title: String
+    public var startsAt: Timestamp
+    public var kind: EventKind
+    /// The event's own currency, which is the one this row's figures are in.
+    public var currency: String
+    /// What the household means to spend on it, in minor units. `nil` when no
+    /// cap was set — the row is then a total, not a target.
+    public var budget: Int?
+    /// Minor units, scoped to `currency`.
+    public var spent: Int
+    /// Every linked expense, whatever currency it was written in. A count, not
+    /// a sum, so it is not scoped — the same asymmetry the overdue-bills badge
+    /// follows.
+    public var expenseCount: Int
+
+    public var id: EventID { eventID }
+
+    enum CodingKeys: String, CodingKey {
+        case eventID = "eventId"
+        case title, kind, currency, budget, spent, expenseCount
+        case startsAt
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        eventID = try c.decode(EventID.self, forKey: .eventID)
+        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+        startsAt = try c.decodeIfPresent(Timestamp.self, forKey: .startsAt)
+            ?? Timestamp(milliseconds: 0)
+        kind = c.decodeLenient(EventKind.self, forKey: .kind, default: .general)
+        currency = try c.decodeIfPresent(String.self, forKey: .currency) ?? Money.deviceDefault
+        budget = c.decodeNumberIfPresent(forKey: .budget)
+        spent = c.decodeNumber(forKey: .spent)
+        expenseCount = c.decodeNumber(forKey: .expenseCount)
+    }
+
+    public init(
+        eventID: EventID,
+        title: String,
+        startsAt: Timestamp = Timestamp(milliseconds: 0),
+        kind: EventKind = .general,
+        currency: String = "EUR",
+        budget: Int? = nil,
+        spent: Int = 0,
+        expenseCount: Int = 0
+    ) {
+        self.eventID = eventID
+        self.title = title
+        self.startsAt = startsAt
+        self.kind = kind
+        self.currency = currency
+        self.budget = budget
+        self.spent = spent
+        self.expenseCount = expenseCount
+    }
+
+    /// How full the budget is, 0...1 and clamped so an overspend fills the ring
+    /// rather than overflowing it. `nil` when there is no budget to be a
+    /// fraction of.
+    public var progress: Double? {
+        guard let budget, budget > 0 else { return nil }
+        return min(Double(spent) / Double(budget), 1)
+    }
+
+    public var remaining: Int? { budget.map { $0 - spent } }
+
+    public var isOverBudget: Bool {
+        guard let budget else { return false }
+        return spent > budget
+    }
+
+    /// The day this event's sheet should open on.
+    public var day: CalendarDay { CalendarDay(startsAt.date) }
 }
 
 /// One person's standing in the household ledger.

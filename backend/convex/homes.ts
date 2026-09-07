@@ -58,16 +58,18 @@ export const create = mutation({
     // refactor got no lists at all, and the name below is only a label for
     // anyone reading the table. The app renders these two from `type`, so what
     // a person sees follows their language rather than the row.
-    for (const preset of PRESET_LISTS) {
-      await ctx.db.insert("movie_lists", {
-        home_id: homeId,
-        name: preset.name,
-        type: preset.type,
-        is_preset: true,
-        created: now,
-        updated: now,
-      });
-    }
+    await Promise.all(
+      PRESET_LISTS.map((preset) =>
+        ctx.db.insert("movie_lists", {
+          home_id: homeId,
+          name: preset.name,
+          type: preset.type,
+          is_preset: true,
+          created: now,
+          updated: now,
+        }),
+      ),
+    );
 
     // Mirror PB behaviour: track the user's home membership on the user too.
     const homes = new Set([...(user.home_id ?? []), homeId]);
@@ -101,19 +103,20 @@ export const ensurePresetLists = mutation({
     const present = new Set(existing.map((l) => l.type));
 
     const now = Date.now();
-    let added = 0;
-    for (const preset of PRESET_LISTS) {
-      if (present.has(preset.type)) continue;
-      await ctx.db.insert("movie_lists", {
-        home_id: homeId,
-        name: preset.name,
-        type: preset.type,
-        is_preset: true,
-        created: now,
-        updated: now,
-      });
-      added++;
-    }
+    const missing = PRESET_LISTS.filter((preset) => !present.has(preset.type));
+    await Promise.all(
+      missing.map((preset) =>
+        ctx.db.insert("movie_lists", {
+          home_id: homeId,
+          name: preset.name,
+          type: preset.type,
+          is_preset: true,
+          created: now,
+          updated: now,
+        }),
+      ),
+    );
+    const added = missing.length;
     return { added };
   },
 });

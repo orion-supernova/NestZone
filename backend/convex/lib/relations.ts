@@ -47,8 +47,12 @@ export async function requireMembers(
   label: string,
 ): Promise<void> {
   const members = new Set(home.members ?? []);
+  // Checked in one round rather than one person at a time. Everything in this
+  // module is on the hot path of a write, and a mutation gets one second of
+  // execution — spending it on sequential round trips is what took out
+  // `events:stockUp` and `stats:forHome`.
+  await Promise.all(userIds.map((id) => requireRef(ctx, id, `${label} user`)));
   for (const id of userIds) {
-    await requireRef(ctx, id, `${label} user`);
     if (!members.has(id)) {
       throw new Error(`${label} includes a user who is not a member of this home`);
     }
@@ -64,7 +68,7 @@ export async function cascadeDeleteConversation(
     .query("messages")
     .withIndex("by_conversation", (q) => q.eq("conversation_id", conversationId))
     .collect();
-  for (const m of messages) await ctx.db.delete(m._id);
+  await Promise.all(messages.map((m) => ctx.db.delete(m._id)));
   await ctx.db.delete(conversationId);
   return messages.length;
 }
@@ -78,12 +82,14 @@ export async function cascadeDeletePoll(
     .query("poll_items")
     .withIndex("by_poll", (q) => q.eq("poll_id", pollId))
     .collect();
-  for (const i of items) await ctx.db.delete(i._id);
   const votes = await ctx.db
     .query("poll_votes")
     .withIndex("by_poll", (q) => q.eq("poll_id", pollId))
     .collect();
-  for (const v of votes) await ctx.db.delete(v._id);
+  await Promise.all([
+    ...items.map((i) => ctx.db.delete(i._id)),
+    ...votes.map((v) => ctx.db.delete(v._id)),
+  ]);
   await ctx.db.delete(pollId);
   return { items: items.length, votes: votes.length };
 }
@@ -97,7 +103,7 @@ export async function cascadeDeleteMovieList(
     .query("movies")
     .withIndex("by_list", (q) => q.eq("list_id", listId))
     .collect();
-  for (const m of movies) await ctx.db.delete(m._id);
+  await Promise.all(movies.map((m) => ctx.db.delete(m._id)));
   await ctx.db.delete(listId);
   return movies.length;
 }
@@ -118,28 +124,34 @@ export async function unlinkEvent(
   ctx: MutationCtx,
   eventId: Id<"events">,
 ): Promise<{ expenses: number; items: number }> {
-  const expenses = await ctx.db
-    .query("expenses")
-    .withIndex("by_event", (q) => q.eq("event_id", eventId))
-    .collect();
-  for (const e of expenses) await ctx.db.patch(e._id, { event_id: undefined });
+  const [expenses, items, meals] = await Promise.all([
+    ctx.db
+      .query("expenses")
+      .withIndex("by_event", (q) => q.eq("event_id", eventId))
+      .collect(),
+    ctx.db
+      .query("shopping_items")
+      .withIndex("by_event", (q) => q.eq("event_id", eventId))
+      .collect(),
+    // The household is still eating that night; only the party is off.
+    //
+    // Indexed now. The comment that used to sit here said meal plans are one
+    // row per home per day so the set is small — true per home, but `filter`
+    // has no index behind it, so this walked every meal plan in the database,
+    // every other household's included, on every event delete.
+    ctx.db
+      .query("meal_plans")
+      .withIndex("by_event", (q) => q.eq("event_id", eventId))
+      .collect(),
+  ]);
 
-  const items = await ctx.db
-    .query("shopping_items")
-    .withIndex("by_event", (q) => q.eq("event_id", eventId))
-    .collect();
-  for (const i of items) {
-    await ctx.db.patch(i._id, { event_id: undefined, event_title: undefined });
-  }
-
-  // The household is still eating that night; only the party is off. No index
-  // here on purpose — meal plans are one row per home per day, so the set is
-  // small and an index would cost more to maintain than it saves.
-  const meals = await ctx.db
-    .query("meal_plans")
-    .filter((q) => q.eq(q.field("event_id"), eventId))
-    .collect();
-  for (const m of meals) await ctx.db.patch(m._id, { event_id: undefined });
+  await Promise.all([
+    ...expenses.map((e) => ctx.db.patch(e._id, { event_id: undefined })),
+    ...items.map((i) =>
+      ctx.db.patch(i._id, { event_id: undefined, event_title: undefined }),
+    ),
+    ...meals.map((m) => ctx.db.patch(m._id, { event_id: undefined })),
+  ]);
 
   return { expenses: expenses.length, items: items.length };
 }
@@ -158,61 +170,70 @@ export async function cascadeDeleteHome(
 ): Promise<Record<string, number>> {
   const removed: Record<string, number> = {};
 
+  // Every table at once, and every row within a table at once.
+  //
+  // This was eleven index scans taken end to end and then one `delete` awaited
+  // per row, which on any household with history cannot finish inside a
+  // mutation's one second. It is called when the last member leaves — and the
+  // comment above is the whole point: if it times out, the home's rows survive
+  // with nobody able to satisfy `requireHomeMember`, which is precisely the
+  // unreachable data this function exists to prevent.
   const simple = [
     "tasks", "shopping_items", "notes", "recipes", "movies", "meal_plans",
     "expenses", "settlements", "bills", "budgets", "events",
   ] as const;
-  for (const table of simple) {
-    const rows = await ctx.db
-      .query(table)
+  await Promise.all(
+    simple.map(async (table) => {
+      const rows = await ctx.db
+        .query(table)
+        .withIndex("by_home", (q) => q.eq("home_id", homeId))
+        .collect();
+      await Promise.all(rows.map((r) => ctx.db.delete(r._id)));
+      removed[table] = rows.length;
+    }),
+  );
+
+  const [lists, polls, convos, users] = await Promise.all([
+    ctx.db
+      .query("movie_lists")
       .withIndex("by_home", (q) => q.eq("home_id", homeId))
-      .collect();
-    for (const r of rows) await ctx.db.delete(r._id);
-    removed[table] = rows.length;
-  }
+      .collect(),
+    ctx.db
+      .query("polls")
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
+      .collect(),
+    ctx.db
+      .query("conversations")
+      .withIndex("by_home", (q) => q.eq("home_id", homeId))
+      .collect(),
+    ctx.db.query("users").collect(),
+  ]);
 
-  const lists = await ctx.db
-    .query("movie_lists")
-    .withIndex("by_home", (q) => q.eq("home_id", homeId))
-    .collect();
-  for (const l of lists) await cascadeDeleteMovieList(ctx, l._id);
+  const [, pollResults, messageCounts, scrubbed] = await Promise.all([
+    Promise.all(lists.map((l) => cascadeDeleteMovieList(ctx, l._id))),
+    Promise.all(polls.map((p) => cascadeDeletePoll(ctx, p._id))),
+    Promise.all(convos.map((c) => cascadeDeleteConversation(ctx, c._id))),
+    // Scrub the denormalised mirror on users so no user points at a dead home.
+    Promise.all(
+      users
+        .filter((u) => (u.home_id ?? []).some((h) => h === homeId))
+        .map((u) =>
+          ctx.db
+            .patch(u._id, {
+              home_id: (u.home_id ?? []).filter((h) => h !== homeId),
+            })
+            .then(() => 1),
+        ),
+    ),
+  ]);
+
   removed["movie_lists"] = lists.length;
-
-  const polls = await ctx.db
-    .query("polls")
-    .withIndex("by_home", (q) => q.eq("home_id", homeId))
-    .collect();
-  let pollItems = 0;
-  let pollVotes = 0;
-  for (const p of polls) {
-    const r = await cascadeDeletePoll(ctx, p._id);
-    pollItems += r.items;
-    pollVotes += r.votes;
-  }
   removed["polls"] = polls.length;
-  removed["poll_items"] = pollItems;
-  removed["poll_votes"] = pollVotes;
-
-  const convos = await ctx.db
-    .query("conversations")
-    .withIndex("by_home", (q) => q.eq("home_id", homeId))
-    .collect();
-  let messages = 0;
-  for (const c of convos) messages += await cascadeDeleteConversation(ctx, c._id);
+  removed["poll_items"] = pollResults.reduce((n, r) => n + r.items, 0);
+  removed["poll_votes"] = pollResults.reduce((n, r) => n + r.votes, 0);
   removed["conversations"] = convos.length;
-  removed["messages"] = messages;
-
-  // Scrub the denormalised mirror on users so no user points at a dead home.
-  const users = await ctx.db.query("users").collect();
-  let scrubbed = 0;
-  for (const u of users) {
-    const homes = u.home_id ?? [];
-    if (homes.some((h) => h === homeId)) {
-      await ctx.db.patch(u._id, { home_id: homes.filter((h) => h !== homeId) });
-      scrubbed++;
-    }
-  }
-  removed["users_scrubbed"] = scrubbed;
+  removed["messages"] = messageCounts.reduce((n, c) => n + c, 0);
+  removed["users_scrubbed"] = scrubbed.length;
 
   await ctx.db.delete(homeId);
   removed["homes"] = 1;

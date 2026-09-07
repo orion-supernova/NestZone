@@ -109,14 +109,13 @@ export const remove = mutation({
 export const removeMany = mutation({
   args: { ids: v.array(v.id("recipes")) },
   handler: async (ctx, { ids }) => {
-    let removed = 0;
-    for (const id of ids) {
-      const recipe = await ctx.db.get(id);
-      if (!recipe) continue;
-      await requireDocHome(ctx, recipe, "Recipe");
-      await ctx.db.delete(id);
-      removed++;
-    }
-    return { removed };
+    // Each phase in one round rather than one recipe at a time: a mutation gets
+    // one second, and awaiting a get and a delete per id spends it on round
+    // trips. The transaction is all-or-nothing either way.
+    const found = await Promise.all(ids.map((id) => ctx.db.get(id)));
+    const present = found.filter((r): r is NonNullable<typeof r> => r !== null);
+    await Promise.all(present.map((recipe) => requireDocHome(ctx, recipe, "Recipe")));
+    await Promise.all(present.map((recipe) => ctx.db.delete(recipe._id)));
+    return { removed: present.length };
   },
 });

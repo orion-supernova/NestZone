@@ -5192,4 +5192,108 @@ public enum L10n {
     public static var dinnerMakeAnEveningOfIt: LocalizedStringResource {
         r("dinner_make_an_evening_of_it", "Make an evening of it")
     }
+
+    /// Show less
+    public static var calendarShowLess: LocalizedStringResource {
+        r("calendar_show_less", "Show less")
+    }
+
+    /// End the round
+    public static var dinnerRoundEnd: LocalizedStringResource {
+        r("dinner_round_end", "End the round")
+    }
+
+    /// This closes the vote for everyone and leaves dinner undecided.
+    public static var dinnerRoundEndMessage: LocalizedStringResource {
+        r(
+            "dinner_round_end_message",
+            "This closes the vote for everyone and leaves dinner undecided."
+        )
+    }
+
+    /// From the calendar
+    public static var financeEventsTitle: LocalizedStringResource {
+        r("finance_events_title", "From the calendar")
+    }
+
+    /// of %@
+    public static func financeEventOfBudget(_ a0: String) -> LocalizedStringResource {
+        r("finance_event_of_budget", "of \(a0)")
+    }
+
+    /// %lld expenses
+    public static func financeEventExpenses(_ a0: Int) -> LocalizedStringResource {
+        r("finance_event_expenses", "\(a0) expenses")
+    }
+
+    /// Dinner on %@
+    public static func calendarIsDinnerOn(_ a0: String) -> LocalizedStringResource {
+        r("calendar_is_dinner_on", "Dinner on \(a0)")
+    }
+
+    /// Make it dinner on %@
+    public static func calendarMakeItDinnerOn(_ a0: String) -> LocalizedStringResource {
+        r("calendar_make_it_dinner_on", "Make it dinner on \(a0)")
+    }
+
+    /// Sets this date only — other repeats stay open.
+    public static var calendarDinnerThisDateOnly: LocalizedStringResource {
+        r(
+            "calendar_dinner_this_date_only",
+            "Sets this date only — other repeats stay open."
+        )
+    }
+
+    /// Clear filters
+    public static var calendarClearFilters: LocalizedStringResource {
+        r("calendar_clear_filters", "Clear filters")
+    }
+
+    /// Showing %1$lld of %2$lld
+    public static func calendarFilterCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("calendar_filter_count", "Showing \(a0) of \(a1)")
+    }
+
+    /// Every event here is hidden by a filter.
+    public static var calendarNoMatchesMessage: LocalizedStringResource {
+        r("calendar_no_matches_message", "Every event here is hidden by a filter.")
+    }
+
+    /// %lld recipes on the menu
+    public static func homeDinnerFromEventMenu(_ a0: Int) -> LocalizedStringResource {
+        r("home_dinner_from_event_menu", "\(a0) recipes on the menu")
+    }
+
+    /// Make it tonight's dinner
+    public static var homeDinnerFromEventAction: LocalizedStringResource {
+        r("home_dinner_from_event_action", "Make it tonight's dinner")
+    }
+
+    /// Decide something else
+    public static var homeDinnerFromEventOther: LocalizedStringResource {
+        r("home_dinner_from_event_other", "Decide something else")
+    }
+
+    /// %lld results
+    public static func calendarSearchResults(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_search_results", "\(a0) results")
+    }
+
+    /// Nothing in this window matches what you typed.
+    public static var calendarSearchNoMatchesMessage: LocalizedStringResource {
+        r(
+            "calendar_search_no_matches_message",
+            "Nothing in this window matches what you typed."
+        )
+    }
+
+    /// Needs an answer
+    public static var calendarFilterNeedsAnswer: LocalizedStringResource {
+        r("calendar_filter_needs_answer", "Needs an answer")
+    }
+
+    /// Has a plan
+    public static var calendarFilterHasPlan: LocalizedStringResource {
+        r("calendar_filter_has_plan", "Has a plan")
+    }
 }

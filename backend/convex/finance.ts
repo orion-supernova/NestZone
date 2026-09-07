@@ -66,6 +66,21 @@ const MAX_REMINDERS = 3;
 const MAX_REMINDER_DAYS = 30;
 /** Months of history the spend chart shows, including the selected one. */
 const SERIES_MONTHS = 6;
+/**
+ * How many events the Finance screen rolls up.
+ *
+ * A household plans a handful of things at a time; a list of every party it
+ * has ever held is a different screen (the calendar) pretending to be this one.
+ */
+const MAX_EVENT_ROLLUP = 12;
+/**
+ * How far back an event with a budget but no spend yet is still worth showing.
+ *
+ * Bounded on purpose: without it, "which events have a budget" is a scan of
+ * every event the household has ever held, and `summary` is on the hot path of
+ * a screen that re-runs on every ledger push.
+ */
+const EVENT_LOOKBACK_MONTHS = 6;
 
 // ---------------------------------------------------------------------------
 // Money
@@ -303,13 +318,36 @@ export const listExpenses = query({
     const start = monthStart(year, month, offset);
     const end = monthStart(year, month + 1, offset);
 
-    return await ctx.db
+    const rows = await ctx.db
       .query("expenses")
       .withIndex("by_home_spent", (q) =>
         q.eq("home_id", homeId).gte("spent_at", start).lt("spent_at", end),
       )
       .order("desc")
       .collect();
+
+    // Read through, not denormalised. `shopping_items` keeps a copy of the
+    // event title because the shopping screen subscribes to items alone; the
+    // ledger already reads its rows here, so one `get` per *distinct* event in
+    // the month buys the same label without a copy that can go stale when the
+    // party is renamed. A row whose event has since been deleted simply loses
+    // its label — the money still moved, which is why the link was never an
+    // owner.
+    const titles = new Map<string, string | null>();
+    const linked = [...new Set(rows.flatMap((e) => (e.event_id ? [e.event_id] : [])))];
+    for (const [index, event] of (
+      await Promise.all(linked.map((id) => ctx.db.get(id)))
+    ).entries()) {
+      titles.set(
+        linked[index],
+        event && event.home_id === homeId ? (event.title ?? "") : null,
+      );
+    }
+
+    return rows.map((e) => ({
+      ...e,
+      event_title: e.event_id ? (titles.get(e.event_id) ?? null) : null,
+    }));
   },
 });
 
@@ -540,6 +578,84 @@ export const summary = query({
       spent: spentByCurrencyCategory.get(`${b.currency}|${b.category}`) ?? 0,
     }));
 
+    // --- Events ------------------------------------------------------------
+    //
+    // The one place the calendar's money reaches Finance. Both halves of it
+    // were already stored and neither was ever shown here: an event keeps its
+    // own cap on its own document (`events.budget`, in the event's own
+    // currency), and money spent on it is ordinary ledger rows carrying an
+    // `event_id`. So a budget set for Saturday's party appeared nowhere in
+    // Finance at all, and its expenses appeared as unexplained lines in the
+    // ledger with nothing tying them to the party.
+    //
+    // Deliberately *not* month-scoped, unlike everything above. An expense for
+    // an event is dated to the event — the composer does that on purpose — so
+    // the deposit paid in March for an April party is in neither month you
+    // would think to look in. An event is a thing with a beginning and an end,
+    // and what it cost is a total over that, not over whichever month the
+    // scrubber is parked on.
+    const linkedByEvent = new Map<string, Doc<"expenses">[]>();
+    for (const e of allExpenses) {
+      if (!e.event_id) continue;
+      const list = linkedByEvent.get(e.event_id);
+      if (list) list.push(e);
+      else linkedByEvent.set(e.event_id, [e]);
+    }
+
+    // Recent and upcoming events, so one that has been budgeted but not yet
+    // spent on still shows — otherwise setting a budget and coming here to look
+    // at it shows nothing until the first receipt lands.
+    const recentEvents = await ctx.db
+      .query("events")
+      .withIndex("by_home_series_end", (q) =>
+        q
+          .eq("home_id", homeId)
+          .gte("series_end", monthStart(year, month - EVENT_LOOKBACK_MONTHS, offset)),
+      )
+      .collect();
+
+    const eventDocs = new Map<string, Doc<"events">>();
+    for (const ev of recentEvents) eventDocs.set(ev._id, ev);
+    // An event with spend on it always shows, however old — the money is in
+    // the ledger either way, and a row nobody can explain is worse than an old
+    // one. Only the ones the window missed cost a read.
+    const missing = [...linkedByEvent.keys()].filter((id) => !eventDocs.has(id));
+    for (const ev of await Promise.all(
+      missing.map((id) => ctx.db.get(id as Id<"events">)),
+    )) {
+      if (ev) eventDocs.set(ev._id, ev);
+    }
+
+    const eventRows = [...eventDocs.values()]
+      .filter((ev) => ev.home_id === homeId)
+      .map((ev) => {
+        const linked = linkedByEvent.get(ev._id) ?? [];
+        // The event's own currency wins; with none set it is whatever its
+        // receipts were written in. The same rule its own plan card follows.
+        const evCurrency = ev.currency ?? linked[0]?.currency ?? null;
+        return {
+          eventId: ev._id,
+          title: ev.title ?? "",
+          startsAt: ev.starts_at,
+          kind: ev.kind ?? null,
+          currency: evCurrency,
+          budget: ev.budget ?? null,
+          // Scoped to the event's own currency, like every other sum here.
+          spent: linked
+            .filter((e) => evCurrency === null || e.currency === evCurrency)
+            .reduce((total, e) => total + e.amount, 0),
+          // A count, not a sum, so it is not scoped — the same asymmetry the
+          // overdue-bills badge follows.
+          expenseCount: linked.length,
+        };
+      })
+      // An event denominated in a currency this screen is not showing belongs
+      // to the other set of figures, not to this one.
+      .filter((row) => row.currency === currency)
+      .filter((row) => row.budget !== null || row.expenseCount > 0)
+      .sort((a, b) => b.startsAt - a.startsAt)
+      .slice(0, MAX_EVENT_ROLLUP);
+
     return {
       year,
       month,
@@ -555,6 +671,7 @@ export const summary = query({
         .map(([category, total]) => ({ category, total }))
         .sort((a, b) => b.total - a.total),
       budgets: budgetRows,
+      events: eventRows,
       // No bill digest: the client has the whole bill list live and counts it
       // there. A count computed here would be scoped to one currency while the
       // list on screen is not, so "2 overdue" would sit above three overdue

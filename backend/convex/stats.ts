@@ -15,6 +15,7 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { READ_WINDOW } from "./messages";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -66,17 +67,34 @@ export const forHome = query({
     // Unread messages actually mean something now. The client previously
     // reported `messageCount = noteCount` — the note count relabelled — so the
     // "Messages" tile on the Home tab has never shown a message count.
-    let unreadMessages = 0;
-    for (const conversation of conversations) {
-      const messages = await ctx.db
-        .query("messages")
-        .withIndex("by_conversation", (q) => q.eq("conversation_id", conversation._id))
-        .collect();
-      for (const message of messages) {
-        if (message.sender_id === user._id) continue;
-        if (!(message.read_by ?? []).includes(user._id)) unreadMessages++;
-      }
-    }
+    // Two things were wrong with counting this, and both of them were fatal on
+    // a household that actually talks.
+    //
+    // It walked the conversations one at a time, and for each it `.collect()`ed
+    // *every message ever sent* in it — to derive a single integer. A query
+    // gets one second of execution, so a few thousand messages spent it all
+    // here and `stats:forHome` failed outright, taking the entire Home tab's
+    // dashboard down with it.
+    //
+    // Now: all conversations in one round, and the newest `READ_WINDOW` of
+    // each. That bound is not an approximation of the right answer, it *is* the
+    // right answer — `messages:markRead` marks exactly this window, so a
+    // message older than it can never be cleared by opening the chat. Counting
+    // over a wider window than can be marked read is how a badge gets stuck at
+    // "3 unread" forever.
+    const recent = await Promise.all(
+      conversations.map((conversation) =>
+        ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversation_id", conversation._id))
+          .order("desc")
+          .take(READ_WINDOW),
+      ),
+    );
+    const unreadMessages = recent
+      .flat()
+      .filter((m) => m.sender_id !== user._id && !(m.read_by ?? []).includes(user._id))
+      .length;
 
     const completedThisWeek = tasks.filter(
       (t) => t.is_completed && (t.updated ?? t._creationTime) >= weekAgo,

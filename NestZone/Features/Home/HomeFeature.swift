@@ -78,6 +78,28 @@ public struct HomeFeature: Sendable {
             return upcoming.count { $0.start <= horizon }
         }
 
+        /// An event on today with a menu, when nobody has said what is for
+        /// dinner yet.
+        ///
+        /// The reverse of the link the event sheet writes, and the half that was
+        /// missing. Planning Saturday's dinner party — menu, shopping, budget —
+        /// did nothing for Saturday's tonight card unless somebody remembered to
+        /// open the event and press "make it dinner". The household had already
+        /// answered "what are we eating"; it just had not answered it *here*.
+        ///
+        /// Offered, never written behind anyone's back. An event with a menu is
+        /// strong evidence about dinner, not a decision — and this tab already
+        /// holds today's events, so it costs no subscription to ask.
+        public var dinnerSuggestion: EventOccurrence? {
+            guard tonight == nil else { return nil }
+            let today = CalendarDay.today
+            return upcoming.first { occurrence in
+                !occurrence.recipeIDs.isEmpty
+                    && !occurrence.isMultiDay
+                    && CalendarDay(occurrence.start) == today
+            }
+        }
+
         /// Newest first, capped — the Home tab is a summary, not the task list.
         public var recentTasks: ArraySlice<HouseTask> {
             tasks
@@ -100,6 +122,9 @@ public struct HomeFeature: Sendable {
         case taskToggled(TaskID)
         case decideDinnerTapped
         case clearDinnerTapped
+        /// Take the event the tonight card is offering as today's dinner.
+        case dinnerSuggestionAccepted
+        case dinnerSuggestionSaved
         case dinner(PresentationAction<DinnerFeature.Action>)
         case toggleFailed(TaskID, wasCompleted: Bool, AppError)
         /// The tab has settled and nobody has been asked about notifications
@@ -293,6 +318,33 @@ public struct HomeFeature: Sendable {
             case .occasionLinked:
                 // Nothing to write here: the meals subscription brings the
                 // linked plan back and the card grows its badge.
+                return .none
+
+            case .dinnerSuggestionAccepted:
+                // The same write the event sheet's "make it dinner" performs,
+                // from the other end. One field — `meal_plans.event_id` —
+                // because a dinner party is a meal *and* an event, and two
+                // copies of the menu is two things that can disagree.
+                guard let occurrence = state.dinnerSuggestion else { return .none }
+                return .run { [homeID = state.homeID] send in
+                    try await mealsClient.set(DinnerDecision(
+                        homeID: homeID,
+                        date: MealDate.key(occurrence.start),
+                        kind: .cook,
+                        recipeID: occurrence.recipeIDs.first,
+                        // A menu whose recipes have all been deleted still names
+                        // a dinner: the event's own title stands in.
+                        title: occurrence.recipeIDs.isEmpty ? occurrence.title : nil,
+                        eventID: occurrence.eventID
+                    ))
+                    await send(.dinnerSuggestionSaved)
+                } catch: { error, send in
+                    await send(.loadFailed(AppError(error)))
+                }
+
+            case .dinnerSuggestionSaved:
+                // The meals subscription brings the plan back, which is what
+                // swaps the offer for the card.
                 return .none
 
             case let .upcomingEventsUpdated(events):

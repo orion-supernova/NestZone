@@ -321,6 +321,9 @@ public struct FinanceView: View {
                 if !store.budgetRows.isEmpty {
                     budgetsPreview.appear(5)
                 }
+                if store.hasEventSpend {
+                    eventsPreview.appear(6)
+                }
             }
             .padding(.horizontal, Metrics.screenPadding)
             .animation(Motion.fade, value: store.isLoading)
@@ -594,6 +597,32 @@ public struct FinanceView: View {
         }
     }
 
+    /// What the calendar is costing.
+    ///
+    /// The half of the app that plans things also spends money, and until this
+    /// card existed none of it arrived here: a budget set on a party lives on
+    /// the event's own document and never reached Finance at all, while its
+    /// expenses landed in the ledger as ordinary rows with nothing saying what
+    /// they were for. Both halves were stored correctly the whole time; neither
+    /// was ever shown.
+    ///
+    /// Totals are per event rather than per month on purpose — see
+    /// `FinanceSummary.events`.
+    private var eventsPreview: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            SectionHeader(L10n.financeEventsTitle, symbol: "calendar")
+            GlassGroup {
+                VStack(spacing: 8) {
+                    ForEach(store.eventRows) { event in
+                        EventSpendRow(event: event) {
+                            store.send(.eventTapped(event.eventID, event.day))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Ledger
 
     @ViewBuilder
@@ -642,6 +671,7 @@ public struct FinanceView: View {
                                 ExpenseRow(
                                     expense: expense,
                                     payerName: store.state.name(for: expense.paidBy),
+                                    eventName: store.state.eventLabel(for: expense),
                                     yourShare: store.currentUserID.map { expense.impact(on: $0) },
                                     revealedID: $revealedExpenseID,
                                     glass: glass,
@@ -893,6 +923,10 @@ private struct DayHeader: View {
 private struct ExpenseRow: View {
     let expense: Expense
     let payerName: String
+    /// What this was spent on in the calendar, when it was. `nil` for ordinary
+    /// money — and for a row whose event has since been deleted, because the
+    /// link was never an owner and the money moved regardless.
+    let eventName: String?
     /// The viewer's own position on this expense: positive if they are up on
     /// it, negative if they are down. `nil` when nobody is signed in.
     let yourShare: Int?
@@ -935,10 +969,28 @@ private struct ExpenseRow: View {
                             .accessibilityLabel(Text(L10n.financeFromBill))
                     }
                 }
-                Text(L10n.financePaidBy(payerName))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    Text(L10n.financePaidBy(payerName))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    if let eventName {
+                        // Without this the ledger showed a caterer's invoice as
+                        // an unexplained line and gave no hint that a party in
+                        // the calendar was the reason for it.
+                        Text(verbatim: "·")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                        Label {
+                            Text(eventName)
+                        } icon: {
+                            Image(systemName: "calendar")
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(Palette.indigo)
+                        .lineLimit(1)
+                    }
+                }
             }
 
             Spacer(minLength: 4)
@@ -963,6 +1015,76 @@ private struct ExpenseRow: View {
         .contentShape(.rect)
         .glassCard(cornerRadius: Metrics.tightRadius)
         .glassEffectID(expense.id.rawValue, in: glass)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// One event, and what it has cost so far.
+///
+/// A budget when the household set one — filled ring, money left — and a plain
+/// total when it did not. Both are money the calendar is responsible for, and
+/// this is the only place in Finance that says so.
+private struct EventSpendRow: View {
+    let event: EventSpend
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                Image(systemName: event.kind.symbol)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(event.kind.tint)
+                    .frame(width: 34, height: 34)
+                    .background(event.kind.tint.opacity(0.16), in: .circle)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(event.title)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    Text(event.startsAt.date, format: .dateTime.day().month(.abbreviated))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
+                    if let progress = event.progress {
+                        GeometryReader { geo in
+                            Capsule()
+                                .fill(event.isOverBudget ? Palette.danger : Palette.indigo)
+                                .frame(width: max(3, geo.size.width * progress))
+                        }
+                        .frame(height: 4)
+                        .background(Capsule().fill(.quaternary))
+                        .padding(.top, 1)
+                    }
+                }
+
+                Spacer(minLength: 4)
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(Money.text(event.spent, currency: event.currency))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                    if let budget = event.budget {
+                        Text(L10n.financeEventOfBudget(
+                            Money.compactText(budget, currency: event.currency)
+                        ))
+                        .font(.caption2)
+                        .monospacedDigit()
+                        .foregroundStyle(event.isOverBudget ? Palette.danger : .secondary)
+                    } else if event.expenseCount > 0 {
+                        Text(L10n.financeEventExpenses(event.expenseCount))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(.horizontal, Metrics.cardPadding)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
+            .glassCard(cornerRadius: Metrics.tightRadius, interactive: true)
+        }
+        .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)
     }
 }

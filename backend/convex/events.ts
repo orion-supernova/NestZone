@@ -1,4 +1,5 @@
 import { query, mutation, internalQuery, internalMutation, internalAction } from "./_generated/server";
+import { WithoutSystemFields } from "convex/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx } from "./_generated/server";
@@ -500,10 +501,8 @@ async function checkedRecipes(
 ): Promise<Id<"recipes">[]> {
   if (!ids?.length) return [];
   const unique = [...new Set(ids)].slice(0, MAX_MENU);
-  for (const id of unique) {
-    const recipe = await requireRef(ctx, id, "Recipe");
-    requireSameHome(recipe, homeId, "Recipe");
-  }
+  const recipes = await Promise.all(unique.map((id) => requireRef(ctx, id, "Recipe")));
+  for (const recipe of recipes) requireSameHome(recipe, homeId, "Recipe");
   return unique;
 }
 
@@ -540,22 +539,69 @@ export const detail = query({
     // Read through, so nothing on the client subscribes to recipes to draw a
     // menu — and a recipe deleted since is simply dropped rather than leaving a
     // dangling row the sheet has to explain.
-    const recipes = await Promise.all(
-      (event.recipe_ids ?? []).map(async (recipeId) => {
-        const recipe = await ctx.db.get(recipeId);
-        if (!recipe || recipe.home_id !== event.home_id) return null;
-        const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
-        return {
-          _id: recipe._id,
-          title: recipe.title ?? "",
-          image: recipe.image ?? null,
-          prep_time: recipe.prep_time ?? null,
-          cook_time: recipe.cook_time ?? null,
-          servings: recipe.servings ?? null,
-          ingredient_count: ingredients.length,
-        };
-      }),
+    const menu = (
+      await Promise.all((event.recipe_ids ?? []).map((recipeId) => ctx.db.get(recipeId)))
+    ).filter((r): r is Doc<"recipes"> => r !== null && r.home_id === event.home_id);
+
+    const recipes = menu.map((recipe) => ({
+      _id: recipe._id,
+      title: recipe.title ?? "",
+      image: recipe.image ?? null,
+      prep_time: recipe.prep_time ?? null,
+      cook_time: recipe.cook_time ?? null,
+      servings: recipe.servings ?? null,
+      ingredient_count: (Array.isArray(recipe.ingredients) ? recipe.ingredients : []).length,
+    }));
+
+    // How much work "stock up" has left to do.
+    //
+    // The client cannot work this out: a menu row carries an ingredient *count*
+    // and not the names, so the button had no way to know it would do nothing.
+    // It stayed lit, and pressing it spent a round trip to be told everything
+    // was already listed. This is the same arithmetic `stockUp` performs, from
+    // the same read, so the button and the mutation cannot disagree.
+    //
+    // Matched against the household's whole outstanding list rather than this
+    // event's slice, because that is what `stockUp` skips against: flour
+    // already on the list for Tuesday's bread is flour you have.
+    const [homeItems, dinnerPlans] = await Promise.all([
+      ctx.db
+        .query("shopping_items")
+        .withIndex("by_home", (q) => q.eq("home_id", event.home_id))
+        .collect(),
+      // Which days this event is *already* the household's dinner.
+      //
+      // Days, plural, because the plan belongs to the series and a series is
+      // many days. "Make it dinner" writes one `meal_plans` row for the
+      // occurrence being looked at — a meal plan is one row per home per day,
+      // so a repeating event cannot claim them all — and the sheet had no way
+      // to know it had ever been pressed. Reopened, it offered again; on a
+      // weekly series every occurrence looked equally undecided.
+      ctx.db
+        .query("meal_plans")
+        .withIndex("by_event", (q) => q.eq("event_id", id))
+        .collect(),
+    ]);
+    const outstanding = new Set(
+      homeItems
+        .filter((it) => !it.is_purchased)
+        .map((it) => (it.name ?? "").trim().toLowerCase()),
     );
+
+    let stockUpPending = 0;
+    for (const recipe of menu) {
+      const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+      for (const raw of ingredients) {
+        const name = typeof raw === "string" ? raw.trim() : "";
+        if (!name) continue;
+        const key = name.toLowerCase();
+        // Counted in the same set, so two recipes both wanting butter count it
+        // once — exactly as `stockUp` adds it once.
+        if (outstanding.has(key)) continue;
+        outstanding.add(key);
+        stockUpPending++;
+      }
+    }
 
     // Scoped to the budget's own currency, for exactly the reason
     // `finance:summary` is: adding 500 lira to 20 euros is not a number, and no
@@ -596,7 +642,14 @@ export const detail = query({
         .sort((a, b) => Number(a.is_purchased) - Number(b.is_purchased) || a.name.localeCompare(b.name)),
       shopping_total: items.length,
       shopping_purchased: items.filter((it) => it.is_purchased).length,
-      recipes: recipes.filter((r): r is NonNullable<typeof r> => r !== null),
+      recipes,
+      /** Ingredients on the menu that are not yet on the list. */
+      stock_up_pending: stockUpPending,
+      /** The days this event is already the dinner on, as `yyyy-MM-dd`. */
+      dinner_days: dinnerPlans
+        .filter((m) => m.home_id === event.home_id)
+        .map((m) => m.date)
+        .sort(),
     };
   },
 });
@@ -634,12 +687,14 @@ export const stockUp = mutation({
       existing.filter((it) => !it.is_purchased).map((it) => (it.name ?? "").trim().toLowerCase()),
     );
 
-    const now = Date.now();
-    let added = 0;
-    let skipped = 0;
+    // Read the menu in one go, not one recipe at a time.
+    const recipes = await Promise.all(recipeIds.map((recipeId) => ctx.db.get(recipeId)));
 
-    for (const recipeId of recipeIds) {
-      const recipe = await ctx.db.get(recipeId);
+    const now = Date.now();
+    let skipped = 0;
+    const pending: WithoutSystemFields<Doc<"shopping_items">>[] = [];
+
+    for (const recipe of recipes) {
       if (!recipe || recipe.home_id !== event.home_id) continue;
       const ingredients: string[] = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
 
@@ -653,7 +708,7 @@ export const stockUp = mutation({
         }
         // Held in the same set, so two recipes both wanting butter add it once.
         outstanding.add(key);
-        await ctx.db.insert("shopping_items", {
+        pending.push({
           home_id: event.home_id,
           name,
           category: category ?? "groceries",
@@ -667,9 +722,20 @@ export const stockUp = mutation({
           created: now,
           updated: now,
         });
-        added++;
       }
     }
+
+    // Every row at once.
+    //
+    // This is the whole reason `stockUp` exists, and awaiting the inserts one
+    // by one gave it away: a mutation gets one second of execution, and a menu
+    // of a dozen recipes is a couple of hundred round trips taken end to end.
+    // "Stock up" on a real menu simply timed out, which the sheet reported as a
+    // server error after a second of nothing. The transaction is the same
+    // either way — the writes commit together or not at all — so nothing here
+    // needs to wait for the row before it.
+    await Promise.all(pending.map((doc) => ctx.db.insert("shopping_items", doc)));
+    const added = pending.length;
 
     if (added > 0) {
       await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
@@ -710,12 +776,12 @@ export const addItems = mutation({
     );
 
     const now = Date.now();
-    let added = 0;
+    const pending: WithoutSystemFields<Doc<"shopping_items">>[] = [];
     for (const raw of names.slice(0, 50)) {
       const name = raw.trim();
       if (!name || outstanding.has(name.toLowerCase())) continue;
       outstanding.add(name.toLowerCase());
-      await ctx.db.insert("shopping_items", {
+      pending.push({
         home_id: event.home_id,
         name,
         category: category ?? "other",
@@ -727,8 +793,11 @@ export const addItems = mutation({
         created: now,
         updated: now,
       });
-      added++;
     }
+
+    // In one round rather than fifty, for the reason `stockUp` above gives.
+    await Promise.all(pending.map((doc) => ctx.db.insert("shopping_items", doc)));
+    const added = pending.length;
 
     if (added > 0) {
       await ctx.scheduler.runAfter(0, internal.push.notifyHome, {

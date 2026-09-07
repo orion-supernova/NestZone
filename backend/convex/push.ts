@@ -125,14 +125,19 @@ export const tokensForHome = internalQuery({
     if (!home) return [];
     const recipients = (home.members ?? []).filter((m) => m !== exclude);
 
-    const rows: Doc<"push_tokens">[] = [];
-    for (const userId of recipients) {
-      const forUser = await ctx.db
-        .query("push_tokens")
-        .withIndex("by_user", (q) => q.eq("user_id", userId))
-        .collect();
-      rows.push(...forUser);
-    }
+    // One round for the whole household. This runs on the way out of every
+    // write that notifies, so a sequential scan per member is a cost every
+    // mutation in the app pays.
+    const rows = (
+      await Promise.all(
+        recipients.map((userId) =>
+          ctx.db
+            .query("push_tokens")
+            .withIndex("by_user", (q) => q.eq("user_id", userId))
+            .collect(),
+        ),
+      )
+    ).flat();
     return rows.map((r) => ({
       id: r._id,
       token: r.token,

@@ -30,13 +30,27 @@ public struct CalendarView: View {
                 monthScrubber
                 modePicker
                 if isSearching { searchField }
-                if !store.presentKinds.isEmpty { filterRow }
+                if store.state.showsFilterRow { filterRow }
 
                 Group {
-                    switch store.mode {
-                    case .month: monthPage
-                    case .week: weekPage
-                    case .agenda: agendaPage
+                    // Any filter replaces the calendar rather than thinning it
+                    // in place.
+                    //
+                    // The grid and the timeline are both about *one day*, so a
+                    // filter could only ever remove dots from days nobody was
+                    // looking at: picking "house party" while sitting on today
+                    // emptied the panel under the grid and left Saturday's
+                    // party reachable only by spotting its dot and tapping the
+                    // right cell. Asking for a subset should show you the
+                    // subset.
+                    if store.state.isFiltering {
+                        resultsPage
+                    } else {
+                        switch store.mode {
+                        case .month: monthPage
+                        case .week: weekPage
+                        case .agenda: agendaPage
+                        }
                     }
                 }
                 // Each face is its own view, not three states of one. Without
@@ -45,7 +59,7 @@ public struct CalendarView: View {
                 // run, and none of the `appear` staggers inside it ever see a
                 // second `onAppear` — switching to an empty week looks like
                 // nothing happened at all.
-                .id(store.mode)
+                .id(store.state.isFiltering ? "results" : store.mode.rawValue)
                 .transition(.opacity.combined(with: .offset(y: 10)))
             }
             .padding(.bottom, Metrics.scrollBottomInset)
@@ -125,16 +139,23 @@ public struct CalendarView: View {
             .focused($isSearchFocused)
             .font(.subheadline)
             .submitLabel(.search)
-            if !store.search.isEmpty {
-                Button {
-                    store.send(.binding(.set(\.search, "")))
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(Palette.accessory)
-                }
-                .buttonStyle(.plain)
-                .transition(.scale.combined(with: .opacity))
+            // Always in the hierarchy, faded rather than inserted.
+            //
+            // As a conditional it was added to the row on the first keystroke,
+            // inside an animation, which makes SwiftUI re-lay-out and re-commit
+            // the text field's binding — two `.binding` actions for one letter.
+            // It also moved the field's trailing edge under the caret while
+            // somebody was typing into it.
+            Button {
+                store.send(.binding(.set(\.search, "")))
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(Palette.accessory)
             }
+            .buttonStyle(.plain)
+            .opacity(store.search.isEmpty ? 0 : 1)
+            .disabled(store.search.isEmpty)
+            .accessibilityHidden(store.search.isEmpty)
         }
         .padding(.horizontal, 14)
         .frame(height: 40)
@@ -242,30 +263,91 @@ public struct CalendarView: View {
     }
 
     private var filterRow: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                Chip(
-                    String(localized: L10n.calendarOnlyMine),
-                    symbol: store.onlyMine ? "person.fill.checkmark" : "person",
-                    isSelected: store.onlyMine
-                ) {
-                    store.send(.onlyMineToggled)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    if store.state.canFilterMine || store.onlyMine {
+                        Chip(
+                            String(localized: L10n.calendarOnlyMine),
+                            symbol: store.onlyMine ? "person.fill.checkmark" : "person",
+                            isSelected: store.onlyMine
+                        ) {
+                            store.send(.onlyMineToggled)
+                        }
+                    }
 
-                ForEach(store.presentKinds) { kind in
-                    Chip(
-                        String(localized: kind.title),
-                        symbol: kind.symbol,
-                        isSelected: store.kindFilter == kind
-                    ) {
-                        store.send(.kindFilterTapped(kind))
+                    if store.state.canFilterNeedsAnswer || store.needsAnswer {
+                        Chip(
+                            String(localized: L10n.calendarFilterNeedsAnswer),
+                            symbol: "questionmark.circle",
+                            isSelected: store.needsAnswer
+                        ) {
+                            store.send(.needsAnswerToggled)
+                        }
+                    }
+
+                    if store.state.canFilterPlanned || store.withPlan {
+                        Chip(
+                            String(localized: L10n.calendarFilterHasPlan),
+                            symbol: "list.bullet.clipboard",
+                            isSelected: store.withPlan
+                        ) {
+                            store.send(.withPlanToggled)
+                        }
+                    }
+
+                    ForEach(store.presentKinds) { kind in
+                        Chip(
+                            String(localized: kind.title),
+                            symbol: kind.symbol,
+                            isSelected: store.kindFilter == kind
+                        ) {
+                            store.send(.kindFilterTapped(kind))
+                        }
+                    }
+
+                    if store.state.isFiltering {
+                        Chip(
+                            String(localized: L10n.calendarClearFilters),
+                            symbol: "xmark"
+                        ) {
+                            store.send(.filtersCleared)
+                        }
                     }
                 }
+                // Room for the press effect to grow into. A chip lifts and
+                // scales under a long press, and inside a horizontal ScrollView
+                // that overflow is clipped to the row's own height — so a held
+                // chip came out shaved off at the top and bottom.
+                .padding(.vertical, 6)
+                .padding(.horizontal, Metrics.screenPadding)
             }
-            .padding(.horizontal, Metrics.screenPadding)
+            .scrollIndicators(.hidden)
+            // The other half of the same problem: the clip happens at the
+            // scroll view's bounds, so the padding above only helps once the
+            // view is allowed to draw outside them.
+            .scrollClipDisabled()
+
+            // What the filters actually did.
+            //
+            // Without this a filter that removes nothing is indistinguishable
+            // from one that is broken — and both of these are often no-ops on
+            // real data, because "just mine" counts events you created and in
+            // most households that is all of them.
+            if store.state.isFiltering {
+                Text(L10n.calendarFilterCount(
+                    store.state.visibleCount, store.state.totalCount
+                ))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .padding(.horizontal, Metrics.screenPadding)
+                .transition(.opacity)
+            }
         }
-        .scrollIndicators(.hidden)
         .animation(Motion.spring, value: store.kindFilter)
+        .animation(Motion.spring, value: store.onlyMine)
     }
 
     // MARK: - Month
@@ -377,6 +459,58 @@ public struct CalendarView: View {
         .animation(Motion.spring, value: items.map(\.id))
     }
 
+    /// Everything the active filters keep, wherever it falls in the window.
+    ///
+    /// One page for search and for the chips, because they are the same
+    /// question asked two ways: "show me the subset". The calendar and the
+    /// day panel are hidden while it is up — a grid is for browsing a month,
+    /// and neither of them can show a match that is not on the selected day.
+    private var resultsPage: some View {
+        let results = store.state.matches
+        return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            if store.isLoading {
+                SkeletonList(rows: 4, height: 76)
+                    .padding(.horizontal, Metrics.screenPadding)
+            } else if results.isEmpty {
+                EmptyStateView(
+                    title: L10n.calendarNoMatches,
+                    message: store.state.isSearchActive
+                        ? L10n.calendarSearchNoMatchesMessage
+                        : L10n.calendarNoMatchesMessage,
+                    symbol: store.state.isSearchActive
+                        ? "magnifyingglass"
+                        : "line.3.horizontal.decrease.circle",
+                    action: .init(title: L10n.calendarClearFilters) {
+                        store.send(.filtersCleared)
+                    },
+                    isCompact: true
+                )
+                .padding(.top, 12)
+            } else {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(L10n.calendarSearchResults(results.count))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                    Spacer(minLength: 8)
+                    Button { store.send(.filtersCleared) } label: {
+                        Text(L10n.calendarClearFilters).font(.caption2.weight(.medium))
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                }
+                .padding(.horizontal, Metrics.screenPadding)
+
+                // Dated, because a match three weeks out is the normal case and
+                // "Thursday" alone does not say which Thursday.
+                eventList(results, showsDate: true)
+                    .padding(.horizontal, Metrics.screenPadding)
+            }
+        }
+        .animation(Motion.spring, value: results.map(\.id))
+    }
+
     private var emptyDay: some View {
         VStack(spacing: 10) {
             Image(systemName: "calendar.badge.plus")
@@ -472,13 +606,24 @@ public struct CalendarView: View {
                 SkeletonList(rows: 4, height: 76)
                     .padding(.horizontal, Metrics.screenPadding)
             } else if days.isEmpty {
+                // A filtered-empty screen has to offer the way out. Before, it
+                // said "No matches" and left the person to work out which of
+                // the chips above was responsible for it.
                 EmptyStateView(
                     title: store.isFiltering ? L10n.calendarNoMatches : L10n.calendarEmptyTitle,
-                    message: store.isFiltering ? nil : L10n.calendarEmptyMessage,
-                    symbol: "calendar.badge.plus",
-                    action: store.isFiltering ? nil : .init(title: L10n.calendarAddFirstEvent) {
-                        store.send(.addTapped)
-                    },
+                    message: store.isFiltering
+                        ? L10n.calendarNoMatchesMessage
+                        : L10n.calendarEmptyMessage,
+                    symbol: store.isFiltering
+                        ? "line.3.horizontal.decrease.circle"
+                        : "calendar.badge.plus",
+                    action: store.isFiltering
+                        ? .init(title: L10n.calendarClearFilters) {
+                            store.send(.filtersCleared)
+                        }
+                        : .init(title: L10n.calendarAddFirstEvent) {
+                            store.send(.addTapped)
+                        },
                     isCompact: true
                 )
                 .padding(.top, 12)

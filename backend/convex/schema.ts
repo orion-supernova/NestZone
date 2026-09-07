@@ -343,7 +343,11 @@ export default defineSchema({
     updated: v.optional(v.number()),
   })
     .index("by_home", ["home_id"])
-    .index("by_home_date", ["home_id", "date"]),
+    .index("by_home_date", ["home_id", "date"])
+    // Which days an event is already the dinner on. Without it the only way to
+    // ask was a filter over every meal plan in the *database* — see
+    // `unlinkEvent`, which did exactly that on every event delete.
+    .index("by_event", ["event_id"]),
 
   polls: defineTable({
     pbId: v.optional(v.string()),

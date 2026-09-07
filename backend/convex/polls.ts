@@ -94,19 +94,23 @@ export const create = mutation({
       created: now,
       updated: now,
     });
-    let order = 0;
-    for (const it of args.items ?? []) {
-      await ctx.db.insert("poll_items", {
-        poll_id: pollId,
-        external_id: it.external_id,
-        label: it.label,
-        thumbnail_url: it.thumbnail_url,
-        payload: it.payload,
-        order: it.order ?? order++,
-        created: now,
-        updated: now,
-      });
-    }
+    // The whole ballot in one round. Awaiting a candidate at a time spends the
+    // mutation's one second of execution on round trips, and a ballot is
+    // exactly the thing somebody puts twenty options on.
+    await Promise.all(
+      (args.items ?? []).map((it, index) =>
+        ctx.db.insert("poll_items", {
+          poll_id: pollId,
+          external_id: it.external_id,
+          label: it.label,
+          thumbnail_url: it.thumbnail_url,
+          payload: it.payload,
+          order: it.order ?? index,
+          created: now,
+          updated: now,
+        }),
+      ),
+    );
 
     // Tell the rest of the household. Scheduled rather than awaited: a mutation
     // must not block on APNs, and a failed push must never roll back the poll.

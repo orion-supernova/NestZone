@@ -26,6 +26,15 @@ public struct EventDetailFeature: Sendable {
 
         /// Freeform "and get some ice" field under the shopping list.
         public var newItem = ""
+        /// Whether the plan's two long lists are showing every row.
+        ///
+        /// Both open collapsed, because a detail sheet is a summary and forty
+        /// shopping lines stacked above the add field is not one. What was
+        /// wrong was not the fold but the label on it: the remainder was
+        /// printed as plain text, so "+8 more items" named eight things and
+        /// gave no way whatsoever to reach them.
+        public var isShoppingExpanded = false
+        public var isExpensesExpanded = false
         public var isStockingUp = false
         public var isAddingItem = false
         /// Items whose tick is in flight, so a second tap cannot race the first.
@@ -89,6 +98,32 @@ public struct EventDetailFeature: Sendable {
             plan?.currency ?? occurrence.currency ?? Money.deviceDefault
         }
 
+        /// How many rows each collapsed list shows before it folds.
+        ///
+        /// The shopping list sorts unbought first, so a collapsed list is the
+        /// twelve things still to buy rather than an arbitrary dozen.
+        static let shoppingPreview = 12
+        static let expensePreview = 6
+
+        public var shopping: [EventPlan.LinkedItem] { plan?.shopping ?? [] }
+        public var expenses: [EventPlan.LinkedExpense] { plan?.expenses ?? [] }
+
+        public var visibleShopping: [EventPlan.LinkedItem] {
+            isShoppingExpanded ? shopping : Array(shopping.prefix(Self.shoppingPreview))
+        }
+
+        public var hiddenShoppingCount: Int {
+            max(0, shopping.count - Self.shoppingPreview)
+        }
+
+        public var visibleExpenses: [EventPlan.LinkedExpense] {
+            isExpensesExpanded ? expenses : Array(expenses.prefix(Self.expensePreview))
+        }
+
+        public var hiddenExpenseCount: Int {
+            max(0, expenses.count - Self.expensePreview)
+        }
+
         /// Whether this event is being planned at all.
         ///
         /// The test for showing an empty shopping card: an event with a budget,
@@ -124,10 +159,23 @@ public struct EventDetailFeature: Sendable {
 
         public var hasPlan: Bool { !visibleSections.isEmpty }
 
+        /// Whether "stock up" has anything left to do.
+        ///
+        /// The server counts the menu's ingredients that are not yet on the
+        /// household's list, because nothing here can: a `MenuRecipe` carries a
+        /// count and not the names. Without it the button stayed lit on a menu
+        /// that was fully bought in, and pressing it spent a round trip to be
+        /// told everything was already listed — a control whose only outcome is
+        /// "that did nothing" should not look like a control.
+        public var canStockUp: Bool {
+            guard let plan, !plan.recipes.isEmpty else { return false }
+            return plan.stockUpPending > 0
+        }
+
         /// The menu has recipes but nothing has been sent to the shopping list
         /// yet — the one moment "stock up" is the obvious next thing to do.
         public var suggestsStockUp: Bool {
-            guard let plan, !plan.recipes.isEmpty else { return false }
+            guard let plan, !plan.recipes.isEmpty, canStockUp else { return false }
             return plan.shoppingTotal == 0
         }
 
@@ -142,6 +190,20 @@ public struct EventDetailFeature: Sendable {
 
         /// The day it would be dinner on.
         public var dinnerDay: String { MealDate.key(occurrence.start) }
+
+        /// Whether *this occurrence's* day is already the household's dinner.
+        ///
+        /// Read off the plan rather than remembered locally. `didPlanDinner`
+        /// only ever knew about a press in this sheet, so reopening an event
+        /// offered to make it dinner all over again — and on a repeating event
+        /// every occurrence looked equally undecided, because the one that had
+        /// been set left no mark on the others.
+        public var isDinnerAlready: Bool {
+            plan?.dinnerDays.contains(dinnerDay) ?? false
+        }
+
+        /// Settled, either because it already was or because it just became so.
+        public var isDinner: Bool { didPlanDinner || isDinnerAlready }
 
         public var ticketURL: URL? {
             guard let raw = occurrence.url?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -166,6 +228,8 @@ public struct EventDetailFeature: Sendable {
         case stockUpTapped
         case bulkAddFinished(StockUpResult)
         case writeFailed(AppError)
+        case shoppingExpandToggled
+        case expensesExpandToggled
 
         case addExpenseTapped
         case planAsDinnerTapped
@@ -333,6 +397,14 @@ public struct EventDetailFeature: Sendable {
                 state.isPlanningDinner = false
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
+                return .none
+
+            case .shoppingExpandToggled:
+                state.isShoppingExpanded.toggle()
+                return .none
+
+            case .expensesExpandToggled:
+                state.isExpensesExpanded.toggle()
                 return .none
 
             // MARK: Money

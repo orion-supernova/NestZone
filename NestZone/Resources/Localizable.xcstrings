@@ -763,6 +763,23 @@
         }
       }
     },
+    "calendar_clear_filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear filters"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtreleri temizle"
+          }
+        }
+      }
+    },
     "calendar_delete_event": {
       "extractionState": "manual",
       "localizations": {
@@ -810,6 +827,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hepsini sil"
+          }
+        }
+      }
+    },
+    "calendar_dinner_this_date_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sets this date only — other repeats stay open."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca bu tarihi ayarlar — diğer tekrarlar açık kalır."
           }
         }
       }
@@ -980,6 +1014,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keşfet"
+          }
+        }
+      }
+    },
+    "calendar_filter_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing %1$lld of %2$lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld etkinlikten %1$lld tanesi"
+          }
+        }
+      }
+    },
+    "calendar_filter_has_plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has a plan"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planı var"
+          }
+        }
+      }
+    },
+    "calendar_filter_needs_answer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs an answer"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yanıt bekliyor"
           }
         }
       }
@@ -1235,6 +1320,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "O günün yemeği"
+          }
+        }
+      }
+    },
+    "calendar_is_dinner_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner on %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ yemeği"
           }
         }
       }
@@ -1681,6 +1783,23 @@
         }
       }
     },
+    "calendar_make_it_dinner_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make it dinner on %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ günü yemeği yap"
+          }
+        }
+      }
+    },
     "calendar_menu_empty": {
       "extractionState": "manual",
       "localizations": {
@@ -1898,6 +2017,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşleşen bir şey yok"
+          }
+        }
+      }
+    },
+    "calendar_no_matches_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every event here is hidden by a filter."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buradaki her etkinlik bir filtreyle gizlenmiş."
           }
         }
       }
@@ -2786,6 +2922,23 @@
         }
       }
     },
+    "calendar_search_no_matches_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in this window matches what you typed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu aralıkta yazdığınla eşleşen bir şey yok."
+          }
+        }
+      }
+    },
     "calendar_search_placeholder": {
       "extractionState": "manual",
       "localizations": {
@@ -2816,6 +2969,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tarif ara"
+          }
+        }
+      }
+    },
+    "calendar_search_results": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld result"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld results"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sonuç"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sonuç"
+                }
+              }
+            }
           }
         }
       }
@@ -2867,6 +3061,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sadece ekstralar — menünün malzemeleri kaydettikten sonra tek dokunuş uzağınızda."
+          }
+        }
+      }
+    },
+    "calendar_show_less": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha az göster"
           }
         }
       }
@@ -5041,6 +5252,40 @@
         }
       }
     },
+    "dinner_round_end": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End the round"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turu bitir"
+          }
+        }
+      }
+    },
+    "dinner_round_end_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This closes the vote for everyone and leaves dinner undecided."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu, oylamayı herkes için kapatır ve akşam yemeğini kararsız bırakır."
+          }
+        }
+      }
+    },
     "dinner_round_needs_two": {
       "extractionState": "manual",
       "localizations": {
@@ -6683,6 +6928,81 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önce bir ad ver."
+          }
+        }
+      }
+    },
+    "finance_event_expenses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld expense"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld expenses"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld harcama"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld harcama"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "finance_event_of_budget": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "of %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ bütçeden"
+          }
+        }
+      }
+    },
+    "finance_events_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From the calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimden"
           }
         }
       }
@@ -8724,6 +9044,81 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu ev silinsin mi?"
+          }
+        }
+      }
+    },
+    "home_dinner_from_event_action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make it tonight's dinner"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu akşamın yemeği yap"
+          }
+        }
+      }
+    },
+    "home_dinner_from_event_menu": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recipe on the menu"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recipes on the menu"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Menüde %lld tarif"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Menüde %lld tarif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home_dinner_from_event_other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decide something else"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir şey seç"
           }
         }
       }

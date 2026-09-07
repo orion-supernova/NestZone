@@ -94,12 +94,24 @@ public struct HomeView: View {
                         onMakeOccasion: { store.send(.makeOccasionTapped) }
                     )
                     .transition(.scale(scale: 0.96).combined(with: .opacity))
+                } else if let occurrence = store.state.dinnerSuggestion {
+                    // The household has already answered "what are we eating" —
+                    // it just answered it in the calendar. Offering it here
+                    // beats making somebody remember to open the event and
+                    // press a button in it.
+                    SuggestedDinnerCard(
+                        occurrence: occurrence,
+                        onAccept: { store.send(.dinnerSuggestionAccepted) },
+                        onDecideOther: { store.send(.decideDinnerTapped) }
+                    )
+                    .transition(.scale(scale: 0.96).combined(with: .opacity))
                 } else {
                     UndecidedDinnerCard { store.send(.decideDinnerTapped) }
                         .transition(.scale(scale: 0.96).combined(with: .opacity))
                 }
             }
             .animation(Motion.spring, value: store.tonight)
+            .animation(Motion.spring, value: store.state.dinnerSuggestion)
         }
     }
 
@@ -189,12 +201,19 @@ public struct HomeView: View {
             // read as a footnote to four counters rather than as the answer to
             // a different question.
             SectionHeader(L10n.homeUpNextTitle, symbol: "calendar.badge.clock") {
+                // The same glass control the Tasks section uses. Bare accent
+                // text next to a glass capsule two sections down read as two
+                // different kinds of thing when they do the same job.
+                //
+                // No icon button beside it, unlike Tasks: that one opens
+                // Contributions, a different screen about the same data, and
+                // events have no equivalent second destination. An icon that
+                // went where "See all" already goes would be decoration.
                 Button { store.send(.delegate(.openCalendar)) } label: {
-                    Text(L10n.commonSeeAll)
-                        .font(.footnote.weight(.semibold))
+                    Text(L10n.commonSeeAll).font(.subheadline.weight(.medium))
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
+                .buttonStyle(.glass)
+                .controlSize(.small)
             }
             upNextCard
         }
@@ -447,5 +466,65 @@ private struct TaskRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(task.isCompleted ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction(named: Text(L10n.tasksToggleAction), onToggle)
+    }
+}
+
+
+/// Tonight is undecided, but something in the calendar today has a menu.
+///
+/// The reverse of the link the event sheet writes. Planning a dinner party —
+/// menu, shopping, budget — used to do nothing for that day's tonight card
+/// unless somebody went back into the event and pressed "make it dinner"; the
+/// answer existed and this tab did not know it.
+///
+/// An offer, not a decision. An event with a menu is strong evidence about
+/// dinner, and evidence is not a reason to write on a household's behalf — so
+/// the way to a different answer stays one tap away underneath.
+private struct SuggestedDinnerCard: View {
+    let occurrence: EventOccurrence
+    let onAccept: () -> Void
+    let onDecideOther: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 16) {
+                Image(systemName: occurrence.kind.symbol)
+                    .font(.title2)
+                    .foregroundStyle(occurrence.kind.tint)
+                    .frame(width: 52, height: 52)
+                    .background(
+                        occurrence.kind.tint.opacity(0.14),
+                        in: .rect(cornerRadius: 14, style: .continuous)
+                    )
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(occurrence.title)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text(L10n.homeDinnerFromEventMenu(occurrence.recipeIDs.count))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+            }
+
+            PrimaryButton(L10n.homeDinnerFromEventAction, symbol: "fork.knife") {
+                onAccept()
+            }
+
+            Button(action: onDecideOther) {
+                Text(L10n.homeDinnerFromEventOther)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: Metrics.minTapTarget)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.pressable)
+        }
+        .padding(Metrics.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+        .accessibilityElement(children: .contain)
     }
 }

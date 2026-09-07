@@ -1014,7 +1014,7 @@ struct EventDetailSheet: View {
                 if !plan.expenses.isEmpty {
                     Divider().opacity(0.4)
                     VStack(spacing: 8) {
-                        ForEach(plan.expenses.prefix(6)) { expense in
+                        ForEach(store.state.visibleExpenses) { expense in
                             HStack(spacing: 8) {
                                 Circle()
                                     .fill(expense.category.tint)
@@ -1031,13 +1031,19 @@ struct EventDetailSheet: View {
                                     .monospacedDigit()
                             }
                         }
-                        if plan.expenses.count > 6 {
-                            Text(L10n.calendarMoreExpenses(plan.expenses.count - 6))
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                        if store.state.hiddenExpenseCount > 0 {
+                            // A fold, not a dead end: this used to be a plain
+                            // label, so "+4 more" named four expenses the
+                            // sheet gave no way at all to read.
+                            DisclosureRow(
+                                isExpanded: store.isExpensesExpanded,
+                                collapsedTitle: L10n.calendarMoreExpenses(
+                                    store.state.hiddenExpenseCount
+                                )
+                            ) { store.send(.expensesExpandToggled) }
                         }
                     }
+                    .animation(Motion.spring, value: store.isExpensesExpanded)
                 }
 
                 Button { store.send(.addExpenseTapped) } label: {
@@ -1085,18 +1091,25 @@ struct EventDetailSheet: View {
                 }
 
                 VStack(spacing: 2) {
-                    ForEach(plan.shopping.prefix(12)) { item in
+                    ForEach(store.state.visibleShopping) { item in
                         shoppingRow(item)
                     }
-                    if plan.shopping.count > 12 {
-                        Text(L10n.calendarMoreItems(plan.shopping.count - 12))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top, 4)
+                    if store.state.hiddenShoppingCount > 0 {
+                        // The bug this replaces: a bulk add would put thirty
+                        // things on the list and the card would print "+18
+                        // more items" as flat text, which is a count of things
+                        // nobody could see, tick off, or reach from anywhere.
+                        DisclosureRow(
+                            isExpanded: store.isShoppingExpanded,
+                            collapsedTitle: L10n.calendarMoreItems(
+                                store.state.hiddenShoppingCount
+                            )
+                        ) { store.send(.shoppingExpandToggled) }
+                        .padding(.top, 4)
                     }
                 }
                 .animation(Motion.spring, value: plan.shoppingPurchased)
+                .animation(Motion.spring, value: store.isShoppingExpanded)
 
                 addItemField
             }
@@ -1213,7 +1226,10 @@ struct EventDetailSheet: View {
                         if store.isStockingUp {
                             ProgressView().controlSize(.small)
                         } else {
-                            Image(systemName: "cart.badge.plus")
+                            Image(systemName: hasNothingToStockUp
+                                ? "checkmark.circle.fill"
+                                : "cart.badge.plus")
+                                .contentTransition(.symbolEffect(.replace))
                                 .bounces(when: store.state.suggestsStockUp)
                         }
                         Text(stockUpTitle)
@@ -1224,10 +1240,20 @@ struct EventDetailSheet: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.glassProminent)
-                .tint(Palette.warning)
-                .disabled(store.isStockingUp || plan.recipes.isEmpty)
+                .tint(hasNothingToStockUp ? Palette.accessory : Palette.warning)
+                .disabled(store.isStockingUp || !store.state.canStockUp)
+                // Spelled out rather than left to the button style: a prominent
+                // glass button barely dims on its own, and a live-looking
+                // control whose only outcome is "that did nothing" is worse
+                // than one that plainly says there is nothing to do.
+                .opacity(hasNothingToStockUp ? 0.55 : 1)
+                .animation(Motion.fade, value: hasNothingToStockUp)
 
-                if let result = store.lastStockUp {
+                // Suppressed when it would only repeat the button above it:
+                // after a press that added nothing, both say the same sentence.
+                // A press that *did* add something still reports what it did.
+                if let result = store.lastStockUp,
+                   !(result.added == 0 && hasNothingToStockUp) {
                     Text(stockUpSummary(result))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -1247,15 +1273,13 @@ struct EventDetailSheet: View {
                             if store.isPlanningDinner {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Image(systemName: store.didPlanDinner
+                                Image(systemName: store.state.isDinner
                                     ? "checkmark.circle.fill"
                                     : "fork.knife.circle")
                                     .contentTransition(.symbolEffect(.replace))
                                     .bounces(when: store.didPlanDinner)
                             }
-                            Text(store.didPlanDinner
-                                ? L10n.calendarIsDinner
-                                : L10n.calendarMakeItDinner)
+                            Text(dinnerButtonTitle)
                         }
                         .font(.subheadline.weight(.medium))
                         .frame(maxWidth: .infinity)
@@ -1263,17 +1287,55 @@ struct EventDetailSheet: View {
                         .contentShape(.rect)
                     }
                     .buttonStyle(.glass)
-                    .tint(store.didPlanDinner ? Palette.success : Palette.warning)
-                    .disabled(store.isPlanningDinner || store.didPlanDinner)
-                    .animation(Motion.spring, value: store.didPlanDinner)
+                    .tint(store.state.isDinner ? Palette.success : Palette.warning)
+                    .disabled(store.isPlanningDinner || store.state.isDinner)
+                    .animation(Motion.spring, value: store.state.isDinner)
+
+                    // Said out loud only on a repeating event, where it is the
+                    // one thing that is not obvious: a meal plan is one row per
+                    // household per day, so "every Friday" cannot claim them
+                    // all. The button sets this Friday, and next Friday is
+                    // still a question — which the button naming its own date
+                    // is what makes readable.
+                    if store.occurrence.isRecurring {
+                        Text(L10n.calendarDinnerThisDateOnly)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .multilineTextAlignment(.center)
+                    }
                 }
             }
             .animation(Motion.fade, value: store.lastStockUp)
         }
     }
 
+    /// A menu with nothing left to send: every ingredient is already on the
+    /// household's list. Distinct from "no menu at all", which shows no card.
+    private var hasNothingToStockUp: Bool {
+        !(store.plan?.recipes.isEmpty ?? true) && !store.state.canStockUp
+    }
+
+    /// Names the day on a repeating event, and only there.
+    ///
+    /// "Make it dinner that day" is unambiguous on a one-off and meaningless on
+    /// "movie night, every Friday" — which Friday? So the repeating case spells
+    /// the date out and the one-off keeps the shorter sentence.
+    private var dinnerButtonTitle: LocalizedStringResource {
+        guard store.occurrence.isRecurring else {
+            return store.state.isDinner ? L10n.calendarIsDinner : L10n.calendarMakeItDinner
+        }
+        let day = store.occurrence.start.formatted(
+            .dateTime.weekday(.abbreviated).day().month(.abbreviated)
+        )
+        return store.state.isDinner
+            ? L10n.calendarIsDinnerOn(day)
+            : L10n.calendarMakeItDinnerOn(day)
+    }
+
     private var stockUpTitle: LocalizedStringResource {
-        (store.plan?.shoppingTotal ?? 0) > 0
+        if hasNothingToStockUp { return L10n.calendarAllAlreadyListed }
+        return (store.plan?.shoppingTotal ?? 0) > 0
             ? L10n.calendarStockUpAgain
             : L10n.calendarStockUp
     }
@@ -1420,6 +1482,37 @@ private struct AddItemField: View {
         .onTapGesture { isFocused = true }
         .animation(Motion.fade, value: canAdd)
         .animation(Motion.fade, value: isBusy)
+    }
+}
+
+/// The fold at the bottom of a plan list.
+///
+/// Both plan lists cut off — a detail sheet is a summary, and a party with
+/// forty shopping lines should not push its add field off the screen. What
+/// makes a fold honest is that it is a control: "+8 more items" as flat text is
+/// a promise of eight things with no way to reach them, which is how a bulk add
+/// could put a whole recipe on the list and then hide most of it.
+private struct DisclosureRow: View {
+    let isExpanded: Bool
+    let collapsedTitle: LocalizedStringResource
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(isExpanded ? L10n.calendarShowLess : collapsedTitle)
+                    .font(.caption2.weight(.medium))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 9, weight: .bold))
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(.secondary)
+            .frame(height: Metrics.minTapTarget)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+        .accessibilityLabel(Text(isExpanded ? L10n.calendarShowLess : collapsedTitle))
     }
 }
 

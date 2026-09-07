@@ -97,20 +97,26 @@ export const createFromRecipe = mutation({
       .filter((n) => n.length > 0)
       .filter((n) => !outstanding.has(n.toLowerCase()));
 
-    for (const name of wanted) {
-      await ctx.db.insert("shopping_items", {
-        home_id: args.homeId,
-        name,
-        category: args.category ?? "groceries",
-        is_purchased: false,
-        recipe_id: args.recipeId,
-        recipe_title: args.recipeTitle,
-        created_by: user._id,
-        updated_by: user._id,
-        created: now,
-        updated: now,
-      });
-    }
+    // Written in one round, not one ingredient at a time. A mutation gets one
+    // second of execution and awaiting each insert spends it on round trips —
+    // which is how the same loop in `events:stockUp` timed out on a real menu.
+    // The transaction commits together either way.
+    await Promise.all(
+      wanted.map((name) =>
+        ctx.db.insert("shopping_items", {
+          home_id: args.homeId,
+          name,
+          category: args.category ?? "groceries",
+          is_purchased: false,
+          recipe_id: args.recipeId,
+          recipe_title: args.recipeTitle,
+          created_by: user._id,
+          updated_by: user._id,
+          created: now,
+          updated: now,
+        }),
+      ),
+    );
 
     if (wanted.length > 0) {
       // One notification for the batch, not one per ingredient.
@@ -179,15 +185,13 @@ export const remove = mutation({
 export const removeMany = mutation({
   args: { ids: v.array(v.id("shopping_items")) },
   handler: async (ctx, { ids }) => {
-    let removed = 0;
-    for (const id of ids) {
-      const item = await ctx.db.get(id);
-      // Already gone — another member got there first, which is not an error.
-      if (!item) continue;
-      await requireDocHome(ctx, item, "Item");
-      await ctx.db.delete(id);
-      removed++;
-    }
-    return { removed };
+    // Read, check, then delete — each phase in one round rather than one item
+    // at a time, for the reason `createFromRecipe` above gives.
+    const items = await Promise.all(ids.map((id) => ctx.db.get(id)));
+    // Already gone — another member got there first, which is not an error.
+    const present = items.filter((it): it is NonNullable<typeof it> => it !== null);
+    await Promise.all(present.map((item) => requireDocHome(ctx, item, "Item")));
+    await Promise.all(present.map((item) => ctx.db.delete(item._id)));
+    return { removed: present.length };
   },
 });

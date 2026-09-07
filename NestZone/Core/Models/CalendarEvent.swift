@@ -584,7 +584,7 @@ public struct EventOccurrence: Codable, Identifiable, Hashable, Sendable {
         // Money is decoded through `decodeNumber` for the reason every other
         // amount in this app is: `v.number()` is float64, and one `1250.0`
         // would throw and blank a whole month rather than one card.
-        budget = c.contains(.budget) ? c.decodeNumber(forKey: .budget) : nil
+        budget = c.decodeNumberIfPresent(forKey: .budget)
         currency = try c.decodeIfPresent(String.self, forKey: .currency)
         recipeIDs = (try? c.decodeIfPresent([RecipeID].self, forKey: .recipeIDs)) ?? []
         recurrence = try c.decodeIfPresent(Recurrence.self, forKey: .recurrence)
@@ -704,11 +704,22 @@ extension EventOccurrence {
 
     /// Whether this concerns `user` at all — they are expected, they answered,
     /// or they wrote it. Drives the "just mine" filter.
-    public func involves(_ user: UserID?) -> Bool {
+    /// Whether this event is one of *mine*, for the calendar's "just mine"
+    /// filter.
+    ///
+    /// Deliberately not "did I type it". `createdBy` used to count, which made
+    /// the filter useless in exactly the household it was built for: whoever
+    /// enters the events owns every one of them, so the toggle excluded nobody
+    /// and read as a dead control.
+    ///
+    /// An event with no invite list is the household's, and therefore mine too
+    /// — hiding the shared calendar behind a personal filter is not what
+    /// anybody means by the word. What it does hide is the event that names
+    /// other people and not me: somebody else's dentist appointment.
+    public func isMine(_ user: UserID?) -> Bool {
         guard let user else { return false }
-        return attendees.contains(user)
-            || createdBy == user
-            || rsvps.contains { $0.userID == user }
+        if attendees.isEmpty { return true }
+        return attendees.contains(user) || rsvps.contains { $0.userID == user }
     }
 
     /// The reminders this build can offer back, de-duplicated.
@@ -760,6 +771,22 @@ public struct EventPlan: Codable, Equatable, Sendable {
     public var shoppingTotal: Int
     public var shoppingPurchased: Int
     public var recipes: [MenuRecipe]
+    /// Ingredients on the menu that are not yet on the household's list — what
+    /// "stock up" would actually add if it were pressed now.
+    ///
+    /// Computed server-side because the client cannot: a `MenuRecipe` carries
+    /// an ingredient *count*, not the names, so the button had no way to know
+    /// it would do nothing. It came from the same read as `stockUp`'s own
+    /// arithmetic, so the two cannot disagree.
+    public var stockUpPending: Int
+    /// The days this event is already the household's dinner, as `yyyy-MM-dd`.
+    ///
+    /// Days, plural, because the plan belongs to the *series* and a series is
+    /// many days. "Make it dinner" writes one meal plan for the occurrence being
+    /// looked at — a meal plan is one row per home per day, so a weekly event
+    /// cannot claim them all — and without this the sheet had no way to know it
+    /// had ever been pressed. Every occurrence looked equally undecided.
+    public var dinnerDays: [String]
 
     public static let empty = EventPlan(eventID: EventID(""))
 
@@ -773,7 +800,9 @@ public struct EventPlan: Codable, Equatable, Sendable {
         shopping: [LinkedItem] = [],
         shoppingTotal: Int = 0,
         shoppingPurchased: Int = 0,
-        recipes: [MenuRecipe] = []
+        recipes: [MenuRecipe] = [],
+        stockUpPending: Int = 0,
+        dinnerDays: [String] = []
     ) {
         self.eventID = eventID
         self.currency = currency
@@ -785,6 +814,8 @@ public struct EventPlan: Codable, Equatable, Sendable {
         self.shoppingTotal = shoppingTotal
         self.shoppingPurchased = shoppingPurchased
         self.recipes = recipes
+        self.stockUpPending = stockUpPending
+        self.dinnerDays = dinnerDays
     }
 
     enum CodingKeys: String, CodingKey {
@@ -792,13 +823,15 @@ public struct EventPlan: Codable, Equatable, Sendable {
         case currency, budget, spent, currencies, expenses, shopping, recipes
         case shoppingTotal = "shopping_total"
         case shoppingPurchased = "shopping_purchased"
+        case stockUpPending = "stock_up_pending"
+        case dinnerDays = "dinner_days"
     }
 
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         eventID = try c.decode(EventID.self, forKey: .eventID)
         currency = try c.decodeIfPresent(String.self, forKey: .currency)
-        budget = c.contains(.budget) ? c.decodeNumber(forKey: .budget) : nil
+        budget = c.decodeNumberIfPresent(forKey: .budget)
         spent = c.decodeNumber(forKey: .spent)
         currencies = (try? c.decodeIfPresent([String].self, forKey: .currencies)) ?? []
         expenses = (try? c.decodeIfPresent([LinkedExpense].self, forKey: .expenses)) ?? []
@@ -806,6 +839,8 @@ public struct EventPlan: Codable, Equatable, Sendable {
         shoppingTotal = c.decodeNumber(forKey: .shoppingTotal)
         shoppingPurchased = c.decodeNumber(forKey: .shoppingPurchased)
         recipes = (try? c.decodeIfPresent([MenuRecipe].self, forKey: .recipes)) ?? []
+        stockUpPending = c.decodeNumber(forKey: .stockUpPending)
+        dinnerDays = (try? c.decodeIfPresent([String].self, forKey: .dinnerDays)) ?? []
     }
 
     /// One expense, only as much of it as a plan needs to list.
