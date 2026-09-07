@@ -25,6 +25,21 @@ import { ActionCtx } from "./_generated/server";
 const BASE = "https://api.themoviedb.org/3";
 const PAGES = 3;
 
+/**
+ * The fewest TMDb votes a film needs to be worth putting in front of a
+ * household.
+ *
+ * `sort_by=popularity.desc` orders what it is given but filters nothing, so a
+ * narrow round scraped the bottom of the catalogue to fill three pages: a 1937
+ * round came back 43-of-60 films with under fifty votes, thirteen of them with
+ * no poster at all, and a household deciding between *It Happened One Night*
+ * and a one-vote obscurity with a blank card is not deciding anything. A floor
+ * of twenty still leaves 1937 with 109 films and the 1930s with 1117 — far
+ * more than a thirty-card deck needs — while removing the noise. A shorter
+ * deck of real films beats a full one padded out.
+ */
+const MIN_VOTES = 20;
+
 const GENRES: Record<string, number> = {
   action: 28, adventure: 12, animation: 16, comedy: 35, crime: 80,
   documentary: 99, drama: 18, family: 10751, fantasy: 14, history: 36,
@@ -64,6 +79,14 @@ type TMDbMovie = {
   poster_path?: string | null;
   genre_ids?: number[];
   genres?: { id: number; name: string }[];
+};
+
+/** A film as it appears under a person, which is the only place the job and
+ *  the popularity that `/discover/movie` sorts by are both available. */
+type TMDbCredit = TMDbMovie & {
+  job?: string;
+  adult?: boolean;
+  popularity?: number;
 };
 
 const GENRE_NAMES: Record<number, string> = Object.fromEntries(
@@ -109,7 +132,10 @@ async function fetchPages(
   for (const page of pages) {
     for (const raw of (page.results ?? []) as TMDbMovie[]) {
       const movie = toMovie(raw);
-      if (!movie.title || seen.has(movie.id)) continue;
+      // A card is a poster and a title. Without the poster there is nothing to
+      // swipe on, so an entry missing one is not a candidate — it is a gap
+      // being counted as one.
+      if (!movie.title || !movie.poster || seen.has(movie.id)) continue;
       seen.add(movie.id);
       movies.push(movie);
     }
@@ -165,6 +191,7 @@ export const discover = action({
         }
         return await fetchPages("/discover/movie", {
           with_genres: id, include_adult: includeAdult, sort_by: sortBy,
+          "vote_count.gte": MIN_VOTES,
         });
       }
 
@@ -172,6 +199,7 @@ export const discover = action({
         return await fetchPages("/discover/movie", {
           primary_release_year: args.year ?? new Date().getFullYear(),
           include_adult: includeAdult, sort_by: sortBy,
+          "vote_count.gte": MIN_VOTES,
         });
 
       case "decade": {
@@ -180,20 +208,50 @@ export const discover = action({
           "primary_release_date.gte": `${start}-01-01`,
           "primary_release_date.lte": `${start + 9}-12-31`,
           include_adult: includeAdult, sort_by: sortBy,
+          "vote_count.gte": MIN_VOTES,
         });
       }
 
       case "actor":
       case "director": {
         const people = await fetchJSON(
-          url("/search/person", { query: args.query ?? "" }),
+          url("/search/person", { query: (args.query ?? "").trim() }),
         );
         const person = (people.results ?? [])[0];
         if (!person) return [];
-        const key = args.kind === "actor" ? "with_cast" : "with_crew";
-        return await fetchPages("/discover/movie", {
-          [key]: person.id, include_adult: includeAdult, sort_by: sortBy,
-        });
+
+        if (args.kind === "actor") {
+          return await fetchPages("/discover/movie", {
+            with_cast: person.id, include_adult: includeAdult, sort_by: sortBy,
+            "vote_count.gte": MIN_VOTES,
+          });
+        }
+
+        // `with_crew` matches *any* crew credit, so a director's round filled
+        // out with films they only produced: a Sam Raimi deck ran out of films
+        // he directed after a dozen and then went on for another fifty of the
+        // horror he lent his name to. The person's own credits carry the job,
+        // so the round can be exactly what they directed. Three pages of
+        // near-misses is not worth one wrong card — a short deck of the right
+        // films is the answer, however short it comes out.
+        const credits = await fetchJSON(url(`/person/${person.id}/movie_credits`, {}));
+        const seen = new Set<string>();
+        return ((credits.crew ?? []) as TMDbCredit[])
+          .filter((raw) => raw.job === "Director")
+          .filter((raw) => includeAdult || !raw.adult)
+          // Student shorts and unreleased projects sit in a director's credits
+          // with no artwork. They are correctly theirs and still not cards.
+          .filter((raw) => raw.poster_path)
+          // `movie_credits` comes back in no useful order; every other round is
+          // richest first.
+          .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+          .map(toMovie)
+          // One film can carry two directing credits for the same person.
+          .filter((movie) => {
+            if (!movie.title || !movie.poster || seen.has(movie.id)) return false;
+            seen.add(movie.id);
+            return true;
+          });
       }
 
       case "popular":
