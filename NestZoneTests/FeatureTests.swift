@@ -2181,6 +2181,50 @@ struct MessagesTests {
         #expect(state.title(for: group) != " Chat")
     }
 
+    @Test("Holding a bubble opens its actions, and only its own")
+    func bubbleActions() async {
+        var state = chat()
+        state.messages = [
+            Message(id: "m1", senderID: "me", content: "mine", readBy: ["me"]),
+            Message(id: "m2", senderID: "them", content: "theirs", readBy: ["them"]),
+        ]
+
+        let store = TestStore(initialState: state) { ChatFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
+        // Holding it again puts the bar away rather than reopening it.
+        await store.send(.bubbleHeld("m1")) { $0.actionsFor = nil }
+
+        // Somebody else's message has nothing to offer.
+        await store.send(.bubbleHeld("m2"))
+        #expect(store.state.actionsFor == nil)
+
+        // Acting on the bar closes it.
+        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
+        await store.send(.editTapped("m1"))
+        #expect(store.state.actionsFor == nil)
+        #expect(store.state.editing == MessageID("m1"))
+
+        await store.send(.editCancelled)
+        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
+        await store.send(.actionsDismissed) { $0.actionsFor = nil }
+    }
+
+    @Test("A bar left open over a message that is gone closes itself")
+    func actionsFollowTheirMessage() async {
+        var state = chat()
+        state.messages = [Message(id: "m1", senderID: "me", content: "mine", readBy: ["me"])]
+        state.actionsFor = "m1"
+
+        let store = TestStore(initialState: state) { ChatFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        // Deleted from another device.
+        await store.send(.messagesUpdated([]))
+        #expect(store.state.actionsFor == nil)
+    }
+
     @Test("Editing rewrites the bubble, and puts it back if the server refuses")
     func editThroughTheComposer() async {
         let saved = LockIsolated<[String]>([])

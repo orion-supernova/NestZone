@@ -118,6 +118,8 @@ struct ChatView: View {
 
     @Environment(\.theme) private var theme
     @FocusState private var isComposerFocused: Bool
+    /// Measured, so the bar can be aligned to a bubble edge and kept on screen.
+    @State private var barSize: CGSize = .zero
 
     var body: some View {
         // Sorted once per render. `startsGroup` used to reach for `ordered`
@@ -144,11 +146,16 @@ struct ChatView: View {
                                 hasFailed: store.state.hasFailed(message),
                                 canModify: store.state.canModify(message),
                                 isBeingEdited: store.editing == message.id,
+                                showsActions: store.actionsFor == message.id,
                                 retry: { store.send(.retryTapped(message.id)) },
+                                hold: { store.send(.bubbleHeld(message.id)) },
                                 edit: { store.send(.editTapped(message.id)) },
                                 delete: { store.send(.deleteTapped(message.id)) }
                             )
                             .id(message.id)
+                            // The open bar overhangs its bubble, and a lazy
+                            // stack draws later rows over earlier ones.
+                            .zIndex(store.actionsFor == message.id ? 1 : 0)
                         }
                     }
                     .padding(.horizontal, Metrics.screenPadding)
@@ -165,12 +172,37 @@ struct ChatView: View {
                 scrollToNewest(proxy, animated: true)
             }
         }
+        // Drawn over the scroll view, not inside it: an overlay on the bubble
+        // is clipped by the scroll view's bounds, which sliced the bar in half
+        // whenever the message was near the top of the screen.
+        .overlayPreferenceValue(BubbleActionsAnchorKey.self) { anchor in
+            GeometryReader { proxy in
+                if let anchor {
+                    let bubble = proxy[anchor.bounds]
+                    MessageActionsBar(
+                        isMine: anchor.isMine,
+                        edit: { store.send(.editTapped(anchor.id)) },
+                        delete: { store.send(.deleteTapped(anchor.id)) }
+                    )
+                    .onGeometryChange(for: CGSize.self) { $0.size } action: { barSize = $0 }
+                    .position(
+                        x: barX(alongside: bubble, isMine: anchor.isMine, within: proxy.size),
+                        y: barY(above: bubble, within: proxy.size)
+                    )
+                    .transition(.scale(scale: 0.85).combined(with: .opacity))
+                }
+            }
+            .animation(Motion.spring, value: store.actionsFor)
+        }
         .background(Backdrop(tint: theme.accent))
         // Swipe the keyboard down, or tap anywhere off the composer to put it
         // away. `simultaneousGesture` so the tap does not eat scrolling or the
-        // bubbles' own context menus.
+        // bubbles' own action bar.
         .scrollDismissesKeyboard(.interactively)
-        .simultaneousGesture(TapGesture().onEnded { isComposerFocused = false })
+        .simultaneousGesture(TapGesture().onEnded {
+            isComposerFocused = false
+            store.send(.actionsDismissed)
+        })
         .safeAreaInset(edge: .bottom) { composer }
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -198,6 +230,25 @@ struct ChatView: View {
             },
             message: { Text(L10n.messagesRenameMessage) }
         )
+    }
+
+    /// Lines the bar up with the bubble's own edge — trailing for yours,
+    /// leading for theirs — then keeps it on screen.
+    private func barX(alongside bubble: CGRect, isMine: Bool, within size: CGSize) -> CGFloat {
+        let half = barSize.width / 2
+        let anchored = isMine ? bubble.maxX - half : bubble.minX + half
+        let margin = Metrics.screenPadding + half
+        return min(max(anchored, margin), max(margin, size.width - margin))
+    }
+
+    /// Above the bubble, unless it is close enough to the top that the bar would
+    /// run off the screen, in which case below it.
+    private func barY(above bubble: CGRect, within size: CGSize) -> CGFloat {
+        let half = barSize.height / 2
+        let gap: CGFloat = 8
+        let preferred = bubble.minY - half - gap
+        guard preferred - half < 0 else { return preferred }
+        return min(bubble.maxY + half + gap, size.height - half - gap)
     }
 
     private func scrollToNewest(_ proxy: ScrollViewProxy, animated: Bool = true) {
@@ -275,11 +326,28 @@ private struct MessageBubble: View {
     /// Your own words, already on the server — the only thing worth a menu.
     let canModify: Bool
     let isBeingEdited: Bool
+    let showsActions: Bool
     let retry: () -> Void
+    let hold: () -> Void
     let edit: () -> Void
     let delete: () -> Void
 
     @Environment(\.theme) private var theme
+
+    /// How long a press has to be held. `.contextMenu` waits about half a
+    /// second; a quarter reads as deliberate without feeling like a stall.
+    private static let holdDuration = 0.25
+
+    /// Tracks the finger, so the bubble reacts on touch-down instead of after
+    /// the hold completes — the wait was invisible, which is what made the
+    /// gesture feel like it had not registered.
+    @GestureState private var isPressing = false
+
+    private var pressGesture: some Gesture {
+        LongPressGesture(minimumDuration: Self.holdDuration)
+            .updating($isPressing) { current, state, _ in state = current }
+            .onEnded { _ in hold() }
+    }
 
     var body: some View {
         VStack(alignment: isMine ? .trailing : .leading, spacing: 2) {
@@ -310,6 +378,23 @@ private struct MessageBubble: View {
                 )
                 .frame(maxWidth: 280, alignment: isMine ? .trailing : .leading)
                 .opacity(isPending && !hasFailed ? 0.55 : 1)
+                .scaleEffect(isPressing || showsActions ? 0.96 : 1)
+                .animation(Motion.press, value: isPressing)
+                .animation(Motion.spring, value: showsActions)
+                // Hands the bubble's frame up to `ChatView`, which draws the bar
+                // outside the scroll view. Drawn here it was inside the scroll
+                // view's clip, so the bar on the topmost bubble was sliced off.
+                .anchorPreference(key: BubbleActionsAnchorKey.self, value: .bounds) {
+                    showsActions
+                        ? BubbleActionsAnchor(id: message.id, bounds: $0, isMine: isMine)
+                        : nil
+                }
+                .contentShape(.rect(cornerRadius: 18, style: .continuous))
+                .gesture(canModify ? pressGesture : nil)
+                // Two taps of feedback: one the instant the press registers,
+                // one when the bar actually opens.
+                .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, now in now }
+                .sensoryFeedback(.impact(weight: .medium), trigger: showsActions) { _, now in now }
 
             // A send that failed keeps its bubble and says so, rather than
             // taking the text down with it.
@@ -329,16 +414,6 @@ private struct MessageBubble: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
-        .contextMenu {
-            if canModify {
-                Button { edit() } label: {
-                    Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
-                }
-                Button(role: .destructive) { delete() } label: {
-                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
-                }
-            }
-        }
         .animation(Motion.fade, value: isPending)
         // Marks which bubble the composer is currently rewriting.
         .overlay(alignment: isMine ? .topLeading : .topTrailing) {
@@ -355,6 +430,69 @@ private struct MessageBubble: View {
         .accessibilityLabel(Text("\(senderName): \(message.content)"))
         .accessibilityValue(hasFailed ? Text(L10n.messagesChatMessageFailed) : Text(""))
         .accessibilityAction(named: Text(L10n.commonRetry)) { if hasFailed { retry() } }
+        // A press-and-hold is not reachable under VoiceOver; the same two
+        // actions are offered by name instead.
+        .accessibilityActions {
+            if canModify {
+                Button { edit() } label: { Text(L10n.commonEdit) }
+                Button { delete() } label: { Text(L10n.commonDelete) }
+            }
+        }
+    }
+
+}
+
+/// Which bubble is open, where it is, and which way it faces.
+private struct BubbleActionsAnchor {
+    let id: MessageID
+    let bounds: Anchor<CGRect>
+    let isMine: Bool
+}
+
+private struct BubbleActionsAnchorKey: PreferenceKey {
+    static let defaultValue: BubbleActionsAnchor? = nil
+
+    static func reduce(value: inout BubbleActionsAnchor?, nextValue: () -> BubbleActionsAnchor?) {
+        value = value ?? nextValue()
+    }
+}
+
+/// Edit and Delete, as one glass capsule pinned to the bubble it belongs to.
+private struct MessageActionsBar: View {
+    let isMine: Bool
+    let edit: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        GlassEffectContainer(spacing: 4) {
+            HStack(spacing: 2) {
+                button(L10n.commonEdit, symbol: "pencil", action: edit)
+                Divider().frame(height: 18)
+                button(L10n.commonDelete, symbol: "trash", tint: Palette.danger, action: delete)
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        }
+        .fixedSize()
+    }
+
+    private func button(
+        _ title: LocalizedStringResource,
+        symbol: String,
+        tint: Color? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label { Text(title) } icon: { Image(systemName: symbol) }
+                .font(.caption.weight(.medium))
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle(tint ?? .primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
     }
 }
 

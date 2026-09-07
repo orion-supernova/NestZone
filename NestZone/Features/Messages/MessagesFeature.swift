@@ -250,6 +250,12 @@ public struct ChatFeature: Sendable {
         /// composer rather than opening an alert: a message can be paragraphs
         /// long, and a one-line alert field is no place to rework it.
         public var editing: MessageID?
+        /// The bubble showing its actions. A hand-built bar rather than
+        /// `.contextMenu`: that one takes half a second to appear, gives no
+        /// feedback while you wait, and previews whatever view it is attached
+        /// to — which for a chat row is the full width of the screen, so the
+        /// menu never looked like it belonged to a particular bubble.
+        public var actionsFor: MessageID?
         /// Deleted here, not yet gone on the server. Filtered out of the thread
         /// and out of incoming pushes, which would otherwise resurrect them
         /// between the mutation landing and the subscription catching up.
@@ -345,6 +351,8 @@ public struct ChatFeature: Sendable {
         case retryTapped(MessageID)
         case sendSucceeded(local: MessageID, server: MessageID)
         case sendFailed(local: MessageID, AppError)
+        case bubbleHeld(MessageID)
+        case actionsDismissed
         case editTapped(MessageID)
         case editCancelled
         case editFailed(MessageID, String, AppError)
@@ -404,6 +412,9 @@ public struct ChatFeature: Sendable {
                 if let editing = state.editing, state.messages[id: editing] == nil {
                     state.editing = nil
                     state.draft = ""
+                }
+                if let open = state.actionsFor, state.messages[id: open] == nil {
+                    state.actionsFor = nil
                 }
                 // A bubble the server has now sent back stops being optimistic.
                 let confirmed = state.messages.ids
@@ -479,10 +490,22 @@ public struct ChatFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
+            case let .bubbleHeld(id):
+                guard let message = state.messages[id: id], state.canModify(message) else {
+                    return .none
+                }
+                state.actionsFor = state.actionsFor == id ? nil : id
+                return .none
+
+            case .actionsDismissed:
+                state.actionsFor = nil
+                return .none
+
             case let .editTapped(id):
                 guard let message = state.messages[id: id], state.canModify(message) else {
                     return .none
                 }
+                state.actionsFor = nil
                 state.editing = id
                 state.draft = message.content
                 return .none
@@ -502,6 +525,7 @@ public struct ChatFeature: Sendable {
                 guard let message = state.messages[id: id], state.canModify(message) else {
                     return .none
                 }
+                state.actionsFor = nil
                 // Gone from the thread now; the subscription makes it official.
                 state.deleting.insert(id)
                 if state.editing == id {
