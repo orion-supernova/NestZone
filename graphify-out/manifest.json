@@ -635,8 +635,8 @@
     "semantic_hash": ""
   },
   "backend/convex/catalog.ts": {
-    "mtime": 1788698179.1675613,
-    "ast_hash": "361265d883188c796ede1f6d76ac0d7e",
+    "mtime": 1788766980.8993661,
+    "ast_hash": "500f98bc3cf184fe4c0dff9a4cc33ef3",
     "semantic_hash": ""
   },
   "backend/convex/stats.ts": {
