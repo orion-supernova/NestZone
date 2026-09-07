@@ -20,6 +20,8 @@ public struct DinnerDecision: Equatable, Sendable {
     public var title: String?
     public var cuisine: Cuisine?
     public var place: String?
+    /// The calendar event this meal belongs to, when it is part of one.
+    public var eventID: EventID?
 
     public init(
         homeID: HomeID,
@@ -28,7 +30,8 @@ public struct DinnerDecision: Equatable, Sendable {
         recipeID: RecipeID? = nil,
         title: String? = nil,
         cuisine: Cuisine? = nil,
-        place: String? = nil
+        place: String? = nil,
+        eventID: EventID? = nil
     ) {
         self.homeID = homeID
         self.date = date
@@ -37,6 +40,7 @@ public struct DinnerDecision: Equatable, Sendable {
         self.title = title
         self.cuisine = cuisine
         self.place = place
+        self.eventID = eventID
     }
 }
 
@@ -68,6 +72,10 @@ extension MealsClient: DependencyKey {
                !place.isEmpty {
                 args["place"] = place
             }
+            // Sent only when there is one: the server reads an absent `eventId`
+            // as "leave the link alone", so re-deciding the same evening cannot
+            // silently detach the dinner from the party it belongs to.
+            if let eventID = decision.eventID { args["eventId"] = eventID }
             try await ConvexConnection.shared.mutate("meals:set", args: args)
         },
         clear: { homeID, date in

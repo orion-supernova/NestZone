@@ -23,12 +23,44 @@ public struct MealPlan: Codable, Identifiable, Hashable, Sendable {
     /// `YYYY-MM-DD` in the household's own reckoning — dinner is a calendar
     /// day, not an instant. Compared against `MealDate.today`.
     public var date: String
+    /// The calendar event this meal belongs to — Saturday's dinner party
+    /// rather than Saturday's dinner.
+    ///
+    /// Read through by the server, so the Home tab can name the occasion and
+    /// open it — with its budget, its shopping and its menu — without
+    /// subscribing to the calendar at all.
+    public var event: LinkedEvent?
     public var plannedBy: UserID?
     public var created: Timestamp?
     public var updated: Timestamp?
 
     public enum Kind: String, Codable, CaseIterable, Sendable {
         case cook, order, out
+    }
+
+    /// Just enough of the event to head a card and open it.
+    public struct LinkedEvent: Codable, Hashable, Sendable, Identifiable {
+        public let id: EventID
+        public var title: String
+        public var kind: EventKind
+
+        enum CodingKeys: String, CodingKey {
+            case id = "_id"
+            case title, kind
+        }
+
+        public init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(EventID.self, forKey: .id)
+            title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+            kind = c.decodeLenient(EventKind.self, forKey: .kind, default: .general)
+        }
+
+        public init(id: EventID, title: String, kind: EventKind = .dinnerParty) {
+            self.id = id
+            self.title = title
+            self.kind = kind
+        }
     }
 
     /// What to put on a card for this plan.
@@ -43,7 +75,7 @@ public struct MealPlan: Codable, Identifiable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id = "_id"
         case homeID = "home_id"
-        case kind, recipe, title, cuisine, place, date
+        case kind, recipe, title, cuisine, place, date, event
         case plannedBy = "planned_by"
         case created, updated
     }
@@ -58,6 +90,7 @@ public struct MealPlan: Codable, Identifiable, Hashable, Sendable {
         cuisine = c.decodeLenientIfPresent(Cuisine.self, forKey: .cuisine)
         place = try c.decodeIfPresent(String.self, forKey: .place)
         date = try c.decodeIfPresent(String.self, forKey: .date) ?? ""
+        event = try c.decodeIfPresent(LinkedEvent.self, forKey: .event)
         plannedBy = try c.decodeIfPresent(UserID.self, forKey: .plannedBy)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
@@ -72,6 +105,7 @@ public struct MealPlan: Codable, Identifiable, Hashable, Sendable {
         cuisine: Cuisine? = nil,
         place: String? = nil,
         date: String,
+        event: LinkedEvent? = nil,
         plannedBy: UserID? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
@@ -84,6 +118,7 @@ public struct MealPlan: Codable, Identifiable, Hashable, Sendable {
         self.cuisine = cuisine
         self.place = place
         self.date = date
+        self.event = event
         self.plannedBy = plannedBy
         self.created = created
         self.updated = updated
@@ -135,4 +170,45 @@ public enum MealDate {
     }
 
     public static var today: String { key() }
+
+    /// The date a `YYYY-MM-DD` key names, in the device's own calendar.
+    ///
+    /// The inverse of `key`, and the reason it is here rather than at a call
+    /// site: a meal key is a *calendar day* with no time and no zone on it, and
+    /// parsing one with a `DateFormatter` set to UTC — the obvious mistake — puts
+    /// half the world's evenings on the day before.
+    public static func date(_ key: String, calendar: Calendar = .current) -> Date? {
+        let parts = key.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return nil }
+        return calendar.date(from: DateComponents(
+            year: parts[0], month: parts[1], day: parts[2]
+        ))
+    }
+
+    /// The time of day from `time`, on the day `key` names.
+    ///
+    /// A time picker edits a whole `Date`, and the date half of it drifts to
+    /// whenever the picker was seeded. Only the clock face is meant, so only the
+    /// clock face is taken.
+    public static func at(_ time: Date, on key: String, calendar: Calendar = .current) -> Date {
+        let day = date(key, calendar: calendar) ?? calendar.startOfDay(for: time)
+        let clock = calendar.dateComponents([.hour, .minute], from: time)
+        return calendar.date(
+            bySettingHour: clock.hour ?? 19,
+            minute: clock.minute ?? 0,
+            second: 0,
+            of: day
+        ) ?? day
+    }
+
+    /// 7pm on the day a key names, which is when a household eats.
+    ///
+    /// A meal plan has no time on it — dinner is a day, not an instant — so
+    /// turning one into a calendar event has to invent one. Seven is the least
+    /// wrong guess, and the composer is one tap away for a household that eats
+    /// at nine.
+    public static func eveningOf(_ key: String, calendar: Calendar = .current) -> Date {
+        let day = date(key, calendar: calendar) ?? calendar.startOfDay(for: Date())
+        return calendar.date(byAdding: .hour, value: 19, to: day) ?? day
+    }
 }

@@ -14,8 +14,24 @@ public struct HomeFeature: Sendable {
         public var tasks: IdentifiedArrayOf<HouseTask> = []
         /// Planned meals from today onwards, soonest first.
         public var meals: [MealPlan] = []
+        /// The next few things in the calendar, soonest first.
+        ///
+        /// A short capped agenda, not a window: this tab only ever asks "is
+        /// anything coming", and `events:upcoming` answers that with at most a
+        /// handful of rows however many years of events the household has.
+        public var upcoming: [EventOccurrence] = []
         public var isLoading = true
+        /// Who lives here.
+        ///
+        /// Subscribed to for one reason: turning tonight's dinner into an
+        /// occasion opens the event composer here, and an event written with no
+        /// attendees is a party nobody was invited to. One small live query for
+        /// the household, which is a handful of rows.
+        public var members: IdentifiedArrayOf<User> = []
         @Presents public var dinner: DinnerFeature.State?
+        /// The event composer, opened from tonight's card to turn a meal that
+        /// has already been decided into an occasion.
+        @Presents public var occasion: EventComposerFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
         /// Whether the household has already been asked about notifications.
@@ -33,6 +49,35 @@ public struct HomeFeature: Sendable {
             meals.first { $0.date == MealDate.today }
         }
 
+        /// Something the household is in the middle of right now.
+        ///
+        /// The one thing on this tab that is true only for a few hours, which is
+        /// why it gets its own badge rather than a number: "3 events" is a
+        /// figure, "the party is happening" is a fact.
+        public var happeningNow: EventOccurrence? {
+            upcoming.first(where: \.isInProgress)
+        }
+
+        /// The next thing that has not started yet.
+        public var nextEvent: EventOccurrence? {
+            upcoming.first { !$0.isInProgress && $0.start > Date() }
+        }
+
+        /// What the card shows: whatever is under way, then what is next, up to
+        /// three rows. Three because a fourth pushes the tasks below the fold on
+        /// a small phone, and this is a summary tab.
+        public var upNext: [EventOccurrence] {
+            Array(upcoming.prefix(3))
+        }
+
+        /// Events in the next seven days. Same rule as the Hub's bill tile: a
+        /// tile is worth reading only when its number is asking for something,
+        /// and "312 events" asks for nothing.
+        public var eventsThisWeek: Int {
+            let horizon = Date().addingTimeInterval(7 * 24 * 3600)
+            return upcoming.count { $0.start <= horizon }
+        }
+
         /// Newest first, capped — the Home tab is a summary, not the task list.
         public var recentTasks: ArraySlice<HouseTask> {
             tasks
@@ -46,6 +91,11 @@ public struct HomeFeature: Sendable {
         case statsUpdated(HomeStats)
         case tasksUpdated([HouseTask])
         case mealsUpdated([MealPlan])
+        case upcomingEventsUpdated([EventOccurrence])
+        case membersUpdated([User])
+        case makeOccasionTapped
+        case occasion(PresentationAction<EventComposerFeature.Action>)
+        case occasionLinked
         case loadFailed(AppError)
         case taskToggled(TaskID)
         case decideDinnerTapped
@@ -72,6 +122,16 @@ public struct HomeFeature: Sendable {
             /// when it opens, so the Home tab pays for no query it cannot show.
             case openContributions
             case openRecipe(Recipe)
+            /// The calendar lives in the Hub, so the tab container has to both
+            /// switch tabs and push — which is why this is a delegate rather
+            /// than navigation this screen does itself.
+            case openCalendar
+            case openEvent(EventOccurrence)
+            /// Opening an event the Home tab only knows the *id* of — the
+            /// occasion a meal plan points at. The tab never subscribes to the
+            /// calendar, so it has the id and the day and nothing else; the
+            /// calendar resolves the rest from the window it opens on.
+            case openEventID(EventID, CalendarDay)
             /// Permission was just granted here. `AppFeature` answers by asking
             /// iOS for a token and registering it with the backend.
             case notificationsEnabled
@@ -82,11 +142,13 @@ public struct HomeFeature: Sendable {
         }
     }
 
-    private enum CancelID { case stats, tasks, meals }
+    private enum CancelID { case stats, tasks, meals, events, members }
 
     @Dependency(\.stats) var statsClient
     @Dependency(\.tasks) var tasksClient
     @Dependency(\.meals) var mealsClient
+    @Dependency(\.events) var eventsClient
+    @Dependency(\.homes) var homesClient
     @Dependency(\.push) var push
     @Dependency(\.continuousClock) var clock
 
@@ -129,6 +191,23 @@ public struct HomeFeature: Sendable {
                     }
                     .cancellable(id: CancelID.tasks, cancelInFlight: true),
 
+                    .run { [homeID = state.homeID] send in
+                        for try await events in eventsClient.upcoming(homeID, 10) {
+                            await send(.upcomingEventsUpdated(events))
+                        }
+                    } catch: { _, _ in
+                        // An empty calendar is the normal case, and a card that
+                        // cannot load is not worth an alert over the whole tab.
+                    }
+                    .cancellable(id: CancelID.events, cancelInFlight: true),
+
+                    .run { [homeID = state.homeID] send in
+                        for try await members in homesClient.members(homeID) {
+                            await send(.membersUpdated(members))
+                        }
+                    } catch: { _, _ in }
+                        .cancellable(id: CancelID.members, cancelInFlight: true),
+
                     // The one place a newcomer is asked about notifications.
                     // Everyone lands here — creating a home and joining one both
                     // end on this tab — and it is the first screen where the
@@ -152,6 +231,77 @@ public struct HomeFeature: Sendable {
 
             case let .mealsUpdated(meals):
                 state.meals = meals
+                return .none
+
+            case let .membersUpdated(members):
+                let incoming = IdentifiedArray(uniqueElements: members)
+                guard incoming != state.members else { return .none }
+                state.members = incoming
+                return .none
+
+            // MARK: Making tonight an occasion
+            //
+            // The path that was missing. The Dinner sheet offers this while a
+            // meal is being decided, but a meal already decided had nowhere to
+            // go — and "we settled on lasagne, now let us make an evening of it"
+            // is the normal way round.
+            //
+            // The composer rather than a silent write: an occasion needs a time,
+            // and once it is open it may as well carry the budget, the shopping
+            // and the guest list too.
+
+            case .makeOccasionTapped:
+                guard let plan = state.tonight, plan.event == nil else { return .none }
+                let title = plan.headline ?? String(localized: L10n.dinnerOccasionFallbackTitle)
+                state.occasion = EventComposerFeature.State(
+                    homeID: state.homeID,
+                    members: state.members,
+                    currentUserID: state.user?.id,
+                    day: CalendarDay(MealDate.date(plan.date) ?? Date()),
+                    seed: EventComposerFeature.State.Seed(
+                        kind: .dinnerParty,
+                        title: title,
+                        startsAt: MealDate.eveningOf(plan.date),
+                        recipeIDs: plan.recipe.map { [$0.id] } ?? []
+                    )
+                )
+                return .none
+
+            case let .occasion(.presented(.delegate(.saved(eventID)))):
+                state.occasion = nil
+                // The link, written second. The event exists now, so the meal
+                // plan has something to point at — and the plan keeps every
+                // other field it already had, because `meals:set` upserts on
+                // the home and the day.
+                guard let eventID, let plan = state.tonight else { return .none }
+                return .run { [homeID = state.homeID] send in
+                    try await mealsClient.set(DinnerDecision(
+                        homeID: homeID,
+                        date: plan.date,
+                        kind: plan.kind,
+                        recipeID: plan.recipe?.id,
+                        title: plan.recipe == nil ? plan.title : nil,
+                        cuisine: plan.cuisine,
+                        place: plan.place,
+                        eventID: eventID
+                    ))
+                    await send(.occasionLinked)
+                } catch: { error, send in
+                    await send(.loadFailed(AppError(error)))
+                }
+
+            case .occasionLinked:
+                // Nothing to write here: the meals subscription brings the
+                // linked plan back and the card grows its badge.
+                return .none
+
+            case let .upcomingEventsUpdated(events):
+                // Compared before assigning, like every other push on this tab:
+                // Convex re-publishes the whole query set on any change, so this
+                // lands far more often than the calendar actually moves, and an
+                // identical array would still invalidate every view reading it.
+                guard events != state.upcoming else { return .none }
+                state.upcoming = events
                 return .none
 
             case let .tasksUpdated(tasks):
@@ -228,11 +378,12 @@ public struct HomeFeature: Sendable {
                 state.dinner = nil
                 return .none
 
-            case .dinner, .delegate, .alert:
+            case .dinner, .delegate, .alert, .occasion:
                 return .none
             }
         }
         .ifLet(\.$dinner, action: \.dinner) { DinnerFeature() }
+        .ifLet(\.$occasion, action: \.occasion) { EventComposerFeature() }
         .ifLet(\.$alert, action: \.alert)
     }
 }

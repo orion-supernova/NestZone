@@ -42,6 +42,21 @@ public struct DinnerFeature: Sendable {
         public var selectedCuisine: Cuisine?
         public var place = ""
         public var isSaving = false
+        /// Whether this dinner should also become an event in the calendar.
+        ///
+        /// Off by default: most dinners are a decision, not an occasion, and a
+        /// calendar that fills with "Tuesday: pasta" is one nobody reads. Turned
+        /// on, the meal becomes a dinner party that carries the machinery a real
+        /// one needs — a menu, a shopping list built from it, and a budget — and
+        /// the meal plan keeps a pointer back to it.
+        public var makeItAnOccasion = false
+        /// When the occasion starts.
+        ///
+        /// A meal plan is a *day* — dinner is a calendar day, not an instant —
+        /// so turning one into an event has to invent a time. It opens at seven,
+        /// which is the least wrong guess, and then asks: a household that eats
+        /// at nine should not have to fix it afterwards in a different screen.
+        public var occasionStart: Date = Date()
         /// Everything on the ballot, in the order it was added. Only used on
         /// the voting route.
         public var ballot: [DinnerCandidate] = []
@@ -200,6 +215,7 @@ public struct DinnerFeature: Sendable {
         case recipeChosen(Recipe)
         case cuisineChosen(Cuisine)
         case saveTapped
+        case occasionToggled
         case saved
         case voteFailed(DinnerCandidate.ID, AppError)
         case failed(AppError)
@@ -220,6 +236,7 @@ public struct DinnerFeature: Sendable {
     @Dependency(\.recipes) var recipesClient
     @Dependency(\.meals) var meals
     @Dependency(\.polls) var pollsClient
+    @Dependency(\.events) var events
 
     public init() {}
 
@@ -421,6 +438,16 @@ public struct DinnerFeature: Sendable {
                 state.selectedCuisine = state.selectedCuisine == cuisine ? nil : cuisine
                 return .none
 
+            case .occasionToggled:
+                state.makeItAnOccasion.toggle()
+                // Seeded on the way in rather than in `init`, so it lands on the
+                // evening of the day being planned rather than on whatever day
+                // the sheet happened to be opened.
+                if state.makeItAnOccasion {
+                    state.occasionStart = MealDate.eveningOf(state.date)
+                }
+                return .none
+
             case .saveTapped:
                 guard state.canSave, let kind = state.kind else { return .none }
                 state.isSaving = true
@@ -433,7 +460,9 @@ public struct DinnerFeature: Sendable {
                     chosen = state.selection,
                     customTitle = state.trimmedCustomTitle,
                     cuisine = state.selectedCuisine,
-                    place = state.place
+                    place = state.place,
+                    asOccasion = state.makeItAnOccasion && kind == .cook,
+                    occasionStart = state.occasionStart
                 ] send in
                     // A plan points at a `recipes` row, and an Explore recipe is
                     // bundled with the app rather than stored — so cooking one
@@ -460,6 +489,37 @@ public struct DinnerFeature: Sendable {
                         ).id
                     }
 
+                    // The event first, so the meal plan can point at something.
+                    //
+                    // A dinner party is both a meal and an event: the meal
+                    // answers "what are we eating on Saturday", the event
+                    // answers "what has to be ready before it". Rather than
+                    // duplicating the menu and the shopping into `meal_plans`,
+                    // the plan keeps one pointer and the event owns all of it —
+                    // which is how the budget and the shopping list come along
+                    // for free.
+                    var eventID: EventID?
+                    if asOccasion {
+                        let title = chosen?.title ?? customTitle
+                        // Clamped to the day being planned: the picker only
+                        // offers a time, and a stale date behind it would put
+                        // Saturday's party on the day the sheet was opened.
+                        let start = MealDate.at(occasionStart, on: date)
+                        eventID = try await events.create(NewEvent(
+                            homeID: homeID,
+                            title: title.isEmpty
+                                ? String(localized: L10n.dinnerOccasionFallbackTitle)
+                                : title,
+                            kind: .dinnerParty,
+                            startsAt: start,
+                            endsAt: start.addingTimeInterval(EventKind.dinnerParty.defaultDuration),
+                            reminders: [.oneDay],
+                            // The dish is the menu, which is what makes "send it
+                            // all to the shopping list" work on the other side.
+                            recipeIDs: recipeID.map { [$0] } ?? []
+                        ))
+                    }
+
                     try await meals.set(
                         DinnerDecision(
                             homeID: homeID,
@@ -468,7 +528,8 @@ public struct DinnerFeature: Sendable {
                             recipeID: kind == .cook ? recipeID : nil,
                             title: kind == .cook && recipeID == nil ? customTitle : nil,
                             cuisine: kind == .cook ? nil : cuisine,
-                            place: kind == .cook ? nil : place
+                            place: kind == .cook ? nil : place,
+                            eventID: eventID
                         )
                     )
                     await send(.saved)

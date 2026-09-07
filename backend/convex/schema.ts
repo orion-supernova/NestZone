@@ -32,6 +32,76 @@ import { authTables } from "@convex-dev/auth/server";
 // The categories a household's money goes into. One list, shared by expenses,
 // bills and budgets — a budget that could name a category no expense can carry
 // would silently never fill.
+// What a household event *is*.
+//
+// Mostly a label — it picks the symbol and the colour — but it also decides
+// which parts of the plan the composer opens with. A dinner party wants a menu;
+// a concert wants a ticket link and a budget; a dentist appointment wants
+// neither. The client owns that mapping (see `EventKind` in
+// Core/Models/CalendarEvent.swift); the server only needs the vocabulary.
+//
+// Nineteen is a lot for a picker, which is why they are grouped rather than
+// listed. The alternative — three kinds and a free-text label — throws away the
+// only signal the app has about what an event needs prepared for it.
+const eventKind = v.union(
+  // At home
+  v.literal("general"),
+  v.literal("houseParty"),
+  v.literal("dinnerParty"),
+  v.literal("movieNight"),
+  v.literal("gameNight"),
+  v.literal("visit"),
+  v.literal("chore"),
+  // Going out
+  v.literal("dining"),
+  v.literal("concert"),
+  v.literal("cinema"),
+  v.literal("theatre"),
+  v.literal("sports"),
+  v.literal("picnic"),
+  v.literal("trip"),
+  // Occasions
+  v.literal("birthday"),
+  v.literal("anniversary"),
+  v.literal("holiday"),
+  // Admin
+  v.literal("appointment"),
+  v.literal("deadline"),
+);
+
+// Whether somebody is coming.
+const rsvpStatus = v.union(
+  v.literal("going"),
+  v.literal("maybe"),
+  v.literal("declined"),
+);
+
+/**
+ * How an event repeats.
+ *
+ * Deliberately smaller than RRULE, and deliberately without `COUNT`. Every
+ * other field can be answered by arithmetic — the nth occurrence is a closed
+ * form — so expanding a window means jumping straight to the first occurrence
+ * inside it. "The 30th time" cannot: it has to be counted from the series
+ * start, which turns every read of next week into a walk over three years of
+ * Tuesdays. "Until a date" and "forever" are what households actually mean, so
+ * that is what this offers.
+ */
+const recurrence = v.object({
+  freq: v.union(
+    v.literal("daily"),
+    v.literal("weekly"),
+    v.literal("monthly"),
+    v.literal("yearly"),
+  ),
+  /** Every `interval` days/weeks/months/years. At least 1. */
+  interval: v.number(),
+  /** 0=Sunday … 6=Saturday. Weekly only; empty means "the same weekday as the start". */
+  weekdays: v.optional(v.array(v.number())),
+  /** Last instant the series may produce an occurrence. Absent means forever. */
+  until: v.optional(v.number()),
+});
+
 const financeCategory = v.union(
   v.literal("groceries"),
   v.literal("utilities"),
@@ -158,10 +228,17 @@ export default defineSchema({
     // or break when the recipe is later deleted.
     recipe_id: v.optional(v.id("recipes")),
     recipe_title: v.optional(v.string()),
+    // Set when the item is on the list *for* something in the calendar. Same
+    // denormalised-title trick as the recipe link above, and for the same
+    // reason: the shopping screen subscribes to items only, so a group heading
+    // must not cost it a second subscription or break when the event is gone.
+    event_id: v.optional(v.id("events")),
+    event_title: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
-    .index("by_home", ["home_id"]),
+    .index("by_home", ["home_id"])
+    .index("by_event", ["event_id"]),
 
   notes: defineTable({
     pbId: v.optional(v.string()),
@@ -246,6 +323,21 @@ export default defineSchema({
     cuisine: v.optional(v.string()),
     place: v.optional(v.string()),
     date: v.string(),
+    /**
+     * Set when the meal belongs to something in the calendar — Saturday's
+     * dinner party rather than Saturday's dinner.
+     *
+     * The one link between the two, and deliberately only one. A meal plan
+     * answers "what are we eating on day D"; an event answers "what is
+     * happening at time T, and what has to be ready". A dinner party is both,
+     * and this is the field that says so — so the Home tab's tonight card can
+     * point at the event that owns the budget, the shopping and the menu
+     * instead of a second copy of any of them.
+     *
+     * A link, not an owner: deleting the event leaves the household still
+     * eating that night.
+     */
+    event_id: v.optional(v.id("events")),
     planned_by: v.optional(v.id("users")),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
@@ -375,12 +467,22 @@ export default defineSchema({
     spent_at: v.number(),
     /** Set when this expense was logged by paying a recurring bill. */
     bill_id: v.optional(v.id("bills")),
+    /**
+     * Set when the money was spent *on* something in the calendar — the
+     * caterer for Saturday's party, the tickets for the gig.
+     *
+     * A link, not an owner: deleting the event unlinks these rather than
+     * deleting them, because the money still moved and a household's balances
+     * must not change because somebody tidied their calendar.
+     */
+    event_id: v.optional(v.id("events")),
     created_by: v.id("users"),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   })
     .index("by_home", ["home_id"])
-    .index("by_home_spent", ["home_id", "spent_at"]),
+    .index("by_home_spent", ["home_id", "spent_at"])
+    .index("by_event", ["event_id"]),
 
   // A payment from one member to another, squaring up what the expenses say
   // they owe. Kept as its own table rather than as a negative expense: it moves
@@ -460,4 +562,112 @@ export default defineSchema({
   })
     .index("by_home", ["home_id"])
     .index("by_home_category", ["home_id", "category"]),
+
+  // --- Calendar & Events -----------------------------------------------------
+  //
+  // One row is a *series*, not an appointment. A one-off event is a series of
+  // one; "every other Tuesday" is a single row that the server expands into
+  // concrete occurrences for whatever window the client is looking at. The
+  // client never does recurrence arithmetic and never holds an event it is not
+  // showing — the same reasoning that put `finance:summary` and `stats:forHome`
+  // on the server.
+  //
+  // Times are absolute epoch-ms, unlike `meal_plans.date`. An event happens at
+  // an instant; dinner happens on a day. `tz_offset` rides along so "the 14th
+  // at 9am, monthly" keeps meaning the 14th at 9am rather than drifting by the
+  // reader's zone (see `expand` in convex/events.ts).
+  events: defineTable({
+    home_id: v.id("homes"),
+    title: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    location: v.optional(v.string()),
+    kind: v.optional(eventKind),
+    /** First occurrence, epoch-ms. */
+    starts_at: v.number(),
+    /** End of the first occurrence. Every later one carries the same duration. */
+    ends_at: v.number(),
+    /**
+     * An all-day event. `starts_at` is local midnight and `ends_at` local
+     * midnight on the day after the last — so a one-day event is a 24h span,
+     * and the UI never has to show a time that was never chosen.
+     */
+    is_all_day: v.optional(v.boolean()),
+    /** Minutes east of UTC where the series was written. */
+    tz_offset: v.optional(v.number()),
+    recurrence: v.optional(recurrence),
+    /**
+     * The last instant this row can still produce an occurrence: the end of a
+     * one-off, the recurrence's `until`, or `FOREVER`.
+     *
+     * Denormalised so that "what is on this month" is one index range rather
+     * than a scan of every event the household has ever held. Without it the
+     * only way to find a weekly series that started two years ago is to read
+     * two years of rows and throw nearly all of them away.
+     */
+    series_end: v.number(),
+    /**
+     * Occurrence start times lifted out of the series — a cancelled Tuesday, or
+     * one moved and re-saved as its own event. Kept on the series rather than
+     * as tombstone rows: the expansion already walks this row, and a `Set`
+     * lookup costs nothing.
+     */
+    exdates: v.optional(v.array(v.number())),
+    /**
+     * Somewhere to go for the thing itself — the ticket, the booking, the
+     * listing. One field rather than a "tickets" sub-object: what a household
+     * actually keeps is the link somebody sent in the chat.
+     */
+    url: v.optional(v.string()),
+
+    // --- The plan --------------------------------------------------------
+    //
+    // An event is rarely just a time. A house party is a menu, a shop and a
+    // bill; a concert is a ticket and a night out that costs something. These
+    // three links are what turn the calendar from a list of dates into the
+    // place the rest of the app is organised from — and each one points at the
+    // module that already owns that data rather than copying it:
+    //
+    //   money    -> `expenses.event_id`      (the ledger stays the ledger)
+    //   shopping -> `shopping_items.event_id` (the list stays the list)
+    //   food     -> `recipe_ids` here         (recipes are read through)
+    //
+    // Nothing is denormalised except a title, and only where a group heading
+    // has to survive the thing it names being deleted.
+    //
+    // The plan belongs to the *series*. For a one-off — which is what parties,
+    // concerts and dinners are — that is exactly right. For "movie night, every
+    // Friday" it reads as a standing plan: the snacks you always buy, the
+    // budget for the season.
+
+    /** What the household means to spend on it, in minor units. */
+    budget: v.optional(v.number()),
+    /** ISO 4217 for `budget`. Per-document, like every other amount in the app. */
+    currency: v.optional(v.string()),
+    /** The menu. Read through on the way out so no screen subscribes to recipes. */
+    recipe_ids: v.optional(v.array(v.id("recipes"))),
+
+    /** Who is expected. Members of this home, checked on write. */
+    attendees: v.optional(v.array(v.id("users"))),
+    /** Who has answered, and how. Per series — an RSVP to "every Tuesday" is one answer. */
+    rsvps: v.optional(v.array(v.object({ user_id: v.id("users"), status: rsvpStatus }))),
+    /**
+     * Whole minutes before an occurrence to nudge the household, e.g.
+     * `[1440, 30]`. At most three, like a bill's.
+     */
+    reminders: v.optional(v.array(v.number())),
+    /**
+     * Nudges already sent, as `"<occurrence_start>:<minutesBefore>"`.
+     *
+     * Keyed by the occurrence rather than the row, because one row is many
+     * appointments — and pruned as it goes (see `markReminded` in
+     * convex/events.ts), or a standing Tuesday would grow this array forever.
+     */
+    reminded: v.optional(v.array(v.string())),
+    created_by: v.id("users"),
+    created: v.optional(v.number()),
+    updated: v.optional(v.number()),
+  })
+    .index("by_home", ["home_id"])
+    .index("by_home_series_end", ["home_id", "series_end"])
+    .index("by_series_end", ["series_end"]),
 });

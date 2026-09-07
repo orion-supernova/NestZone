@@ -64,6 +64,145 @@ struct HomeFeatureTests {
         }
     }
 
+    @Test("A dinner already decided can still become an occasion")
+    func decidedDinnerCanBecomeAnOccasion() async {
+        let recipe = Recipe(id: "r1", title: "Lasagne", ingredients: ["Pasta"], homeID: "h1")
+        let day = MealDate.today
+        let plan = MealPlan(id: "m1", homeID: "h1", kind: .cook, recipe: recipe, date: day)
+        let planned = LockIsolated<[DinnerDecision]>([])
+
+        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
+            HomeFeature()
+        } withDependencies: {
+            $0.meals.set = { decision in planned.withValue { $0.append(decision) } }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.mealsUpdated([plan]))
+        await store.send(.membersUpdated([User(id: "u1", name: "Ada"), User(id: "u2", name: "Bea")]))
+
+        await store.send(.makeOccasionTapped)
+        // The composer, not a silent write: an occasion needs a time, and the
+        // Dinner sheet's toggle only ever covered the case where somebody knew
+        // in advance.
+        guard let composer = store.state.occasion else {
+            Issue.record("expected the event composer to open")
+            return
+        }
+        #expect(composer.kind == .dinnerParty)
+        #expect(composer.title == "Lasagne")
+        // The dish arrives as the menu, which is what makes the shopping list
+        // and the budget work on the other side.
+        #expect(composer.recipeIDs == ["r1"])
+        #expect(composer.sections.contains(.menu))
+        #expect(composer.attendees == ["u1", "u2"])
+
+        await store.send(.occasion(.presented(.delegate(.saved("e-new")))))
+        await store.receive(\.occasionLinked)
+
+        // The link is written second: the event exists, so the plan has
+        // something to point at, and it keeps every field it already had.
+        #expect(planned.value.count == 1)
+        #expect(planned.value[0].eventID == "e-new")
+        #expect(planned.value[0].recipeID == "r1")
+        #expect(planned.value[0].date == day)
+    }
+
+    @Test("A meal already part of an occasion is not offered another")
+    func linkedDinnerIsNotOfferedAgain() async {
+        let plan = MealPlan(
+            id: "m1",
+            homeID: "h1",
+            kind: .cook,
+            title: "Lasagne",
+            date: MealDate.today,
+            event: MealPlan.LinkedEvent(id: "e1", title: "Birthday")
+        )
+        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
+            HomeFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.mealsUpdated([plan]))
+        await store.send(.makeOccasionTapped)
+        #expect(store.state.occasion == nil)
+    }
+
+    @Test("The Home tab surfaces what is on now and what is next")
+    func upcomingEventsReachTheHomeTab() async {
+        let now = Date()
+        let inProgress = EventOccurrence(
+            eventID: "e1",
+            title: "Dinner party",
+            kind: .dinnerParty,
+            startsAt: Timestamp(now.addingTimeInterval(-3600)),
+            endsAt: Timestamp(now.addingTimeInterval(3600))
+        )
+        let soon = EventOccurrence(
+            eventID: "e2",
+            title: "Concert",
+            kind: .concert,
+            startsAt: Timestamp(now.addingTimeInterval(3 * 24 * 3600)),
+            endsAt: Timestamp(now.addingTimeInterval(3 * 24 * 3600 + 7200))
+        )
+        let faraway = EventOccurrence(
+            eventID: "e3",
+            title: "Trip",
+            kind: .trip,
+            startsAt: Timestamp(now.addingTimeInterval(30 * 24 * 3600)),
+            endsAt: Timestamp(now.addingTimeInterval(33 * 24 * 3600))
+        )
+
+        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
+            HomeFeature()
+        }
+
+        await store.send(.upcomingEventsUpdated([inProgress, soon, faraway])) {
+            $0.upcoming = [inProgress, soon, faraway]
+        }
+
+        // "3 events" is a figure; "the party is happening" is a fact, and only
+        // one of them stops being true while you are looking at it.
+        #expect(store.state.happeningNow?.id == inProgress.id)
+        #expect(store.state.nextEvent?.id == soon.id)
+        // The tile counts the week, not the whole agenda — a month-away trip is
+        // not asking for anything today.
+        #expect(store.state.eventsThisWeek == 2)
+
+        // An identical push must not invalidate every view reading the card:
+        // Convex re-publishes the whole query set on any change, so this lands
+        // far more often than the calendar actually moves.
+        await store.send(.upcomingEventsUpdated([inProgress, soon, faraway]))
+    }
+
+    @Test("Opening an event from the Home tab lands on the calendar, on its day")
+    func openingAnEventSwitchesTabsAndPushes() async {
+        let start = Date().addingTimeInterval(4 * 24 * 3600)
+        let occurrence = EventOccurrence(
+            eventID: "e1",
+            title: "Concert",
+            startsAt: Timestamp(start),
+            endsAt: Timestamp(start.addingTimeInterval(7200))
+        )
+        let store = TestStore(
+            initialState: MainFeature.State(homeID: "h1", user: User(id: "u1", name: "Ada"))
+        ) {
+            MainFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.home(.delegate(.openEvent(occurrence))))
+        // The calendar is a Hub module, so this is both a tab switch and a push.
+        #expect(store.state.selectedTab == .hub)
+        guard case .calendar(let calendar) = store.state.hub.path.last else {
+            Issue.record("expected the calendar to be pushed")
+            return
+        }
+        // Opened on the event's own day, so the grid behind the sheet is showing
+        // what was tapped rather than today.
+        #expect(calendar.selectedDay == CalendarDay(start))
+    }
+
     @Test("A newcomer is asked about notifications once, and only once")
     func notificationPromptIsAskedOnce() async {
         await withDependencies {
@@ -3396,3 +3535,956 @@ struct BillComposerTests {
     }
 }
 
+
+// MARK: - Calendar & Events
+
+@MainActor
+@Suite("Calendar")
+struct CalendarFeatureTests {
+
+    /// One anchor for every fixture in this suite.
+    ///
+    /// Taken from the clock rather than from a fixed epoch, because the day
+    /// buckets these tests assert on are the *reader's* days — a hard-coded
+    /// 2025 timestamp is never `CalendarDay.today`, so every assertion about
+    /// "today" would be about an empty day.
+    static let now = Date()
+    static var anchor: CalendarDay { CalendarDay(now) }
+
+    /// Two events on one day, one of them a three-day trip that starts before it.
+    static func sample(now: Date = CalendarFeatureTests.now) -> [EventOccurrence] {
+        let day = Calendar.current.startOfDay(for: now)
+        return [
+            EventOccurrence(
+                eventID: "e1",
+                homeID: "h1",
+                title: "Dinner party",
+                kind: .dinnerParty,
+                startsAt: Timestamp(day.addingTimeInterval(19 * 3600)),
+                endsAt: Timestamp(day.addingTimeInterval(23 * 3600)),
+                attendees: ["u1", "u2"]
+            ),
+            EventOccurrence(
+                eventID: "e2",
+                homeID: "h1",
+                title: "Trip",
+                kind: .trip,
+                startsAt: Timestamp(day.addingTimeInterval(-24 * 3600)),
+                endsAt: Timestamp(day.addingTimeInterval(48 * 3600)),
+                isAllDay: true
+            ),
+        ]
+    }
+
+    private static func store(
+        day: CalendarDay = .today,
+        _ configure: (inout DependencyValues) -> Void = { _ in }
+    ) -> TestStore<CalendarFeature.State, CalendarFeature.Action> {
+        TestStore(
+            initialState: CalendarFeature.State(homeID: "h1", currentUserID: "u1", day: day)
+        ) {
+            CalendarFeature()
+        } withDependencies: { configure(&$0) }
+    }
+
+    @Test("A multi-day event is indexed on every day it covers, not just its first")
+    func multiDayIndexing() async {
+        let store = Self.store()
+        let events = Self.sample()
+        let windowID = store.state.windowID
+
+        await store.send(.occurrencesUpdated(windowID, events)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: events)
+            $0.dayIndex = Self.index(for: events)
+        }
+
+        let today = Self.anchor
+        // The trip started yesterday and runs into tomorrow: it belongs on all
+        // three, or a household looking at Tuesday cannot see it is away.
+        #expect(store.state.count(on: today.advanced(by: -1)) == 1)
+        #expect(store.state.count(on: today) == 2)
+        #expect(store.state.count(on: today.advanced(by: 1)) == 1)
+        #expect(store.state.count(on: today.advanced(by: 2)) == 0)
+    }
+
+    @Test("Opening at an event presents its sheet, not just its day")
+    func deepOpenPresentsTheSheet() async {
+        let start = Date().addingTimeInterval(2 * 24 * 3600)
+        let occurrence = EventOccurrence(
+            eventID: "e1",
+            title: "Concert",
+            startsAt: Timestamp(start),
+            endsAt: Timestamp(start.addingTimeInterval(7200))
+        )
+        let state = CalendarFeature.State(
+            homeID: "h1",
+            currentUserID: "u1",
+            showing: occurrence
+        )
+        // Landing on the right day is not the same as opening the thing that was
+        // tapped — stopping at the day makes the tap have to be repeated.
+        #expect(state.selectedDay == CalendarDay(start))
+        guard case .detail(let detail)? = state.destination else {
+            Issue.record("expected the event sheet to be presented")
+            return
+        }
+        #expect(detail.occurrence.id == occurrence.id)
+    }
+
+    @Test("An event opened by id waits for the window, then presents")
+    func deepOpenByIDResolvesFromTheWindow() async {
+        let events = Self.sample()
+        let target = events[0]
+        let store = TestStore(
+            initialState: CalendarFeature.State(
+                homeID: "h1",
+                currentUserID: "u1",
+                day: CalendarDay(target.start),
+                openingEventID: target.eventID
+            )
+        ) {
+            CalendarFeature()
+        }
+        store.exhaustivity = .off
+
+        // Nothing to present yet — the caller had an id and a day, not an event.
+        #expect(store.state.destination == nil)
+
+        await store.send(.occurrencesUpdated(store.state.windowID, events))
+        guard case .detail(let detail)? = store.state.destination else {
+            Issue.record("expected the event sheet to be presented")
+            return
+        }
+        #expect(detail.occurrence.eventID == target.eventID)
+        // Cleared, so a later month cannot re-fire it.
+        #expect(store.state.pendingOpenID == nil)
+    }
+
+    @Test("Membership reaching the screen reaches the sheet already open on it")
+    func membersFlowIntoAnOpenSheet() async {
+        let events = Self.sample()
+        let store = TestStore(
+            initialState: CalendarFeature.State(
+                homeID: "h1",
+                currentUserID: "u1",
+                showing: events[0]
+            )
+        ) {
+            CalendarFeature()
+        }
+        store.exhaustivity = .off
+
+        // Presented before the membership subscription answered, so the roster
+        // would otherwise read "Someone" for as long as the sheet stayed open.
+        #expect(store.state.destination?.detail?.members.isEmpty == true)
+
+        await store.send(.membersUpdated([User(id: "u1", name: "Ada"), User(id: "u2", name: "Bea")]))
+        #expect(store.state.destination?.detail?.members.count == 2)
+    }
+
+    @Test("A push for a window that has been scrubbed past is ignored")
+    func staleWindowIsDropped() async {
+        let store = Self.store()
+        // The payload carries no range of its own, so a late answer from the
+        // month you just left would otherwise land under the one you are on.
+        await store.send(.occurrencesUpdated("month-1999-1", Self.sample()))
+    }
+
+    @Test("Filtering rebuilds the day index rather than the event list")
+    func filteringNarrowsTheGrid() async {
+        let store = Self.store()
+        let events = Self.sample()
+        let windowID = store.state.windowID
+
+        await store.send(.occurrencesUpdated(windowID, events)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: events)
+            $0.dayIndex = Self.index(for: events)
+        }
+
+        await store.send(.kindFilterTapped(.trip)) {
+            $0.kindFilter = .trip
+            $0.dayIndex = Self.index(for: events.filter { $0.kind == .trip })
+        }
+        // The events themselves are untouched — the grid is drawn from the
+        // index, so a filter costs one rebuild rather than a re-subscription.
+        #expect(store.state.occurrences.count == 2)
+        #expect(store.state.count(on: Self.anchor) == 1)
+
+        await store.send(.kindFilterTapped(.trip)) {
+            $0.kindFilter = nil
+            $0.dayIndex = Self.index(for: events)
+        }
+    }
+
+    @Test("An RSVP moves every occurrence of the series, not just the one tapped")
+    func rsvpAppliesToTheWholeSeries() async {
+        let answered = LockIsolated<[(EventID, RSVPStatus?)]>([])
+        let store = Self.store {
+            $0.events.rsvp = { id, status in
+                answered.withValue { $0.append((id, status)) }
+            }
+        }
+        let start = Date(timeIntervalSince1970: 1_757_000_000)
+        let weekly = (0..<3).map { week in
+            EventOccurrence(
+                eventID: "e9",
+                title: "Standup",
+                startsAt: Timestamp(start.addingTimeInterval(Double(week) * 7 * 86_400)),
+                endsAt: Timestamp(start.addingTimeInterval(Double(week) * 7 * 86_400 + 1800)),
+                recurrence: Recurrence(frequency: .weekly)
+            )
+        }
+        let windowID = store.state.windowID
+        await store.send(.occurrencesUpdated(windowID, weekly)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: weekly)
+            $0.dayIndex = Self.index(for: weekly)
+        }
+
+        await store.send(.rsvpTapped(weekly[0], .going)) {
+            $0.rsvpInFlight = ["e9"]
+            for id in $0.occurrences.ids {
+                $0.occurrences[id: id]?.rsvps = [EventRSVP(userID: "u1", status: .going)]
+            }
+        }
+        // Answering "every Tuesday" once is what people mean; leaving the other
+        // two undecided would show the same person as going and not going.
+        #expect(store.state.occurrences.allSatisfy { $0.rsvp(of: "u1") == .going })
+        #expect(answered.value.count == 1)
+        #expect(answered.value[0].1 == .going)
+    }
+
+    @Test("A refused RSVP puts the old answer back")
+    func failedRSVPRollsBack() async {
+        let store = Self.store {
+            $0.events.rsvp = { _, _ in throw AppError.offline }
+        }
+        let events = Self.sample()
+        let windowID = store.state.windowID
+        await store.send(.occurrencesUpdated(windowID, events)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: events)
+            $0.dayIndex = Self.index(for: events)
+        }
+
+        await store.send(.rsvpTapped(events[0], .going)) {
+            $0.rsvpInFlight = ["e1"]
+            $0.occurrences[id: events[0].id]?.rsvps = [EventRSVP(userID: "u1", status: .going)]
+        }
+        // A refused write changed nothing on the server, so no push is coming to
+        // correct the button — the reducer has to put the old answer back itself.
+        await store.receive(\.rsvpFailed) {
+            $0.rsvpInFlight = []
+            $0.occurrences[id: events[0].id]?.rsvps = []
+        }
+        await store.receive(\.writeFailed) {
+            $0.alert = .failure(.offline)
+        }
+    }
+
+    @Test("Deleting a series clears every occurrence of it on screen")
+    func deletingASeriesClearsTheWindow() async {
+        let clock = TestClock()
+        let removed = LockIsolated<[(EventID, EventScope)]>([])
+        let store = Self.store {
+            $0.continuousClock = clock
+            $0.events.remove = { id, scope, _ in
+                removed.withValue { $0.append((id, scope)) }
+            }
+        }
+        let start = Date(timeIntervalSince1970: 1_757_000_000)
+        let weekly = (0..<3).map { week in
+            EventOccurrence(
+                eventID: "e9",
+                title: "Standup",
+                startsAt: Timestamp(start.addingTimeInterval(Double(week) * 7 * 86_400)),
+                endsAt: Timestamp(start.addingTimeInterval(Double(week) * 7 * 86_400 + 1800)),
+                recurrence: Recurrence(frequency: .weekly)
+            )
+        }
+        let windowID = store.state.windowID
+        await store.send(.occurrencesUpdated(windowID, weekly)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: weekly)
+            $0.dayIndex = Self.index(for: weekly)
+        }
+
+        await store.send(.deleteTapped(weekly[0], .series)) {
+            $0.hidden = Set(weekly.map(\.id))
+            $0.occurrences = []
+            $0.dayIndex = [:]
+            $0.pendingDeletion = .init(occurrence: weekly[0], scope: .series)
+        }
+        // Nothing is sent while the undo window is open — undo cancels the
+        // write rather than reversing it.
+        #expect(removed.value.isEmpty)
+
+        await clock.advance(by: .seconds(5))
+        await store.receive(\.deleteWindowClosed) {
+            $0.pendingDeletion = nil
+        }
+        #expect(removed.value.count == 1)
+        #expect(removed.value[0].1 == .series)
+    }
+
+    @Test("Undo inside the window cancels the write instead of reversing it")
+    func undoCancelsTheDelete() async {
+        let clock = TestClock()
+        let removed = LockIsolated(0)
+        let store = Self.store {
+            $0.continuousClock = clock
+            $0.events.remove = { _, _, _ in removed.withValue { $0 += 1 } }
+        }
+        let events = Self.sample()
+        let windowID = store.state.windowID
+        await store.send(.occurrencesUpdated(windowID, events)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: events)
+            $0.dayIndex = Self.index(for: events)
+        }
+
+        await store.send(.deleteTapped(events[0], .series)) {
+            $0.hidden = [events[0].id]
+            $0.occurrences.remove(id: events[0].id)
+            $0.dayIndex = Self.index(for: [events[1]])
+            $0.pendingDeletion = .init(occurrence: events[0], scope: .series)
+        }
+        // Restored in start order rather than appended at the end: the index is
+        // rebuilt from `occurrences`, so an unsorted list would put the trip
+        // after the dinner on the day they share.
+        let restored = [events[1], events[0]]
+        await store.send(.undoDeleteTapped) {
+            $0.pendingDeletion = nil
+            $0.hidden = []
+            $0.occurrences = IdentifiedArray(uniqueElements: restored)
+            $0.dayIndex = Self.index(for: restored)
+        }
+        await clock.advance(by: .seconds(10))
+        #expect(removed.value == 0)
+    }
+
+    @Test("A live push cannot resurrect a row whose delete is still pending")
+    func hiddenRowsSurviveAPush() async {
+        let clock = TestClock()
+        let store = Self.store {
+            $0.continuousClock = clock
+            $0.events.remove = { _, _, _ in }
+        }
+        let events = Self.sample()
+        let windowID = store.state.windowID
+        await store.send(.occurrencesUpdated(windowID, events)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: events)
+            $0.dayIndex = Self.index(for: events)
+        }
+        await store.send(.deleteTapped(events[0], .series)) {
+            $0.hidden = [events[0].id]
+            $0.occurrences.remove(id: events[0].id)
+            $0.dayIndex = Self.index(for: [events[1]])
+            $0.pendingDeletion = .init(occurrence: events[0], scope: .series)
+        }
+        // The server still has the row, and Convex re-publishes a query set on
+        // every change — without the mask the deleted event flickers back.
+        await store.send(.occurrencesUpdated(windowID, events))
+        #expect(store.state.occurrences.count == 1)
+
+        await clock.advance(by: .seconds(5))
+        await store.receive(\.deleteWindowClosed) { $0.pendingDeletion = nil }
+    }
+
+    @Test("Stepping into another month drops the events it was showing")
+    func steppingAMonthClearsTheGrid() async {
+        let store = Self.store {
+            // Finished rather than `.never`: the reducer subscribes for the new
+            // month, and an endless stream leaves that effect running past the
+            // end of the test.
+            $0.events.inRange = { _, _, _ in
+                AsyncThrowingStream { $0.finish() }
+            }
+        }
+        let events = Self.sample()
+        let windowID = store.state.windowID
+        await store.send(.occurrencesUpdated(windowID, events)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: events)
+            $0.dayIndex = Self.index(for: events)
+        }
+
+        let next = store.state.month.advanced(by: 1)
+        await store.send(.monthStepped(by: 1)) {
+            $0.month = next
+            $0.isLoading = true
+            // Holding them would draw this month's dots under next month's grid
+            // until the new list arrived.
+            $0.occurrences = []
+            $0.dayIndex = [:]
+            $0.selectedDay = CalendarDay(year: next.year, month: next.month, day: 1)
+        }
+    }
+
+    @Test("Month and week share a window, so switching between them re-subscribes to nothing")
+    func modeSwitchKeepsTheWindow() async {
+        let store = Self.store()
+        let events = Self.sample()
+        let windowID = store.state.windowID
+        await store.send(.occurrencesUpdated(windowID, events)) {
+            $0.isLoading = false
+            $0.hasLoadedOnce = true
+            $0.occurrences = IdentifiedArray(uniqueElements: events)
+            $0.dayIndex = Self.index(for: events)
+        }
+        await store.send(.modeSelected(.week)) { $0.mode = .week }
+        // Still loaded: a week is always inside the month grid, so nothing was
+        // torn down and no skeleton went up.
+        #expect(store.state.isLoading == false)
+        #expect(store.state.occurrences.count == 2)
+    }
+
+    /// The same bucketing the reducer does, so a test asserts on the shape
+    /// rather than restating the loop.
+    static func index(for events: [EventOccurrence]) -> [CalendarDay: [EventOccurrence.ID]] {
+        var index: [CalendarDay: [EventOccurrence.ID]] = [:]
+        for event in events {
+            for day in event.days() { index[day, default: []].append(event.id) }
+        }
+        return index
+    }
+}
+
+@MainActor
+@Suite("Event composer")
+struct EventComposerTests {
+
+    private static let members: IdentifiedArrayOf<User> = [
+        User(id: "u1", name: "Ada"),
+        User(id: "u2", name: "Bea"),
+    ]
+
+    @Test("A new event invites the whole house and opens on the kind's own defaults")
+    func defaultsFollowTheKind() async {
+        let store = TestStore(
+            initialState: EventComposerFeature.State(
+                homeID: "h1",
+                members: Self.members,
+                currentUserID: "u1",
+                day: .today
+            )
+        ) {
+            EventComposerFeature()
+        } withDependencies: {
+            // A kind that suggests a menu opens the recipe subscription, and the
+            // bundled Explore list with it.
+            $0.recipes.byHome = { _ in AsyncThrowingStream { $0.finish() } }
+            $0.recipes.samples = { [] }
+        }
+        store.exhaustivity = .off
+
+        #expect(store.state.attendees == ["u1", "u2"])
+
+        await store.send(.kindSelected(.dinnerParty))
+        // A dinner party is a menu, a shop and a bill; the composer opens with
+        // all three rather than making somebody find them.
+        #expect(store.state.sections.contains(.menu))
+        #expect(store.state.sections.contains(.shopping))
+        #expect(store.state.sections.contains(.budget))
+        #expect(store.state.endsAt.timeIntervalSince(store.state.startsAt) == 4 * 3600)
+
+        await store.send(.kindSelected(.birthday))
+        // A birthday that does not repeat yearly is a mistake nobody notices
+        // until next year.
+        #expect(store.state.repeats)
+        #expect(store.state.frequency == .yearly)
+        #expect(store.state.isAllDay)
+    }
+
+    @Test("A fourth reminder is refused rather than silently dropped")
+    func remindersAreCappedOutLoud() async {
+        let store = TestStore(
+            initialState: EventComposerFeature.State(
+                homeID: "h1",
+                members: Self.members,
+                currentUserID: "u1",
+                day: .today
+            )
+        ) {
+            EventComposerFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.reminderToggled(.oneDay))
+        await store.send(.reminderToggled(.thirtyMinutes))
+        #expect(store.state.reminders.count == 3)
+
+        await store.send(.reminderToggled(.oneWeek))
+        // A control that just stops responding reads as broken.
+        #expect(store.state.reminders.count == 3)
+        #expect(store.state.inlineError != nil)
+        #expect(store.state.shakes == 1)
+    }
+
+    @Test("Removing a plan section clears what it was holding")
+    func removingASectionClearsIt() async {
+        let store = TestStore(
+            initialState: EventComposerFeature.State(
+                homeID: "h1",
+                members: Self.members,
+                currentUserID: "u1",
+                day: .today
+            )
+        ) {
+            EventComposerFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.sectionAdded(.budget))
+        await store.send(.binding(.set(\.budgetText, "120")))
+        #expect(store.state.budgetMinor == 12_000)
+
+        await store.send(.sectionRemoved(.budget))
+        // A budget left behind would be saved by a sheet that no longer shows it.
+        #expect(store.state.budgetText.isEmpty)
+        #expect(!store.state.sections.contains(.budget))
+    }
+
+    @Test("Shopping typed into the composer is written once the event has an id")
+    func draftedShoppingIsSentAfterTheEvent() async {
+        let created = LockIsolated<[NewEvent]>([])
+        let added = LockIsolated<[(EventID, [String])]>([])
+        let store = TestStore(
+            initialState: EventComposerFeature.State(
+                homeID: "h1",
+                members: Self.members,
+                currentUserID: "u1",
+                day: .today
+            )
+        ) {
+            EventComposerFeature()
+        } withDependencies: {
+            $0.events.create = { new in
+                created.withValue { $0.append(new) }
+                return "e-new"
+            }
+            $0.events.addItems = { id, names, _ in
+                added.withValue { $0.append((id, names)) }
+                return StockUpResult(added: names.count, skipped: 0)
+            }
+            $0.recipes.byHome = { _ in AsyncThrowingStream { $0.finish() } }
+            $0.recipes.samples = { [] }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.title, "Game night")))
+        await store.send(.kindSelected(.gameNight))
+        // A movie or game night gets no menu by default, but wanting to cook for
+        // one is ordinary — every section is addable by hand.
+        await store.send(.sectionAdded(.menu))
+        #expect(store.state.sections.contains(.menu))
+
+        await store.send(.binding(.set(\.newItem, "Ice")))
+        await store.send(.itemDrafted) { $0.shoppingDraft = ["Ice"]; $0.newItem = "" }
+        await store.send(.binding(.set(\.newItem, "ice")))
+        // Typing it twice on the way to remembering you already typed it must
+        // not put it on the list twice.
+        await store.send(.itemDrafted)
+        #expect(store.state.shoppingDraft == ["Ice"])
+
+        await store.send(.binding(.set(\.newItem, "Crisps")))
+        await store.send(.itemDrafted)
+        #expect(store.state.shoppingDraft == ["Ice", "Crisps"])
+
+        await store.send(.submitTapped)
+        await store.receive(\.savedAs)
+
+        #expect(created.value.count == 1)
+        // A shopping item is a link *to* an event, so the event has to exist
+        // first — which is why `create` hands its id back.
+        #expect(added.value.count == 1)
+        #expect(added.value[0].0 == "e-new")
+        #expect(added.value[0].1 == ["Ice", "Crisps"])
+    }
+
+    @Test("Removing the shopping section drops what was drafted into it")
+    func removingShoppingDropsTheDraft() async {
+        let added = LockIsolated(0)
+        let store = TestStore(
+            initialState: EventComposerFeature.State(
+                homeID: "h1",
+                members: Self.members,
+                currentUserID: "u1",
+                day: .today
+            )
+        ) {
+            EventComposerFeature()
+        } withDependencies: {
+            $0.events.create = { _ in "e-new" }
+            $0.events.addItems = { _, _, _ in
+                added.withValue { $0 += 1 }
+                return StockUpResult()
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.title, "Dentist")))
+        await store.send(.sectionAdded(.shopping))
+        await store.send(.binding(.set(\.newItem, "Floss")))
+        await store.send(.itemDrafted)
+        await store.send(.sectionRemoved(.shopping))
+        #expect(store.state.shoppingDraft.isEmpty)
+
+        await store.send(.submitTapped)
+        await store.receive(\.savedAs)
+        // A draft left behind would be written by a sheet that no longer shows it.
+        #expect(added.value == 0)
+    }
+
+    @Test("Choosing an Explore recipe copies it onto the household's shelf first")
+    func exploreRecipesAreAdoptedBeforeUse() async {
+        let sample = Recipe(
+            id: "sample-lasagne",
+            title: "Lasagne",
+            ingredients: ["Pasta", "Mince"],
+            homeID: Recipe.exploreHomeID
+        )
+        let saved = Recipe(id: "r-saved", title: "Soup", ingredients: ["Stock"], homeID: "h1")
+        let adopted = LockIsolated<[NewRecipe]>([])
+
+        let store = TestStore(
+            initialState: EventComposerFeature.State(
+                homeID: "h1",
+                members: Self.members,
+                currentUserID: "u1",
+                day: .today
+            )
+        ) {
+            EventComposerFeature()
+        } withDependencies: {
+            $0.recipes.byHome = { _ in .never }
+            $0.recipes.samples = { [sample] }
+            $0.recipes.adopt = { new in
+                adopted.withValue { $0.append(new) }
+                return Recipe(
+                    id: "r-adopted",
+                    title: new.title,
+                    ingredients: new.ingredients,
+                    homeID: "h1"
+                )
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.sectionAdded(.menu))
+        await store.send(.recipesUpdated([saved]))
+        await store.send(.samplesLoaded([sample]))
+        await store.send(.pickRecipesTapped)
+        #expect(store.state.picker?.samples.count == 1)
+
+        await store.send(.picker(.presented(.delegate(.chose([saved, sample])))))
+        await store.receive(\.recipesAdopted)
+
+        // A bundled recipe has no id in this home, so an event cannot point at
+        // it until a copy exists here.
+        #expect(adopted.value.count == 1)
+        #expect(adopted.value[0].title == "Lasagne")
+        #expect(store.state.recipeIDs == ["r-saved", "r-adopted"])
+        // Held locally as well, so the chip has a title before the subscription
+        // catches up.
+        #expect(store.state.recipes[id: "r-adopted"] != nil)
+    }
+
+    @Test("A sample the home already has is not offered twice")
+    func alreadyAdoptedSamplesAreHidden() {
+        let saved = Recipe(id: "r1", title: "Lasagne", homeID: "h1")
+        let sample = Recipe(id: "s1", title: "lasagne", homeID: Recipe.exploreHomeID)
+        let picker = RecipePickerFeature.State(
+            recipes: [saved],
+            samples: [sample],
+            selected: []
+        )
+        // Otherwise the same dish sits on screen twice under two ids, and
+        // picking the wrong one silently adds a second copy to the shelf.
+        #expect(picker.samples.isEmpty)
+        #expect(picker.filtered.count == 1)
+    }
+
+    @Test("Editing one occurrence of a series writes it as its own one-off")
+    func editingOneOccurrenceDetachesIt() async {
+        let start = Date(timeIntervalSince1970: 1_757_000_000)
+        let occurrence = EventOccurrence(
+            eventID: "e1",
+            title: "Standup",
+            startsAt: Timestamp(start),
+            endsAt: Timestamp(start.addingTimeInterval(1800)),
+            recurrence: Recurrence(frequency: .weekly)
+        )
+        let written = LockIsolated<[(EventID, EventScope, Date?, EventEdit)]>([])
+        let store = TestStore(
+            initialState: EventComposerFeature.State(
+                homeID: "h1",
+                members: Self.members,
+                currentUserID: "u1",
+                day: CalendarDay(start),
+                editing: occurrence
+            )
+        ) {
+            EventComposerFeature()
+        } withDependencies: {
+            $0.events.update = { id, scope, at, edit in
+                written.withValue { $0.append((id, scope, at, edit)) }
+                // An occurrence-scope edit detaches that date as its own event,
+                // so the server answers with the id it actually wrote — which is
+                // what anything attached afterwards has to point at.
+                return scope == .occurrence ? "e1-detached" : id
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.submitTapped)
+        // A repeating event has to say which of it an edit means, and the answer
+        // changes what is written rather than just what is confirmed.
+        #expect(store.state.scopeDialog != nil)
+
+        await store.send(.scopeDialog(.presented(.saveThisOne)))
+        await store.receive(\.saved)
+
+        #expect(written.value.count == 1)
+        let (_, scope, at, edit) = written.value[0]
+        #expect(scope == .occurrence)
+        #expect(at == start)
+        // The detached copy is one date now, by definition.
+        #expect(edit.recurrence == .some(nil))
+    }
+}
+
+@MainActor
+@Suite("Event plan")
+struct EventPlanTests {
+
+    private static let occurrence = EventOccurrence(
+        eventID: "e1",
+        homeID: "h1",
+        title: "House party",
+        kind: .houseParty,
+        startsAt: Timestamp(Date(timeIntervalSince1970: 1_757_000_000)),
+        endsAt: Timestamp(Date(timeIntervalSince1970: 1_757_014_400)),
+        budget: 15_000,
+        currency: "EUR",
+        recipeIDs: ["r1"]
+    )
+
+    @Test("Ticking an item off moves the counter, not just the row")
+    func tickingAnItemMovesTheTotal() async {
+        let item = EventPlan.LinkedItem(id: "s1", name: "Ice")
+        let plan = EventPlan(
+            eventID: "e1",
+            currency: "EUR",
+            budget: 15_000,
+            spent: 4_000,
+            shopping: [item, EventPlan.LinkedItem(id: "s2", name: "Candles")],
+            shoppingTotal: 2,
+            shoppingPurchased: 0
+        )
+        let store = TestStore(
+            initialState: EventDetailFeature.State(
+                occurrence: Self.occurrence,
+                members: [],
+                currentUserID: "u1"
+            )
+        ) {
+            EventDetailFeature()
+        } withDependencies: {
+            $0.shopping.setPurchased = { _, _ in }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.planUpdated(plan))
+        await store.send(.itemToggled("s1", true))
+        // The plan arrives pre-totalled, so an optimistic tick has to move the
+        // ring as well as the row or "0 of 2" sits over a list showing one.
+        #expect(store.state.plan?.shoppingPurchased == 1)
+        #expect(store.state.plan?.shopping.first?.isPurchased == true)
+    }
+
+    @Test("A budget reads as spent against, and over")
+    func budgetArithmetic() {
+        var plan = EventPlan(eventID: "e1", currency: "EUR", budget: 10_000, spent: 4_000)
+        #expect(plan.remaining == 6_000)
+        #expect(!plan.isOverBudget)
+        #expect(plan.budgetProgress == 0.4)
+
+        plan.spent = 12_500
+        #expect(plan.remaining == -2_500)
+        #expect(plan.isOverBudget)
+        // Clamped rather than overflowing the arc; the number beside the ring is
+        // what says by how much.
+        #expect(plan.budgetProgress == 1)
+    }
+
+    @Test("Logging a spend from an event carries the link, and the event's date")
+    func expenseComposerCarriesTheLink() async {
+        let store = TestStore(
+            initialState: EventDetailFeature.State(
+                occurrence: Self.occurrence,
+                members: [User(id: "u1", name: "Ada")],
+                currentUserID: "u1"
+            )
+        ) {
+            EventDetailFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.addExpenseTapped)
+        let composer = store.state.expense
+        #expect(composer?.eventID == "e1")
+        // An expense logged the morning after a party belongs to the party.
+        #expect(composer?.spentAt == Self.occurrence.start)
+        #expect(composer?.title == "House party")
+        #expect(composer?.payload.eventID == "e1")
+    }
+}
+
+@MainActor
+@Suite("Dinner as an occasion")
+struct DinnerOccasionTests {
+
+    @Test("Making a dinner an occasion writes the event first, then links the plan to it")
+    func occasionCreatesAnEventAndLinksIt() async {
+        let recipe = Recipe(id: "r1", title: "Lasagne", ingredients: ["Pasta"], homeID: "h1")
+        let created = LockIsolated<[NewEvent]>([])
+        let planned = LockIsolated<[DinnerDecision]>([])
+
+        let store = TestStore(
+            initialState: DinnerFeature.State(homeID: "h1", date: "2026-09-12", memberCount: 2)
+        ) {
+            DinnerFeature()
+        } withDependencies: {
+            $0.events.create = { new in
+                created.withValue { $0.append(new) }
+                return "e-new"
+            }
+            $0.meals.set = { decision in
+                planned.withValue { $0.append(decision) }
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.recipesUpdated([recipe]))
+        await store.send(.kindChosen(.cook))
+        await store.send(.recipeChosen(recipe))
+        await store.send(.occasionToggled)
+        #expect(store.state.makeItAnOccasion)
+        // Seeded on the evening of the day being planned, not on whatever day
+        // the sheet was opened.
+        #expect(store.state.occasionStart == MealDate.eveningOf("2026-09-12"))
+
+        // A household that eats at nine should not have to fix it afterwards.
+        let nine = MealDate.at(
+            Calendar.current.date(bySettingHour: 21, minute: 30, second: 0, of: Date())!,
+            on: "2026-09-12"
+        )
+        await store.send(.binding(.set(\.occasionStart, nine)))
+
+        await store.send(.saveTapped)
+        await store.receive(\.saved)
+
+        // The event first, so the meal plan has something to point at — the
+        // other order would leave a plan referring to nothing.
+        #expect(created.value.count == 1)
+        #expect(created.value[0].kind == .dinnerParty)
+        // The dish is the menu, which is what makes the shopping list and the
+        // budget work on the calendar side.
+        #expect(created.value[0].recipeIDs == ["r1"])
+        #expect(created.value[0].startsAt == nine)
+
+        #expect(planned.value.count == 1)
+        #expect(planned.value[0].eventID == "e-new")
+        #expect(planned.value[0].recipeID == "r1")
+    }
+
+    @Test("An ordinary dinner stays out of the calendar")
+    func plainDinnerCreatesNoEvent() async {
+        let recipe = Recipe(id: "r1", title: "Pasta", homeID: "h1")
+        let created = LockIsolated(0)
+        let store = TestStore(
+            initialState: DinnerFeature.State(homeID: "h1", date: "2026-09-12", memberCount: 2)
+        ) {
+            DinnerFeature()
+        } withDependencies: {
+            $0.events.create = { _ in created.withValue { $0 += 1 }; return "e" }
+            $0.meals.set = { _ in }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.recipesUpdated([recipe]))
+        await store.send(.kindChosen(.cook))
+        await store.send(.recipeChosen(recipe))
+        await store.send(.saveTapped)
+        await store.receive(\.saved)
+
+        // Most dinners are a decision, not an occasion; a calendar full of
+        // "Tuesday: pasta" is one nobody reads.
+        #expect(created.value == 0)
+    }
+
+    @Test("An event with a menu can become that day's dinner")
+    func eventBecomesDinner() async {
+        let start = Date().addingTimeInterval(3 * 24 * 3600)
+        let occurrence = EventOccurrence(
+            eventID: "e1",
+            homeID: "h1",
+            title: "House party",
+            kind: .houseParty,
+            startsAt: Timestamp(start),
+            endsAt: Timestamp(start.addingTimeInterval(4 * 3600)),
+            recipeIDs: ["r1"]
+        )
+        let planned = LockIsolated<[DinnerDecision]>([])
+        let store = TestStore(
+            initialState: EventDetailFeature.State(
+                occurrence: occurrence,
+                members: [],
+                currentUserID: "u1"
+            )
+        ) {
+            EventDetailFeature()
+        } withDependencies: {
+            $0.meals.set = { decision in planned.withValue { $0.append(decision) } }
+        }
+        store.exhaustivity = .off
+
+        #expect(store.state.canPlanDinner)
+        await store.send(.planAsDinnerTapped)
+        await store.receive(\.dinnerPlanned)
+
+        #expect(planned.value.count == 1)
+        #expect(planned.value[0].eventID == "e1")
+        #expect(planned.value[0].date == MealDate.key(start))
+        #expect(store.state.didPlanDinner)
+    }
+
+    @Test("A trip is not offered as dinner")
+    func multiDayEventsCannotBeDinner() {
+        let start = Date()
+        let trip = EventOccurrence(
+            eventID: "e2",
+            title: "Trip",
+            kind: .trip,
+            startsAt: Timestamp(start),
+            endsAt: Timestamp(start.addingTimeInterval(3 * 24 * 3600)),
+            recipeIDs: ["r1"]
+        )
+        let state = EventDetailFeature.State(occurrence: trip, members: [], currentUserID: "u1")
+        // A meal plan is one row per home per *day*, so a three-day event has no
+        // single dinner to be — offering it would silently pick one.
+        #expect(!state.canPlanDinner)
+    }
+}

@@ -26,7 +26,7 @@ import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
-import { requireMembers } from "./lib/relations";
+import { requireMembers, requireRef, requireSameHome } from "./lib/relations";
 
 const financeCategory = v.union(
   v.literal("groceries"),
@@ -585,6 +585,8 @@ export const createExpense = mutation({
     ),
     note: v.optional(v.string()),
     billId: v.optional(v.id("bills")),
+    /** Set when this was spent on something in the calendar. */
+    eventId: v.optional(v.id("events")),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -593,6 +595,13 @@ export const createExpense = mutation({
 
     const title = args.title.trim();
     if (!title) throw new Error("Give the expense a name");
+
+    // An expense may only point at an event this household can see — otherwise
+    // the event's plan would total money from a home it has no access to.
+    if (args.eventId) {
+      const event = await requireRef(ctx, args.eventId, "Event");
+      requireSameHome(event, args.homeId, "Event");
+    }
 
     const touched = new Set<Id<"users">>([args.paidBy, ...args.participants]);
     for (const w of args.weights ?? []) touched.add(w.userId);
@@ -621,6 +630,7 @@ export const createExpense = mutation({
       note: args.note?.trim() || undefined,
       spent_at: args.spentAt,
       bill_id: args.billId,
+      event_id: args.eventId,
       created_by: user._id,
       created: now,
       updated: now,
@@ -658,12 +668,19 @@ export const updateExpense = mutation({
       v.array(v.object({ userId: v.id("users"), amount: v.number() })),
     ),
     note: v.optional(v.string()),
+    /** `null` unlinks it from its event; absent leaves the link alone. */
+    eventId: v.optional(v.union(v.id("events"), v.null())),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const expense = await ctx.db.get(args.id);
     if (!expense) throw new Error("Expense not found");
     const home = await requireDocHome(ctx, expense, "Expense");
+
+    if (args.eventId) {
+      const event = await requireRef(ctx, args.eventId, "Event");
+      requireSameHome(event, home._id, "Event");
+    }
 
     const amount = args.amount === undefined ? expense.amount : requireAmount(args.amount);
     const mode = args.mode ?? expense.split_mode;
@@ -704,6 +721,10 @@ export const updateExpense = mutation({
       weights: weights?.map((w) => ({ user_id: w.userId, weight: w.weight })),
       note: args.note === undefined ? expense.note : args.note.trim() || undefined,
       spent_at: args.spentAt ?? expense.spent_at,
+      event_id:
+        args.eventId === undefined
+          ? expense.event_id
+          : (args.eventId ?? undefined),
       updated: Date.now(),
     });
     void user;

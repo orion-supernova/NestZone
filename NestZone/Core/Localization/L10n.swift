@@ -4385,4 +4385,811 @@ public enum L10n {
     public static func financeReminderCount(_ a0: Int) -> LocalizedStringResource {
         r("finance_reminder_count", "\(a0) reminders")
     }
+
+    // MARK: - Calendar & Events
+
+    /// More
+    public static var commonMore: LocalizedStringResource {
+        r("common_more", "More")
+    }
+
+    /// For %@
+    public static func shoppingForEvent(_ a0: String) -> LocalizedStringResource {
+        r("shopping_for_event", "For \(a0)")
+    }
+
+    /// Month
+    public static var calendarModeMonth: LocalizedStringResource {
+        r("calendar_mode_month", "Month")
+    }
+
+    /// Week
+    public static var calendarModeWeek: LocalizedStringResource {
+        r("calendar_mode_week", "Week")
+    }
+
+    /// Agenda
+    public static var calendarModeAgenda: LocalizedStringResource {
+        r("calendar_mode_agenda", "Agenda")
+    }
+
+    /// Previous month
+    public static var calendarPreviousMonth: LocalizedStringResource {
+        r("calendar_previous_month", "Previous month")
+    }
+
+    /// Next month
+    public static var calendarNextMonth: LocalizedStringResource {
+        r("calendar_next_month", "Next month")
+    }
+
+    /// Jump to today
+    public static var calendarJumpToToday: LocalizedStringResource {
+        r("calendar_jump_to_today", "Jump to today")
+    }
+
+    /// Search events
+    public static var calendarSearchPlaceholder: LocalizedStringResource {
+        r("calendar_search_placeholder", "Search events")
+    }
+
+    /// Just mine
+    public static var calendarOnlyMine: LocalizedStringResource {
+        r("calendar_only_mine", "Just mine")
+    }
+
+    /// Today
+    public static var calendarToday: LocalizedStringResource {
+        r("calendar_today", "Today")
+    }
+
+    /// Tomorrow
+    public static var calendarTomorrowLabel: LocalizedStringResource {
+        r("calendar_tomorrow_label", "Tomorrow")
+    }
+
+    /// Yesterday
+    public static var calendarYesterday: LocalizedStringResource {
+        r("calendar_yesterday", "Yesterday")
+    }
+
+    /// All day
+    public static var calendarAllDay: LocalizedStringResource {
+        r("calendar_all_day", "All day")
+    }
+
+    /// Nothing on
+    public static var calendarNothingOn: LocalizedStringResource {
+        r("calendar_nothing_on", "Nothing on")
+    }
+
+    /// Nothing matches that
+    public static var calendarNoMatches: LocalizedStringResource {
+        r("calendar_no_matches", "Nothing matches that")
+    }
+
+    /// %lld scheduled
+    public static func calendarEventCount(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_event_count", "\(a0) scheduled")
+    }
+
+    /// Next up
+    public static var calendarNextUp: LocalizedStringResource {
+        r("calendar_next_up", "Next up")
+    }
+
+    /// Happening now
+    public static var calendarHappeningNow: LocalizedStringResource {
+        r("calendar_happening_now", "Happening now")
+    }
+
+    /// Starting now
+    public static var calendarStartingNow: LocalizedStringResource {
+        r("calendar_starting_now", "Starting now")
+    }
+
+    /// Tomorrow
+    public static var calendarTomorrow: LocalizedStringResource {
+        r("calendar_tomorrow", "Tomorrow")
+    }
+
+    /// in %lld min
+    public static func calendarInMinutes(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_in_minutes", "in \(a0) min")
+    }
+
+    /// in %lld h
+    public static func calendarInHours(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_in_hours", "in \(a0) h")
+    }
+
+    /// in %lld days
+    public static func calendarInDays(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_in_days", "in \(a0) days")
+    }
+
+    /// in %lld months
+    public static func calendarInMonths(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_in_months", "in \(a0) months")
+    }
+
+    /// Nothing planned yet
+    public static var calendarEmptyTitle: LocalizedStringResource {
+        r("calendar_empty_title", "Nothing planned yet")
+    }
+
+    /// Add a dinner, a birthday, a concert — anything the house should know about.
+    public static var calendarEmptyMessage: LocalizedStringResource {
+        r("calendar_empty_message", "Add a dinner, a birthday, a concert — anything the house should know about.")
+    }
+
+    /// Add an event
+    public static var calendarAddFirstEvent: LocalizedStringResource {
+        r("calendar_add_first_event", "Add an event")
+    }
+
+    /// Deleted %@
+    public static func calendarEventDeleted(_ a0: String) -> LocalizedStringResource {
+        r("calendar_event_deleted", "Deleted \(a0)")
+    }
+
+    /// Someone
+    public static var calendarSomeone: LocalizedStringResource {
+        r("calendar_someone", "Someone")
+    }
+
+    /// Event
+    public static var calendarKindGeneral: LocalizedStringResource {
+        r("calendar_kind_general", "Event")
+    }
+
+    /// House party
+    public static var calendarKindHouseParty: LocalizedStringResource {
+        r("calendar_kind_house_party", "House party")
+    }
+
+    /// Dinner party
+    public static var calendarKindDinnerParty: LocalizedStringResource {
+        r("calendar_kind_dinner_party", "Dinner party")
+    }
+
+    /// Movie night
+    public static var calendarKindMovieNight: LocalizedStringResource {
+        r("calendar_kind_movie_night", "Movie night")
+    }
+
+    /// Game night
+    public static var calendarKindGameNight: LocalizedStringResource {
+        r("calendar_kind_game_night", "Game night")
+    }
+
+    /// Guests
+    public static var calendarKindVisit: LocalizedStringResource {
+        r("calendar_kind_visit", "Guests")
+    }
+
+    /// Chore
+    public static var calendarKindChore: LocalizedStringResource {
+        r("calendar_kind_chore", "Chore")
+    }
+
+    /// Restaurant
+    public static var calendarKindDining: LocalizedStringResource {
+        r("calendar_kind_dining", "Restaurant")
+    }
+
+    /// Concert
+    public static var calendarKindConcert: LocalizedStringResource {
+        r("calendar_kind_concert", "Concert")
+    }
+
+    /// Cinema
+    public static var calendarKindCinema: LocalizedStringResource {
+        r("calendar_kind_cinema", "Cinema")
+    }
+
+    /// Theatre
+    public static var calendarKindTheatre: LocalizedStringResource {
+        r("calendar_kind_theatre", "Theatre")
+    }
+
+    /// Sports
+    public static var calendarKindSports: LocalizedStringResource {
+        r("calendar_kind_sports", "Sports")
+    }
+
+    /// Picnic
+    public static var calendarKindPicnic: LocalizedStringResource {
+        r("calendar_kind_picnic", "Picnic")
+    }
+
+    /// Trip
+    public static var calendarKindTrip: LocalizedStringResource {
+        r("calendar_kind_trip", "Trip")
+    }
+
+    /// Birthday
+    public static var calendarKindBirthday: LocalizedStringResource {
+        r("calendar_kind_birthday", "Birthday")
+    }
+
+    /// Anniversary
+    public static var calendarKindAnniversary: LocalizedStringResource {
+        r("calendar_kind_anniversary", "Anniversary")
+    }
+
+    /// Holiday
+    public static var calendarKindHoliday: LocalizedStringResource {
+        r("calendar_kind_holiday", "Holiday")
+    }
+
+    /// Appointment
+    public static var calendarKindAppointment: LocalizedStringResource {
+        r("calendar_kind_appointment", "Appointment")
+    }
+
+    /// Deadline
+    public static var calendarKindDeadline: LocalizedStringResource {
+        r("calendar_kind_deadline", "Deadline")
+    }
+
+    /// At home
+    public static var calendarGroupAtHome: LocalizedStringResource {
+        r("calendar_group_at_home", "At home")
+    }
+
+    /// Going out
+    public static var calendarGroupGoingOut: LocalizedStringResource {
+        r("calendar_group_going_out", "Going out")
+    }
+
+    /// Occasions
+    public static var calendarGroupOccasions: LocalizedStringResource {
+        r("calendar_group_occasions", "Occasions")
+    }
+
+    /// Admin
+    public static var calendarGroupAdmin: LocalizedStringResource {
+        r("calendar_group_admin", "Admin")
+    }
+
+    /// Going
+    public static var calendarRsvpGoing: LocalizedStringResource {
+        r("calendar_rsvp_going", "Going")
+    }
+
+    /// Maybe
+    public static var calendarRsvpMaybe: LocalizedStringResource {
+        r("calendar_rsvp_maybe", "Maybe")
+    }
+
+    /// Can't
+    public static var calendarRsvpDeclined: LocalizedStringResource {
+        r("calendar_rsvp_declined", "Can't")
+    }
+
+    /// Are you coming?
+    public static var calendarAreYouComing: LocalizedStringResource {
+        r("calendar_are_you_coming", "Are you coming?")
+    }
+
+    /// Who's coming
+    public static var calendarWhoIsComing: LocalizedStringResource {
+        r("calendar_who_is_coming", "Who's coming")
+    }
+
+    /// No answer yet
+    public static var calendarNoAnswer: LocalizedStringResource {
+        r("calendar_no_answer", "No answer yet")
+    }
+
+    /// Everyone
+    public static var calendarEveryone: LocalizedStringResource {
+        r("calendar_everyone", "Everyone")
+    }
+
+    /// Clear
+    public static var calendarClearAll: LocalizedStringResource {
+        r("calendar_clear_all", "Clear")
+    }
+
+    /// New event
+    public static var calendarAddEvent: LocalizedStringResource {
+        r("calendar_add_event", "New event")
+    }
+
+    /// Edit event
+    public static var calendarEditEvent: LocalizedStringResource {
+        r("calendar_edit_event", "Edit event")
+    }
+
+    /// What's happening?
+    public static var calendarTitlePlaceholder: LocalizedStringResource {
+        r("calendar_title_placeholder", "What's happening?")
+    }
+
+    /// Notes
+    public static var calendarNotesPlaceholder: LocalizedStringResource {
+        r("calendar_notes_placeholder", "Notes")
+    }
+
+    /// Notes
+    public static var calendarNotes: LocalizedStringResource {
+        r("calendar_notes", "Notes")
+    }
+
+    /// Where?
+    public static var calendarLocationPlaceholder: LocalizedStringResource {
+        r("calendar_location_placeholder", "Where?")
+    }
+
+    /// All day
+    public static var calendarAllDayToggle: LocalizedStringResource {
+        r("calendar_all_day_toggle", "All day")
+    }
+
+    /// Starts
+    public static var calendarStarts: LocalizedStringResource {
+        r("calendar_starts", "Starts")
+    }
+
+    /// Ends
+    public static var calendarEnds: LocalizedStringResource {
+        r("calendar_ends", "Ends")
+    }
+
+    /// Repeats
+    public static var calendarRepeats: LocalizedStringResource {
+        r("calendar_repeats", "Repeats")
+    }
+
+    /// How often
+    public static var calendarRepeatFrequency: LocalizedStringResource {
+        r("calendar_repeat_frequency", "How often")
+    }
+
+    /// Every
+    public static var calendarRepeatEvery: LocalizedStringResource {
+        r("calendar_repeat_every", "Every")
+    }
+
+    /// Stops on a date
+    public static var calendarRepeatEnds: LocalizedStringResource {
+        r("calendar_repeat_ends", "Stops on a date")
+    }
+
+    /// Until
+    public static var calendarRepeatUntil: LocalizedStringResource {
+        r("calendar_repeat_until", "Until")
+    }
+
+    /// Doesn't repeat
+    public static var calendarRepeatNever: LocalizedStringResource {
+        r("calendar_repeat_never", "Doesn't repeat")
+    }
+
+    /// Every day
+    public static var calendarRepeatDaily: LocalizedStringResource {
+        r("calendar_repeat_daily", "Every day")
+    }
+
+    /// Every week
+    public static var calendarRepeatWeekly: LocalizedStringResource {
+        r("calendar_repeat_weekly", "Every week")
+    }
+
+    /// Every month
+    public static var calendarRepeatMonthly: LocalizedStringResource {
+        r("calendar_repeat_monthly", "Every month")
+    }
+
+    /// Every year
+    public static var calendarRepeatYearly: LocalizedStringResource {
+        r("calendar_repeat_yearly", "Every year")
+    }
+
+    /// Every %lld days
+    public static func calendarRepeatEveryNDays(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_repeat_every_n_days", "Every \(a0) days")
+    }
+
+    /// Every %lld weeks
+    public static func calendarRepeatEveryNWeeks(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_repeat_every_n_weeks", "Every \(a0) weeks")
+    }
+
+    /// Every %lld months
+    public static func calendarRepeatEveryNMonths(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_repeat_every_n_months", "Every \(a0) months")
+    }
+
+    /// Every %lld years
+    public static func calendarRepeatEveryNYears(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_repeat_every_n_years", "Every \(a0) years")
+    }
+
+    /// Daily
+    public static var calendarFrequencyDaily: LocalizedStringResource {
+        r("calendar_frequency_daily", "Daily")
+    }
+
+    /// Weekly
+    public static var calendarFrequencyWeekly: LocalizedStringResource {
+        r("calendar_frequency_weekly", "Weekly")
+    }
+
+    /// Monthly
+    public static var calendarFrequencyMonthly: LocalizedStringResource {
+        r("calendar_frequency_monthly", "Monthly")
+    }
+
+    /// Yearly
+    public static var calendarFrequencyYearly: LocalizedStringResource {
+        r("calendar_frequency_yearly", "Yearly")
+    }
+
+    /// Remind the house
+    public static var calendarRemindMe: LocalizedStringResource {
+        r("calendar_remind_me", "Remind the house")
+    }
+
+    /// At the time
+    public static var calendarReminderAtTime: LocalizedStringResource {
+        r("calendar_reminder_at_time", "At the time")
+    }
+
+    /// 10 min before
+    public static var calendarReminderTenMinutes: LocalizedStringResource {
+        r("calendar_reminder_ten_minutes", "10 min before")
+    }
+
+    /// 30 min before
+    public static var calendarReminderThirtyMinutes: LocalizedStringResource {
+        r("calendar_reminder_thirty_minutes", "30 min before")
+    }
+
+    /// 1 hour before
+    public static var calendarReminderOneHour: LocalizedStringResource {
+        r("calendar_reminder_one_hour", "1 hour before")
+    }
+
+    /// 2 hours before
+    public static var calendarReminderTwoHours: LocalizedStringResource {
+        r("calendar_reminder_two_hours", "2 hours before")
+    }
+
+    /// A day before
+    public static var calendarReminderOneDay: LocalizedStringResource {
+        r("calendar_reminder_one_day", "A day before")
+    }
+
+    /// 2 days before
+    public static var calendarReminderTwoDays: LocalizedStringResource {
+        r("calendar_reminder_two_days", "2 days before")
+    }
+
+    /// A week before
+    public static var calendarReminderOneWeek: LocalizedStringResource {
+        r("calendar_reminder_one_week", "A week before")
+    }
+
+    /// Three reminders is the most an event can have.
+    public static var calendarReminderLimit: LocalizedStringResource {
+        r("calendar_reminder_limit", "Three reminders is the most an event can have.")
+    }
+
+    /// The event ends before it starts.
+    public static var calendarErrorEndsBeforeStart: LocalizedStringResource {
+        r("calendar_error_ends_before_start", "The event ends before it starts.")
+    }
+
+    /// Budget
+    public static var calendarPlanBudget: LocalizedStringResource {
+        r("calendar_plan_budget", "Budget")
+    }
+
+    /// Shopping
+    public static var calendarPlanShopping: LocalizedStringResource {
+        r("calendar_plan_shopping", "Shopping")
+    }
+
+    /// Menu
+    public static var calendarPlanMenu: LocalizedStringResource {
+        r("calendar_plan_menu", "Menu")
+    }
+
+    /// Tickets
+    public static var calendarPlanTickets: LocalizedStringResource {
+        r("calendar_plan_tickets", "Tickets")
+    }
+
+    /// Add to the plan
+    public static var calendarAddToPlan: LocalizedStringResource {
+        r("calendar_add_to_plan", "Add to the plan")
+    }
+
+    /// Remove from the plan
+    public static var calendarRemoveFromPlan: LocalizedStringResource {
+        r("calendar_remove_from_plan", "Remove from the plan")
+    }
+
+    /// Anything you log against this event counts towards it.
+    public static var calendarBudgetHint: LocalizedStringResource {
+        r("calendar_budget_hint", "Anything you log against this event counts towards it.")
+    }
+
+    /// Link to the tickets or booking
+    public static var calendarTicketsPlaceholder: LocalizedStringResource {
+        r("calendar_tickets_placeholder", "Link to the tickets or booking")
+    }
+
+    /// Kept here so nobody has to scroll back through the chat for it.
+    public static var calendarTicketsHint: LocalizedStringResource {
+        r("calendar_tickets_hint", "Kept here so nobody has to scroll back through the chat for it.")
+    }
+
+    /// Nothing on the menu yet.
+    public static var calendarMenuEmpty: LocalizedStringResource {
+        r("calendar_menu_empty", "Nothing on the menu yet.")
+    }
+
+    /// Pick recipes
+    public static var calendarPickRecipes: LocalizedStringResource {
+        r("calendar_pick_recipes", "Pick recipes")
+    }
+
+    /// Edit the menu
+    public static var calendarEditMenu: LocalizedStringResource {
+        r("calendar_edit_menu", "Edit the menu")
+    }
+
+    /// Search recipes
+    public static var calendarSearchRecipes: LocalizedStringResource {
+        r("calendar_search_recipes", "Search recipes")
+    }
+
+    /// No recipes yet
+    public static var calendarNoRecipes: LocalizedStringResource {
+        r("calendar_no_recipes", "No recipes yet")
+    }
+
+    /// Save a recipe first and it'll show up here.
+    public static var calendarNoRecipesMessage: LocalizedStringResource {
+        r("calendar_no_recipes_message", "Save a recipe first and it'll show up here.")
+    }
+
+    /// %lld recipes · %lld ingredients
+    public static func calendarMenuSummary(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("calendar_menu_summary", "\(a0) recipes · \(a1) ingredients")
+    }
+
+    /// %lld ingredients
+    public static func calendarIngredientCount(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_ingredient_count", "\(a0) ingredients")
+    }
+
+    /// %lld min
+    public static func calendarMinutes(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_minutes", "\(a0) min")
+    }
+
+    /// Serves %lld
+    public static func calendarServes(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_serves", "Serves \(a0)")
+    }
+
+    /// Send it all to the shopping list
+    public static var calendarStockUp: LocalizedStringResource {
+        r("calendar_stock_up", "Send it all to the shopping list")
+    }
+
+    /// Top up the shopping list
+    public static var calendarStockUpAgain: LocalizedStringResource {
+        r("calendar_stock_up_again", "Top up the shopping list")
+    }
+
+    /// %lld added to the list
+    public static func calendarItemsAdded(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_items_added", "\(a0) added to the list")
+    }
+
+    /// %lld added · %lld already listed
+    public static func calendarItemsAddedSkipped(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("calendar_items_added_skipped", "\(a0) added · \(a1) already listed")
+    }
+
+    /// Everything's already on the list.
+    public static var calendarAllAlreadyListed: LocalizedStringResource {
+        r("calendar_all_already_listed", "Everything's already on the list.")
+    }
+
+    /// %lld of %lld bought
+    public static func calendarBoughtOf(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("calendar_bought_of", "\(a0) of \(a1) bought")
+    }
+
+    /// Add something to buy
+    public static var calendarAddItemPlaceholder: LocalizedStringResource {
+        r("calendar_add_item_placeholder", "Add something to buy")
+    }
+
+    /// +%lld more items
+    public static func calendarMoreItems(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_more_items", "+\(a0) more items")
+    }
+
+    /// +%lld more
+    public static func calendarMoreExpenses(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_more_expenses", "+\(a0) more")
+    }
+
+    /// Log what it cost
+    public static var calendarLogSpend: LocalizedStringResource {
+        r("calendar_log_spend", "Log what it cost")
+    }
+
+    /// of %@
+    public static func calendarOfBudget(_ a0: String) -> LocalizedStringResource {
+        r("calendar_of_budget", "of \(a0)")
+    }
+
+    /// %@ over
+    public static func calendarOverBudget(_ a0: String) -> LocalizedStringResource {
+        r("calendar_over_budget", "\(a0) over")
+    }
+
+    /// %@ left
+    public static func calendarLeftToSpend(_ a0: String) -> LocalizedStringResource {
+        r("calendar_left_to_spend", "\(a0) left")
+    }
+
+    /// Some of this was paid in another currency and isn't in the total.
+    public static var calendarMixedCurrencies: LocalizedStringResource {
+        r("calendar_mixed_currencies", "Some of this was paid in another currency and isn't in the total.")
+    }
+
+    /// Plan it out
+    public static var calendarPlanInvitation: LocalizedStringResource {
+        r("calendar_plan_invitation", "Plan it out")
+    }
+
+    /// Give it a budget, a menu, a shopping list or a ticket link — the house can see all of it.
+    public static var calendarPlanInvitationMessage: LocalizedStringResource {
+        r("calendar_plan_invitation_message", "Give it a budget, a menu, a shopping list or a ticket link — the house can see all of it.")
+    }
+
+    /// This event repeats
+    public static var calendarScopeEditTitle: LocalizedStringResource {
+        r("calendar_scope_edit_title", "This event repeats")
+    }
+
+    /// Change just this one, or every one of them?
+    public static var calendarScopeEditMessage: LocalizedStringResource {
+        r("calendar_scope_edit_message", "Change just this one, or every one of them?")
+    }
+
+    /// This event repeats
+    public static var calendarScopeDeleteTitle: LocalizedStringResource {
+        r("calendar_scope_delete_title", "This event repeats")
+    }
+
+    /// Delete just this one, or every one of them?
+    public static var calendarScopeDeleteMessage: LocalizedStringResource {
+        r("calendar_scope_delete_message", "Delete just this one, or every one of them?")
+    }
+
+    /// Just this one
+    public static var calendarScopeThisEvent: LocalizedStringResource {
+        r("calendar_scope_this_event", "Just this one")
+    }
+
+    /// All of them
+    public static var calendarScopeAllEvents: LocalizedStringResource {
+        r("calendar_scope_all_events", "All of them")
+    }
+
+    /// Skip this one
+    public static var calendarSkipThisOne: LocalizedStringResource {
+        r("calendar_skip_this_one", "Skip this one")
+    }
+
+    /// Delete every one
+    public static var calendarDeleteSeries: LocalizedStringResource {
+        r("calendar_delete_series", "Delete every one")
+    }
+
+    /// Delete event
+    public static var calendarDeleteEvent: LocalizedStringResource {
+        r("calendar_delete_event", "Delete event")
+    }
+
+    /// Delete this event…
+    public static var calendarDeleteEventRepeating: LocalizedStringResource {
+        r("calendar_delete_event_repeating", "Delete this event…")
+    }
+
+    /// Your recipes
+    public static var calendarYourRecipes: LocalizedStringResource {
+        r("calendar_your_recipes", "Your recipes")
+    }
+
+    /// Explore
+    public static var calendarExploreRecipes: LocalizedStringResource {
+        r("calendar_explore_recipes", "Explore")
+    }
+
+    /// %lld will be saved to your recipes
+    public static func calendarWillSaveToHome(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_will_save_to_home", "\(a0) will be saved to your recipes")
+    }
+
+    /// These land on the household's shopping list, tagged for this event.
+    public static var calendarShoppingHint: LocalizedStringResource {
+        r("calendar_shopping_hint", "These land on the household's shopping list, tagged for this event.")
+    }
+
+    /// Extras only — the menu's ingredients are one tap away once this is saved.
+    public static var calendarShoppingHintWithMenu: LocalizedStringResource {
+        r("calendar_shopping_hint_with_menu", "Extras only — the menu's ingredients are one tap away once this is saved.")
+    }
+
+    /// Nothing to buy yet
+    public static var calendarNothingToBuyYet: LocalizedStringResource {
+        r("calendar_nothing_to_buy_yet", "Nothing to buy yet")
+    }
+
+    /// Events
+    public static var homeStatsEventsTitle: LocalizedStringResource {
+        r("home_stats_events_title", "Events")
+    }
+
+    /// Now
+    public static var calendarNowBadge: LocalizedStringResource {
+        r("calendar_now_badge", "Now")
+    }
+
+    /// Up next
+    public static var homeUpNextTitle: LocalizedStringResource {
+        r("home_up_next_title", "Up next")
+    }
+
+    /// Make it dinner that day
+    public static var calendarMakeItDinner: LocalizedStringResource {
+        r("calendar_make_it_dinner", "Make it dinner that day")
+    }
+
+    /// This is dinner that day
+    public static var calendarIsDinner: LocalizedStringResource {
+        r("calendar_is_dinner", "This is dinner that day")
+    }
+
+    /// Make it an occasion
+    public static var dinnerMakeItAnOccasion: LocalizedStringResource {
+        r("dinner_make_it_an_occasion", "Make it an occasion")
+    }
+
+    /// Adds it to the calendar with a menu, so it can carry a shopping list and a budget.
+    public static var dinnerMakeItAnOccasionHint: LocalizedStringResource {
+        r("dinner_make_it_an_occasion_hint", "Adds it to the calendar with a menu, so it can carry a shopping list and a budget.")
+    }
+
+    /// Dinner
+    public static var dinnerOccasionFallbackTitle: LocalizedStringResource {
+        r("dinner_occasion_fallback_title", "Dinner")
+    }
+
+    /// Part of %@
+    public static func homeTonightPartOf(_ a0: String) -> LocalizedStringResource {
+        r("home_tonight_part_of", "Part of \(a0)")
+    }
+
+    /// Starts at
+    public static var dinnerOccasionStarts: LocalizedStringResource {
+        r("dinner_occasion_starts", "Starts at")
+    }
+
+    /// Make an evening of it
+    public static var dinnerMakeAnEveningOfIt: LocalizedStringResource {
+        r("dinner_make_an_evening_of_it", "Make an evening of it")
+    }
 }

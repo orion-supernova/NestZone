@@ -30,6 +30,7 @@ public struct ShoppingView: View {
                     .padding(.top, 48)
                 } else {
                     header
+                    eventSections
                     mealSections
                     viewModeToggle
                     if store.isGrouped {
@@ -171,6 +172,54 @@ public struct ShoppingView: View {
         .transition(.opacity)
     }
 
+    /// Everything that is on the list for something in the calendar, under the
+    /// event it belongs to.
+    ///
+    /// The outermost grouping, above the meals: when a household is shopping for
+    /// Saturday, "Saturday" is the thing they are shopping for, and its four
+    /// recipes and six loose items split across four aisles is exactly the
+    /// problem the meal groups were introduced to solve one level down.
+    @ViewBuilder
+    private var eventSections: some View {
+        ForEach(store.eventGroups, id: \.eventID) { group in
+            let isCollapsed = store.state.isCollapsed(event: group.eventID)
+            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+                GroupHeader(
+                    symbol: "calendar",
+                    title: String(localized: L10n.shoppingForEvent(group.title)),
+                    done: store.state.doneCount(inEvent: group.eventID),
+                    total: store.state.totalCount(inEvent: group.eventID),
+                    isCollapsed: isCollapsed,
+                    isClearing: store.state.isClearing(.event(group.eventID)),
+                    onToggle: { store.send(.eventToggled(group.eventID)) },
+                    onClear: { store.send(.clearEventTapped(group.eventID)) }
+                )
+                .padding(.horizontal, Metrics.screenPadding)
+
+                if !isCollapsed {
+                    GlassGroup {
+                        VStack(spacing: 8) {
+                            ForEach(group.items) { item in
+                                ShoppingRow(
+                                    item: item,
+                                    showsCategory: false,
+                                    revealedID: $revealedItemID,
+                                    glass: glass,
+                                    onToggle: { store.send(.togglePurchased(item.id)) },
+                                    onDelete: { store.send(.deleteTapped(item.id)) }
+                                )
+                            }
+                        }
+                        .padding(.horizontal, Metrics.screenPadding)
+                    }
+                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
+                }
+            }
+            .clipped()
+            .animation(Motion.spring, value: isCollapsed)
+        }
+    }
+
     /// Everything that came over from a recipe, under the meal it belongs to.
     ///
     /// Above the aisles on purpose: a meal is a thing you are shopping *for*,
@@ -181,8 +230,9 @@ public struct ShoppingView: View {
         ForEach(store.mealGroups, id: \.recipeID) { group in
             let isCollapsed = store.state.isCollapsed(meal: group.recipeID)
             VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-                MealHeader(
-                    title: group.title,
+                GroupHeader(
+                    symbol: "fork.knife",
+                    title: String(localized: L10n.shoppingForRecipe(group.title)),
                     done: store.state.doneCount(inMeal: group.recipeID),
                     total: store.state.totalCount(inMeal: group.recipeID),
                     isCollapsed: isCollapsed,
@@ -503,9 +553,13 @@ private struct GroupMenu: View {
 }
 
 
-/// A meal's shopping, foldable and with its own progress — the aisle headers'
-/// twin, for the rows that came from a recipe rather than a category.
-private struct MealHeader: View {
+/// A foldable heading for anything the list is shopping *for* — a meal, an
+/// event — with its own progress. The aisle headers' twin.
+///
+/// One view for both, because they differ only in a symbol and a phrase: two
+/// copies of this drifted apart in every other place this app tried it.
+private struct GroupHeader: View {
+    let symbol: String
     let title: String
     let done: Int
     let total: Int
@@ -518,14 +572,14 @@ private struct MealHeader: View {
         HStack(spacing: 4) {
         Button(action: onToggle) {
             HStack(spacing: 10) {
-                Image(systemName: "fork.knife")
+                Image(systemName: symbol)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.tint)
                     .frame(width: 28, height: 28)
                     .background(.tint.opacity(0.14), in: .circle)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(L10n.shoppingForRecipe(title))
+                    Text(title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)

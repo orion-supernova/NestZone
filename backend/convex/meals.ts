@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { requireRef, requireSameHome } from "./lib/relations";
 import { internal } from "./_generated/api";
 
 // What is for dinner, by calendar day.
@@ -24,11 +25,23 @@ export const forHome = query({
 
     const resolved = await Promise.all(
       plans.map(async (plan) => {
-        if (plan.kind !== "cook") return { ...plan, recipe: null };
+        // The event this meal belongs to, read through for the same reason the
+        // recipe is: the Home tab shows tonight without subscribing to the
+        // calendar, and can open the event that owns the shopping and the
+        // budget straight from the card. An event deleted since simply drops
+        // off rather than leaving a dangling id.
+        const event = plan.event_id ? await ctx.db.get(plan.event_id) : null;
+        const withEvent = {
+          ...plan,
+          event: event
+            ? { _id: event._id, title: event.title ?? "", kind: event.kind ?? "general" }
+            : null,
+        };
+        if (plan.kind !== "cook") return { ...withEvent, recipe: null };
         // A cook plan with a name and no recipe stands on its own.
-        if (!plan.recipe_id) return { ...plan, recipe: null };
+        if (!plan.recipe_id) return { ...withEvent, recipe: null };
         const recipe = await ctx.db.get(plan.recipe_id);
-        return recipe ? { ...plan, recipe } : null;
+        return recipe ? { ...withEvent, recipe } : null;
       }),
     );
     return resolved
@@ -46,10 +59,19 @@ export const set = mutation({
     title: v.optional(v.string()),
     cuisine: v.optional(v.string()),
     place: v.optional(v.string()),
+    /** The calendar event this meal belongs to, if it is part of one. */
+    eventId: v.optional(v.id("events")),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
+
+    // A meal may only point at an event this household can see — otherwise the
+    // Home tab would read a title out of another home.
+    if (args.eventId) {
+      const event = await requireRef(ctx, args.eventId, "Event");
+      requireSameHome(event, args.homeId, "Event");
+    }
 
     if (args.kind === "cook") {
       // Either a recipe or a name — "leftovers" is a perfectly good answer to
@@ -77,6 +99,9 @@ export const set = mutation({
       title: args.kind === "cook" && !args.recipeId ? args.title?.trim() : undefined,
       cuisine: args.kind === "cook" ? undefined : args.cuisine,
       place: args.kind === "cook" ? undefined : args.place,
+      // Absent means "leave the link alone", so re-deciding the same evening's
+      // dinner does not silently detach it from the party it belongs to.
+      ...(args.eventId ? { event_id: args.eventId } : {}),
       planned_by: user._id,
     };
 

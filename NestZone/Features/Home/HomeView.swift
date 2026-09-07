@@ -17,8 +17,11 @@ public struct HomeView: View {
                 greeting.appear(0)
                 tonightCard.appear(1)
                 statsGrid.appear(2)
-                tasksSection.appear(3)
-                movieNightCard.appear(4)
+                if !store.state.upNext.isEmpty {
+                    upNextSection.appear(3)
+                }
+                tasksSection.appear(4)
+                movieNightCard.appear(5)
             }
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, Metrics.scrollBottomInset)
@@ -30,6 +33,9 @@ public struct HomeView: View {
         .task { await store.send(.task).finish() }
         .sheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
             DinnerSheet(store: $0)
+        }
+        .sheet(item: $store.scope(state: \.occasion, action: \.occasion)) {
+            EventComposerSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
@@ -68,13 +74,25 @@ public struct HomeView: View {
 
             Group {
                 if let plan = store.tonight {
-                    DinnerPlanCard(plan: plan) {
-                        if let recipe = plan.recipe {
-                            store.send(.delegate(.openRecipe(recipe)))
-                        } else {
-                            store.send(.decideDinnerTapped)
-                        }
-                    }
+                    DinnerPlanCard(
+                        plan: plan,
+                        action: {
+                            if let recipe = plan.recipe {
+                                store.send(.delegate(.openRecipe(recipe)))
+                            } else {
+                                store.send(.decideDinnerTapped)
+                            }
+                        },
+                        onOpenEvent: plan.event.map { event in
+                            {
+                                store.send(.delegate(.openEventID(
+                                    event.id,
+                                    CalendarDay(MealDate.date(plan.date) ?? Date())
+                                )))
+                            }
+                        },
+                        onMakeOccasion: { store.send(.makeOccasionTapped) }
+                    )
                     .transition(.scale(scale: 0.96).combined(with: .opacity))
                 } else {
                     UndecidedDinnerCard { store.send(.decideDinnerTapped) }
@@ -109,7 +127,7 @@ public struct HomeView: View {
                         title: L10n.homeStatsTodoTitle,
                         value: store.stats.openTasks,
                         symbol: "checklist.unchecked",
-                        tint: Palette.warning
+                        tint: Palette.statTasks
                     ) { store.send(.delegate(.openTasks)) }
 
                     StatTile(
@@ -117,7 +135,7 @@ public struct HomeView: View {
                         value: store.stats.shoppingItems,
                         change: store.stats.shoppingChange,
                         symbol: "cart.fill",
-                        tint: theme.accent
+                        tint: Palette.statShopping
                     ) { store.send(.delegate(.openShoppingList)) }
 
                     StatTile(
@@ -125,7 +143,7 @@ public struct HomeView: View {
                         value: store.stats.notes,
                         change: store.stats.notesChange,
                         symbol: "note.text",
-                        tint: theme.support
+                        tint: Palette.statNotes
                     ) { store.send(.delegate(.openNotes)) }
 
                     // `stats:forHome` has counted unread messages since the
@@ -135,12 +153,128 @@ public struct HomeView: View {
                         value: store.stats.unreadMessages,
                         change: store.stats.messagesChange,
                         symbol: "bubble.left.and.bubble.right.fill",
-                        tint: Palette.accessory
+                        tint: Palette.statMessages
                     ) { store.send(.delegate(.openMessages)) }
+
+                    // The one tile whose number is not from `stats:forHome`.
+                    // It is counted here from the short agenda the card below
+                    // already subscribes to, rather than added to the server's
+                    // summary — one capped query answers both, and a badge that
+                    // could disagree with the list under it is the exact failure
+                    // the Finance screen's bill counters were moved client-side
+                    // to avoid.
+                    StatTile(
+                        title: L10n.homeStatsEventsTitle,
+                        value: store.state.eventsThisWeek,
+                        symbol: "calendar",
+                        tint: Palette.statEvents
+                    ) { store.send(.delegate(.openCalendar)) }
                 }
             }
             .redacted(reason: store.isLoading ? .placeholder : [])
         }
+    }
+
+    // MARK: - Up next
+
+    /// What the household is about to do, and what it is doing right now.
+    ///
+    /// A count cannot say "the party started an hour ago", which is the one
+    /// thing on this tab that stops being true while you are looking at it —
+    /// hence a live countdown and a badge rather than another number.
+    private var upNextSection: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            // Its own section, with its own heading. It used to hang off the
+            // bottom of the statistics grid, which made a list of dated things
+            // read as a footnote to four counters rather than as the answer to
+            // a different question.
+            SectionHeader(L10n.homeUpNextTitle, symbol: "calendar.badge.clock") {
+                Button { store.send(.delegate(.openCalendar)) } label: {
+                    Text(L10n.commonSeeAll)
+                        .font(.footnote.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(theme.accent)
+            }
+            upNextCard
+        }
+    }
+
+    private var upNextCard: some View {
+        GlassCard(padding: 0) {
+            VStack(spacing: 0) {
+                ForEach(Array(store.state.upNext.enumerated()), id: \.element.id) { index, occurrence in
+                    if index > 0 {
+                        Divider().opacity(0.4).padding(.leading, 52)
+                    }
+                    upNextRow(occurrence).appear(index)
+                }
+            }
+        }
+        .animation(Motion.spring, value: store.state.upNext.map(\.id))
+    }
+
+    private func upNextRow(_ occurrence: EventOccurrence) -> some View {
+        Button { store.send(.delegate(.openEvent(occurrence))) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: occurrence.kind.symbol)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(occurrence.kind.tint)
+                    .frame(width: 32, height: 32)
+                    .background(occurrence.kind.tint.opacity(0.14), in: .circle)
+                    .bounces(when: occurrence.isInProgress)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(occurrence.title)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        if occurrence.isInProgress {
+                            NowBadge()
+                        }
+                    }
+                    Text(whenText(occurrence))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 4)
+
+                if occurrence.isInProgress {
+                    // The countdown has nothing left to count, and the badge
+                    // beside the title has already said it.
+                    EmptyView()
+                } else {
+                    CountdownText(occurrence.start)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(theme.accent)
+                        .contentTransition(.numericText())
+                        .monospacedDigit()
+                }
+            }
+            .padding(.horizontal, Metrics.cardPadding)
+            .padding(.vertical, 11)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+    }
+
+    /// "Today · 19:00 – 23:00", or the day for anything further out.
+    private func whenText(_ occurrence: EventOccurrence) -> String {
+        let day = CalendarDay(occurrence.start)
+        let today = CalendarDay.today
+        let label: String = if day == today {
+            String(localized: L10n.calendarToday)
+        } else if day == today.advanced(by: 1) {
+            String(localized: L10n.calendarTomorrowLabel)
+        } else {
+            occurrence.start.formatted(
+                Date.FormatStyle(date: .abbreviated, time: .omitted).locale(L10n.locale)
+            )
+        }
+        return occurrence.isAllDay ? label : "\(label) · \(occurrence.timeText)"
     }
 
     // MARK: - Movie night
@@ -234,6 +368,31 @@ public struct HomeView: View {
             }
         }
         .animation(Motion.spring, value: store.tasks)
+    }
+}
+
+
+/// "Now" — the household is in the middle of this.
+///
+/// The only endlessly-repeating animation on this tab, and there is never more
+/// than one on screen: a row is either happening or it is not, and the whole
+/// point of the badge is that it is alive.
+private struct NowBadge: View {
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(Palette.danger)
+                .frame(width: 5, height: 5)
+                .pulse()
+            Text(L10n.calendarNowBadge)
+                .font(.system(size: 9, weight: .bold))
+                .textCase(.uppercase)
+        }
+        .foregroundStyle(Palette.danger)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background(Palette.danger.opacity(0.14), in: .capsule)
+        .transition(.scale.combined(with: .opacity))
     }
 }
 

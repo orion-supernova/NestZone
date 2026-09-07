@@ -133,6 +133,50 @@ public enum Palette {
     public static let spendSubscriptions = Color(hex: "22D3EE")
     public static let spendOther = Color(hex: "94A3B8")
 
+    /// One colour per kind of event, allocated once.
+    ///
+    /// Fixed rather than derived for the same reason the spending categories
+    /// are: the colour is the only thing tying a dot on the month grid to the
+    /// block on the week timeline to the row in the agenda, and a household
+    /// learns to read it. Twelve hues, far enough apart to survive being a 5pt
+    /// dot on a crowded Tuesday. Several kinds deliberately share one — a cinema
+    /// trip and a movie night are the same colour because they are the same
+    /// evening seen from two sides, and a household reads the grid faster with
+    /// twelve hues than with nineteen.
+    public static let eventGeneral = Color(hex: "6366F1")
+    public static let eventParty = Color(hex: "F472B6")
+    public static let eventFood = Color(hex: "FB923C")
+    public static let eventScreen = Color(hex: "A855F7")
+    public static let eventPlay = Color(hex: "14B8A6")
+    public static let eventPeople = Color(hex: "0EA5E9")
+    public static let eventChore = Color(hex: "94A3B8")
+    public static let eventStage = Color(hex: "E11D48")
+    public static let eventOutdoor = Color(hex: "65A30D")
+    public static let eventTravel = Color(hex: "06B6D4")
+    public static let eventCelebrate = Color(hex: "EC4899")
+    public static let eventHoliday = Color(hex: "F59E0B")
+    public static let eventAdmin = Color(hex: "60A5FA")
+    public static let eventDeadline = Color(hex: "EF4444")
+
+    /// One colour per tile on the Home tab.
+    ///
+    /// Fixed rather than drawn from the theme, which is what they used to be —
+    /// shopping took `theme.accent` and notes took `theme.support`. That made
+    /// every collision theme-dependent and therefore invisible until somebody
+    /// switched: under the default theme `support` is indigo and the events
+    /// tile was indigo too, so two of the five tiles were the same colour in
+    /// dark mode and nearly the same in light.
+    ///
+    /// Five hues, spread far enough around the wheel to stay apart at 15pt in
+    /// both appearances, and stable across all five themes — the tile's colour
+    /// is how you find it without reading it, so it must not move when the
+    /// accent does.
+    public static let statTasks = Color(hex: "F59E0B")      // amber
+    public static let statShopping = Color(hex: "22C55E")   // green
+    public static let statNotes = Color(hex: "A855F7")      // purple
+    public static let statMessages = Color(hex: "38BDF8")   // sky
+    public static let statEvents = Color(hex: "FB7185")     // rose
+
     /// Semantic colours. These resolve per-appearance on their own, which is why
     /// the app no longer needs a light and a dark value for everything.
     public static let danger = Color.red

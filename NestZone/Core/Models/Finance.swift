@@ -290,6 +290,11 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
     public var spentAt: Timestamp
     /// Set when this expense was logged by paying a recurring bill.
     public var billID: BillID?
+    /// Set when the money was spent *on* something in the calendar — the
+    /// caterer for Saturday's party, the tickets for the gig. A link, not an
+    /// owner: deleting the event clears this and leaves the expense alone,
+    /// because the money still moved.
+    public var eventID: EventID?
     public var createdBy: UserID?
     public var created: Timestamp?
     public var updated: Timestamp?
@@ -302,6 +307,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         case weights
         case spentAt = "spent_at"
         case billID = "bill_id"
+        case eventID = "event_id"
         case createdBy = "created_by"
         case created, updated
     }
@@ -321,6 +327,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         spentAt = try c.decodeIfPresent(Timestamp.self, forKey: .spentAt)
             ?? Timestamp(milliseconds: 0)
         billID = try c.decodeIfPresent(BillID.self, forKey: .billID)
+        eventID = try c.decodeIfPresent(EventID.self, forKey: .eventID)
         createdBy = try c.decodeIfPresent(UserID.self, forKey: .createdBy)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
@@ -339,6 +346,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         note: String? = nil,
         spentAt: Timestamp = Timestamp(Date()),
         billID: BillID? = nil,
+        eventID: EventID? = nil,
         createdBy: UserID? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
@@ -355,6 +363,7 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         self.note = note
         self.spentAt = spentAt
         self.billID = billID
+        self.eventID = eventID
         self.createdBy = createdBy
         self.created = created
         self.updated = updated
@@ -380,6 +389,9 @@ extension Expense {
 
     /// Came from paying a recurring bill rather than being typed by hand.
     public var isFromBill: Bool { billID != nil }
+
+    /// Spent on something in the calendar.
+    public var isForEvent: Bool { eventID != nil }
 }
 
 // MARK: - Settlement
@@ -1019,6 +1031,10 @@ public struct NewExpense: Equatable, Sendable {
     /// Typed amounts, for an exact split. Must add up to `amount`.
     public var exact: [ExpenseSplit]
     public var note: String?
+    /// The event this was spent on, when the composer was opened from one.
+    /// Carried through the composer untouched — the sheet never shows it,
+    /// because "which event" was answered by where the button was.
+    public var eventID: EventID?
 
     public init(
         homeID: HomeID,
@@ -1032,7 +1048,8 @@ public struct NewExpense: Equatable, Sendable {
         participants: [UserID] = [],
         weights: [ExpenseWeight] = [],
         exact: [ExpenseSplit] = [],
-        note: String? = nil
+        note: String? = nil,
+        eventID: EventID? = nil
     ) {
         self.homeID = homeID
         self.title = title
@@ -1046,6 +1063,7 @@ public struct NewExpense: Equatable, Sendable {
         self.weights = weights
         self.exact = exact
         self.note = note
+        self.eventID = eventID
     }
 }
 

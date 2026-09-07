@@ -111,6 +111,40 @@ public struct MainFeature: Sendable {
                 state.hub.path.append(.shopping(ShoppingFeature.State(homeID: state.homeID)))
                 return .none
 
+            // The calendar is a Hub module, so opening it from the Home tab is
+            // both a tab switch and a push — the same shape as the shopping list
+            // above, and the reason both are delegates rather than navigation
+            // the Home tab does itself.
+            case .home(.delegate(.openCalendar)):
+                state.selectedTab = .hub
+                state.hub.path.append(.calendar(CalendarFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.user?.id
+                )))
+                return .none
+
+            case let .home(.delegate(.openEvent(occurrence))):
+                state.selectedTab = .hub
+                // Opened *at* the event, not merely on its day: the grid behind
+                // it shows the right date and the sheet for the thing that was
+                // tapped is already up.
+                state.hub.path.append(.calendar(CalendarFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.user?.id,
+                    showing: occurrence
+                )))
+                return .none
+
+            case let .home(.delegate(.openEventID(eventID, day))):
+                state.selectedTab = .hub
+                state.hub.path.append(.calendar(CalendarFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.user?.id,
+                    day: day,
+                    openingEventID: eventID
+                )))
+                return .none
+
             case .home(.delegate(.openNotes)):
                 state.selectedTab = .notes
                 return .none

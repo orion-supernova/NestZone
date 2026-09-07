@@ -55,6 +55,17 @@ public struct ExpenseComposerFeature: Sendable {
         /// up. A refusal has to be felt, not just read.
         public var shakes = 0
 
+        /// The calendar event this expense is being logged against, when the
+        /// composer was opened from one.
+        ///
+        /// Carried through untouched and never shown: "which event" was already
+        /// answered by which button was pressed, and a picker here would be a
+        /// second way to get it wrong. The sheet is otherwise identical, which
+        /// is the point — money spent on a party is an ordinary expense that
+        /// happens to know what it was for, and a simpler composer for events
+        /// would be a second splitting model to keep in step with the server's.
+        public var eventID: EventID?
+
         public init(
             homeID: HomeID,
             members: IdentifiedArrayOf<User>,
@@ -62,8 +73,11 @@ public struct ExpenseComposerFeature: Sendable {
             currency: String,
             knownCurrencies: [String] = [],
             defaultDate: Date = Date(),
-            editing: Expense? = nil
+            editing: Expense? = nil,
+            eventID: EventID? = nil,
+            suggestedTitle: String? = nil
         ) {
+            self.eventID = eventID
             self.homeID = homeID
             self.members = members
             self.currentUserID = currentUserID
@@ -96,6 +110,13 @@ public struct ExpenseComposerFeature: Sendable {
             } else {
                 participants = Set(members.ids)
                 weights = Dictionary(uniqueKeysWithValues: members.ids.map { ($0, 1.0) })
+                // Opened from an event, the title is nearly always the event's
+                // — "Saturday's party", then the amount. Pre-filled rather than
+                // placeheld so it is saved if nobody edits it, and still
+                // entirely replaceable.
+                if let suggestedTitle {
+                    title = suggestedTitle
+                }
             }
         }
 
@@ -195,7 +216,8 @@ public struct ExpenseComposerFeature: Sendable {
                     return ExpenseWeight(userID: member.id, weight: weight)
                 },
                 exact: preview,
-                note: note
+                note: note,
+                eventID: eventID
             )
         }
     }

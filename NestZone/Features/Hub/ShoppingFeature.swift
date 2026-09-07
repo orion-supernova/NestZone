@@ -18,6 +18,7 @@ public struct ShoppingFeature: Sendable {
         /// Meals the user has folded away. Same reasoning as `collapsed`: a
         /// fifteen-ingredient recipe pushes the rest of the shop off screen.
         public var collapsedMeals: Set<RecipeID> = []
+        public var collapsedEvents: Set<EventID> = []
         /// Swiped away, but not yet sent to the server. The row is already gone
         /// from `items`; if the undo window closes without a tap, this is what
         /// gets deleted for real. One at a time — a second swipe commits the
@@ -47,6 +48,7 @@ public struct ShoppingFeature: Sendable {
         public enum ClearTarget: Hashable, Sendable {
             case category(ShoppingItem.Category)
             case meal(RecipeID)
+            case event(EventID)
             case purchased
         }
 
@@ -66,13 +68,45 @@ public struct ShoppingFeature: Sendable {
             }
         }
 
+        /// Outstanding items that are on the list *for* something in the
+        /// calendar — Saturday's party, next week's picnic.
+        ///
+        /// Above the meals, and above the aisles, because it is the outermost
+        /// reason any of these lines exist: a party's shopping split across four
+        /// recipes and four aisles is exactly as hard to shop as a recipe split
+        /// across four aisles, which is the problem the meal groups were added
+        /// to solve one level down.
+        ///
+        /// Grouped by id but titled from the item, so a party still reads
+        /// correctly after its event has been deleted — the title is
+        /// denormalised onto the row for that reason.
+        public var eventGroups: [(eventID: EventID, title: String, items: [ShoppingItem])] {
+            let sourced = items.filter { !$0.isPurchased && $0.eventID != nil }
+            return Dictionary(grouping: sourced) { $0.eventID! }
+                .map { id, group in
+                    (
+                        eventID: id,
+                        title: group.first?.eventTitle ?? "",
+                        items: group.sorted { Timestamp.newestFirst($0.created, $1.created) }
+                    )
+                }
+                .sorted { lhs, rhs in
+                    Timestamp.newestFirst(lhs.items.first?.created, rhs.items.first?.created)
+                }
+        }
+
         /// Outstanding items that came from a recipe, gathered under it.
         ///
         /// Grouped by id but titled from the item, so a meal still reads
         /// correctly after its recipe has been deleted. Newest meal first —
         /// what you are shopping for now is what you just added.
+        ///
+        /// Anything already gathered under an event is skipped: a row appears
+        /// under its event, or its recipe, or its aisle — never twice.
         public var mealGroups: [(recipeID: RecipeID, title: String, items: [ShoppingItem])] {
-            let sourced = items.filter { !$0.isPurchased && $0.recipeID != nil }
+            let sourced = items.filter {
+                !$0.isPurchased && $0.recipeID != nil && $0.eventID == nil
+            }
             let byRecipe = Dictionary(grouping: sourced) { $0.recipeID! }
             return byRecipe
                 .map { id, group in
@@ -87,10 +121,10 @@ public struct ShoppingFeature: Sendable {
                 }
         }
 
-        /// Everything a meal group does not already cover, so an item appears
-        /// under its recipe or under its aisle — never twice.
+        /// Everything the event and meal groups do not already cover, so an
+        /// item appears in exactly one place.
         private var unsourced: [ShoppingItem] {
-            items.filter { !$0.isPurchased && $0.recipeID == nil }
+            items.filter { !$0.isPurchased && $0.recipeID == nil && $0.eventID == nil }
         }
 
         public var purchased: [ShoppingItem] {
@@ -126,6 +160,18 @@ public struct ShoppingFeature: Sendable {
             collapsedMeals.contains(recipeID)
         }
 
+        public func isCollapsed(event eventID: EventID) -> Bool {
+            collapsedEvents.contains(eventID)
+        }
+
+        public func doneCount(inEvent eventID: EventID) -> Int {
+            items.filter { $0.eventID == eventID && $0.isPurchased }.count
+        }
+
+        public func totalCount(inEvent eventID: EventID) -> Int {
+            items.filter { $0.eventID == eventID }.count
+        }
+
         /// Counts across the whole meal, bought or not, so a folded row still
         /// says how far through it you are.
         public func doneCount(inMeal recipeID: RecipeID) -> Int {
@@ -157,6 +203,7 @@ public struct ShoppingFeature: Sendable {
         case clearPurchasedTapped
         case clearCategoryTapped(ShoppingItem.Category)
         case clearMealTapped(RecipeID)
+        case clearEventTapped(EventID)
         case deleteCommitFailed(ShoppingItem, AppError)
         case clearFinished(State.ClearTarget)
         case clearFailed(State.ClearTarget, [ShoppingItemID], AppError)
@@ -166,6 +213,7 @@ public struct ShoppingFeature: Sendable {
         case viewModeToggled(grouped: Bool)
         case categoryToggled(ShoppingItem.Category)
         case mealToggled(RecipeID)
+        case eventToggled(EventID)
         case writeFailed(AppError)
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
@@ -174,6 +222,7 @@ public struct ShoppingFeature: Sendable {
             case confirmClearPurchased
             case confirmClearCategory(ShoppingItem.Category)
             case confirmClearMeal(RecipeID)
+            case confirmClearEvent(EventID)
         }
     }
 
@@ -328,6 +377,14 @@ public struct ShoppingFeature: Sendable {
                 }
                 return .none
 
+            case let .eventToggled(eventID):
+                if state.collapsedEvents.contains(eventID) {
+                    state.collapsedEvents.remove(eventID)
+                } else {
+                    state.collapsedEvents.insert(eventID)
+                }
+                return .none
+
             case .clearPurchasedTapped:
                 guard !state.purchased.isEmpty else { return .none }
                 state.alert = .confirmClearPurchased()
@@ -344,7 +401,7 @@ public struct ShoppingFeature: Sendable {
                 return .none
 
             case let .clearMealTapped(recipeID):
-                let items = state.items.filter { $0.recipeID == recipeID }
+                let items = state.items.filter { $0.recipeID == recipeID && $0.eventID == nil }
                 guard let name = items.first?.recipeTitle, !items.isEmpty else { return .none }
                 state.alert = .confirmClearGroup(
                     name: name,
@@ -353,15 +410,31 @@ public struct ShoppingFeature: Sendable {
                 )
                 return .none
 
+            case let .clearEventTapped(eventID):
+                let items = state.items.filter { $0.eventID == eventID }
+                guard let name = items.first?.eventTitle, !items.isEmpty else { return .none }
+                state.alert = .confirmClearGroup(
+                    name: name,
+                    count: items.count,
+                    action: .confirmClearEvent(eventID)
+                )
+                return .none
+
             case let .alert(.presented(.confirmClearCategory(category))):
-                // An aisle heading only ever covers items that came from no
-                // recipe; a meal's ingredients belong to the meal.
+                // An aisle heading only ever covers items that belong to no
+                // group above it: a meal's ingredients belong to the meal, and
+                // a party's shopping belongs to the party.
                 return clear(&state, target: .category(category)) {
-                    $0.category == category && $0.recipeID == nil
+                    $0.category == category && $0.recipeID == nil && $0.eventID == nil
                 }
 
             case let .alert(.presented(.confirmClearMeal(recipeID))):
-                return clear(&state, target: .meal(recipeID)) { $0.recipeID == recipeID }
+                return clear(&state, target: .meal(recipeID)) {
+                    $0.recipeID == recipeID && $0.eventID == nil
+                }
+
+            case let .alert(.presented(.confirmClearEvent(eventID))):
+                return clear(&state, target: .event(eventID)) { $0.eventID == eventID }
 
             case .alert(.presented(.confirmClearPurchased)):
                 return clear(&state, target: .purchased, where: \.isPurchased)

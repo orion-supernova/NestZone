@@ -43,6 +43,7 @@ public enum ExpensesTable {}
 public enum SettlementsTable {}
 public enum BillsTable {}
 public enum BudgetsTable {}
+public enum EventsTable {}
 
 public typealias UserID = ConvexID<UsersTable>
 public typealias HomeID = ConvexID<HomesTable>
@@ -60,3 +61,4 @@ public typealias ExpenseID = ConvexID<ExpensesTable>
 public typealias SettlementID = ConvexID<SettlementsTable>
 public typealias BillID = ConvexID<BillsTable>
 public typealias BudgetID = ConvexID<BudgetsTable>
+public typealias EventID = ConvexID<EventsTable>

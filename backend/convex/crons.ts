@@ -1,6 +1,6 @@
 // Scheduled work.
 //
-// One job so far: the bill reminder sweep.
+// Two jobs: the bill reminder sweep and the event reminder sweep.
 //
 // Daily rather than hourly, and at a fixed UTC hour, because a `bills` row has
 // no timezone on it — the household that owns it does, and the server does not
@@ -21,6 +21,23 @@ crons.daily(
   "bill reminders",
   { hourUTC: 8, minuteUTC: 0 },
   internal.finance.sweepReminders,
+);
+
+// Events keep a different clock.
+//
+// A bill is due on a *day*, so a daily sweep is as exact as the data. An event
+// is at 18:30, and "half an hour before" has to land near half an hour before
+// or it is not a reminder — so this runs on a quarter-hour and the offsets the
+// UI offers stop at ten minutes. Anything finer would promise a precision the
+// sweep cannot keep.
+//
+// Idempotent in the same way `finance.sweepReminders` is: each nudge is
+// recorded against `<occurrence_start>:<minutesBefore>` before it goes out, so
+// a rerun sends nothing twice.
+crons.interval(
+  "event reminders",
+  { minutes: 15 },
+  internal.events.sweepReminders,
 );
 
 export default crons;

@@ -103,6 +103,48 @@ export async function cascadeDeleteMovieList(
 }
 
 /**
+ * Detach everything that pointed at an event, without deleting any of it.
+ *
+ * Deliberately not a cascade. The expenses linked to Saturday's party are money
+ * that actually moved: deleting them because somebody tidied their calendar
+ * would silently rewrite the household's balances, which is the one thing the
+ * ledger must never do. The shopping items are the same argument in a smaller
+ * key — the ice is still needed, it just is not "for" anything any more.
+ *
+ * The denormalised `event_title` goes with the link, or the shopping screen
+ * would head a group after an event that no longer exists.
+ */
+export async function unlinkEvent(
+  ctx: MutationCtx,
+  eventId: Id<"events">,
+): Promise<{ expenses: number; items: number }> {
+  const expenses = await ctx.db
+    .query("expenses")
+    .withIndex("by_event", (q) => q.eq("event_id", eventId))
+    .collect();
+  for (const e of expenses) await ctx.db.patch(e._id, { event_id: undefined });
+
+  const items = await ctx.db
+    .query("shopping_items")
+    .withIndex("by_event", (q) => q.eq("event_id", eventId))
+    .collect();
+  for (const i of items) {
+    await ctx.db.patch(i._id, { event_id: undefined, event_title: undefined });
+  }
+
+  // The household is still eating that night; only the party is off. No index
+  // here on purpose — meal plans are one row per home per day, so the set is
+  // small and an index would cost more to maintain than it saves.
+  const meals = await ctx.db
+    .query("meal_plans")
+    .filter((q) => q.eq(q.field("event_id"), eventId))
+    .collect();
+  for (const m of meals) await ctx.db.patch(m._id, { event_id: undefined });
+
+  return { expenses: expenses.length, items: items.length };
+}
+
+/**
  * Delete a home and everything scoped to it, and scrub it from every user's
  * `home_id` mirror.
  *
@@ -118,7 +160,7 @@ export async function cascadeDeleteHome(
 
   const simple = [
     "tasks", "shopping_items", "notes", "recipes", "movies", "meal_plans",
-    "expenses", "settlements", "bills", "budgets",
+    "expenses", "settlements", "bills", "budgets", "events",
   ] as const;
   for (const table of simple) {
     const rows = await ctx.db

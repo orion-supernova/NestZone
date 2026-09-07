@@ -102,17 +102,108 @@ struct DinnerSheet: View {
             .padding(.bottom, 8)
             .animation(Motion.spring, value: store.ballot.count)
         } else if store.kind != nil {
-            PrimaryButton(
-                L10n.dinnerSetButton,
-                symbol: "checkmark",
-                isLoading: store.isSaving
-            ) { store.send(.saveTapped) }
-                .disabled(!store.canSave)
-                .opacity(store.canSave ? 1 : 0.5)
-                .padding(.horizontal, Metrics.screenPadding)
-                .padding(.bottom, 8)
-                .animation(Motion.spring, value: store.canSave)
+            VStack(spacing: 10) {
+                // Only for cooking, and only once there is something to cook.
+                //
+                // Most dinners are a decision, not an occasion — a calendar that
+                // fills up with "Tuesday: pasta" is one nobody reads. But some
+                // are a party, and those need a menu, a shopping list built from
+                // it and a budget. Rather than growing all of that onto a meal
+                // plan, this turns the meal into a calendar event and leaves the
+                // plan pointing at it.
+                if store.kind == .cook, store.canSave {
+                    occasionToggle
+                    if store.makeItAnOccasion {
+                        occasionTime
+                            .transition(.opacity.combined(with: .offset(y: -6)))
+                    }
+                }
+                PrimaryButton(
+                    L10n.dinnerSetButton,
+                    symbol: "checkmark",
+                    isLoading: store.isSaving
+                ) { store.send(.saveTapped) }
+                    .disabled(!store.canSave)
+                    .opacity(store.canSave ? 1 : 0.5)
+            }
+            .padding(.horizontal, Metrics.screenPadding)
+            .padding(.bottom, 8)
+            .animation(Motion.spring, value: store.canSave)
+            .animation(Motion.spring, value: store.makeItAnOccasion)
         }
+    }
+
+    /// "Make it an occasion" — the one control that turns a meal into an event.
+    private var occasionToggle: some View {
+        Button { store.send(.occasionToggled) } label: {
+            HStack(spacing: 10) {
+                Image(systemName: store.makeItAnOccasion
+                    ? "party.popper.fill"
+                    : "calendar.badge.plus")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(store.makeItAnOccasion ? Palette.eventParty : .secondary)
+                    .contentTransition(.symbolEffect(.replace))
+                    .bounces(when: store.makeItAnOccasion)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(L10n.dinnerMakeItAnOccasion)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.primary)
+                    Text(L10n.dinnerMakeItAnOccasionHint)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: store.makeItAnOccasion
+                    ? "checkmark.circle.fill"
+                    : "circle")
+                    .font(.title3)
+                    .foregroundStyle(store.makeItAnOccasion ? Palette.eventParty : Palette.accessory)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+        .glassCard(
+            cornerRadius: Metrics.tightRadius,
+            tinted: store.makeItAnOccasion ? Palette.eventParty.opacity(0.16) : nil
+        )
+        .sensoryFeedback(.selection, trigger: store.makeItAnOccasion)
+        .accessibilityAddTraits(store.makeItAnOccasion ? [.isButton, .isSelected] : .isButton)
+    }
+
+    /// When the occasion starts. Only the clock face — the day is the day being
+    /// planned, and a date picker beside it would be a second way to say the
+    /// same thing, and a way to disagree with it.
+    private var occasionTime: some View {
+        HStack {
+            Label {
+                Text(L10n.dinnerOccasionStarts)
+            } icon: {
+                Image(systemName: "clock.fill")
+                    .foregroundStyle(Palette.eventParty)
+            }
+            .font(.subheadline)
+
+            Spacer(minLength: 8)
+
+            DatePicker(
+                selection: $store.occasionStart,
+                displayedComponents: [.hourAndMinute]
+            ) {
+                Text(L10n.dinnerOccasionStarts)
+            }
+            .labelsHidden()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .glassCard(cornerRadius: Metrics.tightRadius)
     }
 
     // MARK: - Deciding, or asking
@@ -573,6 +664,12 @@ private struct RecipeChoice: View {
 struct DinnerPlanCard: View {
     let plan: MealPlan
     let action: () -> Void
+    /// Tapping the occasion badge, when the meal belongs to one. `nil` leaves
+    /// the badge as a label.
+    var onOpenEvent: (() -> Void)? = nil
+    /// Turning a meal that is already decided into an occasion. `nil` hides the
+    /// offer — it belongs on the Home tab's tonight card and nowhere else.
+    var onMakeOccasion: (() -> Void)? = nil
 
     @Environment(\.theme) private var theme
 
@@ -592,6 +689,17 @@ struct DinnerPlanCard: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
+                    // The meal belongs to something in the calendar. Said here
+                    // rather than duplicated: the event owns the menu, the
+                    // shopping and the budget, and this is the way through to
+                    // all three.
+                    if let event = plan.event {
+                        occasionBadge(event)
+                    } else if let onMakeOccasion, plan.kind == .cook {
+                        // The offer only makes sense for cooking, and only while
+                        // the meal is not already part of something.
+                        makeOccasionButton(onMakeOccasion)
+                    }
                 }
 
                 Spacer(minLength: 0)
@@ -609,6 +717,60 @@ struct DinnerPlanCard: View {
         .buttonStyle(.pressable)
         .glassCard(interactive: true)
         .accessibilityElement(children: .combine)
+    }
+
+    /// "Make an evening of it" — the way in for a dinner that is already
+    /// decided.
+    ///
+    /// The dinner sheet offers this while a meal is being chosen, which covers
+    /// the case where somebody knows in advance. It does not cover the normal
+    /// one: the household settles on lasagne, and only then decides to invite
+    /// people. Without this there was no way back to that decision short of
+    /// re-deciding dinner.
+    private func makeOccasionButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: "party.popper")
+                    .font(.system(size: 9, weight: .bold))
+                Text(L10n.dinnerMakeAnEveningOfIt)
+                    .font(.caption2.weight(.medium))
+            }
+            .foregroundStyle(Palette.eventParty)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Palette.eventParty.opacity(0.14), in: .capsule)
+            .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func occasionBadge(_ event: MealPlan.LinkedEvent) -> some View {
+        let label = HStack(spacing: 4) {
+            Image(systemName: event.kind.symbol)
+                .font(.system(size: 9, weight: .bold))
+            Text(L10n.homeTonightPartOf(event.title))
+                .font(.caption2.weight(.medium))
+                .lineLimit(1)
+            if onOpenEvent != nil {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 7, weight: .bold))
+            }
+        }
+        .foregroundStyle(event.kind.tint)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(event.kind.tint.opacity(0.14), in: .capsule)
+
+        if let onOpenEvent {
+            // A button inside a button: the card opens the recipe, the badge
+            // opens the occasion. `.plain` and a tight content shape so the tap
+            // targets do not overlap.
+            Button(action: onOpenEvent) { label.contentShape(.capsule) }
+                .buttonStyle(.plain)
+        } else {
+            label
+        }
     }
 
     @ViewBuilder

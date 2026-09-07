@@ -202,6 +202,11 @@ private func expenseArgs(
         "participants": new.participants.map { $0 as ConvexEncodable? },
     ]
     if let homeID { args["homeId"] = homeID }
+    // Only on the way in. An edit that did not come from an event must not
+    // silently unlink one that did — `finance:updateExpense` reads an absent
+    // `eventId` as "leave it alone" and an explicit null as "unlink", and this
+    // composer has no control that means the latter.
+    if let eventID = new.eventID { args["eventId"] = eventID }
 
     switch new.mode {
     case .equal:

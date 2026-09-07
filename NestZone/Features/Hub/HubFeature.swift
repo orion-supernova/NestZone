@@ -21,6 +21,10 @@ public struct HubFeature: Sendable {
         /// a tile is worth reading only when its number is asking for
         /// something.
         public var billsDueCount = 0
+        /// Events in the next seven days. Same rule as the bills: a calendar
+        /// tile showing "312 events" says nothing, and "3 this week" is the
+        /// only number anybody acts on.
+        public var eventsThisWeekCount = 0
 
         public init(homeID: HomeID, currentUserID: UserID? = nil) {
             self.homeID = homeID
@@ -34,17 +38,24 @@ public struct HubFeature: Sendable {
         case recipes(RecipesFeature)
         case movies(MoviesFeature)
         case finance(FinanceFeature)
+        case calendar(CalendarFeature)
     }
 
     public enum Action {
         case task
-        case countsUpdated(shopping: Int?, recipes: Int?, movies: Int?, billsDue: Int?)
+        case countsUpdated(
+            shopping: Int? = nil,
+            recipes: Int? = nil,
+            movies: Int? = nil,
+            billsDue: Int? = nil,
+            events: Int? = nil
+        )
         case moduleTapped(HubModule)
         case showShoppingList
         case path(StackActionOf<Path>)
     }
 
-    private enum CancelID { case shopping, recipes, movies, bills, handoff }
+    private enum CancelID { case shopping, recipes, movies, bills, events, handoff }
 
     /// Roughly one navigation transition. There is no completion callback for a
     /// `StackState` pop, so the push that follows one has to wait it out.
@@ -54,6 +65,7 @@ public struct HubFeature: Sendable {
     @Dependency(\.recipes) var recipesClient
     @Dependency(\.movies) var moviesClient
     @Dependency(\.finance) var financeClient
+    @Dependency(\.events) var eventsClient
     @Dependency(\.continuousClock) var clock
 
     public init() {}
@@ -67,8 +79,7 @@ public struct HubFeature: Sendable {
                     .run { send in
                         for try await items in shoppingClient.byHome(homeID) {
                             await send(.countsUpdated(
-                                shopping: items.filter { !$0.isPurchased }.count,
-                                recipes: nil, movies: nil, billsDue: nil
+                                shopping: items.filter { !$0.isPurchased }.count
                             ))
                         }
                     } catch: { _, _ in }
@@ -76,18 +87,14 @@ public struct HubFeature: Sendable {
 
                     .run { send in
                         for try await recipes in recipesClient.byHome(homeID) {
-                            await send(.countsUpdated(
-                                shopping: nil, recipes: recipes.count, movies: nil, billsDue: nil
-                            ))
+                            await send(.countsUpdated(recipes: recipes.count))
                         }
                     } catch: { _, _ in }
                         .cancellable(id: CancelID.recipes, cancelInFlight: true),
 
                     .run { send in
                         for try await movies in moviesClient.allMovies(homeID) {
-                            await send(.countsUpdated(
-                                shopping: nil, recipes: nil, movies: movies.count, billsDue: nil
-                            ))
+                            await send(.countsUpdated(movies: movies.count))
                         }
                     } catch: { _, _ in }
                         .cancellable(id: CancelID.movies, cancelInFlight: true),
@@ -95,19 +102,33 @@ public struct HubFeature: Sendable {
                     .run { send in
                         for try await bills in financeClient.bills(homeID) {
                             await send(.countsUpdated(
-                                shopping: nil, recipes: nil, movies: nil,
                                 billsDue: bills.filter { $0.urgency() <= .dueSoon }.count
                             ))
                         }
                     } catch: { _, _ in }
-                        .cancellable(id: CancelID.bills, cancelInFlight: true)
+                        .cancellable(id: CancelID.bills, cancelInFlight: true),
+
+                    // `upcoming` rather than a month range: the tile only ever
+                    // asks "is anything coming", and the server caps the answer
+                    // at a short agenda — so a household with three years of
+                    // events costs the Hub the same as one created yesterday.
+                    .run { send in
+                        for try await occurrences in eventsClient.upcoming(homeID, 20) {
+                            let horizon = Date().addingTimeInterval(7 * 24 * 3600)
+                            await send(.countsUpdated(
+                                events: occurrences.count { $0.start <= horizon }
+                            ))
+                        }
+                    } catch: { _, _ in }
+                        .cancellable(id: CancelID.events, cancelInFlight: true)
                 )
 
-            case let .countsUpdated(shopping, recipes, movies, billsDue):
+            case let .countsUpdated(shopping, recipes, movies, billsDue, events):
                 if let shopping { state.shoppingCount = shopping }
                 if let recipes { state.recipeCount = recipes }
                 if let movies { state.movieCount = movies }
                 if let billsDue { state.billsDueCount = billsDue }
+                if let events { state.eventsThisWeekCount = events }
                 return .none
 
             case let .moduleTapped(module):
@@ -123,7 +144,12 @@ public struct HubFeature: Sendable {
                         homeID: state.homeID,
                         currentUserID: state.currentUserID
                     )))
-                case .maintenance, .calendar:
+                case .calendar:
+                    state.path.append(.calendar(CalendarFeature.State(
+                        homeID: state.homeID,
+                        currentUserID: state.currentUserID
+                    )))
+                case .maintenance:
                     // Not built yet; the tile is disabled, so this is unreachable.
                     break
                 }
@@ -186,7 +212,11 @@ public struct HubFeature: Sendable {
 /// `notes` used to be listed here as "coming soon" while also being its own tab,
 /// so it is not a module — it is one tap away on the tab bar.
 public enum HubModule: String, CaseIterable, Identifiable, Sendable {
-    case shopping, recipes, movies, maintenance, finance, calendar
+    // Declaration order is grid order, and the one module that is not built
+    // yet goes last. A disabled tile sitting fourth of six put a dead card in
+    // the middle of the grid, above two working ones — which reads as the
+    // household's own list being broken rather than as something still coming.
+    case shopping, recipes, movies, finance, calendar, maintenance
 
     public var id: String { rawValue }
 
@@ -219,7 +249,7 @@ public enum HubModule: String, CaseIterable, Identifiable, Sendable {
         case .movies: "film.fill"
         case .maintenance: "wrench.adjustable.fill"
         case .finance: "dollarsign.circle.fill"
-        case .calendar: "calendar"
+        case .calendar: "calendar.badge.clock"
         }
     }
 
@@ -236,8 +266,8 @@ public enum HubModule: String, CaseIterable, Identifiable, Sendable {
 
     public var isAvailable: Bool {
         switch self {
-        case .shopping, .recipes, .movies, .finance: true
-        case .maintenance, .calendar: false
+        case .shopping, .recipes, .movies, .finance, .calendar: true
+        case .maintenance: false
         }
     }
 }

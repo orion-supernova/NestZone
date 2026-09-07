@@ -15,6 +15,12 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
     /// correctly after the recipe itself is gone.
     public var recipeID: RecipeID?
     public var recipeTitle: String?
+    /// Set when the item is on the list *for* something in the calendar — the
+    /// ice for Saturday. Same denormalised title as the recipe link above, and
+    /// for the same reason: a group heading must survive the event being
+    /// deleted, and must not cost the list a second subscription.
+    public var eventID: EventID?
+    public var eventTitle: String?
     public var created: Timestamp?
     public var updated: Timestamp?
 
@@ -34,6 +40,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         case homeID = "home_id"
         case recipeID = "recipe_id"
         case recipeTitle = "recipe_title"
+        case eventID = "event_id"
+        case eventTitle = "event_title"
         case created, updated
     }
 
@@ -50,6 +58,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         homeID = try c.decodeIfPresent(HomeID.self, forKey: .homeID)
         recipeID = try c.decodeIfPresent(RecipeID.self, forKey: .recipeID)
         recipeTitle = try c.decodeIfPresent(String.self, forKey: .recipeTitle)
+        eventID = try c.decodeIfPresent(EventID.self, forKey: .eventID)
+        eventTitle = try c.decodeIfPresent(String.self, forKey: .eventTitle)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
     }
@@ -66,6 +76,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         homeID: HomeID? = nil,
         recipeID: RecipeID? = nil,
         recipeTitle: String? = nil,
+        eventID: EventID? = nil,
+        eventTitle: String? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
     ) {
@@ -80,6 +92,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         self.homeID = homeID
         self.recipeID = recipeID
         self.recipeTitle = recipeTitle
+        self.eventID = eventID
+        self.eventTitle = eventTitle
         self.created = created
         self.updated = updated
     }
