@@ -34,7 +34,7 @@ public struct MainFeature: Sendable {
             // `self`, which is not fully initialised yet.
             homeTab.memberCount = max(home?.members.count ?? 1, 1)
             self.homeTab = homeTab
-            self.hub = HubFeature.State(homeID: homeID)
+            self.hub = HubFeature.State(homeID: homeID, currentUserID: user?.id)
             self.notes = NotesFeature.State(homeID: homeID, currentUserID: user?.id)
             self.messages = MessagesFeature.State(homeID: homeID, currentUserID: user?.id)
             self.settings = SettingsFeature.State(homeID: homeID, home: home, user: user)
@@ -158,6 +158,7 @@ extension MainFeature.State {
         homeTab.user = user
         homeTab.memberCount = memberCount
         notes.currentUserID = user?.id
+        hub.currentUserID = user?.id
         // Not a bare assignment: a chat already pushed onto the Messages stack
         // holds its own copy of the session, and needs the new one too.
         messages.apply(currentUserID: user?.id, homeName: home?.name)

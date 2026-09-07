@@ -29,3 +29,23 @@ extension KeyedDecodingContainer {
         return T(rawValue: raw)
     }
 }
+
+extension KeyedDecodingContainer {
+    /// Decodes a number that must land as an `Int` — an amount in minor units,
+    /// a count, a year.
+    ///
+    /// Convex's `v.number()` is float64. Integer-valued numbers have always
+    /// come back over this wire without a decimal point, which is why the rest
+    /// of the app decodes counts straight into `Int` — but money is the one
+    /// field where being wrong is not a cosmetic problem, and an expense list
+    /// is decoded as a single array, so one `1234.0` would blank the whole
+    /// ledger rather than one row. Trying `Int` and falling back to a rounded
+    /// `Double` accepts both spellings of the same value.
+    func decodeNumber(forKey key: Key, default fallback: Int = 0) -> Int {
+        if let exact = try? decodeIfPresent(Int.self, forKey: key) { return exact }
+        if let loose = try? decodeIfPresent(Double.self, forKey: key), loose.isFinite {
+            return Int(loose.rounded())
+        }
+        return fallback
+    }
+}

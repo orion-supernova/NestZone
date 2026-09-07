@@ -8,14 +8,24 @@ public struct HubFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
         public var homeID: HomeID
+        /// Who is looking. The Finance module needs it — a balance is only
+        /// meaningful as somebody's.
+        public var currentUserID: UserID?
         public var path = StackState<Path.State>()
         /// Live counts for the module tiles, so each card shows something real
         /// rather than a static subtitle.
         public var shoppingCount = 0
         public var recipeCount = 0
         public var movieCount = 0
+        /// Bills already due or due within the week. Not "how many bills" —
+        /// a tile is worth reading only when its number is asking for
+        /// something.
+        public var billsDueCount = 0
 
-        public init(homeID: HomeID) { self.homeID = homeID }
+        public init(homeID: HomeID, currentUserID: UserID? = nil) {
+            self.homeID = homeID
+            self.currentUserID = currentUserID
+        }
     }
 
     @Reducer
@@ -23,17 +33,18 @@ public struct HubFeature: Sendable {
         case shopping(ShoppingFeature)
         case recipes(RecipesFeature)
         case movies(MoviesFeature)
+        case finance(FinanceFeature)
     }
 
     public enum Action {
         case task
-        case countsUpdated(shopping: Int?, recipes: Int?, movies: Int?)
+        case countsUpdated(shopping: Int?, recipes: Int?, movies: Int?, billsDue: Int?)
         case moduleTapped(HubModule)
         case showShoppingList
         case path(StackActionOf<Path>)
     }
 
-    private enum CancelID { case shopping, recipes, movies, handoff }
+    private enum CancelID { case shopping, recipes, movies, bills, handoff }
 
     /// Roughly one navigation transition. There is no completion callback for a
     /// `StackState` pop, so the push that follows one has to wait it out.
@@ -42,6 +53,7 @@ public struct HubFeature: Sendable {
     @Dependency(\.shopping) var shoppingClient
     @Dependency(\.recipes) var recipesClient
     @Dependency(\.movies) var moviesClient
+    @Dependency(\.finance) var financeClient
     @Dependency(\.continuousClock) var clock
 
     public init() {}
@@ -56,7 +68,7 @@ public struct HubFeature: Sendable {
                         for try await items in shoppingClient.byHome(homeID) {
                             await send(.countsUpdated(
                                 shopping: items.filter { !$0.isPurchased }.count,
-                                recipes: nil, movies: nil
+                                recipes: nil, movies: nil, billsDue: nil
                             ))
                         }
                     } catch: { _, _ in }
@@ -65,7 +77,7 @@ public struct HubFeature: Sendable {
                     .run { send in
                         for try await recipes in recipesClient.byHome(homeID) {
                             await send(.countsUpdated(
-                                shopping: nil, recipes: recipes.count, movies: nil
+                                shopping: nil, recipes: recipes.count, movies: nil, billsDue: nil
                             ))
                         }
                     } catch: { _, _ in }
@@ -74,17 +86,28 @@ public struct HubFeature: Sendable {
                     .run { send in
                         for try await movies in moviesClient.allMovies(homeID) {
                             await send(.countsUpdated(
-                                shopping: nil, recipes: nil, movies: movies.count
+                                shopping: nil, recipes: nil, movies: movies.count, billsDue: nil
                             ))
                         }
                     } catch: { _, _ in }
-                        .cancellable(id: CancelID.movies, cancelInFlight: true)
+                        .cancellable(id: CancelID.movies, cancelInFlight: true),
+
+                    .run { send in
+                        for try await bills in financeClient.bills(homeID) {
+                            await send(.countsUpdated(
+                                shopping: nil, recipes: nil, movies: nil,
+                                billsDue: bills.filter { $0.urgency() <= .dueSoon }.count
+                            ))
+                        }
+                    } catch: { _, _ in }
+                        .cancellable(id: CancelID.bills, cancelInFlight: true)
                 )
 
-            case let .countsUpdated(shopping, recipes, movies):
+            case let .countsUpdated(shopping, recipes, movies, billsDue):
                 if let shopping { state.shoppingCount = shopping }
                 if let recipes { state.recipeCount = recipes }
                 if let movies { state.movieCount = movies }
+                if let billsDue { state.billsDueCount = billsDue }
                 return .none
 
             case let .moduleTapped(module):
@@ -95,7 +118,12 @@ public struct HubFeature: Sendable {
                     state.path.append(.recipes(RecipesFeature.State(homeID: state.homeID)))
                 case .movies:
                     state.path.append(.movies(MoviesFeature.State(homeID: state.homeID)))
-                case .maintenance, .finance, .calendar:
+                case .finance:
+                    state.path.append(.finance(FinanceFeature.State(
+                        homeID: state.homeID,
+                        currentUserID: state.currentUserID
+                    )))
+                case .maintenance, .calendar:
                     // Not built yet; the tile is disabled, so this is unreachable.
                     break
                 }
@@ -208,8 +236,8 @@ public enum HubModule: String, CaseIterable, Identifiable, Sendable {
 
     public var isAvailable: Bool {
         switch self {
-        case .shopping, .recipes, .movies: true
-        case .maintenance, .finance, .calendar: false
+        case .shopping, .recipes, .movies, .finance: true
+        case .maintenance, .calendar: false
         }
     }
 }

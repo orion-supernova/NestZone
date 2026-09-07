@@ -113,6 +113,26 @@ public enum Palette {
             : UIColor(white: 0, alpha: 0.55)
     })
 
+    /// One colour per spending category, allocated once.
+    ///
+    /// A category's colour is the only thing tying its donut segment to its
+    /// budget ring to its row in the ledger, so these are fixed rather than
+    /// derived: a hue hashed from the name — the way `MemberTint` does it —
+    /// would change the moment a category was renamed, and the chart a
+    /// household had learned to read would rearrange itself under them. Ten
+    /// hues, spaced far enough apart to stay apart both on a ring at 26pt and
+    /// in an 8pt legend dot.
+    public static let spendGroceries = Color(hex: "34D399")
+    public static let spendUtilities = Color(hex: "38BDF8")
+    public static let spendRent = Color(hex: "6366F1")
+    public static let spendHousehold = Color(hex: "A78BFA")
+    public static let spendDining = Color(hex: "FB7185")
+    public static let spendTransport = Color(hex: "F59E0B")
+    public static let spendHealth = Color(hex: "F87171")
+    public static let spendEntertainment = Color(hex: "E879F9")
+    public static let spendSubscriptions = Color(hex: "22D3EE")
+    public static let spendOther = Color(hex: "94A3B8")
+
     /// Semantic colours. These resolve per-appearance on their own, which is why
     /// the app no longer needs a light and a dark value for everything.
     public static let danger = Color.red

@@ -29,6 +29,22 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
+// The categories a household's money goes into. One list, shared by expenses,
+// bills and budgets — a budget that could name a category no expense can carry
+// would silently never fill.
+const financeCategory = v.union(
+  v.literal("groceries"),
+  v.literal("utilities"),
+  v.literal("rent"),
+  v.literal("household"),
+  v.literal("dining"),
+  v.literal("transport"),
+  v.literal("health"),
+  v.literal("entertainment"),
+  v.literal("subscriptions"),
+  v.literal("other"),
+);
+
 export default defineSchema({
   ...authTables,
 
@@ -316,4 +332,132 @@ export default defineSchema({
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
     .index("by_home", ["home_id"]),
+  // --- Bills & Finance -------------------------------------------------------
+  //
+  // Money is stored in **minor units** (cents, kuruş) as integers, never as a
+  // decimal amount. A three-way split of 10.00 is 334 + 333 + 333, which is
+  // exact; the same split in floating-point euros is not, and a household
+  // ledger that loses a cent per expense stops adding up after a month.
+  // `v.number()` is float64, so these are integer-valued doubles.
+  //
+  // Currency travels on each document rather than living on the home: a
+  // household that pays rent in one currency and a holiday in another still
+  // gets both formatted correctly, and nothing has to be converted behind
+  // anyone's back.
+
+  expenses: defineTable({
+    home_id: v.id("homes"),
+    title: v.optional(v.string()),
+    /** Total, in minor units. */
+    amount: v.number(),
+    /** ISO 4217, e.g. "EUR". */
+    currency: v.string(),
+    category: v.optional(financeCategory),
+    /** Who actually put the money down. */
+    paid_by: v.id("users"),
+    /**
+     * The resolved shares. Always sums to `amount` exactly — the remainder of an
+     * uneven division is handed out a minor unit at a time — so a balance never
+     * drifts from the sum of the expenses that produced it.
+     */
+    splits: v.array(v.object({ user_id: v.id("users"), amount: v.number() })),
+    split_mode: v.union(v.literal("equal"), v.literal("shares"), v.literal("exact")),
+    /**
+     * What the split was *authored* as, so reopening the editor shows the two
+     * shares the person typed rather than the amounts those happened to resolve
+     * to. Absent for an equal split, where the participants are the whole story.
+     */
+    weights: v.optional(
+      v.array(v.object({ user_id: v.id("users"), weight: v.number() })),
+    ),
+    note: v.optional(v.string()),
+    /** When the money was spent, which is not always when it was entered. */
+    spent_at: v.number(),
+    /** Set when this expense was logged by paying a recurring bill. */
+    bill_id: v.optional(v.id("bills")),
+    created_by: v.id("users"),
+    created: v.optional(v.number()),
+    updated: v.optional(v.number()),
+  })
+    .index("by_home", ["home_id"])
+    .index("by_home_spent", ["home_id", "spent_at"]),
+
+  // A payment from one member to another, squaring up what the expenses say
+  // they owe. Kept as its own table rather than as a negative expense: it moves
+  // money without anything being *spent*, so it must never reach a category
+  // total, a budget or the month's spend.
+  settlements: defineTable({
+    home_id: v.id("homes"),
+    from_user: v.id("users"),
+    to_user: v.id("users"),
+    amount: v.number(),
+    currency: v.string(),
+    note: v.optional(v.string()),
+    settled_at: v.number(),
+    created_by: v.id("users"),
+    created: v.optional(v.number()),
+    updated: v.optional(v.number()),
+  }).index("by_home", ["home_id"]),
+
+  // The bills that come round again — rent, power, the streaming service nobody
+  // admits to. A bill is a *schedule*, not a spend: paying one writes an
+  // expense and rolls `due_date` forward, so the ledger records what happened
+  // and the timeline records what is next.
+  bills: defineTable({
+    home_id: v.id("homes"),
+    title: v.optional(v.string()),
+    amount: v.number(),
+    currency: v.string(),
+    category: v.optional(financeCategory),
+    cycle: v.union(
+      v.literal("once"),
+      v.literal("weekly"),
+      v.literal("biweekly"),
+      v.literal("monthly"),
+      v.literal("quarterly"),
+      v.literal("yearly"),
+    ),
+    /** Next payment due, epoch-ms. */
+    due_date: v.number(),
+    /** Whose job it is to actually pay it. Nobody's, by default. */
+    responsible: v.optional(v.id("users")),
+    /** Whether paying it splits equally across the household. */
+    auto_split: v.optional(v.boolean()),
+    /** Retired rather than deleted, so the expenses it produced keep their source. */
+    is_archived: v.optional(v.boolean()),
+    /**
+     * Whole days before `due_date` to nudge the household, e.g. `[3, 1, 0]`.
+     * At most three: a bill that pings four times is a bill people mute.
+     */
+    reminders: v.optional(v.array(v.number())),
+    /**
+     * Which nudges have already gone out, as `"<due_date>:<daysBefore>"` (plus
+     * `"<due_date>:overdue"` for the one late nudge).
+     *
+     * Keyed by the due date on purpose: the sweep runs daily and would
+     * otherwise send the same reminder every morning, and paying the bill moves
+     * `due_date`, which retires every key belonging to the cycle just closed.
+     */
+    reminded: v.optional(v.array(v.string())),
+    last_paid_at: v.optional(v.number()),
+    created_by: v.id("users"),
+    created: v.optional(v.number()),
+    updated: v.optional(v.number()),
+  }).index("by_home", ["home_id"]),
+
+  // A monthly ceiling for one category. One row per home per category — a
+  // budget is a standing intention, not a per-month document, so changing it
+  // does not rewrite history.
+  budgets: defineTable({
+    home_id: v.id("homes"),
+    category: financeCategory,
+    /** Monthly limit, in minor units. */
+    limit: v.number(),
+    currency: v.string(),
+    created_by: v.id("users"),
+    created: v.optional(v.number()),
+    updated: v.optional(v.number()),
+  })
+    .index("by_home", ["home_id"])
+    .index("by_home_category", ["home_id", "category"]),
 });

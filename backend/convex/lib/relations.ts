@@ -118,6 +118,7 @@ export async function cascadeDeleteHome(
 
   const simple = [
     "tasks", "shopping_items", "notes", "recipes", "movies", "meal_plans",
+    "expenses", "settlements", "bills", "budgets",
   ] as const;
   for (const table of simple) {
     const rows = await ctx.db

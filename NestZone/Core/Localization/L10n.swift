@@ -3648,4 +3648,716 @@ public enum L10n {
     public static var notificationsPromptNotNow: LocalizedStringResource {
         r("notifications_prompt_not_now", "Not now")
     }
+
+    // MARK: - Bills & Finance
+    //
+    // The household ledger. Amounts themselves are never strings here — they
+    // are formatted by `Money`, which knows the currency each figure was
+    // written in — so every parameter below that looks like money arrives
+    // already formatted.
+
+    /// Overview
+    public static var financeSectionOverview: LocalizedStringResource {
+        r("finance_section_overview", "Overview")
+    }
+
+    /// Expenses
+    public static var financeSectionLedger: LocalizedStringResource {
+        r("finance_section_ledger", "Expenses")
+    }
+
+    /// Bills
+    public static var financeSectionBills: LocalizedStringResource {
+        r("finance_section_bills", "Bills")
+    }
+
+    /// Budgets
+    public static var financeSectionBudgets: LocalizedStringResource {
+        r("finance_section_budgets", "Budgets")
+    }
+
+    /// You
+    public static var financeYou: LocalizedStringResource {
+        r("finance_you", "You")
+    }
+
+    /// Someone
+    public static var financeSomeone: LocalizedStringResource {
+        r("finance_someone", "Someone")
+    }
+
+    /// You’re owed
+    public static var financeYouAreOwed: LocalizedStringResource {
+        r("finance_you_are_owed", "You’re owed")
+    }
+
+    /// You owe
+    public static var financeYouOwe: LocalizedStringResource {
+        r("finance_you_owe", "You owe")
+    }
+
+    /// All square
+    public static var financeAllSquareTitle: LocalizedStringResource {
+        r("finance_all_square_title", "All square")
+    }
+
+    /// Nobody owes anybody a thing.
+    public static var financeAllSquareMessage: LocalizedStringResource {
+        r("finance_all_square_message", "Nobody owes anybody a thing.")
+    }
+
+    /// You owe %@
+    public static func financeYouOwePerson(_ a0: String) -> LocalizedStringResource {
+        r("finance_you_owe_person", "You owe \(a0)")
+    }
+
+    /// %@ owes you
+    public static func financePersonOwesYou(_ a0: String) -> LocalizedStringResource {
+        r("finance_person_owes_you", "\(a0) owes you")
+    }
+
+    /// Settle up
+    public static var financeSettleUp: LocalizedStringResource {
+        r("finance_settle_up", "Settle up")
+    }
+
+    /// Spent this month
+    public static var financeSpentThisMonth: LocalizedStringResource {
+        r("finance_spent_this_month", "Spent this month")
+    }
+
+    /// Six months
+    public static var financeTrendTitle: LocalizedStringResource {
+        r("finance_trend_title", "Six months")
+    }
+
+    /// Up on last month
+    public static var financeTrendUp: LocalizedStringResource {
+        r("finance_trend_up", "Up on last month")
+    }
+
+    /// Down on last month
+    public static var financeTrendDown: LocalizedStringResource {
+        r("finance_trend_down", "Down on last month")
+    }
+
+    /// Where it went
+    public static var financeCategoriesTitle: LocalizedStringResource {
+        r("finance_categories_title", "Where it went")
+    }
+
+    /// This month
+    public static var financeDonutCaption: LocalizedStringResource {
+        r("finance_donut_caption", "This month")
+    }
+
+    /// Who’s up, who’s down
+    public static var financeBalancesTitle: LocalizedStringResource {
+        r("finance_balances_title", "Who’s up, who’s down")
+    }
+
+    /// Across everything, not just this month
+    public static var financeBalancesSubtitle: LocalizedStringResource {
+        r("finance_balances_subtitle", "Across everything, not just this month")
+    }
+
+    /// Paid this month
+    public static var financePaidThisMonth: LocalizedStringResource {
+        r("finance_paid_this_month", "Paid this month")
+    }
+
+    /// is owed %@
+    public static func financeIsOwedAmount(_ a0: String) -> LocalizedStringResource {
+        r("finance_is_owed_amount", "is owed \(a0)")
+    }
+
+    /// owes %@
+    public static func financeOwesAmount(_ a0: String) -> LocalizedStringResource {
+        r("finance_owes_amount", "owes \(a0)")
+    }
+
+    /// Needs paying
+    public static var financeBillsDueTitle: LocalizedStringResource {
+        r("finance_bills_due_title", "Needs paying")
+    }
+
+    /// Coming up
+    public static var financeBillsUpcomingTitle: LocalizedStringResource {
+        r("finance_bills_upcoming_title", "Coming up")
+    }
+
+    /// Committed each month
+    public static var financeCommittedMonthly: LocalizedStringResource {
+        r("finance_committed_monthly", "Committed each month")
+    }
+
+    /// Nothing due
+    public static var financeNothingDue: LocalizedStringResource {
+        r("finance_nothing_due", "Nothing due")
+    }
+
+    /// Due today
+    public static var financeDueToday: LocalizedStringResource {
+        r("finance_due_today", "Due today")
+    }
+
+    /// Mark paid
+    public static var financeMarkPaid: LocalizedStringResource {
+        r("finance_mark_paid", "Mark paid")
+    }
+
+    /// Pay %@ now
+    public static func financePayNow(_ a0: String) -> LocalizedStringResource {
+        r("finance_pay_now", "Pay \(a0) now")
+    }
+
+    /// Pay
+    public static var financePayAction: LocalizedStringResource {
+        r("finance_pay_action", "Pay")
+    }
+
+    /// Budgets
+    public static var financeBudgetsTitle: LocalizedStringResource {
+        r("finance_budgets_title", "Budgets")
+    }
+
+    /// %@ left
+    public static func financeBudgetLeft(_ a0: String) -> LocalizedStringResource {
+        r("finance_budget_left", "\(a0) left")
+    }
+
+    /// %@ over
+    public static func financeBudgetOverBy(_ a0: String) -> LocalizedStringResource {
+        r("finance_budget_over_by", "\(a0) over")
+    }
+
+    /// %@ of %@
+    public static func financeBudgetSpentOf(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("finance_budget_spent_of", "\(a0) of \(a1)")
+    }
+
+    /// A monthly ceiling for this category.
+    public static var financeBudgetHint: LocalizedStringResource {
+        r("finance_budget_hint", "A monthly ceiling for this category.")
+    }
+
+    /// Add expense
+    public static var financeAddExpense: LocalizedStringResource {
+        r("finance_add_expense", "Add expense")
+    }
+
+    /// Add bill
+    public static var financeAddBill: LocalizedStringResource {
+        r("finance_add_bill", "Add bill")
+    }
+
+    /// Set a budget
+    public static var financeAddBudget: LocalizedStringResource {
+        r("finance_add_budget", "Set a budget")
+    }
+
+    /// Add the first one
+    public static var financeAddFirstExpense: LocalizedStringResource {
+        r("finance_add_first_expense", "Add the first one")
+    }
+
+    /// Edit expense
+    public static var financeEditExpenseTitle: LocalizedStringResource {
+        r("finance_edit_expense_title", "Edit expense")
+    }
+
+    /// Edit bill
+    public static var financeEditBillTitle: LocalizedStringResource {
+        r("finance_edit_bill_title", "Edit bill")
+    }
+
+    /// Edit budget
+    public static var financeEditBudgetTitle: LocalizedStringResource {
+        r("finance_edit_budget_title", "Edit budget")
+    }
+
+    /// Delete expense
+    public static var financeDeleteExpense: LocalizedStringResource {
+        r("finance_delete_expense", "Delete expense")
+    }
+
+    /// Delete bill
+    public static var financeDeleteBill: LocalizedStringResource {
+        r("finance_delete_bill", "Delete bill")
+    }
+
+    /// Remove budget
+    public static var financeRemoveBudget: LocalizedStringResource {
+        r("finance_remove_budget", "Remove budget")
+    }
+
+    /// Delete this bill?
+    public static var financeDeleteBillTitle: LocalizedStringResource {
+        r("finance_delete_bill_title", "Delete this bill?")
+    }
+
+    /// The schedule goes. Everything already paid stays in the ledger.
+    public static var financeDeleteBillMessage: LocalizedStringResource {
+        r("finance_delete_bill_message", "The schedule goes. Everything already paid stays in the ledger.")
+    }
+
+    /// Deleted “%@”
+    public static func financeExpenseDeleted(_ a0: String) -> LocalizedStringResource {
+        r("finance_expense_deleted", "Deleted “\(a0)”")
+    }
+
+    /// Amount
+    public static var financeAmountLabel: LocalizedStringResource {
+        r("finance_amount_label", "Amount")
+    }
+
+    /// What was it for?
+    public static var financeTitlePlaceholder: LocalizedStringResource {
+        r("finance_title_placeholder", "What was it for?")
+    }
+
+    /// Rent, power, internet…
+    public static var financeBillTitlePlaceholder: LocalizedStringResource {
+        r("finance_bill_title_placeholder", "Rent, power, internet…")
+    }
+
+    /// Add a note
+    public static var financeNotePlaceholder: LocalizedStringResource {
+        r("finance_note_placeholder", "Add a note")
+    }
+
+    /// Category
+    public static var financeCategoryLabel: LocalizedStringResource {
+        r("finance_category_label", "Category")
+    }
+
+    /// Paid by
+    public static var financePaidByLabel: LocalizedStringResource {
+        r("finance_paid_by_label", "Paid by")
+    }
+
+    /// Paid by %@
+    public static func financePaidBy(_ a0: String) -> LocalizedStringResource {
+        r("finance_paid_by", "Paid by \(a0)")
+    }
+
+    /// Date
+    public static var financeDateLabel: LocalizedStringResource {
+        r("finance_date_label", "Date")
+    }
+
+    /// Repeats
+    public static var financeCycleLabel: LocalizedStringResource {
+        r("finance_cycle_label", "Repeats")
+    }
+
+    /// Next due
+    public static var financeDueDateLabel: LocalizedStringResource {
+        r("finance_due_date_label", "Next due")
+    }
+
+    /// Whose job
+    public static var financeResponsibleLabel: LocalizedStringResource {
+        r("finance_responsible_label", "Whose job")
+    }
+
+    /// Nobody
+    public static var financeNobody: LocalizedStringResource {
+        r("finance_nobody", "Nobody")
+    }
+
+    /// Split with the house
+    public static var financeAutoSplitLabel: LocalizedStringResource {
+        r("finance_auto_split_label", "Split with the house")
+    }
+
+    /// Everyone pays a share
+    public static var financeAutoSplitOn: LocalizedStringResource {
+        r("finance_auto_split_on", "Everyone pays a share")
+    }
+
+    /// One person carries it
+    public static var financeAutoSplitOff: LocalizedStringResource {
+        r("finance_auto_split_off", "One person carries it")
+    }
+
+    /// Equally
+    public static var financeSplitEqual: LocalizedStringResource {
+        r("finance_split_equal", "Equally")
+    }
+
+    /// By shares
+    public static var financeSplitShares: LocalizedStringResource {
+        r("finance_split_shares", "By shares")
+    }
+
+    /// Exact
+    public static var financeSplitExact: LocalizedStringResource {
+        r("finance_split_exact", "Exact")
+    }
+
+    /// Split between
+    public static var financeSplitBetween: LocalizedStringResource {
+        r("finance_split_between", "Split between")
+    }
+
+    /// Everyone
+    public static var financeEveryone: LocalizedStringResource {
+        r("finance_everyone", "Everyone")
+    }
+
+    /// Only me
+    public static var financeOnlyMe: LocalizedStringResource {
+        r("finance_only_me", "Only me")
+    }
+
+    /// Two shares for a couple, one for a lodger.
+    public static var financeSharesHint: LocalizedStringResource {
+        r("finance_shares_hint", "Two shares for a couple, one for a lodger.")
+    }
+
+    /// Left to assign
+    public static var financeExactRemaining: LocalizedStringResource {
+        r("finance_exact_remaining", "Left to assign")
+    }
+
+    /// The shares are %@ out.
+    public static func financeExactOff(_ a0: String) -> LocalizedStringResource {
+        r("finance_exact_off", "The shares are \(a0) out.")
+    }
+
+    /// Search expenses
+    public static var financeSearchPlaceholder: LocalizedStringResource {
+        r("finance_search_placeholder", "Search expenses")
+    }
+
+    /// Filtered total
+    public static var financeFilteredTotal: LocalizedStringResource {
+        r("finance_filtered_total", "Filtered total")
+    }
+
+    /// This month
+    public static var financeMonthTotal: LocalizedStringResource {
+        r("finance_month_total", "This month")
+    }
+
+    /// Today
+    public static var financeToday: LocalizedStringResource {
+        r("finance_today", "Today")
+    }
+
+    /// From a bill
+    public static var financeFromBill: LocalizedStringResource {
+        r("finance_from_bill", "From a bill")
+    }
+
+    /// You lent %@
+    public static func financeYouLent(_ a0: String) -> LocalizedStringResource {
+        r("finance_you_lent", "You lent \(a0)")
+    }
+
+    /// You owe %@
+    public static func financeYouBorrowed(_ a0: String) -> LocalizedStringResource {
+        r("finance_you_borrowed", "You owe \(a0)")
+    }
+
+    /// Previous month
+    public static var financePreviousMonth: LocalizedStringResource {
+        r("finance_previous_month", "Previous month")
+    }
+
+    /// Next month
+    public static var financeNextMonth: LocalizedStringResource {
+        r("finance_next_month", "Next month")
+    }
+
+    /// Back to this month
+    public static var financeBackToThisMonth: LocalizedStringResource {
+        r("finance_back_to_this_month", "Back to this month")
+    }
+
+    /// No money tracked yet
+    public static var financeEmptyTitle: LocalizedStringResource {
+        r("finance_empty_title", "No money tracked yet")
+    }
+
+    /// Add an expense and the household ledger starts here.
+    public static var financeEmptyMessage: LocalizedStringResource {
+        r("finance_empty_message", "Add an expense and the household ledger starts here.")
+    }
+
+    /// Nothing this month
+    public static var financeNoExpensesTitle: LocalizedStringResource {
+        r("finance_no_expenses_title", "Nothing this month")
+    }
+
+    /// Nothing has been spent in this month yet.
+    public static var financeNoExpensesMessage: LocalizedStringResource {
+        r("finance_no_expenses_message", "Nothing has been spent in this month yet.")
+    }
+
+    /// No matches
+    public static var financeNoMatchesTitle: LocalizedStringResource {
+        r("finance_no_matches_title", "No matches")
+    }
+
+    /// Try a different search, or clear the filter.
+    public static var financeNoMatchesMessage: LocalizedStringResource {
+        r("finance_no_matches_message", "Try a different search, or clear the filter.")
+    }
+
+    /// No bills yet
+    public static var financeNoBillsTitle: LocalizedStringResource {
+        r("finance_no_bills_title", "No bills yet")
+    }
+
+    /// Add the rent, the power, the subscription nobody admits to.
+    public static var financeNoBillsMessage: LocalizedStringResource {
+        r("finance_no_bills_message", "Add the rent, the power, the subscription nobody admits to.")
+    }
+
+    /// No budgets yet
+    public static var financeNoBudgetsTitle: LocalizedStringResource {
+        r("finance_no_budgets_title", "No budgets yet")
+    }
+
+    /// Set a monthly ceiling and watch it fill.
+    public static var financeNoBudgetsMessage: LocalizedStringResource {
+        r("finance_no_budgets_message", "Set a monthly ceiling and watch it fill.")
+    }
+
+    /// Suggested payments
+    public static var financeSuggestedTitle: LocalizedStringResource {
+        r("finance_suggested_title", "Suggested payments")
+    }
+
+    /// The fewest payments that clear everything
+    public static var financeSuggestedSubtitle: LocalizedStringResource {
+        r("finance_suggested_subtitle", "The fewest payments that clear everything")
+    }
+
+    /// %@ pays %@
+    public static func financeTransferLine(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("finance_transfer_line", "\(a0) pays \(a1)")
+    }
+
+    /// From
+    public static var financeFromLabel: LocalizedStringResource {
+        r("finance_from_label", "From")
+    }
+
+    /// To
+    public static var financeToLabel: LocalizedStringResource {
+        r("finance_to_label", "To")
+    }
+
+    /// Swap direction
+    public static var financeSwapDirection: LocalizedStringResource {
+        r("finance_swap_direction", "Swap direction")
+    }
+
+    /// Record payment
+    public static var financeRecordPayment: LocalizedStringResource {
+        r("finance_record_payment", "Record payment")
+    }
+
+    /// Each of you pays
+    public static var financeEachPays: LocalizedStringResource {
+        r("finance_each_pays", "Each of you pays")
+    }
+
+    /// %@ more than usual
+    public static func financeMoreThanUsual(_ a0: String) -> LocalizedStringResource {
+        r("finance_more_than_usual", "\(a0) more than usual")
+    }
+
+    /// %@ less than usual
+    public static func financeLessThanUsual(_ a0: String) -> LocalizedStringResource {
+        r("finance_less_than_usual", "\(a0) less than usual")
+    }
+
+    /// A one-off is finished once it’s paid.
+    public static var financePayOnceHint: LocalizedStringResource {
+        r("finance_pay_once_hint", "A one-off is finished once it’s paid.")
+    }
+
+    /// Logs the expense and moves the bill to its next date.
+    public static var financePayRecurringHint: LocalizedStringResource {
+        r("finance_pay_recurring_hint", "Logs the expense and moves the bill to its next date.")
+    }
+
+    /// Give it a name first.
+    public static var financeErrorTitle: LocalizedStringResource {
+        r("finance_error_title", "Give it a name first.")
+    }
+
+    /// Enter an amount above zero.
+    public static var financeErrorAmount: LocalizedStringResource {
+        r("finance_error_amount", "Enter an amount above zero.")
+    }
+
+    /// Choose who this is split between.
+    public static var financeErrorParticipants: LocalizedStringResource {
+        r("finance_error_participants", "Choose who this is split between.")
+    }
+
+    /// Give at least one person a share.
+    public static var financeErrorShares: LocalizedStringResource {
+        r("finance_error_shares", "Give at least one person a share.")
+    }
+
+    /// The shares add up to %@, not %@.
+    public static func financeErrorExactMismatch(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("finance_error_exact_mismatch", "The shares add up to \(a0), not \(a1).")
+    }
+
+    /// Groceries
+    public static var financeCategoryGroceries: LocalizedStringResource {
+        r("finance_category_groceries", "Groceries")
+    }
+
+    /// Utilities
+    public static var financeCategoryUtilities: LocalizedStringResource {
+        r("finance_category_utilities", "Utilities")
+    }
+
+    /// Rent
+    public static var financeCategoryRent: LocalizedStringResource {
+        r("finance_category_rent", "Rent")
+    }
+
+    /// Household
+    public static var financeCategoryHousehold: LocalizedStringResource {
+        r("finance_category_household", "Household")
+    }
+
+    /// Eating out
+    public static var financeCategoryDining: LocalizedStringResource {
+        r("finance_category_dining", "Eating out")
+    }
+
+    /// Transport
+    public static var financeCategoryTransport: LocalizedStringResource {
+        r("finance_category_transport", "Transport")
+    }
+
+    /// Health
+    public static var financeCategoryHealth: LocalizedStringResource {
+        r("finance_category_health", "Health")
+    }
+
+    /// Fun
+    public static var financeCategoryEntertainment: LocalizedStringResource {
+        r("finance_category_entertainment", "Fun")
+    }
+
+    /// Subscriptions
+    public static var financeCategorySubscriptions: LocalizedStringResource {
+        r("finance_category_subscriptions", "Subscriptions")
+    }
+
+    /// Other
+    public static var financeCategoryOther: LocalizedStringResource {
+        r("finance_category_other", "Other")
+    }
+
+    /// One-off
+    public static var financeCycleOnce: LocalizedStringResource {
+        r("finance_cycle_once", "One-off")
+    }
+
+    /// Weekly
+    public static var financeCycleWeekly: LocalizedStringResource {
+        r("finance_cycle_weekly", "Weekly")
+    }
+
+    /// Every two weeks
+    public static var financeCycleBiweekly: LocalizedStringResource {
+        r("finance_cycle_biweekly", "Every two weeks")
+    }
+
+    /// Monthly
+    public static var financeCycleMonthly: LocalizedStringResource {
+        r("finance_cycle_monthly", "Monthly")
+    }
+
+    /// Every three months
+    public static var financeCycleQuarterly: LocalizedStringResource {
+        r("finance_cycle_quarterly", "Every three months")
+    }
+
+    /// Yearly
+    public static var financeCycleYearly: LocalizedStringResource {
+        r("finance_cycle_yearly", "Yearly")
+    }
+
+    /// %d expenses
+    public static func financeExpenseCount(_ a0: Int) -> LocalizedStringResource {
+        r("finance_expense_count", "\(a0) expenses")
+    }
+
+    /// %d overdue
+    public static func financeOverdueCount(_ a0: Int) -> LocalizedStringResource {
+        r("finance_overdue_count", "\(a0) overdue")
+    }
+
+    /// %d due soon
+    public static func financeDueSoonCount(_ a0: Int) -> LocalizedStringResource {
+        r("finance_due_soon_count", "\(a0) due soon")
+    }
+
+    /// Due in %d days
+    public static func financeDueIn(_ a0: Int) -> LocalizedStringResource {
+        r("finance_due_in", "Due in \(a0) days")
+    }
+
+    /// %d days late
+    public static func financeOverdueBy(_ a0: Int) -> LocalizedStringResource {
+        r("finance_overdue_by", "\(a0) days late")
+    }
+
+    /// Currency
+    public static var financeCurrencyLabel: LocalizedStringResource {
+        r("finance_currency_label", "Currency")
+    }
+
+    /// Shares for %@
+    public static func financeSharesFor(_ a0: String) -> LocalizedStringResource {
+        r("finance_shares_for", "Shares for \(a0)")
+    }
+
+    /// Remind the house
+    public static var financeRemindersLabel: LocalizedStringResource {
+        r("finance_reminders_label", "Remind the house")
+    }
+
+    /// Up to three nudges before it is due.
+    public static var financeRemindersHint: LocalizedStringResource {
+        r("finance_reminders_hint", "Up to three nudges before it is due.")
+    }
+
+    /// On the day
+    public static var financeReminderOnDay: LocalizedStringResource {
+        r("finance_reminder_on_day", "On the day")
+    }
+
+    /// A week before
+    public static var financeReminderWeekBefore: LocalizedStringResource {
+        r("finance_reminder_week_before", "A week before")
+    }
+
+    /// No reminders
+    public static var financeRemindersOff: LocalizedStringResource {
+        r("finance_reminders_off", "No reminders")
+    }
+
+    /// %d days before
+    public static func financeReminderDaysBefore(_ a0: Int) -> LocalizedStringResource {
+        r("finance_reminder_days_before", "\(a0) days before")
+    }
+
+    /// %d reminders
+    public static func financeReminderCount(_ a0: Int) -> LocalizedStringResource {
+        r("finance_reminder_count", "\(a0) reminders")
+    }
 }

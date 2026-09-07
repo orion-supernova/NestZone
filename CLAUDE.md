@@ -96,6 +96,24 @@ cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in 
   not go back to downloading whole collections to count them.
 - `catalog:discover` / `catalog:details` proxy TMDb so the API key stays on the
   server. Nothing in the app may call api.themoviedb.org directly.
+- `finance:summary` computes the whole Finance screen server-side — balances,
+  the settle-up plan, the category split, six months of history, budget
+  progress. Balances are all-time and the spend figures are month-scoped; that
+  asymmetry is deliberate. Money is stored in **minor units** as integers and
+  the *server* owns every split (`resolveSplits`), so no client version can
+  write a ledger whose shares do not add up to its total. `SplitMath` on the
+  client is the same arithmetic, for the composer's preview only.
+- **Money is per-document, not per-home.** Every expense, bill and budget
+  carries its own `currency`, and `finance:summary` is scoped to one of them —
+  adding 500 lira to 20 dollars is not a number, and no rate is ever invented on
+  a household's behalf. The client filters the ledger to match. Sums are scoped;
+  counts (overdue bills, say) are not, and are derived client-side so a badge
+  can never contradict the list under it.
+- `convex/crons.ts` runs `finance:sweepReminders` daily at 08:00 UTC. It is
+  idempotent by design — every nudge is recorded against
+  `<due_date>:<daysBefore>` before it is sent, because a duplicate reminder is
+  worse than a missed one. Paying a bill moves `due_date`, which retires the
+  keys for the cycle just closed.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

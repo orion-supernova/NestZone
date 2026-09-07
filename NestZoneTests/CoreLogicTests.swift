@@ -439,3 +439,289 @@ struct ContributionsMathTests {
         #expect(ContributionWindow.allTime.days == 0)
     }
 }
+
+/// The household ledger's arithmetic — the part that has to be exactly right.
+@Suite("Household money")
+struct FinanceLogicTests {
+
+    // MARK: Formatting and parsing
+
+    @Test("Minor units survive the round trip, including currencies with no cents")
+    func minorUnitRoundTrip() {
+        #expect(Money.minorUnits(Decimal(string: "12.34")!, currency: "EUR") == 1234)
+        #expect(Money.decimal(1234, currency: "EUR") == Decimal(string: "12.34"))
+        // Yen has no subunit: 1200 is ¥1,200, not ¥12.00.
+        #expect(Money.minorUnits(Decimal(1200), currency: "JPY") == 1200)
+        #expect(Money.decimal(1200, currency: "JPY") == 1200)
+        // Three-digit subunits are rare but real.
+        #expect(Money.minorUnits(Decimal(string: "1.234")!, currency: "KWD") == 1234)
+    }
+
+    @Test("A typed amount is read the same way whichever separator the keyboard gave")
+    func parsingSeparators() {
+        #expect(Money.parse("12.34", currency: "EUR") == 1234)
+        #expect(Money.parse("12,34", currency: "EUR") == 1234)
+        // The last separator is the decimal one, so a grouped figure pasted in
+        // from either convention reads the same.
+        #expect(Money.parse("1.234,56", currency: "EUR") == 123_456)
+        #expect(Money.parse("1,234.56", currency: "EUR") == 123_456)
+        // Symbols and spaces are noise, not an error.
+        #expect(Money.parse("€ 40", currency: "EUR") == 4000)
+        // Nothing readable is zero, which the save button already refuses —
+        // a better answer than an error about a half-typed field.
+        #expect(Money.parse("", currency: "EUR") == 0)
+        #expect(Money.parse("abc", currency: "EUR") == 0)
+    }
+
+    @Test("Rounding a typed amount never loses the last cent")
+    func parsingRounds() {
+        // Truncation would make this 1233 — an expense a cent short of what was
+        // typed, every time, in one direction.
+        #expect(Money.parse("12.335", currency: "EUR") == 1234)
+        #expect(Money.parse("12.344", currency: "EUR") == 1234)
+    }
+
+    @Test("An editable amount carries no symbol and no grouping")
+    func editableText() {
+        #expect(Money.editableText(0, currency: "EUR").isEmpty)
+        #expect(!Money.editableText(123_456, currency: "EUR").contains("€"))
+    }
+
+    // MARK: Splitting
+
+    @Test("An equal split always adds up to the total")
+    func equalSplitIsExact() {
+        let people: [UserID] = ["u1", "u2", "u3"]
+        let split = SplitMath.evenly(1000, among: people)
+        // 3.34 + 3.33 + 3.33, not 3.33 three times — which would lose a cent.
+        #expect(split.map(\.amount) == [334, 333, 333])
+        #expect(split.reduce(0) { $0 + $1.amount } == 1000)
+        #expect(split.map(\.userID) == people)
+    }
+
+    @Test("An equal split of nothing between nobody is empty rather than a crash")
+    func equalSplitEdges() {
+        #expect(SplitMath.evenly(1000, among: []).isEmpty)
+        #expect(SplitMath.evenly(0, among: ["u1", "u2"]).map(\.amount) == [0, 0])
+    }
+
+    @Test("A weighted split hands the rounding remainder to whoever lost most to it")
+    func weightedSplit() {
+        let split = SplitMath.byWeight(1000, weights: [
+            ExpenseWeight(userID: "u1", weight: 2),
+            ExpenseWeight(userID: "u2", weight: 1),
+        ])
+        #expect(split.map(\.amount) == [667, 333])
+        #expect(split.reduce(0) { $0 + $1.amount } == 1000)
+    }
+
+    @Test("A weighted split drops the people given no share, and still adds up")
+    func weightedSplitZeroes() {
+        let split = SplitMath.byWeight(100, weights: [
+            ExpenseWeight(userID: "u1", weight: 1),
+            ExpenseWeight(userID: "u2", weight: 0),
+            ExpenseWeight(userID: "u3", weight: 1),
+        ])
+        #expect(split.map(\.userID) == ["u1", "u3"])
+        #expect(split.reduce(0) { $0 + $1.amount } == 100)
+        // No positive weights at all has no answer, so it gives none rather
+        // than dividing by zero.
+        #expect(SplitMath.byWeight(100, weights: []).isEmpty)
+    }
+
+    // MARK: Expenses
+
+    @Test("An expense's effect on one person is what they put in minus their share")
+    func expenseImpact() {
+        let expense = Expense(
+            id: "e1",
+            title: "Lasagne",
+            amount: 3000,
+            paidBy: "u1",
+            splits: [
+                ExpenseSplit(userID: "u1", amount: 1000),
+                ExpenseSplit(userID: "u2", amount: 1000),
+                ExpenseSplit(userID: "u3", amount: 1000),
+            ]
+        )
+        #expect(expense.impact(on: "u1") == 2000)
+        #expect(expense.impact(on: "u2") == -1000)
+        // Somebody who was not on it is unaffected, not owed nothing-in-error.
+        #expect(expense.impact(on: "u9") == 0)
+        #expect(expense.involves("u2"))
+        #expect(!expense.involves("u9"))
+    }
+
+    // MARK: Bills
+
+    @Test("A bill's urgency is measured in whole days, not hours")
+    func billUrgency() {
+        let now = Date()
+        func bill(daysFromNow: Int) -> Bill {
+            Bill(
+                id: "b1",
+                title: "Power",
+                amount: 5000,
+                dueDate: Timestamp(Calendar.current.date(byAdding: .day, value: daysFromNow, to: now)!)
+            )
+        }
+        // A bill due in nine hours is "due today", and the countdown flips to
+        // overdue at midnight rather than at the stroke of the stamp.
+        #expect(bill(daysFromNow: 0).urgency(now: now) == .dueToday)
+        #expect(bill(daysFromNow: -1).urgency(now: now) == .overdue)
+        #expect(bill(daysFromNow: 3).urgency(now: now) == .dueSoon)
+        #expect(bill(daysFromNow: 30).urgency(now: now) == .upcoming)
+        // Sorted so the ones asking for something come first.
+        #expect(Bill.Urgency.overdue < Bill.Urgency.upcoming)
+    }
+
+    @Test("Every cycle is comparable once said per month")
+    func monthlyEquivalents() {
+        #expect(BillCycle.monthly.monthlyEquivalent(of: 100_000) == 100_000)
+        #expect(BillCycle.yearly.monthlyEquivalent(of: 120_000) == 10_000)
+        #expect(BillCycle.quarterly.monthlyEquivalent(of: 30_000) == 10_000)
+        // A one-off is a date, not a standing cost, so it commits nothing.
+        #expect(BillCycle.once.monthlyEquivalent(of: 100_000) == 0)
+    }
+
+    // MARK: Budgets
+
+    @Test("A budget's health warns before it is spent, not after")
+    func budgetHealth() {
+        func health(spent: Int) -> BudgetProgress.Health {
+            BudgetProgress(category: .groceries, limit: 10_000, spent: spent).health
+        }
+        #expect(health(spent: 5_000) == .healthy)
+        #expect(health(spent: 8_500) == .close)
+        #expect(health(spent: 10_000) == .over)
+        #expect(health(spent: 14_000) == .over)
+
+        let over = BudgetProgress(category: .groceries, limit: 10_000, spent: 14_000)
+        #expect(over.isOver)
+        #expect(over.remaining == -4_000)
+        // Uncapped: a ring has to know it is at 140%, not merely that it is full.
+        #expect(over.progress == 1.4)
+    }
+
+    // MARK: Months
+
+    @Test("Months step across a year boundary and refuse to run ahead")
+    func calendarMonth() {
+        let december = CalendarMonth(year: 2026, month: 12)
+        #expect(december.advanced(by: 1) == CalendarMonth(year: 2027, month: 1))
+        #expect(december.advanced(by: -12) == CalendarMonth(year: 2025, month: 12))
+        #expect(CalendarMonth(year: 2020, month: 1) < december)
+        #expect(CalendarMonth.current.isCurrent)
+        #expect(!CalendarMonth.current.isInFuture)
+        #expect(CalendarMonth.current.advanced(by: 1).isInFuture)
+    }
+
+    // MARK: Summary
+
+    @Test("Balances read as a settle-up list, and a settled house says so")
+    func summaryBalances() {
+        let summary = FinanceSummary(
+            year: 2026, month: 9, currency: "EUR",
+            monthTotal: 12_000, previousMonthTotal: 10_000,
+            members: [
+                MemberFinance(userID: "u1", name: "Ada", net: 4_000, paidThisMonth: 8_000),
+                MemberFinance(userID: "u2", name: "Grace", net: -4_000, paidThisMonth: 4_000),
+                MemberFinance(userID: "u3", name: "Idle", net: 0),
+            ],
+            transfers: [Transfer(from: "u2", to: "u1", amount: 4_000)]
+        )
+        // Whoever is square is not in the list — a settled household shows one
+        // calm line rather than three zeroes.
+        #expect(summary.outstanding.map(\.userID) == ["u1", "u2"])
+        #expect(!summary.isSquare)
+        #expect(summary.net(for: "u1") == 4_000)
+        #expect(summary.net(for: "u9") == 0)
+        #expect(summary.monthChange == 0.2)
+        #expect(summary.transfers(involving: "u1").count == 1)
+        #expect(summary.transfers(involving: "u3").isEmpty)
+        #expect(summary.payers.map(\.userID) == ["u1", "u2"])
+
+        var settled = summary
+        settled.members = settled.members.map {
+            var member = $0
+            member.net = 0
+            return member
+        }
+        settled.transfers = []
+        #expect(settled.isSquare)
+    }
+
+    @Test("A month with no history before it reports no trend rather than an infinite one")
+    func monthChangeWithoutHistory() {
+        let summary = FinanceSummary(monthTotal: 5_000, previousMonthTotal: 0)
+        #expect(summary.monthChange == nil)
+        // At least one, so an empty history draws a baseline rather than
+        // dividing by zero.
+        #expect(summary.busiestMonth == 1)
+    }
+}
+
+extension FinanceLogicTests {
+    @Test("One person's share of an evenly split bill is the largest of them")
+    func evenShare() {
+        // 3.34, not 3.33: the figure somebody might actually be asked for.
+        #expect(SplitMath.evenShare(1000, ways: 3) == 334)
+        #expect(SplitMath.evenShare(1000, ways: 2) == 500)
+        #expect(SplitMath.evenShare(1000, ways: 1) == 1000)
+        // Nobody to split between is not a division at all.
+        #expect(SplitMath.evenShare(1000, ways: 0) == 1000)
+    }
+}
+
+extension FinanceLogicTests {
+    @Test("A currency picker offers what the household uses before the rest of the world")
+    func currencyPickerOrder() {
+        let codes = Money.pickerCodes(used: ["TRY", "SEK"])
+        #expect(codes.first == "TRY")
+        #expect(codes[1] == "SEK")
+        // The device's own follows, then everything else — and nothing twice.
+        #expect(codes.contains(Money.deviceDefault))
+        #expect(Set(codes).count == codes.count)
+        #expect(codes.count > 10)
+    }
+
+    @Test("Amounts are scaled by their own currency, not by a shared assumption")
+    func perCurrencyScale() {
+        // The same typed string is a different number of minor units depending
+        // on the currency it is written in, which is why currency travels on
+        // the document rather than on the home.
+        #expect(Money.parse("1000", currency: "TRY") == 100_000)
+        #expect(Money.parse("1000", currency: "JPY") == 1_000)
+        #expect(Money.parse("1000", currency: "KWD") == 1_000_000)
+    }
+}
+
+extension FinanceLogicTests {
+    @Test("An absurd amount is clamped rather than turned into a nonsense number")
+    func hugeAmountsAreClamped() {
+        // `NSDecimalNumber.intValue` past `Int.max` returns nonsense rather than
+        // failing, so without the clamp a pasted seventy-digit number became an
+        // arbitrary amount in the ledger.
+        let absurd = String(repeating: "9", count: 70)
+        let parsed = Money.parse(absurd, currency: "EUR")
+        #expect(parsed == Money.maximumMinorUnits)
+        #expect(parsed > 0)
+
+        // And the cap stays inside what float64 carries exactly, because the
+        // server does integer arithmetic on these over the wire.
+        #expect(Money.maximumMinorUnits < 1 << 53)
+
+        // Ordinary amounts are untouched.
+        #expect(Money.parse("1234.56", currency: "EUR") == 123_456)
+        // As is the boundary itself.
+        #expect(Money.minorUnits(Decimal(Money.maximumMinorUnits), currency: "JPY")
+            == Money.maximumMinorUnits)
+    }
+
+    @Test("Nothing readable, or nothing positive, is zero rather than a crash")
+    func degenerateAmounts() {
+        #expect(Money.parse(".", currency: "EUR") == 0)
+        #expect(Money.parse("0.000", currency: "EUR") == 0)
+        #expect(Money.parse("-5", currency: "EUR") == 500)
+    }
+}

@@ -2467,3 +2467,834 @@ struct MessagesTests {
         #expect(call.3)
     }
 }
+
+@MainActor
+@Suite("Finance")
+struct FinanceTests {
+
+    private static let ada = User(id: "u1", name: "Ada")
+    private static let grace = User(id: "u2", name: "Grace")
+    private static let members: IdentifiedArrayOf<User> = [ada, grace]
+
+    private static func expense(
+        _ id: ExpenseID,
+        _ title: String,
+        _ amount: Int = 1_000
+    ) -> Expense {
+        Expense(
+            id: id,
+            title: title,
+            amount: amount,
+            currency: "EUR",
+            paidBy: "u1",
+            splits: [
+                ExpenseSplit(userID: "u1", amount: amount / 2),
+                ExpenseSplit(userID: "u2", amount: amount / 2),
+            ],
+            spentAt: Timestamp(milliseconds: 1_756_000_000_000)
+        )
+    }
+
+    private static func summary(
+        _ month: CalendarMonth,
+        adaNet: Int = 0
+    ) -> FinanceSummary {
+        FinanceSummary(
+            year: month.year,
+            month: month.month,
+            currency: "EUR",
+            monthTotal: 1_000,
+            members: [
+                MemberFinance(userID: "u1", name: "Ada", net: adaNet),
+                MemberFinance(userID: "u2", name: "Grace", net: -adaNet),
+            ],
+            transfers: adaNet > 0
+                ? [Transfer(from: "u2", to: "u1", amount: adaNet)]
+                : []
+        )
+    }
+
+    /// A store with every subscription the screen opens stubbed, because
+    /// `.task` fans out to five of them and an unimplemented one is a failure
+    /// rather than an empty stream.
+    private static func financeStore(
+        asked: LockIsolated<[CalendarMonth]> = LockIsolated([]),
+        removed: LockIsolated<[ExpenseID]> = LockIsolated([]),
+        paid: LockIsolated<[BillID]> = LockIsolated([]),
+        expenses: LockIsolated<[CalendarMonth: [Expense]]> = LockIsolated([:]),
+        clock: TestClock<Duration> = TestClock()
+    ) -> TestStoreOf<FinanceFeature> {
+        TestStore(
+            initialState: FinanceFeature.State(homeID: "h1", currentUserID: "u1")
+        ) {
+            FinanceFeature()
+        } withDependencies: {
+            $0.finance.summary = { _, month, _ in
+                asked.withValue { $0.append(month) }
+                return AsyncThrowingStream { $0.yield(Self.summary(month)) }
+            }
+            $0.finance.expenses = { _, month in
+                AsyncThrowingStream { $0.yield(expenses.value[month] ?? []) }
+            }
+            $0.finance.bills = { _ in AsyncThrowingStream { $0.yield([]) } }
+            $0.finance.budgets = { _ in AsyncThrowingStream { $0.yield([]) } }
+            $0.finance.removeExpense = { id in removed.withValue { $0.append(id) } }
+            $0.finance.payBill = { id, _, _ in paid.withValue { $0.append(id) } }
+            $0.homes.members = { _ in AsyncThrowingStream { $0.yield([Self.ada, Self.grace]) } }
+            $0.continuousClock = clock
+        }
+    }
+
+    /// A store whose subscriptions never yield, for the tests that are about
+    /// the order updates arrive in. Racing a stub that answers on its own makes
+    /// those assertions depend on scheduling rather than on the reducer.
+    private static func silentStore() -> TestStoreOf<FinanceFeature> {
+        TestStore(
+            initialState: FinanceFeature.State(homeID: "h1", currentUserID: "u1")
+        ) {
+            FinanceFeature()
+        } withDependencies: {
+            $0.finance.summary = { _, _, _ in .never }
+            $0.finance.expenses = { _, _ in .never }
+            $0.finance.bills = { _ in .never }
+            $0.finance.budgets = { _ in .never }
+            $0.homes.members = { _ in .never }
+        }
+    }
+
+    @Test("The screen opens on this month and asks the server for exactly that")
+    func opensOnCurrentMonth() async {
+        let asked = LockIsolated<[CalendarMonth]>([])
+        let store = Self.financeStore(asked: asked)
+        store.exhaustivity = .off
+
+        #expect(store.state.month == .current)
+        await store.send(.task)
+        await store.receive(\.summaryUpdated)
+        #expect(asked.value == [.current])
+    }
+
+    @Test("Changing month re-subscribes rather than filtering what it already has")
+    func monthChangeResubscribes() async {
+        let asked = LockIsolated<[CalendarMonth]>([])
+        let store = Self.financeStore(asked: asked)
+        store.exhaustivity = .off
+
+        await store.send(.task)
+        await store.receive(\.summaryUpdated)
+
+        let previous = CalendarMonth.current.advanced(by: -1)
+        await store.send(.monthStepped(by: -1)) {
+            $0.month = previous
+            // The figures on screen answer a different question now, and the
+            // screen says so rather than showing September under August.
+            $0.isLoading = true
+        }
+        await store.receive(\.summaryUpdated)
+        #expect(asked.value == [.current, previous])
+    }
+
+    @Test("The scrubber will not run past this month")
+    func refusesTheFuture() async {
+        let asked = LockIsolated<[CalendarMonth]>([])
+        let store = Self.financeStore(asked: asked)
+        store.exhaustivity = .off
+
+        await store.send(.task)
+        await store.receive(\.summaryUpdated)
+
+        // A ledger has no future: an empty October opened in September reads as
+        // data loss, not as a month that has not happened.
+        await store.send(.monthStepped(by: 1))
+        #expect(store.state.month == .current)
+        #expect(asked.value == [.current])
+    }
+
+    @Test("A swipe drops the expense at once but holds the write open for undo")
+    func deleteIsHeldForUndo() async {
+        let removed = LockIsolated<[ExpenseID]>([])
+        let clock = TestClock()
+        let store = Self.financeStore(removed: removed, clock: clock)
+        let milk = Self.expense("e1", "Milk")
+        let rent = Self.expense("e2", "Rent")
+
+        await store.send(.expensesUpdated(.current, [milk, rent])) {
+            $0.expenses = [milk, rent]
+        }
+        await store.send(.deleteExpenseTapped("e1")) {
+            $0.expenses.remove(id: "e1")
+            $0.hidden.insert("e1")
+            $0.pendingDeletion = milk
+        }
+        #expect(removed.value.isEmpty)
+
+        // The server still has the row, so a live push arriving mid-window must
+        // not put it back.
+        await store.send(.expensesUpdated(.current, [milk, rent]))
+        #expect(store.state.expenses.ids == ["e2"])
+
+        await clock.advance(by: .seconds(5))
+        await store.receive(\.deleteWindowClosed) {
+            $0.pendingDeletion = nil
+        }
+        #expect(removed.value == ["e1"])
+    }
+
+    @Test("Undo cancels the write rather than reversing it")
+    func undoCancelsTheDelete() async {
+        let removed = LockIsolated<[ExpenseID]>([])
+        let clock = TestClock()
+        let store = Self.financeStore(removed: removed, clock: clock)
+        let milk = Self.expense("e1", "Milk")
+
+        await store.send(.expensesUpdated(.current, [milk])) {
+            $0.expenses = [milk]
+        }
+        await store.send(.deleteExpenseTapped("e1")) {
+            $0.expenses.remove(id: "e1")
+            $0.hidden.insert("e1")
+            $0.pendingDeletion = milk
+        }
+        await store.send(.undoDeleteTapped) {
+            $0.pendingDeletion = nil
+            $0.hidden.remove("e1")
+            $0.expenses.append(milk)
+        }
+
+        await clock.advance(by: .seconds(30))
+        #expect(removed.value.isEmpty)
+    }
+
+    @Test("Reaching square is celebrated once, not on every push that follows")
+    func celebratesSquaringUpOnce() async {
+        let store = Self.financeStore()
+        store.exhaustivity = .off
+
+        let owing = Self.summary(.current, adaNet: 4_000)
+        let square = Self.summary(.current, adaNet: 0)
+
+        // Arriving already settled is not an event, so the first push is quiet.
+        await store.send(.summaryUpdated(square))
+        #expect(store.state.settledCelebration == 0)
+
+        await store.send(.summaryUpdated(owing))
+        #expect(store.state.settledCelebration == 0)
+
+        await store.send(.summaryUpdated(square))
+        #expect(store.state.settledCelebration == 1)
+
+        // A household that is already square gets no confetti every time the
+        // subscription pushes.
+        await store.send(.summaryUpdated(square))
+        #expect(store.state.settledCelebration == 1)
+    }
+
+    @Test("A cancellation never reaches the user as an alert")
+    func silentFailure() async {
+        let store = Self.financeStore()
+        await store.send(.loadFailed(.cancelled)) {
+            $0.isLoading = false
+        }
+        #expect(store.state.alert == nil)
+    }
+
+    @Test("Paying a fixed bill from the row writes it without a form")
+    func quickPay() async {
+        let paid = LockIsolated<[BillID]>([])
+        let store = Self.financeStore(paid: paid)
+        let bill = Bill(id: "b1", title: "Rent", amount: 90_000, currency: "EUR")
+
+        await store.send(.billsUpdated([bill])) {
+            $0.bills = [bill]
+        }
+        await store.send(.quickPayTapped("b1")) {
+            $0.paying.insert("b1")
+        }
+        await store.receive(\.billPaid) {
+            $0.paying.remove("b1")
+        }
+        #expect(paid.value == ["b1"])
+    }
+
+    @Test("A month's figures never appear under another month's heading")
+    func monthSwitchNeverShowsTheOldMonthsFigures() async {
+        let august = CalendarMonth.current.advanced(by: -1)
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        await store.send(.summaryUpdated(Self.summary(.current))) {
+            $0.isLoading = false
+        }
+        #expect(store.state.summary.monthTotal == 1_000)
+
+        // Leaving a month takes its rows with it, and the screen says it is
+        // waiting rather than presenting what it has as the new month's.
+        await store.send(.expensesUpdated(.current, [Self.expense("e1", "Milk")]))
+        #expect(store.state.expenses.count == 1)
+
+        await store.send(.monthStepped(by: -1)) {
+            $0.month = august
+            $0.isLoading = true
+            $0.expenses = []
+        }
+
+        // The expense list is the smaller query and usually answers first.
+        // Answering must not call the screen loaded while every month-scoped
+        // card still holds September's figures.
+        await store.send(.expensesUpdated(august, []))
+        #expect(store.state.isLoading)
+
+        // A last push from the month just left is dropped rather than applied
+        // to the month now on screen.
+        await store.send(.expensesUpdated(.current, [Self.expense("e9", "Stale")]))
+        #expect(store.state.expenses.isEmpty)
+        await store.send(.summaryUpdated(Self.summary(.current)))
+        #expect(store.state.isLoading)
+
+        // Only the right month's summary settles it.
+        await store.send(.summaryUpdated(Self.summary(august))) {
+            $0.isLoading = false
+        }
+        #expect(store.state.summary.month == august.month)
+    }
+
+    @Test("Switching month drops a filter the new month cannot show")
+    func monthSwitchClearsAnInvisibleFilter() async {
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        await store.send(.categoryFilterTapped(.dining)) {
+            $0.categoryFilter = .dining
+        }
+        // The chip row only offers categories present in the month on screen,
+        // so a filter carried across would be invisible — and unclearable.
+        await store.send(.monthStepped(by: -1)) {
+            $0.month = CalendarMonth.current.advanced(by: -1)
+            $0.isLoading = true
+            $0.categoryFilter = nil
+        }
+    }
+
+    @Test("Choosing another currency asks for another set of figures")
+    func currencySwitchResubscribes() async {
+        let asked = LockIsolated<[String?]>([])
+        let store = TestStore(
+            initialState: FinanceFeature.State(homeID: "h1", currentUserID: "u1")
+        ) {
+            FinanceFeature()
+        } withDependencies: {
+            $0.finance.summary = { _, month, currency in
+                asked.withValue { $0.append(currency) }
+                var summary = Self.summary(month)
+                summary.currency = currency ?? "EUR"
+                summary.currencies = ["EUR", "TRY"]
+                return AsyncThrowingStream { $0.yield(summary) }
+            }
+            $0.finance.expenses = { _, _ in .never }
+            $0.finance.bills = { _ in .never }
+            $0.finance.budgets = { _ in .never }
+            $0.homes.members = { _ in .never }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.task)
+        await store.receive(\.summaryUpdated)
+        #expect(store.state.currency == "EUR")
+        #expect(store.state.hasSeveralCurrencies)
+
+        // Nothing is converted: 500 lira and 20 euros are two sets of figures,
+        // and asking for one is a different subscription.
+        await store.send(.currencySelected("TRY")) {
+            $0.selectedCurrency = "TRY"
+            $0.isLoading = true
+        }
+        await store.receive(\.summaryUpdated)
+        #expect(store.state.currency == "TRY")
+        #expect(asked.value == [nil, "TRY"])
+    }
+
+    @Test("A summary for a currency that has been switched away from is dropped")
+    func staleCurrencyIsIgnored() async {
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        await store.send(.currencySelected("TRY")) {
+            $0.selectedCurrency = "TRY"
+            $0.isLoading = true
+        }
+
+        var euros = Self.summary(.current)
+        euros.currency = "EUR"
+        await store.send(.summaryUpdated(euros))
+        #expect(store.state.isLoading)
+
+        var lira = Self.summary(.current)
+        lira.currency = "TRY"
+        await store.send(.summaryUpdated(lira)) {
+            $0.isLoading = false
+        }
+        #expect(store.state.currency == "TRY")
+    }
+
+    @Test("A ledger with two currencies never adds one to the other")
+    func ledgerScopesToTheSelectedCurrency() async {
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        var summary = Self.summary(.current)
+        summary.currency = "EUR"
+        summary.currencies = ["EUR", "TRY"]
+        await store.send(.summaryUpdated(summary))
+
+        let euros = Expense(
+            id: "e1", title: "Coffee", amount: 500, currency: "EUR", paidBy: "u1"
+        )
+        let lira = Expense(
+            id: "e2", title: "Kira", amount: 50_000, currency: "TRY", paidBy: "u1"
+        )
+        await store.send(.expensesUpdated(.current, [euros, lira]))
+
+        // Only the selected currency's rows, so the running total under the
+        // search field is a number that means something.
+        #expect(store.state.filteredExpenses.map(\.id) == ["e1"])
+        #expect(store.state.filteredTotal == 500)
+
+        await store.send(.currencySelected("TRY")) { $0.selectedCurrency = "TRY" }
+        var inLira = summary
+        inLira.currency = "TRY"
+        await store.send(.summaryUpdated(inLira))
+        #expect(store.state.filteredExpenses.map(\.id) == ["e2"])
+        #expect(store.state.filteredTotal == 50_000)
+    }
+
+    @Test("A household with one currency has nothing narrowed and no picker")
+    func singleCurrencyHouseholdIsUnaffected() async {
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        var summary = Self.summary(.current)
+        summary.currency = "EUR"
+        summary.currencies = ["EUR"]
+        await store.send(.summaryUpdated(summary))
+        await store.send(.expensesUpdated(.current, [
+            Expense(id: "e1", title: "Coffee", amount: 500, currency: "EUR", paidBy: "u1"),
+        ]))
+
+        #expect(!store.state.hasSeveralCurrencies)
+        #expect(store.state.filteredExpenses.count == 1)
+    }
+
+    @Test("Bill badges count every currency; the committed total counts one")
+    func billCountersAreHonestAboutCurrency() async {
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        var summary = Self.summary(.current)
+        summary.currency = "EUR"
+        summary.currencies = ["EUR", "TRY"]
+        await store.send(.summaryUpdated(summary))
+
+        let past = Timestamp(Date().addingTimeInterval(-3 * 86_400))
+        let soon = Timestamp(Date().addingTimeInterval(2 * 86_400))
+        await store.send(.billsUpdated([
+            Bill(id: "b1", title: "Power", amount: 5_000, currency: "EUR",
+                 cycle: .monthly, dueDate: past),
+            Bill(id: "b2", title: "Kira", amount: 900_000, currency: "TRY",
+                 cycle: .monthly, dueDate: soon),
+        ]))
+
+        // Every bill is on screen whatever it is written in, so the badges have
+        // to count all of them or they contradict the list underneath.
+        #expect(store.state.overdueCount == 1)
+        #expect(store.state.dueSoonCount == 1)
+        // The committed figure is a sum, so it is the one thing that is scoped.
+        #expect(store.state.monthlyCommitted == 5_000)
+    }
+
+    @Test("Backfilling a past month dates the expense in that month, not today")
+    func composerDatesIntoTheShownMonth() async {
+        let store = Self.financeStore()
+        store.exhaustivity = .off
+
+        let august = CalendarMonth.current.advanced(by: -1)
+        await store.send(.monthSelected(august))
+        await store.send(.addExpenseTapped)
+
+        guard case let .composeExpense(composer) = store.state.destination else {
+            Issue.record("expected the expense composer")
+            return
+        }
+        #expect(CalendarMonth(containing: composer.spentAt) == august)
+    }
+}
+
+@MainActor
+@Suite("Expense composer")
+struct ExpenseComposerTests {
+
+    private static let members: IdentifiedArrayOf<User> = [
+        User(id: "u1", name: "Ada"),
+        User(id: "u2", name: "Grace"),
+        User(id: "u3", name: "Alan"),
+    ]
+
+    private static func composer(
+        editing: Expense? = nil,
+        saved: LockIsolated<[NewExpense]> = LockIsolated([])
+    ) -> TestStoreOf<ExpenseComposerFeature> {
+        TestStore(
+            initialState: ExpenseComposerFeature.State(
+                homeID: "h1",
+                members: members,
+                currentUserID: "u1",
+                currency: "EUR",
+                editing: editing
+            )
+        ) {
+            ExpenseComposerFeature()
+        } withDependencies: {
+            $0.finance.createExpense = { new in saved.withValue { $0.append(new) } }
+            $0.finance.updateExpense = { _, new in saved.withValue { $0.append(new) } }
+        }
+    }
+
+    @Test("A new expense starts split across the whole household, paid by you")
+    func defaults() {
+        let state = ExpenseComposerFeature.State(
+            homeID: "h1",
+            members: Self.members,
+            currentUserID: "u2",
+            currency: "EUR"
+        )
+        #expect(state.paidBy == "u2")
+        #expect(state.participants == ["u1", "u2", "u3"])
+        // The person entering it comes first, because they paid for it far more
+        // often than not.
+        #expect(state.orderedMembers.first?.id == "u2")
+    }
+
+    @Test("The preview is the split the server will store, to the cent")
+    func previewMatchesTheServersArithmetic() async {
+        let store = Self.composer()
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.amountText, "10")))
+        // 3.34 + 3.33 + 3.33 — the same largest-remainder division the server
+        // runs, so the preview and the saved ledger cannot disagree.
+        #expect(store.state.preview.map(\.amount) == [334, 333, 333])
+        #expect(store.state.preview.reduce(0) { $0 + $1.amount } == 1_000)
+
+        await store.send(.participantToggled("u3"))
+        #expect(store.state.preview.map(\.amount) == [500, 500])
+    }
+
+    @Test("A split can never come down to nobody")
+    func neverEmpties() async {
+        let store = Self.composer()
+        store.exhaustivity = .off
+
+        await store.send(.onlyMeTapped)
+        #expect(store.state.participants == ["u1"])
+        // Refused rather than left with a save button that goes grey without
+        // saying why.
+        await store.send(.participantToggled("u1"))
+        #expect(store.state.participants == ["u1"])
+    }
+
+    @Test("An exact split that does not add up is refused, and says by how much")
+    func exactSplitMustBalance() async {
+        let store = Self.composer()
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.title, "Lasagne")))
+        await store.send(.binding(.set(\.amountText, "30")))
+        await store.send(.binding(.set(\.mode, .exact)))
+        // Seeded from the equal split, which already adds up.
+        #expect(store.state.isBalanced)
+        #expect(store.state.canSubmit)
+
+        await store.send(.binding(.set(\.exact, ["u1": "5", "u2": "5", "u3": "5"])))
+        #expect(store.state.exactRemainder == 1_500)
+        #expect(!store.state.canSubmit)
+
+        await store.send(.submitTapped)
+        // A refusal has to be felt as well as read.
+        #expect(store.state.shakes == 1)
+        #expect(store.state.inlineError != nil)
+    }
+
+    @Test("Weighted shares divide the money and still add up")
+    func weightedShares() async {
+        let store = Self.composer()
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.amountText, "10")))
+        await store.send(.binding(.set(\.mode, .shares)))
+        await store.send(.weightChanged("u1", 2))
+        await store.send(.weightChanged("u3", 0))
+
+        #expect(store.state.preview.map(\.userID) == ["u1", "u2"])
+        #expect(store.state.preview.map(\.amount) == [667, 333])
+        #expect(store.state.preview.reduce(0) { $0 + $1.amount } == 1_000)
+    }
+
+    @Test("Saving sends what the preview was showing")
+    func savingSendsThePreview() async {
+        let saved = LockIsolated<[NewExpense]>([])
+        let store = Self.composer(saved: saved)
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.title, "Lasagne")))
+        await store.send(.binding(.set(\.amountText, "12,50")))
+        await store.send(.binding(.set(\.category, .dining)))
+        await store.send(.submitTapped)
+        await store.receive(\.saved)
+        await store.receive(\.delegate)
+
+        #expect(saved.value.count == 1)
+        let payload = saved.value[0]
+        #expect(payload.amount == 1_250)
+        #expect(payload.category == .dining)
+        // A set: the participants travel in the order the sheet listed them —
+        // the person entering it first, then everybody else by name — and the
+        // server treats them as a set either way.
+        #expect(Set(payload.participants) == ["u1", "u2", "u3"])
+    }
+
+    @Test("Reopening an expense restores the shares that were typed, not the amounts they became")
+    func editingRestoresAuthoredWeights() {
+        let expense = Expense(
+            id: "e1",
+            title: "Rent",
+            amount: 90_000,
+            currency: "EUR",
+            paidBy: "u1",
+            splits: [
+                ExpenseSplit(userID: "u1", amount: 60_000),
+                ExpenseSplit(userID: "u2", amount: 30_000),
+            ],
+            splitMode: .shares,
+            weights: [
+                ExpenseWeight(userID: "u1", weight: 2),
+                ExpenseWeight(userID: "u2", weight: 1),
+            ]
+        )
+        let state = ExpenseComposerFeature.State(
+            homeID: "h1",
+            members: Self.members,
+            currentUserID: "u1",
+            currency: "EUR",
+            editing: expense
+        )
+        #expect(state.isEditing)
+        #expect(state.mode == .shares)
+        // Two shares and one, not 600 and 300 — otherwise editing the total
+        // would silently turn a proportional split into an exact one.
+        #expect(state.weights["u1"] == 2)
+        #expect(state.weights["u2"] == 1)
+        #expect(state.amountMinor == 90_000)
+    }
+
+    @Test("Deleting from the editor hands the row back to the screen's undo path")
+    func deleteDelegatesRatherThanWriting() async {
+        let store = Self.composer(editing: Expense(
+            id: "e1", title: "Milk", amount: 500, paidBy: "u1"
+        ))
+        await store.send(.deleteTapped)
+        await store.receive(\.delegate.deleteRequested)
+    }
+}
+
+@MainActor
+@Suite("Settling up")
+struct SettleUpTests {
+
+    private static let members: IdentifiedArrayOf<User> = [
+        User(id: "u1", name: "Ada"),
+        User(id: "u2", name: "Grace"),
+        User(id: "u3", name: "Alan"),
+    ]
+
+    @Test("The sheet opens on the payment the viewer is actually part of")
+    func preloadsTheViewersPayment() {
+        let state = SettleUpFeature.State(
+            homeID: "h1",
+            currentUserID: "u3",
+            currency: "EUR",
+            members: Self.members,
+            balances: [
+                MemberFinance(userID: "u1", name: "Ada", net: 5_000),
+                MemberFinance(userID: "u2", name: "Grace", net: -1_000),
+                MemberFinance(userID: "u3", name: "Alan", net: -4_000),
+            ],
+            transfers: [
+                Transfer(from: "u2", to: "u1", amount: 1_000),
+                Transfer(from: "u3", to: "u1", amount: 4_000),
+            ]
+        )
+        // Not the first suggestion — the first one involving *them*. People open
+        // this screen to settle their own debt, not to referee somebody else's.
+        #expect(state.from == "u3")
+        #expect(state.to == "u1")
+        #expect(state.amountMinor == 4_000)
+        #expect(state.canSubmit)
+        #expect(state.name(for: "u3") == "You")
+    }
+
+    @Test("Recording a payment writes it and marks that suggestion done")
+    func recordingASuggestion() async {
+        let recorded = LockIsolated<[NewSettlement]>([])
+        let store = TestStore(
+            initialState: SettleUpFeature.State(
+                homeID: "h1",
+                currentUserID: "u1",
+                currency: "EUR",
+                members: Self.members,
+                balances: [
+                    MemberFinance(userID: "u1", name: "Ada", net: 4_000),
+                    MemberFinance(userID: "u2", name: "Grace", net: -4_000),
+                ],
+                transfers: [Transfer(from: "u2", to: "u1", amount: 4_000)]
+            )
+        ) {
+            SettleUpFeature()
+        } withDependencies: {
+            $0.finance.settle = { payment in recorded.withValue { $0.append(payment) } }
+        }
+        store.exhaustivity = .off
+
+        #expect(store.state.openTransfers.count == 1)
+        await store.send(.recordTapped)
+        await store.receive(\.recorded)
+        await store.receive(\.delegate)
+
+        #expect(recorded.value.count == 1)
+        #expect(recorded.value[0].from == "u2")
+        #expect(recorded.value[0].to == "u1")
+        #expect(recorded.value[0].amount == 4_000)
+        // The row cannot be tapped twice while the ledger catches up.
+        #expect(store.state.openTransfers.isEmpty)
+    }
+
+    @Test("A payment needs two different people")
+    func refusesAPaymentToYourself() {
+        var state = SettleUpFeature.State(
+            homeID: "h1",
+            currentUserID: "u1",
+            currency: "EUR",
+            members: Self.members,
+            balances: [],
+            transfers: []
+        )
+        state.from = "u1"
+        state.to = "u1"
+        state.amountText = "40"
+        #expect(!state.canSubmit)
+        state.to = "u2"
+        #expect(state.canSubmit)
+    }
+}
+
+@MainActor
+@Suite("Bill composer")
+struct BillComposerTests {
+
+    private static let members: IdentifiedArrayOf<User> = [User(id: "u1", name: "Ada")]
+
+    private static func composer(
+        editing: Bill? = nil,
+        saved: LockIsolated<[NewBill]> = LockIsolated([])
+    ) -> TestStoreOf<BillComposerFeature> {
+        TestStore(
+            initialState: BillComposerFeature.State(
+                homeID: "h1",
+                members: members,
+                currency: "EUR",
+                knownCurrencies: ["EUR", "TRY"],
+                editing: editing
+            )
+        ) {
+            BillComposerFeature()
+        } withDependencies: {
+            $0.finance.createBill = { new in saved.withValue { $0.append(new) } }
+            $0.finance.updateBill = { _, new in saved.withValue { $0.append(new) } }
+        }
+    }
+
+    @Test("A new bill is reminded about the day before, without anyone finding the setting")
+    func remindersDefault() {
+        let state = BillComposerFeature.State(
+            homeID: "h1", members: Self.members, currency: "EUR"
+        )
+        #expect(state.reminders == [1])
+        // And a bill that is due the moment it is created would open the screen
+        // already overdue, so it defaults a month out.
+        #expect(state.dueDate > Date())
+    }
+
+    @Test("At most three reminders, and the fourth is simply not offered")
+    func remindersAreCapped() async {
+        let store = Self.composer()
+        store.exhaustivity = .off
+
+        await store.send(.reminderToggled(7))
+        await store.send(.reminderToggled(3))
+        #expect(store.state.reminders == [1, 3, 7])
+        #expect(!store.state.canAddReminder)
+
+        // Silently refused rather than alerted: the chips that cannot be added
+        // are already dim, so there is nothing to explain.
+        await store.send(.reminderToggled(0))
+        #expect(store.state.reminders == [1, 3, 7])
+
+        await store.send(.reminderToggled(3))
+        #expect(store.state.reminders == [1, 7])
+        #expect(store.state.canAddReminder)
+    }
+
+    @Test("Saving carries the reminders and the bill's own currency")
+    func savingCarriesRemindersAndCurrency() async {
+        let saved = LockIsolated<[NewBill]>([])
+        let store = Self.composer(saved: saved)
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.title, "Kira")))
+        await store.send(.binding(.set(\.currency, "TRY")))
+        await store.send(.binding(.set(\.amountText, "9000")))
+        await store.send(.reminderToggled(3))
+        await store.send(.submitTapped)
+        await store.receive(\.saved)
+
+        #expect(saved.value.count == 1)
+        let payload = saved.value[0]
+        #expect(payload.currency == "TRY")
+        // TRY has two subunit digits, so 9000 lira is 900000 kuruş.
+        #expect(payload.amount == 900_000)
+        // Furthest-out nudge first, which is the order they will fire in.
+        #expect(payload.reminders == [3, 1])
+    }
+
+    @Test("A yearly bill and the rent are comparable once said per month")
+    func monthlyCostIsShown() async {
+        let store = Self.composer()
+        store.exhaustivity = .off
+
+        await store.send(.binding(.set(\.amountText, "120")))
+        await store.send(.binding(.set(\.cycle, .yearly)))
+        #expect(store.state.monthlyCost == 1_000)
+    }
+
+    @Test("Deleting a bill is confirmed inside the sheet that offered it")
+    func deleteConfirmsInPlace() async {
+        let store = Self.composer(editing: Bill(
+            id: "b1", title: "Power", amount: 5_000, currency: "EUR"
+        ))
+        store.exhaustivity = .off
+
+        await store.send(.deleteTapped)
+        #expect(store.state.alert != nil)
+        await store.send(.alert(.presented(.confirmDelete)))
+        await store.receive(\.delegate)
+    }
+}
+

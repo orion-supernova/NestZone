@@ -39,6 +39,7 @@ public struct HubView: View {
             case let .shopping(store): ShoppingView(store: store)
             case let .recipes(store): RecipesView(store: store)
             case let .movies(store): MoviesView(store: store)
+            case let .finance(store): FinanceView(store: store)
             }
         }
     }
@@ -48,7 +49,10 @@ public struct HubView: View {
         case .shopping: store.shoppingCount
         case .recipes: store.recipeCount
         case .movies: store.movieCount
-        case .maintenance, .finance, .calendar: nil
+        // Zero bills needing attention is good news, and a tile shouting "0"
+        // reads as something missing rather than as nothing to do.
+        case .finance: store.billsDueCount > 0 ? store.billsDueCount : nil
+        case .maintenance, .calendar: nil
         }
     }
 }

@@ -39,6 +39,10 @@ public enum MovieListsTable {}
 public enum MoviesTable {}
 public enum PollsTable {}
 public enum MealPlansTable {}
+public enum ExpensesTable {}
+public enum SettlementsTable {}
+public enum BillsTable {}
+public enum BudgetsTable {}
 
 public typealias UserID = ConvexID<UsersTable>
 public typealias HomeID = ConvexID<HomesTable>
@@ -52,3 +56,7 @@ public typealias MovieListID = ConvexID<MovieListsTable>
 public typealias StoredMovieID = ConvexID<MoviesTable>
 public typealias PollID = ConvexID<PollsTable>
 public typealias MealPlanID = ConvexID<MealPlansTable>
+public typealias ExpenseID = ConvexID<ExpensesTable>
+public typealias SettlementID = ConvexID<SettlementsTable>
+public typealias BillID = ConvexID<BillsTable>
+public typealias BudgetID = ConvexID<BudgetsTable>
