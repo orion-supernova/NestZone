@@ -99,6 +99,17 @@ public struct MovieNightFeature: Sendable {
         /// A round is open and its cards are still on their way.
         public var isAwaitingDeck: Bool { hasActivePoll && detail == nil }
 
+        /// How many of the household have been through the whole deck.
+        public var finishedCount: Int { detail?.finishedVoterCount ?? 0 }
+
+        /// Whether the round is waiting on anybody. Until it isn't, the person
+        /// who finished first has nothing to do but wait — which is what the
+        /// end-of-deck screen has to say, because the only button on it closes
+        /// the round for everybody.
+        public var everyoneFinished: Bool {
+            memberCount > 0 && finishedCount >= memberCount
+        }
+
         /// Every candidate in the round, however anyone voted.
         ///
         /// Not `deck.count`: the deck holds what the caller has *left*, and it
@@ -380,6 +391,10 @@ extension AlertState where Action == MovieNightFeature.Action.Alert {
             ButtonState(role: .cancel) {
                 TextState(String(localized: L10n.commonCancel))
             }
+        } message: {
+            // The alert had no message at all, so the one irreversible action
+            // in the round asked for confirmation without saying what it did.
+            TextState(String(localized: L10n.movienightCloseMessage))
         }
     }
 }

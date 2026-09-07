@@ -1357,6 +1357,39 @@ struct MovieNightTests {
         #expect(state.isDeckFinished)
     }
 
+    @Test("Finishing your own deck is waiting, not ending")
+    func waitsForTheRestOfTheHouse() async {
+        let dune = PollItem(id: "i1", externalID: "dune")
+        let arrival = PollItem(id: "i2", externalID: "arrival")
+
+        func vote(_ user: UserID, _ target: String) -> PollVote {
+            PollVote(id: "\(user)-\(target)", targetExternalID: target, isYes: true, userID: user)
+        }
+
+        var state = MovieNightFeature.State(homeID: "h1", memberCount: 3, currentUserID: "u1")
+        state.poll = Poll(id: "p1")
+        // One person all the way through, another halfway.
+        state.detail = PollDetail(
+            poll: Poll(id: "p1"),
+            items: [dune, arrival],
+            votes: [vote("u1", "dune"), vote("u1", "arrival"), vote("u2", "dune")],
+            myVotes: [vote("u1", "dune"), vote("u1", "arrival")]
+        )
+        state.deck = []
+
+        #expect(state.isDeckFinished)
+        // Half a deck is not a finished one.
+        #expect(state.finishedCount == 1)
+        #expect(!state.everyoneFinished)
+
+        // The last two catch up.
+        state.detail?.votes.append(contentsOf: [
+            vote("u2", "arrival"), vote("u3", "dune"), vote("u3", "arrival"),
+        ])
+        #expect(state.finishedCount == 3)
+        #expect(state.everyoneFinished)
+    }
+
     @Test("Closing a poll clears the deck and moves the round into history")
     func closedPollResets() async {
         var state = MovieNightFeature.State(homeID: "h1", memberCount: 2)

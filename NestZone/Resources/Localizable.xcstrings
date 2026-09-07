@@ -6214,36 +6214,70 @@
         }
       }
     },
+    "movienight_close_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ending the round closes it for the whole home. Anyone still swiping stops where they are."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turu bitirmek onu tüm ev için kapatır. Hâlâ seçim yapanlar olduğu yerde kalır."
+          }
+        }
+      }
+    },
     "movienight_close_poll": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "End round"
+            "value": "End for everyone"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turu bitir"
+            "value": "Herkes için bitir"
           }
         }
       }
     },
-    "movienight_deck_done": {
+    "movienight_everyone_done": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "That's everything"
+            "value": "Everyone has finished"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hepsi bu kadar"
+            "value": "Herkes bitirdi"
+          }
+        }
+      }
+    },
+    "movienight_finished_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld have finished"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld kişiden %1$lld tanesi bitirdi"
           }
         }
       }

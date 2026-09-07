@@ -3278,11 +3278,6 @@ public enum L10n {
         r("movienight_no_matches_message", "Keep swiping, or add more films to the round.")
     }
 
-    /// That's everything
-    public static var movienightDeckDone: LocalizedStringResource {
-        r("movienight_deck_done", "That's everything")
-    }
-
     /// Pick a genre
     public static var movienightPickGenre: LocalizedStringResource {
         r("movienight_pick_genre", "Pick a genre")
@@ -3290,7 +3285,25 @@ public enum L10n {
 
     /// End round
     public static var movienightClosePoll: LocalizedStringResource {
-        r("movienight_close_poll", "End round")
+        r("movienight_close_poll", "End for everyone")
+    }
+
+    /// Ending the round closes it for the whole home. Anyone still swiping stops where they are.
+    public static var movienightCloseMessage: LocalizedStringResource {
+        r(
+            "movienight_close_message",
+            "Ending the round closes it for the whole home. Anyone still swiping stops where they are."
+        )
+    }
+
+    /// Everyone has finished
+    public static var movienightEveryoneDone: LocalizedStringResource {
+        r("movienight_everyone_done", "Everyone has finished")
+    }
+
+    /// %1$lld of %2$lld have finished
+    public static func movienightFinishedCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("movienight_finished_count", "\(a0) of \(a1) have finished")
     }
 
     /// Previous rounds

@@ -195,21 +195,42 @@ public struct MovieNightView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 10) {
-                Text(L10n.movienightDeckDone)
+        .safeAreaInset(edge: .bottom) { finishedFooter }
+    }
+
+    /// What happens next at the end of your own deck — which is usually
+    /// nothing you have to do.
+    ///
+    /// This was "That's everything" over an End round button, and the button
+    /// was the only thing on the screen to tap, so finishing your deck read as
+    /// an instruction to close the round. It is not: closing it stops everyone
+    /// else mid-swipe and settles the result on whatever they had reached.
+    /// Waiting is the normal ending, so the screen says so and says who it is
+    /// still waiting for; ending early is the exception, and the button now
+    /// says whose round it ends.
+    @ViewBuilder
+    private var finishedFooter: some View {
+        VStack(spacing: 10) {
+            VStack(spacing: 3) {
+                Text(store.everyoneFinished ? L10n.movienightEveryoneDone : L10n.movienightWaiting)
+                    .font(.subheadline.weight(.semibold))
+                Text(L10n.movienightFinishedCount(store.finishedCount, store.memberCount))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+            }
+            .multilineTextAlignment(.center)
+            .animation(Motion.spring, value: store.finishedCount)
 
-                if store.canEndRound {
-                    SecondaryButton(L10n.movienightClosePoll, symbol: "stop.circle") {
-                        store.send(.endRoundTapped)
-                    }
+            if store.canEndRound {
+                SecondaryButton(L10n.movienightClosePoll, symbol: "stop.circle") {
+                    store.send(.endRoundTapped)
                 }
             }
-            .padding(.horizontal, Metrics.screenPadding)
-            .padding(.bottom, 8)
         }
+        .padding(.horizontal, Metrics.screenPadding)
+        .padding(.bottom, 8)
     }
 }
 

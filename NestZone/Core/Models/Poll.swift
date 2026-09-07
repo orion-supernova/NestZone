@@ -237,6 +237,21 @@ extension PollDetail {
     /// Everyone who cast a vote of any kind.
     public var voterCount: Int { Set(votes.map(\.userID)).count }
 
+    /// How many people have been all the way through the deck.
+    ///
+    /// What the end-of-deck screen is actually waiting for. A round is over
+    /// when every member has answered every candidate — not when the first one
+    /// has — so finishing your own deck is a cue to wait, not to close it.
+    public var finishedVoterCount: Int {
+        let targets = Set(items.map(\.externalID))
+        guard !targets.isEmpty else { return 0 }
+        var answered: [UserID: Set<String>] = [:]
+        for vote in votes where targets.contains(vote.targetExternalID) {
+            answered[vote.userID, default: []].insert(vote.targetExternalID)
+        }
+        return answered.values.filter { $0.count == targets.count }.count
+    }
+
     /// How a round actually turned out.
     ///
     /// The history sheet used to take the first unanimous match and, failing
