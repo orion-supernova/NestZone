@@ -14,6 +14,10 @@ public struct PollsClient: Sendable {
     public var create: @Sendable (HomeID, String, Poll.Kind, String?, [PollCandidate]) async throws -> PollID
     public var addItem: @Sendable (PollID, PollCandidate, Int?) async throws -> Void
     public var vote: @Sendable (PollID, String, Bool) async throws -> Void
+    /// Retracts the caller's vote on one candidate, so the card returns to the
+    /// deck. Deleting the row is what brings it back: `unvotedItems` is derived
+    /// from the votes, so a vote left in place keeps the card hidden.
+    public var unvote: @Sendable (PollID, String) async throws -> Void
     public var close: @Sendable (PollID) async throws -> Void
     public var remove: @Sendable (PollID) async throws -> Void
 }
@@ -80,6 +84,12 @@ extension PollsClient: DependencyKey {
             try await ConvexConnection.shared.mutate(
                 "polls:vote",
                 args: ["pollId": pollID, "target_external_id": externalID, "vote": isYes]
+            )
+        },
+        unvote: { pollID, externalID in
+            try await ConvexConnection.shared.mutate(
+                "polls:unvote",
+                args: ["pollId": pollID, "target_external_id": externalID]
             )
         },
         close: { pollID in

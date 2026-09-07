@@ -20,7 +20,8 @@ public struct MovieNightView: View {
     /// and come straight back for the idle and results screens, which are
     /// ordinary pages and want their navigation.
     private var isImmersive: Bool {
-        store.hasActivePoll && !store.isDeckFinished && !store.isLoading && !store.isStarting
+        store.hasActivePoll && !store.isDeckFinished && !store.isLoading
+            && !store.isStarting && !store.isAwaitingDeck
     }
 
     public var body: some View {
@@ -87,10 +88,12 @@ public struct MovieNightView: View {
     private var content: some View {
         if store.isLoading {
             LoadingView(message: L10n.commonLoading)
-        } else if store.isStarting {
-            // Building a round means a TMDb round trip and then a write. A bare
-            // spinner said nothing about which of those was taking the time.
-            LoadingView(message: L10n.movienightBuildingDeck)
+        } else if store.isStarting || store.isAwaitingDeck {
+            // Building a round means a TMDb round trip and then a write, and
+            // joining one means waiting for its candidates. Both used to land
+            // on the end-of-round screen or a bare spinner; this is the shape
+            // of what is coming.
+            DeckSkeleton(message: L10n.movienightBuildingDeck)
         } else if !store.hasActivePoll {
             idle
         } else if store.isDeckFinished {
@@ -98,9 +101,12 @@ public struct MovieNightView: View {
         } else {
             SwipeDeck(
                 items: store.remaining,
-                total: store.deck.count,
+                position: store.position,
+                total: store.roundSize,
+                canUndo: store.canUndo,
                 onSwipe: { item, isYes in store.send(.swiped(item, isYes: isYes)) },
-                onOpen: { store.send(.movieTapped($0)) }
+                onOpen: { store.send(.movieTapped($0)) },
+                onUndo: { store.send(.undoTapped) }
             )
         }
     }
@@ -213,13 +219,18 @@ public struct MovieNightView: View {
 /// up to thirty full-size posters — behind the visible one.
 struct SwipeDeck: View {
     let items: [PollItem]
-    /// Everything the round started with, for the counter.
+    /// Which card is on top, counting from one.
+    let position: Int
+    /// Every candidate in the round.
     let total: Int
+    /// Whether there is a swipe to take back.
+    let canUndo: Bool
     let onSwipe: (PollItem, Bool) -> Void
     /// Opening a card rather than answering it. A yes or a no is a decision made
     /// on a poster and a title alone; this is the way to the plot, the cast and
     /// the rating before committing to either.
     let onOpen: (PollItem) -> Void
+    let onUndo: () -> Void
 
     /// Set by the hovering buttons. A tap has to leave the deck exactly the way
     /// a drag does — the card owns its own offset, so the instruction is passed
@@ -231,9 +242,9 @@ struct SwipeDeck: View {
         let isYes: Bool
     }
 
-    private static let visibleCards = 3
+    fileprivate static let visibleCards = 3
     /// Height kept clear at the bottom for the floating controls.
-    private static let controlsRoom: CGFloat = 92
+    fileprivate static let controlsRoom: CGFloat = 92
 
     var body: some View {
         GeometryReader { geometry in
@@ -282,17 +293,23 @@ struct SwipeDeck: View {
         .ignoresSafeArea()
     }
 
-    /// How much of the round is left. A deck with no end in sight is the thing
+    /// Where you are in the round. A deck with no end in sight is the thing
     /// that makes people stop swiping.
+    ///
+    /// Position over total, not what is left over what is left: the deck holds
+    /// only unanswered cards and shrinks as votes confirm, so counting down
+    /// with it moved both numbers at once. This one climbs to a total that
+    /// stays put.
     private var counter: some View {
-        Text(L10n.movienightRemaining(items.count, max(total, items.count)))
+        Text(L10n.movienightPosition(position, total))
             .font(.footnote.weight(.semibold))
             .monospacedDigit()
             .contentTransition(.numericText())
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
             .glassEffect(.regular, in: .capsule)
-            .animation(Motion.spring, value: items.count)
+            .animation(Motion.spring, value: position)
+            .accessibilityLabel(Text(L10n.movienightPositionLabel(position, total)))
             .accessibilityAddTraits(.updatesFrequently)
     }
 
@@ -302,21 +319,33 @@ struct SwipeDeck: View {
     /// one to say no thirty times.
     private var controls: some View {
         GlassGroup(spacing: 10) {
-            HStack(spacing: 28) {
+            HStack(spacing: 22) {
+                // Smaller, and first: taking a card back is the rarer thing to
+                // want, and it must not compete with the two answers for the
+                // thumb that is about to give one.
+                SwipeButton(
+                    symbol: "arrow.uturn.backward",
+                    tint: Palette.warning,
+                    label: L10n.movienightUndo,
+                    diameter: 52,
+                    isEnabled: canUndo
+                ) { onUndo() }
+
                 SwipeButton(
                     symbol: "hand.thumbsdown.fill",
                     tint: Palette.danger,
-                    label: L10n.movienightPass
+                    label: L10n.movienightPass,
+                    isEnabled: !items.isEmpty
                 ) { fling(isYes: false) }
 
                 SwipeButton(
                     symbol: "hand.thumbsup.fill",
                     tint: Palette.success,
-                    label: L10n.movienightWouldWatch
+                    label: L10n.movienightWouldWatch,
+                    isEnabled: !items.isEmpty
                 ) { fling(isYes: true) }
             }
         }
-        .disabled(items.isEmpty)
     }
 
     private func fling(isYes: Bool) {
@@ -326,7 +355,7 @@ struct SwipeDeck: View {
 
     /// Fits a 2:3 poster into the space available, so a small phone gets a
     /// shorter card rather than a cropped one.
-    private static func poster(fitting available: CGSize) -> CGSize {
+    fileprivate static func poster(fitting available: CGSize) -> CGSize {
         let width = max(available.width, 0)
         let height = max(available.height, 0)
         let ratio: CGFloat = 3.0 / 2.0
@@ -336,23 +365,87 @@ struct SwipeDeck: View {
     }
 }
 
+/// The deck before it has any cards.
+///
+/// A spinner in the middle of an empty screen says "wait" without saying what
+/// for, and the screen this replaces was worse than that: an empty round read
+/// as a finished one, so building a deck showed "No match yet" and offered to
+/// close the round. This is the shape of what is coming, sized by the same
+/// maths the real stack uses, so the cards arrive into the space already held
+/// for them.
+private struct DeckSkeleton: View {
+    let message: LocalizedStringResource
+
+    var body: some View {
+        GeometryReader { geometry in
+            let size = SwipeDeck.poster(fitting: CGSize(
+                width: geometry.size.width - 32,
+                height: geometry.size.height - SwipeDeck.controlsRoom
+            ))
+
+            VStack(spacing: Metrics.sectionSpacing) {
+                ZStack {
+                    ForEach((0..<SwipeDeck.visibleCards).reversed(), id: \.self) { index in
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .fill(.quaternary)
+                            .frame(width: size.width, height: size.height)
+                            // The same peek as the real deck, so the stack reads
+                            // as a stack rather than as one blank panel.
+                            .scaleEffect(1 - CGFloat(index) * 0.04)
+                            .offset(y: CGFloat(index) * 12)
+                            .opacity(1 - Double(index) * 0.28)
+                    }
+                }
+                .redacted(reason: .placeholder)
+
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .transition(.opacity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(message))
+    }
+}
+
 /// One of the two answers, as a floating glass button.
 private struct SwipeButton: View {
     let symbol: String
     let tint: Color
     let label: LocalizedStringResource
+    var diameter: CGFloat = 68
+    /// Whether the button has anything to do. It owns how that looks rather
+    /// than leaving the caller to dim it, so every control in the row goes
+    /// inert the same way.
+    var isEnabled = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(tint)
-                .frame(width: 68, height: 68)
+                .font(.system(size: diameter * 0.38, weight: .semibold))
+                // Grey, not a pale version of the tint. A washed-out orange
+                // still reads as orange — as the same button, rendered badly —
+                // where grey reads as a button with nothing behind it.
+                .foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
+                .frame(width: diameter, height: diameter)
                 .contentShape(.circle)
         }
         .buttonStyle(.pressable)
-        .glassEffect(.regular.interactive(), in: .circle)
+        // The glass stops responding to touch as well as to taps: an
+        // interactive surface that lights up under a finger and then does
+        // nothing is worse than one that never offered.
+        .glassEffect(isEnabled ? .regular.interactive() : .regular, in: .circle)
+        .opacity(isEnabled ? 1 : 0.55)
+        .disabled(!isEnabled)
+        // Undo empties itself the moment it is used, so the change of state is
+        // the feedback for the tap. It should fade, not blink.
+        .animation(Motion.spring, value: isEnabled)
         .accessibilityLabel(Text(label))
     }
 }

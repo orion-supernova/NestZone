@@ -3303,9 +3303,19 @@ public enum L10n {
         r("movienight_building_deck", "Rounding up the films…")
     }
 
-    /// %1$lld of %2$lld left
-    public static func movienightRemaining(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
-        r("movienight_remaining", "\(a0) of \(a1) left")
+    /// %1$lld/%2$lld
+    public static func movienightPosition(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("movienight_position", "\(a0)/\(a1)")
+    }
+
+    /// Film %1$lld of %2$lld
+    public static func movienightPositionLabel(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("movienight_position_label", "Film \(a0) of \(a1)")
+    }
+
+    /// Undo
+    public static var movienightUndo: LocalizedStringResource {
+        r("movienight_undo", "Undo")
     }
 
     /// Pass

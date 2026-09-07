@@ -33,6 +33,31 @@ public struct MovieNightFeature: Sendable {
         /// Locally-swiped ids, so a card leaves immediately rather than waiting
         /// for the server round trip.
         public var swiped: Set<String> = []
+        /// The last card answered, kept so it can be taken back.
+        ///
+        /// One card deep on purpose. A swipe is the whole interaction and it is
+        /// one flick away from the wrong answer, so the last one has to be
+        /// recoverable — but a deck you can rewind through is a list, and the
+        /// point of the round is to decide.
+        public var lastSwipe: Swipe?
+        /// A card taken back locally, held in the deck until the server drops
+        /// the vote.
+        ///
+        /// The dual of `swiped`. Without it, a detail push still carrying the
+        /// retracted vote recomputes `deck` from `unvotedItems` and takes the
+        /// card straight back out — so an undo flickered the card in, out, and
+        /// in again as the two round trips landed.
+        public var restoring: PollItem?
+
+        public struct Swipe: Equatable, Sendable {
+            public var item: PollItem
+            public var isYes: Bool
+
+            public init(item: PollItem, isYes: Bool) {
+                self.item = item
+                self.isYes = isYes
+            }
+        }
 
         @Shared(.includeAdultTitles) public var includeAdultTitles: Bool
 
@@ -59,7 +84,36 @@ public struct MovieNightFeature: Sendable {
             deck.filter { !swiped.contains($0.externalID) }
         }
 
-        public var isDeckFinished: Bool { hasActivePoll && remaining.isEmpty }
+        /// True once the caller has answered every candidate in the round.
+        ///
+        /// The detail has to have arrived first. Between a round appearing on
+        /// the list stream and its candidates landing on the detail stream the
+        /// deck is empty for a reason that has nothing to do with being
+        /// finished, and reading that as "done" put the end-of-round screen —
+        /// "No match yet", and a button to close the round — in front of a
+        /// round nobody had seen a single card of yet.
+        public var isDeckFinished: Bool {
+            hasActivePoll && detail != nil && remaining.isEmpty
+        }
+
+        /// A round is open and its cards are still on their way.
+        public var isAwaitingDeck: Bool { hasActivePoll && detail == nil }
+
+        /// Every candidate in the round, however anyone voted.
+        ///
+        /// Not `deck.count`: the deck holds what the caller has *left*, and it
+        /// shrinks as the server confirms each vote. Counting the round with it
+        /// gave a total that chased the position down the screen — "29 of 29
+        /// left" one card after "30 of 30 left".
+        public var roundSize: Int { max(detail?.items.count ?? 0, deck.count) }
+
+        /// Which card is on top, counting from one.
+        public var position: Int {
+            guard roundSize > 0 else { return 0 }
+            return min(roundSize - remaining.count + 1, roundSize)
+        }
+
+        public var canUndo: Bool { hasActivePoll && lastSwipe != nil }
     }
 
     @Reducer
@@ -83,6 +137,7 @@ public struct MovieNightFeature: Sendable {
         case pollCreated(PollID)
         case startFailed(AppError)
         case swiped(PollItem, isYes: Bool)
+        case undoTapped
         case voteFailed(AppError)
         case movieTapped(PollItem)
         case summaryTapped
@@ -136,11 +191,15 @@ public struct MovieNightFeature: Sendable {
                     state.detail = nil
                     state.deck = []
                     state.swiped = []
+                    state.lastSwipe = nil
+                    state.restoring = nil
                     return .cancel(id: CancelID.detail)
                 }
                 guard changed else { return .none }
 
                 state.swiped = []
+                state.lastSwipe = nil
+                state.restoring = nil
                 // Subscribing to the detail is what makes the round shared: a
                 // teammate's vote lands here without anyone refreshing.
                 return .run { send in
@@ -160,6 +219,19 @@ public struct MovieNightFeature: Sendable {
                 // the local optimistic marker.
                 let confirmed = Set(detail.myVotes.map(\.targetExternalID))
                 state.swiped.subtract(confirmed)
+
+                if let restoring = state.restoring {
+                    if confirmed.contains(restoring.externalID) {
+                        // The retraction has not landed yet. Hold the card where
+                        // the undo put it rather than letting this push undo the
+                        // undo.
+                        if !state.deck.contains(where: { $0.externalID == restoring.externalID }) {
+                            state.deck.insert(restoring, at: 0)
+                        }
+                    } else {
+                        state.restoring = nil
+                    }
+                }
                 return .none
 
             case let .loadFailed(error):
@@ -212,8 +284,32 @@ public struct MovieNightFeature: Sendable {
             case let .swiped(item, isYes):
                 guard let pollID = state.poll?.id else { return .none }
                 state.swiped.insert(item.externalID)
+                state.lastSwipe = State.Swipe(item: item, isYes: isYes)
+                // Answering the card that was just taken back settles it.
+                state.restoring = nil
                 return .run { send in
                     try await pollsClient.vote(pollID, item.externalID, isYes)
+                } catch: { error, send in
+                    await send(.voteFailed(AppError(error)))
+                }
+
+            case .undoTapped:
+                guard let pollID = state.poll?.id, let last = state.lastSwipe else { return .none }
+                // Spent: one step back, and the next one has to be earned by
+                // another swipe.
+                state.lastSwipe = nil
+                state.swiped.remove(last.item.externalID)
+                state.restoring = last.item
+                // A vote the server has already confirmed took the card out of
+                // the deck as well, so dropping the optimistic marker is not
+                // enough to bring it back. It goes on top, which is where the
+                // live subscription will put it too — its `order` is lower than
+                // everything still unanswered.
+                if !state.deck.contains(where: { $0.externalID == last.item.externalID }) {
+                    state.deck.insert(last.item, at: 0)
+                }
+                return .run { [externalID = last.item.externalID] send in
+                    try await pollsClient.unvote(pollID, externalID)
                 } catch: { error, send in
                     await send(.voteFailed(AppError(error)))
                 }

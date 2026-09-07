@@ -161,6 +161,42 @@ export const vote = mutation({
   },
 });
 
+/**
+ * Take back one vote.
+ *
+ * The deck's single-step undo. A swipe is the whole interaction here and it is
+ * one flick away from the wrong answer, so a card has to be recoverable —
+ * without a retraction the vote stands, `unvotedItems` keeps excluding it, and
+ * the card never comes back.
+ */
+export const unvote = mutation({
+  args: {
+    pollId: v.id("polls"),
+    target_external_id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const poll = await ctx.db.get(args.pollId);
+    if (!poll) throw new Error("Poll not found");
+    await requireDocHome(ctx, poll, "Poll");
+
+    const existing = await ctx.db
+      .query("poll_votes")
+      .withIndex("by_poll_user_target", (q) =>
+        q
+          .eq("poll_id", args.pollId)
+          .eq("user_id", user._id)
+          .eq("target_external_id", args.target_external_id),
+      )
+      .first();
+
+    // Undoing a swipe the server never recorded is not a failure: the vote is
+    // gone either way, which is all the caller asked for. The optimistic client
+    // can outrun its own write, and that must not surface as an error.
+    if (existing) await ctx.db.delete(existing._id);
+  },
+});
+
 /** Add a single item to an existing poll. */
 export const addItem = mutation({
   args: {

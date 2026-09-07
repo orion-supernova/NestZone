@@ -6350,6 +6350,40 @@
         }
       }
     },
+    "movienight_position": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "movienight_position_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film %1$lld of %2$lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld filmden %1$lld."
+          }
+        }
+      }
+    },
     "movienight_previous_rounds": {
       "extractionState": "manual",
       "localizations": {
@@ -6363,23 +6397,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önceki turlar"
-          }
-        }
-      }
-    },
-    "movienight_remaining": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld of %2$lld left"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%2$lld filmden %1$lld tanesi kaldı"
           }
         }
       }
@@ -6431,6 +6448,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ne izlesek"
+          }
+        }
+      }
+    },
+    "movienight_undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri al"
           }
         }
       }

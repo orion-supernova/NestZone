@@ -1214,6 +1214,7 @@ struct MovieNightTests {
 
         await store.send(.swiped(item, isYes: true)) {
             $0.swiped = ["dune"]
+            $0.lastSwipe = MovieNightFeature.State.Swipe(item: item, isYes: true)
         }
         #expect(store.state.remaining.isEmpty)
         #expect(votes.value.count == 1)
@@ -1237,6 +1238,123 @@ struct MovieNightTests {
         // Opening a card is not a vote: it stays in the deck, unswiped.
         #expect(store.state.swiped.isEmpty)
         #expect(store.state.remaining.count == 1)
+    }
+
+    @Test("Undo takes the last swipe back, once")
+    func undoReturnsTheCard() async {
+        let retracted = LockIsolated<[String]>([])
+        var state = MovieNightFeature.State(homeID: "h1", memberCount: 2)
+        state.poll = Poll(id: "p1")
+        let first = PollItem(id: "i1", externalID: "dune", label: "Dune")
+        let second = PollItem(id: "i2", externalID: "arrival", label: "Arrival")
+        state.deck = [first, second]
+
+        let store = TestStore(initialState: state) {
+            MovieNightFeature()
+        } withDependencies: {
+            $0.polls.vote = { _, _, _ in }
+            $0.polls.unvote = { _, external in
+                retracted.withValue { $0.append(external) }
+            }
+        }
+
+        await store.send(.swiped(first, isYes: false)) {
+            $0.swiped = ["dune"]
+            $0.lastSwipe = MovieNightFeature.State.Swipe(item: first, isYes: false)
+        }
+        #expect(store.state.remaining.map(\.externalID) == ["arrival"])
+
+        await store.send(.undoTapped) {
+            $0.swiped = []
+            $0.lastSwipe = nil
+            $0.restoring = first
+        }
+        // Back on top, and the vote is gone from the server too.
+        #expect(store.state.remaining.map(\.externalID) == ["dune", "arrival"])
+        #expect(retracted.value == ["dune"])
+
+        // One step only: the button has nothing left to undo.
+        #expect(!store.state.canUndo)
+        await store.send(.undoTapped)
+    }
+
+    @Test("A confirmed vote does not undo the undo")
+    func restoredCardSurvivesADetailPush() async {
+        var state = MovieNightFeature.State(homeID: "h1", memberCount: 2)
+        state.poll = Poll(id: "p1")
+        let item = PollItem(id: "i1", externalID: "dune", label: "Dune")
+        state.deck = [item]
+        state.restoring = item
+
+        let store = TestStore(initialState: state) { MovieNightFeature() }
+
+        // The push still carries the vote the retraction has not reached yet.
+        let stale = PollDetail(
+            poll: Poll(id: "p1"),
+            items: [item],
+            votes: [],
+            myVotes: [PollVote(id: "v1", targetExternalID: "dune", isYes: false, userID: "u1")]
+        )
+        await store.send(.detailUpdated(stale)) {
+            $0.isLoading = false
+            $0.detail = stale
+            // `unvotedItems` drops it; the marker puts it back.
+            $0.deck = [item]
+        }
+        #expect(store.state.remaining.map(\.externalID) == ["dune"])
+
+        // Once the retraction lands the marker is spent.
+        let settled = PollDetail(poll: Poll(id: "p1"), items: [item], votes: [], myVotes: [])
+        await store.send(.detailUpdated(settled)) {
+            $0.detail = settled
+            $0.deck = [item]
+            $0.restoring = nil
+        }
+    }
+
+    @Test("The counter measures the round, not what is left of it")
+    func positionCountsTheWholeRound() async {
+        var state = MovieNightFeature.State(homeID: "h1", memberCount: 2)
+        state.poll = Poll(id: "p1")
+        let items = (1...18).map { PollItem(id: "i\($0)", externalID: "m\($0)") }
+        state.detail = PollDetail(poll: Poll(id: "p1"), items: items)
+        state.deck = items
+
+        #expect(state.roundSize == 18)
+        #expect(state.position == 1)
+
+        // Six answered: the seventh card is on top, and the total holds.
+        state.swiped = Set(items.prefix(6).map(\.externalID))
+        #expect(state.position == 7)
+        #expect(state.roundSize == 18)
+
+        // The deck shrinking as votes confirm must not shrink the total with it.
+        state.deck = Array(items.dropFirst(6))
+        state.swiped = []
+        #expect(state.position == 7)
+        #expect(state.roundSize == 18)
+    }
+
+    @Test("An open round with no cards yet is loading, not finished")
+    func emptyDeckBeforeDetailIsNotTheEnd() async {
+        var state = MovieNightFeature.State(homeID: "h1", memberCount: 2)
+        state.poll = Poll(id: "p1")
+
+        // The round is on the list stream; its candidates are not here yet.
+        #expect(state.hasActivePoll)
+        #expect(state.isAwaitingDeck)
+        #expect(!state.isDeckFinished)
+
+        // The detail lands with cards: a deck, still not the end.
+        let item = PollItem(id: "i1", externalID: "dune")
+        state.detail = PollDetail(poll: Poll(id: "p1"), items: [item])
+        state.deck = [item]
+        #expect(!state.isAwaitingDeck)
+        #expect(!state.isDeckFinished)
+
+        // Answered: now it is the end.
+        state.swiped = ["dune"]
+        #expect(state.isDeckFinished)
     }
 
     @Test("Closing a poll clears the deck and moves the round into history")
