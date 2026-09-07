@@ -296,3 +296,146 @@ struct DecodingTests {
         #expect(String(decoding: encoded, as: UTF8.self) == "\"abc\"")
     }
 }
+
+/// The maths behind the Home tab's split bar and the contributions screen.
+@Suite("Contributions")
+struct ContributionsMathTests {
+
+    private static func member(
+        _ id: UserID,
+        _ name: String,
+        completed: Int,
+        openAssigned: Int = 0,
+        overdue: Int = 0
+    ) -> MemberContribution {
+        MemberContribution(
+            userID: id,
+            name: name,
+            completed: completed,
+            openAssigned: openAssigned,
+            overdue: overdue
+        )
+    }
+
+    private static func contributions(
+        _ members: [MemberContribution],
+        unattributed: Int = 0
+    ) -> HomeContributions {
+        HomeContributions(
+            windowDays: 30,
+            totalCompleted: members.reduce(0) { $0 + $1.completed } + unattributed,
+            unattributed: unattributed,
+            members: members
+        )
+    }
+
+    @Test("Shares are measured against everything done, unattributed included")
+    func sharesIncludeUnattributed() {
+        let ada = Self.member("u1", "Ada", completed: 6)
+        let grace = Self.member("u2", "Grace", completed: 2)
+        let data = Self.contributions([ada, grace], unattributed: 2)
+
+        #expect(data.totalCompleted == 10)
+        #expect(data.attributed == 8)
+        #expect(data.share(of: ada) == 0.6)
+        #expect(data.share(of: grace) == 0.2)
+        #expect(data.unattributedShare == 0.2)
+        // The bar has to fill exactly, or it reads as missing data.
+        let total = data.share(of: ada) + data.share(of: grace) + data.unattributedShare
+        #expect(abs(total - 1) < 0.000_001)
+    }
+
+    @Test("An empty window divides by nothing")
+    func emptyWindow() {
+        let data = Self.contributions([Self.member("u1", "Ada", completed: 0)])
+        #expect(data.isEmpty)
+        #expect(data.share(of: data.members[0]) == 0)
+        #expect(data.balance == nil)
+        // The activity chart scales against this; zero would be a crash.
+        #expect(data.busiestDay == 1)
+    }
+
+    @Test("Ranking is busiest first, and ties never flicker")
+    func ranking() {
+        let data = Self.contributions([
+            Self.member("u1", "Zoe", completed: 3),
+            Self.member("u2", "Ada", completed: 9),
+            Self.member("u3", "Grace", completed: 3),
+        ])
+        #expect(data.ranked.map(\.displayName) == ["Ada", "Grace", "Zoe"])
+    }
+
+    @Test("Balance runs from an even split to one person doing everything")
+    func balance() {
+        let even = Self.contributions([
+            Self.member("u1", "Ada", completed: 5),
+            Self.member("u2", "Grace", completed: 5),
+        ])
+        #expect(even.balance == 1)
+
+        let allOnOne = Self.contributions([
+            Self.member("u1", "Ada", completed: 10),
+            Self.member("u2", "Grace", completed: 0),
+        ])
+        #expect(allOnOne.balance == 0)
+
+        let tilted = Self.contributions([
+            Self.member("u1", "Ada", completed: 7),
+            Self.member("u2", "Grace", completed: 3),
+        ])
+        let score = try! #require(tilted.balance)
+        #expect(score > 0 && score < 1)
+
+        // A household of one has no split to be unfair about.
+        #expect(Self.contributions([Self.member("u1", "Ada", completed: 4)]).balance == nil)
+    }
+
+    @Test("The verdict reads the balance score, not the raw counts")
+    func verdict() {
+        #expect(ContributionsFeature.State.Verdict(balance: 0.95) == .even)
+        #expect(ContributionsFeature.State.Verdict(balance: 0.8) == .even)
+        #expect(ContributionsFeature.State.Verdict(balance: 0.6) == .tilted)
+        #expect(ContributionsFeature.State.Verdict(balance: 0.2) == .lopsided)
+    }
+
+    @Test("Work kinds come back biggest first, with the zeroes dropped")
+    func byKind() {
+        let member = MemberContribution(
+            userID: "u1", name: "Ada", completed: 9,
+            cleaning: 5, shopping: 0, maintenance: 1, general: 3
+        )
+        #expect(member.byKind.map(\.kind) == [.cleaning, .general, .maintenance])
+        #expect(member.byKind.map(\.count) == [5, 3, 1])
+    }
+
+    @Test("A member row decodes the stats payload's camelCase keys")
+    func decoding() throws {
+        let json = Data("""
+        {"windowDays": 7, "totalCompleted": 4, "unattributed": 1,
+         "members": [{"userId": "u1", "name": null, "email": "ada@example.com",
+                      "completed": 3, "openAssigned": 2, "overdue": 1, "streak": 5,
+                      "cleaning": 1, "shopping": 1, "maintenance": 0, "general": 1}],
+         "days": [{"start": 1757116800000, "total": 3,
+                   "counts": [{"userId": "u1", "count": 3}]}]}
+        """.utf8)
+        let data = try JSONDecoder().decode(HomeContributions.self, from: json)
+
+        let member = try #require(data.members.first)
+        #expect(member.userID == UserID("u1"))
+        // Same fallback as `User.displayName`, so one person is not labelled two
+        // different ways on two screens.
+        #expect(member.displayName == "ada")
+        #expect(member.initials == "A")
+        #expect(member.streak == 5)
+        #expect(data.days.first?.counts.first?.count == 3)
+        #expect(data.busiestDay == 3)
+    }
+
+    @Test("Every window maps to the days the query expects")
+    func windows() {
+        #expect(ContributionWindow.week.days == 7)
+        #expect(ContributionWindow.month.days == 30)
+        // 0 is what `stats:contributions` reads as "no lower bound".
+        #expect(ContributionWindow.allTime.days == 0)
+    }
+}

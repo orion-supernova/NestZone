@@ -17,8 +17,8 @@ public struct HomeView: View {
                 greeting.appear(0)
                 tonightCard.appear(1)
                 statsGrid.appear(2)
-                movieNightCard.appear(3)
-                tasksSection.appear(4)
+                tasksSection.appear(3)
+                movieNightCard.appear(4)
             }
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, Metrics.scrollBottomInset)
@@ -96,12 +96,20 @@ public struct HomeView: View {
                     columns: [GridItem(.adaptive(minimum: 150), spacing: Metrics.stackSpacing)],
                     spacing: Metrics.stackSpacing
                 ) {
+                    // One task tile, not two. It used to carry "Tasks Done" —
+                    // an all-time total that only ever grows — beside "Issues",
+                    // a high-priority count that reads 0 in any household that
+                    // never sets priority. Both were about tasks, and the Tasks
+                    // section directly below now tells the whole story: the
+                    // split, the recent rows, and the done count in the ring
+                    // behind it. What is left is the one task number that moves
+                    // day to day, and `openTasks` had been computed server-side
+                    // and thrown away this whole time.
                     StatTile(
-                        title: L10n.homeStatsTasksDoneTitle,
-                        value: store.stats.completedTasks,
-                        change: store.stats.completedTasksChange,
-                        symbol: "checkmark.circle.fill",
-                        tint: Palette.success
+                        title: L10n.homeStatsTodoTitle,
+                        value: store.stats.openTasks,
+                        symbol: "checklist.unchecked",
+                        tint: Palette.warning
                     ) { store.send(.delegate(.openTasks)) }
 
                     StatTile(
@@ -119,13 +127,6 @@ public struct HomeView: View {
                         symbol: "note.text",
                         tint: theme.support
                     ) { store.send(.delegate(.openNotes)) }
-
-                    StatTile(
-                        title: L10n.homeStatsIssuesTitle,
-                        value: store.stats.urgentTasks,
-                        symbol: "exclamationmark.triangle.fill",
-                        tint: Palette.warning
-                    ) { store.send(.delegate(.openTasks)) }
 
                     // `stats:forHome` has counted unread messages since the
                     // server took the tiles over; nothing had ever displayed it.
@@ -179,30 +180,51 @@ public struct HomeView: View {
 
     // MARK: - Tasks
 
+    /// Chores, and the way into who has been doing them.
+    ///
+    /// The split lives behind the chart button in this header rather than in a
+    /// card above the rows. It was tried as a full-width strip at the top of
+    /// this stack, and it read as a very large first task: two different kinds
+    /// of thing — a summary and the items it summarises — stacked in one column
+    /// with the same surface. A header control says "there is more about this
+    /// section" without competing with the rows for the same glance.
     private var tasksSection: some View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(L10n.homeTasksTitle, symbol: "checklist") {
-                Button { store.send(.delegate(.openTasks)) } label: {
-                    Text(L10n.commonSeeAll).font(.subheadline.weight(.medium))
+                HStack(spacing: 8) {
+                    Button { store.send(.delegate(.openContributions)) } label: {
+                        Image(systemName: "chart.pie.fill")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                    .accessibilityLabel(Text(L10n.contributionsSectionTitle))
+                    .accessibilityIdentifier("ContributionsButton")
+
+                    Button { store.send(.delegate(.openTasks)) } label: {
+                        Text(L10n.commonSeeAll).font(.subheadline.weight(.medium))
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
                 }
-                .buttonStyle(.glass)
-                .controlSize(.small)
             }
 
-            if store.isLoading {
-                SkeletonList(rows: 3, height: 56)
-            } else if store.tasks.isEmpty {
-                EmptyStateView(
-                    title: L10n.homeTasksEmptyTitle,
-                    message: L10n.homeTasksEmptyMessage,
-                    symbol: "checkmark.seal",
-                    action: .init(title: L10n.commonAdd) { store.send(.delegate(.openTasks)) },
-                    isCompact: true
-                )
-                .frame(maxWidth: .infinity)
-            } else {
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
+            GlassGroup {
+                VStack(spacing: Metrics.stackSpacing) {
+                    if store.isLoading {
+                        SkeletonList(rows: 3, height: 56)
+                    } else if store.tasks.isEmpty {
+                        EmptyStateView(
+                            title: L10n.homeTasksEmptyTitle,
+                            message: L10n.homeTasksEmptyMessage,
+                            symbol: "checkmark.seal",
+                            action: .init(title: L10n.commonAdd) {
+                                store.send(.delegate(.openTasks))
+                            },
+                            isCompact: true
+                        )
+                        .frame(maxWidth: .infinity)
+                    } else {
                         ForEach(store.recentTasks) { task in
                             TaskRow(task: task) { store.send(.taskToggled(task.id)) }
                                 .glassEffectID(task.id.rawValue, in: glass)

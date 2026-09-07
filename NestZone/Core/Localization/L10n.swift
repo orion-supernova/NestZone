@@ -263,18 +263,156 @@ public enum L10n {
         r("home_stats_shopping_title", "Shopping")
     }
 
-    /// Issues
-    public static var homeStatsIssuesTitle: LocalizedStringResource {
-        r("home_stats_issues_title", "Issues")
+    /// To do
+    ///
+    /// Open tasks. Replaces two tiles that were both about tasks — "Issues", a
+    /// high-priority count that read 0 in any household that never sets
+    /// priority, and "Tasks Done", an all-time total that only grew. Named for
+    /// the state rather than the noun, so it does not collide with the "Tasks"
+    /// section directly below it.
+    public static var homeStatsTodoTitle: LocalizedStringResource {
+        r("home_stats_todo_title", "To do")
     }
 
-    /// Tasks Done
+    /// Unread
     public static var homeStatsMessagesTitle: LocalizedStringResource {
         r("home_stats_messages_title", "Unread")
     }
 
-    public static var homeStatsTasksDoneTitle: LocalizedStringResource {
-        r("home_stats_tasks_done_title", "Tasks Done")
+    // MARK: Contributions
+
+    /// Who does what
+    public static var contributionsSectionTitle: LocalizedStringResource {
+        r("contributions_section_title", "Who does what")
+    }
+
+    /// Contributions
+    public static var contributionsScreenTitle: LocalizedStringResource {
+        r("contributions_screen_title", "Contributions")
+    }
+
+    /// Week
+    public static var contributionsWindowWeek: LocalizedStringResource {
+        r("contributions_window_week", "Week")
+    }
+
+    /// Month
+    public static var contributionsWindowMonth: LocalizedStringResource {
+        r("contributions_window_month", "Month")
+    }
+
+    /// All time
+    public static var contributionsWindowAllTime: LocalizedStringResource {
+        r("contributions_window_all_time", "All time")
+    }
+
+    /// tasks done
+    public static var contributionsDonutCaption: LocalizedStringResource {
+        r("contributions_donut_caption", "tasks done")
+    }
+
+    /// Leaderboard
+    public static var contributionsLeaderboardTitle: LocalizedStringResource {
+        r("contributions_leaderboard_title", "Leaderboard")
+    }
+
+    /// Daily activity
+    public static var contributionsActivityTitle: LocalizedStringResource {
+        r("contributions_activity_title", "Daily activity")
+    }
+
+    /// Tasks finished each day
+    public static var contributionsActivitySubtitle: LocalizedStringResource {
+        r("contributions_activity_subtitle", "Tasks finished each day")
+    }
+
+    /// Busiest day: %lld
+    public static func contributionsActivityBusiestDay(_ a0: Int) -> LocalizedStringResource {
+        r("contributions_activity_busiest_day", "Busiest day: \(a0)")
+    }
+
+    /// Task split
+    public static var contributionsShareBarLabel: LocalizedStringResource {
+        r("contributions_share_bar_label", "Task split")
+    }
+
+    /// You
+    public static var contributionsYou: LocalizedStringResource {
+        r("contributions_you", "You")
+    }
+
+    /// Unassigned
+    public static var contributionsUnattributed: LocalizedStringResource {
+        r("contributions_unattributed", "Unassigned")
+    }
+
+    /// %lld days
+    public static func contributionsStreak(_ a0: Int) -> LocalizedStringResource {
+        r("contributions_streak", "\(a0) days")
+    }
+
+    /// %lld done
+    public static func contributionsDoneCount(_ a0: Int) -> LocalizedStringResource {
+        r("contributions_done_count", "\(a0) done")
+    }
+
+    /// %lld open
+    public static func contributionsOpenCount(_ a0: Int) -> LocalizedStringResource {
+        r("contributions_open_count", "\(a0) open")
+    }
+
+    /// %lld overdue
+    public static func contributionsOverdueCount(_ a0: Int) -> LocalizedStringResource {
+        r("contributions_overdue_count", "\(a0) overdue")
+    }
+
+    /// Nothing done yet
+    public static var contributionsEmptyTitle: LocalizedStringResource {
+        r("contributions_empty_title", "Nothing done yet")
+    }
+
+    /// Tick a task off and this fills in.
+    public static var contributionsEmptyMessage: LocalizedStringResource {
+        r("contributions_empty_message", "Tick a task off and this fills in.")
+    }
+
+    /// Nicely balanced
+    public static var contributionsBalanceEvenTitle: LocalizedStringResource {
+        r("contributions_balance_even_title", "Nicely balanced")
+    }
+
+    /// Everyone is doing about their share. Keep it up.
+    public static var contributionsBalanceEvenMessage: LocalizedStringResource {
+        r(
+            "contributions_balance_even_message",
+            "Everyone is doing about their share. Keep it up."
+        )
+    }
+
+    /// Slightly lopsided
+    public static var contributionsBalanceTiltedTitle: LocalizedStringResource {
+        r("contributions_balance_tilted_title", "Slightly lopsided")
+    }
+
+    /// The split is drifting. Assigning a few tasks would even it out.
+    public static var contributionsBalanceTiltedMessage: LocalizedStringResource {
+        r(
+            "contributions_balance_tilted_message",
+            "The split is drifting. Assigning a few tasks would even it out."
+        )
+    }
+
+    /// Someone is carrying the house
+    public static var contributionsBalanceLopsidedTitle: LocalizedStringResource {
+        r("contributions_balance_lopsided_title", "Someone is carrying the house")
+    }
+
+    /// Almost all of the housework is falling to one person.
+    public static var contributionsBalanceLopsidedMessage: LocalizedStringResource {
+        r(
+            "contributions_balance_lopsided_message",
+            "Almost all of the housework is falling to one person."
+        )
     }
 
     /// Notes

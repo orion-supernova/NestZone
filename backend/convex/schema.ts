@@ -95,6 +95,12 @@ export default defineSchema({
     updated_by: v.optional(v.id("users")),
     assigned_to: v.optional(v.id("users")),
     is_completed: v.optional(v.boolean()),
+    // Who ticked the box. `updated_by` is only *approximately* this — an edit to
+    // the title overwrites it — so completion is recorded separately, and the
+    // stats attribute a chore to the person who actually finished it. Optional:
+    // never-completed tasks have none, and every row migrated from PocketBase
+    // predates the field (see `creditFor` in convex/stats.ts for the fallback).
+    completed_by: v.optional(v.id("users")),
     image: v.optional(v.id("_storage")),
     home_id: v.id("homes"),
     priority: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),

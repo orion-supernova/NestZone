@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import Foundation
 import Testing
+import UserNotifications
 @testable import NestZone
 
 /// Reducer behaviour, driven through `TestStore` with stubbed clients.
@@ -156,6 +157,149 @@ struct HomeFeatureTests {
         #expect(store.state.recentTasks.count == 5)
         // Newest first.
         #expect(store.state.recentTasks.first?.id == TaskID("t8"))
+    }
+}
+
+@MainActor
+@Suite("Contributions navigation")
+struct ContributionsNavigationTests {
+
+    @Test("The chart button in the Tasks header pushes the breakdown")
+    func openingFromHome() async {
+        let store = TestStore(
+            initialState: MainFeature.State(
+                homeID: "h1",
+                home: Home(id: "h1", name: "The Nest", members: ["me", "you"]),
+                user: User(id: "me", name: "Ada")
+            )
+        ) {
+            MainFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.home(.delegate(.openContributions)))
+
+        #expect(store.state.homePath.count == 1)
+        guard case let .contributions(contributions) = store.state.homePath.first else {
+            Issue.record("expected the contributions screen on the stack")
+            return
+        }
+        // It opens knowing who is looking, so their own row can say "You".
+        #expect(contributions.currentUserID == UserID("me"))
+        #expect(contributions.homeID == HomeID("h1"))
+    }
+}
+
+@MainActor
+@Suite("Contributions screen")
+struct ContributionsFeatureTests {
+
+    private static func payload(
+        window: ContributionWindow,
+        adaCompleted: Int
+    ) -> HomeContributions {
+        HomeContributions(
+            windowDays: window.days,
+            totalCompleted: adaCompleted + 2,
+            unattributed: 0,
+            members: [
+                MemberContribution(userID: "u1", name: "Ada", completed: adaCompleted),
+                MemberContribution(userID: "u2", name: "Grace", completed: 2),
+            ]
+        )
+    }
+
+    @Test("The screen opens on the month and subscribes for it")
+    func subscribesOnAppear() async {
+        let asked = LockIsolated<[ContributionWindow]>([])
+        let store = TestStore(
+            initialState: ContributionsFeature.State(homeID: "h1", currentUserID: "u1")
+        ) {
+            ContributionsFeature()
+        } withDependencies: {
+            $0.stats.contributions = { _, window in
+                asked.withValue { $0.append(window) }
+                return AsyncThrowingStream { $0.yield(Self.payload(window: window, adaCompleted: 6)) }
+            }
+        }
+        store.exhaustivity = .off
+
+        #expect(store.state.window == .month)
+        await store.send(.task)
+        await store.receive(\.contributionsUpdated) {
+            $0.isLoading = false
+            $0.data = Self.payload(window: .month, adaCompleted: 6)
+        }
+        #expect(asked.value == [.month])
+    }
+
+    @Test("Switching the window re-subscribes rather than filtering what it has")
+    func windowSwitchResubscribes() async {
+        let asked = LockIsolated<[ContributionWindow]>([])
+        let store = TestStore(
+            initialState: ContributionsFeature.State(homeID: "h1")
+        ) {
+            ContributionsFeature()
+        } withDependencies: {
+            $0.stats.contributions = { _, window in
+                asked.withValue { $0.append(window) }
+                return AsyncThrowingStream { $0.yield(Self.payload(window: window, adaCompleted: 1)) }
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.task)
+        await store.receive(\.contributionsUpdated)
+
+        await store.send(.binding(.set(\.window, .week))) {
+            $0.window = .week
+            // The old numbers are for a different question; the screen says so
+            // rather than showing a month's totals under a "Week" tab.
+            $0.isLoading = true
+        }
+        await store.receive(\.contributionsUpdated) {
+            $0.isLoading = false
+            $0.data = Self.payload(window: .week, adaCompleted: 1)
+        }
+        #expect(asked.value == [.month, .week])
+    }
+
+    @Test("Slices are ordered like the leaderboard and carry the leftover")
+    func slices() async {
+        let data = HomeContributions(
+            windowDays: 30,
+            totalCompleted: 10,
+            unattributed: 2,
+            members: [
+                MemberContribution(userID: "u2", name: "Grace", completed: 3),
+                MemberContribution(userID: "u1", name: "Ada", completed: 5),
+                MemberContribution(userID: "u3", name: "Idle", completed: 0),
+            ]
+        )
+        let store = TestStore(initialState: ContributionsFeature.State(homeID: "h1")) {
+            ContributionsFeature()
+        }
+        await store.send(.contributionsUpdated(data)) {
+            $0.isLoading = false
+            $0.data = data
+        }
+
+        // Busiest first, nobody with a zero share on the ring, and the
+        // unattributed remainder last so the segments still fill the circle.
+        #expect(store.state.data.slices.map(\.id) == ["u1", "u2", "unattributed"])
+        #expect(store.state.data.slices.map(\.value) == [0.5, 0.3, 0.2])
+        #expect(store.state.data.slices.last?.seed == nil)
+    }
+
+    @Test("A failure that is only a cancellation never becomes an alert")
+    func silentFailure() async {
+        let store = TestStore(initialState: ContributionsFeature.State(homeID: "h1")) {
+            ContributionsFeature()
+        }
+        await store.send(.loadFailed(.cancelled)) {
+            $0.isLoading = false
+        }
+        #expect(store.state.alert == nil)
     }
 }
 
@@ -1074,6 +1218,25 @@ struct MovieNightTests {
         #expect(store.state.remaining.isEmpty)
         #expect(votes.value.count == 1)
         #expect(votes.value[0] == ("dune", true))
+    }
+
+    @Test("Tapping a card in the deck opens the film without answering for it")
+    func cardOpensDetails() async {
+        var state = MovieNightFeature.State(homeID: "h1", memberCount: 2)
+        state.poll = Poll(id: "p1")
+        let item = PollItem(id: "i1", externalID: "dune", label: "Dune")
+        state.deck = [item]
+
+        let store = TestStore(initialState: state) { MovieNightFeature() }
+
+        await store.send(.movieTapped(item)) {
+            $0.destination = .movieInfo(
+                MovieInfoFeature.State(homeID: "h1", movie: item.asMovie)
+            )
+        }
+        // Opening a card is not a vote: it stays in the deck, unswiped.
+        #expect(store.state.swiped.isEmpty)
+        #expect(store.state.remaining.count == 1)
     }
 
     @Test("Closing a poll clears the deck and moves the round into history")

@@ -91,11 +91,28 @@ export const update = mutation({
     if (fields.assigned_to) {
       await requireMembers(ctx, home, [fields.assigned_to], "Task assignee");
     }
-    await ctx.db.patch(id, { ...fields, updated_by: user._id, updated: Date.now() });
-
     // Only the transitions worth interrupting someone for. An edit to the
     // title, or unticking a box that was already unticked, is not news.
     const justCompleted = fields.is_completed === true && !task.is_completed;
+
+    // Credit the chore to whoever ticked the box, and take the credit back when
+    // the box is unticked — otherwise a task completed, reopened and finished by
+    // someone else would keep counting for the first person forever. `undefined`
+    // in a patch removes the field, which is what "nobody has finished this"
+    // should look like.
+    const completed_by = justCompleted
+      ? user._id // freshly ticked — credit whoever ticked it
+      : fields.is_completed === false
+        ? undefined // reopened — nobody has finished this
+        : task.completed_by; // an unrelated edit leaves the credit alone
+
+    await ctx.db.patch(id, {
+      ...fields,
+      completed_by,
+      updated_by: user._id,
+      updated: Date.now(),
+    });
+
     if (justCompleted && task.home_id) {
       await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
         homeId: task.home_id,

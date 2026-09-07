@@ -122,6 +122,7 @@ struct MainView: View {
                 } destination: { store in
                     switch store.case {
                     case let .tasks(store): TasksView(store: store)
+                    case let .contributions(store): ContributionsView(store: store)
                     case let .movieNight(store): MovieNightView(store: store)
                     case let .recipeDetail(store): RecipeDetailView(store: store)
                     }

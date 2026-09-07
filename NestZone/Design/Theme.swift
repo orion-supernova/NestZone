@@ -85,6 +85,10 @@ public enum Palette {
     public static let amber = Color(hex: "F59E0B")
     public static let lemon = Color(hex: "FDE047")
     public static let mint = Color(hex: "34D399")
+    /// Second and third place on the contributions leaderboard, and nothing
+    /// else. Both are dark enough to carry white text at 11pt.
+    public static let silver = Color(hex: "9AA0A6")
+    public static let bronze = Color(hex: "B87333")
 
     /// Chevrons, disclosure arrows, overflow dots — the small glyphs that say
     /// "there is more here" and carry no other information.

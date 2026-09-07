@@ -47,6 +47,7 @@ public struct MainFeature: Sendable {
     @Reducer
     public enum HomePath {
         case tasks(TasksFeature)
+        case contributions(ContributionsFeature)
         case movieNight(MovieNightFeature)
         /// Reached from tonight's dinner card, which is the one place on the
         /// Home tab that points at a specific recipe.
@@ -120,6 +121,13 @@ public struct MainFeature: Sendable {
 
             case .home(.delegate(.openTasks)):
                 state.homePath.append(.tasks(TasksFeature.State(homeID: state.homeID)))
+                return .none
+
+            case .home(.delegate(.openContributions)):
+                state.homePath.append(.contributions(ContributionsFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.user?.id
+                )))
                 return .none
 
             case let .home(.delegate(.openRecipe(recipe))):

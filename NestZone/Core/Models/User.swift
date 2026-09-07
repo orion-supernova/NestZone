@@ -57,14 +57,22 @@ extension User {
     /// What to show wherever a person is named. Never empty: falls back through
     /// the email local-part before giving up, because Apple only supplies a name
     /// on a user's *first* authorization and most accounts therefore have none.
-    public var displayName: String {
+    public var displayName: String { Self.displayName(name: name, email: email) }
+
+    /// Up to two letters for an avatar placeholder.
+    public var initials: String { Self.initials(from: displayName) }
+
+    /// The same rules, for the places that hold a name and an email but not a
+    /// whole `User` — `MemberContribution`, whose rows come from the stats query
+    /// rather than from `users:byIds`. Both sides have to agree, or the same
+    /// person is labelled differently on two screens.
+    public static func displayName(name: String?, email: String?) -> String {
         if let name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return name }
         if let local = email?.split(separator: "@").first, !local.isEmpty { return String(local) }
         return String(localized: "user.fallbackName", defaultValue: "Someone")
     }
 
-    /// Up to two letters for an avatar placeholder.
-    public var initials: String {
+    public static func initials(from displayName: String) -> String {
         let parts = displayName
             .split(separator: " ")
             .prefix(2)

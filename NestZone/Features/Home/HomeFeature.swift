@@ -67,6 +67,10 @@ public struct HomeFeature: Sendable {
             case openMessages
             case openMovieNight
             case openTasks
+            /// Raised by the chart button in the Tasks header. The tab holds no
+            /// contribution state of its own — the screen behind this subscribes
+            /// when it opens, so the Home tab pays for no query it cannot show.
+            case openContributions
             case openRecipe(Recipe)
             /// Permission was just granted here. `AppFeature` answers by asking
             /// iOS for a token and registering it with the backend.
@@ -92,7 +96,7 @@ public struct HomeFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .task:
-                // Two live subscriptions, opened once. The old screen instead
+                // Three live subscriptions, opened once. The old screen instead
                 // re-fetched four collections on every appearance and on every
                 // `homeDidChange` notification, with a hardcoded 100 ms sleep in
                 // front "to prevent request conflicts".

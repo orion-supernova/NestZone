@@ -62,6 +62,42 @@ final class TabNavigationUITests: XCTestCase {
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
     }
 
+    /// The chart button in the Tasks header is the only way into the
+    /// contributions breakdown, so a button that stops working strands a whole
+    /// screen. Unconditional, unlike the summary card it replaced: a household
+    /// that has finished nothing still gets there, and finds an empty state
+    /// explaining what will fill it.
+    func testHomeOpensContributions() throws {
+        try requireSignedIn()
+
+        app.buttons["HomeTab"].tap()
+
+        let button = app.buttons["ContributionsButton"]
+        XCTAssertTrue(button.waitForExistence(timeout: 15), "chart button is missing")
+        app.swipeUp()
+
+        let home = XCTAttachment(screenshot: app.screenshot())
+        home.name = "HomeTasksSection"
+        home.lifetime = .keepAlways
+        add(home)
+
+        button.tap()
+
+        // The nav bar rather than a section title: the screen renders a
+        // leaderboard or an empty state depending on the household, and both
+        // count as having opened.
+        XCTAssertTrue(
+            app.navigationBars["Contributions"].waitForExistence(timeout: 10),
+            "Contributions screen did not render"
+        )
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
+
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "Contributions"
+        shot.lifetime = .keepAlways
+        add(shot)
+    }
+
     func testSettingsShowsThemeAndLanguage() throws {
         try requireSignedIn()
 

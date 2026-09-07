@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// A person, drawn as their initials on a colour derived from their id.
+/// A person, drawn as their initials on their own colour.
 ///
-/// Deriving the colour from the id means the same member is the same colour on
-/// every screen and across devices, with nothing to store.
+/// The colour comes from `MemberTint`, which derives it from the id — so the
+/// same member is the same colour on every screen and across devices with
+/// nothing to store, and their avatar matches their slice of the contributions
+/// ring.
 public struct Avatar: View {
     private let initials: String
     private let seed: String
@@ -17,7 +19,7 @@ public struct Avatar: View {
 
     public var body: some View {
         Circle()
-            .fill(Self.gradient(for: seed))
+            .fill(MemberTint.gradient(for: seed))
             .frame(width: size, height: size)
             .overlay {
                 Text(initials)
@@ -25,24 +27,6 @@ public struct Avatar: View {
                     .foregroundStyle(.white)
             }
             .accessibilityHidden(true)
-    }
-
-    /// Stable hash → hue. `String.hashValue` is seeded per-process, so it would
-    /// give the same member a different colour on every launch.
-    private static func gradient(for seed: String) -> LinearGradient {
-        var hash: UInt64 = 5381
-        for byte in seed.utf8 {
-            hash = (hash &* 33) &+ UInt64(byte)
-        }
-        let hue = Double(hash % 360) / 360
-        return LinearGradient(
-            colors: [
-                Color(hue: hue, saturation: 0.62, brightness: 0.82),
-                Color(hue: (hue + 0.08).truncatingRemainder(dividingBy: 1), saturation: 0.7, brightness: 0.66),
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
     }
 }
 
