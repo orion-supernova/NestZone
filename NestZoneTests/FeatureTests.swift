@@ -2211,6 +2211,32 @@ struct MessagesTests {
         await store.send(.actionsDismissed) { $0.actionsFor = nil }
     }
 
+    @Test("Tapping the thread backs out of the editor as well as the bar")
+    func backgroundTapClosesEverything() async {
+        var state = chat()
+        state.messages = [Message(id: "m1", senderID: "me", content: "mine", readBy: ["me"])]
+
+        let store = TestStore(initialState: state) { ChatFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
+        await store.send(.editTapped("m1"))
+        #expect(store.state.isEditing)
+
+        await store.send(.backgroundTapped)
+        // The banner and its half-typed text go together; leaving the editor
+        // running once the bar and the keyboard had gone read as stuck.
+        #expect(!store.state.isEditing)
+        #expect(store.state.draft.isEmpty)
+        #expect(store.state.actionsFor == nil)
+
+        // With nothing open it is just a keyboard dismissal, and must not
+        // disturb a draft that was being written from scratch.
+        await store.send(.binding(.set(\.draft, "half a thought")))
+        await store.send(.backgroundTapped)
+        #expect(store.state.draft == "half a thought")
+    }
+
     @Test("A bar left open over a message that is gone closes itself")
     func actionsFollowTheirMessage() async {
         var state = chat()

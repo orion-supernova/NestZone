@@ -353,6 +353,7 @@ public struct ChatFeature: Sendable {
         case sendFailed(local: MessageID, AppError)
         case bubbleHeld(MessageID)
         case actionsDismissed
+        case backgroundTapped
         case editTapped(MessageID)
         case editCancelled
         case editFailed(MessageID, String, AppError)
@@ -499,6 +500,17 @@ public struct ChatFeature: Sendable {
 
             case .actionsDismissed:
                 state.actionsFor = nil
+                return .none
+
+            // Tapping the thread backs out of everything the composer and the
+            // bubbles have going on. Leaving the editor running while the bar
+            // and the keyboard both went away read as stuck: the banner stayed,
+            // the text stayed, and nothing on screen explained why.
+            case .backgroundTapped:
+                state.actionsFor = nil
+                guard state.editing != nil else { return .none }
+                state.editing = nil
+                state.draft = ""
                 return .none
 
             case let .editTapped(id):

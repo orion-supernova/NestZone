@@ -171,6 +171,14 @@ struct ChatView: View {
             .onChange(of: store.state.ordered.last?.id) { _, _ in
                 scrollToNewest(proxy, animated: true)
             }
+            // On the scroll view itself, deliberately: attached further out it
+            // also fired for taps on the action bar, which is drawn over this,
+            // so hitting Edit would have cancelled the edit it just began.
+            // `simultaneousGesture` so it does not eat scrolling.
+            .simultaneousGesture(TapGesture().onEnded {
+                isComposerFocused = false
+                store.send(.backgroundTapped)
+            })
         }
         // Drawn over the scroll view, not inside it: an overlay on the bubble
         // is clipped by the scroll view's bounds, which sliced the bar in half
@@ -199,10 +207,6 @@ struct ChatView: View {
         // away. `simultaneousGesture` so the tap does not eat scrolling or the
         // bubbles' own action bar.
         .scrollDismissesKeyboard(.interactively)
-        .simultaneousGesture(TapGesture().onEnded {
-            isComposerFocused = false
-            store.send(.actionsDismissed)
-        })
         .safeAreaInset(edge: .bottom) { composer }
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -264,17 +268,30 @@ struct ChatView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "pencil")
                     Text(L10n.messagesEditingBanner)
+                        .font(.caption.weight(.medium))
                     Spacer(minLength: 0)
+
+                    // Named and full height, not a 12-point glyph. The icon
+                    // alone was both hard to find and hard to hit: `glassEffect`
+                    // paints without contributing a hit region, so the tap
+                    // target was the drawn cross and nothing around it.
                     Button { store.send(.editCancelled) } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .symbolRenderingMode(.hierarchical)
+                        Label {
+                            Text(L10n.commonCancel)
+                        } icon: {
+                            Image(systemName: "xmark.circle.fill")
+                                .symbolRenderingMode(.hierarchical)
+                        }
+                        .font(.footnote.weight(.semibold))
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: Metrics.minTapTarget)
+                        .contentShape(.capsule)
                     }
                     .buttonStyle(.pressable)
-                    .accessibilityLabel(Text(L10n.commonCancel))
+                    .glassEffect(.regular.interactive(), in: .capsule)
                 }
-                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 14)
+                .padding(.leading, 14)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
