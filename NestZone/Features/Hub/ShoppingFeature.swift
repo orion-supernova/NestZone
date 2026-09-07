@@ -161,6 +161,8 @@ public struct ShoppingFeature: Sendable {
         case clearFinished(State.ClearTarget)
         case clearFailed(State.ClearTarget, [ShoppingItemID], AppError)
         case addFinished
+        case addFailed(String, AppError)
+        case toggleFailed(ShoppingItemID, wasPurchased: Bool, AppError)
         case viewModeToggled(grouped: Bool)
         case categoryToggled(ShoppingItem.Category)
         case mealToggled(RecipeID)
@@ -230,7 +232,11 @@ public struct ShoppingFeature: Sendable {
                 )
                 // Clear the field straight away so the next item can be typed
                 // while this one is still in flight — the live subscription will
-                // slot it into the list when the server confirms.
+                // slot it into the list when the server confirms. If it does not,
+                // the words come back: a rejected write leaves nothing on the
+                // server to push, and losing what somebody typed is the one
+                // failure they cannot recover from themselves.
+                let typed = state.draft
                 state.draft = ""
                 state.pendingAdds += 1
                 return .run { send in
@@ -238,7 +244,7 @@ public struct ShoppingFeature: Sendable {
                     await send(.addFinished)
                 } catch: { error, send in
                     await send(.addFinished)
-                    await send(.writeFailed(AppError(error)))
+                    await send(.addFailed(typed, AppError(error)))
                 }
 
             case .addFinished:
@@ -248,11 +254,14 @@ public struct ShoppingFeature: Sendable {
             case let .togglePurchased(id):
                 guard let item = state.items[id: id] else { return .none }
                 let newValue = !item.isPurchased
+                // Optimistic, and undone by hand if the write is refused —
+                // there is no server-side change for a subscription to correct
+                // this with.
                 state.items[id: id]?.isPurchased = newValue
                 return .run { send in
                     try await shopping.setPurchased(id, newValue)
                 } catch: { error, send in
-                    await send(.writeFailed(AppError(error)))
+                    await send(.toggleFailed(id, wasPurchased: item.isPurchased, AppError(error)))
                 }
 
             case let .deleteTapped(id):
@@ -370,6 +379,17 @@ public struct ShoppingFeature: Sendable {
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
+
+            case let .addFailed(typed, error):
+                // Only if the box is still empty. Somebody who has already
+                // started the next item would rather keep it than have the
+                // rejected one shoved back over the top.
+                if state.draft.isEmpty { state.draft = typed }
+                return .send(.writeFailed(error))
+
+            case let .toggleFailed(id, wasPurchased, error):
+                state.items[id: id]?.isPurchased = wasPurchased
+                return .send(.writeFailed(error))
 
             case let .writeFailed(error):
                 guard !error.isSilent else { return .none }

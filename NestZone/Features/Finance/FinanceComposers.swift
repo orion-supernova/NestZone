@@ -157,6 +157,16 @@ public struct ExpenseComposerFeature: Sendable {
 
         public var isBalanced: Bool { mode != .exact || exactRemainder == 0 }
 
+        /// Whether the equal split currently covers the whole household, or
+        /// only the person filling the sheet in. The two presets are states to
+        /// be in, not actions to fire, so they show which one is already true.
+        public var isEveryone: Bool { participants == Set(members.ids) }
+
+        public var isOnlyMe: Bool {
+            guard let me = currentUserID else { return false }
+            return participants == [me]
+        }
+
         public var canSubmit: Bool {
             guard !isSubmitting else { return false }
             guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
@@ -227,9 +237,16 @@ public struct ExpenseComposerFeature: Sendable {
                     // than just going grey.
                     if !state.isBalanced {
                         state.shakes += 1
-                        state.inlineError = String(localized: L10n.financeExactOff(
-                            Money.text(abs(state.exactRemainder), currency: state.currency)
-                        ))
+                        // Which side of the total the shares fall on is the
+                        // whole of what the person has to do next, and "%@ out"
+                        // does not say it.
+                        let off = Money.text(
+                            abs(state.exactRemainder),
+                            currency: state.currency
+                        )
+                        state.inlineError = String(localized: state.exactRemainder < 0
+                            ? L10n.financeExactOffOver(off)
+                            : L10n.financeExactOff(off))
                     }
                     return .none
                 }

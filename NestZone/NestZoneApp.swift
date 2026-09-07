@@ -28,6 +28,9 @@ struct NestZoneApp: App {
     var body: some Scene {
         WindowGroup {
             AppView(store: Self.store)
+                // The window exists by the time its content appears, which is
+                // the earliest the recogniser has anything to attach to.
+                .onAppear { KeyboardDismisser.shared.install() }
         }
     }
 }

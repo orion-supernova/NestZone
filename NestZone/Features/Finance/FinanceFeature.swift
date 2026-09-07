@@ -281,8 +281,18 @@ public struct FinanceFeature: Sendable {
         /// overview with "no money tracked yet" and then replace it back. The
         /// test is `paid`, which is all-time — if nobody has ever put money
         /// down, and there are no bills and no budgets, there is nothing here.
+        ///
+        /// And deliberately `hasSummary` rather than `!isLoading`, which is the
+        /// same trap one level up. Every month step sets `isLoading`, so gating
+        /// on it *inverted this flag on every tap of the chevron*: a household
+        /// with nothing tracked sat on the empty state, flipped to a full stack
+        /// of redacted cards for as long as the month took to load, and flipped
+        /// back. The whole screen changed twice to report nothing at all. What
+        /// the guard is actually for is "we have not heard from the server
+        /// yet", and that is what `hasSummary` says — it stays true across a
+        /// reload, so this answer no longer depends on when it is asked.
         public var isBlank: Bool {
-            !isLoading && bills.isEmpty && budgets.isEmpty
+            hasSummary && bills.isEmpty && budgets.isEmpty
                 && summary.members.allSatisfy { $0.paid == 0 && $0.isSettled }
         }
 
@@ -405,6 +415,22 @@ public struct FinanceFeature: Sendable {
                         .cancellable(id: CancelID.members, cancelInFlight: true)
                 )
 
+            // MARK: Live pushes
+            //
+            // Every one of these lands far more often than the data changes.
+            // Convex re-publishes *every* live query in the app whenever the
+            // query set is modified, and stepping a month modifies it twice —
+            // the summary and the expense subscriptions are both replaced — so
+            // one tap on the chevron re-delivers identical bills, budgets and
+            // members two or three times over.
+            //
+            // Assigning them anyway is not free. TCA skips the observation
+            // notification only when the new value's *identity* matches, and a
+            // plain model array has no identity to compare, so an identical
+            // payload still invalidated every view reading it. Each handler
+            // therefore compares before it writes, and a redundant push costs
+            // nothing but the comparison.
+
             case let .summaryUpdated(summary):
                 // The server echoes the month it was asked about. A payload for
                 // any other one belongs to a month that has been scrubbed past
@@ -417,20 +443,22 @@ public struct FinanceFeature: Sendable {
                 if let wanted = state.selectedCurrency, summary.currency != wanted {
                     return .none
                 }
-                // Everyone square, having not been a moment ago. The one thing
-                // on this screen worth celebrating, and only on the transition
-                // — a household that is already settled gets no confetti every
-                // time the subscription pushes.
-                if !state.summary.isSquare, summary.isSquare, !state.summary.members.isEmpty {
-                    state.settledCelebration += 1
+                if summary != state.summary {
+                    // Everyone square, having not been a moment ago. The one
+                    // thing on this screen worth celebrating, and only on the
+                    // transition — a household that is already settled gets no
+                    // confetti every time the subscription pushes.
+                    if !state.summary.isSquare, summary.isSquare, !state.summary.members.isEmpty {
+                        state.settledCelebration += 1
+                    }
+                    state.summary = summary
                 }
-                state.summary = summary
                 // Only the summary clears this, and deliberately so. The
                 // expense list is the smaller query and usually answers first;
                 // letting it call the screen loaded showed every month-scoped
                 // card still holding the *previous* month's figures until the
                 // summary caught up.
-                state.isLoading = false
+                if state.isLoading { state.isLoading = false }
                 return .none
 
             case let .expensesUpdated(month, expenses):
@@ -438,21 +466,29 @@ public struct FinanceFeature: Sendable {
                 var incoming = IdentifiedArray(uniqueElements: expenses)
                 // Anything the server has already dropped no longer needs
                 // hiding; keeping it would leak the mask across a re-add.
-                state.hidden.formIntersection(incoming.ids)
-                for id in state.hidden { incoming.remove(id: id) }
+                let stillHidden = state.hidden.intersection(incoming.ids)
+                if stillHidden != state.hidden { state.hidden = stillHidden }
+                for id in stillHidden { incoming.remove(id: id) }
+                guard incoming != state.expenses else { return .none }
                 state.expenses = incoming
                 return .none
 
             case let .billsUpdated(bills):
-                state.bills = IdentifiedArray(uniqueElements: bills)
+                let incoming = IdentifiedArray(uniqueElements: bills)
+                guard incoming != state.bills else { return .none }
+                state.bills = incoming
                 return .none
 
             case let .budgetsUpdated(budgets):
-                state.budgets = IdentifiedArray(uniqueElements: budgets)
+                let incoming = IdentifiedArray(uniqueElements: budgets)
+                guard incoming != state.budgets else { return .none }
+                state.budgets = incoming
                 return .none
 
             case let .membersUpdated(members):
-                state.members = IdentifiedArray(uniqueElements: members)
+                let incoming = IdentifiedArray(uniqueElements: members)
+                guard incoming != state.members else { return .none }
+                state.members = incoming
                 return .none
 
             case let .loadFailed(error):

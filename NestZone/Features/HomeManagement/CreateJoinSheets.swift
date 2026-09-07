@@ -77,7 +77,7 @@ private struct FormSheet<Field: View>: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 56))
                 .foregroundStyle(Palette.success)
-                .symbolEffect(.bounce, options: .nonRepeating)
+                .bounces()
             Text(successTitle).font(.headline)
         }
         .transition(.scale(scale: 0.85).combined(with: .opacity))

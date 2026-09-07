@@ -54,9 +54,23 @@ public final class ConvexConnection: @unchecked Sendable {
     // MARK: - Reads
 
     /// A live query. The stream yields the current value immediately and again
-    /// on every server-side change, and tears the subscription down when the
+    /// on every server-side *change*, and tears the subscription down when the
     /// consuming task is cancelled.
-    public func subscribe<T: Decodable & Sendable>(
+    ///
+    /// Change, not push. Convex re-publishes every query in the client's set on
+    /// every transition, and the set is modified whenever any screen anywhere
+    /// swaps a subscription — so one tap of the Finance month scrubber, which
+    /// replaces two queries, made `users:me`, `homes:listMine`, the bills, the
+    /// budgets, the members and the Hub's counters all re-deliver the payload
+    /// already on screen, three times over. Each of those was a full trip
+    /// through the root reducer and an invalidation of every view reading the
+    /// result.
+    ///
+    /// An identical payload carries no information, so it does not leave here.
+    /// The comparison is per-subscription, and a fresh subscription starts with
+    /// nothing to compare against, so the first value after a month change is
+    /// always delivered even if it happens to match the month before it.
+    public func subscribe<T: Decodable & Equatable & Sendable>(
         to name: String,
         args: [String: ConvexEncodable?]? = nil,
         as type: T.Type = T.self
@@ -68,6 +82,7 @@ public final class ConvexConnection: @unchecked Sendable {
             let box = CancellableBox()
             box.cancellable = client
                 .subscribe(to: name, with: args, yielding: T.self)
+                .removeDuplicates()
                 .sink(
                     receiveCompletion: { completion in
                         switch completion {
@@ -87,7 +102,7 @@ public final class ConvexConnection: @unchecked Sendable {
     ///
     /// Only for genuinely one-shot reads — resolving an invite code, say. If a
     /// screen displays the result, subscribe instead so it stays current.
-    public func first<T: Decodable & Sendable>(
+    public func first<T: Decodable & Equatable & Sendable>(
         _ name: String,
         args: [String: ConvexEncodable?]? = nil,
         as type: T.Type = T.self

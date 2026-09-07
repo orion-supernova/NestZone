@@ -71,11 +71,18 @@ public struct Badge: View {
             if let symbol {
                 Image(systemName: symbol).font(.caption2.weight(.bold))
             }
-            Text(text).font(.caption.weight(.semibold))
+            Text(text)
+                .font(.caption.weight(.semibold))
+                // Most badges in this app are counts — overdue bills, items
+                // due — and a count that cuts from 3 to 2 reads as a redraw
+                // rather than as one going away. Keyed and animated here so no
+                // call site has to remember to.
+                .contentTransition(.numericText())
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
         .foregroundStyle(tint)
         .background(tint.opacity(0.15), in: .capsule)
+        .animation(Motion.fade, value: text)
     }
 }

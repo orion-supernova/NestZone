@@ -72,6 +72,7 @@ public struct TasksFeature: Sendable {
         case composeTapped
         case toggled(TaskID)
         case deleteTapped(TaskID)
+        case toggleFailed(TaskID, wasCompleted: Bool, AppError)
         case writeFailed(AppError)
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
@@ -137,11 +138,14 @@ public struct TasksFeature: Sendable {
             case let .toggled(id):
                 guard let task = state.tasks[id: id] else { return .none }
                 let newValue = !task.isCompleted
+                // Optimistic, and the failure carries what it takes to undo:
+                // a rejected write leaves the server unchanged, so there is no
+                // push coming to correct the checkbox.
                 state.tasks[id: id]?.isCompleted = newValue
                 return .run { send in
                     try await tasksClient.setCompleted(id, newValue)
                 } catch: { error, send in
-                    await send(.writeFailed(AppError(error)))
+                    await send(.toggleFailed(id, wasCompleted: task.isCompleted, AppError(error)))
                 }
 
             case let .deleteTapped(id):
@@ -150,6 +154,10 @@ public struct TasksFeature: Sendable {
                 } catch: { error, send in
                     await send(.writeFailed(AppError(error)))
                 }
+
+            case let .toggleFailed(id, wasCompleted, error):
+                state.tasks[id: id]?.isCompleted = wasCompleted
+                return .send(.writeFailed(error))
 
             case let .writeFailed(error):
                 guard !error.isSilent else { return .none }

@@ -77,8 +77,13 @@ public struct HomeManagementFeature: Sendable {
                 .cancellable(id: CancelID.homes, cancelInFlight: true)
 
             case let .homesUpdated(homes):
-                state.isLoading = false
-                state.homes = IdentifiedArray(uniqueElements: homes)
+                if state.isLoading { state.isLoading = false }
+                // Convex re-publishes every live query in the app whenever the
+                // query set changes, so this arrives unchanged several times
+                // over any time a screen swaps a subscription. Comparing first
+                // keeps a redundant push from invalidating the whole tree.
+                let incoming = IdentifiedArray(uniqueElements: homes)
+                if incoming != state.homes { state.homes = incoming }
 
                 // Drop a stale selection — the home may have been left or
                 // deleted on another device.

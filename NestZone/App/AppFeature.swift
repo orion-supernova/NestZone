@@ -158,6 +158,16 @@ public struct AppFeature: Sendable {
                 }
 
             case let .currentUserChanged(user):
+                // `users:me` is a live query, and Convex re-publishes every
+                // live query in the app whenever the query set changes — so
+                // this fires several times over on any screen that swaps a
+                // subscription, with the same user each time. Propagating it
+                // walks the tab container and every open chat, and writes into
+                // state SwiftUI is observing, so an unchanged user is work the
+                // whole app pays for and nobody sees.
+                guard user != state.currentUser || state.main?.user != user else {
+                    return .none
+                }
                 state.currentUser = user
                 state.main?.user = user
                 state.main?.propagateSession()
@@ -252,19 +262,24 @@ public struct AppFeature: Sendable {
         let user = state.currentUser
         let homes = state.homeGate.homes
         guard let home = selected else {
-            state.main = nil
+            if state.main != nil { state.main = nil }
             return .none
         }
         if state.main?.homeID != home.id {
             state.main = MainFeature.State(homeID: home.id, home: home, user: user)
-        } else {
+        } else if state.main?.home != home || state.main?.user != user {
+            // Only when something actually moved. `homes:listMine` re-publishes
+            // on every query-set change, not only when a home does, and
+            // propagating walks the tabs and every open chat.
             state.main?.home = home
             state.main?.user = user
             state.main?.propagateSession()
         }
         // Settings offers the whole list — switch, join, leave — off this one
         // subscription rather than opening a second one of its own.
-        state.main?.settings.applyHomes(homes)
+        if state.main?.settings.homes != homes {
+            state.main?.settings.applyHomes(homes)
+        }
         return .none
     }
 }

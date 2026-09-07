@@ -71,7 +71,7 @@ public struct AuthView: View {
             .foregroundStyle(theme.accent)
             .frame(width: 84, height: 84)
             .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
-            .symbolEffect(.bounce, options: .nonRepeating)
+            .bounces()
     }
 
     private var headline: some View {

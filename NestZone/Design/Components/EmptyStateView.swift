@@ -49,7 +49,7 @@ public struct EmptyStateView: View {
             } icon: {
                 Image(systemName: symbol)
                     .foregroundStyle(theme.accent)
-                    .symbolEffect(.bounce, options: .nonRepeating)
+                    .bounces()
             }
         } description: {
             if let message { Text(message) }

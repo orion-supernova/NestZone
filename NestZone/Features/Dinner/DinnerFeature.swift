@@ -201,6 +201,7 @@ public struct DinnerFeature: Sendable {
         case cuisineChosen(Cuisine)
         case saveTapped
         case saved
+        case voteFailed(DinnerCandidate.ID, AppError)
         case failed(AppError)
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
@@ -383,11 +384,15 @@ public struct DinnerFeature: Sendable {
 
             case let .voted(candidate, isYes):
                 guard let pollID = state.poll?.id else { return .none }
-                state.voted.insert(candidate.id)
-                return .run { _ in
-                    try await pollsClient.vote(pollID, candidate.id, isYes)
+                // Optimistic, and taken back if the vote is refused: the
+                // ballot would otherwise show as answered for the rest of the
+                // round with nothing recorded behind it.
+                let candidateID = candidate.id
+                state.voted.insert(candidateID)
+                return .run { send in
+                    try await pollsClient.vote(pollID, candidateID, isYes)
                 } catch: { error, send in
-                    await send(.failed(AppError(error)))
+                    await send(.voteFailed(candidateID, AppError(error)))
                 }
 
             case let .matchAccepted(candidate):
@@ -475,6 +480,10 @@ public struct DinnerFeature: Sendable {
                 state.isSaving = false
                 // The Home tab's live subscription already has it.
                 return .send(.delegate(.finished))
+
+            case let .voteFailed(id, error):
+                state.voted.remove(id)
+                return .send(.failed(error))
 
             case let .failed(error):
                 state.isSaving = false

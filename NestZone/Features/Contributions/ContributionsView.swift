@@ -178,9 +178,13 @@ private struct MemberRow: View {
                         .fill(Self.podium[rank])
                         .frame(width: 18, height: 18)
                         .overlay {
+                            // The leaderboard reorders as work lands, so this
+                            // is a number that moves rather than a label.
                             Text(rank + 1, format: .number)
                                 .font(.system(size: 11, weight: .heavy, design: .rounded))
                                 .foregroundStyle(.white)
+                                .contentTransition(.numericText(value: Double(rank + 1)))
+                                .animation(Motion.spring, value: rank)
                         }
                         .overlay(Circle().strokeBorder(.background, lineWidth: 1.5))
                         .offset(x: 3, y: 2)

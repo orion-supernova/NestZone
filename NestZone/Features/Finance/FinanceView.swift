@@ -39,6 +39,22 @@ public struct FinanceView: View {
                     case .budgets: budgetsPage
                     }
                 }
+                // Each face is its own view, not four states of one.
+                //
+                // Without the id, all four branches shared an identity: SwiftUI
+                // swapped the content in place, so the transition below never
+                // had an insertion to run and none of the `appear` staggers
+                // inside ever saw a second `onAppear`. Switching to an empty
+                // Bills tab looked like nothing had happened at all. With it,
+                // the outgoing face leaves, the incoming one arrives, and its
+                // contents stagger in every time — which is the whole point of
+                // a picker that swaps a page.
+                //
+                // It rebuilds the subtree on each switch. That is the price of
+                // the effect and it is a fair one: the switch is a deliberate
+                // tap, it happens at most a few times a visit, and each face is
+                // a handful of cards.
+                .id(store.section)
                 // Faces cross-dissolve and lift rather than sliding: they are
                 // four views of one month, not four places, and a horizontal
                 // slide would claim otherwise.
@@ -99,8 +115,11 @@ public struct FinanceView: View {
             state: \.destination?.editBudget,
             action: \.destination.editBudget
         )) { store in
+            // Full height, like the expense and bill composers. A medium detent
+            // had to hold a header, a wrapping grid of ten category chips and
+            // an amount field, which left the field itself scrolled half out of
+            // sight the moment the keyboard came up.
             BudgetEditorSheet(store: store)
-                .presentationDetents([.medium])
         }
     }
 
@@ -218,8 +237,11 @@ public struct FinanceView: View {
                 let isSelected = store.section == section
                 Button { store.send(.sectionSelected(section)) } label: {
                     HStack(spacing: 5) {
+                        // The icon you just chose acknowledges the tap; the one
+                        // you left goes quiet without a fuss.
                         Image(systemName: section.symbol)
                             .font(.caption2.weight(.semibold))
+                            .bounces(when: isSelected)
                         Text(section.title)
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
@@ -487,19 +509,35 @@ public struct FinanceView: View {
                     currentUserID: store.currentUserID
                 )
 
-                if !store.isLoading, !store.summary.payers.isEmpty {
-                    Divider().opacity(0.4)
-                    Text(L10n.financePaidThisMonth)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    ForEach(store.summary.payers) { member in
-                        PayerRow(
-                            member: member,
-                            fraction: Double(member.paidThisMonth) / Double(store.summary.topPayment),
-                            currency: store.currency,
-                            isYou: member.userID == store.currentUserID
-                        )
+                // The bars above are all-time and survive a month change; the
+                // payer list under them is the one month-scoped thing on this
+                // card. Gating it on `isLoading` tore it out of the tree on
+                // every step — the card lost a divider, a caption and a row per
+                // payer, so it collapsed, everything under it jumped up, and
+                // then it all grew back a moment later. That is two layout
+                // changes to report one, and it is the flicker.
+                //
+                // So it stays mounted on the same terms as the spend and
+                // category cards: redacted in place while the figures it is
+                // showing belong to the month being left, unreadable rather
+                // than merely stale, and holding its own height throughout.
+                if !store.summary.payers.isEmpty {
+                    Group {
+                        Divider().opacity(0.4)
+                        Text(L10n.financePaidThisMonth)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        ForEach(store.summary.payers) { member in
+                            PayerRow(
+                                member: member,
+                                fraction: Double(member.paidThisMonth)
+                                    / Double(store.summary.topPayment),
+                                currency: store.currency,
+                                isYou: member.userID == store.currentUserID
+                            )
+                        }
                     }
+                    .redacted(reason: store.isLoading ? .placeholder : [])
                 }
             }
         }
@@ -781,6 +819,13 @@ public struct FinanceView: View {
 
     // MARK: - Budgets
 
+    /// Adding is the toolbar's `+`, exactly as it is on the bills page.
+    ///
+    /// This page used to carry a full-width glass button under the grid as
+    /// well, which on an empty page put it directly beneath the empty state's
+    /// own prominent one: two controls, same words, same sheet, stacked. The
+    /// empty state asks when there is nothing here, and the toolbar asks the
+    /// rest of the time.
     @ViewBuilder
     private var budgetsPage: some View {
         VStack(spacing: Metrics.sectionSpacing) {
@@ -808,32 +853,9 @@ public struct FinanceView: View {
                     }
                 }
             }
-
-            if !store.unbudgetedCategories.isEmpty {
-                addBudgetButton
-            }
         }
         .padding(.horizontal, Metrics.screenPadding)
         .animation(Motion.spring, value: store.budgets)
-    }
-
-    /// The one way to add a budget. It used to be a menu that picked the
-    /// category before the sheet opened, while the toolbar's identically
-    /// labelled button jumped straight into whichever category happened to be
-    /// free first — two controls with the same name doing different things.
-    /// Both now open the same sheet, and the sheet asks.
-    private var addBudgetButton: some View {
-        Button { store.send(.addBudgetTapped) } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "plus.circle.fill")
-                Text(L10n.financeAddBudget)
-            }
-            .font(.subheadline.weight(.semibold))
-            .frame(maxWidth: .infinity)
-            .frame(height: 46)
-            .contentShape(.rect)
-        }
-        .buttonStyle(.glass)
     }
 }
 
@@ -1159,12 +1181,16 @@ private struct TrendChip: View {
         let isFlat = abs(change) < Self.flat
         let isUp = change > 0
         return HStack(spacing: 3) {
+            // Spend against last month flips direction as the month fills in.
             Image(systemName: isFlat ? "equal" : (isUp ? "arrow.up.right" : "arrow.down.right"))
+                .contentTransition(.symbolEffect(.replace))
                 .font(.caption2.weight(.bold))
             Text(abs(change), format: .percent.precision(.fractionLength(0)))
                 .font(.caption2.weight(.semibold))
                 .monospacedDigit()
+                .contentTransition(.numericText(value: abs(change)))
         }
+        .animation(Motion.spring, value: change)
         // Spending more is not a failure, so this is not red — it is the
         // household's own number moving, and the colour only says which way.
         .foregroundStyle(isFlat ? Color.secondary : (isUp ? Palette.warning : Palette.success))

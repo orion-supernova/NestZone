@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import UIKit
 
 // The Finance screen's four sheets, plus the amount field they share.
 
@@ -29,9 +30,13 @@ struct AmountField: View {
 
     @Environment(\.theme) private var theme
     @FocusState private var isFocused: Bool
+    /// Bumped every time a keystroke is thrown away for being past the cap, so
+    /// the refusal can be felt as well as read.
+    @State private var refusals = 0
 
     private var minorUnits: Int { Money.parse(text, currency: currency) }
     private var isSwitchable: Bool { onCurrencyChange != nil && !currencyOptions.isEmpty }
+    private var isAtLimit: Bool { text.count >= Money.maximumInputLength }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -54,10 +59,16 @@ struct AmountField: View {
             // The real stop on an absurd amount is that it cannot be typed.
             // Clamping on save would let somebody enter seventy digits, watch
             // the layout break, and then be handed a different number.
+            //
+            // Silently dropping the keystroke is its own problem, though: the
+            // field simply stops responding and nothing says why, which reads
+            // as a broken keyboard. So the cap announces itself — a shake, a
+            // warning tap, and a line under the field for as long as the
+            // amount is sitting on the limit.
             .onChange(of: text) { _, typed in
-                if typed.count > Money.maximumInputLength {
-                    text = String(typed.prefix(Money.maximumInputLength))
-                }
+                guard typed.count > Money.maximumInputLength else { return }
+                text = String(typed.prefix(Money.maximumInputLength))
+                refusals += 1
             }
 
             HStack(spacing: 8) {
@@ -80,6 +91,17 @@ struct AmountField: View {
                         .transition(.opacity)
                 }
             }
+
+            // Tied to the text length rather than to the last refusal, so it
+            // stays up while the amount is at the cap and leaves the moment a
+            // digit is deleted. No timer to get out of step with.
+            if isAtLimit {
+                Text(L10n.financeAmountLimit)
+                    .font(.caption2)
+                    .foregroundStyle(Palette.warning)
+                    .multilineTextAlignment(.center)
+                    .transition(.opacity)
+            }
         }
         .padding(.vertical, isCompact ? 12 : 20)
         .padding(.horizontal, 16)
@@ -90,10 +112,12 @@ struct AmountField: View {
         )
         .contentShape(.rect)
         .onTapGesture { isFocused = true }
-        .shake(on: shakes)
+        .shake(on: shakes + refusals)
+        .sensoryFeedback(.warning, trigger: refusals)
         .animation(Motion.spring, value: isFocused)
         .animation(Motion.fade, value: minorUnits > 0)
         .animation(Motion.fade, value: currency)
+        .animation(Motion.fade, value: isAtLimit)
     }
 
     /// The household's own currencies first, then the rest of the world. A
@@ -139,12 +163,37 @@ private struct ComposerToolbar: ToolbarContent {
     let onSubmit: () -> Void
     let onCancel: () -> Void
 
+    /// Ends editing before either button does anything.
+    ///
+    /// A focused field writes its binding one last time as it resigns, and
+    /// dismissing the sheet first meant that write landed after the store's
+    /// presentation state was already `nil` — which is TCA's "received a
+    /// presentation action when destination state was absent" runtime warning,
+    /// twice, on every cancel. Resigning first puts the last write back inside
+    /// the sheet's own lifetime, where there is still somewhere to put it.
+    private func endEditing() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+
     var body: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button(role: .cancel, action: onCancel) { Text(L10n.commonCancel) }
+            Button(role: .cancel) {
+                endEditing()
+                onCancel()
+            } label: {
+                Text(L10n.commonCancel)
+            }
         }
         ToolbarItem(placement: .confirmationAction) {
-            Button(action: onSubmit) {
+            Button {
+                endEditing()
+                onSubmit()
+            } label: {
                 if isSubmitting {
                     ProgressView().controlSize(.small)
                 } else {
@@ -154,6 +203,62 @@ private struct ComposerToolbar: ToolbarContent {
             .disabled(!canSubmit)
             .sensoryFeedback(.impact(weight: .medium), trigger: isSubmitting) { was, now in
                 !was && now
+            }
+        }
+    }
+}
+
+/// A member's name in a row that also has to hold a control.
+///
+/// The name takes one line and is the first thing in the row to give way. A
+/// long one used to push the share, the count and the stepper towards the edge,
+/// and in the exact split it squeezed the very field somebody was trying to
+/// type in. When the name is long enough for that to bite, an info button
+/// appears beside it and hands the whole thing back in a popover — shortened on
+/// the row, never lost.
+private struct MemberLabel: View {
+    let name: String
+    let initials: String
+    let seed: String
+    var isMuted: Bool = false
+
+    @State private var isShowingFullName = false
+
+    /// Past this the row would rather truncate than carry it. A character count
+    /// rather than a measured width, because measuring means a `GeometryReader`
+    /// per row to answer a question whose answer barely moves.
+    private var isLong: Bool { name.count > 14 }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Avatar(initials: initials, seed: seed, size: 26)
+
+            Text(name)
+                .font(.subheadline)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .layoutPriority(-1)
+                .foregroundStyle(isMuted ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+
+            if isLong {
+                Button { isShowingFullName = true } label: {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .contentShape(.circle)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(L10n.financeFullName))
+                .accessibilityValue(Text(name))
+                .popover(isPresented: $isShowingFullName) {
+                    Text(name)
+                        .font(.subheadline)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        // Without this a popover becomes a sheet on iPhone,
+                        // which is a lot of ceremony for one name.
+                        .presentationCompactAdaptation(.popover)
+                }
             }
         }
     }
@@ -332,11 +437,18 @@ struct ExpenseComposerSheet: View {
                 } label: { EmptyView() }
                 .pickerStyle(.segmented)
 
-                switch store.mode {
-                case .equal: equalSplit
-                case .shares: sharesSplit
-                case .exact: exactSplit
+                // Same reason as the section picker on the screen behind this
+                // one: three branches under one identity swap in place and
+                // nothing moves. Given their own identities they hand over.
+                Group {
+                    switch store.mode {
+                    case .equal: equalSplit
+                    case .shares: sharesSplit
+                    case .exact: exactSplit
+                    }
                 }
+                .id(store.mode)
+                .transition(.opacity.combined(with: .offset(y: 8)))
 
                 if store.amountMinor > 0, !store.preview.isEmpty {
                     Divider().opacity(0.4)
@@ -349,21 +461,34 @@ struct ExpenseComposerSheet: View {
 
     private var equalSplit: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
+            // Two bare words in the accent colour read as a caption, not as
+            // controls — nothing about them said they could be tapped, and
+            // nothing said which one the split was already on. They are the
+            // same capsules the category row above uses, and they carry a
+            // selected state, because these are places to be rather than
+            // buttons to fire: a split already covering the household should
+            // show "Everyone" lit rather than offer it as news.
+            //
+            // Hidden in a household of one, where the two presets would mean
+            // the same thing and both would light up.
+            HStack(spacing: 8) {
                 Text(L10n.financeSplitBetween)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 8)
-                Button { store.send(.everyoneTapped) } label: {
-                    Text(L10n.financeEveryone).font(.caption.weight(.medium))
+                if store.members.count > 1 {
+                    splitPreset(
+                        L10n.financeEveryone,
+                        symbol: "person.2.fill",
+                        isSelected: store.isEveryone
+                    ) { store.send(.everyoneTapped) }
+
+                    splitPreset(
+                        L10n.financeOnlyMe,
+                        symbol: "person.fill",
+                        isSelected: store.isOnlyMe
+                    ) { store.send(.onlyMeTapped) }
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
-                Button { store.send(.onlyMeTapped) } label: {
-                    Text(L10n.financeOnlyMe).font(.caption.weight(.medium))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
             }
 
             ForEach(store.orderedMembers) { member in
@@ -377,18 +502,25 @@ struct ExpenseComposerSheet: View {
 
                         Avatar(initials: member.initials, seed: member.id.rawValue, size: 26)
 
+                        // One line, and the first thing to give way: the row
+                        // has an amount to show on the other side of it.
                         Text(member.id == store.currentUserID
                             ? String(localized: L10n.financeYou)
                             : member.displayName)
                             .font(.subheadline)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .layoutPriority(-1)
                             .foregroundStyle(isOn ? .primary : .secondary)
 
                         Spacer(minLength: 4)
 
                         if isOn, store.amountMinor > 0 {
-                            MoneyText(store.state.share(of: member.id), currency: store.currency)
+                            let share = store.state.share(of: member.id)
+                            MoneyText(share, currency: store.currency)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.secondary)
+                                .animation(Motion.spring, value: share)
                         }
                     }
                     .contentShape(.rect)
@@ -400,6 +532,36 @@ struct ExpenseComposerSheet: View {
         .animation(Motion.spring, value: store.participants)
     }
 
+    /// A shortcut for who an equal split covers, drawn as a chip so it looks
+    /// like something to press. Sized to the category capsules rather than to
+    /// `Chip`, which is built for a row of its own and would tower over the
+    /// caption beside it.
+    private func splitPreset(
+        _ title: LocalizedStringResource,
+        symbol: String,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: symbol)
+                    .font(.caption2.weight(.semibold))
+                Text(title)
+                    .font(.caption.weight(.medium))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .foregroundStyle(isSelected ? Color.white : theme.accent)
+            .background(
+                isSelected ? theme.accent : theme.accent.opacity(0.14),
+                in: .capsule
+            )
+            .contentShape(.capsule)
+        }
+        .buttonStyle(.pressable)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
     private var sharesSplit: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.financeSharesHint)
@@ -408,20 +570,32 @@ struct ExpenseComposerSheet: View {
 
             ForEach(store.orderedMembers) { member in
                 let weight = store.weights[member.id] ?? 0
+                let share = store.state.share(of: member.id)
                 HStack(spacing: 10) {
-                    Avatar(initials: member.initials, seed: member.id.rawValue, size: 26)
-                    Text(member.id == store.currentUserID
-                        ? String(localized: L10n.financeYou)
-                        : member.displayName)
-                        .font(.subheadline)
-                        .foregroundStyle(weight > 0 ? .primary : .secondary)
+                    MemberLabel(
+                        name: member.id == store.currentUserID
+                            ? String(localized: L10n.financeYou)
+                            : member.displayName,
+                        initials: member.initials,
+                        seed: member.id.rawValue,
+                        isMuted: weight == 0
+                    )
 
                     Spacer(minLength: 4)
 
-                    if store.amountMinor > 0, weight > 0 {
-                        MoneyText(store.state.share(of: member.id), currency: store.currency)
+                    // Mounted for everybody the moment there is an amount to
+                    // divide, including at zero. Hiding it below a share meant
+                    // the first "+" inserted the figure at its final value and
+                    // the last "−" deleted it outright, so the one roll worth
+                    // watching — money arriving at or leaving a person — was
+                    // the only one the row could not do. The animation is keyed
+                    // to the share itself rather than to the weights, so it
+                    // also follows the total being typed.
+                    if store.amountMinor > 0 {
+                        MoneyText(share, currency: store.currency)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(weight > 0 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tertiary))
+                            .animation(Motion.spring, value: share)
                     }
 
                     // The count sits outside the stepper, not in its label:
@@ -459,11 +633,13 @@ struct ExpenseComposerSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(store.orderedMembers) { member in
                 HStack(spacing: 10) {
-                    Avatar(initials: member.initials, seed: member.id.rawValue, size: 26)
-                    Text(member.id == store.currentUserID
-                        ? String(localized: L10n.financeYou)
-                        : member.displayName)
-                        .font(.subheadline)
+                    MemberLabel(
+                        name: member.id == store.currentUserID
+                            ? String(localized: L10n.financeYou)
+                            : member.displayName,
+                        initials: member.initials,
+                        seed: member.id.rawValue
+                    )
 
                     Spacer(minLength: 8)
 
@@ -498,22 +674,53 @@ struct ExpenseComposerSheet: View {
                 }
             }
 
-            // The running difference, which is the only thing standing between
-            // this mode and a save button that goes grey without saying why.
-            HStack {
-                Text(L10n.financeExactRemaining)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 8)
-                Text(Money.text(store.exactRemainder, currency: store.currency))
-                    .font(.caption.weight(.bold))
-                    .monospacedDigit()
-                    .foregroundStyle(store.isBalanced ? Palette.success : Palette.warning)
-                    .contentTransition(.numericText(value: Double(store.exactRemainder)))
-            }
-            .padding(.top, 2)
+            exactRemainderRow
         }
         .animation(Motion.spring, value: store.exactRemainder)
+    }
+
+    /// The running difference, which is the only thing standing between this
+    /// mode and a save button that goes grey without saying why.
+    ///
+    /// Three named states rather than one signed number. "Left to assign
+    /// −₺50,00" is a label that contradicts its own value, and it leaves the
+    /// reader to work out from a minus sign that they have gone *over* — which
+    /// is precisely the case that needs saying plainly, since it is the one
+    /// they have to undo rather than finish. Each state names itself and shows
+    /// an amount that needs no interpreting.
+    @ViewBuilder
+    private var exactRemainderRow: some View {
+        let remainder = store.exactRemainder
+        let isOver = remainder < 0
+        let isSettled = remainder == 0
+
+        HStack(spacing: 6) {
+            Image(systemName: isSettled
+                ? "checkmark.circle.fill"
+                : (isOver ? "exclamationmark.circle.fill" : "circle.dotted"))
+                .font(.caption)
+            Text(isSettled
+                ? L10n.financeExactBalanced
+                : (isOver ? L10n.financeExactOver : L10n.financeExactRemaining))
+                .font(.caption.weight(.medium))
+
+            Spacer(minLength: 8)
+
+            // Zero is already said by the label; printing it too invites the
+            // reader to check the arithmetic of a row that is done.
+            if !isSettled {
+                Text(Money.text(abs(remainder), currency: store.currency))
+                    .font(.caption.weight(.bold))
+                    .monospacedDigit()
+                    .contentTransition(.numericText(value: Double(abs(remainder))))
+            }
+        }
+        // Short of the total is unfinished; past it is wrong. They are
+        // different problems and they do not get the same colour.
+        .foregroundStyle(isSettled
+            ? Palette.success
+            : (isOver ? Palette.danger : Palette.warning))
+        .padding(.top, 2)
     }
 
     /// What each person ends up carrying — the same arithmetic the server will
@@ -816,6 +1023,7 @@ struct PayBillSheet: View {
                                     Money.text(-difference, currency: store.bill.currency)))
                         } icon: {
                             Image(systemName: difference > 0 ? "arrow.up.right" : "arrow.down.right")
+                                .contentTransition(.symbolEffect(.replace))
                         }
                         .font(.caption)
                         .foregroundStyle(difference > 0 ? Palette.warning : Palette.success)

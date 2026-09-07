@@ -51,7 +51,7 @@ public struct HomeFeature: Sendable {
         case decideDinnerTapped
         case clearDinnerTapped
         case dinner(PresentationAction<DinnerFeature.Action>)
-        case toggleFailed(AppError)
+        case toggleFailed(TaskID, wasCompleted: Bool, AppError)
         /// The tab has settled and nobody has been asked about notifications
         /// yet. Raised by an effect rather than from `.task` directly so the
         /// prompt lands on a drawn screen, not a blank one.
@@ -169,12 +169,14 @@ public struct HomeFeature: Sendable {
                 guard let task = state.tasks[id: id] else { return .none }
                 let newValue = !task.isCompleted
                 // Optimistic: the checkbox answers the tap immediately, and the
-                // live subscription confirms or corrects it a moment later.
+                // live subscription confirms it a moment later. Confirms only —
+                // the failure carries the value to put back, because nothing
+                // else will.
                 state.tasks[id: id]?.isCompleted = newValue
                 return .run { send in
                     try await tasksClient.setCompleted(id, newValue)
                 } catch: { error, send in
-                    await send(.toggleFailed(AppError(error)))
+                    await send(.toggleFailed(id, wasCompleted: task.isCompleted, AppError(error)))
                 }
 
             case .notificationPromptReady:
@@ -196,9 +198,11 @@ public struct HomeFeature: Sendable {
                 guard granted else { return .none }
                 return .send(.delegate(.notificationsEnabled))
 
-            case let .toggleFailed(error):
-                // No manual rollback needed: the server's next push carries the
-                // true value, and it is already on its way.
+            case let .toggleFailed(id, wasCompleted, error):
+                // The write never happened, so the server has nothing to push
+                // and no correction is on its way. The checkbox goes back here
+                // or it stays wrong until something unrelated reloads the list.
+                state.tasks[id: id]?.isCompleted = wasCompleted
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none

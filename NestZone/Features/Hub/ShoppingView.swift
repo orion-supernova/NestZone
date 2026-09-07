@@ -402,6 +402,8 @@ private struct ShoppingRow: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+                    .contentTransition(.numericText(value: quantity))
+                    .animation(Motion.spring, value: quantity)
             }
         }
         .padding(.horizontal, Metrics.cardPadding)

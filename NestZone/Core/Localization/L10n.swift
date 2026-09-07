@@ -4021,9 +4021,34 @@ public enum L10n {
         r("finance_exact_remaining", "Left to assign")
     }
 
-    /// The shares are %@ out.
+    /// Full name
+    public static var financeFullName: LocalizedStringResource {
+        r("finance_full_name", "Full name")
+    }
+
+    /// Over by
+    public static var financeExactOver: LocalizedStringResource {
+        r("finance_exact_over", "Over by")
+    }
+
+    /// All assigned
+    public static var financeExactBalanced: LocalizedStringResource {
+        r("finance_exact_balanced", "All assigned")
+    }
+
+    /// The shares are %@ short of the total.
     public static func financeExactOff(_ a0: String) -> LocalizedStringResource {
-        r("finance_exact_off", "The shares are \(a0) out.")
+        r("finance_exact_off", "The shares are \(a0) short of the total.")
+    }
+
+    /// The shares come to %@ more than the total.
+    public static func financeExactOffOver(_ a0: String) -> LocalizedStringResource {
+        r("finance_exact_off_over", "The shares come to \(a0) more than the total.")
+    }
+
+    /// That is as long as an amount can be.
+    public static var financeAmountLimit: LocalizedStringResource {
+        r("finance_amount_limit", "That is as long as an amount can be.")
     }
 
     /// Search expenses

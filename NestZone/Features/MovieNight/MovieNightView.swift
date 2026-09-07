@@ -120,7 +120,7 @@ public struct MovieNightView: View {
                 .foregroundStyle(theme.accent)
                 .frame(width: 108, height: 108)
                 .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
-                .symbolEffect(.bounce, options: .nonRepeating)
+                .bounces()
                 .appear(0)
 
             VStack(spacing: 8) {
@@ -584,6 +584,7 @@ private struct SwipeCard: View {
 
     private func stamp(yes: Bool) -> some View {
         Image(systemName: yes ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
+            .contentTransition(.symbolEffect(.replace))
             .font(.system(size: 34, weight: .bold))
             .foregroundStyle(.white)
             .padding(14)
@@ -718,9 +719,14 @@ struct PollSummarySheet: View {
                     ForEach(store.scoreboard, id: \.item.id) { entry in
                         Button { store.send(.movieTapped(entry.item)) } label: {
                             LabeledContent {
+                                // Votes land live from the other people in the
+                                // house; a tally that jumps is the one thing
+                                // worth watching on this screen.
                                 Text(entry.yes, format: .number)
                                     .monospacedDigit()
                                     .foregroundStyle(.secondary)
+                                    .contentTransition(.numericText(value: Double(entry.yes)))
+                                    .animation(Motion.spring, value: entry.yes)
                             } label: {
                                 Text(entry.item.label ?? "").foregroundStyle(.primary)
                             }

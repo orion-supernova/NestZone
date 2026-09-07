@@ -3001,6 +3001,23 @@
         }
       }
     },
+    "finance_amount_limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That is as long as an amount can be."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir tutar en fazla bu kadar uzun olabilir."
+          }
+        }
+      }
+    },
     "finance_auto_split_label": {
       "extractionState": "manual",
       "localizations": {
@@ -4018,19 +4035,70 @@
         }
       }
     },
+    "finance_exact_balanced": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All assigned"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümü dağıtıldı"
+          }
+        }
+      }
+    },
     "finance_exact_off": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The shares are %@ out."
+            "value": "The shares are %@ short of the total."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paylar %@ tutmuyor."
+            "value": "Paylar toplamdan %@ eksik."
+          }
+        }
+      }
+    },
+    "finance_exact_off_over": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shares come to %@ more than the total."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paylar toplamdan %@ fazla."
+          }
+        }
+      }
+    },
+    "finance_exact_over": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over by"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fazlalık"
           }
         }
       }
@@ -4157,6 +4225,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kimden"
+          }
+        }
+      }
+    },
+    "finance_full_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full name"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam ad"
           }
         }
       }

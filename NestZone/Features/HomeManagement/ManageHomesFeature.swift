@@ -52,7 +52,7 @@ public struct ManageHomesFeature: Sendable {
         case homeTapped(HomeID)
         case leaveTapped(HomeID)
         case leaveFinished
-        case leaveFailed(AppError)
+        case leaveFailed(restoring: Home?, at: Int?, AppError)
         case createTapped
         case joinTapped
         case doneTapped
@@ -100,20 +100,30 @@ public struct ManageHomesFeature: Sendable {
                 // Optimistic, like every other write: the row goes now and the
                 // live `homes:listMine` update confirms it. Leaving the home
                 // that is open tears this sheet down with the tab container.
-                state.homes.remove(id: id)
+                //
+                // The index travels with the failure as well as the home. A
+                // refused leave has to put the row back where it was, not at
+                // the end of a list somebody is reading top to bottom.
+                let index = state.homes.index(id: id)
+                let removed = state.homes.remove(id: id)
                 return .run { send in
                     try await homesClient.leave(id)
                     await send(.leaveFinished)
                 } catch: { error, send in
-                    await send(.leaveFailed(AppError(error)))
+                    await send(.leaveFailed(restoring: removed, at: index, AppError(error)))
                 }
 
             case .leaveFinished:
                 state.leavingID = nil
                 return .none
 
-            case let .leaveFailed(error):
+            case let .leaveFailed(home, index, error):
                 state.leavingID = nil
+                // Still a member, so the row belongs on screen. Nothing changed
+                // server-side, which means nothing is coming to say so.
+                if let home, !state.homes.ids.contains(home.id) {
+                    state.homes.insert(home, at: min(index ?? state.homes.count, state.homes.count))
+                }
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none

@@ -37,8 +37,8 @@ struct HomeFeatureTests {
         #expect(confirmed.value[0].1 == true)
     }
 
-    @Test("A failed toggle is not rolled back by hand — the stream corrects it")
-    func failedToggleShowsAlert() async {
+    @Test("A failed toggle puts the checkbox back")
+    func failedToggleRestoresTheCheckbox() async {
         let task = HouseTask(id: "t1", title: "Dishes")
         let store = TestStore(
             initialState: HomeFeature.State(homeID: "h1")
@@ -55,7 +55,11 @@ struct HomeFeatureTests {
         await store.send(.taskToggled("t1")) {
             $0.tasks[id: "t1"]?.isCompleted = true
         }
+        // A refused write leaves the server unchanged, so no push is coming to
+        // correct the checkbox — the reducer has to put it back itself, or the
+        // row reads "done" over a task nobody did.
         await store.receive(\.toggleFailed) {
+            $0.tasks[id: "t1"]?.isCompleted = false
             $0.alert = .failure(.offline)
         }
     }
@@ -793,6 +797,76 @@ struct ShoppingTests {
             $0.shopping.removeMany = { ids in removed.withValue { $0.append(contentsOf: ids) } }
             $0.continuousClock = clock
         }
+    }
+
+    @Test("A refused tick goes back to how it was")
+    func failedToggleRestoresTheTick() async {
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.setPurchased = { _, _ in throw AppError.offline }
+        }
+
+        await store.send(.itemsUpdated([Self.milk])) {
+            $0.isLoading = false
+            $0.items = [Self.milk]
+        }
+        await store.send(.togglePurchased("s1")) {
+            $0.items[id: "s1"]?.isPurchased = true
+        }
+        // Nothing changed on the server, so nothing is coming to undo this.
+        await store.receive(\.toggleFailed) {
+            $0.items[id: "s1"]?.isPurchased = false
+        }
+        await store.receive(\.writeFailed) {
+            $0.alert = .failure(.offline)
+        }
+    }
+
+    @Test("A refused add gives the typed words back")
+    func failedAddRestoresTheDraft() async {
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        } withDependencies: {
+            $0.shopping.create = { _ in throw AppError.offline }
+        }
+
+        await store.send(.binding(.set(\.draft, "Oat milk"))) {
+            $0.draft = "Oat milk"
+        }
+        await store.send(.addTapped) {
+            $0.draft = ""
+            $0.pendingAdds = 1
+        }
+        await store.receive(\.addFinished) {
+            $0.pendingAdds = 0
+        }
+        // Losing what somebody typed is the one failure they cannot recover
+        // from themselves.
+        await store.receive(\.addFailed) {
+            $0.draft = "Oat milk"
+        }
+        await store.receive(\.writeFailed) {
+            $0.alert = .failure(.offline)
+        }
+    }
+
+    @Test("A refused add does not shove itself over something newer")
+    func failedAddKeepsWhatIsBeingTyped() async {
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        }
+
+        // Somebody who has already started the next item would rather keep it
+        // than have the rejected one land on top of what they are typing.
+        await store.send(.binding(.set(\.draft, "Bread"))) {
+            $0.draft = "Bread"
+        }
+        await store.send(.addFailed("Oat milk", .offline))
+        await store.receive(\.writeFailed) {
+            $0.alert = .failure(.offline)
+        }
+        #expect(store.state.draft == "Bread")
     }
 
     @Test("A swipe drops the row at once but holds the write open for undo")
@@ -2592,6 +2666,30 @@ struct FinanceTests {
         }
         await store.receive(\.summaryUpdated)
         #expect(asked.value == [.current, previous])
+    }
+
+    @Test("A household with nothing tracked keeps its empty state through a month step")
+    func emptyStateSurvivesAMonthStep() async {
+        let store = Self.financeStore()
+        store.exhaustivity = .off
+
+        await store.send(.task)
+        await store.receive(\.summaryUpdated)
+        // Nobody has ever paid anything, and there are no bills or budgets.
+        #expect(store.state.isBlank)
+
+        // `isBlank` used to be gated on `!isLoading`, so a month step inverted
+        // it: the overview swapped the empty state for a full stack of redacted
+        // cards for as long as the load took, then swapped it back. Two changes
+        // of the whole screen to report nothing at all, on every tap of the
+        // chevron. It must hold through the load and out the other side.
+        await store.send(.monthStepped(by: -1))
+        #expect(store.state.isLoading)
+        #expect(store.state.isBlank)
+
+        await store.receive(\.summaryUpdated)
+        #expect(!store.state.isLoading)
+        #expect(store.state.isBlank)
     }
 
     @Test("The scrubber will not run past this month")

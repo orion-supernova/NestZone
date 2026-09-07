@@ -182,6 +182,8 @@ private struct RecipeCard: View {
                     if let servings = recipe.servings {
                         Label {
                             Text(servings, format: .number)
+                                .contentTransition(.numericText(value: Double(servings)))
+                                .animation(Motion.spring, value: servings)
                         } icon: {
                             Image(systemName: "person.2")
                         }
@@ -463,16 +465,25 @@ struct CookingModeView: View {
     @Bindable var store: StoreOf<RecipeDetailFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: Metrics.stackSpacing) {
             header
             progress
 
-            switch store.phase {
-            case .ingredients: ingredients
-            case .cooking: steps
+            // Two halves of one session, each its own view: sharing an
+            // identity meant the swap happened in place with nothing to
+            // animate, so stepping from the ingredients to the first step just
+            // blinked.
+            Group {
+                switch store.phase {
+                case .ingredients: ingredients
+                case .cooking: steps
+                }
             }
+            .id(store.phase)
+            .transition(.opacity.combined(with: .offset(y: 8)))
 
             controls
         }
@@ -630,7 +641,7 @@ struct CookingModeView: View {
                 Image(systemName: "timer")
                     .font(.title3)
                     .foregroundStyle(theme.accent)
-                    .symbolEffect(.pulse, options: .repeating)
+                    .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
 
                 Text(store.timer.formatted)
                     .font(.system(.title3, design: .rounded, weight: .bold))
@@ -742,7 +753,11 @@ struct ComposeRecipeSheet: View {
                     }
                     Stepper(value: $store.servings, in: 1...20) {
                         LabeledContent {
+                            // The one number this control exists to change.
                             Text(store.servings, format: .number)
+                                .monospacedDigit()
+                                .contentTransition(.numericText(value: Double(store.servings)))
+                                .animation(Motion.spring, value: store.servings)
                         } label: {
                             Text(L10n.recipesNewRecipeServingsPicker)
                         }

@@ -31,13 +31,23 @@ private struct AppearModifier: ViewModifier {
     let index: Int
     let distance: CGFloat
     @State private var shown = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .opacity(shown ? 1 : 0)
-            .offset(y: shown ? 0 : distance)
+            // Reduce Motion asks for less *travel*, not less feedback: the
+            // element still fades in, it just does not fly. The stagger goes
+            // with it — a delay only reads as choreography when there is
+            // movement to choreograph.
+            .offset(y: shown || reduceMotion ? 0 : distance)
             .onAppear {
-                withAnimation(Motion.arrive.delay(Motion.stagger(index))) { shown = true }
+                guard !shown else { return }
+                withAnimation(
+                    reduceMotion ? Motion.fade : Motion.arrive.delay(Motion.stagger(index))
+                ) {
+                    shown = true
+                }
             }
     }
 }
@@ -146,20 +156,65 @@ public struct AnimatedNumber: View, Animatable {
     }
 }
 
+// MARK: - Symbols
+
+private struct SymbolBounceModifier: ViewModifier {
+    let active: Bool
+    @State private var trigger = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .symbolEffect(.bounce, options: .nonRepeating, value: trigger)
+            .onAppear { fire(if: active) }
+            .onChange(of: active) { _, now in fire(if: now) }
+    }
+
+    private func fire(if shouldFire: Bool) {
+        guard shouldFire, !reduceMotion else { return }
+        trigger += 1
+    }
+}
+
+extension View {
+    /// Bounces a symbol every time `active` becomes true — on first appearance,
+    /// on every appearance after it, and on every change into the active state.
+    ///
+    /// `symbolEffect(_:options: .nonRepeating)` on its own fires when the effect
+    /// is *installed*, which happens once per view instance. Anything that stays
+    /// mounted — or that SwiftUI reuses rather than rebuilds — therefore
+    /// animates the first time it is ever seen and never again for the rest of
+    /// the screen's life. Driving the effect from a counter is what makes
+    /// "again" possible.
+    ///
+    /// Silent under Reduce Motion: the counter simply stops moving, so the
+    /// symbol is drawn without ever being animated.
+    public func bounces(when active: Bool = true) -> some View {
+        modifier(SymbolBounceModifier(active: active))
+    }
+}
+
 // MARK: - Attention
 
 private struct PulseModifier: ViewModifier {
     let active: Bool
     @State private var on = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// The only animation in the app that never ends, so it is also the only
+    /// one that keeps a display link alive for as long as it is on screen.
+    /// Switched off entirely under Reduce Motion rather than softened: a slow
+    /// endless throb is the exact thing that setting exists to stop.
+    private var isBreathing: Bool { active && !reduceMotion }
 
     func body(content: Content) -> some View {
         content
             .scaleEffect(on ? 1.04 : 1)
             .animation(
-                active ? .easeInOut(duration: 1.1).repeatForever(autoreverses: true) : .default,
+                isBreathing ? .easeInOut(duration: 1.1).repeatForever(autoreverses: true) : .default,
                 value: on
             )
-            .onChange(of: active, initial: true) { _, isActive in on = isActive }
+            .onChange(of: isBreathing, initial: true) { _, breathing in on = breathing }
     }
 }
 

@@ -149,7 +149,7 @@ public struct MovieNightFeature: Sendable {
         case startFailed(AppError)
         case swiped(PollItem, isYes: Bool)
         case undoTapped
-        case voteFailed(AppError)
+        case voteFailed(restoring: State.Swipe?, AppError)
         case movieTapped(PollItem)
         case summaryTapped
         case historyTapped
@@ -294,6 +294,7 @@ public struct MovieNightFeature: Sendable {
 
             case let .swiped(item, isYes):
                 guard let pollID = state.poll?.id else { return .none }
+                let previous = state.lastSwipe
                 state.swiped.insert(item.externalID)
                 state.lastSwipe = State.Swipe(item: item, isYes: isYes)
                 // Answering the card that was just taken back settles it.
@@ -301,7 +302,10 @@ public struct MovieNightFeature: Sendable {
                 return .run { send in
                     try await pollsClient.vote(pollID, item.externalID, isYes)
                 } catch: { error, send in
-                    await send(.voteFailed(AppError(error)))
+                    // The card comes back and the undo step goes back to what
+                    // it was: a refused vote is not recorded anywhere, so
+                    // leaving the card answered would lose it silently.
+                    await send(.voteFailed(restoring: previous, AppError(error)))
                 }
 
             case .undoTapped:
@@ -322,10 +326,18 @@ public struct MovieNightFeature: Sendable {
                 return .run { [externalID = last.item.externalID] send in
                     try await pollsClient.unvote(pollID, externalID)
                 } catch: { error, send in
-                    await send(.voteFailed(AppError(error)))
+                    // The undo did not take, so the swipe still stands. Putting
+                    // it back is what re-arms the undo button too.
+                    await send(.voteFailed(restoring: last, AppError(error)))
                 }
 
-            case let .voteFailed(error):
+            case let .voteFailed(restoring, error):
+                if let restoring {
+                    state.swiped.insert(restoring.item.externalID)
+                    state.deck.removeAll { $0.externalID == restoring.item.externalID }
+                    state.restoring = nil
+                }
+                state.lastSwipe = restoring
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
@@ -364,7 +376,9 @@ public struct MovieNightFeature: Sendable {
                     try await pollsClient.close(pollID)
                     await send(.roundEnded)
                 } catch: { error, send in
-                    await send(.voteFailed(AppError(error)))
+                    // Nothing was moved optimistically here — the round only
+                    // ends when the server says it has.
+                    await send(.voteFailed(restoring: nil, AppError(error)))
                 }
 
             case .roundEnded:
@@ -656,6 +670,7 @@ public struct PollHistoryFeature: Sendable {
         case detailLoaded(PollID, PollDetail)
         case deleteTapped(PollID)
         case deleteConfirmed(PollID)
+        case deleteFailed(Poll?, Int?, PollOutcome?, AppError)
         case movieTapped(PollItem)
         case movieInfo(PresentationAction<MovieInfoFeature.Action>)
         case failed(AppError)
@@ -712,13 +727,26 @@ public struct PollHistoryFeature: Sendable {
                 return .none
 
             case let .alert(.presented(.confirmDelete(id))), let .deleteConfirmed(id):
+                // The whole row and its result, held so a refused delete can put
+                // both back — the list is not going to hear about a poll the
+                // server still has.
+                let index = state.polls.firstIndex { $0.id == id }
+                let removed = state.polls.first { $0.id == id }
+                let outcome = state.outcomes[id]
                 state.polls.removeAll { $0.id == id }
                 state.outcomes[id] = nil
                 return .run { send in
                     try await polls.remove(id)
                 } catch: { error, send in
-                    await send(.failed(AppError(error)))
+                    await send(.deleteFailed(removed, index, outcome, AppError(error)))
                 }
+
+            case let .deleteFailed(poll, index, outcome, error):
+                if let poll, !state.polls.contains(where: { $0.id == poll.id }) {
+                    state.polls.insert(poll, at: min(index ?? state.polls.count, state.polls.count))
+                    state.outcomes[poll.id] = outcome
+                }
+                return .send(.failed(error))
 
             case let .failed(error):
                 guard !error.isSilent else { return .none }

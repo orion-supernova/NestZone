@@ -659,7 +659,6 @@ struct UndecidedDinnerCard: View {
     let action: () -> Void
 
     @Environment(\.theme) private var theme
-    @State private var isBreathing = false
 
     var body: some View {
         Button(action: action) {
@@ -670,11 +669,12 @@ struct UndecidedDinnerCard: View {
                     .frame(width: 52, height: 52)
                     .background(theme.accent.opacity(0.14), in: .rect(cornerRadius: 14, style: .continuous))
                     // The one thing on this tab actually waiting on a person.
-                    .scaleEffect(isBreathing ? 1.05 : 1)
-                    .animation(
-                        .easeInOut(duration: 1.6).repeatForever(autoreverses: true),
-                        value: isBreathing
-                    )
+                    //
+                    // Through `pulse` rather than a `repeatForever` of its own,
+                    // which ran unconditionally and ignored Reduce Motion — the
+                    // one animation in the app with no end needs the one switch
+                    // that can stop it.
+                    .pulse()
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.dinnerEmptyTitle).font(.headline)
@@ -694,7 +694,6 @@ struct UndecidedDinnerCard: View {
         }
         .buttonStyle(.pressable)
         .glassCard(interactive: true)
-        .onAppear { isBreathing = true }
         .accessibilityElement(children: .combine)
     }
 }
@@ -786,6 +785,7 @@ private struct RoundView: View {
     @Bindable var store: StoreOf<DinnerFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: Metrics.sectionSpacing) {
@@ -842,7 +842,7 @@ private struct RoundView: View {
             Image(systemName: "party.popper.fill")
                 .font(.system(size: 44))
                 .foregroundStyle(theme.accent)
-                .symbolEffect(.bounce, options: .nonRepeating)
+                .bounces()
 
             Text(candidate.label)
                 .font(.system(.title2, design: .rounded, weight: .bold))
@@ -863,7 +863,7 @@ private struct RoundView: View {
             Image(systemName: "hourglass")
                 .font(.system(size: 34))
                 .foregroundStyle(.secondary)
-                .symbolEffect(.pulse)
+                .symbolEffect(.pulse, isActive: !reduceMotion)
             Text(L10n.dinnerRoundOpen).font(.headline)
             Text(L10n.dinnerRoundOpenHint)
                 .font(.footnote)

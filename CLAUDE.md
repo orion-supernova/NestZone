@@ -31,8 +31,17 @@ only place that knows the shape of the whole app.
 - **Mutations go through `ConvexConnection.mutate`**, never
   `client.mutation(_:with:)` — the SDK's no-result overload decodes the response
   as a `String` and fails on anything that returns a document.
-- **Writes are optimistic.** Mutate state, fire the effect, and let the live
-  subscription confirm or correct it. No manual rollback.
+- **Writes are optimistic, and every one of them owns its rollback.** Mutate
+  state, fire the effect, and let the live subscription confirm it. It cannot
+  *correct* it: a write that failed changed nothing on the server, so there is
+  no push coming. The failure handler has to put the old value back itself,
+  which means the failure action carries whatever it needs to do that — the
+  previous value, the removed element and its index, the text that was cleared.
+  This rule used to read "no manual rollback", which held only by accident:
+  Convex re-publishes every query in its set on every query-set change, so an
+  unrelated screen swapping a subscription would eventually re-deliver the true
+  value and quietly undo the wrong one. `ConvexConnection.subscribe` now drops
+  duplicate payloads, so that accident is gone and the rollback has to be real.
 - **Strings** live in `Resources/Localizable.xcstrings`, reached through `L10n`.
   Nothing user-visible is a literal. The catalog is **hand-maintained**: add a
   case to `L10n.swift` and the matching entry in Xcode's String Catalog editor.
