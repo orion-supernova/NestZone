@@ -67,8 +67,9 @@ public struct MovieNightFeature: Sendable {
         case pickKind(PollKindFeature)
         case summary(PollSummaryFeature)
         case history(PollHistoryFeature)
-        /// A film from the round, opened. Everything the app knows about it,
-        /// plus the household's lists to file it into.
+        /// A film from the round, opened — from a card in the deck or from a
+        /// match at the end. Everything the app knows about it, plus the
+        /// household's lists to file it into.
         case movieInfo(MovieInfoFeature)
     }
 
@@ -83,7 +84,7 @@ public struct MovieNightFeature: Sendable {
         case startFailed(AppError)
         case swiped(PollItem, isYes: Bool)
         case voteFailed(AppError)
-        case matchTapped(PollItem)
+        case movieTapped(PollItem)
         case summaryTapped
         case historyTapped
         case endRoundTapped
@@ -222,7 +223,7 @@ public struct MovieNightFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            case let .matchTapped(item):
+            case let .movieTapped(item):
                 state.destination = .movieInfo(MovieInfoFeature.State(
                     homeID: state.homeID, movie: item.asMovie
                 ))

@@ -99,7 +99,8 @@ public struct MovieNightView: View {
             SwipeDeck(
                 items: store.remaining,
                 total: store.deck.count,
-                onSwipe: { item, isYes in store.send(.swiped(item, isYes: isYes)) }
+                onSwipe: { item, isYes in store.send(.swiped(item, isYes: isYes)) },
+                onOpen: { store.send(.movieTapped($0)) }
             )
         }
     }
@@ -163,7 +164,7 @@ public struct MovieNightView: View {
                             // it again to save it was the gap. The poster opens
                             // it: everything TMDb knows, and the household's
                             // lists to file it into.
-                            Button { store.send(.matchTapped(item)) } label: {
+                            Button { store.send(.movieTapped(item)) } label: {
                                 PosterCard(
                                     title: item.label ?? "",
                                     year: nil,
@@ -215,6 +216,10 @@ struct SwipeDeck: View {
     /// Everything the round started with, for the counter.
     let total: Int
     let onSwipe: (PollItem, Bool) -> Void
+    /// Opening a card rather than answering it. A yes or a no is a decision made
+    /// on a poster and a title alone; this is the way to the plot, the cast and
+    /// the rating before committing to either.
+    let onOpen: (PollItem) -> Void
 
     /// Set by the hovering buttons. A tap has to leave the deck exactly the way
     /// a drag does — the card owns its own offset, so the instruction is passed
@@ -253,7 +258,8 @@ struct SwipeDeck: View {
                         item: item,
                         size: size,
                         command: $command,
-                        onSwipe: { isYes in onSwipe(item, isYes) }
+                        onSwipe: { isYes in onSwipe(item, isYes) },
+                        onOpen: { onOpen(item) }
                     )
                     // Cards behind peek out slightly, so the stack reads as a deck.
                     .scaleEffect(1 - CGFloat(index) * 0.04)
@@ -356,6 +362,7 @@ private struct SwipeCard: View {
     let size: CGSize
     @Binding var command: SwipeDeck.Command?
     let onSwipe: (Bool) -> Void
+    let onOpen: () -> Void
 
     @State private var offset: CGSize = .zero
     @State private var isGone = false
@@ -376,20 +383,7 @@ private struct SwipeCard: View {
             .frame(width: size.width, height: size.height)
             .clipped()
 
-            if let label = item.label {
-                Text(label)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 18)
-                    .padding(.top, 48)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    // A gradient rather than a flat black bar: the title stays
-                    // readable over a bright poster without cutting a hard edge
-                    // across the artwork.
-                    .background(Palette.posterScrim)
-            }
+            caption
         }
         .frame(width: size.width, height: size.height)
         .clipShape(.rect(cornerRadius: 28, style: .continuous))
@@ -412,6 +406,13 @@ private struct SwipeCard: View {
                     }
                 }
         )
+        // A tap is not a swipe: the drag only engages once the finger has
+        // travelled, so lifting where you landed opens the film instead of
+        // answering for it.
+        .onTapGesture {
+            guard !isGone else { return }
+            onOpen()
+        }
         // The hovering buttons speak to the top card through this, so a tap and
         // a drag leave the deck by exactly the same path.
         .onChange(of: command) { _, new in
@@ -422,8 +423,39 @@ private struct SwipeCard: View {
         .sensoryFeedback(.impact(weight: .medium), trigger: isGone)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(item.label ?? ""))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(Text(L10n.moviesDetailTitle))
+        // Activating the card does what tapping it does; the two answers stay
+        // on the rotor, where a drag cannot reach.
+        .accessibilityAction { onOpen() }
         .accessibilityAction(named: Text(L10n.movienightWouldWatch)) { onSwipe(true) }
         .accessibilityAction(named: Text(L10n.movienightPass)) { onSwipe(false) }
+    }
+
+    /// The title, and the sign that the poster itself opens.
+    ///
+    /// A full-bleed card gives nothing away about being tappable, so the glyph
+    /// says it. The bar is drawn whether or not the candidate carries a title —
+    /// a card with no name is exactly the one worth opening.
+    private var caption: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(item.label ?? "")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Image(systemName: "info.circle")
+                .font(.title3)
+                .foregroundStyle(.white.opacity(0.85))
+        }
+        .padding(.horizontal, 18)
+        .padding(.bottom, 18)
+        .padding(.top, 48)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // A gradient rather than a flat black bar: the title stays readable
+        // over a bright poster without cutting a hard edge across the artwork.
+        .background(Palette.posterScrim)
     }
 
     /// Flings the card off in the direction of travel, then reports — so it
