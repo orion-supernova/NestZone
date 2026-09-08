@@ -46,7 +46,14 @@ public struct AppFeature: Sendable {
             // picker for as long as the round trip takes, because an empty list
             // and "no home yet" are indistinguishable.
             if homeGate.isLoading { return .launching }
-            return selectedHome == nil ? .choosingHome : .main
+            guard selectedHome != nil else { return .choosingHome }
+            // The tab container is built by `syncMain`, in response to a
+            // `homeGate` action. Seeded from the cache the selection is already
+            // valid before any such action has run, so for a beat on launch
+            // there is a home to open and nothing yet to open it with — and
+            // `.main` with no store renders a blank screen, which is worse than
+            // the launch screen it replaced.
+            return main == nil ? .launching : .main
         }
 
         public enum Screen: Equatable {
@@ -147,6 +154,21 @@ public struct AppFeature: Sendable {
                 case .unauthenticated:
                     state.currentUser = nil
                     state.main = nil
+                    // Drop the cached home list before rebuilding the gate, or
+                    // the fresh state seeds itself straight back out of it.
+                    //
+                    // Only for a session that had actually started:
+                    // `.unauthenticated` is also the auth stream's opening value
+                    // on every launch, before the cached session is restored,
+                    // and clearing there would throw the cache away on each
+                    // launch — which is the one thing it exists to prevent.
+                    //
+                    // Cleared at all because it is one household's data: a
+                    // session that has ended must not leave its home names on
+                    // the device for whoever signs in next.
+                    if wasAuthenticated {
+                        state.homeGate.$cachedHomes.withLock { $0 = [] }
+                    }
                     state.homeGate = HomeManagementFeature.State()
                     return .merge(
                         .cancel(id: CancelID.currentUser),

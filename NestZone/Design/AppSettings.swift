@@ -34,6 +34,32 @@ extension SharedKey where Self == AppStorageKey<String?>.Default {
     }
 }
 
+extension SharedKey where Self == FileStorageKey<[Home]>.Default {
+    /// The household list as it stood at the end of the last session.
+    ///
+    /// The launch screen used to stay up until `homes:listMine` answered, and on
+    /// a cold start that answer is a websocket connect, a refresh-token exchange
+    /// and a query round trip away — every launch paid the network to be told
+    /// what the device already knew, and a launch with no network never got past
+    /// the splash at all. Seeded from here the gate opens immediately and the
+    /// live subscription corrects it a moment later, which is the same bargain
+    /// the rest of the app makes with optimistic writes.
+    ///
+    /// A file rather than app storage: `@AppStorage` holds property-list types
+    /// only, and this is a list of structs. Documents, because it must survive a
+    /// low-storage purge — a cleared cache would put the splash back — and the
+    /// container is private (the app ships no `UIFileSharingEnabled`).
+    ///
+    /// Cleared on sign-out. It is one household's data, and the next person to
+    /// sign in on this device must not inherit it.
+    public static var cachedHomes: Self {
+        Self[
+            .fileStorage(.documentsDirectory.appending(component: "cached-homes.json")),
+            default: []
+        ]
+    }
+}
+
 extension SharedKey where Self == AppStorageKey<Bool>.Default {
     /// Whether the movie catalogue may return adult titles.
     public static var includeAdultTitles: Self {

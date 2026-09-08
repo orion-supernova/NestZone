@@ -459,6 +459,7 @@ struct HomeManagementTests {
         await store.send(.homesUpdated([home])) {
             $0.isLoading = false
             $0.homes = [home]
+            $0.$cachedHomes.withLock { $0 = [home] }
             $0.$selectedHomeIDRaw.withLock { $0 = "h1" }
         }
     }
@@ -472,6 +473,7 @@ struct HomeManagementTests {
         await store.send(.homesUpdated(homes)) {
             $0.isLoading = false
             $0.homes = IdentifiedArray(uniqueElements: homes)
+            $0.$cachedHomes.withLock { $0 = homes }
         }
         #expect(store.state.$selectedHomeIDRaw.homeID == nil)
     }
@@ -487,8 +489,32 @@ struct HomeManagementTests {
         await store.send(.homesUpdated(remaining)) {
             $0.isLoading = false
             $0.homes = IdentifiedArray(uniqueElements: remaining)
+            $0.$cachedHomes.withLock { $0 = remaining }
             $0.$selectedHomeIDRaw.withLock { $0 = nil }
         }
+    }
+
+    @Test("A cached home list opens the gate without waiting for the network")
+    func cachedHomesSeedTheGate() async {
+        let home = Home(id: "h1", name: "The Nest")
+        @Shared(.cachedHomes) var cachedHomes: [Home]
+        $cachedHomes.withLock { $0 = [home] }
+
+        // What the launch screen reads. `isLoading` staying true here is what
+        // used to hold the splash up for a websocket connect, a token exchange
+        // and a query round trip, on a device that already knew the answer.
+        let state = HomeManagementFeature.State()
+        #expect(state.homes == [home])
+        #expect(state.isLoading == false)
+    }
+
+    @Test("With nothing cached the gate still waits, rather than claiming no homes")
+    func emptyCacheStillLoads() async {
+        let state = HomeManagementFeature.State()
+        #expect(state.isLoading)
+        // `isEmpty` is what draws "let's get started", and an unanswered
+        // subscription must never look like an answer of "none".
+        #expect(!state.isEmpty)
     }
 
     @Test("Leaving as the last member warns that the home will be deleted")
@@ -500,6 +526,7 @@ struct HomeManagementTests {
         await store.send(.homesUpdated([home])) {
             $0.isLoading = false
             $0.homes = [home]
+            $0.$cachedHomes.withLock { $0 = [home] }
             $0.$selectedHomeIDRaw.withLock { $0 = "h1" }
         }
         await store.send(.leaveTapped("h1")) {

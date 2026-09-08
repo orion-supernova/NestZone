@@ -16,10 +16,21 @@ public struct HomeManagementFeature: Sendable {
         public var homes: IdentifiedArrayOf<Home> = []
         public var isLoading = true
         @Shared(.selectedHomeIDRaw) public var selectedHomeIDRaw: String?
+        @Shared(.cachedHomes) public var cachedHomes: [Home]
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
-        public init() {}
+        public init() {
+            // Open on what the last session ended with. `isLoading` is what
+            // holds the launch screen up (see `AppFeature.State.screen`), so a
+            // device that already knows the answer must not claim to be
+            // loading — the subscription still starts, and `homesUpdated`
+            // reconciles a moment later.
+            let cached = cachedHomes
+            guard !cached.isEmpty else { return }
+            homes = IdentifiedArray(uniqueElements: cached)
+            isLoading = false
+        }
 
         /// True once we know the user has no home at all.
         public var isEmpty: Bool { !isLoading && homes.isEmpty }
@@ -84,6 +95,12 @@ public struct HomeManagementFeature: Sendable {
                 // keeps a redundant push from invalidating the whole tree.
                 let incoming = IdentifiedArray(uniqueElements: homes)
                 if incoming != state.homes { state.homes = incoming }
+                // Same comparison before touching the cache: this writes a file,
+                // and the redundant pushes above would otherwise rewrite it on
+                // every query-set change in the app.
+                if state.cachedHomes != homes {
+                    state.$cachedHomes.withLock { $0 = homes }
+                }
 
                 // Drop a stale selection — the home may have been left or
                 // deleted on another device.
