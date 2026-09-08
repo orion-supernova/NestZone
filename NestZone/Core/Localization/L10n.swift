@@ -3605,6 +3605,44 @@ public enum L10n {
         r("settings_notifications_no_device", "Not registered")
     }
 
+    /// Registered
+    public static var settingsNotificationsDeviceRegistered: LocalizedStringResource {
+        r("settings_notifications_device_registered", "Registered")
+    }
+
+    /// Registering…
+    public static var settingsNotificationsDevicePending: LocalizedStringResource {
+        r("settings_notifications_device_pending", "Registering\u{2026}")
+    }
+
+    /// %lld bytes · %@
+    public static func settingsNotificationsDeviceDetail(
+        _ a0: Int, _ a1: String
+    ) -> LocalizedStringResource {
+        r("settings_notifications_device_detail", "\(a0) bytes · \(a1)")
+    }
+
+    /// Registration failed
+    public static var settingsNotificationsDeviceFailed: LocalizedStringResource {
+        r("settings_notifications_device_failed", "Registration failed")
+    }
+
+    /// No device is registered to receive it. NestZone will try again next time you open the app.
+    public static var settingsNotificationsTestNoDevices: LocalizedStringResource {
+        r(
+            "settings_notifications_test_no_devices",
+            "No device is registered to receive it. NestZone will try again next time you open the app."
+        )
+    }
+
+    /// Apple rejected every device registered to this account, so they have been removed. Reopen NestZone to register this one again.
+    public static var settingsNotificationsTestDropped: LocalizedStringResource {
+        r(
+            "settings_notifications_test_dropped",
+            "Apple rejected every device registered to this account, so they have been removed. Reopen NestZone to register this one again."
+        )
+    }
+
     // MARK: - Relative time
 
     /// Just now

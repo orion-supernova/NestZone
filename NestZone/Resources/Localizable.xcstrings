@@ -16585,6 +16585,74 @@
         }
       }
     },
+    "settings_notifications_device_detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld bytes · %2$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld bayt · %2$@"
+          }
+        }
+      }
+    },
+    "settings_notifications_device_failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registration failed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıt başarısız"
+          }
+        }
+      }
+    },
+    "settings_notifications_device_pending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registering…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydediliyor…"
+          }
+        }
+      }
+    },
+    "settings_notifications_device_registered" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registered"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlı"
+          }
+        }
+      }
+    },
     "settings_notifications_footer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16649,6 +16717,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Test bildirimi gönder"
+          }
+        }
+      }
+    },
+    "settings_notifications_test_dropped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple rejected every device registered to this account, so they have been removed. Reopen NestZone to register this one again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple bu hesaba kayıtlı tüm cihazları reddetti, bu yüzden kayıtları kaldırıldı. Bu cihazı yeniden kaydetmek için NestZone’u tekrar açın."
+          }
+        }
+      }
+    },
+    "settings_notifications_test_no_devices" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No device is registered to receive it. NestZone will try again next time you open the app."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bunu alacak kayıtlı bir cihaz yok. NestZone, uygulamayı bir sonraki açışınızda yeniden deneyecek."
           }
         }
       }

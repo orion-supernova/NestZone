@@ -1767,7 +1767,7 @@ struct SignOutTests {
     func signOutUnregistersDevice() async {
         let handed = LockIsolated<[String?]>([])
         var state = SettingsFeature.State(homeID: "h1")
-        state.pushToken = "abc123"
+        state.pushRegistration = .registered(token: "abc123")
 
         let store = TestStore(initialState: state) {
             SettingsFeature()
@@ -1790,6 +1790,297 @@ struct SignOutTests {
 
         await store.send(.signOutConfirmed)
         #expect(handed.value == [String?.none])
+    }
+
+    /// The server may well hold this token from an earlier launch — registering
+    /// is an upsert keyed on the token, not on the session. Handing over only
+    /// tokens *this* launch confirmed would leave the device in a household it
+    /// has left.
+    @Test("Sign-out unregisters a token even if this launch could not confirm it")
+    func signOutUnregistersUnconfirmedToken() async {
+        let handed = LockIsolated<[String?]>([])
+        var state = SettingsFeature.State(homeID: "h1")
+        state.pushRegistration = .failed(token: "abc123")
+
+        let store = TestStore(initialState: state) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+        }
+
+        await store.send(.signOutConfirmed)
+        #expect(handed.value == ["abc123"])
+    }
+}
+
+@MainActor
+@Suite("Push registration")
+struct PushRegistrationTests {
+
+    private func signedIn(_ home: Home) -> AppFeature.State {
+        var state = AppFeature.State()
+        state.status = .authenticated
+        state.homeGate.homes = [home]
+        state.homeGate.isLoading = false
+        state.homeGate.$selectedHomeIDRaw.withLock { $0 = home.id.rawValue }
+        return state
+    }
+
+    /// The bug the rest of this suite exists to keep fixed.
+    ///
+    /// iOS answers with a token while the home list is still in flight, so
+    /// there is no tab container to write it into — and nothing delivered it
+    /// afterwards. Push itself worked the whole time, which is why the Settings
+    /// row calling every device unregistered looked like a display quirk rather
+    /// than the sign-out bug it shared a cause with.
+    @Test("A token arriving before the tabs exist still reaches Settings")
+    func tokenArrivingBeforeMainStillLands() async {
+        let home = Home(id: "h1", name: "The Nest")
+        let store = TestStore(initialState: signedIn(home)) {
+            AppFeature()
+        } withDependencies: {
+            $0.devices.register = { _, _ in }
+            $0.continuousClock = ImmediateClock()
+        }
+        store.exhaustivity = .off
+
+        #expect(store.state.main == nil)
+        await store.send(.deviceTokenReceived("abc123"))
+        await store.receive(\.deviceRegistered)
+
+        // Built only now, and it has to be handed the standing on the way up.
+        await store.send(.homeGate(.homesUpdated([home])))
+        #expect(
+            store.state.main?.settings.pushRegistration == .registered(token: "abc123")
+        )
+    }
+
+    /// Switching home throws the whole tab container away and builds a new one.
+    @Test("Switching home does not lose the registration")
+    func switchingHomeKeepsTheRegistration() async {
+        let first = Home(id: "h1", name: "The Nest")
+        let second = Home(id: "h2", name: "The Other")
+        var state = signedIn(first)
+        state.homeGate.homes = [first, second]
+
+        let store = TestStore(initialState: state) {
+            AppFeature()
+        } withDependencies: {
+            $0.devices.register = { _, _ in }
+            $0.continuousClock = ImmediateClock()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.deviceTokenReceived("abc123"))
+        await store.receive(\.deviceRegistered)
+        await store.send(.homeGate(.homesUpdated([first, second])))
+
+        await store.send(.main(.settings(.delegate(.homeSwitched("h2")))))
+        #expect(
+            store.state.main?.settings.pushRegistration == .registered(token: "abc123")
+        )
+    }
+
+    /// "iOS gave us a token" and "the server can reach this phone" are separate
+    /// claims, and only the second one delivers anything.
+    @Test("A token the server refuses is not reported as registered")
+    func failedRegistrationIsNotHealthy() async {
+        let home = Home(id: "h1", name: "The Nest")
+        let store = TestStore(initialState: signedIn(home)) {
+            AppFeature()
+        } withDependencies: {
+            $0.devices.register = { _, _ in throw AppError.offline }
+            $0.continuousClock = ImmediateClock()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.deviceTokenReceived("abc123"))
+        await store.receive(\.deviceRegistrationFailed)
+
+        #expect(store.state.pushRegistration == .failed(token: "abc123"))
+        #expect(!store.state.pushRegistration.isRegistered)
+        // Still held, because sign-out has to unregister it.
+        #expect(store.state.pushRegistration.token == "abc123")
+    }
+
+    /// Registration used to end for the whole session after five attempts, so a
+    /// blip during sign-in cost every notification until the app was force-quit.
+    @Test("Returning to the foreground retries a registration that failed")
+    func foregroundRetriesAfterFailure() async {
+        let home = Home(id: "h1", name: "The Nest")
+        let attempts = LockIsolated(0)
+        var state = signedIn(home)
+        state.pushRegistration = .failed(token: "abc123")
+
+        let store = TestStore(initialState: state) {
+            AppFeature()
+        } withDependencies: {
+            $0.push.authorizationStatus = { .authorized }
+            $0.push.registerForRemoteNotifications = {}
+            $0.push.deviceTokens = {
+                AsyncStream { continuation in
+                    continuation.yield("abc123")
+                    continuation.finish()
+                }
+            }
+            $0.devices.register = { _, _ in attempts.withValue { $0 += 1 } }
+            $0.continuousClock = ImmediateClock()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.appEnteredForeground)
+        await store.receive(\.deviceTokenReceived)
+        await store.receive(\.deviceRegistered)
+
+        #expect(attempts.value == 1)
+        #expect(store.state.pushRegistration == .registered(token: "abc123"))
+    }
+
+    /// The retry has to be free while things are working, or it is a write per
+    /// app resume for every user in the app.
+    @Test("Returning to the foreground re-registers nothing when already registered")
+    func foregroundIsQuietWhenRegistered() async {
+        let home = Home(id: "h1", name: "The Nest")
+        var state = signedIn(home)
+        state.pushRegistration = .registered(token: "abc123")
+
+        let store = TestStore(initialState: state) { AppFeature() }
+        await store.send(.appEnteredForeground)
+    }
+
+    /// A test push that reaches nobody is the exact failure this button is for.
+    @Test("A test push that reaches no device says so")
+    func testPushWithNoDevicesAlerts() async {
+        let store = TestStore(initialState: SettingsFeature.State(homeID: "h1")) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.devices.sendTestToSelf = { PushResult(sent: 0, dropped: 0) }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.sendTestPushTapped)
+        await store.receive(\.testPushFinished)
+        #expect(store.state.alert != nil)
+        #expect(!store.state.isSendingTestPush)
+    }
+
+    @Test("A test push that lands says nothing")
+    func testPushThatLandsIsSilent() async {
+        let store = TestStore(initialState: SettingsFeature.State(homeID: "h1")) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.devices.sendTestToSelf = { PushResult(sent: 1, dropped: 0) }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.sendTestPushTapped)
+        await store.receive(\.testPushFinished)
+        #expect(store.state.alert == nil)
+    }
+
+    /// Eight characters is enough to recognise a device and not enough to
+    /// check one against a backend row, which is what this screen is for.
+    @Test("Tapping the device row expands it to the whole token")
+    func deviceRowExpands() async {
+        var state = SettingsFeature.State(homeID: "h1")
+        state.pushRegistration = .registered(token: "abc123def456")
+
+        let store = TestStore(initialState: state) { SettingsFeature() }
+
+        await store.send(.deviceRowTapped) { $0.isShowingFullPushToken = true }
+        #expect(store.state.pushTokenFull == "abc123def456")
+        await store.send(.deviceRowTapped) { $0.isShowingFullPushToken = false }
+    }
+
+    @Test("Tapping the members row expands it to the full names")
+    func membersRowExpands() async {
+        var state = SettingsFeature.State(homeID: "h1")
+        state.members = [
+            User(id: "u1", name: "Ada Lovelace"),
+            User(id: "u2", name: "Grace Hopper"),
+        ]
+
+        let store = TestStore(initialState: state) { SettingsFeature() }
+
+        await store.send(.membersRowTapped) { $0.isShowingMembers = true }
+        await store.send(.membersRowTapped) { $0.isShowingMembers = false }
+    }
+
+    @Test("Tapping the members row does nothing when there are no members")
+    func membersRowWithoutMembersDoesNotExpand() async {
+        let store = TestStore(initialState: SettingsFeature.State(homeID: "h1")) {
+            SettingsFeature()
+        }
+        await store.send(.membersRowTapped)
+        #expect(!store.state.isShowingMembers)
+    }
+
+    @Test("Tapping the device row does nothing when there is no token")
+    func deviceRowWithoutTokenDoesNotExpand() async {
+        let store = TestStore(initialState: SettingsFeature.State(homeID: "h1")) {
+            SettingsFeature()
+        }
+        await store.send(.deviceRowTapped)
+        #expect(!store.state.isShowingFullPushToken)
+    }
+
+    @Test("Copying puts the whole token on the clipboard, not the summary")
+    func copyingTheTokenCopiesAllOfIt() async {
+        let copied = LockIsolated<[String]>([])
+        let clock = TestClock()
+        var state = SettingsFeature.State(homeID: "h1")
+        state.pushRegistration = .registered(token: "abc123def456")
+
+        let store = TestStore(initialState: state) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.pasteboard.copy = { text in copied.withValue { $0.append(text) } }
+            $0.continuousClock = clock
+        }
+
+        await store.send(.copyPushTokenTapped) { $0.didCopyPushToken = true }
+        #expect(copied.value == ["abc123def456"])
+
+        await clock.advance(by: .seconds(2))
+        await store.receive(\.pushTokenCopyExpired) { $0.didCopyPushToken = false }
+    }
+
+    /// Separate cancellation ids: copying one used to be able to cut the
+    /// other's confirmation short.
+    @Test("Copying the token leaves the invite code's confirmation alone")
+    func copyingTheTokenDoesNotCancelTheInviteTick() async {
+        let clock = TestClock()
+        var state = SettingsFeature.State(homeID: "h1")
+        state.home = Home(id: "h1", name: "The Nest", inviteCode: "NEST42")
+        state.pushRegistration = .registered(token: "abc123def456")
+
+        let store = TestStore(initialState: state) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.pasteboard.copy = { _ in }
+            $0.continuousClock = clock
+        }
+
+        await store.send(.copyInviteCodeTapped) { $0.didCopyInviteCode = true }
+        await store.send(.copyPushTokenTapped) { $0.didCopyPushToken = true }
+
+        await clock.advance(by: .seconds(2))
+        await store.receive(\.inviteCodeCopyExpired) { $0.didCopyInviteCode = false }
+        await store.receive(\.pushTokenCopyExpired) { $0.didCopyPushToken = false }
+    }
+
+    @Test("A test push that throws surfaces the error")
+    func testPushFailureAlerts() async {
+        let store = TestStore(initialState: SettingsFeature.State(homeID: "h1")) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.devices.sendTestToSelf = { throw AppError.offline }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.sendTestPushTapped)
+        await store.receive(\.testPushFinished)
+        #expect(store.state.alert != nil)
     }
 }
 

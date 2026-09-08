@@ -113,6 +113,19 @@ public enum Palette {
             : UIColor(white: 0, alpha: 0.55)
     })
 
+    /// The ground under an inset block of monospaced detail inside a row — a
+    /// device token, an id — so it reads as a quoted block rather than a line
+    /// of text that wandered to the left margin.
+    ///
+    /// Fixed alpha for the same reason as `accessory`: `.quaternary` is tuned
+    /// against an opaque system background and all but disappears over the
+    /// blurred one this app puts behind every screen.
+    public static let inset = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 1, alpha: 0.10)
+            : UIColor(white: 0, alpha: 0.06)
+    })
+
     /// One colour per spending category, allocated once.
     ///
     /// A category's colour is the only thing tying its donut segment to its

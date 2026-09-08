@@ -16,10 +16,20 @@ public struct SettingsFeature: Sendable {
         /// again here.
         public var homes: IdentifiedArrayOf<Home> = []
         public var didCopyInviteCode = false
-        /// Kept so sign-out can tell the backend to stop pushing to this device.
-        public var pushToken: String?
+        /// Where this device stands with APNs and with the server. Owned by
+        /// `AppFeature`, which outlives every tab container, and copied down
+        /// here — this screen displays it, and sign-out unregisters it.
+        public var pushRegistration: PushRegistration = .none
         public var notificationStatus: UNAuthorizationStatus = .notDetermined
         public var isSendingTestPush = false
+        /// The row shows the first eight characters, which is all you need to
+        /// pick this device out of a list. Matching one against a backend row,
+        /// or pasting it into an APNs request by hand, needs all of it.
+        public var isShowingFullPushToken = false
+        public var didCopyPushToken = false
+        /// The stack shows four avatars and a "+2". Who those people are is a
+        /// question the row can answer in place.
+        public var isShowingMembers = false
 
         /// `.denied` can only be undone in Settings.app, so the row becomes a
         /// link there rather than a toggle that would silently do nothing.
@@ -28,19 +38,43 @@ public struct SettingsFeature: Sendable {
             [.authorized, .provisional, .ephemeral].contains(notificationStatus)
         }
 
-        /// Enough of this device's APNs token to recognise it in the backend,
-        /// plus the two facts that decide whether a push can land: how long the
-        /// token is, and which gateway it was registered against.
+        /// The row's whole answer to "can a push land on this phone?", in
+        /// words. It used to be the token prefix, its length and the gateway
+        /// crammed into one trailing string, which was too long for the slot
+        /// and wrapped — and a wrapped trailing value reads as a mistake.
         ///
-        /// Permission being granted does not mean iOS ever handed over a token
-        /// — registration can fail on its own — and until that token reaches
-        /// the server this device is simply not in the fan-out.
-        public var pushTokenSummary: String {
-            guard let pushToken else {
-                return String(localized: L10n.settingsNotificationsNoDevice)
+        /// Permission being granted does not mean iOS ever handed over a token,
+        /// and holding a token does not mean the server took it, so all four
+        /// states get their own words. A row that says "not registered" when
+        /// the truth is "registering" sends people looking for a bug that
+        /// resolves itself a second later.
+        public var pushStatusLabel: String {
+            switch pushRegistration {
+            case .none:
+                String(localized: L10n.settingsNotificationsNoDevice)
+            case .pending:
+                String(localized: L10n.settingsNotificationsDevicePending)
+            case .registered:
+                String(localized: L10n.settingsNotificationsDeviceRegistered)
+            case .failed:
+                String(localized: L10n.settingsNotificationsDeviceFailed)
             }
-            return "\(pushToken.prefix(8))… · \(pushToken.count / 2)B · "
-                + APNSEnvironment.current
+        }
+
+        /// Red for anything a push cannot land on, so the row reads at a glance.
+        public var pushTokenIsHealthy: Bool { pushRegistration.isRegistered }
+
+        /// The whole token, for the expanded row and the clipboard.
+        public var pushTokenFull: String? { pushRegistration.token }
+
+        /// The two facts that decide whether a token can be delivered at all,
+        /// shown under the token they describe rather than in a row that has no
+        /// space for them.
+        public var pushTokenDetail: String? {
+            guard let token = pushRegistration.token else { return nil }
+            return String(localized: L10n.settingsNotificationsDeviceDetail(
+                token.count / 2, APNSEnvironment.current
+            ))
         }
 
         @Shared(.theme) public var theme: AppTheme
@@ -83,8 +117,12 @@ public struct SettingsFeature: Sendable {
         case notificationsToggled(Bool)
         case openSystemSettingsTapped
         case sendTestPushTapped
-        case testPushFinished
-        case pushTokenChanged(String?)
+        case testPushFinished(Result<PushResult, AppError>)
+        case pushRegistrationChanged(PushRegistration)
+        case membersRowTapped
+        case deviceRowTapped
+        case copyPushTokenTapped
+        case pushTokenCopyExpired
         case membersUpdated([User])
         case editNameTapped
         case themeSelected(AppTheme)
@@ -111,7 +149,7 @@ public struct SettingsFeature: Sendable {
         }
     }
 
-    private enum CancelID { case members, copyReset }
+    private enum CancelID { case members, copyReset, pushTokenCopyReset }
 
     @Dependency(\.homes) var homes
     @Dependency(\.auth) var auth
@@ -171,18 +209,65 @@ public struct SettingsFeature: Sendable {
                 guard !state.isSendingTestPush else { return .none }
                 state.isSendingTestPush = true
                 return .run { send in
-                    try await devices.sendTestToSelf()
-                    await send(.testPushFinished)
-                } catch: { error, send in
-                    await send(.testPushFinished)
+                    await send(.testPushFinished(
+                        Result { try await devices.sendTestToSelf() }
+                            .mapError(AppError.init)
+                    ))
                 }
 
-            case .testPushFinished:
+            // The whole point of this button is to answer "can you reach my
+            // phone?", so every answer but yes has to be said out loud. It used
+            // to swallow the error and stop the spinner, which looks identical
+            // to a push that was sent and simply never arrived.
+            case let .testPushFinished(result):
                 state.isSendingTestPush = false
+                switch result {
+                case let .success(push) where push.sent == 0:
+                    // APNs accepted nothing. Either no device is registered
+                    // against this account or every token it had is dead — and
+                    // `dropped` says which, so the copy can be specific.
+                    state.alert = .failure(.validation(String(
+                        localized: push.dropped > 0
+                            ? L10n.settingsNotificationsTestDropped
+                            : L10n.settingsNotificationsTestNoDevices
+                    )))
+                case .success:
+                    break
+                case let .failure(error):
+                    state.alert = .failure(error)
+                }
                 return .none
 
-            case let .pushTokenChanged(token):
-                state.pushToken = token
+            case let .pushRegistrationChanged(registration):
+                state.pushRegistration = registration
+                return .none
+
+            case .membersRowTapped:
+                guard !state.members.isEmpty else { return .none }
+                state.isShowingMembers.toggle()
+                return .none
+
+            case .deviceRowTapped:
+                // Nothing to expand to when there is no token; the row is
+                // already saying everything it knows.
+                guard state.pushRegistration.token != nil else { return .none }
+                state.isShowingFullPushToken.toggle()
+                return .none
+
+            case .copyPushTokenTapped:
+                guard let token = state.pushRegistration.token else { return .none }
+                pasteboard.copy(token)
+                state.didCopyPushToken = true
+                return .run { send in
+                    try await clock.sleep(for: .seconds(2))
+                    await send(.pushTokenCopyExpired)
+                }
+                // Its own id: copying a token must not cut short the invite
+                // code's confirmation, or either one's tick vanishes early.
+                .cancellable(id: CancelID.pushTokenCopyReset, cancelInFlight: true)
+
+            case .pushTokenCopyExpired:
+                state.didCopyPushToken = false
                 return .none
 
             case let .membersUpdated(members):
@@ -238,7 +323,12 @@ public struct SettingsFeature: Sendable {
                 return .none
 
             case .alert(.presented(.confirmSignOut)), .signOutConfirmed:
-                return .run { [token = state.pushToken] _ in
+                // Deliberately `token` and not "the token the server told us
+                // it took": an earlier launch may have registered this same
+                // token successfully, and skipping the unregister because
+                // *this* launch could not confirm it leaves the device
+                // receiving a household's notifications after leaving it.
+                return .run { [token = state.pushRegistration.token] _ in
                     await auth.signOut(token)
                 }
 

@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Foundation
+import UIKit
 
 /// The root. Owns the two gates every launch passes through — are you signed in,
 /// and which home are you in — and the session data every tab reads.
@@ -20,6 +21,12 @@ public struct AppFeature: Sendable {
         /// A stored session exists but could not be exchanged. The user is not
         /// signed out — the network is just unavailable.
         public var restoreFailedOffline = false
+        /// This device's standing with APNs and with the server, held here
+        /// because this is the only reducer that lives for the whole session.
+        /// iOS delivers a token once per launch, long before there is a
+        /// Settings screen to put it in, so the arrival of a token and the
+        /// display of one cannot be the same event.
+        public var pushRegistration: PushRegistration = .none
 
         public var auth = AuthFeature.State()
         public var homeGate = HomeManagementFeature.State()
@@ -68,14 +75,18 @@ public struct AppFeature: Sendable {
         case sessionRestoreFinished(RestoreOutcome)
         case languageChanged(AppLanguage)
         case deviceTokenReceived(String)
-        case deviceRegistrationFailed
+        case deviceRegistered(String)
+        case deviceRegistrationFailed(String)
+        case appEnteredForeground
         case retryRestoreTapped
         case auth(AuthFeature.Action)
         case homeGate(HomeManagementFeature.Action)
         case main(MainFeature.Action)
     }
 
-    private enum CancelID { case authState, currentUser, deviceToken, deviceRegistration }
+    private enum CancelID {
+        case authState, currentUser, deviceToken, deviceRegistration, foreground
+    }
 
     @Dependency(\.auth) var authClient
     @Dependency(\.continuousClock) var clock
@@ -116,7 +127,20 @@ public struct AppFeature: Sendable {
                             attempt += 1
                         }
                         await send(.sessionRestoreFinished(outcome))
+                    },
+
+                    // Lives as long as the app does, deliberately unscoped to
+                    // auth: it has to be listening before the first sign-in and
+                    // still be there after the last one.
+                    .run { send in
+                        let foregrounds = NotificationCenter.default.notifications(
+                            named: UIApplication.willEnterForegroundNotification
+                        )
+                        for await _ in foregrounds {
+                            await send(.appEnteredForeground)
+                        }
                     }
+                    .cancellable(id: CancelID.foreground)
                 )
 
             case let .authStatusChanged(status):
@@ -154,6 +178,12 @@ public struct AppFeature: Sendable {
                 case .unauthenticated:
                     state.currentUser = nil
                     state.main = nil
+                    // The token belongs to the device and outlives the session,
+                    // but this standing does not: it was registered against the
+                    // user who just left. The broker replays the token to the
+                    // listener that the next sign-in starts, which registers it
+                    // afresh against whoever that is.
+                    state.pushRegistration = .none
                     // Drop the cached home list before rebuilding the gate, or
                     // the fresh state seeds itself straight back out of it.
                     //
@@ -211,42 +241,76 @@ public struct AppFeature: Sendable {
                 return .none
 
             case let .deviceTokenReceived(token):
-                state.main?.settings.pushToken = token
-                return .run { send in
-                    // Retried, because giving up here costs the whole session's
-                    // notifications and nothing tries again until the next
-                    // launch. It is one mutation fired once, into whatever the
-                    // network happens to be doing a second after sign-in —
-                    // which on a cold backend is the moment every subscription
-                    // in the app is contending for it.
-                    //
-                    // Safe to repeat: `push:registerDevice` upserts on the
-                    // token, so a second attempt that follows a first one that
-                    // actually landed patches the same row rather than adding
-                    // another. Not something to do with mutations in general —
-                    // a retried expense is a second expense — but this one is
-                    // idempotent by construction.
-                    var attempt = 1
-                    while true {
-                        do {
-                            return try await devices.register(token, APNSEnvironment.current)
-                        } catch is CancellationError {
-                            return
-                        } catch {
-                            guard attempt <= 4 else {
-                                return await send(.deviceRegistrationFailed)
+                // Already confirmed against the server, and iOS handed back the
+                // same token — which is what the foreground retry and every new
+                // stream subscriber replay. Registering again would be a write
+                // per app resume for nothing.
+                guard state.pushRegistration != .registered(token: token) else {
+                    return .none
+                }
+                state.pushRegistration = .pending(token: token)
+                return .merge(
+                    syncMain(&state),
+                    .run { send in
+                        // Retried, because giving up here costs the whole
+                        // session's notifications and nothing tries again until
+                        // the next launch. It is one mutation fired once, into
+                        // whatever the network happens to be doing a second
+                        // after sign-in — which on a cold backend is the moment
+                        // every subscription in the app is contending for it.
+                        //
+                        // Safe to repeat: `push:registerDevice` upserts on the
+                        // token, so a second attempt that follows a first one
+                        // that actually landed patches the same row rather than
+                        // adding another. Not something to do with mutations in
+                        // general — a retried expense is a second expense — but
+                        // this one is idempotent by construction.
+                        var attempt = 1
+                        while true {
+                            do {
+                                try await devices.register(token, APNSEnvironment.current)
+                                return await send(.deviceRegistered(token))
+                            } catch is CancellationError {
+                                return
+                            } catch {
+                                guard attempt <= 4 else {
+                                    return await send(.deviceRegistrationFailed(token))
+                                }
+                                try? await clock.sleep(for: .seconds(attempt))
+                                attempt += 1
                             }
-                            try? await clock.sleep(for: .seconds(attempt))
-                            attempt += 1
                         }
                     }
-                }
-                .cancellable(id: CancelID.deviceRegistration, cancelInFlight: true)
+                    .cancellable(id: CancelID.deviceRegistration, cancelInFlight: true)
+                )
 
-            case .deviceRegistrationFailed:
-                // Out of retries. The device simply gets no pushes until the
-                // next launch asks iOS for its token again.
-                return .none
+            // Both outcomes name the token they are about: a newer one can have
+            // arrived while the retries were sleeping, and the answer to an
+            // older attempt must not overwrite where the newer one stands.
+            case let .deviceRegistered(token):
+                guard state.pushRegistration.token == token else { return .none }
+                state.pushRegistration = .registered(token: token)
+                return syncMain(&state)
+
+            case let .deviceRegistrationFailed(token):
+                // Out of retries. Said out loud rather than logged: the device
+                // gets no pushes, the Settings row now reports exactly that,
+                // and returning to the foreground tries again.
+                guard state.pushRegistration.token == token else { return .none }
+                state.pushRegistration = .failed(token: token)
+                return syncMain(&state)
+
+            // Registration used to end here for the whole session — five
+            // attempts over about ten seconds, and a network blip during
+            // sign-in cost every notification until the app was force-quit.
+            // Coming back to the foreground is the cheapest honest retry: it
+            // costs nothing while things are working, because the listener only
+            // restarts when this device is not actually registered.
+            case .appEnteredForeground:
+                guard state.status == .authenticated,
+                      !state.pushRegistration.isRegistered
+                else { return .none }
+                return listenForDeviceToken(onlyIfAlreadyAuthorized: true)
 
             case .retryRestoreTapped:
                 state.isRestoringSession = true
@@ -305,7 +369,6 @@ public struct AppFeature: Sendable {
         .cancellable(id: CancelID.deviceToken, cancelInFlight: true)
     }
 
-    /// The device token, held so a later sign-out can unregister it.
     /// Creates, updates or tears down the tab container to match the open home.
     private func syncMain(_ state: inout State) -> Effect<Action> {
         // Read before mutating: `selectedHome` reads `state` while the
@@ -313,6 +376,7 @@ public struct AppFeature: Sendable {
         let selected = state.selectedHome
         let user = state.currentUser
         let homes = state.homeGate.homes
+        let pushRegistration = state.pushRegistration
         guard let home = selected else {
             if state.main != nil { state.main = nil }
             return .none
@@ -331,6 +395,14 @@ public struct AppFeature: Sendable {
         // subscription rather than opening a second one of its own.
         if state.main?.settings.homes != homes {
             state.main?.settings.applyHomes(homes)
+        }
+        // The token almost always arrives before this container exists — it is
+        // asked for at sign-in, while the home list is still in flight — and a
+        // home switch builds a fresh one that has never seen it. Every change
+        // to the standing comes back through here, so this one line is the only
+        // thing keeping the Settings screen and sign-out in step with the truth.
+        if state.main?.settings.pushRegistration != pushRegistration {
+            state.main?.settings.pushRegistration = pushRegistration
         }
         return .none
     }

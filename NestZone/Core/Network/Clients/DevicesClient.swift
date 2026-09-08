@@ -8,7 +8,11 @@ public struct DevicesClient: Sendable {
     public var register: @Sendable (_ token: String, _ environment: String) async throws -> Void
     public var unregister: @Sendable (_ token: String) async throws -> Void
     /// Sends a push to the caller's own devices, to prove the chain works.
-    public var sendTestToSelf: @Sendable () async throws -> Void
+    ///
+    /// Returns what APNs made of it. A call that throws and a call that returns
+    /// `sent: 0` are both failures from the tapping user's point of view, and
+    /// only the count can tell the second one apart from success.
+    public var sendTestToSelf: @Sendable () async throws -> PushResult
 }
 
 extension DevicesClient: DependencyKey {
@@ -25,7 +29,7 @@ extension DevicesClient: DependencyKey {
             )
         },
         sendTestToSelf: {
-            let _: PushResult = try await ConvexConnection.shared.act(
+            try await ConvexConnection.shared.act(
                 "push:sendTestToSelf", as: PushResult.self
             )
         }
@@ -34,9 +38,16 @@ extension DevicesClient: DependencyKey {
     public static let testValue = DevicesClient()
 }
 
-struct PushResult: Decodable, Sendable {
-    let sent: Int
-    let dropped: Int
+/// What the server made of one fan-out: how many devices APNs accepted, and how
+/// many tokens it rejected as dead and the server therefore deleted.
+public struct PushResult: Decodable, Sendable, Equatable {
+    public let sent: Int
+    public let dropped: Int
+
+    public init(sent: Int, dropped: Int) {
+        self.sent = sent
+        self.dropped = dropped
+    }
 }
 
 extension DependencyValues {
