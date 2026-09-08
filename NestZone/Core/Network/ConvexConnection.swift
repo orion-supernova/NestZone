@@ -33,25 +33,52 @@ public final class ConvexConnection: @unchecked Sendable {
 
     private let diagnostics = DiagnosticsBag()
 
+    /// Whether the websocket is up, as the SDK last reported it.
+    ///
+    /// Shared rather than per-instance so `mapped` — which is static, because it
+    /// is called from throwing contexts all over this file — can consult it.
+    /// There is one `ConvexConnection` in the process.
+    private static let link = ConnectionState()
+
+    /// Whether the app currently has a live connection to the backend.
+    public static var isConnected: Bool { link.isConnected }
+
     private init() {
         let provider = ConvexAppleAuthProvider(deploymentUrl: Self.deploymentURL)
         authProvider = provider
         client = ConvexClientWithAuth(deploymentUrl: Self.deploymentURL, authProvider: provider)
-    }
 
-    /// Mirrors websocket state into the log. Only worth running in debug builds;
-    /// in release it is a no-op so we are not logging on every reconnect.
-    public func startDiagnostics() {
-        #if DEBUG
+        // Always watched, not just in debug. This used to live in a
+        // `startDiagnostics()` that nothing ever called, so the one signal that
+        // says whether the phone can reach the backend was both compiled out of
+        // release builds and unreachable in debug ones.
+        //
+        // It is what tells a dropped connection apart from a broken server —
+        // see `mapped`.
+        let link = Self.link
         diagnostics.store(
             client.watchWebSocketState().sink { state in
+                let connected = if case .connected = state { true } else { false }
+                link.isConnected = connected
+                #if DEBUG
                 Self.log.debug("websocket: \(String(describing: state), privacy: .public)")
+                #endif
             }
         )
-        #endif
     }
 
     // MARK: - Reads
+
+    /// How many times a failed subscription is re-opened before the error is
+    /// allowed to reach the screen. The budget is refreshed by any delivered
+    /// value, so this bounds a *run* of failures, not the lifetime of a stream.
+    private static let maxResubscribes = 4
+
+    /// Backoff bounds for a subscription waiting for the network to come back.
+    /// It starts quick, because most drops are momentary, and settles into a
+    /// slow poll rather than giving up.
+    private static let firstOfflineWait: Duration = .milliseconds(500)
+    private static let maxOfflineWait: Duration = .seconds(30)
 
     /// A live query. The stream yields the current value immediately and again
     /// on every server-side *change*, and tears the subscription down when the
@@ -70,7 +97,123 @@ public final class ConvexConnection: @unchecked Sendable {
     /// The comparison is per-subscription, and a fresh subscription starts with
     /// nothing to compare against, so the first value after a month change is
     /// always delivered even if it happens to match the month before it.
+    ///
+    /// A failure re-opens the query rather than ending the stream. A live
+    /// subscription used to die on the first error and never come back: one
+    /// handler that overran its second, one socket dropped in a lift, and the
+    /// screen was inert until it was navigated away from and re-entered, because
+    /// the only thing that ever restarted a subscription was `.task` running
+    /// again. Which errors are worth re-opening is `isWorthRetrying`'s call.
     public func subscribe<T: Decodable & Equatable & Sendable>(
+        to name: String,
+        args: [String: ConvexEncodable?]? = nil,
+        as type: T.Type = T.self
+    ) -> AsyncThrowingStream<T, any Error> {
+        // `ConvexEncodable` predates Swift concurrency and carries no `Sendable`
+        // conformance, so the argument dictionary cannot cross into the retry
+        // task on its own account. Boxing is safe here for the same reason the
+        // class above is `@unchecked Sendable`: the arguments are value types
+        // built at the call site, never mutated after this point, and only ever
+        // handed straight back to the SDK.
+        let boxed = ArgumentBox(args)
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                var attempt = 0
+                // Tracked apart from `attempt`, because a stretch with no
+                // network must not use up the budget that exists for a query
+                // the server keeps rejecting.
+                var offlineWait = Self.firstOfflineWait
+                // Carried across re-opens: a fresh subscription always replays
+                // the current value, and that replay is not news. The
+                // duplicate-dropping contract the whole app leans on — an
+                // optimistic write is confirmed by a *change*, never corrected
+                // by a redelivery — has to hold across a reconnect too, or the
+                // reconnect itself would look like a server push.
+                var last: T?
+
+                while !Task.isCancelled {
+                    do {
+                        for try await value in self.attemptSubscription(to: name, args: boxed.args, as: T.self) {
+                            // A value proves the query is not broken, so a
+                            // long-lived stream gets its full budget back after
+                            // every recovery rather than spending it once.
+                            attempt = 0
+                            offlineWait = Self.firstOfflineWait
+                            guard value != last else { continue }
+                            last = value
+                            continuation.yield(value)
+                        }
+                        // The publisher completed on its own. Nothing failed,
+                        // so there is nothing to retry.
+                        return continuation.finish()
+                    } catch {
+                        let mapped = AppError(error)
+                        guard !Task.isCancelled, Self.isWorthRetrying(mapped) else {
+                            return continuation.finish(throwing: mapped)
+                        }
+
+                        let delay: Duration
+                        if mapped == .offline {
+                            // Being offline is not a reason to stop. The phone
+                            // went into a lift, and it will come out again;
+                            // giving up after a few seconds means coming out two
+                            // minutes later to a screen that is permanently
+                            // dead, with nothing to restart it short of
+                            // navigating away and back. So this waits instead of
+                            // spending the budget, backing off to a slow poll
+                            // rather than a spin. The task dies with the screen,
+                            // so waiting forever costs nothing once nobody is
+                            // looking.
+                            offlineWait = min(offlineWait * 2, Self.maxOfflineWait)
+                            delay = offlineWait
+                        } else {
+                            // A server that answers and keeps saying no is a
+                            // different thing: four tries and a few seconds,
+                            // then let the screen show the error rather than
+                            // hammering a query that cannot work.
+                            guard attempt < Self.maxResubscribes else {
+                                return continuation.finish(throwing: mapped)
+                            }
+                            attempt += 1
+                            delay = .milliseconds(250 << (attempt - 1))
+                        }
+
+                        Self.log.debug(
+                            "\(name, privacy: .public) dropped (\(mapped.diagnostic, privacy: .public)); re-opening in \(delay, privacy: .public)"
+                        )
+                        try? await Task.sleep(for: delay)
+                    }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    /// Whether a failed subscription is worth re-opening.
+    ///
+    /// A live query dies for two very different reasons. One is the household's
+    /// wifi, a dropped socket, or a handler that ran out of its one second under
+    /// momentary load — none of which say anything about the query, and all of
+    /// which fix themselves. The other is a query that cannot work: a rejected
+    /// argument, a payload the client cannot decode, an expired session.
+    /// Re-opening the first is the whole point; re-opening the second is a spin
+    /// that ends in the same alert.
+    private static func isWorthRetrying(_ error: AppError) -> Bool {
+        switch error {
+        case .offline, .server, .unknown:
+            true
+        // Deterministic, or somebody else's job: `.notAuthenticated` is the
+        // session machinery's to resolve, and a decode failure will fail
+        // identically on every attempt.
+        case .notAuthenticated, .decoding, .validation, .noHomeSelected, .cancelled:
+            false
+        }
+    }
+
+    /// One attempt at a live query. Ends — for good — on the first failure;
+    /// `subscribe` is what decides whether to open another.
+    private func attemptSubscription<T: Decodable & Equatable & Sendable>(
         to name: String,
         args: [String: ConvexEncodable?]? = nil,
         as type: T.Type = T.self
@@ -177,11 +320,19 @@ public final class ConvexConnection: @unchecked Sendable {
         let mapped: AppError
         if let clientError = error as? ClientError {
             mapped = switch clientError {
-            // A rejected argument list arrives this way too, and is almost
-            // always a client/server name mismatch rather than an outage.
+            // The server ran and said no: a thrown handler error, a rejected
+            // argument list, a query that overran its second. All of these mean
+            // the request reached the backend, so none of them are an outage.
             case let .ServerError(msg): .server(msg)
             case let .ConvexError(data): .server(data)
-            case let .InternalError(msg): .server(msg)
+            // Everything the transport itself can go wrong with. `ClientError`
+            // has no offline case — the three above are all of it — so a phone
+            // in a lift produced `.server` and the app told the household
+            // "something went wrong on our end", which is both untrue and
+            // useless advice. The websocket's own state is the honest
+            // discriminator, and far steadier than matching on message text.
+            case let .InternalError(msg):
+                link.isConnected ? .server(msg) : .offline
             }
         } else {
             mapped = AppError(error)
@@ -189,6 +340,17 @@ public final class ConvexConnection: @unchecked Sendable {
         log.error("\(name, privacy: .public) failed: \(mapped.diagnostic, privacy: .public)")
         return mapped
     }
+}
+
+/// Carries a query's arguments across a task boundary.
+///
+/// `ConvexEncodable` has no `Sendable` conformance to inherit — it is older than
+/// Swift concurrency — so a dictionary of them cannot be captured by the retry
+/// task in `subscribe` without one. Nothing reads the arguments but the SDK, and
+/// nothing writes them after the call site builds them.
+private final class ArgumentBox: @unchecked Sendable {
+    let args: [String: ConvexEncodable?]?
+    init(_ args: [String: ConvexEncodable?]?) { self.args = args }
 }
 
 /// Carries a Combine `AnyCancellable` across a `@Sendable` boundary.
@@ -206,6 +368,22 @@ private final class CancellableBox: @unchecked Sendable {
             _cancellable?.cancel()
             _cancellable = nil
         }
+    }
+}
+
+/// The websocket's last reported state.
+///
+/// `WebSocketState` is only `.connected` or `.connecting`; the SDK reconnects on
+/// its own and never reports a terminal "offline". So "connecting" is what being
+/// offline looks like from here, and it is the difference between telling
+/// somebody the server is broken and telling them to check their signal.
+private final class ConnectionState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _isConnected = false
+
+    var isConnected: Bool {
+        get { lock.withLock { _isConnected } }
+        set { lock.withLock { _isConnected = newValue } }
     }
 }
 
