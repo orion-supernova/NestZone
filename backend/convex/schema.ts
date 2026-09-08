@@ -202,7 +202,13 @@ export default defineSchema({
     updated: v.optional(v.number()),
     due_date: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
-    .index("by_home", ["home_id"]),
+    .index("by_home", ["home_id"])
+    // "What is still to be done" — the Home tab's one task number, and the only
+    // one anything displays. Counting it used to mean collecting every task the
+    // household had ever finished as well, which is a set that only grows.
+    // `is_completed` is optional, so an open task sits under `false` *or*
+    // `undefined` — see `openTasks` in lib/pending.ts.
+    .index("by_home_completed", ["home_id", "is_completed"]),
 
   shopping_items: defineTable({
     pbId: v.optional(v.string()),
@@ -238,6 +244,14 @@ export default defineSchema({
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
     .index("by_home", ["home_id"])
+    // "What is still on the list" — the question four different call sites ask
+    // before adding to it (`events:detail`, `events:stockUp`, `events:addItems`,
+    // `shopping:createFromRecipe`). They each used to answer it by collecting
+    // the home's whole shopping history and filtering in JS, which grows without
+    // bound and is what timed `events:detail` out at one second. `is_purchased`
+    // is optional, so a bought item sits under `true` and an outstanding one
+    // under `false` *or* `undefined` — see `outstandingNames` in lib/shopping.ts.
+    .index("by_home_purchased", ["home_id", "is_purchased"])
     .index("by_event", ["event_id"]),
 
   notes: defineTable({
@@ -549,7 +563,14 @@ export default defineSchema({
     created_by: v.id("users"),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
-  }).index("by_home", ["home_id"]),
+  }).index("by_home", ["home_id"])
+    // For `finance:sweepReminders`, the daily cron. It has to consider every
+    // household, so it is the one bill read that is not home-scoped — which
+    // made it a scan of every bill in the deployment, growing with the number
+    // of people using the app rather than with the work actually due. A bill
+    // can only be nudged from `MAX_REMINDER_DAYS` before its date until it goes
+    // overdue, so a range on the date is the whole working set.
+    .index("by_due_date", ["due_date"]),
 
   // A monthly ceiling for one category. One row per home per category — a
   // budget is a standing intention, not a per-month document, so changing it

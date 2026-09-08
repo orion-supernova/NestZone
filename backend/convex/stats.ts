@@ -15,72 +15,82 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { openTasks, outstandingItems } from "./lib/pending";
 import { READ_WINDOW } from "./messages";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Documents created inside [start, end). */
-function countBetween(
-  docs: { created?: number; _creationTime: number }[],
-  start: number,
-  end: number,
-): number {
+function countBetween(docs: { _creationTime: number }[], start: number, end: number): number {
   let n = 0;
-  for (const doc of docs) {
-    // Migrated PocketBase rows may have no `created`; `_creationTime` is always
-    // stamped by Convex, so it is the reliable fallback.
-    const at = doc.created ?? doc._creationTime;
-    if (at >= start && at < end) n++;
-  }
+  for (const doc of docs) if (doc._creationTime >= start && doc._creationTime < end) n++;
   return n;
 }
 
+/**
+ * The Home tab's counters.
+ *
+ * Every read here is bounded by something that cannot grow without a person
+ * doing something about it — what is open, what is outstanding, what happened in
+ * the last fortnight — rather than by the household's whole history. This query
+ * runs on the launch path, and a dashboard that gets slower every month a
+ * household uses the app is a dashboard that eventually takes the Home tab down
+ * with it. That is not hypothetical: it already happened once here, when the
+ * unread count walked every conversation and collected every message ever sent
+ * in it, and it happened again in `events:detail`.
+ *
+ * The two counters that could not be bounded are gone rather than paid for.
+ * "Tasks done" was an all-time total that only ever grew and "Issues" was a
+ * high-priority count that read 0 in any household that never sets priority;
+ * the Home tab dropped both tiles some time ago, and the server has been
+ * collecting the entire tasks table to compute them ever since. Nothing has
+ * read them since the tiles went.
+ */
 export const forHome = query({
   args: { homeId: v.id("homes") },
   handler: async (ctx, { homeId }) => {
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, homeId);
 
-    const [tasks, shopping, notes, conversations] = await Promise.all([
-      ctx.db
-        .query("tasks")
-        .withIndex("by_home", (q) => q.eq("home_id", homeId))
-        .collect(),
-      ctx.db
-        .query("shopping_items")
-        .withIndex("by_home", (q) => q.eq("home_id", homeId))
-        .collect(),
-      ctx.db
-        .query("notes")
-        .withIndex("by_home", (q) => q.eq("home_id", homeId))
-        .collect(),
-      ctx.db
-        .query("conversations")
-        .withIndex("by_home", (q) => q.eq("home_id", homeId))
-        .collect(),
-    ]);
-
     const now = Date.now();
     const weekAgo = now - WEEK_MS;
     const twoWeeksAgo = now - 2 * WEEK_MS;
 
+    const [open, outstanding, notes, recentShopping, conversations] = await Promise.all([
+      openTasks(ctx, homeId),
+      outstandingItems(ctx, homeId),
+      // Not bounded, and deliberately so. Notes are authored one at a time by a
+      // person who can also delete them, unlike a completed task or a bought
+      // item, which accumulate on their own as a by-product of using the app.
+      // The Notes screen collects the same rows to draw the board, so a count
+      // taken here costs the household nothing it was not already paying.
+      ctx.db.query("notes").withIndex("by_home", (q) => q.eq("home_id", homeId)).collect(),
+      // Only the fortnight the trend chip compares. Every Convex index ends in
+      // `_creationTime` implicitly, so `by_home` already sorts by it and this
+      // needs no index of its own.
+      ctx.db
+        .query("shopping_items")
+        .withIndex("by_home", (q) => q.eq("home_id", homeId).gte("_creationTime", twoWeeksAgo))
+        .collect(),
+      ctx.db.query("conversations").withIndex("by_home", (q) => q.eq("home_id", homeId)).collect(),
+    ]);
+
     // Unread messages actually mean something now. The client previously
     // reported `messageCount = noteCount` — the note count relabelled — so the
     // "Messages" tile on the Home tab has never shown a message count.
-    // Two things were wrong with counting this, and both of them were fatal on
-    // a household that actually talks.
     //
-    // It walked the conversations one at a time, and for each it `.collect()`ed
-    // *every message ever sent* in it — to derive a single integer. A query
-    // gets one second of execution, so a few thousand messages spent it all
-    // here and `stats:forHome` failed outright, taking the entire Home tab's
-    // dashboard down with it.
+    // Two things were wrong with counting this, and both of them were fatal on
+    // a household that actually talks. It walked the conversations one at a
+    // time, and for each it `.collect()`ed *every message ever sent* in it — to
+    // derive a single integer. A query gets one second of execution, so a few
+    // thousand messages spent it all here and `stats:forHome` failed outright,
+    // taking the entire Home tab's dashboard down with it.
     //
     // Now: all conversations in one round, and the newest `READ_WINDOW` of
     // each. That bound is not an approximation of the right answer, it *is* the
-    // right answer — `messages:markRead` marks exactly this window, so a
-    // message older than it can never be cleared by opening the chat. Counting
-    // over a wider window than can be marked read is how a badge gets stuck at
+    // right answer — `messages:markRead` marks exactly this window, so a message
+    // older than it can never be cleared by opening the chat. Counting over a
+    // wider window than can be marked read is how a badge gets stuck at
     // "3 unread" forever.
     const recent = await Promise.all(
       conversations.map((conversation) =>
@@ -96,28 +106,17 @@ export const forHome = query({
       .filter((m) => m.sender_id !== user._id && !(m.read_by ?? []).includes(user._id))
       .length;
 
-    const completedThisWeek = tasks.filter(
-      (t) => t.is_completed && (t.updated ?? t._creationTime) >= weekAgo,
-    ).length;
-    const completedLastWeek = tasks.filter((t) => {
-      const at = t.updated ?? t._creationTime;
-      return t.is_completed && at >= twoWeeksAgo && at < weekAgo;
-    }).length;
-
-    const shoppingThisWeek = countBetween(shopping, weekAgo, now);
-    const notesThisWeek = countBetween(notes, weekAgo, now);
-
     return {
-      openTasks: tasks.filter((t) => !t.is_completed).length,
-      completedTasks: tasks.filter((t) => t.is_completed).length,
-      urgentTasks: tasks.filter((t) => !t.is_completed && t.priority === "high").length,
-      shoppingItems: shopping.filter((s) => !s.is_purchased).length,
+      openTasks: open.length,
+      shoppingItems: outstanding.length,
       notes: notes.length,
       unreadMessages,
 
-      completedTasksChange: completedThisWeek - completedLastWeek,
-      shoppingChange: shoppingThisWeek - countBetween(shopping, twoWeeksAgo, weekAgo),
-      notesChange: notesThisWeek - countBetween(notes, twoWeeksAgo, weekAgo),
+      shoppingChange:
+        countBetween(recentShopping, weekAgo, now) -
+        countBetween(recentShopping, twoWeeksAgo, weekAgo),
+      notesChange:
+        countBetween(notes, weekAgo, now) - countBetween(notes, twoWeeksAgo, weekAgo),
       // No historical read-state to compare against, so this stays flat rather
       // than inventing a trend.
       messagesChange: 0,

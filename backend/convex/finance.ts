@@ -1199,11 +1199,35 @@ type DueNudge = {
   daysUntil: number;
 };
 
+/**
+ * How far past its date the sweep still looks for a bill nobody has been told
+ * about.
+ *
+ * The late nudge is recorded against `<due_date>:overdue`, so a bill that has
+ * been announced once is never announced again however long it stays unpaid —
+ * which means looking further back than this only ever re-reads bills that have
+ * already had their nudge. The window exists for the other case: a stretch where
+ * the cron did not run. Three months of it.
+ */
+const OVERDUE_SWEEP_DAYS = 90;
+
 export const pendingReminders = internalQuery({
   args: {},
   handler: async (ctx): Promise<DueNudge[]> => {
-    const bills = await ctx.db.query("bills").collect();
     const now = Date.now();
+    // Only the bills near enough their date to have anything to say. This
+    // served every household in the deployment from one unindexed scan of the
+    // whole `bills` table, so the daily sweep got slower with every account
+    // that ever signed up — and a query gets one second, after which nobody's
+    // reminders go out at all.
+    const bills = await ctx.db
+      .query("bills")
+      .withIndex("by_due_date", (q) =>
+        q
+          .gte("due_date", now - OVERDUE_SWEEP_DAYS * DAY_MS)
+          .lte("due_date", now + (MAX_REMINDER_DAYS + 1) * DAY_MS),
+      )
+      .collect();
     const today = dayNumber(now);
     const due: DueNudge[] = [];
 

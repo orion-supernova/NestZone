@@ -5,6 +5,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx } from "./_generated/server";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireMembers, requireRef, requireSameHome, unlinkEvent } from "./lib/relations";
+import { outstandingNames } from "./lib/pending";
 import { internal } from "./_generated/api";
 
 // The household calendar.
@@ -564,11 +565,8 @@ export const detail = query({
     // Matched against the household's whole outstanding list rather than this
     // event's slice, because that is what `stockUp` skips against: flour
     // already on the list for Tuesday's bread is flour you have.
-    const [homeItems, dinnerPlans] = await Promise.all([
-      ctx.db
-        .query("shopping_items")
-        .withIndex("by_home", (q) => q.eq("home_id", event.home_id))
-        .collect(),
+    const [outstanding, dinnerPlans] = await Promise.all([
+      outstandingNames(ctx, event.home_id),
       // Which days this event is *already* the household's dinner.
       //
       // Days, plural, because the plan belongs to the series and a series is
@@ -582,11 +580,6 @@ export const detail = query({
         .withIndex("by_event", (q) => q.eq("event_id", id))
         .collect(),
     ]);
-    const outstanding = new Set(
-      homeItems
-        .filter((it) => !it.is_purchased)
-        .map((it) => (it.name ?? "").trim().toLowerCase()),
-    );
 
     let stockUpPending = 0;
     for (const recipe of menu) {
@@ -676,16 +669,10 @@ export const stockUp = mutation({
     const recipeIds = event.recipe_ids ?? [];
     if (!recipeIds.length) return { added: 0, skipped: 0 };
 
-    const existing = await ctx.db
-      .query("shopping_items")
-      .withIndex("by_home", (q) => q.eq("home_id", event.home_id))
-      .collect();
     // Matched on the outstanding list as a whole, not just this event's slice:
     // if the flour is already on the list for Tuesday's bread, buying it twice
     // for Saturday's cake is not help.
-    const outstanding = new Set(
-      existing.filter((it) => !it.is_purchased).map((it) => (it.name ?? "").trim().toLowerCase()),
-    );
+    const outstanding = await outstandingNames(ctx, event.home_id);
 
     // Read the menu in one go, not one recipe at a time.
     const recipes = await Promise.all(recipeIds.map((recipeId) => ctx.db.get(recipeId)));
@@ -767,13 +754,7 @@ export const addItems = mutation({
     if (!event) throw new Error("Event not found");
     await requireDocHome(ctx, event, "Event");
 
-    const existing = await ctx.db
-      .query("shopping_items")
-      .withIndex("by_home", (q) => q.eq("home_id", event.home_id))
-      .collect();
-    const outstanding = new Set(
-      existing.filter((it) => !it.is_purchased).map((it) => (it.name ?? "").trim().toLowerCase()),
-    );
+    const outstanding = await outstandingNames(ctx, event.home_id);
 
     const now = Date.now();
     const pending: WithoutSystemFields<Doc<"shopping_items">>[] = [];

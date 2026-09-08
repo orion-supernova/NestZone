@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { openTasks } from "./lib/pending";
 import { requireMembers } from "./lib/relations";
 
 // Shown as the notification title; the body carries what actually changed.
@@ -15,14 +16,32 @@ const taskType = v.union(
   v.literal("general"),
 );
 
+/**
+ * How many finished tasks the list carries back with it.
+ *
+ * Same bargain as `shopping:listByHome`, and for the same reason: finishing a
+ * chore flips a flag, it does not remove the row, so a household that uses the
+ * app accumulates completed tasks forever and the Tasks screen was downloading
+ * all of them to draw an "open" list and a "done" tab. Five hundred is well past
+ * where anybody stops scrolling their own history.
+ */
+const DONE_WINDOW = 500;
+
 export const listByHome = query({
   args: { homeId: v.id("homes") },
   handler: async (ctx, { homeId }) => {
     await requireHomeMember(ctx, homeId);
-    return await ctx.db
-      .query("tasks")
-      .withIndex("by_home", (q) => q.eq("home_id", homeId))
-      .collect();
+    const [open, done] = await Promise.all([
+      openTasks(ctx, homeId),
+      ctx.db
+        .query("tasks")
+        .withIndex("by_home_completed", (q) =>
+          q.eq("home_id", homeId).eq("is_completed", true),
+        )
+        .order("desc")
+        .take(DONE_WINDOW),
+    ]);
+    return [...open, ...done];
   },
 });
 

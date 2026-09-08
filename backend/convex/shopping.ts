@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { outstandingItems, outstandingNames } from "./lib/pending";
 
 // Shown as the notification title; the body carries what actually changed.
 const NOTIFY_TITLE = "Added to the list";
@@ -13,14 +14,42 @@ const category = v.union(
   v.literal("other"),
 );
 
+/**
+ * How many bought items the list carries back with it.
+ *
+ * A shopping list is the things you still need plus a short tail of what you
+ * just got, and the screen shows exactly that: an outstanding section and a
+ * "purchased" one under it. Bought rows are never deleted by ticking them —
+ * they keep their flag and stay — so collecting the whole table meant the list
+ * screen downloaded every item the household had ever bought, growing with its
+ * history and shrinking for no reason but a manual "clear purchased".
+ *
+ * Five hundred is far past the end of anything anyone scrolls, so nothing
+ * visible changes today; it just stops being unbounded tomorrow. And because
+ * clearing works on what the screen is holding, the window is also exactly what
+ * a person can act on — the list and the button agree.
+ */
+const DONE_WINDOW = 500;
+
 export const listByHome = query({
   args: { homeId: v.id("homes") },
   handler: async (ctx, { homeId }) => {
     await requireHomeMember(ctx, homeId);
-    return await ctx.db
-      .query("shopping_items")
-      .withIndex("by_home", (q) => q.eq("home_id", homeId))
-      .collect();
+    const [outstanding, bought] = await Promise.all([
+      outstandingItems(ctx, homeId),
+      // `true` is never the missing value — nothing writes a bought item
+      // without saying so — so unlike the outstanding half this is one bucket.
+      // `.order("desc")` runs down the index's implicit `_creationTime`, newest
+      // first, which is the end of the list a person is still interested in.
+      ctx.db
+        .query("shopping_items")
+        .withIndex("by_home_purchased", (q) =>
+          q.eq("home_id", homeId).eq("is_purchased", true),
+        )
+        .order("desc")
+        .take(DONE_WINDOW),
+    ]);
+    return [...outstanding, ...bought];
   },
 });
 
@@ -81,15 +110,7 @@ export const createFromRecipe = mutation({
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
 
-    const existing = await ctx.db
-      .query("shopping_items")
-      .withIndex("by_home", (q) => q.eq("home_id", args.homeId))
-      .collect();
-    const outstanding = new Set(
-      existing
-        .filter((it) => !it.is_purchased)
-        .map((it) => (it.name ?? "").trim().toLowerCase()),
-    );
+    const outstanding = await outstandingNames(ctx, args.homeId);
 
     const now = Date.now();
     const wanted = args.names

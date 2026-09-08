@@ -1,17 +1,38 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Doc } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { cascadeDeleteHome } from "./lib/relations";
 import { internal } from "./_generated/api";
 
-/** Homes the current user belongs to. */
+/**
+ * Homes the current user belongs to.
+ *
+ * Read through the user's own `home_id` mirror rather than by collecting every
+ * home in the deployment and filtering in JavaScript. That scan was not scoped
+ * to the household or even to the account — it grew with the number of homes
+ * *every user of the app* had ever made, and it sits on the launch path: this
+ * is the query the launch screen waits for. One household's cold start got
+ * slower every time a stranger signed up.
+ *
+ * The mirror is safe to navigate by because it cannot drift. Membership is
+ * written in exactly three places — create, join and leave — and each of them
+ * patches `homes.members` and the user's `home_id` in the same mutation, which
+ * in Convex is one transaction. `cascadeDeleteHome` scrubs it the same way.
+ *
+ * Membership is still decided by `homes.members`, which is what
+ * `requireHomeMember` enforces, so the mirror only ever narrows what is looked
+ * at — it never grants a home the members list does not agree with.
+ */
 export const listMine = query({
   args: {},
   handler: async (ctx) => {
     const user = await requireUser(ctx);
-    // Small dataset: scan and filter membership. Add an index if homes grow large.
-    const all = await ctx.db.query("homes").collect();
-    return all.filter((h) => (h.members ?? []).some((m) => m === user._id));
+    const docs = await Promise.all((user.home_id ?? []).map((id) => ctx.db.get(id)));
+    return docs.filter(
+      (home): home is Doc<"homes"> =>
+        home !== null && (home.members ?? []).some((m) => m === user._id),
+    );
   },
 });
 

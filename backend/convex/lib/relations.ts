@@ -169,6 +169,9 @@ export async function cascadeDeleteHome(
   homeId: Id<"homes">,
 ): Promise<Record<string, number>> {
   const removed: Record<string, number> = {};
+  // Read before anything is deleted: the home doc carries the member list the
+  // mirror-scrub below needs, and this function ends by deleting it.
+  const memberIds = (await ctx.db.get(homeId))?.members ?? [];
 
   // Every table at once, and every row within a table at once.
   //
@@ -193,7 +196,7 @@ export async function cascadeDeleteHome(
     }),
   );
 
-  const [lists, polls, convos, users] = await Promise.all([
+  const [lists, polls, convos, members] = await Promise.all([
     ctx.db
       .query("movie_lists")
       .withIndex("by_home", (q) => q.eq("home_id", homeId))
@@ -206,7 +209,14 @@ export async function cascadeDeleteHome(
       .query("conversations")
       .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect(),
-    ctx.db.query("users").collect(),
+    // The home's own members, not every user in the deployment. The old read
+    // was `ctx.db.query("users").collect()` — an unindexed scan of the entire
+    // user table to find the handful of rows whose mirror points here, growing
+    // with the app's sign-ups rather than with the household being deleted.
+    // `homes.members` is the authoritative membership list (it is what
+    // `requireHomeMember` enforces) and the mirror is patched alongside it in
+    // the same transaction, so these are exactly the users to scrub.
+    Promise.all(memberIds.map((id) => ctx.db.get(id))),
   ]);
 
   const [, pollResults, messageCounts, scrubbed] = await Promise.all([
@@ -215,12 +225,12 @@ export async function cascadeDeleteHome(
     Promise.all(convos.map((c) => cascadeDeleteConversation(ctx, c._id))),
     // Scrub the denormalised mirror on users so no user points at a dead home.
     Promise.all(
-      users
-        .filter((u) => (u.home_id ?? []).some((h) => h === homeId))
+      members
+        .filter((u) => u !== null && (u.home_id ?? []).some((h) => h === homeId))
         .map((u) =>
           ctx.db
-            .patch(u._id, {
-              home_id: (u.home_id ?? []).filter((h) => h !== homeId),
+            .patch(u!._id, {
+              home_id: (u!.home_id ?? []).filter((h) => h !== homeId),
             })
             .then(() => 1),
         ),
