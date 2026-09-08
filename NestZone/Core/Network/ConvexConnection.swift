@@ -165,7 +165,7 @@ public final class ConvexConnection: @unchecked Sendable {
                             // so waiting forever costs nothing once nobody is
                             // looking.
                             offlineWait = min(offlineWait * 2, Self.maxOfflineWait)
-                            delay = offlineWait
+                            delay = Self.jittered(offlineWait)
                         } else {
                             // A server that answers and keeps saying no is a
                             // different thing: four tries and a few seconds,
@@ -175,7 +175,7 @@ public final class ConvexConnection: @unchecked Sendable {
                                 return continuation.finish(throwing: mapped)
                             }
                             attempt += 1
-                            delay = .milliseconds(250 << (attempt - 1))
+                            delay = Self.jittered(.milliseconds(250 << (attempt - 1)))
                         }
 
                         Self.log.debug(
@@ -188,6 +188,19 @@ public final class ConvexConnection: @unchecked Sendable {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    /// Spreads a retry out over the second half of its backoff window.
+    ///
+    /// A screen opens several subscriptions at once, so when the backend has a
+    /// bad moment they tend to fail together — and without this they would then
+    /// retry together, arriving as one burst on exactly the server that has just
+    /// shown it cannot take one. Each one waits its own amount, so the load
+    /// spreads instead of resonating.
+    private static func jittered(_ delay: Duration) -> Duration {
+        let ms = Double(delay.components.seconds) * 1000
+            + Double(delay.components.attoseconds) / 1e15
+        return .milliseconds(Int(ms / 2 + Double.random(in: 0...(ms / 2))))
     }
 
     /// Whether a failed subscription is worth re-opening.

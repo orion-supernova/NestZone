@@ -20,7 +20,29 @@ public struct HomeFeature: Sendable {
         /// anything coming", and `events:upcoming` answers that with at most a
         /// handful of rows however many years of events the household has.
         public var upcoming: [EventOccurrence] = []
-        public var isLoading = true
+        /// Which of the tab's subscriptions have answered.
+        ///
+        /// This was one `isLoading` flag for the whole screen, cleared by
+        /// whichever query happened to land first. That is wrong in both
+        /// directions: the first answer un-redacted tiles whose own data had not
+        /// arrived, and — the half that hurt — one slow query held the entire
+        /// tab as a skeleton while the sections either side of it were sitting
+        /// there ready to draw. Each section waits on its own answer now, so a
+        /// screen made of five queries appears in five pieces rather than
+        /// waiting for the slowest.
+        public var loaded: Loaded = []
+
+        public struct Loaded: OptionSet, Equatable, Sendable {
+            public let rawValue: Int
+            public init(rawValue: Int) { self.rawValue = rawValue }
+            /// `stats:forHome` — the four counter tiles.
+            public static let stats = Loaded(rawValue: 1 << 0)
+            /// `tasks:listByHome` — the task list below.
+            public static let tasks = Loaded(rawValue: 1 << 1)
+            /// `events:upcoming` — the agenda card and the events tile, which is
+            /// counted from it rather than from the server's summary.
+            public static let upcoming = Loaded(rawValue: 1 << 2)
+        }
         /// Who lives here.
         ///
         /// Subscribed to for one reason: turning tonight's dinner into an
@@ -250,7 +272,7 @@ public struct HomeFeature: Sendable {
                 )
 
             case let .statsUpdated(stats):
-                state.isLoading = false
+                state.loaded.insert(.stats)
                 state.stats = stats
                 return .none
 
@@ -348,6 +370,12 @@ public struct HomeFeature: Sendable {
                 return .none
 
             case let .upcomingEventsUpdated(events):
+                // Marked answered before the comparison below, not after. A
+                // household with nothing coming up delivers an empty array that
+                // matches the initial state, and the early return would leave
+                // the agenda skeletoning forever on exactly the screens that had
+                // the least to show.
+                state.loaded.insert(.upcoming)
                 // Compared before assigning, like every other push on this tab:
                 // Convex re-publishes the whole query set on any change, so this
                 // lands far more often than the calendar actually moves, and an
@@ -357,12 +385,15 @@ public struct HomeFeature: Sendable {
                 return .none
 
             case let .tasksUpdated(tasks):
-                state.isLoading = false
+                state.loaded.insert(.tasks)
                 state.tasks = IdentifiedArray(uniqueElements: tasks)
                 return .none
 
             case let .loadFailed(error):
-                state.isLoading = false
+                // Everything stops waiting, not just the query that failed:
+                // `loadFailed` does not say which one it was, and a section left
+                // skeletoning forever is worse than one showing its empty state.
+                state.loaded = [.stats, .tasks, .upcoming]
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none

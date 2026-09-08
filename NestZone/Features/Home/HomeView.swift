@@ -135,6 +135,7 @@ public struct HomeView: View {
                     // behind it. What is left is the one task number that moves
                     // day to day, and `openTasks` had been computed server-side
                     // and thrown away this whole time.
+                    Group {
                     StatTile(
                         title: L10n.homeStatsTodoTitle,
                         value: store.stats.openTasks,
@@ -167,6 +168,12 @@ public struct HomeView: View {
                         symbol: "bubble.left.and.bubble.right.fill",
                         tint: Palette.statMessages
                     ) { store.send(.delegate(.openMessages)) }
+                    }
+                    // The four counters that come off `stats:forHome`, so they
+                    // wait on it and on nothing else. A `Group` inside a grid
+                    // flattens to its children, so these stay four cells and the
+                    // modifier lands on each.
+                    .redacted(reason: store.loaded.contains(.stats) ? [] : .placeholder)
 
                     // The one tile whose number is not from `stats:forHome`.
                     // It is counted here from the short agenda the card below
@@ -181,9 +188,10 @@ public struct HomeView: View {
                         symbol: "calendar",
                         tint: Palette.statEvents
                     ) { store.send(.delegate(.openCalendar)) }
+                    // Counted from the agenda, so it waits on the agenda.
+                    .redacted(reason: store.loaded.contains(.upcoming) ? [] : .placeholder)
                 }
             }
-            .redacted(reason: store.isLoading ? .placeholder : [])
         }
     }
 
@@ -364,7 +372,7 @@ public struct HomeView: View {
 
             GlassGroup {
                 VStack(spacing: Metrics.stackSpacing) {
-                    if store.isLoading {
+                    if !store.loaded.contains(.tasks) {
                         SkeletonList(rows: 3, height: 56)
                     } else if store.tasks.isEmpty {
                         EmptyStateView(

@@ -25,7 +25,7 @@ struct HomeFeatureTests {
         }
 
         await store.send(.tasksUpdated([task])) {
-            $0.isLoading = false
+            $0.loaded.insert(.tasks)
             $0.tasks = [task]
         }
 
@@ -49,7 +49,7 @@ struct HomeFeatureTests {
         }
 
         await store.send(.tasksUpdated([task])) {
-            $0.isLoading = false
+            $0.loaded.insert(.tasks)
             $0.tasks = [task]
         }
         await store.send(.taskToggled("t1")) {
@@ -276,7 +276,8 @@ struct HomeFeatureTests {
             HomeFeature()
         }
         await store.send(.loadFailed(.cancelled)) {
-            $0.isLoading = false
+            // Every section stops waiting, not just the one that failed.
+            $0.loaded = [.stats, .tasks, .upcoming]
         }
         #expect(store.state.alert == nil)
     }
@@ -294,7 +295,7 @@ struct HomeFeatureTests {
             HomeFeature()
         }
         await store.send(.tasksUpdated(tasks)) {
-            $0.isLoading = false
+            $0.loaded.insert(.tasks)
             $0.tasks = IdentifiedArray(uniqueElements: tasks)
         }
         #expect(store.state.recentTasks.count == 5)
