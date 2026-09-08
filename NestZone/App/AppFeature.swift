@@ -75,7 +75,7 @@ public struct AppFeature: Sendable {
         case main(MainFeature.Action)
     }
 
-    private enum CancelID { case authState, currentUser, deviceToken }
+    private enum CancelID { case authState, currentUser, deviceToken, deviceRegistration }
 
     @Dependency(\.auth) var authClient
     @Dependency(\.continuousClock) var clock
@@ -172,7 +172,11 @@ public struct AppFeature: Sendable {
                     state.homeGate = HomeManagementFeature.State()
                     return .merge(
                         .cancel(id: CancelID.currentUser),
-                        .cancel(id: CancelID.deviceToken)
+                        .cancel(id: CancelID.deviceToken),
+                        // Including a registration still backing off. It would
+                        // authorise as nobody, and the token belongs to whoever
+                        // signs in next.
+                        .cancel(id: CancelID.deviceRegistration)
                     )
 
                 default:
@@ -209,13 +213,39 @@ public struct AppFeature: Sendable {
             case let .deviceTokenReceived(token):
                 state.main?.settings.pushToken = token
                 return .run { send in
-                    try await devices.register(token, APNSEnvironment.current)
-                } catch: { _, send in
-                    // A device that cannot register simply gets no pushes.
-                    await send(.deviceRegistrationFailed)
+                    // Retried, because giving up here costs the whole session's
+                    // notifications and nothing tries again until the next
+                    // launch. It is one mutation fired once, into whatever the
+                    // network happens to be doing a second after sign-in —
+                    // which on a cold backend is the moment every subscription
+                    // in the app is contending for it.
+                    //
+                    // Safe to repeat: `push:registerDevice` upserts on the
+                    // token, so a second attempt that follows a first one that
+                    // actually landed patches the same row rather than adding
+                    // another. Not something to do with mutations in general —
+                    // a retried expense is a second expense — but this one is
+                    // idempotent by construction.
+                    var attempt = 1
+                    while true {
+                        do {
+                            return try await devices.register(token, APNSEnvironment.current)
+                        } catch is CancellationError {
+                            return
+                        } catch {
+                            guard attempt <= 4 else {
+                                return await send(.deviceRegistrationFailed)
+                            }
+                            try? await clock.sleep(for: .seconds(attempt))
+                            attempt += 1
+                        }
+                    }
                 }
+                .cancellable(id: CancelID.deviceRegistration, cancelInFlight: true)
 
             case .deviceRegistrationFailed:
+                // Out of retries. The device simply gets no pushes until the
+                // next launch asks iOS for its token again.
                 return .none
 
             case .retryRestoreTapped:
