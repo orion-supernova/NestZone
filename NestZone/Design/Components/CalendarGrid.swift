@@ -212,85 +212,96 @@ public struct EventRow: View {
     }
 
     public var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Capsule()
-                    .fill(occurrence.kind.tint)
-                    .frame(width: 4)
-                    .frame(maxHeight: .infinity)
+        row
+            // Not a `Button`. These rows sit in a ScrollView, and a button
+            // holds the touch on the way down while it decides whether the
+            // press is a tap or the start of a drag — during which the scroll
+            // view cannot pan, so a finger landing on an event could not scroll
+            // the list. A `TapGesture` fails the moment the finger moves.
+            .contentShape(.rect)
+            .onTapGesture(perform: action)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction(.default, action)
+    }
 
-                VStack(alignment: .leading, spacing: 5) {
-                    HStack(spacing: 6) {
-                        Image(systemName: occurrence.kind.symbol)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(occurrence.kind.tint)
-                            // Bounces exactly once, when the event becomes the
-                            // one that is happening. Nothing else on the row
-                            // moves, so it reads as "this, now".
-                            .bounces(when: occurrence.isInProgress)
-                        Text(occurrence.title)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                        if occurrence.isRecurring {
-                            Image(systemName: "repeat")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(Palette.accessory)
-                        }
-                    }
+    private var row: some View {
+        HStack(spacing: 12) {
+            Capsule()
+                .fill(occurrence.kind.tint)
+                .frame(width: 4)
+                .frame(maxHeight: .infinity)
 
-                    HStack(spacing: 6) {
-                        Text(showsDate ? dateAndTime : occurrence.timeText)
-                            .font(.caption)
-                            .foregroundStyle(occurrence.isInProgress ? theme.accent : .secondary)
-                            .monospacedDigit()
-                        if let location = occurrence.location, !location.isEmpty {
-                            Text("·").foregroundStyle(.tertiary)
-                            Label {
-                                Text(location).lineLimit(1)
-                            } icon: {
-                                Image(systemName: "mappin")
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    if !planBadges.isEmpty {
-                        HStack(spacing: 5) {
-                            ForEach(planBadges, id: \.self) { section in
-                                Image(systemName: section.symbol)
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundStyle(section.tint)
-                                    .padding(4)
-                                    .background(section.tint.opacity(0.14), in: .circle)
-                            }
-                        }
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 6) {
+                    Image(systemName: occurrence.kind.symbol)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(occurrence.kind.tint)
+                        // Bounces exactly once, when the event becomes the
+                        // one that is happening. Nothing else on the row
+                        // moves, so it reads as "this, now".
+                        .bounces(when: occurrence.isInProgress)
+                    Text(occurrence.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if occurrence.isRecurring {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(Palette.accessory)
                     }
                 }
 
-                Spacer(minLength: 4)
-
-                VStack(alignment: .trailing, spacing: 6) {
-                    if let rsvp {
-                        Image(systemName: rsvp.symbol)
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(rsvp.tint)
-                            // Replaces rather than cross-fades, so changing your
-                            // mind reads as the glyph turning into the other one.
-                            .contentTransition(.symbolEffect(.replace))
+                HStack(spacing: 6) {
+                    Text(showsDate ? dateAndTime : occurrence.timeText)
+                        .font(.caption)
+                        .foregroundStyle(occurrence.isInProgress ? theme.accent : .secondary)
+                        .monospacedDigit()
+                    if let location = occurrence.location, !location.isEmpty {
+                        Text("·").foregroundStyle(.tertiary)
+                        Label {
+                            Text(location).lineLimit(1)
+                        } icon: {
+                            Image(systemName: "mappin")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
-                    if !attendees.isEmpty {
-                        AvatarStack(members: attendees, size: 20, maxVisible: 3)
+                }
+
+                if !planBadges.isEmpty {
+                    HStack(spacing: 5) {
+                        ForEach(planBadges, id: \.self) { section in
+                            Image(systemName: section.symbol)
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(section.tint)
+                                .padding(4)
+                                .background(section.tint.opacity(0.14), in: .circle)
+                        }
                     }
                 }
             }
-            .padding(.vertical, 11)
-            .padding(.horizontal, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(.rect)
+
+            Spacer(minLength: 4)
+
+            VStack(alignment: .trailing, spacing: 6) {
+                if let rsvp {
+                    Image(systemName: rsvp.symbol)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(rsvp.tint)
+                        // Replaces rather than cross-fades, so changing your
+                        // mind reads as the glyph turning into the other one.
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                if !attendees.isEmpty {
+                    AvatarStack(members: attendees, size: 20, maxVisible: 3)
+                }
+            }
         }
-        .buttonStyle(.pressable)
+        .padding(.vertical, 11)
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect)
         .opacity(occurrence.isPast ? 0.55 : 1)
         .animation(Motion.fade, value: rsvp)
         .accessibilityElement(children: .combine)

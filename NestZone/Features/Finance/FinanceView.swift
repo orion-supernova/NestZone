@@ -943,8 +943,16 @@ private struct ExpenseRow: View {
             ),
             onDelete: onDelete
         ) {
-            Button(action: onTap) { card }
-                .buttonStyle(.pressable)
+            // Not a `Button`: it sits in a ScrollView *and* inside a swipe
+            // gesture, and a button holds the touch on the way down while it
+            // decides what the press is going to be — so neither the scroll nor
+            // the swipe could start under a finger that landed on a row. A
+            // `TapGesture` fails the instant the finger moves.
+            card
+                .contentShape(.rect)
+                .onTapGesture(perform: onTap)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(.default, onTap)
         }
     }
 
@@ -1029,63 +1037,67 @@ private struct EventSpendRow: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                Image(systemName: event.kind.symbol)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(event.kind.tint)
-                    .frame(width: 34, height: 34)
-                    .background(event.kind.tint.opacity(0.16), in: .circle)
+        HStack(spacing: 12) {
+            Image(systemName: event.kind.symbol)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(event.kind.tint)
+                .frame(width: 34, height: 34)
+                .background(event.kind.tint.opacity(0.16), in: .circle)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(event.title)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                    Text(event.startsAt.date, format: .dateTime.day().month(.abbreviated))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(event.title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Text(event.startsAt.date, format: .dateTime.day().month(.abbreviated))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
 
-                    if let progress = event.progress {
-                        GeometryReader { geo in
-                            Capsule()
-                                .fill(event.isOverBudget ? Palette.danger : Palette.indigo)
-                                .frame(width: max(3, geo.size.width * progress))
-                        }
-                        .frame(height: 4)
-                        .background(Capsule().fill(.quaternary))
-                        .padding(.top, 1)
+                if let progress = event.progress {
+                    GeometryReader { geo in
+                        Capsule()
+                            .fill(event.isOverBudget ? Palette.danger : Palette.indigo)
+                            .frame(width: max(3, geo.size.width * progress))
                     }
-                }
-
-                Spacer(minLength: 4)
-
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(Money.text(event.spent, currency: event.currency))
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .monospacedDigit()
-                    if let budget = event.budget {
-                        Text(L10n.financeEventOfBudget(
-                            Money.compactText(budget, currency: event.currency)
-                        ))
-                        .font(.caption2)
-                        .monospacedDigit()
-                        .foregroundStyle(event.isOverBudget ? Palette.danger : .secondary)
-                    } else if event.expenseCount > 0 {
-                        Text(L10n.financeEventExpenses(event.expenseCount))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
+                    .frame(height: 4)
+                    .background(Capsule().fill(.quaternary))
+                    .padding(.top, 1)
                 }
             }
-            .padding(.horizontal, Metrics.cardPadding)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(.rect)
-            .glassCard(cornerRadius: Metrics.tightRadius, interactive: true)
+
+            Spacer(minLength: 4)
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(Money.text(event.spent, currency: event.currency))
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .monospacedDigit()
+                if let budget = event.budget {
+                    Text(L10n.financeEventOfBudget(
+                        Money.compactText(budget, currency: event.currency)
+                    ))
+                    .font(.caption2)
+                    .monospacedDigit()
+                    .foregroundStyle(event.isOverBudget ? Palette.danger : .secondary)
+                } else if event.expenseCount > 0 {
+                    Text(L10n.financeEventExpenses(event.expenseCount))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
-        .buttonStyle(.pressable)
+        .padding(.horizontal, Metrics.cardPadding)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect)
+        // Not interactive glass: that tracks the finger so the surface can lean
+        // toward it, which is right for a floating control and wrong for a row
+        // in a ScrollView, where it is one more claim on the touch the pan
+        // needs.
+        .glassCard(cornerRadius: Metrics.tightRadius)
+        .onTapGesture(perform: onTap)
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(.default, onTap)
     }
 }
 
