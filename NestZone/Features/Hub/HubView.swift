@@ -104,7 +104,13 @@ private struct ModuleTile: View {
                         if isPending {
                             // Shaped like the number it is standing in for, so
                             // the tile does not resize when the real one lands.
-                            Text("––")
+                            //
+                            // `verbatim` because this is a shape, not language:
+                            // it is always drawn redacted, so it is never read.
+                            // A plain `Text("––")` is a localizable literal — the
+                            // rule the whole catalog is built on — and the
+                            // extractor duly added a "––" entry to it.
+                            Text(verbatim: "––")
                                 .font(.system(.title3, design: .rounded, weight: .bold))
                                 .foregroundStyle(module.tint)
                                 .redacted(reason: .placeholder)
