@@ -10,6 +10,18 @@ import SwiftUI
 ///
 /// `isRevealed` is a binding rather than local state so a list can keep one row
 /// open at a time — opening a second closes the first, as the system does.
+///
+/// **The live drag is `@GestureState`, never `@State`.** A drag inside a
+/// `ScrollView` is routinely *cancelled* rather than ended: the scroll view
+/// claims the touch the moment the finger turns vertical, and when it does
+/// `onEnded` never runs. An offset written from `onChanged` into `@State` is
+/// then stranded wherever the finger left it — the row sits half open, while
+/// `isRevealed` still reads `false`, so the next drag measures from a base that
+/// does not match what is on screen and the row can never be pushed back. That
+/// was the stuck row. `@GestureState` is the one piece of state SwiftUI resets
+/// on a cancel as well as on an end, which is the guarantee this needs, and the
+/// row's position is *derived* from it rather than stored, so there is no
+/// second copy of the truth to fall out of step with.
 public struct SwipeToDelete<Content: View>: View {
     private let cornerRadius: CGFloat
     private let title: LocalizedStringResource
@@ -17,19 +29,13 @@ public struct SwipeToDelete<Content: View>: View {
     @Binding private var isRevealed: Bool
     private let content: Content
 
-    @State private var offset: CGFloat = 0
+    /// The translation of the drag in flight. SwiftUI clears it when the
+    /// gesture ends *or is cancelled*.
+    @GestureState private var translation: CGFloat = 0
     @State private var width: CGFloat = 0
-    /// True once the drag has been claimed as horizontal. Without it every
-    /// vertical scroll that starts on a row would drag the row sideways.
-    @State private var isTracking = false
-    @State private var didCommit = false
 
     /// Wide enough for the icon and its label, and for a 44pt tap target.
     private let actionWidth: CGFloat = 88
-
-    /// The button is only on screen — and only touchable — once the row has
-    /// actually moved.
-    private var isOut: Bool { offset < -1 }
 
     public init(
         cornerRadius: CGFloat = Metrics.tightRadius,
@@ -44,6 +50,23 @@ public struct SwipeToDelete<Content: View>: View {
         self.onDelete = onDelete
         self.content = content()
     }
+
+    /// Where the row sits: its settled position plus whatever the finger is
+    /// adding right now. Computed, so it cannot disagree with `isRevealed`.
+    private var offset: CGFloat {
+        let proposed = (isRevealed ? -actionWidth : 0) + translation
+        // Nothing lives on the leading edge, so a pull that way is resisted
+        // rather than followed.
+        return proposed > 0 ? proposed / 6 : max(proposed, -width)
+    }
+
+    /// How much of the action is showing. The panel is exactly this wide, which
+    /// is what makes it grow out of the edge under the finger.
+    private var revealed: CGFloat { max(0, -offset) }
+
+    /// Past this the release deletes outright, and the panel has taken over
+    /// enough of the row to say so.
+    private var isFullSwipe: Bool { width > 0 && revealed > width * 0.55 }
 
     public var body: some View {
         ZStack(alignment: .trailing) {
@@ -65,6 +88,11 @@ public struct SwipeToDelete<Content: View>: View {
                     }
                 }
         }
+        // No animation while the finger is down, or the row lags behind it
+        // instead of tracking it. The spring is for the settle — which is also
+        // what runs when the gesture is cancelled, so a row the scroll view
+        // stole the touch from glides home instead of freezing mid-swipe.
+        .animation(translation == 0 ? Motion.spring : nil, value: offset)
         .clipShape(.rect(cornerRadius: cornerRadius, style: .continuous))
         // The row is a glass card, and `glassEffect` contributes no hit region:
         // without this the drag only starts where a glyph happens to be — on the
@@ -76,13 +104,7 @@ public struct SwipeToDelete<Content: View>: View {
         // cannot be scrolled by starting on one. Sharing it lets the scroll
         // view take the vertical drags this gesture deliberately ignores.
         .simultaneousGesture(drag)
-        .onChange(of: isRevealed) { _, revealed in
-            guard !didCommit else { return }
-            withAnimation(Motion.spring) { offset = revealed ? -actionWidth : 0 }
-        }
-        .sensoryFeedback(.impact(weight: .medium), trigger: didCommit) { _, committed in
-            committed
-        }
+        .sensoryFeedback(.impact(weight: .medium), trigger: isFullSwipe) { _, full in full }
         // VoiceOver never sees the gesture, so the action is offered directly.
         .accessibilityAction(named: Text(title)) { commit() }
     }
@@ -94,48 +116,45 @@ public struct SwipeToDelete<Content: View>: View {
                 Text(title).font(.caption2.weight(.medium))
             }
             .foregroundStyle(.white)
+            // The label holds its own width against the trailing edge, so it
+            // stays put while the panel grows behind it rather than sliding
+            // around inside it.
             .frame(width: actionWidth)
             .frame(maxHeight: .infinity)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        // As wide as the row has actually been pulled — the way a system swipe
+        // action behaves. It used to be a fixed 88pt panel parked under the row
+        // and faded in with `opacity`, which is what made the gesture read as
+        // something other than a swipe action: the button did not come *out of*
+        // the edge, it appeared behind a hole.
+        .frame(width: revealed, alignment: .trailing)
         .background(Palette.danger)
-        // Hidden until the drag starts, or it shows through the row's own
-        // rounded corners while the row is at rest.
-        .opacity(isOut ? 1 : 0)
-        // An `opacity(0)` view still answers taps, and this one is a
-        // full-height destructive button sitting under the trailing end of the
-        // row — the gaps in the row above it would delete the item outright.
-        .allowsHitTesting(isOut)
+        .clipped()
+        // A zero-width panel still answers taps at its edge, and this one is
+        // destructive.
+        .allowsHitTesting(revealed > 1)
         .accessibilityHidden(true)
     }
 
     private var drag: some Gesture {
         DragGesture(minimumDistance: 12)
-            .onChanged { value in
-                guard !didCommit else { return }
-                if !isTracking {
-                    // Claim the drag only once it is clearly sideways: a small
-                    // horizontal wobble at the start of a scroll must not pull
-                    // the row open. Below the threshold, neither direction has
-                    // won yet, so do nothing at all.
-                    let width = abs(value.translation.width)
-                    let height = abs(value.translation.height)
-                    guard width > height * 1.5, width > 16 else { return }
-                    isTracking = true
+            .updating($translation) { value, state, _ in
+                // Follow the finger only once it is clearly sideways: a small
+                // horizontal wobble at the start of a scroll must not pull the
+                // row open. Below the threshold neither direction has won, so
+                // the row stays where it is and the scroll view gets the touch.
+                guard abs(value.translation.width) > abs(value.translation.height) * 1.5 else {
+                    return
                 }
-                let base = isRevealed ? -actionWidth : 0
-                let proposed = base + value.translation.width
-                // Nothing lives on the leading edge, so a pull that way is
-                // resisted rather than followed.
-                offset = proposed > 0 ? proposed / 6 : max(proposed, -width)
+                state = value.translation.width
             }
             .onEnded { value in
-                guard isTracking, !didCommit else { return }
-                isTracking = false
-                let base = isRevealed ? -actionWidth : 0
-                let projected = base + value.predictedEndTranslation.width
-
+                guard abs(value.translation.width) > abs(value.translation.height) * 1.5 else {
+                    return
+                }
+                let projected = (isRevealed ? -actionWidth : 0) + value.predictedEndTranslation.width
                 if projected < -width * 0.55 {
                     commit()
                 } else {
@@ -146,16 +165,23 @@ public struct SwipeToDelete<Content: View>: View {
 
     private func setRevealed(_ revealed: Bool) {
         isRevealed = revealed
-        withAnimation(Motion.spring) { offset = revealed ? -actionWidth : 0 }
     }
 
+    /// Runs the action and returns the row to rest.
+    ///
+    /// It deliberately does *not* carry the row off the edge and hold it there.
+    /// That flourish assumed `onDelete` deletes, which is only true where the
+    /// write is optimistic — the shopping list removes the item in the same
+    /// frame, so the row was gone before the animation mattered. Recipes asks
+    /// first: `deleteTapped` raises a confirmation alert and removes nothing. A
+    /// row parked off the edge behind a latched flag therefore never came back,
+    /// and cancelling the alert left the recipe in the list with no row to show
+    /// for it. Springing home costs nothing in the optimistic case (the item
+    /// leaves the list anyway, and the list's own transition covers it) and is
+    /// the only correct thing in the confirmed one — which is also what the
+    /// system does when a swipe action puts up a confirmation.
     private func commit() {
-        guard !didCommit else { return }
-        didCommit = true
         isRevealed = false
-        // Carry the row off the edge; the delete is optimistic, so the list
-        // removes it in the same frame and the two animations read as one.
-        withAnimation(Motion.spring) { offset = -width }
         onDelete()
     }
 }
