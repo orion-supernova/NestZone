@@ -149,6 +149,7 @@ struct ChatView: View {
                                 showsActions: store.actionsFor == message.id,
                                 retry: { store.send(.retryTapped(message.id)) },
                                 hold: { store.send(.bubbleHeld(message.id)) },
+                                dismiss: dismissEverything,
                                 edit: { store.send(.editTapped(message.id)) },
                                 delete: { store.send(.deleteTapped(message.id)) }
                             )
@@ -160,6 +161,16 @@ struct ChatView: View {
                     }
                     .padding(.horizontal, Metrics.screenPadding)
                     .padding(.vertical, Metrics.stackSpacing)
+                    // Catches the taps that land beside a bubble rather than on
+                    // one. Behind the thread, not around it: a gesture on the
+                    // scroll view is simultaneous with the bubbles' own, so the
+                    // finger coming up off a hold counted as a tap too and shut
+                    // the bar in the same breath that opened it.
+                    .background {
+                        Color.clear
+                            .contentShape(.rect)
+                            .onTapGesture { dismissEverything() }
+                    }
                 }
             }
             // Opens on the newest message. `defaultScrollAnchor` is resolved
@@ -171,14 +182,6 @@ struct ChatView: View {
             .onChange(of: store.state.ordered.last?.id) { _, _ in
                 scrollToNewest(proxy, animated: true)
             }
-            // On the scroll view itself, deliberately: attached further out it
-            // also fired for taps on the action bar, which is drawn over this,
-            // so hitting Edit would have cancelled the edit it just began.
-            // `simultaneousGesture` so it does not eat scrolling.
-            .simultaneousGesture(TapGesture().onEnded {
-                isComposerFocused = false
-                store.send(.backgroundTapped)
-            })
         }
         // Drawn over the scroll view, not inside it: an overlay on the bubble
         // is clipped by the scroll view's bounds, which sliced the bar in half
@@ -188,14 +191,13 @@ struct ChatView: View {
                 if let anchor {
                     let bubble = proxy[anchor.bounds]
                     MessageActionsBar(
-                        isMine: anchor.isMine,
                         edit: { store.send(.editTapped(anchor.id)) },
                         delete: { store.send(.deleteTapped(anchor.id)) }
                     )
                     .onGeometryChange(for: CGSize.self) { $0.size } action: { barSize = $0 }
                     .position(
                         x: barX(alongside: bubble, isMine: anchor.isMine, within: proxy.size),
-                        y: barY(above: bubble, within: proxy.size)
+                        y: barY(above: bubble, within: proxy.size, insets: proxy.safeAreaInsets)
                     )
                     .transition(.scale(scale: 0.85).combined(with: .opacity))
                 }
@@ -203,9 +205,8 @@ struct ChatView: View {
             .animation(Motion.spring, value: store.actionsFor)
         }
         .background(Backdrop(tint: theme.accent))
-        // Swipe the keyboard down, or tap anywhere off the composer to put it
-        // away. `simultaneousGesture` so the tap does not eat scrolling or the
-        // bubbles' own action bar.
+        // Swipe the keyboard down; a tap anywhere in the thread does the same,
+        // through `dismissEverything`.
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .bottom) { composer }
         .navigationTitle(store.title)
@@ -236,6 +237,13 @@ struct ChatView: View {
         )
     }
 
+    /// What a plain tap in the thread means: put the keyboard away, close the
+    /// action bar, and abandon an edit in progress.
+    private func dismissEverything() {
+        isComposerFocused = false
+        store.send(.backgroundTapped)
+    }
+
     /// Lines the bar up with the bubble's own edge — trailing for yours,
     /// leading for theirs — then keeps it on screen.
     private func barX(alongside bubble: CGRect, isMine: Bool, within size: CGSize) -> CGFloat {
@@ -246,13 +254,16 @@ struct ChatView: View {
     }
 
     /// Above the bubble, unless it is close enough to the top that the bar would
-    /// run off the screen, in which case below it.
-    private func barY(above bubble: CGRect, within size: CGSize) -> CGFloat {
+    /// slide under the navigation bar, in which case below it.
+    ///
+    /// The scroll view runs edge to edge, so its own top is behind the title —
+    /// clamping to zero left the bar readable only through the toolbar's blur.
+    private func barY(above bubble: CGRect, within size: CGSize, insets: EdgeInsets) -> CGFloat {
         let half = barSize.height / 2
         let gap: CGFloat = 8
         let preferred = bubble.minY - half - gap
-        guard preferred - half < 0 else { return preferred }
-        return min(bubble.maxY + half + gap, size.height - half - gap)
+        guard preferred - half < insets.top else { return preferred }
+        return min(bubble.maxY + half + gap, size.height - insets.bottom - half - gap)
     }
 
     private func scrollToNewest(_ proxy: ScrollViewProxy, animated: Bool = true) {
@@ -346,6 +357,7 @@ private struct MessageBubble: View {
     let showsActions: Bool
     let retry: () -> Void
     let hold: () -> Void
+    let dismiss: () -> Void
     let edit: () -> Void
     let delete: () -> Void
 
@@ -360,10 +372,17 @@ private struct MessageBubble: View {
     /// gesture feel like it had not registered.
     @GestureState private var isPressing = false
 
+    /// A hold opens the bar, a tap dismisses whatever is open — as one
+    /// exclusive gesture, so the two can never both fire for the same touch.
+    /// Split across views they did: the finger lifting off a completed hold is
+    /// still a tap, so the bar closed in the same breath it opened, and the
+    /// gesture only appeared to work when a stray millimetre of drift happened
+    /// to cancel the tap.
     private var pressGesture: some Gesture {
         LongPressGesture(minimumDuration: Self.holdDuration)
-            .updating($isPressing) { current, state, _ in state = current }
-            .onEnded { _ in hold() }
+            .updating($isPressing) { current, state, _ in state = canModify && current }
+            .onEnded { _ in if canModify { hold() } }
+            .exclusively(before: TapGesture().onEnded { dismiss() })
     }
 
     var body: some View {
@@ -393,7 +412,6 @@ private struct MessageBubble: View {
                     isMine ? .identity : .regular,
                     in: .rect(cornerRadius: 18, style: .continuous)
                 )
-                .frame(maxWidth: 280, alignment: isMine ? .trailing : .leading)
                 .opacity(isPending && !hasFailed ? 0.55 : 1)
                 .scaleEffect(isPressing || showsActions ? 0.96 : 1)
                 .animation(Motion.press, value: isPressing)
@@ -407,11 +425,16 @@ private struct MessageBubble: View {
                         : nil
                 }
                 .contentShape(.rect(cornerRadius: 18, style: .continuous))
-                .gesture(canModify ? pressGesture : nil)
+                .gesture(pressGesture)
                 // Two taps of feedback: one the instant the press registers,
                 // one when the bar actually opens.
                 .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, now in now }
                 .sensoryFeedback(.impact(weight: .medium), trigger: showsActions) { _, now in now }
+                // Last, so everything above it measures and is touched as the
+                // bubble rather than as the full-width row this frame opens up
+                // to. Inside it, a hold on the empty half of a line opened the
+                // neighbouring bubble's bar, and the bar was pinned to the row.
+                .frame(maxWidth: 280, alignment: isMine ? .trailing : .leading)
 
             // A send that failed keeps its bubble and says so, rather than
             // taking the text down with it.
@@ -476,7 +499,6 @@ private struct BubbleActionsAnchorKey: PreferenceKey {
 
 /// Edit and Delete, as one glass capsule pinned to the bubble it belongs to.
 private struct MessageActionsBar: View {
-    let isMine: Bool
     let edit: () -> Void
     let delete: () -> Void
 
@@ -484,11 +506,10 @@ private struct MessageActionsBar: View {
         GlassEffectContainer(spacing: 4) {
             HStack(spacing: 2) {
                 button(L10n.commonEdit, symbol: "pencil", action: edit)
-                Divider().frame(height: 18)
+                Divider().frame(height: 20)
                 button(L10n.commonDelete, symbol: "trash", tint: Palette.danger, action: delete)
             }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 4)
             .glassEffect(.regular.interactive(), in: .capsule)
         }
         .fixedSize()
@@ -505,8 +526,11 @@ private struct MessageActionsBar: View {
                 .font(.caption.weight(.medium))
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(tint ?? .primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.horizontal, 12)
+                // Full height, not the height of nine-point caption text.
+                // Delete sat next to Edit in a 26-point strip, which is a
+                // careless place to make a fingertip choose.
+                .frame(minHeight: Metrics.minTapTarget)
                 .contentShape(.rect)
         }
         .buttonStyle(.pressable)
