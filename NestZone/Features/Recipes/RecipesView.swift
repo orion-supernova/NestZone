@@ -5,9 +5,6 @@ public struct RecipesView: View {
     @Bindable var store: StoreOf<RecipesFeature>
 
     @Environment(\.theme) private var theme
-    /// The card with its delete button showing, if any. Held here so opening
-    /// one closes the last, as a system list does.
-    @State private var revealedID: RecipeID?
 
     public init(store: StoreOf<RecipesFeature>) {
         self.store = store
@@ -39,14 +36,46 @@ public struct RecipesView: View {
             .animation(Motion.spring, value: store.visible)
     }
 
+    /// A real `List`, so the swipe is the system's rather than a rebuild of it.
+    ///
+    /// `.swipeActions` only exists on `List`, which is why the shelf used to be
+    /// a `LazyVStack` behind a hand-built `SwipeToDelete`. Every bug that came
+    /// out of that — a drag the scroll view cancelled leaving the row stranded
+    /// half open, a committed row parked off the edge that the confirmation
+    /// alert could never bring back, a reveal that grew from nothing instead of
+    /// out of the trailing edge — is something `UISwipeActionsConfiguration`
+    /// has always handled. The list carries the List's chrome away instead:
+    /// clear row backgrounds, no separators, no insets, and the glass card
+    /// supplies the whole surface.
+    ///
+    /// The cost is the `GlassEffectContainer`: it cannot span List cells, so
+    /// the cards no longer reach for one another. Glass rows, separate shapes.
     private var content: some View {
-        ScrollView {
-            LazyVStack(spacing: Metrics.stackSpacing) {
-                filterBar
-                results
-            }
-            .padding(.bottom, Metrics.scrollBottomInset)
+        List {
+            filterBar
+                .plainRow(insets: .init(
+                    top: 0, leading: 0, bottom: Metrics.stackSpacing, trailing: 0
+                ))
+
+            results
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.bottom, Metrics.scrollBottomInset, for: .scrollContent)
+        // Rows are exactly as tall as their card; without this the filter bar
+        // is padded out to the system's 44pt minimum.
+        .environment(\.defaultMinListRowHeight, 0)
+    }
+
+    /// Card insets: the screen's horizontal padding, and a bottom gap that
+    /// stands in for the stack spacing the `VStack` used to provide.
+    private var rowInsets: EdgeInsets {
+        .init(
+            top: 0,
+            leading: Metrics.screenPadding,
+            bottom: Metrics.stackSpacing,
+            trailing: Metrics.screenPadding
+        )
     }
 
     @ViewBuilder
@@ -56,38 +85,35 @@ public struct RecipesView: View {
         // attached to it.
         if store.isWaiting {
             SkeletonList(rows: 4, height: 96)
-                .padding(.horizontal, Metrics.screenPadding)
+                .plainRow(insets: rowInsets)
         } else if store.visible.isEmpty {
             emptyState
+                .plainRow(insets: rowInsets)
         } else {
-            GlassGroup {
-                VStack(spacing: Metrics.stackSpacing) {
-                    ForEach(Array(store.visible.enumerated()), id: \.element.id) { index, recipe in
+            ForEach(Array(store.visible.enumerated()), id: \.element.id) { index, recipe in
+                RecipeCard(recipe: recipe) { store.send(.recipeTapped(recipe)) }
+                    // Only the first screenful is choreographed. List rows are
+                    // realised as they scroll in, so staggering all of them
+                    // would fade every arriving row in behind a delay of up to
+                    // a third of a second — which reads as the list struggling
+                    // to keep up rather than as an entrance.
+                    .appear(index < 8 ? index : 0)
+                    .plainRow(insets: rowInsets)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         // Only the home's own shelf: an Explore recipe is
                         // bundled with the app and there is nothing to delete.
                         if store.tab == .mine {
-                            SwipeToDelete(
-                                cornerRadius: Metrics.cardRadius,
-                                isRevealed: Binding(
-                                    get: { revealedID == recipe.id },
-                                    set: { revealedID = $0 ? recipe.id : nil }
-                                ),
-                                onDelete: { store.send(.deleteTapped(recipe.id)) }
-                            ) {
-                                RecipeCard(
-                                    recipe: recipe,
-                                    action: { store.send(.recipeTapped(recipe)) },
-                                    onDelete: { store.send(.deleteTapped(recipe.id)) }
-                                )
+                            Button(role: .destructive) {
+                                store.send(.deleteTapped(recipe.id))
+                            } label: {
+                                Label {
+                                    Text(L10n.commonDelete)
+                                } icon: {
+                                    Image(systemName: "trash")
+                                }
                             }
-                            .appear(index)
-                        } else {
-                            RecipeCard(recipe: recipe) { store.send(.recipeTapped(recipe)) }
-                                .appear(index)
                         }
                     }
-                }
-                .padding(.horizontal, Metrics.screenPadding)
             }
         }
     }
@@ -144,68 +170,72 @@ public struct RecipesView: View {
 private struct RecipeCard: View {
     let recipe: Recipe
     let action: () -> Void
-    /// Nil for a bundled Explore recipe, which the home does not own.
-    var onDelete: (() -> Void)?
 
     var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(recipe.title)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
+        card
+            .glassCard()
+            // Deliberately not a `Button`, and deliberately no `.contextMenu`.
+            // Both hold the touch on the way down to work out whether the press
+            // is going to become a tap, a long press or a menu lift, and while
+            // they are deciding the enclosing ScrollView is not allowed to pan —
+            // so a finger landing on a card could not scroll the list. A
+            // `TapGesture` fails the instant the finger moves, which is why the
+            // rows in Tasks and Shopping scroll cleanly: neither is a button
+            // either. Delete lives on the swipe and in the detail view.
+            .contentShape(.rect)
+            .onTapGesture(perform: action)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction(.default, action)
+    }
+
+    private var card: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(recipe.title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    if let summary = recipe.summary {
+                        Text(summary)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
-                        if let summary = recipe.summary {
-                            Text(summary)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.leading)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    if let difficulty = recipe.difficulty {
-                        Badge(String(localized: difficulty.title), tint: difficulty.tint)
                     }
                 }
+                Spacer(minLength: 0)
+                if let difficulty = recipe.difficulty {
+                    Badge(String(localized: difficulty.title), tint: difficulty.tint)
+                }
+            }
 
-                HStack(spacing: 12) {
-                    if let minutes = recipe.totalMinutes {
-                        Label {
-                            Text(L10n.recipesCardTimeFormat(minutes))
-                        } icon: {
-                            Image(systemName: "clock")
-                        }
+            HStack(spacing: 12) {
+                if let minutes = recipe.totalMinutes {
+                    Label {
+                        Text(L10n.recipesCardTimeFormat(minutes))
+                    } icon: {
+                        Image(systemName: "clock")
                     }
-                    if let servings = recipe.servings {
-                        Label {
-                            Text(servings, format: .number)
-                                .contentTransition(.numericText(value: Double(servings)))
-                                .animation(Motion.spring, value: servings)
-                        } icon: {
-                            Image(systemName: "person.2")
-                        }
+                }
+                if let servings = recipe.servings {
+                    Label {
+                        Text(servings, format: .number)
+                            .contentTransition(.numericText(value: Double(servings)))
+                            .animation(Motion.spring, value: servings)
+                    } icon: {
+                        Image(systemName: "person.2")
                     }
-                    Spacer(minLength: 0)
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
             }
-            .padding(Metrics.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(.rect)
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
-        .buttonStyle(.pressable)
-        .glassCard(interactive: true)
-        .contextMenu {
-            if let onDelete {
-                Button(role: .destructive, action: onDelete) {
-                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
-                }
-            }
-        }
+        .padding(Metrics.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -901,5 +931,18 @@ private struct AddedToListToast: View {
         .padding(.vertical, 6)
         .glassEffect(.regular.interactive(), in: .capsule)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A `List` row stripped of the List's own chrome.
+///
+/// The cards carry their own glass surface and their own spacing, so every
+/// default the List would otherwise supply — the row background, the separator,
+/// the standard insets — is something to take away rather than to style.
+extension View {
+    fileprivate func plainRow(insets: EdgeInsets) -> some View {
+        listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(insets)
     }
 }
