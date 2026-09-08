@@ -26,6 +26,28 @@ public struct HubFeature: Sendable {
         /// only number anybody acts on.
         public var eventsThisWeekCount = 0
 
+        /// Which module counts have actually been answered.
+        ///
+        /// Every count starts at 0, and 0 is a real answer — "nothing on the
+        /// list", "no bills due". So an unanswered tile was indistinguishable
+        /// from an empty one, and the Hub opened claiming the household had
+        /// nothing anywhere, then silently filled in. Worse than a wait,
+        /// because it reads as fact rather than as loading.
+        ///
+        /// The counts arrive from five independent subscriptions, so they land
+        /// separately and each tile is told on its own.
+        public var loaded: Loaded = []
+
+        public struct Loaded: OptionSet, Equatable, Sendable {
+            public let rawValue: Int
+            public init(rawValue: Int) { self.rawValue = rawValue }
+            public static let shopping = Loaded(rawValue: 1 << 0)
+            public static let recipes = Loaded(rawValue: 1 << 1)
+            public static let movies = Loaded(rawValue: 1 << 2)
+            public static let billsDue = Loaded(rawValue: 1 << 3)
+            public static let events = Loaded(rawValue: 1 << 4)
+        }
+
         public init(homeID: HomeID, currentUserID: UserID? = nil) {
             self.homeID = homeID
             self.currentUserID = currentUserID
@@ -124,11 +146,28 @@ public struct HubFeature: Sendable {
                 )
 
             case let .countsUpdated(shopping, recipes, movies, billsDue, events):
-                if let shopping { state.shoppingCount = shopping }
-                if let recipes { state.recipeCount = recipes }
-                if let movies { state.movieCount = movies }
-                if let billsDue { state.billsDueCount = billsDue }
-                if let events { state.eventsThisWeekCount = events }
+                // Each argument is its own subscription's answer, so each one
+                // that arrives settles its own tile and leaves the rest waiting.
+                if let shopping {
+                    state.shoppingCount = shopping
+                    state.loaded.insert(.shopping)
+                }
+                if let recipes {
+                    state.recipeCount = recipes
+                    state.loaded.insert(.recipes)
+                }
+                if let movies {
+                    state.movieCount = movies
+                    state.loaded.insert(.movies)
+                }
+                if let billsDue {
+                    state.billsDueCount = billsDue
+                    state.loaded.insert(.billsDue)
+                }
+                if let events {
+                    state.eventsThisWeekCount = events
+                    state.loaded.insert(.events)
+                }
                 return .none
 
             case let .moduleTapped(module):

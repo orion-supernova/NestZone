@@ -21,7 +21,8 @@ public struct HubView: View {
                         ForEach(Array(HubModule.allCases.enumerated()), id: \.element.id) { index, module in
                             ModuleTile(
                                 module: module,
-                                count: count(for: module)
+                                count: count(for: module),
+                                isPending: isPending(module)
                             ) { store.send(.moduleTapped(module)) }
                             .appear(index)
                         }
@@ -59,11 +60,31 @@ public struct HubView: View {
         case .maintenance: nil
         }
     }
+
+    /// Whether this tile's number is still on its way.
+    ///
+    /// Distinct from "the number is zero", which is a real answer and looks
+    /// identical. Without this the Hub opened reading 0 across the board and
+    /// then quietly corrected itself, which states something false rather than
+    /// admitting it does not know yet.
+    private func isPending(_ module: HubModule) -> Bool {
+        switch module {
+        case .shopping: !store.loaded.contains(.shopping)
+        case .recipes: !store.loaded.contains(.recipes)
+        case .movies: !store.loaded.contains(.movies)
+        case .finance: !store.loaded.contains(.billsDue)
+        case .calendar: !store.loaded.contains(.events)
+        // No count of its own to wait for.
+        case .maintenance: false
+        }
+    }
 }
 
 private struct ModuleTile: View {
     let module: HubModule
     let count: Int?
+    /// The count has not arrived yet, as opposed to having arrived as zero.
+    let isPending: Bool
     let action: () -> Void
 
     var body: some View {
@@ -79,10 +100,19 @@ private struct ModuleTile: View {
                             in: .rect(cornerRadius: 12, style: .continuous)
                         )
                     Spacer(minLength: 0)
-                    if let count, module.isAvailable {
-                        AnimatedNumber(count)
-                            .font(.system(.title3, design: .rounded, weight: .bold))
-                            .foregroundStyle(module.tint)
+                    if module.isAvailable {
+                        if isPending {
+                            // Shaped like the number it is standing in for, so
+                            // the tile does not resize when the real one lands.
+                            Text("––")
+                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .foregroundStyle(module.tint)
+                                .redacted(reason: .placeholder)
+                        } else if let count {
+                            AnimatedNumber(count)
+                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .foregroundStyle(module.tint)
+                        }
                     }
                 }
 

@@ -4516,3 +4516,41 @@ struct DinnerOccasionTests {
         #expect(!state.canPlanDinner)
     }
 }
+
+@MainActor
+@Suite("Hub module counts")
+struct HubCountsTests {
+
+    @Test("A tile that has not answered is pending, not zero")
+    func countsStartPending() async {
+        let state = HubFeature.State(homeID: "h1")
+        // Every count reads 0 before anything arrives, which is also what an
+        // empty household reads. The tiles have to be able to tell those apart
+        // or the Hub opens stating, as fact, that there is nothing anywhere.
+        #expect(state.shoppingCount == 0)
+        #expect(state.loaded.isEmpty)
+    }
+
+    @Test("Each subscription settles its own tile and leaves the rest waiting")
+    func countsSettleIndependently() async {
+        let store = TestStore(initialState: HubFeature.State(homeID: "h1")) {
+            HubFeature()
+        }
+
+        await store.send(.countsUpdated(recipes: 4)) {
+            $0.recipeCount = 4
+            $0.loaded.insert(.recipes)
+        }
+        // The other four have said nothing, so they are still pending rather
+        // than reporting the zero they were initialised with.
+        #expect(!store.state.loaded.contains(.shopping))
+        #expect(!store.state.loaded.contains(.billsDue))
+
+        await store.send(.countsUpdated(shopping: 0)) {
+            $0.loaded.insert(.shopping)
+        }
+        // Zero is an answer. Having arrived, the tile stops waiting and shows it.
+        #expect(store.state.loaded.contains(.shopping))
+        #expect(store.state.shoppingCount == 0)
+    }
+}
