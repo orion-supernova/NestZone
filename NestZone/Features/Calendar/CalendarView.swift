@@ -807,7 +807,15 @@ public struct CalendarView: View {
                     Button(role: .destructive) {
                         store.send(.deleteTapped(occurrence, .series))
                     } label: {
-                        Label { Text(L10n.calendarDeleteSeries) } icon: {
+                        // A one-off has no series to delete, and calling its
+                        // single date "all events" named something that does
+                        // not exist. Same action either way — `.series` on an
+                        // event that happens once is just that event.
+                        Label {
+                            Text(occurrence.isRecurring
+                                ? L10n.calendarDeleteSeries
+                                : L10n.calendarDeleteEvent)
+                        } icon: {
                             Image(systemName: "trash")
                         }
                     }

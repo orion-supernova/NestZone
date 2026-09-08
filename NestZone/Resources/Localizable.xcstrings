@@ -825,13 +825,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete every one"
+            "value" : "Delete all events"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hepsini sil"
+            "value" : "Tüm etkinlikleri sil"
           }
         }
       }

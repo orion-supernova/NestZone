@@ -5131,9 +5131,9 @@ public enum L10n {
         r("calendar_skip_this_one", "Skip this one")
     }
 
-    /// Delete every one
+    /// Delete all events
     public static var calendarDeleteSeries: LocalizedStringResource {
-        r("calendar_delete_series", "Delete every one")
+        r("calendar_delete_series", "Delete all events")
     }
 
     /// Delete event
