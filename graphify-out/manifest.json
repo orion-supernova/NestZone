@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/AppFeature.swift": {
-    "mtime": 1788816014.3688207,
-    "ast_hash": "c6d58a8ae346645ba70dae55919cea09",
+    "mtime": 1788864398.40421,
+    "ast_hash": "8d5300ed0cae0aef39315f8229a98c6c",
     "semantic_hash": ""
   },
   "NestZone/App/AppView.swift": {
@@ -370,8 +370,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/ConvexConnection.swift": {
-    "mtime": 1788859439.6096125,
-    "ast_hash": "655d71e7dd7bb2f41cf41b884f551d84",
+    "mtime": 1788873397.9266713,
+    "ast_hash": "321212798f273def6a262d99384f6fb6",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/KeychainTokenStore.swift": {
@@ -480,13 +480,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeFeature.swift": {
-    "mtime": 1788812816.0789196,
-    "ast_hash": "8400dd9cb969c8e6f55911641d8397a5",
+    "mtime": 1788873336.6058414,
+    "ast_hash": "35b9ccf95bb99689ea9547bd4300af4b",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeView.swift": {
-    "mtime": 1788813461.1889625,
-    "ast_hash": "62332431e08d37dc7ac70dc2716405dd",
+    "mtime": 1788873336.6245573,
+    "ast_hash": "51d88d0c62a56d9eb308baf21e8511eb",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/CreateHomeFeature.swift": {
@@ -510,13 +510,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/HubFeature.swift": {
-    "mtime": 1788809148.26363,
-    "ast_hash": "2823249efb75d1be373e7e2fee0e848b",
+    "mtime": 1788873731.1713824,
+    "ast_hash": "52911adad77cb5c8cefe31c3ef3502d9",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/HubView.swift": {
-    "mtime": 1788791790.382908,
-    "ast_hash": "b6126b164110e7c50e58587c3ef2f585",
+    "mtime": 1788873746.7210467,
+    "ast_hash": "b2593c09ffa53576bbc38059a20d681c",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/ShoppingFeature.swift": {
@@ -620,8 +620,8 @@
     "semantic_hash": ""
   },
   "NestZoneTests/FeatureTests.swift": {
-    "mtime": 1788816134.0307105,
-    "ast_hash": "44bcef693306d166a7562788eed63860",
+    "mtime": 1788873848.7593956,
+    "ast_hash": "3228cb1e53dc31e3ca36b226b984527c",
     "semantic_hash": ""
   },
   "NestZoneUITests/LaunchUITests.swift": {
