@@ -108,8 +108,10 @@ backend compose env. The path rule above is the minimal, reversible fix and is s
   account (PB used bcrypt). On first sign‑up with the same email, `auth.ts`
   `createOrUpdateUser` links the new account to the migrated profile. See the iOS guide §3.
 - **Idempotency:** the importer refuses to run twice unless `--wipe` is passed.
-- **PocketBase stays live** at `https://nestzone-pocketbase-dashboard.walhallaa.com`
-  as rollback until the Convex‑based app ships.
+- ~~**PocketBase stays live** at `https://nestzone-pocketbase-dashboard.walhallaa.com`
+  as rollback until the Convex‑based app ships.~~ **No longer true as of 2026‑09‑10.**
+  PocketBase was not migrated to the new host and its data was not carried over; the
+  hostname now falls through to the tunnel's 404 catch‑all. See "Host move" below.
 - **Data integrity:** pre‑flight check found **0 dangling relations** across all 924 records.
 
 ## Production hardening pass (2026‑09‑03)
@@ -319,3 +321,103 @@ whether it regrows — a client reconnect loop is the likely cause.
 
 **`tr.json` had a trailing comma** (invalid JSON). `JSONSerialization` happens to tolerate
 it, so Turkish was never actually broken, but every stricter parser rejects the file. Fixed.
+
+## Host move (2026‑09‑10): zeynepmakine → instance‑20260910‑1151
+
+The backend moved hosts again. **Nothing about the deployment changed** —
+`https://nestzone-convex-api.walhallaa.com` resolves and behaves exactly as before, no
+DNS record was edited, and no client, key or admin credential was reissued.
+
+| | old | new |
+|---|---|---|
+| host | `zeynepmakine` 92.5.100.185 | `instance-20260910-1151` 130.61.231.195 |
+| arch | x86_64 | **aarch64 (ARM64)** |
+| OS | Ubuntu 24.04 | Ubuntu 26.04 LTS |
+| key | `ssh-key-2026-04-28.key` | `ssh-key-2026-09-10.key` |
+
+Local connect script: `~/Documents/BelesMakinem/zeynepmakine/zeynepmakine_connect.sh`
+(both keys live beside it).
+
+**Why no DNS change.** Every hostname is a CNAME to `<tunnel-id>.cfargotunnel.com`, so
+the tunnel *is* the address. Moving the credentials file and config to a new host
+re-points the hostname with nothing else touched. All three tunnels moved wholesale for
+that reason — same tunnel IDs, same ingress rules:
+
+| tunnel | serves |
+|---|---|
+| `4ab9757f` (`cloudflared-main`) | nestzone api + dashboard, couplezone api + dashboard |
+| `4d623c7e` (`cloudflared-watch-sync`) | watch-sync api + dashboard |
+| `60f2d746` (`cloudflared`) | spyfall api + dashboard |
+
+**The architecture change was safe, and here is why it was checked rather than assumed.**
+Every pinned digest is a multi‑arch manifest *list*, so pulling the same
+`@sha256:…` on ARM yields the arm64 variant of the **identical build** — the pin holds and
+no version moved. Confirmed on first boot: every backend logged `db metadata version up
+to date` and `Migration complete` with **no migration applied**, and each deployment
+reported the same `database_uuid` as on the old box. The data itself is `db.sqlite3`,
+whose on‑disk format is architecture‑independent.
+
+**Two `:latest` tags were pinned during the move.** `convex-server` (spyfall) and
+`watch-sync-server` floated on `:latest`, which on a fresh host would have pulled a newer
+backend and run its forward‑only migrations against these databases on first boot —
+exactly the hazard the nestzone/couplezone compose files were already pinned against.
+Both are now pinned to the digest they were actually running
+(`convex-backend@sha256:ed68a487…`, `convex-dashboard@sha256:4dd0dd03…`). Upgrade
+deliberately, one deployment at a time, with a volume backup in hand.
+
+**Cutover order** (a tunnel run from two hosts is load‑balanced across both, which would
+split live writes across two databases — so the old side must be fully stopped first):
+
+1. stop tunnels on old → public traffic stops
+2. stop containers on old → clean SQLite close
+3. copy volumes → quiet source, consistent snapshot, `sha256` verified per file
+4. start containers on new → health‑checked on localhost
+5. start tunnels on new → traffic resumes on the same hostnames
+
+**PocketBase was retired here.** It was superseded by Convex long ago, was not migrated,
+and its data was not carried over. Its ingress rule is gone from the main tunnel config;
+`nestzone-pocketbase-dashboard.walhallaa.com` now hits the 404 catch‑all. Re‑adding the
+rule would route to nothing.
+
+**Known, pre‑existing:** `couplezone-convex-api.walhallaa.com/.well-known/jwks.json`
+returns 404. That is the couplezone deployment's own behaviour, not a routing fault — its
+ingress rules are byte‑identical to the old host's and its data is byte‑identical, so it
+behaved the same before the move. NestZone's own JWKS and OpenID metadata return 200.
+
+**Rollback (expired).** During the cutover the old box was only stopped, so it stayed a
+working rollback. That is gone: on 2026‑09‑10, once nestzone and couplezone were confirmed
+working, the old box was wiped — containers, volumes, images, app directories, PocketBase,
+and **all three tunnel credential files** (a retired machine must not keep credentials that
+can still claim a live tunnel). What remains instead is a consistent snapshot of the
+cutover state, taken from the stopped old box and verified readable:
+`/home/ubuntu/pre-retire-backup/*.tar.gz` on the new host (449 MB, one per deployment).
+Restore = extract into the matching `/var/lib/docker/volumes/<name>/_data` with the stack
+stopped.
+
+**The old instance itself still exists** and still bills until it is terminated in the
+Oracle Cloud console — that cannot be done over SSH.
+
+### Cleanup done in the same pass (2026‑09‑10)
+
+- **`etcd` removed from nestzone.** Verified unused first (the backend held no connection
+  to the etcd container's address and carried no ETCD env var), then dropped along with
+  the backend's `depends_on` gate. Backend and dashboard were *not* recreated — zero
+  downtime. Previous file: `docker-compose.yaml.bak.pre-etcd-removal`.
+- Stale files removed: the May‑era `migrate-backup` archives (superseded), leftover
+  `.deb` installers, apt cache.
+
+### Not errors, despite looking like one
+
+- **`/.well-known/jwks.json` → 404 on couplezone, spyfall and watch‑sync.** That file is
+  only served by a deployment that uses Convex Auth. A scan of each database shows
+  nestzone has the auth tables (`authAccounts`, `authSessions`) and correctly serves 200;
+  the other three have **none** — they do not have accounts at all, so there is nothing to
+  serve and nothing to fix. Do not "fix" this by adding auth config to those deployments.
+- **`/api/version` → 404 everywhere.** Not an endpoint; the real one is `/version`.
+
+### Open item
+
+`nestzone-pocketbase-dashboard.walhallaa.com` still has a DNS CNAME pointing at the main
+tunnel, whose ingress no longer routes it — so it answers 404. Deleting that CNAME in the
+Cloudflare dashboard retires the hostname properly. `cloudflared` can only *create* DNS
+routes, not delete them, so this cannot be done from the host.
