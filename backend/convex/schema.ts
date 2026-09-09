@@ -102,6 +102,93 @@ const recurrence = v.object({
   until: v.optional(v.number()),
 });
 
+// --- House problems --------------------------------------------------------
+//
+// What is wrong with the house, as a vocabulary rather than free text. A
+// household writes "tap drips" and "the tap in the kitchen drips again" for the
+// same fault, so the only way the app can ever say "this is the fourth time the
+// kitchen plumbing has gone" is if the *where* and the *what* are chosen from a
+// list. Everything the Problems screen groups, charts or warns about is built
+// on these three fields.
+
+/** How far along a problem is. The order is the order it is drawn in. */
+const issueStatus = v.union(
+  /** Somebody has said it is broken. Nothing has happened yet. */
+  v.literal("reported"),
+  /** The household has seen it and agrees it is real. */
+  v.literal("acknowledged"),
+  /** Somebody is coming, or a date is set. */
+  v.literal("scheduled"),
+  /** Being worked on now. */
+  v.literal("inProgress"),
+  /** Stuck on something outside the house — a part, a landlord, a quote. */
+  v.literal("blocked"),
+  /** Fixed. */
+  v.literal("fixed"),
+  /** Decided against: the wobbly shelf everyone has made peace with. */
+  v.literal("wontFix"),
+);
+
+/**
+ * How badly it matters.
+ *
+ * Four steps, not five: the distinction people can actually hold is "annoying /
+ * needs doing / needs doing soon / do not wait". A ten-point scale is a scale
+ * nobody agrees on.
+ */
+const issueSeverity = v.union(
+  v.literal("cosmetic"),
+  v.literal("minor"),
+  v.literal("major"),
+  v.literal("urgent"),
+);
+
+/** Where in the house it is. */
+const issueArea = v.union(
+  v.literal("kitchen"),
+  v.literal("bathroom"),
+  v.literal("bedroom"),
+  v.literal("living"),
+  v.literal("hallway"),
+  v.literal("laundry"),
+  v.literal("garage"),
+  v.literal("garden"),
+  v.literal("balcony"),
+  v.literal("basement"),
+  v.literal("roof"),
+  v.literal("exterior"),
+  v.literal("whole"),
+  v.literal("other"),
+);
+
+/** What kind of thing is broken — which decides who you call. */
+const issueCategory = v.union(
+  v.literal("plumbing"),
+  v.literal("electrical"),
+  v.literal("heating"),
+  v.literal("appliance"),
+  v.literal("furniture"),
+  v.literal("structural"),
+  v.literal("internet"),
+  v.literal("pest"),
+  v.literal("damp"),
+  v.literal("safety"),
+  v.literal("cosmetic"),
+  v.literal("other"),
+);
+
+/** What an entry on a problem's timeline is. */
+const issueEntryKind = v.union(
+  /** Somebody wrote something. */
+  v.literal("comment"),
+  /** The status moved. Carries both ends of the move. */
+  v.literal("status"),
+  /** Something was attached — a chore, a visit, parts, a receipt. */
+  v.literal("link"),
+  /** The app said something on the household's behalf. */
+  v.literal("system"),
+);
+
 const financeCategory = v.union(
   v.literal("groceries"),
   v.literal("utilities"),
@@ -201,6 +288,16 @@ export default defineSchema({
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
     due_date: v.optional(v.number()),
+    /**
+     * Set when this chore exists because something in the house is broken.
+     *
+     * A link, not an owner, in both directions: deleting the problem leaves the
+     * chore standing (somebody still has to do it) and deleting the chore leaves
+     * the problem standing (it is still broken). What the link buys is the one
+     * thing neither table could say alone — finishing the chore is news on the
+     * problem's timeline, which is where `tasks:update` posts it.
+     */
+    issue_id: v.optional(v.id("issues")),
   }).index("by_pbId", ["pbId"])
     .index("by_home", ["home_id"])
     // "What is still to be done" — the Home tab's one task number, and the only
@@ -240,6 +337,14 @@ export default defineSchema({
     // must not cost it a second subscription or break when the event is gone.
     event_id: v.optional(v.id("events")),
     event_title: v.optional(v.string()),
+    // Set when the line is a *part* — the washer for the dripping tap, the bulb
+    // for the dead hall light. The third of the three reasons a household adds
+    // something to the list, and the same denormalised-title trick as the two
+    // above, for the same reason: the shopping screen subscribes to items only,
+    // so a group heading must not cost it a second subscription or break when
+    // the problem is closed and tidied away.
+    issue_id: v.optional(v.id("issues")),
+    issue_title: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
@@ -252,7 +357,8 @@ export default defineSchema({
     // is optional, so a bought item sits under `true` and an outstanding one
     // under `false` *or* `undefined` — see `outstandingNames` in lib/shopping.ts.
     .index("by_home_purchased", ["home_id", "is_purchased"])
-    .index("by_event", ["event_id"]),
+    .index("by_event", ["event_id"])
+    .index("by_issue", ["issue_id"]),
 
   notes: defineTable({
     pbId: v.optional(v.string()),
@@ -494,13 +600,25 @@ export default defineSchema({
      * must not change because somebody tidied their calendar.
      */
     event_id: v.optional(v.id("events")),
+    /**
+     * Set when the money was spent *fixing* something — the plumber, the part,
+     * the replacement kettle.
+     *
+     * The same shape of link as `event_id` above and it keeps the same promise:
+     * closing the problem never touches the ledger, because the money moved
+     * whatever the household later decided about the shelf. It is what lets a
+     * problem say what it actually cost without keeping a second copy of the
+     * figure, and what lets the ledger explain a line nobody remembers.
+     */
+    issue_id: v.optional(v.id("issues")),
     created_by: v.id("users"),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   })
     .index("by_home", ["home_id"])
     .index("by_home_spent", ["home_id", "spent_at"])
-    .index("by_event", ["event_id"]),
+    .index("by_event", ["event_id"])
+    .index("by_issue", ["issue_id"]),
 
   // A payment from one member to another, squaring up what the expenses say
   // they owe. Kept as its own table rather than as a negative expense: it moves
@@ -695,4 +813,156 @@ export default defineSchema({
     .index("by_home", ["home_id"])
     .index("by_home_series_end", ["home_id", "series_end"])
     .index("by_series_end", ["series_end"]),
+
+  // --- House problems --------------------------------------------------------
+  //
+  // Everything in a shared home that is broken, and what the household is doing
+  // about it. One row is one fault, from the moment somebody notices it to the
+  // moment it is fixed — or to the moment everyone agrees to live with it.
+  //
+  // It is deliberately not a task list. A chore is a thing to *do* and it is
+  // finished when somebody does it; a problem is a thing that is *wrong*, it can
+  // outlive several attempts to fix it, it costs money, it needs parts, and the
+  // same one comes back. So it keeps its own state machine, its own history, and
+  // links out to the modules that already own the work:
+  //
+  //   the chore     -> `tasks.issue_id`          (the task list stays the task list)
+  //   the visit     -> `issues.event_id`         (the calendar stays the calendar)
+  //   the parts     -> `shopping_items.issue_id` (the list stays the list)
+  //   what it cost  -> `expenses.issue_id`       (the ledger stays the ledger)
+  //
+  // Nothing is copied across those links except a title, and only where a group
+  // heading has to survive the thing it names being deleted.
+  issues: defineTable({
+    home_id: v.id("homes"),
+    title: v.optional(v.string()),
+    details: v.optional(v.string()),
+    area: issueArea,
+    category: issueCategory,
+    severity: issueSeverity,
+    status: issueStatus,
+
+    /**
+     * Whether this problem is still outstanding — `status` is neither `fixed`
+     * nor `wontFix`.
+     *
+     * Denormalised, and the two indexes below are why. "What is still wrong"
+     * is the question every screen in this module asks, and an index cannot
+     * range over "any of five statuses" in one pass. Without it, the list read
+     * every problem the household had ever had — including the fixed ones,
+     * which only accumulate — and the daily sweep read every problem in the
+     * deployment. Kept in step by `setStatus` in convex/issues.ts, which — with the two plan
+     * mutations that move a problem along as a side effect — is all that ever
+     * writes `status`.
+     */
+    is_open: v.boolean(),
+
+    reported_by: v.id("users"),
+    /** Whose job it is. Nobody's, by default. */
+    assigned_to: v.optional(v.id("users")),
+
+    /**
+     * Pictures of the fault. Nothing explains a leak like a photo of it, and a
+     * plumber asked over the phone will ask for one.
+     *
+     * `_storage` ids, resolved to URLs on the way out (see `photoUrls` in
+     * convex/issues.ts) so no client ever holds a storage id it has to know
+     * what to do with. Capped — see `MAX_PHOTOS`.
+     */
+    photos: v.optional(v.array(v.id("_storage"))),
+
+    /** When it has to be sorted by, if anything makes it urgent. */
+    due_by: v.optional(v.number()),
+    /** Why it is stuck. Only meaningful while `status` is `blocked`. */
+    blocked_reason: v.optional(v.string()),
+
+    resolved_at: v.optional(v.number()),
+    resolved_by: v.optional(v.id("users")),
+    /** What actually fixed it, for the next time it happens. */
+    resolution: v.optional(v.string()),
+
+    /** What the household expects it to cost, in minor units. */
+    cost_estimate: v.optional(v.number()),
+    /** ISO 4217 for `cost_estimate`. Per-document, like every other amount. */
+    currency: v.optional(v.string()),
+
+    /** Who to call. A name and a number beats a memory of a name. */
+    vendor_name: v.optional(v.string()),
+    vendor_phone: v.optional(v.string()),
+    vendor_url: v.optional(v.string()),
+    /** Covered until. A broken appliance is a different problem under warranty. */
+    warranty_until: v.optional(v.number()),
+
+    /**
+     * Everyone else who has hit this too.
+     *
+     * The cheapest useful signal in a shared house: one person reporting a cold
+     * radiator is a maintenance note, three people reporting it is the heating.
+     * It sorts the list and it is the only thing anybody has to do to agree.
+     */
+    me_too: v.optional(v.array(v.id("users"))),
+
+    /** The chore made of it, if somebody made one. */
+    task_id: v.optional(v.id("tasks")),
+    /** The visit booked for it, if somebody booked one. */
+    event_id: v.optional(v.id("events")),
+
+    /**
+     * When anything last happened here — a comment, a status move, a part
+     * added. Not `updated`, which every incidental patch bumps.
+     *
+     * This is what "nobody has touched this in a fortnight" is measured
+     * against, and it is half of the index the daily sweep reads.
+     */
+    last_activity_at: v.number(),
+    /**
+     * Nudges already sent, as `"<due_by>:overdue"` and
+     * `"<last_activity_at>:stale"`.
+     *
+     * Keyed by the thing that caused them, exactly as a bill's are keyed by its
+     * due date: any activity moves `last_activity_at`, which retires the stale
+     * key and lets the next quiet stretch nudge once on its own account. A
+     * reminder that repeats every morning is a reminder people turn off.
+     */
+    reminded: v.optional(v.array(v.string())),
+
+    created: v.optional(v.number()),
+    updated: v.optional(v.number()),
+  })
+    .index("by_home", ["home_id"])
+    // "What is still wrong here" — the read behind the whole module. See
+    // `is_open` above for why this is a boolean rather than a status range.
+    .index("by_home_open", ["home_id", "is_open"])
+    // For the daily sweep, which has to consider every household and so is the
+    // one issue read that is not home-scoped. Bounded on both ends by the
+    // activity range: a problem is only worth nudging about between a few days
+    // and a few weeks of silence.
+    .index("by_open_activity", ["is_open", "last_activity_at"]),
+
+  // A problem's history: what people said, and what the app watched happen.
+  //
+  // Its own table rather than an array on the issue, for the reason every
+  // append-only list in this schema is: a comment is a write, and a write to an
+  // array field rewrites — and re-publishes — the whole document, so a busy
+  // problem would push its photos and its vendor details to every subscriber
+  // every time somebody typed a line.
+  issue_comments: defineTable({
+    issue_id: v.id("issues"),
+    /**
+     * Carried as well as `issue_id`, so `cascadeDeleteHome` can find a
+     * household's entries by index instead of walking every problem it ever
+     * had to collect the children of each.
+     */
+    home_id: v.id("homes"),
+    /** Absent for an entry the app wrote rather than a person. */
+    author_id: v.optional(v.id("users")),
+    kind: issueEntryKind,
+    body: v.optional(v.string()),
+    /** Both ends of a status move, so the timeline reads as a sentence. */
+    from_status: v.optional(issueStatus),
+    to_status: v.optional(issueStatus),
+    created: v.number(),
+  })
+    .index("by_issue", ["issue_id"])
+    .index("by_home", ["home_id"]),
 });

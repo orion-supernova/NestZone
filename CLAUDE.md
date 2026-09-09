@@ -1,8 +1,8 @@
 # NestZone
 
 A shared-household iOS app: tasks, shopping, notes, messages, recipes, movie
-lists, and a "what should we watch" swipe game. SwiftUI + The Composable
-Architecture on the client, self-hosted Convex on the server.
+lists, house problems, and a "what should we watch" swipe game. SwiftUI + The
+Composable Architecture on the client, self-hosted Convex on the server.
 
 ## Layout
 
@@ -118,11 +118,30 @@ cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in 
   a household's behalf. The client filters the ledger to match. Sums are scoped;
   counts (overdue bills, say) are not, and are derived client-side so a badge
   can never contradict the list under it.
+- **House problems are not a second task list.** A chore is finished when
+  somebody does it; a problem is a thing that is *wrong*, it outlives attempts
+  to fix it, it costs money, it needs parts, and the same one comes back. So
+  `issues` keeps its own state machine and links *out* rather than copying:
+  `tasks.issue_id`, `issues.event_id`, `shopping_items.issue_id`,
+  `expenses.issue_id`. Deleting a problem detaches all of them and deletes only
+  its own timeline — the washer is still needed and the plumber's invoice is
+  still money that moved.
+- `issues:byHome` returns the rows **and** the aggregates in one payload, so a
+  badge reading "2 urgent" can never sit over three urgent rows. It is bounded
+  by `is_open` — a denormalised boolean, because an index cannot range over
+  "any of five statuses" and fixed problems only accumulate. `issues:setStatus`
+  is the only thing that writes `status`, so the two cannot drift.
+- Photos go up through `issues:uploadUrl`: the phone POSTs the bytes straight to
+  a signed URL and only the storage id reaches a mutation. `issues:detail`
+  returns `photo_refs` — ids *and* URLs — because the screen has to draw a photo
+  and delete it, and a signed URL is not an identity.
 - `convex/crons.ts` runs `finance:sweepReminders` daily at 08:00 UTC. It is
   idempotent by design — every nudge is recorded against
   `<due_date>:<daysBefore>` before it is sent, because a duplicate reminder is
   worse than a missed one. Paying a bill moves `due_date`, which retires the
-  keys for the cycle just closed.
+  keys for the cycle just closed. `issues:sweepStale` runs at 09:00 on the same
+  terms, keyed by `<due_by>:overdue` and `<last_activity_at>:stale` — any
+  activity at all retires the stale key, so a quiet stretch nudges exactly once.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

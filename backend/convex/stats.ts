@@ -40,11 +40,15 @@ function countBetween(docs: { _creationTime: number }[], start: number, end: num
  * in it, and it happened again in `events:detail`.
  *
  * The two counters that could not be bounded are gone rather than paid for.
- * "Tasks done" was an all-time total that only ever grew and "Issues" was a
- * high-priority count that read 0 in any household that never sets priority;
- * the Home tab dropped both tiles some time ago, and the server has been
- * collecting the entire tasks table to compute them ever since. Nothing has
- * read them since the tiles went.
+ * "Tasks done" was an all-time total that only ever grew and the old "Issues"
+ * tile was a high-priority *task* count that read 0 in any household that never
+ * sets priority; the Home tab dropped both some time ago, and the server went on
+ * collecting the entire tasks table to compute them for a while afterwards.
+ *
+ * `openIssues` below is not that number coming back. It is a different table
+ * with a boolean the server maintains, so "what is still broken" is an index
+ * range rather than a scan — which is the only reason it is allowed on this
+ * query at all.
  */
 export const forHome = query({
   args: { homeId: v.id("homes") },
@@ -56,7 +60,7 @@ export const forHome = query({
     const weekAgo = now - WEEK_MS;
     const twoWeeksAgo = now - 2 * WEEK_MS;
 
-    const [open, outstanding, notes, recentShopping, conversations] = await Promise.all([
+    const [open, outstanding, notes, recentShopping, conversations, problems] = await Promise.all([
       openTasks(ctx, homeId),
       outstandingItems(ctx, homeId),
       // Not bounded, and deliberately so. Notes are authored one at a time by a
@@ -73,6 +77,20 @@ export const forHome = query({
         .withIndex("by_home", (q) => q.eq("home_id", homeId).gte("_creationTime", twoWeeksAgo))
         .collect(),
       ctx.db.query("conversations").withIndex("by_home", (q) => q.eq("home_id", homeId)).collect(),
+      // What is still broken.
+      //
+      // The tile this replaces was removed once already, and the reason is
+      // worth repeating: the old "Issues" counter was a high-priority *task*
+      // count computed by collecting the household's entire tasks table, and it
+      // read 0 in any home that never set a priority. This is a different
+      // number from a different table, and it is bounded by the one thing that
+      // cannot grow on its own — `issues.is_open` goes false the moment
+      // somebody fixes something, so the read is the household's outstanding
+      // repairs and never its repair history.
+      ctx.db
+        .query("issues")
+        .withIndex("by_home_open", (q) => q.eq("home_id", homeId).eq("is_open", true))
+        .collect(),
     ]);
 
     // Unread messages actually mean something now. The client previously
@@ -111,12 +129,25 @@ export const forHome = query({
       shoppingItems: outstanding.length,
       notes: notes.length,
       unreadMessages,
+      openIssues: problems.length,
+      // The half of the number that decides whether the tile shouts. Counted
+      // here rather than derived on the phone because the phone does not hold
+      // the problems — that is the whole point of this query.
+      urgentIssues: problems.filter(
+        (issue) => issue.severity === "urgent" || (issue.due_by ?? Infinity) < now,
+      ).length,
 
       shoppingChange:
         countBetween(recentShopping, weekAgo, now) -
         countBetween(recentShopping, twoWeeksAgo, weekAgo),
       notesChange:
         countBetween(notes, weekAgo, now) - countBetween(notes, twoWeeksAgo, weekAgo),
+      // Reported this week against last. Read off the open set, so it is
+      // "what has come up lately" rather than a rate over everything the house
+      // has ever broken — and it goes down when things are fixed, which is the
+      // direction a household wants to see it move.
+      issuesChange:
+        countBetween(problems, weekAgo, now) - countBetween(problems, twoWeeksAgo, weekAgo),
       // No historical read-state to compare against, so this stays flat rather
       // than inventing a trend.
       messagesChange: 0,

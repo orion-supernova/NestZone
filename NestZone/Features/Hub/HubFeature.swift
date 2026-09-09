@@ -25,6 +25,13 @@ public struct HubFeature: Sendable {
         /// tile showing "312 events" says nothing, and "3 this week" is the
         /// only number anybody acts on.
         public var eventsThisWeekCount = 0
+        /// What is still broken. Not "how many problems has this house ever
+        /// had" — the same rule the bills and events tiles follow: a tile is
+        /// worth reading only when its number is asking for something.
+        public var openIssueCount = 0
+        /// How many of those are urgent or already past their date. Not shown
+        /// as a second number — it decides whether the one number is red.
+        public var urgentIssueCount = 0
 
         /// Which module counts have actually been answered.
         ///
@@ -46,6 +53,7 @@ public struct HubFeature: Sendable {
             public static let movies = Loaded(rawValue: 1 << 2)
             public static let billsDue = Loaded(rawValue: 1 << 3)
             public static let events = Loaded(rawValue: 1 << 4)
+            public static let issues = Loaded(rawValue: 1 << 5)
         }
 
         public init(homeID: HomeID, currentUserID: UserID? = nil) {
@@ -61,6 +69,7 @@ public struct HubFeature: Sendable {
         case movies(MoviesFeature)
         case finance(FinanceFeature)
         case calendar(CalendarFeature)
+        case issues(IssuesFeature)
     }
 
     public enum Action {
@@ -70,14 +79,24 @@ public struct HubFeature: Sendable {
             recipes: Int? = nil,
             movies: Int? = nil,
             billsDue: Int? = nil,
-            events: Int? = nil
+            events: Int? = nil,
+            issues: IssueCounts? = nil
         )
         case moduleTapped(HubModule)
         case showShoppingList
         case path(StackActionOf<Path>)
+
+        /// The two numbers the Problems tile needs, together — they come from
+        /// one payload and one of them decides how the other is drawn, so
+        /// letting them land separately would flash a red count over a house
+        /// with nothing urgent in it.
+        public struct IssueCounts: Equatable, Sendable {
+            public var open: Int
+            public var urgent: Int
+        }
     }
 
-    private enum CancelID { case shopping, recipes, movies, bills, events, handoff }
+    private enum CancelID { case shopping, recipes, movies, bills, events, issues, handoff }
 
     /// Roughly one navigation transition. There is no completion callback for a
     /// `StackState` pop, so the push that follows one has to wait it out.
@@ -88,6 +107,7 @@ public struct HubFeature: Sendable {
     @Dependency(\.movies) var moviesClient
     @Dependency(\.finance) var financeClient
     @Dependency(\.events) var eventsClient
+    @Dependency(\.issues) var issuesClient
     @Dependency(\.continuousClock) var clock
 
     public init() {}
@@ -142,10 +162,26 @@ public struct HubFeature: Sendable {
                             ))
                         }
                     } catch: { _, _ in }
-                        .cancellable(id: CancelID.events, cancelInFlight: true)
+                        .cancellable(id: CancelID.events, cancelInFlight: true),
+
+                    // The Problems module's own board, which the tile needs two
+                    // numbers out of. Subscribed to here rather than counted
+                    // from a list: `issues:byHome` already computes both
+                    // server-side for the screen itself, so the Hub reads the
+                    // same answer instead of deriving a second one that could
+                    // disagree with it.
+                    .run { send in
+                        for try await board in issuesClient.board(homeID) {
+                            await send(.countsUpdated(issues: .init(
+                                open: board.summary.open,
+                                urgent: board.summary.urgent + board.summary.overdue
+                            )))
+                        }
+                    } catch: { _, _ in }
+                        .cancellable(id: CancelID.issues, cancelInFlight: true)
                 )
 
-            case let .countsUpdated(shopping, recipes, movies, billsDue, events):
+            case let .countsUpdated(shopping, recipes, movies, billsDue, events, issues):
                 // Each argument is its own subscription's answer, so each one
                 // that arrives settles its own tile and leaves the rest waiting.
                 if let shopping {
@@ -168,6 +204,11 @@ public struct HubFeature: Sendable {
                     state.eventsThisWeekCount = events
                     state.loaded.insert(.events)
                 }
+                if let issues {
+                    state.openIssueCount = issues.open
+                    state.urgentIssueCount = issues.urgent
+                    state.loaded.insert(.issues)
+                }
                 return .none
 
             case let .moduleTapped(module):
@@ -189,8 +230,10 @@ public struct HubFeature: Sendable {
                         currentUserID: state.currentUserID
                     )))
                 case .maintenance:
-                    // Not built yet; the tile is disabled, so this is unreachable.
-                    break
+                    state.path.append(.issues(IssuesFeature.State(
+                        homeID: state.homeID,
+                        currentUserID: state.currentUserID
+                    )))
                 }
                 return .none
 
@@ -239,13 +282,22 @@ public struct HubFeature: Sendable {
             // A plain push rather than the pop-and-wait dance above: the
             // calendar goes *on top* of the ledger, so nothing is unwinding
             // while it arrives, and the back button lands where it should.
-            case let .path(.element(id: _, action: .finance(.delegate(.openEvent(eventID, day))))):
+            case let .path(.element(id: _, action: .finance(.delegate(.openEvent(eventID, day))))),
+                 let .path(.element(id: _, action: .issues(.delegate(.openEvent(eventID, day))))):
                 state.path.append(.calendar(CalendarFeature.State(
                     homeID: state.homeID,
                     currentUserID: state.currentUserID,
                     day: day,
                     openingEventID: eventID
                 )))
+                return .none
+
+            // The parts for a repair are ordinary shopping, so "show me the
+            // parts" is the shopping list — pushed on top of the problem rather
+            // than unwound to, because the household is in the middle of
+            // something and the back button should land them back in it.
+            case .path(.element(id: _, action: .issues(.delegate(.openShoppingList)))):
+                state.path.append(.shopping(ShoppingFeature.State(homeID: state.homeID)))
                 return .none
 
             case .showShoppingList:
@@ -268,10 +320,12 @@ public struct HubFeature: Sendable {
 /// `notes` used to be listed here as "coming soon" while also being its own tab,
 /// so it is not a module — it is one tap away on the tab bar.
 public enum HubModule: String, CaseIterable, Identifiable, Sendable {
-    // Declaration order is grid order, and the one module that is not built
-    // yet goes last. A disabled tile sitting fourth of six put a dead card in
-    // the middle of the grid, above two working ones — which reads as the
-    // household's own list being broken rather than as something still coming.
+    // Declaration order is grid order. It used to end with the one module
+    // that was not built yet, because a disabled tile in the middle of the
+    // grid reads as the household's own list being broken rather than as
+    // something still coming. All six are built now, so the order is simply
+    // how often a household reaches for them — and House Problems keeps the
+    // last slot, because it is the one you hope not to need.
     case shopping, recipes, movies, finance, calendar, maintenance
 
     public var id: String { rawValue }
@@ -320,12 +374,10 @@ public enum HubModule: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    public var isAvailable: Bool {
-        switch self {
-        case .shopping, .recipes, .movies, .finance, .calendar: true
-        case .maintenance: false
-        }
-    }
+    /// Every module is built. The flag stays because the grid is where a
+    /// future one would arrive, and a tile that reads "coming soon" is a
+    /// promise the app should be able to make without a new code path.
+    public var isAvailable: Bool { true }
 }
 
 // Navigation state is `Equatable` so parent states compare cleanly;

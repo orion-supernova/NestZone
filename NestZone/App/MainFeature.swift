@@ -135,6 +135,14 @@ public struct MainFeature: Sendable {
                 )))
                 return .none
 
+            case .home(.delegate(.openIssues)):
+                state.selectedTab = .hub
+                state.hub.path.append(.issues(IssuesFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.user?.id
+                )))
+                return .none
+
             case let .home(.delegate(.openEventID(eventID, day))):
                 state.selectedTab = .hub
                 state.hub.path.append(.calendar(CalendarFeature.State(

@@ -302,6 +302,15 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
     /// deleted — the money still moved, so the row stays and only its label
     /// goes.
     public var eventTitle: String?
+    /// Set when the money was spent *fixing* something — the plumber, the part,
+    /// the replacement kettle. The same shape of link as `eventID` above and it
+    /// keeps the same promise: closing the problem never touches the ledger,
+    /// because the money moved whatever the household later decided.
+    public var issueID: IssueID?
+    /// What that problem is called, read through by `finance:listExpenses` the
+    /// same way `eventTitle` is — so a plumber's invoice is a line the ledger
+    /// can explain rather than one nobody remembers.
+    public var issueTitle: String?
     public var createdBy: UserID?
     public var created: Timestamp?
     public var updated: Timestamp?
@@ -316,6 +325,8 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         case billID = "bill_id"
         case eventID = "event_id"
         case eventTitle = "event_title"
+        case issueID = "issue_id"
+        case issueTitle = "issue_title"
         case createdBy = "created_by"
         case created, updated
     }
@@ -337,6 +348,8 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         billID = try c.decodeIfPresent(BillID.self, forKey: .billID)
         eventID = try c.decodeIfPresent(EventID.self, forKey: .eventID)
         eventTitle = try c.decodeIfPresent(String.self, forKey: .eventTitle)
+        issueID = try c.decodeIfPresent(IssueID.self, forKey: .issueID)
+        issueTitle = try c.decodeIfPresent(String.self, forKey: .issueTitle)
         createdBy = try c.decodeIfPresent(UserID.self, forKey: .createdBy)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
@@ -357,6 +370,8 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         billID: BillID? = nil,
         eventID: EventID? = nil,
         eventTitle: String? = nil,
+        issueID: IssueID? = nil,
+        issueTitle: String? = nil,
         createdBy: UserID? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
@@ -375,6 +390,8 @@ public struct Expense: Codable, Identifiable, Hashable, Sendable {
         self.billID = billID
         self.eventID = eventID
         self.eventTitle = eventTitle
+        self.issueID = issueID
+        self.issueTitle = issueTitle
         self.createdBy = createdBy
         self.created = created
         self.updated = updated
@@ -403,6 +420,9 @@ extension Expense {
 
     /// Spent on something in the calendar.
     public var isForEvent: Bool { eventID != nil }
+
+    /// Whether this expense was spent fixing something.
+    public var isForIssue: Bool { issueID != nil }
 }
 
 // MARK: - Settlement
@@ -1140,6 +1160,9 @@ public struct NewExpense: Equatable, Sendable {
     /// Carried through the composer untouched — the sheet never shows it,
     /// because "which event" was answered by where the button was.
     public var eventID: EventID?
+    /// The problem this was spent fixing, when the composer was opened from
+    /// one. Carried through on exactly the same terms as `eventID`.
+    public var issueID: IssueID?
 
     public init(
         homeID: HomeID,
@@ -1154,7 +1177,8 @@ public struct NewExpense: Equatable, Sendable {
         weights: [ExpenseWeight] = [],
         exact: [ExpenseSplit] = [],
         note: String? = nil,
-        eventID: EventID? = nil
+        eventID: EventID? = nil,
+        issueID: IssueID? = nil
     ) {
         self.homeID = homeID
         self.title = title
@@ -1169,6 +1193,7 @@ public struct NewExpense: Equatable, Sendable {
         self.exact = exact
         self.note = note
         self.eventID = eventID
+        self.issueID = issueID
     }
 }
 

@@ -22,7 +22,8 @@ public struct HubView: View {
                             ModuleTile(
                                 module: module,
                                 count: count(for: module),
-                                isPending: isPending(module)
+                                isPending: isPending(module),
+                                isAlarming: isAlarming(module)
                             ) { store.send(.moduleTapped(module)) }
                             .appear(index)
                         }
@@ -42,6 +43,7 @@ public struct HubView: View {
             case let .movies(store): MoviesView(store: store)
             case let .finance(store): FinanceView(store: store)
             case let .calendar(store): CalendarView(store: store)
+            case let .issues(store): IssuesView(store: store)
             }
         }
     }
@@ -57,7 +59,23 @@ public struct HubView: View {
         // A quiet week is good news, and a tile shouting "0" reads as something
         // missing rather than as nothing on.
         case .calendar: store.eventsThisWeekCount > 0 ? store.eventsThisWeekCount : nil
-        case .maintenance: nil
+        // A house with nothing wrong with it is good news, and a tile shouting
+        // "0" reads as something missing rather than as nothing broken.
+        case .maintenance: store.openIssueCount > 0 ? store.openIssueCount : nil
+        }
+    }
+
+    /// Whether the tile's number is bad news rather than merely a number.
+    ///
+    /// Only House Problems has one: three things on the shopping list is a
+    /// shopping list, and three urgent repairs is a different kind of fact. The
+    /// tile keeps its own colour — a tile whose hue moves is a tile you have to
+    /// hunt for on exactly the day you most need it — and the *number* goes red
+    /// instead, which is the part that is actually saying something.
+    private func isAlarming(_ module: HubModule) -> Bool {
+        switch module {
+        case .maintenance: store.urgentIssueCount > 0
+        case .shopping, .recipes, .movies, .finance, .calendar: false
         }
     }
 
@@ -74,8 +92,7 @@ public struct HubView: View {
         case .movies: !store.loaded.contains(.movies)
         case .finance: !store.loaded.contains(.billsDue)
         case .calendar: !store.loaded.contains(.events)
-        // No count of its own to wait for.
-        case .maintenance: false
+        case .maintenance: !store.loaded.contains(.issues)
         }
     }
 }
@@ -85,6 +102,8 @@ private struct ModuleTile: View {
     let count: Int?
     /// The count has not arrived yet, as opposed to having arrived as zero.
     let isPending: Bool
+    /// The number is bad news, not merely a number.
+    var isAlarming: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -117,7 +136,10 @@ private struct ModuleTile: View {
                         } else if let count {
                             AnimatedNumber(count)
                                 .font(.system(.title3, design: .rounded, weight: .bold))
-                                .foregroundStyle(module.tint)
+                                .foregroundStyle(isAlarming ? Palette.danger : module.tint)
+                                // At most one tile on this grid ever breathes,
+                                // and only when something is genuinely wrong.
+                                .pulse(isAlarming)
                         }
                     }
                 }
@@ -138,6 +160,7 @@ private struct ModuleTile: View {
                     Badge(String(localized: L10n.hubComingSoon), tint: .secondary)
                 }
             }
+            .animation(Motion.spring, value: isAlarming)
             .padding(Metrics.cardPadding)
             .frame(maxWidth: .infinity, minHeight: 148, alignment: .topLeading)
             .contentShape(.rect)

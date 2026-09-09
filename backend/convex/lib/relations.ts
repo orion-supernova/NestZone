@@ -181,9 +181,14 @@ export async function cascadeDeleteHome(
   // comment above is the whole point: if it times out, the home's rows survive
   // with nobody able to satisfy `requireHomeMember`, which is precisely the
   // unreachable data this function exists to prevent.
+  //
+  // `issue_comments` is in here rather than behind a per-issue cascade for the
+  // same reason: it carries `home_id` precisely so a household's entries are one
+  // index range instead of one read per problem the household ever had.
   const simple = [
     "tasks", "shopping_items", "notes", "recipes", "movies", "meal_plans",
     "expenses", "settlements", "bills", "budgets", "events",
+    "issues", "issue_comments",
   ] as const;
   await Promise.all(
     simple.map(async (table) => {

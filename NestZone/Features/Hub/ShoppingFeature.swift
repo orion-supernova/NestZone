@@ -19,6 +19,8 @@ public struct ShoppingFeature: Sendable {
         /// fifteen-ingredient recipe pushes the rest of the shop off screen.
         public var collapsedMeals: Set<RecipeID> = []
         public var collapsedEvents: Set<EventID> = []
+        /// Repairs the user has folded away. Same reasoning again.
+        public var collapsedIssues: Set<IssueID> = []
         /// Swiped away, but not yet sent to the server. The row is already gone
         /// from `items`; if the undo window closes without a tap, this is what
         /// gets deleted for real. One at a time — a second swipe commits the
@@ -49,6 +51,7 @@ public struct ShoppingFeature: Sendable {
             case category(ShoppingItem.Category)
             case meal(RecipeID)
             case event(EventID)
+            case issue(IssueID)
             case purchased
         }
 
@@ -95,6 +98,36 @@ public struct ShoppingFeature: Sendable {
                 }
         }
 
+        /// Outstanding items that are *parts* — bought for something that is
+        /// broken rather than for something the household is going to eat.
+        ///
+        /// Its own group for the same reason a party's shopping is: the washer
+        /// and the PTFE tape are one errand, and split across the hardware and
+        /// household aisles they are two things nobody remembers are related.
+        /// Below the events and above the meals, which is the order the reasons
+        /// actually nest — a party is an occasion, a repair is a job, a recipe
+        /// is a dish.
+        ///
+        /// Grouped by id but titled from the item, so a repair still reads
+        /// correctly after the problem has been closed and tidied away — the
+        /// title is denormalised onto the row for exactly that reason.
+        public var partGroups: [(issueID: IssueID, title: String, items: [ShoppingItem])] {
+            let sourced = items.filter {
+                !$0.isPurchased && $0.issueID != nil && $0.eventID == nil
+            }
+            return Dictionary(grouping: sourced) { $0.issueID! }
+                .map { id, group in
+                    (
+                        issueID: id,
+                        title: group.first?.issueTitle ?? "",
+                        items: group.sorted { Timestamp.newestFirst($0.created, $1.created) }
+                    )
+                }
+                .sorted { lhs, rhs in
+                    Timestamp.newestFirst(lhs.items.first?.created, rhs.items.first?.created)
+                }
+        }
+
         /// Outstanding items that came from a recipe, gathered under it.
         ///
         /// Grouped by id but titled from the item, so a meal still reads
@@ -105,7 +138,7 @@ public struct ShoppingFeature: Sendable {
         /// under its event, or its recipe, or its aisle — never twice.
         public var mealGroups: [(recipeID: RecipeID, title: String, items: [ShoppingItem])] {
             let sourced = items.filter {
-                !$0.isPurchased && $0.recipeID != nil && $0.eventID == nil
+                !$0.isPurchased && $0.recipeID != nil && $0.eventID == nil && $0.issueID == nil
             }
             let byRecipe = Dictionary(grouping: sourced) { $0.recipeID! }
             return byRecipe
@@ -124,7 +157,9 @@ public struct ShoppingFeature: Sendable {
         /// Everything the event and meal groups do not already cover, so an
         /// item appears in exactly one place.
         private var unsourced: [ShoppingItem] {
-            items.filter { !$0.isPurchased && $0.recipeID == nil && $0.eventID == nil }
+            items.filter {
+                !$0.isPurchased && $0.recipeID == nil && $0.eventID == nil && $0.issueID == nil
+            }
         }
 
         public var purchased: [ShoppingItem] {
@@ -162,6 +197,18 @@ public struct ShoppingFeature: Sendable {
 
         public func isCollapsed(event eventID: EventID) -> Bool {
             collapsedEvents.contains(eventID)
+        }
+
+        public func isCollapsed(issue issueID: IssueID) -> Bool {
+            collapsedIssues.contains(issueID)
+        }
+
+        public func doneCount(inIssue issueID: IssueID) -> Int {
+            items.filter { $0.issueID == issueID && $0.isPurchased }.count
+        }
+
+        public func totalCount(inIssue issueID: IssueID) -> Int {
+            items.filter { $0.issueID == issueID }.count
         }
 
         public func doneCount(inEvent eventID: EventID) -> Int {
@@ -204,6 +251,7 @@ public struct ShoppingFeature: Sendable {
         case clearCategoryTapped(ShoppingItem.Category)
         case clearMealTapped(RecipeID)
         case clearEventTapped(EventID)
+        case clearPartsTapped(IssueID)
         case deleteCommitFailed(ShoppingItem, AppError)
         case clearFinished(State.ClearTarget)
         case clearFailed(State.ClearTarget, [ShoppingItemID], AppError)
@@ -214,6 +262,7 @@ public struct ShoppingFeature: Sendable {
         case categoryToggled(ShoppingItem.Category)
         case mealToggled(RecipeID)
         case eventToggled(EventID)
+        case issueToggled(IssueID)
         case writeFailed(AppError)
         case binding(BindingAction<State>)
         case alert(PresentationAction<Alert>)
@@ -223,6 +272,7 @@ public struct ShoppingFeature: Sendable {
             case confirmClearCategory(ShoppingItem.Category)
             case confirmClearMeal(RecipeID)
             case confirmClearEvent(EventID)
+            case confirmClearParts(IssueID)
         }
     }
 
@@ -385,13 +435,23 @@ public struct ShoppingFeature: Sendable {
                 }
                 return .none
 
+            case let .issueToggled(issueID):
+                if state.collapsedIssues.contains(issueID) {
+                    state.collapsedIssues.remove(issueID)
+                } else {
+                    state.collapsedIssues.insert(issueID)
+                }
+                return .none
+
             case .clearPurchasedTapped:
                 guard !state.purchased.isEmpty else { return .none }
                 state.alert = .confirmClearPurchased()
                 return .none
 
             case let .clearCategoryTapped(category):
-                let items = state.items.filter { $0.category == category && $0.recipeID == nil }
+                let items = state.items.filter {
+                    $0.category == category && $0.recipeID == nil && $0.issueID == nil
+                }
                 guard !items.isEmpty else { return .none }
                 state.alert = .confirmClearGroup(
                     name: String(localized: category.title),
@@ -420,12 +480,23 @@ public struct ShoppingFeature: Sendable {
                 )
                 return .none
 
+            case let .clearPartsTapped(issueID):
+                let items = state.items.filter { $0.issueID == issueID && $0.eventID == nil }
+                guard let name = items.first?.issueTitle, !items.isEmpty else { return .none }
+                state.alert = .confirmClearGroup(
+                    name: name,
+                    count: items.count,
+                    action: .confirmClearParts(issueID)
+                )
+                return .none
+
             case let .alert(.presented(.confirmClearCategory(category))):
                 // An aisle heading only ever covers items that belong to no
                 // group above it: a meal's ingredients belong to the meal, and
                 // a party's shopping belongs to the party.
                 return clear(&state, target: .category(category)) {
                     $0.category == category && $0.recipeID == nil && $0.eventID == nil
+                        && $0.issueID == nil
                 }
 
             case let .alert(.presented(.confirmClearMeal(recipeID))):
@@ -435,6 +506,11 @@ public struct ShoppingFeature: Sendable {
 
             case let .alert(.presented(.confirmClearEvent(eventID))):
                 return clear(&state, target: .event(eventID)) { $0.eventID == eventID }
+
+            case let .alert(.presented(.confirmClearParts(issueID))):
+                return clear(&state, target: .issue(issueID)) {
+                    $0.issueID == issueID && $0.eventID == nil
+                }
 
             case .alert(.presented(.confirmClearPurchased)):
                 return clear(&state, target: .purchased, where: \.isPurchased)

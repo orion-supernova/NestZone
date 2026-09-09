@@ -140,6 +140,20 @@ export const update = mutation({
         body: task.title ?? "",
         category: "tasks",
       });
+
+      // A chore that exists because something is broken owes the problem an
+      // answer. Recorded on its timeline rather than closing it: "call the
+      // plumber" is a chore somebody can finish while the tap goes on
+      // dripping, so the app says what happened and the household says whether
+      // it worked. Scheduled rather than awaited, like the push — ticking a box
+      // must not wait on, or be rolled back by, a write to another module.
+      if (task.issue_id) {
+        await ctx.scheduler.runAfter(0, internal.issues.noteChoreDone, {
+          issueId: task.issue_id,
+          userId: user._id,
+          title: task.title ?? "",
+        });
+      }
     }
 
     // Being handed a job is personal, so it goes to the assignee alone rather

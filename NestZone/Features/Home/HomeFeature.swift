@@ -173,6 +173,10 @@ public struct HomeFeature: Sendable {
             /// switch tabs and push — which is why this is a delegate rather
             /// than navigation this screen does itself.
             case openCalendar
+            /// House Problems is a Hub module too, so opening it is the same
+            /// shape as opening the calendar: a tab switch and a push, which
+            /// only the tab container can do.
+            case openIssues
             case openEvent(EventOccurrence)
             /// Opening an event the Home tab only knows the *id* of — the
             /// occasion a meal plan points at. The tab never subscribes to the

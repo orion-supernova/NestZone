@@ -15,6 +15,14 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
     public var priority: Priority
     public var kind: Kind
     public var dueDate: Timestamp?
+    /// Set when this chore exists because something in the house is broken.
+    ///
+    /// A link, not an owner, in both directions: deleting the problem leaves
+    /// the chore standing (somebody still has to do it) and deleting the chore
+    /// leaves the problem standing (it is still broken). What it buys is the
+    /// one thing neither could say alone — finishing the chore is news on the
+    /// problem's timeline.
+    public var issueID: IssueID?
     public var created: Timestamp?
     public var updated: Timestamp?
 
@@ -49,6 +57,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         case priority
         case kind = "type"
         case dueDate = "due_date"
+        case issueID = "issue_id"
         case created, updated
     }
 
@@ -66,6 +75,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         priority = c.decodeLenient(Priority.self, forKey: .priority, default: .medium)
         kind = c.decodeLenient(Kind.self, forKey: .kind, default: .general)
         dueDate = try c.decodeIfPresent(Timestamp.self, forKey: .dueDate)
+        issueID = try c.decodeIfPresent(IssueID.self, forKey: .issueID)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
     }
@@ -83,6 +93,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         priority: Priority = .medium,
         kind: Kind = .general,
         dueDate: Timestamp? = nil,
+        issueID: IssueID? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
     ) {
@@ -98,6 +109,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         self.priority = priority
         self.kind = kind
         self.dueDate = dueDate
+        self.issueID = issueID
         self.created = created
         self.updated = updated
     }

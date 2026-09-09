@@ -40,4 +40,22 @@ crons.interval(
   internal.events.sweepReminders,
 );
 
+// House problems keep the bills' clock, not the calendar's.
+//
+// Nothing here happens at a time. A repair is overdue by *days* and a problem
+// has been ignored for *days*, so a daily pass is as exact as the data — and an
+// hourly one would only mean the same household hearing about the same leak
+// twenty-four times in the window where it is still true. An hour after the
+// bills, so a morning cannot open with two notifications at once.
+//
+// Idempotent in the same way both sweeps above are: each nudge is recorded
+// against the thing that caused it — `<due_by>:overdue`, `<last_activity>:stale`
+// — before it goes out, and any activity at all retires the stale key. See
+// `sweepStale` in convex/issues.ts.
+crons.daily(
+  "house problem nudges",
+  { hourUTC: 9, minuteUTC: 0 },
+  internal.issues.sweepStale,
+);
+
 export default crons;

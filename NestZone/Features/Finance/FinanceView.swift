@@ -672,6 +672,7 @@ public struct FinanceView: View {
                                     expense: expense,
                                     payerName: store.state.name(for: expense.paidBy),
                                     eventName: store.state.eventLabel(for: expense),
+                                    issueName: store.state.issueLabel(for: expense),
                                     yourShare: store.currentUserID.map { expense.impact(on: $0) },
                                     revealedID: $revealedExpenseID,
                                     glass: glass,
@@ -927,6 +928,11 @@ private struct ExpenseRow: View {
     /// money — and for a row whose event has since been deleted, because the
     /// link was never an owner and the money moved regardless.
     let eventName: String?
+    /// What this was spent *fixing*, on the same terms. A plumber's invoice is
+    /// otherwise an unexplained line with nothing saying that a leak in the
+    /// bathroom is the reason for it — the same gap the event label closes one
+    /// module over.
+    let issueName: String?
     /// The viewer's own position on this expense: positive if they are up on
     /// it, negative if they are down. `nil` when nobody is signed in.
     let yourShare: Int?
@@ -996,6 +1002,19 @@ private struct ExpenseRow: View {
                         }
                         .font(.caption2)
                         .foregroundStyle(Palette.indigo)
+                        .lineLimit(1)
+                    }
+                    if let issueName {
+                        Text(verbatim: "·")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                        Label {
+                            Text(issueName)
+                        } icon: {
+                            Image(systemName: "wrench.adjustable.fill")
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(Palette.statIssues)
                         .lineLimit(1)
                     }
                 }

@@ -5334,4 +5334,1084 @@ public enum L10n {
     public static var calendarFilterHasPlan: LocalizedStringResource {
         r("calendar_filter_has_plan", "Has a plan")
     }
+
+    /// Open
+    public static var commonOpen: LocalizedStringResource {
+        r("common_open", "Open")
+    }
+
+    /// Problems
+    public static var homeStatsIssuesTitle: LocalizedStringResource {
+        r("home_stats_issues_title", "Problems")
+    }
+
+    /// To fix %@
+    public static func shoppingForRepair(_ a0: String) -> LocalizedStringResource {
+        r("shopping_for_repair", "To fix \(a0)")
+    }
+
+    /// Board
+    public static var issuesSectionBoard: LocalizedStringResource {
+        r("issues_section_board", "Board")
+    }
+
+    /// List
+    public static var issuesSectionList: LocalizedStringResource {
+        r("issues_section_list", "List")
+    }
+
+    /// Rooms
+    public static var issuesSectionRooms: LocalizedStringResource {
+        r("issues_section_rooms", "Rooms")
+    }
+
+    /// History
+    public static var issuesSectionHistory: LocalizedStringResource {
+        r("issues_section_history", "History")
+    }
+
+    /// Report
+    public static var issuesReport: LocalizedStringResource {
+        r("issues_report", "Report")
+    }
+
+    /// Report a problem
+    public static var issuesReportTitle: LocalizedStringResource {
+        r("issues_report_title", "Report a problem")
+    }
+
+    /// Edit problem
+    public static var issuesEditTitle: LocalizedStringResource {
+        r("issues_edit_title", "Edit problem")
+    }
+
+    /// Report the first one
+    public static var issuesReportFirst: LocalizedStringResource {
+        r("issues_report_first", "Report the first one")
+    }
+
+    /// Reported
+    public static var issuesStatusReported: LocalizedStringResource {
+        r("issues_status_reported", "Reported")
+    }
+
+    /// Seen
+    public static var issuesStatusAcknowledged: LocalizedStringResource {
+        r("issues_status_acknowledged", "Seen")
+    }
+
+    /// Booked
+    public static var issuesStatusScheduled: LocalizedStringResource {
+        r("issues_status_scheduled", "Booked")
+    }
+
+    /// Underway
+    public static var issuesStatusInProgress: LocalizedStringResource {
+        r("issues_status_in_progress", "Underway")
+    }
+
+    /// Stuck
+    public static var issuesStatusBlocked: LocalizedStringResource {
+        r("issues_status_blocked", "Stuck")
+    }
+
+    /// Fixed
+    public static var issuesStatusFixed: LocalizedStringResource {
+        r("issues_status_fixed", "Fixed")
+    }
+
+    /// Living with it
+    public static var issuesStatusWontFix: LocalizedStringResource {
+        r("issues_status_wont_fix", "Living with it")
+    }
+
+    /// We've seen it
+    public static var issuesActionAcknowledge: LocalizedStringResource {
+        r("issues_action_acknowledge", "We've seen it")
+    }
+
+    /// Book it in
+    public static var issuesActionSchedule: LocalizedStringResource {
+        r("issues_action_schedule", "Book it in")
+    }
+
+    /// Start work
+    public static var issuesActionStart: LocalizedStringResource {
+        r("issues_action_start", "Start work")
+    }
+
+    /// Back on it
+    public static var issuesActionResume: LocalizedStringResource {
+        r("issues_action_resume", "Back on it")
+    }
+
+    /// Mark it fixed
+    public static var issuesActionMarkFixed: LocalizedStringResource {
+        r("issues_action_mark_fixed", "Mark it fixed")
+    }
+
+    /// Open it again
+    public static var issuesActionReopen: LocalizedStringResource {
+        r("issues_action_reopen", "Open it again")
+    }
+
+    /// Cosmetic
+    public static var issuesSeverityCosmetic: LocalizedStringResource {
+        r("issues_severity_cosmetic", "Cosmetic")
+    }
+
+    /// Minor
+    public static var issuesSeverityMinor: LocalizedStringResource {
+        r("issues_severity_minor", "Minor")
+    }
+
+    /// Major
+    public static var issuesSeverityMajor: LocalizedStringResource {
+        r("issues_severity_major", "Major")
+    }
+
+    /// Urgent
+    public static var issuesSeverityUrgent: LocalizedStringResource {
+        r("issues_severity_urgent", "Urgent")
+    }
+
+    /// Annoying to look at. Nothing stops working.
+    public static var issuesSeverityCosmeticHint: LocalizedStringResource {
+        r("issues_severity_cosmetic_hint", "Annoying to look at. Nothing stops working.")
+    }
+
+    /// Needs doing at some point. Nobody's week changes.
+    public static var issuesSeverityMinorHint: LocalizedStringResource {
+        r("issues_severity_minor_hint", "Needs doing at some point. Nobody's week changes.")
+    }
+
+    /// Needs doing soon. Something people use is affected.
+    public static var issuesSeverityMajorHint: LocalizedStringResource {
+        r("issues_severity_major_hint", "Needs doing soon. Something people use is affected.")
+    }
+
+    /// Do not wait. It's unsafe, spreading, or costing money.
+    public static var issuesSeverityUrgentHint: LocalizedStringResource {
+        r("issues_severity_urgent_hint", "Do not wait. It's unsafe, spreading, or costing money.")
+    }
+
+    /// Kitchen
+    public static var issuesAreaKitchen: LocalizedStringResource {
+        r("issues_area_kitchen", "Kitchen")
+    }
+
+    /// Bathroom
+    public static var issuesAreaBathroom: LocalizedStringResource {
+        r("issues_area_bathroom", "Bathroom")
+    }
+
+    /// Bedroom
+    public static var issuesAreaBedroom: LocalizedStringResource {
+        r("issues_area_bedroom", "Bedroom")
+    }
+
+    /// Living room
+    public static var issuesAreaLiving: LocalizedStringResource {
+        r("issues_area_living", "Living room")
+    }
+
+    /// Hallway
+    public static var issuesAreaHallway: LocalizedStringResource {
+        r("issues_area_hallway", "Hallway")
+    }
+
+    /// Laundry
+    public static var issuesAreaLaundry: LocalizedStringResource {
+        r("issues_area_laundry", "Laundry")
+    }
+
+    /// Garage
+    public static var issuesAreaGarage: LocalizedStringResource {
+        r("issues_area_garage", "Garage")
+    }
+
+    /// Garden
+    public static var issuesAreaGarden: LocalizedStringResource {
+        r("issues_area_garden", "Garden")
+    }
+
+    /// Balcony
+    public static var issuesAreaBalcony: LocalizedStringResource {
+        r("issues_area_balcony", "Balcony")
+    }
+
+    /// Basement
+    public static var issuesAreaBasement: LocalizedStringResource {
+        r("issues_area_basement", "Basement")
+    }
+
+    /// Roof
+    public static var issuesAreaRoof: LocalizedStringResource {
+        r("issues_area_roof", "Roof")
+    }
+
+    /// Outside
+    public static var issuesAreaExterior: LocalizedStringResource {
+        r("issues_area_exterior", "Outside")
+    }
+
+    /// Whole home
+    public static var issuesAreaWhole: LocalizedStringResource {
+        r("issues_area_whole", "Whole home")
+    }
+
+    /// Somewhere else
+    public static var issuesAreaOther: LocalizedStringResource {
+        r("issues_area_other", "Somewhere else")
+    }
+
+    /// Inside
+    public static var issuesRoomsIndoors: LocalizedStringResource {
+        r("issues_rooms_indoors", "Inside")
+    }
+
+    /// Outside and shared
+    public static var issuesRoomsOutdoors: LocalizedStringResource {
+        r("issues_rooms_outdoors", "Outside and shared")
+    }
+
+    /// Plumbing
+    public static var issuesCategoryPlumbing: LocalizedStringResource {
+        r("issues_category_plumbing", "Plumbing")
+    }
+
+    /// Electrical
+    public static var issuesCategoryElectrical: LocalizedStringResource {
+        r("issues_category_electrical", "Electrical")
+    }
+
+    /// Heating & cooling
+    public static var issuesCategoryHeating: LocalizedStringResource {
+        r("issues_category_heating", "Heating & cooling")
+    }
+
+    /// Appliance
+    public static var issuesCategoryAppliance: LocalizedStringResource {
+        r("issues_category_appliance", "Appliance")
+    }
+
+    /// Furniture
+    public static var issuesCategoryFurniture: LocalizedStringResource {
+        r("issues_category_furniture", "Furniture")
+    }
+
+    /// Structural
+    public static var issuesCategoryStructural: LocalizedStringResource {
+        r("issues_category_structural", "Structural")
+    }
+
+    /// Internet & tech
+    public static var issuesCategoryInternet: LocalizedStringResource {
+        r("issues_category_internet", "Internet & tech")
+    }
+
+    /// Pests
+    public static var issuesCategoryPest: LocalizedStringResource {
+        r("issues_category_pest", "Pests")
+    }
+
+    /// Damp & mould
+    public static var issuesCategoryDamp: LocalizedStringResource {
+        r("issues_category_damp", "Damp & mould")
+    }
+
+    /// Safety
+    public static var issuesCategorySafety: LocalizedStringResource {
+        r("issues_category_safety", "Safety")
+    }
+
+    /// Paint & finish
+    public static var issuesCategoryCosmetic: LocalizedStringResource {
+        r("issues_category_cosmetic", "Paint & finish")
+    }
+
+    /// Something else
+    public static var issuesCategoryOther: LocalizedStringResource {
+        r("issues_category_other", "Something else")
+    }
+
+    /// open
+    public static var issuesOpenLabel: LocalizedStringResource {
+        r("issues_open_label", "open")
+    }
+
+    /// How the house is holding up
+    public static var issuesHealthLabel: LocalizedStringResource {
+        r("issues_health_label", "How the house is holding up")
+    }
+
+    /// %lld things to sort out
+    public static func issuesOpenTitle(_ a0: Int) -> LocalizedStringResource {
+        r("issues_open_title", "\(a0) things to sort out")
+    }
+
+    /// Everything the household has said is broken and not yet fixed.
+    public static var issuesOpenMessage: LocalizedStringResource {
+        r("issues_open_message", "Everything the household has said is broken and not yet fixed.")
+    }
+
+    /// Nothing broken
+    public static var issuesAllClearTitle: LocalizedStringResource {
+        r("issues_all_clear_title", "Nothing broken")
+    }
+
+    /// Every problem anyone reported has been dealt with. Enjoy it while it lasts.
+    public static var issuesAllClearMessage: LocalizedStringResource {
+        r("issues_all_clear_message", "Every problem anyone reported has been dealt with. Enjoy it while it lasts.")
+    }
+
+    /// %lld urgent
+    public static func issuesUrgentCount(_ a0: Int) -> LocalizedStringResource {
+        r("issues_urgent_count", "\(a0) urgent")
+    }
+
+    /// %lld overdue
+    public static func issuesOverdueCount(_ a0: Int) -> LocalizedStringResource {
+        r("issues_overdue_count", "\(a0) overdue")
+    }
+
+    /// %lld unclaimed
+    public static func issuesUnassignedCount(_ a0: Int) -> LocalizedStringResource {
+        r("issues_unassigned_count", "\(a0) unclaimed")
+    }
+
+    /// %lld fixed this month
+    public static func issuesFixedThisMonth(_ a0: Int) -> LocalizedStringResource {
+        r("issues_fixed_this_month", "\(a0) fixed this month")
+    }
+
+    /// Needs you
+    public static var issuesAttentionTitle: LocalizedStringResource {
+        r("issues_attention_title", "Needs you")
+    }
+
+    /// Worst first, then whatever is late
+    public static var issuesAttentionSubtitle: LocalizedStringResource {
+        r("issues_attention_subtitle", "Worst first, then whatever is late")
+    }
+
+    /// Gone quiet
+    public static var issuesQuietTitle: LocalizedStringResource {
+        r("issues_quiet_title", "Gone quiet")
+    }
+
+    /// Nobody has touched these in a week
+    public static var issuesQuietSubtitle: LocalizedStringResource {
+        r("issues_quiet_subtitle", "Nobody has touched these in a week")
+    }
+
+    /// Nobody's job yet
+    public static var issuesUnassignedTitle: LocalizedStringResource {
+        r("issues_unassigned_title", "Nobody's job yet")
+    }
+
+    /// Put a name against one and it starts moving
+    public static var issuesUnassignedSubtitle: LocalizedStringResource {
+        r("issues_unassigned_subtitle", "Put a name against one and it starts moving")
+    }
+
+    /// Keeps happening
+    public static var issuesRepeatsTitle: LocalizedStringResource {
+        r("issues_repeats_title", "Keeps happening")
+    }
+
+    /// Same room, same kind of fault
+    public static var issuesRepeatsSubtitle: LocalizedStringResource {
+        r("issues_repeats_subtitle", "Same room, same kind of fault")
+    }
+
+    /// %lld times
+    public static func issuesRepeatsCount(_ a0: Int) -> LocalizedStringResource {
+        r("issues_repeats_count", "\(a0) times")
+    }
+
+    /// Search problems, rooms, trades
+    public static var issuesSearchPlaceholder: LocalizedStringResource {
+        r("issues_search_placeholder", "Search problems, rooms, trades")
+    }
+
+    /// Mine
+    public static var issuesFilterMine: LocalizedStringResource {
+        r("issues_filter_mine", "Mine")
+    }
+
+    /// Still open
+    public static var issuesFilterOpen: LocalizedStringResource {
+        r("issues_filter_open", "Still open")
+    }
+
+    /// Filter by status
+    public static var issuesFilterStatusLabel: LocalizedStringResource {
+        r("issues_filter_status_label", "Filter by status")
+    }
+
+    /// Sort
+    public static var issuesSortLabel: LocalizedStringResource {
+        r("issues_sort_label", "Sort")
+    }
+
+    /// Needs attention
+    public static var issuesSortAttention: LocalizedStringResource {
+        r("issues_sort_attention", "Needs attention")
+    }
+
+    /// Newest
+    public static var issuesSortNewest: LocalizedStringResource {
+        r("issues_sort_newest", "Newest")
+    }
+
+    /// Longest standing
+    public static var issuesSortOldest: LocalizedStringResource {
+        r("issues_sort_oldest", "Longest standing")
+    }
+
+    /// By deadline
+    public static var issuesSortDue: LocalizedStringResource {
+        r("issues_sort_due", "By deadline")
+    }
+
+    /// How bad
+    public static var issuesSortSeverity: LocalizedStringResource {
+        r("issues_sort_severity", "How bad")
+    }
+
+    /// Showing
+    public static var issuesShowingCount: LocalizedStringResource {
+        r("issues_showing_count", "Showing")
+    }
+
+    /// Matches
+    public static var issuesFilteredCount: LocalizedStringResource {
+        r("issues_filtered_count", "Matches")
+    }
+
+    /// Clear
+    public static var issuesClearFilters: LocalizedStringResource {
+        r("issues_clear_filters", "Clear")
+    }
+
+    /// Nothing matches
+    public static var issuesNoMatchesTitle: LocalizedStringResource {
+        r("issues_no_matches_title", "Nothing matches")
+    }
+
+    /// No problem fits what you're filtering for.
+    public static var issuesNoMatchesMessage: LocalizedStringResource {
+        r("issues_no_matches_message", "No problem fits what you're filtering for.")
+    }
+
+    /// All sorted
+    public static var issuesNothingOpenTitle: LocalizedStringResource {
+        r("issues_nothing_open_title", "All sorted")
+    }
+
+    /// Nothing is outstanding right now.
+    public static var issuesNothingOpenMessage: LocalizedStringResource {
+        r("issues_nothing_open_message", "Nothing is outstanding right now.")
+    }
+
+    /// Nothing reported yet
+    public static var issuesEmptyTitle: LocalizedStringResource {
+        r("issues_empty_title", "Nothing reported yet")
+    }
+
+    /// When something breaks, put it here. The household sees it, and it stops living in somebody's head.
+    public static var issuesEmptyMessage: LocalizedStringResource {
+        r("issues_empty_message", "When something breaks, put it here. The household sees it, and it stops living in somebody's head.")
+    }
+
+    /// Deleted %@
+    public static func issuesDeleted(_ a0: String) -> LocalizedStringResource {
+        r("issues_deleted", "Deleted \(a0)")
+    }
+
+    /// %lldd old
+    public static func issuesAgeDays(_ a0: Int) -> LocalizedStringResource {
+        r("issues_age_days", "\(a0)d old")
+    }
+
+    /// Due today
+    public static var issuesDueToday: LocalizedStringResource {
+        r("issues_due_today", "Due today")
+    }
+
+    /// in %lldd
+    public static func issuesDueIn(_ a0: Int) -> LocalizedStringResource {
+        r("issues_due_in", "in \(a0)d")
+    }
+
+    /// By %@
+    public static func issuesDueOn(_ a0: String) -> LocalizedStringResource {
+        r("issues_due_on", "By \(a0)")
+    }
+
+    /// %lldd late
+    public static func issuesOverdueBy(_ a0: Int) -> LocalizedStringResource {
+        r("issues_overdue_by", "\(a0)d late")
+    }
+
+    /// %lld parts
+    public static func issuesPartsPending(_ a0: Int) -> LocalizedStringResource {
+        r("issues_parts_pending", "\(a0) parts")
+    }
+
+    /// chore
+    public static var issuesHasChore: LocalizedStringResource {
+        r("issues_has_chore", "chore")
+    }
+
+    /// booked
+    public static var issuesHasVisit: LocalizedStringResource {
+        r("issues_has_visit", "booked")
+    }
+
+    /// Under warranty
+    public static var issuesUnderWarranty: LocalizedStringResource {
+        r("issues_under_warranty", "Under warranty")
+    }
+
+    /// %lld
+    public static func issuesMeTooCount(_ a0: Int) -> LocalizedStringResource {
+        r("issues_me_too_count", "\(a0)")
+    }
+
+    /// Happening to me too
+    public static var issuesMeTooAccessibility: LocalizedStringResource {
+        r("issues_me_too_accessibility", "Happening to me too")
+    }
+
+    /// Happening to me too
+    public static var issuesMeTooAdd: LocalizedStringResource {
+        r("issues_me_too_add", "Happening to me too")
+    }
+
+    /// Not happening to me
+    public static var issuesMeTooUndo: LocalizedStringResource {
+        r("issues_me_too_undo", "Not happening to me")
+    }
+
+    /// Around the house
+    public static var issuesRoomsTitle: LocalizedStringResource {
+        r("issues_rooms_title", "Around the house")
+    }
+
+    /// Where things keep going wrong
+    public static var issuesRoomsSubtitle: LocalizedStringResource {
+        r("issues_rooms_subtitle", "Where things keep going wrong")
+    }
+
+    /// Nothing outstanding in the %@.
+    public static func issuesRoomClear(_ a0: String) -> LocalizedStringResource {
+        r("issues_room_clear", "Nothing outstanding in the \(a0).")
+    }
+
+    /// Already dealt with
+    public static var issuesHistoryTitle: LocalizedStringResource {
+        r("issues_history_title", "Already dealt with")
+    }
+
+    /// Nothing settled yet
+    public static var issuesHistoryEmptyTitle: LocalizedStringResource {
+        r("issues_history_empty_title", "Nothing settled yet")
+    }
+
+    /// Fixed problems land here, with what fixed them.
+    public static var issuesHistoryEmptyMessage: LocalizedStringResource {
+        r("issues_history_empty_message", "Fixed problems land here, with what fixed them.")
+    }
+
+    /// What this house costs
+    public static var issuesUpkeepTitle: LocalizedStringResource {
+        r("issues_upkeep_title", "What this house costs")
+    }
+
+    /// Repairs over the last year
+    public static var issuesUpkeepSubtitle: LocalizedStringResource {
+        r("issues_upkeep_subtitle", "Repairs over the last year")
+    }
+
+    /// Fixed this month
+    public static var issuesDigestFixedMonth: LocalizedStringResource {
+        r("issues_digest_fixed_month", "Fixed this month")
+    }
+
+    /// Typical time to fix
+    public static var issuesDigestTypicalFix: LocalizedStringResource {
+        r("issues_digest_typical_fix", "Typical time to fix")
+    }
+
+    /// Spent this year
+    public static var issuesDigestSpentYear: LocalizedStringResource {
+        r("issues_digest_spent_year", "Spent this year")
+    }
+
+    /// %lld days
+    public static func issuesDigestDays(_ a0: Int) -> LocalizedStringResource {
+        r("issues_digest_days", "\(a0) days")
+    }
+
+    /// %@ of that was this month.
+    public static func issuesDigestSpentMonth(_ a0: String) -> LocalizedStringResource {
+        r("issues_digest_spent_month", "\(a0) of that was this month.")
+    }
+
+    /// Reported by %@ · %lldd ago
+    public static func issuesReportedBy(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("issues_reported_by", "Reported by \(a0) · \(a1)d ago")
+    }
+
+    /// Assign
+    public static var issuesAssign: LocalizedStringResource {
+        r("issues_assign", "Assign")
+    }
+
+    /// Take the name off
+    public static var issuesUnassign: LocalizedStringResource {
+        r("issues_unassign", "Take the name off")
+    }
+
+    /// You
+    public static var issuesYou: LocalizedStringResource {
+        r("issues_you", "You")
+    }
+
+    /// Someone
+    public static var issuesSomeone: LocalizedStringResource {
+        r("issues_someone", "Someone")
+    }
+
+    /// Nobody yet
+    public static var issuesNobody: LocalizedStringResource {
+        r("issues_nobody", "Nobody yet")
+    }
+
+    /// NestZone
+    public static var issuesTheApp: LocalizedStringResource {
+        r("issues_the_app", "NestZone")
+    }
+
+    /// Covered to %@
+    public static func issuesWarrantyUntil(_ a0: String) -> LocalizedStringResource {
+        r("issues_warranty_until", "Covered to \(a0)")
+    }
+
+    /// Move to
+    public static var issuesMoveTo: LocalizedStringResource {
+        r("issues_move_to", "Move to")
+    }
+
+    /// Delete this problem?
+    public static var issuesDeleteTitle: LocalizedStringResource {
+        r("issues_delete_title", "Delete this problem?")
+    }
+
+    /// Its history goes with it. Parts on the shopping list and money in the ledger stay where they are.
+    public static var issuesDeleteMessage: LocalizedStringResource {
+        r("issues_delete_message", "Its history goes with it. Parts on the shopping list and money in the ledger stay where they are.")
+    }
+
+    /// The chore is done
+    public static var issuesVerdictTitle: LocalizedStringResource {
+        r("issues_verdict_title", "The chore is done")
+    }
+
+    /// Somebody finished the chore for this. Did it actually fix the problem?
+    public static var issuesVerdictMessage: LocalizedStringResource {
+        r("issues_verdict_message", "Somebody finished the chore for this. Did it actually fix the problem?")
+    }
+
+    /// Yes, fixed
+    public static var issuesVerdictFixed: LocalizedStringResource {
+        r("issues_verdict_fixed", "Yes, fixed")
+    }
+
+    /// Not yet
+    public static var issuesVerdictNotYet: LocalizedStringResource {
+        r("issues_verdict_not_yet", "Not yet")
+    }
+
+    /// The plan
+    public static var issuesPlanTitle: LocalizedStringResource {
+        r("issues_plan_title", "The plan")
+    }
+
+    /// Nothing arranged yet
+    public static var issuesPlanSubtitle: LocalizedStringResource {
+        r("issues_plan_subtitle", "Nothing arranged yet")
+    }
+
+    /// Chore
+    public static var issuesPlanChore: LocalizedStringResource {
+        r("issues_plan_chore", "Chore")
+    }
+
+    /// Make it a chore
+    public static var issuesPlanMakeChore: LocalizedStringResource {
+        r("issues_plan_make_chore", "Make it a chore")
+    }
+
+    /// Done
+    public static var issuesChoreDone: LocalizedStringResource {
+        r("issues_chore_done", "Done")
+    }
+
+    /// Visit
+    public static var issuesPlanVisit: LocalizedStringResource {
+        r("issues_plan_visit", "Visit")
+    }
+
+    /// Book a visit
+    public static var issuesPlanBookVisit: LocalizedStringResource {
+        r("issues_plan_book_visit", "Book a visit")
+    }
+
+    /// Move the visit
+    public static var issuesPlanMoveVisit: LocalizedStringResource {
+        r("issues_plan_move_visit", "Move the visit")
+    }
+
+    /// Parts
+    public static var issuesPlanParts: LocalizedStringResource {
+        r("issues_plan_parts", "Parts")
+    }
+
+    /// Add parts
+    public static var issuesPlanAddParts: LocalizedStringResource {
+        r("issues_plan_add_parts", "Add parts")
+    }
+
+    /// %lld of %lld bought
+    public static func issuesPartsProgress(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("issues_parts_progress", "\(a0) of \(a1) bought")
+    }
+
+    /// What it cost
+    public static var issuesPlanCost: LocalizedStringResource {
+        r("issues_plan_cost", "What it cost")
+    }
+
+    /// Log what it cost
+    public static var issuesPlanLogCost: LocalizedStringResource {
+        r("issues_plan_log_cost", "Log what it cost")
+    }
+
+    /// %@ of %@
+    public static func issuesCostOfEstimate(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("issues_cost_of_estimate", "\(a0) of \(a1)")
+    }
+
+    /// Estimated %@
+    public static func issuesEstimateOnly(_ a0: String) -> LocalizedStringResource {
+        r("issues_estimate_only", "Estimated \(a0)")
+    }
+
+    /// Who to call
+    public static var issuesVendorTitle: LocalizedStringResource {
+        r("issues_vendor_title", "Who to call")
+    }
+
+    /// Website
+    public static var issuesVendorWebsite: LocalizedStringResource {
+        r("issues_vendor_website", "Website")
+    }
+
+    /// Plumber, electrician, landlord…
+    public static var issuesVendorNamePlaceholder: LocalizedStringResource {
+        r("issues_vendor_name_placeholder", "Plumber, electrician, landlord…")
+    }
+
+    /// Phone number
+    public static var issuesVendorPhonePlaceholder: LocalizedStringResource {
+        r("issues_vendor_phone_placeholder", "Phone number")
+    }
+
+    /// Website or booking link
+    public static var issuesVendorUrlPlaceholder: LocalizedStringResource {
+        r("issues_vendor_url_placeholder", "Website or booking link")
+    }
+
+    /// Last time this went
+    public static var issuesPreviouslyTitle: LocalizedStringResource {
+        r("issues_previously_title", "Last time this went")
+    }
+
+    /// Same room, same kind of fault
+    public static var issuesPreviouslySubtitle: LocalizedStringResource {
+        r("issues_previously_subtitle", "Same room, same kind of fault")
+    }
+
+    /// What's happened
+    public static var issuesTimelineTitle: LocalizedStringResource {
+        r("issues_timeline_title", "What's happened")
+    }
+
+    /// Add a note…
+    public static var issuesCommentPlaceholder: LocalizedStringResource {
+        r("issues_comment_placeholder", "Add a note…")
+    }
+
+    /// Post
+    public static var issuesPostComment: LocalizedStringResource {
+        r("issues_post_comment", "Post")
+    }
+
+    /// Moved it to %@
+    public static func issuesMovedTo(_ a0: String) -> LocalizedStringResource {
+        r("issues_moved_to", "Moved it to \(a0)")
+    }
+
+    /// Moved it from %@ to %@
+    public static func issuesMovedFromTo(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("issues_moved_from_to", "Moved it from \(a0) to \(a1)")
+    }
+
+    /// Uploading %lld photos…
+    public static func issuesUploading(_ a0: Int) -> LocalizedStringResource {
+        r("issues_uploading", "Uploading \(a0) photos…")
+    }
+
+    /// Photos
+    public static var issuesPhotosTitle: LocalizedStringResource {
+        r("issues_photos_title", "Photos")
+    }
+
+    /// A picture saves a paragraph — and the plumber will ask for one
+    public static var issuesPhotosSubtitle: LocalizedStringResource {
+        r("issues_photos_subtitle", "A picture saves a paragraph — and the plumber will ask for one")
+    }
+
+    /// Add
+    public static var issuesAddPhoto: LocalizedStringResource {
+        r("issues_add_photo", "Add")
+    }
+
+    /// Remove photo
+    public static var issuesPhotoRemove: LocalizedStringResource {
+        r("issues_photo_remove", "Remove photo")
+    }
+
+    /// %lld photos
+    public static func issuesPhotosAccessibility(_ a0: Int) -> LocalizedStringResource {
+        r("issues_photos_accessibility", "\(a0) photos")
+    }
+
+    /// What's wrong?
+    public static var issuesTitlePlaceholder: LocalizedStringResource {
+        r("issues_title_placeholder", "What's wrong?")
+    }
+
+    /// Anything that would help whoever fixes it
+    public static var issuesDetailsPlaceholder: LocalizedStringResource {
+        r("issues_details_placeholder", "Anything that would help whoever fixes it")
+    }
+
+    /// How bad is it?
+    public static var issuesHowBadTitle: LocalizedStringResource {
+        r("issues_how_bad_title", "How bad is it?")
+    }
+
+    /// Where is it?
+    public static var issuesWhereTitle: LocalizedStringResource {
+        r("issues_where_title", "Where is it?")
+    }
+
+    /// What kind of problem?
+    public static var issuesWhatKindTitle: LocalizedStringResource {
+        r("issues_what_kind_title", "What kind of problem?")
+    }
+
+    /// Really: who would you call about it
+    public static var issuesWhatKindSubtitle: LocalizedStringResource {
+        r("issues_what_kind_subtitle", "Really: who would you call about it")
+    }
+
+    /// Whose job is it?
+    public static var issuesWhoTitle: LocalizedStringResource {
+        r("issues_who_title", "Whose job is it?")
+    }
+
+    /// Deadline, cost, who to call
+    public static var issuesMoreTitle: LocalizedStringResource {
+        r("issues_more_title", "Deadline, cost, who to call")
+    }
+
+    /// Has a deadline
+    public static var issuesDeadlineTitle: LocalizedStringResource {
+        r("issues_deadline_title", "Has a deadline")
+    }
+
+    /// Sorted by
+    public static var issuesDeadlineBy: LocalizedStringResource {
+        r("issues_deadline_by", "Sorted by")
+    }
+
+    /// What might it cost?
+    public static var issuesEstimateTitle: LocalizedStringResource {
+        r("issues_estimate_title", "What might it cost?")
+    }
+
+    /// A guess is fine. Receipts logged against this are totalled separately.
+    public static var issuesEstimateHint: LocalizedStringResource {
+        r("issues_estimate_hint", "A guess is fine. Receipts logged against this are totalled separately.")
+    }
+
+    /// Still under warranty
+    public static var issuesWarrantyTitle: LocalizedStringResource {
+        r("issues_warranty_title", "Still under warranty")
+    }
+
+    /// Worth knowing before anybody pays for it
+    public static var issuesWarrantyHint: LocalizedStringResource {
+        r("issues_warranty_hint", "Worth knowing before anybody pays for it")
+    }
+
+    /// Covered until
+    public static var issuesWarrantyUntilLabel: LocalizedStringResource {
+        r("issues_warranty_until_label", "Covered until")
+    }
+
+    /// Say what's wrong first.
+    public static var issuesErrorTitle: LocalizedStringResource {
+        r("issues_error_title", "Say what's wrong first.")
+    }
+
+    /// Write something first.
+    public static var issuesErrorComment: LocalizedStringResource {
+        r("issues_error_comment", "Write something first.")
+    }
+
+    /// The visit ends before it starts.
+    public static var issuesErrorVisitOrder: LocalizedStringResource {
+        r("issues_error_visit_order", "The visit ends before it starts.")
+    }
+
+    /// What fixed it?
+    public static var issuesResolutionPrompt: LocalizedStringResource {
+        r("issues_resolution_prompt", "What fixed it?")
+    }
+
+    /// Replaced the washer — took ten minutes
+    public static var issuesResolutionPlaceholder: LocalizedStringResource {
+        r("issues_resolution_placeholder", "Replaced the washer — took ten minutes")
+    }
+
+    /// What is it waiting for?
+    public static var issuesBlockedPrompt: LocalizedStringResource {
+        r("issues_blocked_prompt", "What is it waiting for?")
+    }
+
+    /// Waiting on the landlord to call back
+    public static var issuesBlockedPlaceholder: LocalizedStringResource {
+        r("issues_blocked_placeholder", "Waiting on the landlord to call back")
+    }
+
+    /// Anything to add?
+    public static var issuesStatusNotePrompt: LocalizedStringResource {
+        r("issues_status_note_prompt", "Anything to add?")
+    }
+
+    /// Optional
+    public static var issuesStatusNotePlaceholder: LocalizedStringResource {
+        r("issues_status_note_placeholder", "Optional")
+    }
+
+    /// You can leave this blank — the move is recorded either way.
+    public static var issuesStatusNoteOptional: LocalizedStringResource {
+        r("issues_status_note_optional", "You can leave this blank — the move is recorded either way.")
+    }
+
+    /// Parts to buy
+    public static var issuesPartsTitle: LocalizedStringResource {
+        r("issues_parts_title", "Parts to buy")
+    }
+
+    /// One per line. They go on the household shopping list under this repair.
+    public static var issuesPartsHint: LocalizedStringResource {
+        r("issues_parts_hint", "One per line. They go on the household shopping list under this repair.")
+    }
+
+    /// Washer PTFE tape New trap
+    public static var issuesPartsPlaceholder: LocalizedStringResource {
+        r("issues_parts_placeholder", "Washer\nPTFE tape\nNew trap")
+    }
+
+    /// Anything already on the list is skipped.
+    public static var issuesPartsSkipNote: LocalizedStringResource {
+        r("issues_parts_skip_note", "Anything already on the list is skipped.")
+    }
+
+    /// Already on the list
+    public static var issuesPartsAlreadyTitle: LocalizedStringResource {
+        r("issues_parts_already_title", "Already on the list")
+    }
+
+    /// All %lld were already on the shopping list.
+    public static func issuesPartsAlreadyMessage(_ a0: Int) -> LocalizedStringResource {
+        r("issues_parts_already_message", "All \(a0) were already on the shopping list.")
+    }
+
+    /// Book a visit
+    public static var issuesVisitTitle: LocalizedStringResource {
+        r("issues_visit_title", "Book a visit")
+    }
+
+    /// Book
+    public static var issuesVisitBook: LocalizedStringResource {
+        r("issues_visit_book", "Book")
+    }
+
+    /// When
+    public static var issuesVisitWhen: LocalizedStringResource {
+        r("issues_visit_when", "When")
+    }
+
+    /// How long to keep free
+    public static var issuesVisitLength: LocalizedStringResource {
+        r("issues_visit_length", "How long to keep free")
+    }
+
+    /// %lld min
+    public static func issuesVisitMinutes(_ a0: Int) -> LocalizedStringResource {
+        r("issues_visit_minutes", "\(a0) min")
+    }
+
+    /// Who's coming
+    public static var issuesVisitWhoPlaceholder: LocalizedStringResource {
+        r("issues_visit_who_placeholder", "Who's coming")
+    }
+
+    /// Where to meet them
+    public static var issuesVisitWherePlaceholder: LocalizedStringResource {
+        r("issues_visit_where_placeholder", "Where to meet them")
+    }
+
+    /// Remind the household
+    public static var issuesVisitRemindTitle: LocalizedStringResource {
+        r("issues_visit_remind_title", "Remind the household")
+    }
+
+    /// No reminder
+    public static var issuesRemindNone: LocalizedStringResource {
+        r("issues_remind_none", "No reminder")
+    }
+
+    /// An hour before
+    public static var issuesRemindHour: LocalizedStringResource {
+        r("issues_remind_hour", "An hour before")
+    }
+
+    /// Four hours before
+    public static var issuesRemindFourHours: LocalizedStringResource {
+        r("issues_remind_four_hours", "Four hours before")
+    }
+
+    /// The day before
+    public static var issuesRemindDayBefore: LocalizedStringResource {
+        r("issues_remind_day_before", "The day before")
+    }
 }

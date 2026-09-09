@@ -21,6 +21,13 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
     /// deleted, and must not cost the list a second subscription.
     public var eventID: EventID?
     public var eventTitle: String?
+    /// Set when the item is a *part* — the washer for the dripping tap, the
+    /// bulb for the dead hall light. The third reason a household adds
+    /// something to this list, and the same denormalised title as the two
+    /// above, for the same reason: the heading must survive the problem being
+    /// tidied away, and must not cost the list a second subscription.
+    public var issueID: IssueID?
+    public var issueTitle: String?
     public var created: Timestamp?
     public var updated: Timestamp?
 
@@ -42,6 +49,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         case recipeTitle = "recipe_title"
         case eventID = "event_id"
         case eventTitle = "event_title"
+        case issueID = "issue_id"
+        case issueTitle = "issue_title"
         case created, updated
     }
 
@@ -60,6 +69,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         recipeTitle = try c.decodeIfPresent(String.self, forKey: .recipeTitle)
         eventID = try c.decodeIfPresent(EventID.self, forKey: .eventID)
         eventTitle = try c.decodeIfPresent(String.self, forKey: .eventTitle)
+        issueID = try c.decodeIfPresent(IssueID.self, forKey: .issueID)
+        issueTitle = try c.decodeIfPresent(String.self, forKey: .issueTitle)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
     }
@@ -78,6 +89,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         recipeTitle: String? = nil,
         eventID: EventID? = nil,
         eventTitle: String? = nil,
+        issueID: IssueID? = nil,
+        issueTitle: String? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
     ) {
@@ -94,6 +107,8 @@ public struct ShoppingItem: Codable, Identifiable, Hashable, Sendable {
         self.recipeTitle = recipeTitle
         self.eventID = eventID
         self.eventTitle = eventTitle
+        self.issueID = issueID
+        self.issueTitle = issueTitle
         self.created = created
         self.updated = updated
     }

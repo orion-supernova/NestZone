@@ -66,6 +66,17 @@ public struct ExpenseComposerFeature: Sendable {
         /// would be a second splitting model to keep in step with the server's.
         public var eventID: EventID?
 
+        /// The house problem this receipt belongs to, when the composer was
+        /// opened from one — the plumber, the part, the replacement kettle.
+        ///
+        /// Carried on exactly the same terms as `eventID` above, and for the
+        /// same reason: "which repair" was already answered by which button was
+        /// pressed, and a picker here would be a second way to get it wrong. A
+        /// simpler composer for repairs would be a second splitting model to
+        /// keep in step with the server's — and a plumber's bill is split
+        /// across a household like anything else.
+        public var issueID: IssueID?
+
         public init(
             homeID: HomeID,
             members: IdentifiedArrayOf<User>,
@@ -75,9 +86,15 @@ public struct ExpenseComposerFeature: Sendable {
             defaultDate: Date = Date(),
             editing: Expense? = nil,
             eventID: EventID? = nil,
-            suggestedTitle: String? = nil
+            issueID: IssueID? = nil,
+            suggestedTitle: String? = nil,
+            /// Named apart from the stored property on purpose: `category` here
+            /// would shadow it, and the `editing` branch below assigns to the
+            /// property unqualified.
+            defaultCategory: SpendCategory? = nil
         ) {
             self.eventID = eventID
+            self.issueID = issueID
             self.homeID = homeID
             self.members = members
             self.currentUserID = currentUserID
@@ -117,6 +134,10 @@ public struct ExpenseComposerFeature: Sendable {
                 if let suggestedTitle {
                     title = suggestedTitle
                 }
+                // A repair is not groceries. The caller that already knows what
+                // kind of spend this is says so, rather than leaving somebody to
+                // correct the picker on every receipt.
+                if let defaultCategory { category = defaultCategory }
             }
         }
 
@@ -217,7 +238,8 @@ public struct ExpenseComposerFeature: Sendable {
                 },
                 exact: preview,
                 note: note,
-                eventID: eventID
+                eventID: eventID,
+                issueID: issueID
             )
         }
     }

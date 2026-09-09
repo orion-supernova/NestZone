@@ -189,6 +189,38 @@ public enum Palette {
     public static let statNotes = Color(hex: "A855F7")      // purple
     public static let statMessages = Color(hex: "38BDF8")   // sky
     public static let statEvents = Color(hex: "FB7185")     // rose
+    // The sixth tile. Indigo because it is what is left: the five above sit at
+    // roughly 38°, 142°, 199°, 271° and 350° round the wheel, and the widest
+    // usable gap between two of them that is not simply "another green" is the
+    // one between sky and purple. It does not go red when something is urgent —
+    // a tile's colour is how you find it without reading it, and one that moves
+    // is one you have to hunt for on exactly the day you most need it.
+    public static let statIssues = Color(hex: "6366F1")     // indigo
+
+    /// How badly a house problem matters, as a four-step ramp.
+    ///
+    /// Read as a ramp rather than as four labels — grey, blue, amber, red is a
+    /// sequence anybody can order at a glance without learning it, which is the
+    /// whole reason severity is worth a colour at all. It is the tint a problem
+    /// row carries, because urgency is what a person scans a list of faults for.
+    public static let issueCosmetic = Color(hex: "94A3B8")
+    public static let issueMinor = Color(hex: "38BDF8")
+    public static let issueMajor = Color(hex: "F59E0B")
+    public static let issueUrgent = Color(hex: "EF4444")
+
+    /// How far along a problem is.
+    ///
+    /// Also a sequence, and deliberately a different one: nothing yet, seen,
+    /// booked, being done, then either done or dropped. `blocked` is amber
+    /// rather than another cool hue because being stuck is the one state on the
+    /// track that is asking somebody for something.
+    public static let issueReported = Color(hex: "94A3B8")
+    public static let issueAcknowledged = Color(hex: "60A5FA")
+    public static let issueScheduled = Color(hex: "A78BFA")
+    public static let issueInProgress = Color(hex: "06B6D4")
+    public static let issueBlocked = Color(hex: "F59E0B")
+    public static let issueFixed = Color(hex: "22C55E")
+    public static let issueWontFix = Color(hex: "78716C")
 
     /// Semantic colours. These resolve per-appearance on their own, which is why
     /// the app no longer needs a light and a dark value for everything.

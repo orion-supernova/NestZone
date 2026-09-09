@@ -168,10 +168,27 @@ public struct HomeView: View {
                         symbol: "bubble.left.and.bubble.right.fill",
                         tint: Palette.statMessages
                     ) { store.send(.delegate(.openMessages)) }
+
+                    // What is still broken.
+                    //
+                    // Not the tile that used to sit here under this name: that
+                    // one counted high-priority *tasks* and read 0 in any home
+                    // that never set a priority, which is why it went. This is
+                    // its own table, its own index, and a number that falls
+                    // when somebody fixes something. It goes red when any of it
+                    // is urgent or overdue — the one counter on this grid where
+                    // "3" and "3, one of them a leak" are different facts.
+                    StatTile(
+                        title: L10n.homeStatsIssuesTitle,
+                        value: store.stats.openIssues,
+                        change: store.stats.issuesChange,
+                        symbol: "wrench.adjustable.fill",
+                        tint: store.stats.urgentIssues > 0 ? Palette.danger : Palette.statIssues
+                    ) { store.send(.delegate(.openIssues)) }
                     }
-                    // The four counters that come off `stats:forHome`, so they
+                    // The five counters that come off `stats:forHome`, so they
                     // wait on it and on nothing else. A `Group` inside a grid
-                    // flattens to its children, so these stay four cells and the
+                    // flattens to its children, so these stay five cells and the
                     // modifier lands on each.
                     .redacted(reason: store.loaded.contains(.stats) ? [] : .placeholder)
 

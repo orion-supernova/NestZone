@@ -31,6 +31,7 @@ public struct ShoppingView: View {
                 } else {
                     header
                     eventSections
+                    partSections
                     mealSections
                     viewModeToggle
                     if store.isGrouped {
@@ -193,6 +194,55 @@ public struct ShoppingView: View {
                     isClearing: store.state.isClearing(.event(group.eventID)),
                     onToggle: { store.send(.eventToggled(group.eventID)) },
                     onClear: { store.send(.clearEventTapped(group.eventID)) }
+                )
+                .padding(.horizontal, Metrics.screenPadding)
+
+                if !isCollapsed {
+                    GlassGroup {
+                        VStack(spacing: 8) {
+                            ForEach(group.items) { item in
+                                ShoppingRow(
+                                    item: item,
+                                    showsCategory: false,
+                                    revealedID: $revealedItemID,
+                                    glass: glass,
+                                    onToggle: { store.send(.togglePurchased(item.id)) },
+                                    onDelete: { store.send(.deleteTapped(item.id)) }
+                                )
+                            }
+                        }
+                        .padding(.horizontal, Metrics.screenPadding)
+                    }
+                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
+                }
+            }
+            .clipped()
+            .animation(Motion.spring, value: isCollapsed)
+        }
+    }
+
+    /// Everything on the list because something is broken, under the repair it
+    /// belongs to.
+    ///
+    /// Between the events and the meals, which is the order the reasons actually
+    /// nest: a party is an occasion, a repair is a job, a recipe is a dish. Its
+    /// own group for the same reason a party's shopping is — the washer and the
+    /// PTFE tape are one errand, and split across the hardware and household
+    /// aisles they are two things nobody remembers are related.
+    @ViewBuilder
+    private var partSections: some View {
+        ForEach(store.partGroups, id: \.issueID) { group in
+            let isCollapsed = store.state.isCollapsed(issue: group.issueID)
+            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+                GroupHeader(
+                    symbol: "wrench.adjustable.fill",
+                    title: String(localized: L10n.shoppingForRepair(group.title)),
+                    done: store.state.doneCount(inIssue: group.issueID),
+                    total: store.state.totalCount(inIssue: group.issueID),
+                    isCollapsed: isCollapsed,
+                    isClearing: store.state.isClearing(.issue(group.issueID)),
+                    onToggle: { store.send(.issueToggled(group.issueID)) },
+                    onClear: { store.send(.clearPartsTapped(group.issueID)) }
                 )
                 .padding(.horizontal, Metrics.screenPadding)
 

@@ -207,6 +207,8 @@ private func expenseArgs(
     // `eventId` as "leave it alone" and an explicit null as "unlink", and this
     // composer has no control that means the latter.
     if let eventID = new.eventID { args["eventId"] = eventID }
+    // The same, for money spent fixing something.
+    if let issueID = new.issueID { args["issueId"] = issueID }
 
     switch new.mode {
     case .equal:

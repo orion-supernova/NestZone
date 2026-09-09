@@ -285,6 +285,18 @@ public struct FinanceFeature: Sendable {
             return title
         }
 
+        /// The title to print under a ledger row that was spent fixing
+        /// something. `nil` for ordinary money, and for a row whose problem has
+        /// since been deleted — the expense outlives the link, because the
+        /// money moved whatever the household later decided about the shelf.
+        public func issueLabel(for expense: Expense) -> String? {
+            guard expense.issueID != nil else { return nil }
+            guard let title = expense.issueTitle?.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ), !title.isEmpty else { return nil }
+            return title
+        }
+
         /// Categories with no ceiling yet, for the "add a budget" menu.
         public var unbudgetedCategories: [SpendCategory] {
             let taken = Set(budgets.map(\.category))

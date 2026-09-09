@@ -344,9 +344,25 @@ export const listExpenses = query({
       );
     }
 
+    // The same read-through for money spent fixing something. Without it the
+    // plumber's invoice is an unexplained line in the ledger and nothing says
+    // that a leak in the bathroom is the reason for it — which is exactly the
+    // gap the event label was added to close, one module over.
+    const repairs = new Map<string, string | null>();
+    const broken = [...new Set(rows.flatMap((e) => (e.issue_id ? [e.issue_id] : [])))];
+    for (const [index, issue] of (
+      await Promise.all(broken.map((id) => ctx.db.get(id)))
+    ).entries()) {
+      repairs.set(
+        broken[index],
+        issue && issue.home_id === homeId ? (issue.title ?? "") : null,
+      );
+    }
+
     return rows.map((e) => ({
       ...e,
       event_title: e.event_id ? (titles.get(e.event_id) ?? null) : null,
+      issue_title: e.issue_id ? (repairs.get(e.issue_id) ?? null) : null,
     }));
   },
 });
@@ -704,6 +720,8 @@ export const createExpense = mutation({
     billId: v.optional(v.id("bills")),
     /** Set when this was spent on something in the calendar. */
     eventId: v.optional(v.id("events")),
+    /** Set when this was spent fixing something — the plumber, the part. */
+    issueId: v.optional(v.id("issues")),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -718,6 +736,12 @@ export const createExpense = mutation({
     if (args.eventId) {
       const event = await requireRef(ctx, args.eventId, "Event");
       requireSameHome(event, args.homeId, "Event");
+    }
+    // The same guard for a repair, and for the same reason: a problem's "what
+    // it cost" must never total a receipt from a house it cannot see.
+    if (args.issueId) {
+      const issue = await requireRef(ctx, args.issueId, "Problem");
+      requireSameHome(issue, args.homeId, "Problem");
     }
 
     const touched = new Set<Id<"users">>([args.paidBy, ...args.participants]);
@@ -748,6 +772,7 @@ export const createExpense = mutation({
       spent_at: args.spentAt,
       bill_id: args.billId,
       event_id: args.eventId,
+      issue_id: args.issueId,
       created_by: user._id,
       created: now,
       updated: now,
@@ -787,6 +812,8 @@ export const updateExpense = mutation({
     note: v.optional(v.string()),
     /** `null` unlinks it from its event; absent leaves the link alone. */
     eventId: v.optional(v.union(v.id("events"), v.null())),
+    /** `null` unlinks it from its problem; absent leaves the link alone. */
+    issueId: v.optional(v.union(v.id("issues"), v.null())),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -797,6 +824,10 @@ export const updateExpense = mutation({
     if (args.eventId) {
       const event = await requireRef(ctx, args.eventId, "Event");
       requireSameHome(event, home._id, "Event");
+    }
+    if (args.issueId) {
+      const issue = await requireRef(ctx, args.issueId, "Problem");
+      requireSameHome(issue, home._id, "Problem");
     }
 
     const amount = args.amount === undefined ? expense.amount : requireAmount(args.amount);
@@ -842,6 +873,10 @@ export const updateExpense = mutation({
         args.eventId === undefined
           ? expense.event_id
           : (args.eventId ?? undefined),
+      issue_id:
+        args.issueId === undefined
+          ? expense.issue_id
+          : (args.issueId ?? undefined),
       updated: Date.now(),
     });
     void user;
