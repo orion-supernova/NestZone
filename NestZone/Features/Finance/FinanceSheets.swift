@@ -19,13 +19,18 @@ struct AmountField: View {
     /// Bumped by the reducer to refuse an amount. A rejection has to be felt.
     var shakes: Int = 0
     var isCompact: Bool = false
-    /// The currencies this field may be switched to. Given some, the code under
-    /// the amount becomes a control; given none it is a label.
+    /// The currencies this household already writes in, hoisted to their own
+    /// section in the picker. Every other ISO code is still reachable there, so
+    /// this being empty costs a new household nothing but the shortcut.
     ///
     /// Sitting on the field rather than in a settings screen because currency
     /// is a property of *this* amount: the rent in lira and the streaming
     /// service in dollars are one household's ordinary week.
     var currencyOptions: [String] = []
+    /// Given a handler the code under the amount is a control; given none it is
+    /// a label. It used to also require a non-empty `currencyOptions`, which
+    /// meant a household that had written down no money yet could not pick a
+    /// currency for the first amount it entered.
     var onCurrencyChange: ((String) -> Void)? = nil
 
     @Environment(\.theme) private var theme
@@ -33,9 +38,10 @@ struct AmountField: View {
     /// Bumped every time a keystroke is thrown away for being past the cap, so
     /// the refusal can be felt as well as read.
     @State private var refusals = 0
+    @State private var isPickingCurrency = false
 
     private var minorUnits: Int { Money.parse(text, currency: currency) }
-    private var isSwitchable: Bool { onCurrencyChange != nil && !currencyOptions.isEmpty }
+    private var isSwitchable: Bool { onCurrencyChange != nil }
     private var isAtLimit: Bool { text.count >= Money.maximumInputLength }
 
     var body: some View {
@@ -120,22 +126,16 @@ struct AmountField: View {
         .animation(Motion.fade, value: isAtLimit)
     }
 
-    /// The household's own currencies first, then the rest of the world. A
-    /// picker that opens on 150 alphabetical ISO codes is a worse answer than
-    /// the three a household actually uses.
+    /// A sheet rather than a menu.
+    ///
+    /// This was a `Menu` over every common ISO code, which iOS draws as one
+    /// 150-row popover with no search in it — picking lira meant flicking past
+    /// sixty currencies, every time. `CurrencyPicker` hoists what this person
+    /// picked recently and what the household already writes in above the
+    /// alphabet, and lets them type when neither is the answer.
     private var currencyMenu: some View {
-        Menu {
-            ForEach(currencyOptions, id: \.self) { code in
-                Button { onCurrencyChange?(code) } label: {
-                    if code == currency {
-                        Label { Text(verbatim: "\(code) · \(Money.name(for: code))") } icon: {
-                            Image(systemName: "checkmark")
-                        }
-                    } else {
-                        Text(verbatim: "\(code) · \(Money.name(for: code))")
-                    }
-                }
-            }
+        Button {
+            isPickingCurrency = true
         } label: {
             HStack(spacing: 3) {
                 Text(currency)
@@ -149,8 +149,14 @@ struct AmountField: View {
             .background(theme.accent.opacity(0.12), in: .capsule)
             .contentShape(.capsule)
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(Text(L10n.financeCurrencyLabel))
         .accessibilityValue(Text(Money.name(for: currency)))
+        .sheet(isPresented: $isPickingCurrency) {
+            CurrencyPicker(selected: currency, used: currencyOptions) { code in
+                onCurrencyChange?(code)
+            }
+        }
     }
 }
 

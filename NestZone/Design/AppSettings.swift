@@ -32,6 +32,38 @@ extension SharedKey where Self == AppStorageKey<String?>.Default {
     public static var selectedHomeIDRaw: Self {
         Self[.appStorage("appSelectedHomeID"), default: nil]
     }
+
+    /// What this household writes its money in, as `finance:summary` last
+    /// reported it. `nil` until anything has been logged.
+    ///
+    /// Only ever a *default* for a composer that has no better answer — no
+    /// stored amount is reinterpreted through it and nothing is converted. It
+    /// exists because the calendar's budget field used to open on
+    /// `Money.deviceDefault`, which is this phone's locale and not the
+    /// household's ledger: two members in two countries budgeted the same party
+    /// in two currencies, and a budget written in a currency the ledger has
+    /// never seen lands in a set of figures nobody is looking at.
+    ///
+    /// Written by Finance, which is the only feature that knows the answer, and
+    /// read through `CurrencyDefaults.preferred`. Passing it through app
+    /// storage rather than a dependency keeps the calendar from reaching into
+    /// Finance for it, and means the answer survives a launch — the composer is
+    /// reachable long before the Finance tab has ever been opened.
+    public static var householdCurrency: Self {
+        Self[.appStorage("appHouseholdCurrency"), default: nil]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// The currencies this person has actually picked, most recent first, as
+    /// one comma-joined string.
+    ///
+    /// A string rather than an array because app storage holds property-list
+    /// scalars only, and a file for four ISO codes is more machinery than the
+    /// value deserves. Read it through `CurrencyDefaults`, never directly.
+    public static var recentCurrenciesRaw: Self {
+        Self[.appStorage("appRecentCurrencies"), default: ""]
+    }
 }
 
 extension SharedKey where Self == FileStorageKey<[Home]>.Default {
@@ -98,5 +130,53 @@ extension Shared<String?> {
         nonmutating set {
             withLock { $0 = newValue?.rawValue }
         }
+    }
+}
+
+/// What an amount field opens on, and what the currency picker puts at the top.
+///
+/// One place, because five composers ask the same question — an expense, a
+/// bill, a budget, an event's budget and a repair's estimate — and they used to
+/// answer it five times with `Money.deviceDefault`. That is this *phone's*
+/// locale, which is not the household's ledger and not what the person picked
+/// last time either.
+public enum CurrencyDefaults {
+    /// How many picks are worth remembering.
+    ///
+    /// Small on purpose: the list is a shortcut past the search field, not a
+    /// history. A household that genuinely writes in six currencies is better
+    /// served by typing three letters than by scrolling its own past.
+    static let recentLimit = 4
+
+    /// The codes this person has picked before, most recent first.
+    public static var recent: [String] {
+        @Shared(.recentCurrenciesRaw) var raw: String
+        return raw.split(separator: ",").map(String.init).filter { !$0.isEmpty }
+    }
+
+    /// What an amount field should open on.
+    ///
+    /// In order: what this person picked last, then what the household writes
+    /// its money in, then this device's locale. The last pick wins over the
+    /// household because it is the more specific statement — somebody who
+    /// switched to lira for the last three expenses is telling you something
+    /// the ledger's majority has not caught up with yet. The household beats
+    /// the device for the reason on `SharedKey.householdCurrency`.
+    public static var preferred: String {
+        @Shared(.householdCurrency) var household: String?
+        return recent.first ?? household ?? Money.deviceDefault
+    }
+
+    /// Record a pick. Called by the picker itself, so every field that presents
+    /// one gets the memory without asking for it.
+    ///
+    /// Moves an existing code to the front rather than duplicating it, so the
+    /// list is a set in most-recent order and picking the same currency twice
+    /// does not push the others out.
+    public static func remember(_ code: String) {
+        @Shared(.recentCurrenciesRaw) var raw: String
+        var codes = recent.filter { $0 != code }
+        codes.insert(code, at: 0)
+        $raw.withLock { $0 = codes.prefix(recentLimit).joined(separator: ",") }
     }
 }

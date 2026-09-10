@@ -49,7 +49,24 @@ public struct EventComposerFeature: Sendable {
         /// Which optional halves of the plan are on screen.
         public var sections: Set<PlanSection> = []
         public var budgetText = ""
-        public var currency: String = Money.deviceDefault
+
+        /// What this household writes its money in, as Finance last reported
+        /// it. Read-only here — the calendar never decides the answer, it just
+        /// stops contradicting it.
+        @Shared(.householdCurrency) public var householdCurrency: String?
+
+        /// The budget's currency. Seeded from the household's, not from this
+        /// phone's locale.
+        ///
+        /// It used to be `Money.deviceDefault`, and that is what made a budget
+        /// typed here vanish from Finance: the rollup on that screen is scoped
+        /// to one currency, so a party budgeted in the phone's currency by a
+        /// household whose ledger is written in another was filtered straight
+        /// out of the only screen that would have shown it. The server no
+        /// longer lets such a budget become unreachable — it votes for its own
+        /// currency now — but landing in a second set of figures is still the
+        /// wrong answer when the household has plainly settled on one.
+        public var currency: String
         public var recipeIDs: [RecipeID] = []
 
         /// Things to buy, typed before the event exists.
@@ -137,6 +154,10 @@ public struct EventComposerFeature: Sendable {
             // *method call on self*, and the compiler will not allow that while
             // a stored property is still uninitialised. The three dates have no
             // default of their own, so they are seeded here and refined below.
+            // Nor does `currency`, whose default is a fact about the household
+            // rather than a constant — and which is read through a second
+            // `Shared` handle for the same reason: `self.$householdCurrency` is
+            // an access on `self`, and `self` is not whole yet.
             //
             // A new event lands on the day the calendar was showing, at the next
             // round hour, which is nearly always what somebody tapping "+" on a
@@ -146,6 +167,7 @@ public struct EventComposerFeature: Sendable {
             self.endsAt = editing?.end ?? start.addingTimeInterval(EventKind.general.defaultDuration)
             self.until = editing?.recurrence?.until?.date
                 ?? start.addingTimeInterval(365 * 24 * 3600)
+            self.currency = CurrencyDefaults.preferred
 
             guard let editing else {
                 // Everybody, until somebody says otherwise: a household event
@@ -179,7 +201,11 @@ public struct EventComposerFeature: Sendable {
             attendees = Set(editing.attendees)
             reminders = Set(editing.reminderChoices)
             recipeIDs = editing.recipeIDs
-            currency = editing.currency ?? Money.deviceDefault
+            // A saved event's own currency wins over the household's: it is
+            // what the amount underneath was actually written in, and rereading
+            // 500 as euros because the ledger is mostly euros would silently
+            // restate what somebody typed.
+            currency = editing.currency ?? currency
             if let budget = editing.budget, budget > 0 {
                 budgetText = Money.editableText(budget, currency: currency)
             }
@@ -245,7 +271,16 @@ public struct EventComposerFeature: Sendable {
             )
         }
 
-        public var currencyOptions: [String] { Money.pickerCodes(used: [currency]) }
+        /// What the picker should hoist above the alphabet: whatever is
+        /// picked now, plus what this person has reached for lately. The full
+        /// ISO list is `CurrencyPicker`'s own business.
+        public var currencyOptions: [String] {
+            var codes = [currency]
+            for code in CurrencyDefaults.recent where !codes.contains(code) {
+                codes.append(code)
+            }
+            return codes
+        }
 
         /// Members in a stable order, the viewer first.
         public var orderedMembers: [User] {
@@ -480,7 +515,7 @@ public struct EventComposerFeature: Sendable {
             case let .sectionAdded(section):
                 state.sections.insert(section)
                 if section == .budget, state.budgetText.isEmpty {
-                    state.currency = Money.deviceDefault
+                    state.currency = CurrencyDefaults.preferred
                 }
                 return section == .menu && !state.isSubscribedToRecipes
                     ? subscribeToRecipes(&state)

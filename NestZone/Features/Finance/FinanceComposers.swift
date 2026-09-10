@@ -146,7 +146,10 @@ public struct ExpenseComposerFeature: Sendable {
         /// The total, in whole minor units — the only form the server accepts.
         public var amountMinor: Int { Money.parse(amountText, currency: currency) }
 
-        public var currencyOptions: [String] { Money.pickerCodes(used: knownCurrencies) }
+        /// What *this household* writes in, for the picker's own section. The
+        /// full ISO list is the picker's business, not the composer's — it was
+        /// built here only because the old `Menu` had nowhere else to get it.
+        public var currencyOptions: [String] { knownCurrencies }
 
         /// Members in a stable order, the payer's own row first.
         public var orderedMembers: [User] {
@@ -452,7 +455,10 @@ public struct BillComposerFeature: Sendable {
 
         public var isEditing: Bool { editing != nil }
         public var amountMinor: Int { Money.parse(amountText, currency: currency) }
-        public var currencyOptions: [String] { Money.pickerCodes(used: knownCurrencies) }
+        /// What *this household* writes in, for the picker's own section. The
+        /// full ISO list is the picker's business, not the composer's — it was
+        /// built here only because the old `Menu` had nowhere else to get it.
+        public var currencyOptions: [String] { knownCurrencies }
 
         /// What this bill will cost the household every month, which is the
         /// figure that makes a yearly subscription comparable to the rent.
@@ -741,7 +747,10 @@ public struct BudgetEditorFeature: Sendable {
         }
 
         public var isEditing: Bool { editing != nil }
-        public var currencyOptions: [String] { Money.pickerCodes(used: knownCurrencies) }
+        /// What *this household* writes in, for the picker's own section. The
+        /// full ISO list is the picker's business, not the composer's — it was
+        /// built here only because the old `Menu` had nowhere else to get it.
+        public var currencyOptions: [String] { knownCurrencies }
         /// Whether there is a choice to present at all.
         public var canChooseCategory: Bool { !isEditing && choosableCategories.count > 1 }
         public var limitMinor: Int { Money.parse(limitText, currency: currency) }

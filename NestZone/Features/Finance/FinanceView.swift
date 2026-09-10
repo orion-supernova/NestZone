@@ -324,6 +324,9 @@ public struct FinanceView: View {
                 if store.hasEventSpend {
                     eventsPreview.appear(6)
                 }
+                if store.hasRepairSpend {
+                    repairsPreview.appear(7)
+                }
             }
             .padding(.horizontal, Metrics.screenPadding)
             .animation(Motion.fade, value: store.isLoading)
@@ -623,6 +626,49 @@ public struct FinanceView: View {
         }
     }
 
+    /// The ceilings the house set for itself.
+    ///
+    /// An estimate is a softer thing than a budget — somebody else names the
+    /// price and the household only guesses at it — but it is still a number to
+    /// come in under, and it belongs on the page about numbers to come in
+    /// under. It was stored on the problem's own document and shown nowhere
+    /// here, exactly as an event's budget was.
+    private var repairEstimates: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            SectionHeader(L10n.financeRepairEstimatesTitle, symbol: "wrench.and.screwdriver")
+            GlassGroup {
+                VStack(spacing: 8) {
+                    ForEach(store.estimatedRepairRows) { repair in
+                        RepairSpendRow(repair: repair) {
+                            store.send(.repairTapped(repair.issueID))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// What the house itself is costing.
+    ///
+    /// The calendar's twin, and it was missing for the same reason: a problem
+    /// carries its estimate on its own document and its receipts land in the
+    /// ledger as ordinary rows. The ledger could already say *what* a row was
+    /// for; only this card can say whether the boiler has eaten its estimate.
+    private var repairsPreview: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            SectionHeader(L10n.financeRepairsTitle, symbol: "wrench.and.screwdriver")
+            GlassGroup {
+                VStack(spacing: 8) {
+                    ForEach(store.repairRows) { repair in
+                        RepairSpendRow(repair: repair) {
+                            store.send(.repairTapped(repair.issueID))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Ledger
 
     @ViewBuilder
@@ -859,8 +905,8 @@ public struct FinanceView: View {
     /// rest of the time.
     @ViewBuilder
     private var budgetsPage: some View {
-        VStack(spacing: Metrics.sectionSpacing) {
-            if store.budgets.isEmpty {
+        VStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
+            if !store.hasAnyBudget {
                 EmptyStateView(
                     title: L10n.financeNoBudgetsTitle,
                     message: L10n.financeNoBudgetsMessage,
@@ -872,21 +918,62 @@ public struct FinanceView: View {
                 )
                 .padding(.top, 12)
             } else {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 152), spacing: Metrics.stackSpacing)],
-                    spacing: Metrics.stackSpacing
-                ) {
-                    ForEach(Array(store.budgetRows.enumerated()), id: \.element.budget.id) { index, row in
-                        BudgetCard(progress: row.progress, currency: row.progress.currency) {
-                            store.send(.budgetTapped(row.budget.id))
-                        }
-                        .appear(index)
+                if !store.budgetRows.isEmpty {
+                    // Headed only when the event group is under it. On its own
+                    // the grid is the whole page and the tab already names it;
+                    // a heading repeating the tab is noise.
+                    if store.hasBudgetedEvents || store.hasEstimatedRepairs {
+                        SectionHeader(L10n.financeBudgetCeilingsTitle, symbol: "target")
                     }
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 152), spacing: Metrics.stackSpacing)],
+                        spacing: Metrics.stackSpacing
+                    ) {
+                        ForEach(Array(store.budgetRows.enumerated()), id: \.element.budget.id) { index, row in
+                            BudgetCard(progress: row.progress, currency: row.progress.currency) {
+                                store.send(.budgetTapped(row.budget.id))
+                            }
+                            .appear(index)
+                        }
+                    }
+                }
+
+                if store.hasBudgetedEvents {
+                    eventBudgets
+                }
+
+                if store.hasEstimatedRepairs {
+                    repairEstimates
                 }
             }
         }
         .padding(.horizontal, Metrics.screenPadding)
         .animation(Motion.spring, value: store.budgets)
+        .animation(Motion.spring, value: store.budgetedEventRows)
+        .animation(Motion.spring, value: store.estimatedRepairRows)
+    }
+
+    /// The ceilings set in the calendar rather than here.
+    ///
+    /// A budget typed into the event composer is stored on the event's own
+    /// document, not in the `budgets` table, so this page — which reads that
+    /// table — showed nothing for it and, with no category budget set, said in
+    /// as many words that the household had no budgets at all. It had one; it
+    /// was on Saturday's party. The rows are the same ones the overview shows,
+    /// narrowed to the events that were actually given a cap.
+    private var eventBudgets: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            SectionHeader(L10n.financeEventBudgetsTitle, symbol: "calendar")
+            GlassGroup {
+                VStack(spacing: 8) {
+                    ForEach(store.budgetedEventRows) { event in
+                        EventSpendRow(event: event) {
+                            store.send(.eventTapped(event.eventID, event.day))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1112,6 +1199,78 @@ private struct EventSpendRow: View {
         // toward it, which is right for a floating control and wrong for a row
         // in a ScrollView, where it is one more claim on the touch the pan
         // needs.
+        .glassCard(cornerRadius: Metrics.tightRadius)
+        .onTapGesture(perform: onTap)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(.default, onTap)
+    }
+}
+
+/// One house problem, and what it has cost so far.
+///
+/// `EventSpendRow`'s twin, with one difference that is not cosmetic: the bar
+/// fills toward an *estimate*, which is a guess at what somebody else will
+/// charge rather than a decision the household made. Going over it is worth
+/// seeing and is not a failure, so it colours as a warning rather than as
+/// danger — the severity beside it is what says whether to worry.
+private struct RepairSpendRow: View {
+    let repair: RepairSpend
+    let onTap: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: repair.severity.symbol)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(repair.severity.tint)
+                .frame(width: 34, height: 34)
+                .background(repair.severity.tint.opacity(0.16), in: .circle)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(repair.title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Text(repair.severity.title)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                if let progress = repair.progress {
+                    GeometryReader { geo in
+                        Capsule()
+                            .fill(repair.isOverEstimate ? Palette.warning : Palette.indigo)
+                            .frame(width: max(3, geo.size.width * progress))
+                    }
+                    .frame(height: 4)
+                    .background(Capsule().fill(.quaternary))
+                    .padding(.top, 1)
+                }
+            }
+
+            Spacer(minLength: 4)
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(Money.text(repair.spent, currency: repair.currency))
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .monospacedDigit()
+                if let estimate = repair.estimate {
+                    Text(L10n.financeRepairOfEstimate(
+                        Money.compactText(estimate, currency: repair.currency)
+                    ))
+                    .font(.caption2)
+                    .monospacedDigit()
+                    .foregroundStyle(repair.isOverEstimate ? Palette.warning : .secondary)
+                } else if repair.expenseCount > 0 {
+                    Text(L10n.financeEventExpenses(repair.expenseCount))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, Metrics.cardPadding)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect)
         .glassCard(cornerRadius: Metrics.tightRadius)
         .onTapGesture(perform: onTap)
         .accessibilityElement(children: .combine)

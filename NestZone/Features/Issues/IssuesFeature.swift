@@ -68,9 +68,20 @@ public struct IssuesFeature: Sendable {
         @Presents public var compose: IssueComposerFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
-        public init(homeID: HomeID, currentUserID: UserID? = nil) {
+        /// Opened by id, from somewhere that only knows *which* problem —
+        /// Finance's repair rows, above all. Held until the board arrives,
+        /// because the detail is built from the row and there is no row yet.
+        /// The same shape as `CalendarFeature.pendingOpenID`.
+        public var pendingOpenID: IssueID?
+
+        public init(
+            homeID: HomeID,
+            currentUserID: UserID? = nil,
+            openingIssueID: IssueID? = nil
+        ) {
             self.homeID = homeID
             self.currentUserID = currentUserID
+            self.pendingOpenID = openingIssueID
         }
 
         /// The four faces of the screen.
@@ -443,6 +454,24 @@ public struct IssuesFeature: Sendable {
                 if board.summary != state.summary { state.summary = board.summary }
                 state.isLoading = false
                 state.hasLoaded = true
+
+                // Opened by id: resolve it now that there is a row to build the
+                // detail from. A problem that the board does not carry — closed
+                // long ago, and reachable from Finance because money was spent
+                // on it — leaves the screen on the board rather than on an
+                // empty sheet. The board is still a truthful answer to "show me
+                // this problem"; a blank detail is not.
+                if let wanted = state.pendingOpenID {
+                    state.pendingOpenID = nil
+                    if let issue = state.issues[id: wanted] {
+                        state.detail = IssueDetailFeature.State(
+                            issue: issue,
+                            homeID: state.homeID,
+                            currentUserID: state.currentUserID,
+                            members: state.members
+                        )
+                    }
+                }
                 return .none
 
             case let .membersUpdated(members):

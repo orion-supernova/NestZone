@@ -4674,6 +4674,91 @@
         }
       }
     },
+    "currency_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All currencies"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm para birimleri"
+          }
+        }
+      }
+    },
+    "currency_in_this_home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In this home"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu evde"
+          }
+        }
+      }
+    },
+    "currency_picker_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Currency"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para birimi"
+          }
+        }
+      }
+    },
+    "currency_recent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son kullanılan"
+          }
+        }
+      }
+    },
+    "currency_search_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search currencies"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para birimi ara"
+          }
+        }
+      }
+    },
     "decade_input_create_poll": {
       "extractionState": "manual",
       "localizations": {
@@ -6102,6 +6187,23 @@
         }
       }
     },
+    "finance_budget_ceilings_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly ceilings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aylık limitler"
+          }
+        }
+      }
+    },
     "finance_budget_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -6945,6 +7047,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önce bir ad ver."
+          }
+        }
+      }
+    },
+    "finance_event_budgets_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Event budgets"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etkinlik bütçeleri"
           }
         }
       }
@@ -8007,6 +8126,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bütçeyi kaldır"
+          }
+        }
+      }
+    },
+    "finance_repair_estimates_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repair estimates"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamir tahminleri"
+          }
+        }
+      }
+    },
+    "finance_repair_of_estimate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "of %@ estimated"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tahminden"
+          }
+        }
+      }
+    },
+    "finance_repairs_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the house is costing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev ne kadara mal oluyor"
           }
         }
       }

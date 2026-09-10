@@ -19,6 +19,7 @@ struct EventComposerSheet: View {
     @Environment(\.theme) private var theme
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isItemFocused: Bool
+    @State private var isPickingCurrency = false
 
     var body: some View {
         NavigationStack {
@@ -467,10 +468,8 @@ struct EventComposerSheet: View {
     private var budgetFields: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                Menu {
-                    ForEach(store.currencyOptions, id: \.self) { code in
-                        Button(code) { store.send(.binding(.set(\.currency, code))) }
-                    }
+                Button {
+                    isPickingCurrency = true
                 } label: {
                     HStack(spacing: 3) {
                         Text(store.currency)
@@ -479,6 +478,12 @@ struct EventComposerSheet: View {
                             .font(.system(size: 8, weight: .bold))
                     }
                     .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $isPickingCurrency) {
+                    CurrencyPicker(selected: store.currency, used: store.currencyOptions) { code in
+                        store.send(.binding(.set(\.currency, code)))
+                    }
                 }
 
                 TextField(text: $store.budgetText) {

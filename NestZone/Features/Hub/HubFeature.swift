@@ -292,6 +292,18 @@ public struct HubFeature: Sendable {
                 )))
                 return .none
 
+            // The mirror of the case above: the ledger can now say a row was a
+            // repair, so it has to be able to show which one. Finance names the
+            // problem; this is the only place that knows problems are shown on
+            // the House Problems screen.
+            case let .path(.element(id: _, action: .finance(.delegate(.openIssue(issueID))))):
+                state.path.append(.issues(IssuesFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.currentUserID,
+                    openingIssueID: issueID
+                )))
+                return .none
+
             // The parts for a repair are ordinary shopping, so "show me the
             // parts" is the shopping list — pushed on top of the problem rather
             // than unwound to, because the household is in the middle of

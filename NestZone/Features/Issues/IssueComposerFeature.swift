@@ -40,7 +40,13 @@ public struct IssueComposerFeature: Sendable {
         /// deleting one, every time. The same habit every amount field in this
         /// app has.
         public var estimateText = ""
-        public var currency: String = Money.deviceDefault
+        /// What the estimate is written in. Seeded from the household's ledger
+        /// rather than from this phone's locale, for the reason spelled out on
+        /// `SharedKey.householdCurrency`: a repair priced in a currency the
+        /// household does not write in lands in a set of figures nobody on the
+        /// Finance screen is looking at.
+        @Shared(.householdCurrency) public var householdCurrency: String?
+        public var currency: String = CurrencyDefaults.preferred
 
         public var vendorName = ""
         public var vendorPhone = ""
@@ -93,7 +99,11 @@ public struct IssueComposerFeature: Sendable {
                     hasDeadline = true
                     dueBy = due.date
                 }
-                currency = editing.currency ?? Money.deviceDefault
+                // The problem's own currency wins: it is what the number
+                // underneath was actually written in, and rereading a 5000
+                // quote as euros because the ledger is mostly euros would
+                // silently restate what the plumber said.
+                currency = editing.currency ?? currency
                 if let estimate = editing.costEstimate, estimate > 0 {
                     estimateText = Money.editableText(estimate, currency: currency)
                 }
@@ -119,7 +129,16 @@ public struct IssueComposerFeature: Sendable {
         /// The estimate in whole minor units — the only form the server takes.
         public var estimateMinor: Int { Money.parse(estimateText, currency: currency) }
 
-        public var currencyOptions: [String] { Money.pickerCodes(used: [currency]) }
+        /// What the picker should hoist above the alphabet: whatever is
+        /// picked now, plus what this person has reached for lately. The full
+        /// ISO list is `CurrencyPicker`'s own business.
+        public var currencyOptions: [String] {
+            var codes = [currency]
+            for code in CurrencyDefaults.recent where !codes.contains(code) {
+                codes.append(code)
+            }
+            return codes
+        }
 
         /// Members in a stable order, the reporter first.
         public var orderedMembers: [User] {

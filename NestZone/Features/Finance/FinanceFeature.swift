@@ -36,6 +36,11 @@ public struct FinanceFeature: Sendable {
         public var selectedCurrency: String?
         public var section: Section = .overview
 
+        /// What this household writes its money in, republished for features
+        /// that have no summary of their own to read it off — the calendar's
+        /// budget field above all. Written here and nowhere else.
+        @Shared(.householdCurrency) public var householdCurrency: String?
+
         public var summary: FinanceSummary = .empty
         public var expenses: IdentifiedArrayOf<Expense> = []
         public var bills: IdentifiedArrayOf<Bill> = []
@@ -274,6 +279,59 @@ public struct FinanceFeature: Sendable {
         /// Only worth a card once there is something in it.
         public var hasEventSpend: Bool { !summary.events.isEmpty }
 
+        /// The calendar's own budgets — the events that were given a ceiling.
+        ///
+        /// The Budgets page is about caps, so it takes this rather than the
+        /// whole rollup: an event with receipts and no ceiling is spend, and
+        /// belongs on the overview with the rest of what the calendar costs.
+        /// Budgeting a party in the event composer and then finding nothing
+        /// under Budgets was the whole complaint — the money was on the event
+        /// document the entire time, and only the overview ever showed it.
+        public var budgetedEventRows: [EventSpend] {
+            summary.events.filter { $0.budget != nil }
+        }
+
+        /// Only worth its own group once there is something in it.
+        public var hasBudgetedEvents: Bool { !budgetedEventRows.isEmpty }
+
+        /// What a *new* amount on this screen should open on.
+        ///
+        /// The last currency this person actually picked, when there is one,
+        /// and otherwise whatever the screen is showing. Picking one used to be
+        /// forgotten the moment the sheet closed, so somebody logging a week of
+        /// lira receipts changed the currency on every single one.
+        ///
+        /// The wrinkle worth knowing: this screen is scoped to one currency, so
+        /// an expense added in another lands outside the figures being looked
+        /// at until the currency chips are switched. That is the same rule the
+        /// rest of Finance follows — nothing is converted, ever — and it is
+        /// better than the alternative, which is silently overriding a
+        /// deliberate choice every time.
+        public var composerCurrency: String {
+            CurrencyDefaults.recent.first ?? currency
+        }
+
+        /// What the house's problems are costing, newest activity first.
+        public var repairRows: [RepairSpend] { summary.repairs }
+
+        public var hasRepairSpend: Bool { !summary.repairs.isEmpty }
+
+        /// The repairs somebody has actually put a number on. Same rule as
+        /// `budgetedEventRows`: the Budgets page is about caps, and a problem
+        /// with receipts but no estimate is spend rather than a ceiling.
+        public var estimatedRepairRows: [RepairSpend] {
+            summary.repairs.filter { $0.estimate != nil }
+        }
+
+        public var hasEstimatedRepairs: Bool { !estimatedRepairRows.isEmpty }
+
+        /// Whether the Budgets page has anything at all. A household that has
+        /// budgeted only a party — or only guessed at what the boiler will
+        /// cost — has budgets, and must not be told it has none.
+        public var hasAnyBudget: Bool {
+            !budgets.isEmpty || hasBudgetedEvents || hasEstimatedRepairs
+        }
+
         /// The title to print under a ledger row that was spent on something in
         /// the calendar. `nil` for ordinary money, and for a row whose event has
         /// since been deleted — the expense outlives the link.
@@ -395,6 +453,7 @@ public struct FinanceFeature: Sendable {
         case writeFailed(AppError)
 
         case eventTapped(EventID, CalendarDay)
+        case repairTapped(IssueID)
 
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
@@ -415,6 +474,9 @@ public struct FinanceFeature: Sendable {
             /// does not get to know that. It says which event; the Hub knows
             /// where events are shown.
             case openEvent(EventID, CalendarDay)
+            /// Same bargain for the house's problems: Finance says which one,
+            /// and the Hub — which owns the stack — knows where problems live.
+            case openIssue(IssueID)
         }
     }
 
@@ -507,6 +569,21 @@ public struct FinanceFeature: Sendable {
                 // card still holding the *previous* month's figures until the
                 // summary caught up.
                 if state.isLoading { state.isLoading = false }
+
+                // Tell the rest of the app what this household writes its money
+                // in. Only the household's *main* currency, which is the one the
+                // server picks when the screen has not asked for another —
+                // publishing whatever the picker happened to be parked on would
+                // teach the calendar the wrong default from a moment's browsing.
+                //
+                // The composers over here already read the answer off the
+                // summary; the calendar's budget field could not, and opened on
+                // this phone's locale instead. See `SharedKey.householdCurrency`.
+                if state.selectedCurrency == nil,
+                   let main = summary.currency,
+                   main != state.householdCurrency {
+                    state.$householdCurrency.withLock { $0 = main }
+                }
                 return .none
 
             case let .expensesUpdated(month, expenses):
@@ -590,7 +667,7 @@ public struct FinanceFeature: Sendable {
                     homeID: state.homeID,
                     members: state.members,
                     currentUserID: state.currentUserID,
-                    currency: state.currency,
+                    currency: state.composerCurrency,
                     knownCurrencies: state.currencies,
                     // Adding an expense while looking at March should date it in
                     // March, not today — but only if March is over. Backfilling
@@ -661,7 +738,7 @@ public struct FinanceFeature: Sendable {
                 state.destination = .composeBill(BillComposerFeature.State(
                     homeID: state.homeID,
                     members: state.members,
-                    currency: state.currency,
+                    currency: state.composerCurrency,
                     knownCurrencies: state.currencies
                 ))
                 return .none
@@ -816,6 +893,9 @@ public struct FinanceFeature: Sendable {
 
             case let .eventTapped(eventID, day):
                 return .send(.delegate(.openEvent(eventID, day)))
+
+            case let .repairTapped(issueID):
+                return .send(.delegate(.openIssue(issueID)))
 
             case .binding, .destination, .alert, .delegate:
                 return .none

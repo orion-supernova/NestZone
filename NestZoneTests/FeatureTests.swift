@@ -3369,6 +3369,75 @@ struct FinanceTests {
         #expect(asked.value == [nil, "TRY"])
     }
 
+    @Test("A budget set in the calendar shows up under Budgets")
+    func eventBudgetsReachTheBudgetsPage() async {
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        var summary = Self.summary(.current)
+        summary.events = [
+            EventSpend(eventID: "e1", title: "Saturday's party", currency: "EUR", budget: 20_000),
+            // Spent on, never capped. Money, not a budget.
+            EventSpend(
+                eventID: "e2",
+                title: "Dentist",
+                currency: "EUR",
+                budget: nil,
+                spent: 8_000,
+                expenseCount: 1
+            ),
+        ]
+        await store.send(.summaryUpdated(summary))
+
+        // The whole rollup is what the calendar costs, and belongs on the
+        // overview.
+        #expect(store.state.eventRows.count == 2)
+
+        // The Budgets page is about caps: the party has one, the dentist does
+        // not. Budgeting a party and then being told the household has no
+        // budgets was the bug — the ceiling lives on the event document rather
+        // than in the `budgets` table, and only the overview ever read it.
+        #expect(store.state.budgetedEventRows.map(\.eventID) == ["e1"])
+        #expect(store.state.budgets.isEmpty)
+        #expect(store.state.hasAnyBudget)
+    }
+
+    @Test("An event with no budget and no spend leaves the Budgets page empty")
+    func budgetsPageStaysEmptyWithoutACeiling() async {
+        let store = Self.silentStore()
+        store.exhaustivity = .off
+
+        await store.send(.summaryUpdated(Self.summary(.current)))
+        #expect(!store.state.hasAnyBudget)
+    }
+
+    @Test("The household's currency is published for features with no summary")
+    func householdCurrencyIsPublished() async {
+        await withDependencies {
+            // Persisted, so an unisolated store would inherit whatever ran first.
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            let store = Self.silentStore()
+            store.exhaustivity = .off
+
+            var summary = Self.summary(.current)
+            summary.currency = "TRY"
+            await store.send(.summaryUpdated(summary))
+            #expect(store.state.householdCurrency == "TRY")
+
+            // Browsing the other set of figures is not a statement about what
+            // the household writes in. Teaching the calendar "EUR" from a
+            // moment's looking would put the next party's budget in the wrong
+            // one — which is exactly the trip that hid it in the first place.
+            await store.send(.currencySelected("EUR"))
+            var euros = Self.summary(.current)
+            euros.currency = "EUR"
+            await store.send(.summaryUpdated(euros))
+            #expect(store.state.currency == "EUR")
+            #expect(store.state.householdCurrency == "TRY")
+        }
+    }
+
     @Test("A summary for a currency that has been switched away from is dropped")
     func staleCurrencyIsIgnored() async {
         let store = Self.silentStore()
@@ -4324,6 +4393,81 @@ struct EventComposerTests {
         #expect(store.state.repeats)
         #expect(store.state.frequency == .yearly)
         #expect(store.state.isAllDay)
+    }
+
+    @Test("A budget opens in the household's currency, not this phone's")
+    func budgetFollowsTheHousehold() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            @Shared(.householdCurrency) var householdCurrency: String?
+            $householdCurrency.withLock { $0 = "TRY" }
+
+            let store = TestStore(
+                initialState: EventComposerFeature.State(
+                    homeID: "h1",
+                    members: Self.members,
+                    currentUserID: "u1",
+                    day: .today
+                )
+            ) {
+                EventComposerFeature()
+            } withDependencies: {
+                $0.recipes.byHome = { _ in AsyncThrowingStream { $0.finish() } }
+                $0.recipes.samples = { [] }
+            }
+            store.exhaustivity = .off
+
+            // The ledger is written in lira, so the party is budgeted in lira.
+            // On the device default it would have been written in whatever this
+            // phone's locale says and then filtered out of the one screen that
+            // shows it — Finance scopes its figures to a single currency and
+            // never invents a rate between two.
+            #expect(store.state.currency == "TRY")
+
+            await store.send(.sectionAdded(.budget))
+            #expect(store.state.currency == "TRY")
+        }
+    }
+
+    @Test("A saved event keeps the currency its budget was written in")
+    func editingKeepsTheEventsOwnCurrency() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            @Shared(.householdCurrency) var householdCurrency: String?
+            $householdCurrency.withLock { $0 = "TRY" }
+
+            let now = Date()
+            let event = EventOccurrence(
+                eventID: "e1",
+                title: "Berlin trip",
+                startsAt: Timestamp(now),
+                endsAt: Timestamp(now.addingTimeInterval(3600)),
+                budget: 50_000,
+                currency: "EUR"
+            )
+            let store = TestStore(
+                initialState: EventComposerFeature.State(
+                    homeID: "h1",
+                    members: Self.members,
+                    currentUserID: "u1",
+                    day: .today,
+                    editing: event
+                )
+            ) {
+                EventComposerFeature()
+            } withDependencies: {
+                $0.recipes.byHome = { _ in AsyncThrowingStream { $0.finish() } }
+                $0.recipes.samples = { [] }
+            }
+            store.exhaustivity = .off
+
+            // 50000 was typed as euros. Rereading it as lira because the ledger
+            // is mostly lira would restate what somebody wrote.
+            #expect(store.state.currency == "EUR")
+            #expect(store.state.sections.contains(.budget))
+        }
     }
 
     @Test("A fourth reminder is refused rather than silently dropped")

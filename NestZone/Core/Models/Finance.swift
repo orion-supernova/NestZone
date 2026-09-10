@@ -178,6 +178,21 @@ public enum Money {
     public static func name(for currency: String) -> String {
         L10n.locale.localizedString(forCurrencyCode: currency) ?? currency
     }
+
+    /// A currency's symbol, for a picker row that can show one. `nil` when the
+    /// locale has nothing better than the code itself — "TRY · TRY" is a column
+    /// of noise, and the caller drops it rather than printing it twice.
+    public static func symbol(for currency: String) -> String? {
+        // `Locale.currencySymbol` is about the *locale's own* currency, so the
+        // symbol for an arbitrary code has to come from a formatter pinned to
+        // it. Cheap enough for a list this size.
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = L10n.locale
+        formatter.currencyCode = currency
+        guard let candidate = formatter.currencySymbol, !candidate.isEmpty else { return nil }
+        return candidate
+    }
 }
 
 // MARK: - Category
@@ -663,10 +678,17 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
     /// in neither month somebody would think to look in. What a party cost is a
     /// total over the party, not over whichever month the scrubber is on.
     public var events: [EventSpend]
+    /// What the house's problems are costing, on the same terms as `events`:
+    /// the estimate lives on the problem's own document, the money spent is
+    /// ordinary ledger rows carrying an `issue_id`, and neither reached this
+    /// screen before. Not month-scoped, for the same reason — a repair is a
+    /// thing with a beginning and an end, and the deposit paid to the plumber
+    /// in March and the balance paid in May are one repair, not two months.
+    public var repairs: [RepairSpend]
 
     enum CodingKeys: String, CodingKey {
         case year, month, currency, currencies, monthTotal, previousMonthTotal, expenseCount
-        case members, transfers, series, categories, budgets, events
+        case members, transfers, series, categories, budgets, events, repairs
     }
 
     public init(from decoder: any Decoder) throws {
@@ -684,6 +706,7 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
         categories = try c.decodeIfPresent([CategoryTotal].self, forKey: .categories) ?? []
         budgets = try c.decodeIfPresent([BudgetProgress].self, forKey: .budgets) ?? []
         events = (try? c.decodeIfPresent([EventSpend].self, forKey: .events)) ?? []
+        repairs = (try? c.decodeIfPresent([RepairSpend].self, forKey: .repairs)) ?? []
     }
 
     public init(
@@ -699,7 +722,8 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
         series: [SpendPoint] = [],
         categories: [CategoryTotal] = [],
         budgets: [BudgetProgress] = [],
-        events: [EventSpend] = []
+        events: [EventSpend] = [],
+        repairs: [RepairSpend] = []
     ) {
         self.year = year
         self.month = month
@@ -714,6 +738,7 @@ public struct FinanceSummary: Codable, Hashable, Sendable {
         self.categories = categories
         self.budgets = budgets
         self.events = events
+        self.repairs = repairs
     }
 
     public static let empty = FinanceSummary()
@@ -800,6 +825,99 @@ public struct EventSpend: Codable, Identifiable, Hashable, Sendable {
 
     /// The day this event's sheet should open on.
     public var day: CalendarDay { CalendarDay(startsAt.date) }
+}
+
+/// What one house problem has cost the household.
+///
+/// `EventSpend`'s twin, and it exists for the same reason. A problem carries
+/// `cost_estimate` on its own document, in its own currency; the money spent
+/// fixing it is ordinary ledger rows carrying an `issue_id`. The ledger already
+/// labelled those rows with the problem's title, so the money was explainable —
+/// what it could not say was whether the boiler had eaten its estimate.
+///
+/// Kept separate from `EventSpend` rather than made generic over the two: the
+/// ids are different types, a party is budgeted while a repair is *estimated*
+/// — a guess at what somebody else will charge, not a decision about what the
+/// household will spend — and a repair carries its severity, which is the thing
+/// that decides whether an overrun matters.
+public struct RepairSpend: Codable, Identifiable, Hashable, Sendable {
+    public let issueID: IssueID
+    public var title: String
+    public var severity: IssueSeverity
+    public var isOpen: Bool
+    /// The problem's own currency, which is the one this row's figures are in.
+    public var currency: String
+    /// What the household expects it to cost, in minor units. `nil` when nobody
+    /// has guessed yet — the row is then a total, not a target.
+    public var estimate: Int?
+    /// Minor units, scoped to `currency`.
+    public var spent: Int
+    /// Every linked expense, whatever currency it was written in. A count, not
+    /// a sum, so it is not scoped.
+    public var expenseCount: Int
+    /// Last time anything happened to it, which is what this row sorts on.
+    public var lastActivityAt: Timestamp
+
+    public var id: IssueID { issueID }
+
+    enum CodingKeys: String, CodingKey {
+        case issueID = "issueId"
+        case title, severity, currency, estimate, spent, expenseCount
+        case isOpen, lastActivityAt
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        issueID = try c.decode(IssueID.self, forKey: .issueID)
+        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+        severity = c.decodeLenient(IssueSeverity.self, forKey: .severity, default: .minor)
+        isOpen = try c.decodeIfPresent(Bool.self, forKey: .isOpen) ?? true
+        currency = try c.decodeIfPresent(String.self, forKey: .currency) ?? Money.deviceDefault
+        estimate = c.decodeNumberIfPresent(forKey: .estimate)
+        spent = c.decodeNumber(forKey: .spent)
+        expenseCount = c.decodeNumber(forKey: .expenseCount)
+        lastActivityAt = try c.decodeIfPresent(Timestamp.self, forKey: .lastActivityAt)
+            ?? Timestamp(milliseconds: 0)
+    }
+
+    public init(
+        issueID: IssueID,
+        title: String,
+        severity: IssueSeverity = .minor,
+        isOpen: Bool = true,
+        currency: String = "EUR",
+        estimate: Int? = nil,
+        spent: Int = 0,
+        expenseCount: Int = 0,
+        lastActivityAt: Timestamp = Timestamp(milliseconds: 0)
+    ) {
+        self.issueID = issueID
+        self.title = title
+        self.severity = severity
+        self.isOpen = isOpen
+        self.currency = currency
+        self.estimate = estimate
+        self.spent = spent
+        self.expenseCount = expenseCount
+        self.lastActivityAt = lastActivityAt
+    }
+
+    /// How far into the estimate the repair has gone, 0...1 and clamped so an
+    /// overrun fills the ring rather than overflowing it. `nil` when there is
+    /// no estimate to be a fraction of.
+    public var progress: Double? {
+        guard let estimate, estimate > 0 else { return nil }
+        return min(Double(spent) / Double(estimate), 1)
+    }
+
+    public var remaining: Int? { estimate.map { $0 - spent } }
+
+    /// Over the guess, which for a repair is a milder statement than for a
+    /// budget: somebody else set this price. It is still worth seeing.
+    public var isOverEstimate: Bool {
+        guard let estimate else { return false }
+        return spent > estimate
+    }
 }
 
 /// One person's standing in the household ledger.

@@ -91,6 +91,7 @@ struct IssueComposerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @State private var picked: [PhotosPickerItem] = []
+    @State private var isPickingCurrency = false
 
     var body: some View {
         NavigationStack {
@@ -415,14 +416,8 @@ struct IssueComposerSheet: View {
                                 .keyboardType(.decimalPad)
                                 .monospacedDigit()
 
-                                Menu {
-                                    ForEach(store.currencyOptions, id: \.self) { code in
-                                        Button {
-                                            store.send(.binding(.set(\.currency, code)))
-                                        } label: {
-                                            Text(verbatim: "\(code) · \(Money.name(for: code))")
-                                        }
-                                    }
+                                Button {
+                                    isPickingCurrency = true
                                 } label: {
                                     HStack(spacing: 3) {
                                         Text(store.currency)
@@ -435,6 +430,15 @@ struct IssueComposerSheet: View {
                                     .padding(.vertical, 6)
                                     .glassEffect(.regular.interactive(), in: .capsule)
                                     .contentShape(.capsule)
+                                }
+                                .buttonStyle(.plain)
+                                .sheet(isPresented: $isPickingCurrency) {
+                                    CurrencyPicker(
+                                        selected: store.currency,
+                                        used: store.currencyOptions
+                                    ) { code in
+                                        store.send(.binding(.set(\.currency, code)))
+                                    }
                                 }
                             }
                             Text(L10n.issuesEstimateHint)

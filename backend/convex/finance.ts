@@ -81,6 +81,12 @@ const MAX_EVENT_ROLLUP = 12;
  * a screen that re-runs on every ledger push.
  */
 const EVENT_LOOKBACK_MONTHS = 6;
+/**
+ * How many house problems the Finance screen rolls up, on the same terms as
+ * `MAX_EVENT_ROLLUP`. The working set is what is still wrong, not the history
+ * of everything that ever broke — that is the House Problems screen.
+ */
+const MAX_REPAIR_ROLLUP = 12;
 
 // ---------------------------------------------------------------------------
 // Money
@@ -437,22 +443,63 @@ export const summary = query({
     const home = await requireHomeMember(ctx, homeId);
     const offset = tzOffsetMinutes ?? 0;
 
-    const [allExpenses, allSettlements, allBills, budgets] = await Promise.all([
+    // Recent and upcoming events are read here rather than down in the events
+    // section because a budgeted event is one of the things that decides which
+    // currency this screen is *about* — see the vote below.
+    const [allExpenses, allSettlements, allBills, budgets, recentEvents, openIssues] =
+      await Promise.all([
       ctx.db.query("expenses").withIndex("by_home", (q) => q.eq("home_id", homeId)).collect(),
       ctx.db.query("settlements").withIndex("by_home", (q) => q.eq("home_id", homeId)).collect(),
       ctx.db.query("bills").withIndex("by_home", (q) => q.eq("home_id", homeId)).collect(),
       ctx.db.query("budgets").withIndex("by_home", (q) => q.eq("home_id", homeId)).collect(),
+      ctx.db
+        .query("events")
+        .withIndex("by_home_series_end", (q) =>
+          q
+            .eq("home_id", homeId)
+            .gte("series_end", monthStart(year, month - EVENT_LOOKBACK_MONTHS, offset)),
+        )
+        .collect(),
+      // Every problem that is still wrong. Bounded by `is_open` rather than by
+      // a date, because a problem is not over when its month is — the boiler
+      // quoted in March is still costing money in June. Closed ones that money
+      // was actually spent on are picked up by id below, the same way an old
+      // event with receipts is.
+      ctx.db
+        .query("issues")
+        .withIndex("by_home_open", (q) => q.eq("home_id", homeId).eq("is_open", true))
+        .collect(),
     ]);
 
     // Every currency the household actually writes in, most-used first. The
     // screen offers these and nothing else — an empty picker of 150 ISO codes
     // is a worse answer than the three a household really uses.
+    //
+    // A budget set on an event votes like any other written amount. It did not
+    // used to, and the omission hid it twice over: the event rollup is scoped
+    // to the selected currency, so a party budgeted in the composer's default
+    // currency was filtered out — and because that currency was in no ballot,
+    // it was not in the picker either, so there was no way to switch to the
+    // figures it had been dropped from. A household whose ledger was still
+    // empty had no selected currency at all, and its only budgeted event fell
+    // out of a screen that had nothing else to show.
     const votes = new Map<string, number>();
     const bump = (map: Map<string, number>, key: string, by: number) =>
       map.set(key, (map.get(key) ?? 0) + by);
     for (const e of allExpenses) bump(votes, e.currency, 1);
     for (const b of allBills) if (!b.is_archived) bump(votes, b.currency, 1);
     for (const b of budgets) bump(votes, b.currency, 1);
+    for (const ev of recentEvents) {
+      if (ev.budget != null && ev.budget > 0 && ev.currency) bump(votes, ev.currency, 1);
+    }
+    // And so does what a household expects a repair to cost. `cost_estimate`
+    // is the same kind of statement as an event's budget — a cap on one thing,
+    // in its own currency — and it was just as invisible here.
+    for (const issue of openIssues) {
+      if (issue.cost_estimate != null && issue.cost_estimate > 0 && issue.currency) {
+        bump(votes, issue.currency, 1);
+      }
+    }
     const currencies = [...votes.entries()]
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([code]) => code);
@@ -618,18 +665,10 @@ export const summary = query({
       else linkedByEvent.set(e.event_id, [e]);
     }
 
-    // Recent and upcoming events, so one that has been budgeted but not yet
+    // `recentEvents` reaches back far enough that an event budgeted but not yet
     // spent on still shows — otherwise setting a budget and coming here to look
-    // at it shows nothing until the first receipt lands.
-    const recentEvents = await ctx.db
-      .query("events")
-      .withIndex("by_home_series_end", (q) =>
-        q
-          .eq("home_id", homeId)
-          .gte("series_end", monthStart(year, month - EVENT_LOOKBACK_MONTHS, offset)),
-      )
-      .collect();
-
+    // at it shows nothing until the first receipt lands. It is read at the top
+    // of the handler, with the vote it takes part in.
     const eventDocs = new Map<string, Doc<"events">>();
     for (const ev of recentEvents) eventDocs.set(ev._id, ev);
     // An event with spend on it always shows, however old — the money is in
@@ -672,6 +711,67 @@ export const summary = query({
       .sort((a, b) => b.startsAt - a.startsAt)
       .slice(0, MAX_EVENT_ROLLUP);
 
+    // --- Repairs -----------------------------------------------------------
+    //
+    // The other half of the calendar's story, and it was missing for the same
+    // reason. A house problem carries `cost_estimate` on its own document, in
+    // its own currency, and the money actually spent fixing it is ordinary
+    // ledger rows carrying an `issue_id`. The ledger already labels those rows
+    // with the problem's title; what it could not say was whether the boiler
+    // had eaten its estimate, because the estimate was never read here.
+    //
+    // Not month-scoped, for the reason events are not: a repair is a thing
+    // with a beginning and an end. The deposit paid to the plumber in March
+    // and the balance paid in May are one repair, not two months.
+    const linkedByIssue = new Map<string, Doc<"expenses">[]>();
+    for (const e of allExpenses) {
+      if (!e.issue_id) continue;
+      const list = linkedByIssue.get(e.issue_id);
+      if (list) list.push(e);
+      else linkedByIssue.set(e.issue_id, [e]);
+    }
+
+    const issueDocs = new Map<string, Doc<"issues">>();
+    for (const issue of openIssues) issueDocs.set(issue._id, issue);
+    // A problem that has been paid for always shows, fixed or not — the money
+    // is in the ledger either way, and a row nobody can explain is worse than
+    // a closed one. Only the ones `by_home_open` missed cost a read.
+    const missingIssues = [...linkedByIssue.keys()].filter((id) => !issueDocs.has(id));
+    for (const issue of await Promise.all(
+      missingIssues.map((id) => ctx.db.get(id as Id<"issues">)),
+    )) {
+      if (issue) issueDocs.set(issue._id, issue);
+    }
+
+    const repairRows = [...issueDocs.values()]
+      .filter((issue) => issue.home_id === homeId)
+      .map((issue) => {
+        const linked = linkedByIssue.get(issue._id) ?? [];
+        // The problem's own currency wins; with none set it is whatever its
+        // receipts were written in. The same rule its own money card follows.
+        const isCurrency = issue.currency ?? linked[0]?.currency ?? null;
+        return {
+          issueId: issue._id,
+          title: issue.title ?? "",
+          severity: issue.severity ?? null,
+          status: issue.status ?? null,
+          isOpen: issue.is_open ?? true,
+          currency: isCurrency,
+          estimate: issue.cost_estimate ?? null,
+          spent: linked
+            .filter((e) => isCurrency === null || e.currency === isCurrency)
+            .reduce((total, e) => total + e.amount, 0),
+          // A count, not a sum, so it is not scoped — the same asymmetry the
+          // overdue-bills badge follows.
+          expenseCount: linked.length,
+          lastActivityAt: issue.last_activity_at ?? issue._creationTime,
+        };
+      })
+      .filter((row) => row.currency === currency)
+      .filter((row) => row.estimate !== null || row.expenseCount > 0)
+      .sort((a, b) => b.lastActivityAt - a.lastActivityAt)
+      .slice(0, MAX_REPAIR_ROLLUP);
+
     return {
       year,
       month,
@@ -688,6 +788,7 @@ export const summary = query({
         .sort((a, b) => b.total - a.total),
       budgets: budgetRows,
       events: eventRows,
+      repairs: repairRows,
       // No bill digest: the client has the whole bill list live and counts it
       // there. A count computed here would be scoped to one currency while the
       // list on screen is not, so "2 overdue" would sit above three overdue

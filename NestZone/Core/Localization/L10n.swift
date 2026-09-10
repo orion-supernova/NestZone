@@ -5254,6 +5254,56 @@ public enum L10n {
         r("finance_events_title", "From the calendar")
     }
 
+    /// Monthly ceilings
+    public static var financeBudgetCeilingsTitle: LocalizedStringResource {
+        r("finance_budget_ceilings_title", "Monthly ceilings")
+    }
+
+    /// Event budgets
+    public static var financeEventBudgetsTitle: LocalizedStringResource {
+        r("finance_event_budgets_title", "Event budgets")
+    }
+
+    /// Repair estimates
+    public static var financeRepairEstimatesTitle: LocalizedStringResource {
+        r("finance_repair_estimates_title", "Repair estimates")
+    }
+
+    /// Currency
+    public static var currencyPickerTitle: LocalizedStringResource {
+        r("currency_picker_title", "Currency")
+    }
+
+    /// Search currencies
+    public static var currencySearchPlaceholder: LocalizedStringResource {
+        r("currency_search_placeholder", "Search currencies")
+    }
+
+    /// Recent
+    public static var currencyRecent: LocalizedStringResource {
+        r("currency_recent", "Recent")
+    }
+
+    /// In this home
+    public static var currencyInThisHome: LocalizedStringResource {
+        r("currency_in_this_home", "In this home")
+    }
+
+    /// All currencies
+    public static var currencyAll: LocalizedStringResource {
+        r("currency_all", "All currencies")
+    }
+
+    /// What the house is costing
+    public static var financeRepairsTitle: LocalizedStringResource {
+        r("finance_repairs_title", "What the house is costing")
+    }
+
+    /// of %@ estimated
+    public static func financeRepairOfEstimate(_ a0: String) -> LocalizedStringResource {
+        r("finance_repair_of_estimate", "of \(a0) estimated")
+    }
+
     /// of %@
     public static func financeEventOfBudget(_ a0: String) -> LocalizedStringResource {
         r("finance_event_of_budget", "of \(a0)")
