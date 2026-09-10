@@ -8,8 +8,9 @@ import SwiftUI
 /// gradient-filled `Text` views and an `AngularGradient` ring behind the icon —
 /// then put a transparent `Button` on top of a `SignInWithAppleButton` that had
 /// `allowsHitTesting(false)`, so the real Apple button was decoration. Here the
-/// Apple button is the actual control, and the only decoration is one soft wash
-/// behind the glass.
+/// Apple button is the actual control, wearing nothing but its own shape — a
+/// glass card around it only competed with the one Apple already draws — and
+/// the only decoration is one soft wash behind the mark.
 public struct AuthView: View {
     @Bindable var store: StoreOf<AuthFeature>
 
@@ -24,28 +25,28 @@ public struct AuthView: View {
         ZStack {
             backdrop
 
+            // Greeting high, button just below centre, the rest of the slack
+            // left at the bottom. Both gaps are capped rather than free: an
+            // uncapped pair splits the leftover space evenly and drags the
+            // button onto the home indicator on a tall phone.
             VStack(spacing: 0) {
-                Spacer(minLength: 0)
+                // Capped, so the mark lands in the same place on a 6.9" phone
+                // as it does on an SE instead of drifting down with the glass.
+                Spacer(minLength: 30)
+                    .frame(maxHeight: 200)
 
-                GlassGroup(spacing: 28) {
-                    VStack(spacing: 28) {
-                        mark.appear(0)
-                        headline.appear(1)
-                        signInCard.appear(2)
-                    }
-                }
-                .padding(.horizontal, Metrics.screenPadding)
+                mark.appear(0)
+                headline.appear(1).padding(.top, 32)
 
-                Spacer(minLength: 0)
+                Spacer()
+                    .frame(maxHeight: 40)
 
-                Text(L10n.authAppleExplainer)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 24)
-                    .appear(3)
+                signInButton.appear(2)
+
+                Spacer()
             }
+            .padding(.horizontal, Metrics.screenPadding)
+            .padding(.bottom, 24)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
@@ -86,28 +87,24 @@ public struct AuthView: View {
         }
     }
 
-    private var signInCard: some View {
-        VStack(spacing: 16) {
-            SignInWithAppleButton(.signIn) { request in
-                request.requestedScopes = [.fullName, .email]
-            } onCompletion: { result in
-                store.send(handle(result))
-            }
-            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-            .frame(height: 52)
-            .clipShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))
-            .opacity(store.isSigningIn ? 0.5 : 1)
-            .disabled(store.isSigningIn)
-            .overlay {
-                if store.isSigningIn {
-                    ProgressView()
-                        .tint(colorScheme == .dark ? .black : .white)
-                }
-            }
-            .animation(Motion.fade, value: store.isSigningIn)
+    private var signInButton: some View {
+        SignInWithAppleButton(.signIn) { request in
+            request.requestedScopes = [.fullName, .email]
+        } onCompletion: { result in
+            store.send(handle(result))
         }
-        .padding(Metrics.cardPadding)
-        .glassCard()
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+        .frame(height: 52)
+        .clipShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))
+        .opacity(store.isSigningIn ? 0.5 : 1)
+        .disabled(store.isSigningIn)
+        .overlay {
+            if store.isSigningIn {
+                ProgressView()
+                    .tint(colorScheme == .dark ? .black : .white)
+            }
+        }
+        .animation(Motion.fade, value: store.isSigningIn)
     }
 
     /// Maps `ASAuthorization` into the feature's vocabulary. Kept out of the

@@ -202,23 +202,6 @@
         }
       }
     },
-    "auth_apple_explainer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in with your Apple ID. NestZone never sees or stores a password."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple Kimliğinle giriş yap. NestZone parolanı hiçbir zaman görmez veya saklamaz."
-          }
-        }
-      }
-    },
     "auth_confirm_password_empty": {
       "extractionState": "manual",
       "localizations": {

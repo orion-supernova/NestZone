@@ -2265,11 +2265,6 @@ public enum L10n {
         r("auth_sign_in_subtitle", "Sign in to continue ✨")
     }
 
-    /// Sign in with your Apple ID. NestZone never sees or stores a password.
-    public static var authAppleExplainer: LocalizedStringResource {
-        r("auth_apple_explainer", "Sign in with your Apple ID. NestZone never sees or stores a password.")
-    }
-
     /// Create your account ✨
     public static var authCreateAccountSubtitle: LocalizedStringResource {
         r("auth_create_account_subtitle", "Create your account ✨")
