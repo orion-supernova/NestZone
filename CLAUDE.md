@@ -88,6 +88,12 @@ cd backend && npx tsc --noEmit -p tsconfig.json   # typecheck
 cd backend && npx convex deploy                   # deploy
 cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in the app
 
+# How long a finished chore stays on the Done list before it falls into the
+# Archive. Unset means 30. Set it to 0 to put every completion in the Archive
+# at once — the only way to see that screen without waiting a month, and it
+# rewrites nothing: the boundary moves, the rows do not.
+cd backend && npx convex env set DONE_WINDOW_DAYS 0
+
 # APNs. The auth key is team-wide, not per-app: one .p8 signs for every app
 # under the same Team ID, and the bundle id travels per-request in `apns-topic`.
 #   npx convex env set APNS_KEY_ID    <10-char id, from the .p8 filename>
@@ -118,7 +124,7 @@ cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in 
   is still there — reopen the chore, which retracts the credit visibly, then
   delete it as an open task.
 - **Done and Archive are two halves of one boundary, not two lists.**
-  `DONE_WINDOW_DAYS` splits `completed_at`: above it is `tasks:listByHome`'s
+  `doneWindowDays()` splits `completed_at`: above it is `tasks:listByHome`'s
   finished half, below it is `tasks:archive`. Disjoint by construction — no
   flag, no sweep, and no way for a chore to show up in both. There is no
   archiving *verb*; a chore is in the Archive because it got old. An earlier

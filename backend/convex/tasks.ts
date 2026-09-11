@@ -32,11 +32,31 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * `task_completions`, the History screen reads it, and the contribution split
  * is tallied from it. This shortens the list, not the record.
  *
- * Sent to the client (see `listByHome`) rather than duplicated there, because
- * the Tasks screen states the rule to the person reading it — and a screen that
- * says "30 days" while the server means 14 is worse than one that says nothing.
+ * Sent to the client (see `listByHome` and `archive`) rather than duplicated
+ * there, because both screens state the rule to the person reading them — and a
+ * screen that says "30 days" while the server means 14 is worse than one that
+ * says nothing.
  */
-export const DONE_WINDOW_DAYS = 30;
+const DEFAULT_DONE_WINDOW_DAYS = 30;
+
+/**
+ * The window in force, which the deployment may override.
+ *
+ * How long a finished chore stays on the working list is a product decision,
+ * not a constant of nature, and it is the kind that wants trying at a different
+ * value before it wants a code change. `npx convex env set DONE_WINDOW_DAYS 7`
+ * moves it; unset, or set to anything that is not a non-negative number, and it
+ * is the default above.
+ *
+ * It is also the only way to see the Archive without waiting a month: set it to
+ * `0` and every finished chore falls below the boundary at once. Nothing is
+ * rewritten by that — the boundary moves, the rows do not, and putting the
+ * value back puts them back.
+ */
+export function doneWindowDays(): number {
+  const raw = Number(process.env.DONE_WINDOW_DAYS);
+  return Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_DONE_WINDOW_DAYS;
+}
 
 /**
  * A hard ceiling on the Done list, under the date window.
@@ -171,6 +191,7 @@ export const listByHome = query({
   args: { homeId: v.id("homes") },
   handler: async (ctx, { homeId }) => {
     await requireHomeMember(ctx, homeId);
+    const windowDays = doneWindowDays();
     const [open, done] = await Promise.all([
       openTasks(ctx, homeId),
       ctx.db
@@ -179,12 +200,12 @@ export const listByHome = query({
           q
             .eq("home_id", homeId)
             .eq("is_completed", true)
-            .gte("completed_at", Date.now() - DONE_WINDOW_DAYS * DAY_MS),
+            .gte("completed_at", Date.now() - windowDays * DAY_MS),
         )
         .order("desc")
         .take(DONE_LIMIT),
     ]);
-    return { tasks: [...open, ...done], doneWindowDays: DONE_WINDOW_DAYS };
+    return { tasks: [...open, ...done], doneWindowDays: windowDays };
   },
 });
 
@@ -216,11 +237,12 @@ export const archive = query({
     await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
 
+    const windowDays = doneWindowDays();
     const take = Math.min(Math.max(Math.floor(limit ?? ARCHIVE_LIMIT), 1), ARCHIVE_MAX);
     const rows = await ctx.db
       .query("task_completions")
       .withIndex("by_home_at", (q) =>
-        q.eq("home_id", homeId).lt("completed_at", Date.now() - DONE_WINDOW_DAYS * DAY_MS),
+        q.eq("home_id", homeId).lt("completed_at", Date.now() - windowDays * DAY_MS),
       )
       .order("desc")
       .take(take);
@@ -229,7 +251,7 @@ export const archive = query({
 
     return {
       limit: take,
-      windowDays: DONE_WINDOW_DAYS,
+      windowDays,
       // True when the read hit its ceiling, so the screen can say it is showing
       // the most recent rather than implying it is showing everything.
       isTruncated: rows.length === take,
