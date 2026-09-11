@@ -342,7 +342,15 @@ export default defineSchema({
     // are one index range rather than "take the last 500 and hope". Order
     // matters: the equality goes before the range, because an index can only
     // range over its last used field.
-    .index("by_home_completed", ["home_id", "is_completed", "archived_at", "completed_at"]),
+    .index("by_home_completed", ["home_id", "is_completed", "archived_at", "completed_at"])
+    // The archive, as a place rather than as a property of rows elsewhere.
+    //
+    // Ranging over `archived_at` from zero selects exactly the put-away chores:
+    // a Convex index sorts `undefined` before every number, so "never archived"
+    // falls outside the range instead of having to be filtered out of it. Newest
+    // put away first, which is the order somebody looking for the thing they
+    // just archived by mistake expects to find it in.
+    .index("by_home_archived", ["home_id", "archived_at"]),
 
   /**
    * Every chore this household has ever finished. The record, not the work.

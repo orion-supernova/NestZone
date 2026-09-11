@@ -17,6 +17,8 @@ public struct TaskHistoryView: View {
 
     public var body: some View {
         List {
+            listingPicker
+
             note
 
             content
@@ -34,6 +36,25 @@ public struct TaskHistoryView: View {
         .task { await store.send(.task).finish() }
         .alert($store.scope(state: \.alert, action: \.alert))
         .animation(Motion.spring, value: store.entries)
+        .animation(Motion.spring, value: store.listing)
+    }
+
+    /// The record, or just what has been put away. Two lists, because the
+    /// actions differ: the record is read-only, and the archive is where a
+    /// chore can be brought back or — deliberately, behind a dialog — erased.
+    private var listingPicker: some View {
+        Picker(selection: $store.listing) {
+            ForEach(TaskHistoryFeature.State.Listing.allCases, id: \.self) { listing in
+                Text(listing.title).tag(listing)
+            }
+        } label: { EmptyView() }
+        .pickerStyle(.segmented)
+        .glassListRow(insets: .init(
+            top: 0,
+            leading: Metrics.screenPadding,
+            bottom: Metrics.stackSpacing,
+            trailing: Metrics.screenPadding
+        ))
     }
 
     /// What this screen is, in one sentence, before the list of it.
@@ -46,9 +67,9 @@ public struct TaskHistoryView: View {
     private var note: some View {
         if !store.isLoading {
             Label {
-                Text(L10n.taskHistoryNote)
+                Text(store.listing.note)
             } icon: {
-                Image(systemName: "checkmark.seal")
+                Image(systemName: store.listing == .archived ? "archivebox" : "checkmark.seal")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -70,9 +91,13 @@ public struct TaskHistoryView: View {
                 .glassListRow()
         } else if store.entries.isEmpty {
             EmptyStateView(
-                title: L10n.taskHistoryEmptyTitle,
-                message: L10n.taskHistoryEmptyMessage,
-                symbol: "clock.arrow.circlepath"
+                title: store.listing == .archived
+                    ? L10n.taskHistoryArchivedEmptyTitle
+                    : L10n.taskHistoryEmptyTitle,
+                message: store.listing == .archived
+                    ? L10n.taskHistoryArchivedEmptyMessage
+                    : L10n.taskHistoryEmptyMessage,
+                symbol: store.listing == .archived ? "archivebox" : "clock.arrow.circlepath"
             )
             .padding(.top, 48)
             .glassListRow()
@@ -81,17 +106,37 @@ public struct TaskHistoryView: View {
                 HistoryRow(
                     entry: entry,
                     isMe: entry.userID != nil && entry.userID == store.currentUserID,
-                    isRestoring: store.state.isRestoring(entry)
+                    isRestoring: store.state.isRestoring(entry),
+                    // Redundant in a list where every row is archived. It earns
+                    // its place in the record, where it is the one thing
+                    // distinguishing these rows from the rest.
+                    showsArchivedBadge: store.listing == .all
                 )
                 .appearInPlace(index < 8 ? index : 0)
                 .glassListRow()
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                // Deleting a completion is offered in the archive and nowhere
+                // else. Putting a chore away is already a statement that the
+                // row has done its job; erasing it is a second, separate
+                // statement that it should never have existed — and two acts
+                // rather than one is the whole difference between this and the
+                // single silent swipe it replaces.
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if entry.isArchived {
+                        Button(role: .destructive) {
+                            store.send(.deleteTapped(entry))
+                        } label: {
+                            Label { Text(L10n.commonDelete) } icon: {
+                                Image(systemName: "trash")
+                            }
+                        }
+                    }
                     // Only where it would do something. A chore finished longer
                     // ago than the Done window cannot be put back onto a list
                     // that does not reach that far, and the server says so
                     // rather than leaving the screen to guess — see
-                    // `canRestore` in convex/tasks.ts.
-                    if entry.canRestore, !store.state.isRestoring(entry) {
+                    // `canRestore` in convex/tasks.ts. Delete stays available
+                    // either way, so no archived chore is ever a dead end.
+                    if entry.isArchived, entry.canRestore, !store.state.isRestoring(entry) {
                         Button {
                             store.send(.restoreTapped(entry.taskID))
                         } label: {
@@ -110,8 +155,8 @@ public struct TaskHistoryView: View {
     /// has done exactly two hundred things.
     @ViewBuilder
     private var footer: some View {
-        if !store.isLoading, store.history.isTruncated {
-            Text(L10n.taskHistoryTruncated(store.history.limit))
+        if !store.isLoading, store.shown.isTruncated {
+            Text(L10n.taskHistoryTruncated(store.shown.limit))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -133,6 +178,7 @@ private struct HistoryRow: View {
     let entry: TaskCompletion
     let isMe: Bool
     let isRestoring: Bool
+    let showsArchivedBadge: Bool
 
     var body: some View {
         HStack(spacing: 12) {
@@ -193,7 +239,7 @@ private struct HistoryRow: View {
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
 
-                if entry.isArchived, !isRestoring {
+                if entry.isArchived, !isRestoring, showsArchivedBadge {
                     Badge(
                         String(localized: L10n.taskHistoryArchivedBadge),
                         tint: Palette.warning,

@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1789114866.8068912,
-    "ast_hash": "a1797de52b7f44fde18c19c159b6dba8",
+    "mtime": 1789118812.5845208,
+    "ast_hash": "84f856400ec8290948897affe5bd06c2",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "backend/convex/tasks.ts": {
-    "mtime": 1789115586.6919692,
-    "ast_hash": "a3ebac693175d41852b344dd6b55c255",
+    "mtime": 1789118850.8107228,
+    "ast_hash": "aa4921d7b60c056e533438e2b2f3d429",
     "semantic_hash": ""
   },
   "backend/convex/users.ts": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1789115526.8968098,
-    "ast_hash": "04a8c87fffc488c0d5fb406c037d33ba",
+    "mtime": 1789118994.6356509,
+    "ast_hash": "ace44ac7a289952ea5a5776246231608",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1789117915.1724126,
-    "ast_hash": "f368e8d1ea340b1c408933910ab7a7d0",
+    "mtime": 1789118942.0494673,
+    "ast_hash": "b7effa70e7a3e31dafd958a304c1c658",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/TasksClient.swift": {
-    "mtime": 1789115152.7348857,
-    "ast_hash": "a5e4bb9a5a87d6d838159befdddd47e7",
+    "mtime": 1789118866.5059547,
+    "ast_hash": "3dc1cadd88b176ceec9cd8d7d7800258",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/UsersClient.swift": {
@@ -620,8 +620,8 @@
     "semantic_hash": ""
   },
   "NestZoneTests/FeatureTests.swift": {
-    "mtime": 1789118149.8644524,
-    "ast_hash": "35cd73778755f1d3423366f8c9c3a387",
+    "mtime": 1789119409.792669,
+    "ast_hash": "a978eab0fad541657cb044edfd32acac",
     "semantic_hash": ""
   },
   "NestZoneUITests/LaunchUITests.swift": {
@@ -930,13 +930,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TaskHistoryFeature.swift": {
-    "mtime": 1789115270.4431021,
-    "ast_hash": "9d767b9705f91e4b01cbd0ec62441d83",
+    "mtime": 1789119409.790615,
+    "ast_hash": "ea314bdd0fbd5bdef4b879d2eb455ecf",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TaskHistoryView.swift": {
-    "mtime": 1789115642.6528897,
-    "ast_hash": "ec8d5a318ed7c7fc0800790681b15f36",
+    "mtime": 1789119419.0606618,
+    "ast_hash": "9e7b3c41b85411d25009af225a1bdeea",
     "semantic_hash": ""
   }
 }

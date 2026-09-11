@@ -21859,6 +21859,125 @@
         }
       }
     },
+    "task_history_archived_empty_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe a finished chore on the Tasks screen to put it away."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görevler ekranında tamamlanmış bir işi kaydırarak kaldırabilirsin."
+          }
+        }
+      }
+    },
+    "task_history_archived_empty_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing archived"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşivde bir şey yok"
+          }
+        }
+      }
+    },
+    "task_history_archived_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chores you've put away. They still count towards contributions — deleting one from here is the only thing that changes that."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaldırdığın işler. Katkılara sayılmaya devam ederler — bunu değiştiren tek şey buradan silmektir."
+          }
+        }
+      }
+    },
+    "task_history_delete_message_mine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This also removes your credit for finishing it, so the contribution split will change. It can't be undone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu, işi tamamlama kredini de siler; katkı dağılımı değişir. Geri alınamaz."
+          }
+        }
+      }
+    },
+    "task_history_delete_message_other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This also removes %@'s credit for finishing it, so the contribution split will change. It can't be undone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu, %@ adlı kişinin işi tamamlama kredisini de siler; katkı dağılımı değişir. Geri alınamaz."
+          }
+        }
+      }
+    },
+    "task_history_delete_message_unattributed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This also removes it from the contribution split. It can't be undone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu, katkı dağılımından da kaldırır. Geri alınamaz."
+          }
+        }
+      }
+    },
+    "task_history_delete_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete “%@” for good?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” kalıcı olarak silinsin mi?"
+          }
+        }
+      }
+    },
     "task_history_empty_message": {
       "extractionState": "manual",
       "localizations": {
@@ -21923,6 +22042,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geri koy"
+          }
+        }
+      }
+    },
+    "task_history_scope_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümü"
+          }
+        }
+      }
+    },
+    "task_history_scope_archived": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv"
           }
         }
       }

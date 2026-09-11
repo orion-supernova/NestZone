@@ -2699,6 +2699,66 @@ public enum L10n {
         r("task_history_restore_action", "Put back")
     }
 
+    /// All
+    public static var taskHistoryScopeAll: LocalizedStringResource {
+        r("task_history_scope_all", "All")
+    }
+
+    /// Archived
+    public static var taskHistoryScopeArchived: LocalizedStringResource {
+        r("task_history_scope_archived", "Archived")
+    }
+
+    /// Chores you've put away. They still count towards contributions — deleting one from here ...
+    public static var taskHistoryArchivedNote: LocalizedStringResource {
+        r(
+            "task_history_archived_note",
+            "Chores you've put away. They still count towards contributions — deleting one from here is the only thing that changes that."
+        )
+    }
+
+    /// Nothing archived
+    public static var taskHistoryArchivedEmptyTitle: LocalizedStringResource {
+        r("task_history_archived_empty_title", "Nothing archived")
+    }
+
+    /// Swipe a finished chore on the Tasks screen to put it away.
+    public static var taskHistoryArchivedEmptyMessage: LocalizedStringResource {
+        r(
+            "task_history_archived_empty_message",
+            "Swipe a finished chore on the Tasks screen to put it away."
+        )
+    }
+
+    /// Delete “%@” for good?
+    public static func taskHistoryDeleteTitle(_ a0: String) -> LocalizedStringResource {
+        r("task_history_delete_title", "Delete “\(a0)” for good?")
+    }
+
+    /// This also removes your credit for finishing it, so the contribution split will change. It...
+    public static var taskHistoryDeleteMessageMine: LocalizedStringResource {
+        r(
+            "task_history_delete_message_mine",
+            "This also removes your credit for finishing it, so the contribution split will change. It can't be undone."
+        )
+    }
+
+    /// This also removes %@'s credit for finishing it, so the contribution split will change. It...
+    public static func taskHistoryDeleteMessageOther(_ a0: String) -> LocalizedStringResource {
+        r(
+            "task_history_delete_message_other",
+            "This also removes \(a0)'s credit for finishing it, so the contribution split will change. It can't be undone."
+        )
+    }
+
+    /// This also removes it from the contribution split. It can't be undone.
+    public static var taskHistoryDeleteMessageUnattributed: LocalizedStringResource {
+        r(
+            "task_history_delete_message_unattributed",
+            "This also removes it from the contribution split. It can't be undone."
+        )
+    }
+
     /// Showing the %lld most recent.
     public static func taskHistoryTruncated(_ a0: Int) -> LocalizedStringResource {
         r("task_history_truncated", "Showing the \(a0) most recent.")

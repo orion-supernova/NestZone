@@ -590,6 +590,70 @@ struct TaskHistoryFeatureTests {
         )
     }
 
+    @Test("The archive is its own list, and it is where delete lives")
+    func archiveIsItsOwnScope() async {
+        let kept = Self.completion(id: "c1", title: "Dishes")
+        let putAway = Self.completion(id: "c2", title: "Test row", archived: true, canRestore: true)
+
+        let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
+            TaskHistoryFeature()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.recordUpdated(TaskHistory(entries: [kept, putAway])))
+        await store.send(.archiveUpdated(TaskHistory(entries: [putAway])))
+
+        #expect(store.state.entries.count == 2)
+        await store.send(.binding(.set(\.listing, .archived)))
+        #expect(store.state.entries.map(\.id) == ["c2"])
+    }
+
+    @Test("Deleting a completion asks first, and names what it costs")
+    func deleteAsksBeforeItErases() async {
+        let entry = Self.completion(id: "c1", title: "Test row", archived: true)
+        let erased = LockIsolated<[TaskID]>([])
+
+        let store = TestStore(
+            initialState: TaskHistoryFeature.State(homeID: "h1", currentUserID: "me")
+        ) {
+            TaskHistoryFeature()
+        } withDependencies: {
+            $0.tasks.removeFinished = { id in erased.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.archiveUpdated(TaskHistory(entries: [entry])))
+        await store.send(.deleteTapped(entry))
+        // Nothing is sent on the swipe alone. This is the one act in the app
+        // that moves the contribution split, so it goes through the dialog.
+        #expect(erased.value.isEmpty)
+        #expect(store.state.alert != nil)
+
+        await store.send(.alert(.presented(.confirmDelete(entry.taskID))))
+        #expect(erased.value == [entry.taskID])
+    }
+
+    @Test("An archived chore too old to restore can still be deleted")
+    func oldArchivedChoreIsNotADeadEnd() async {
+        // The hole in the first version of the archive: put away, past the Done
+        // window, so `canRestore` is false — and with no delete it could be
+        // neither brought back nor got rid of.
+        let stuck = Self.completion(id: "c1", title: "Old test row", archived: true, canRestore: false)
+        let erased = LockIsolated<[TaskID]>([])
+
+        let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
+            TaskHistoryFeature()
+        } withDependencies: {
+            $0.tasks.removeFinished = { id in erased.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.archiveUpdated(TaskHistory(entries: [stuck])))
+        await store.send(.deleteTapped(stuck))
+        await store.send(.alert(.presented(.confirmDelete(stuck.taskID))))
+        #expect(erased.value == [stuck.taskID])
+    }
+
     @Test("Putting a chore back clears the archive flag and nothing else")
     func restoringAnArchivedChore() async {
         let entry = Self.completion(id: "c1", title: "Dishes", archived: true, canRestore: true)
@@ -602,7 +666,7 @@ struct TaskHistoryFeatureTests {
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
-        await store.send(.historyUpdated(TaskHistory(entries: [entry])))
+        await store.send(.archiveUpdated(TaskHistory(entries: [entry])))
         await store.send(.restoreTapped(entry.taskID)) {
             $0.restoring.insert(entry.taskID)
         }
@@ -621,7 +685,7 @@ struct TaskHistoryFeatureTests {
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
-        await store.send(.historyUpdated(TaskHistory(entries: [entry])))
+        await store.send(.archiveUpdated(TaskHistory(entries: [entry])))
         await store.send(.restoreTapped(entry.taskID))
         await store.receive(\.restoreFailed) {
             $0.restoring.remove(entry.taskID)
@@ -632,7 +696,6 @@ struct TaskHistoryFeatureTests {
     @Test("A push that no longer calls the chore archived drops the mask")
     func serverAgreementClearsTheMask() async {
         let archived = Self.completion(id: "c1", title: "Dishes", archived: true, canRestore: true)
-        let restored = Self.completion(id: "c1", title: "Dishes")
 
         let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
             TaskHistoryFeature()
@@ -641,11 +704,12 @@ struct TaskHistoryFeatureTests {
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
-        await store.send(.historyUpdated(TaskHistory(entries: [archived])))
+        await store.send(.archiveUpdated(TaskHistory(entries: [archived])))
         await store.send(.restoreTapped(archived.taskID))
         #expect(store.state.restoring.contains(archived.taskID))
 
-        await store.send(.historyUpdated(TaskHistory(entries: [restored])))
+        // Restored, so it leaves the archive entirely.
+        await store.send(.archiveUpdated(TaskHistory(entries: [])))
         // The mask is self-clearing: once the server stops calling it archived
         // there is nothing left to hide, and keeping the mask would strand it.
         #expect(store.state.restoring.isEmpty)

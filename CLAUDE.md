@@ -111,10 +111,20 @@ cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in 
   somebody's credit with it, and the read grew with the household's age. So:
   **`tasks:remove` refuses a completed task.** Delete means "this should not
   exist" and is offered on open rows only; a finished chore is put away with
-  `tasks:setArchived`, which touches `archived_at` and nothing else. The escape
-  hatch for "this was never done" is to reopen it — which retracts the credit
-  where the person can see it happen — and then delete it as the open task it
-  has become.
+  `tasks:setArchived`, which touches `archived_at` and nothing else.
+- **A completion can only be destroyed from the archive.** `tasks:removeFinished`
+  is the deliberate path — a separate mutation from `remove` so no swipe on the
+  working list can reach it however the client is written, and it refuses
+  anything not both completed *and* archived. Two acts, not one: putting a chore
+  away says the row has done its job, deleting it from the archive says it should
+  never have existed. The client only ever calls it behind a dialog that names
+  whose credit goes with it. The gentler escape hatch is still there — reopen the
+  chore, which retracts the credit visibly, then delete it as an open task.
+- `tasks:archived` makes the archive a *place* rather than a flag, via
+  `by_home_archived`. Without it, putting a chore away hid it with no route back:
+  restoring meant finding its badge among every completion the home had recorded,
+  and anything finished outside the Done window could be neither restored nor
+  deleted. Any archived row must always offer at least one way out.
 - **The Done list is bounded by `DONE_WINDOW_DAYS`**, and `tasks:listByHome`
   returns that number alongside the rows so the screen can state the rule it is
   obeying. Anything older lives in History. `completed_at` is denormalised onto
