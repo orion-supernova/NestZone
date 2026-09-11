@@ -232,24 +232,22 @@ struct DinnerSheet: View {
                     .padding(.horizontal, Metrics.screenPadding)
                     .appear(0)
 
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
-                        RouteCard(
-                            title: L10n.dinnerRouteSet,
-                            subtitle: L10n.dinnerRouteSetSubtitle,
-                            symbol: "hand.point.up.left.fill",
-                            tint: theme.accent
-                        ) { store.send(.routeChosen(.set)) }
-                        .appear(1)
+                GlassList {
+                    RouteCard(
+                        title: L10n.dinnerRouteSet,
+                        subtitle: L10n.dinnerRouteSetSubtitle,
+                        symbol: "hand.point.up.left.fill",
+                        tint: theme.accent
+                    ) { store.send(.routeChosen(.set)) }
+                    .appearInPlace(1)
 
-                        RouteCard(
-                            title: L10n.dinnerRouteVote,
-                            subtitle: L10n.dinnerRouteVoteSubtitle,
-                            symbol: "person.3.fill",
-                            tint: theme.support
-                        ) { store.send(.routeChosen(.vote)) }
-                        .appear(2)
-                    }
+                    RouteCard(
+                        title: L10n.dinnerRouteVote,
+                        subtitle: L10n.dinnerRouteVoteSubtitle,
+                        symbol: "person.3.fill",
+                        tint: theme.support
+                    ) { store.send(.routeChosen(.vote)) }
+                    .appearInPlace(2)
                 }
                 .padding(.horizontal, Metrics.screenPadding)
             }
@@ -279,16 +277,14 @@ struct DinnerSheet: View {
                 .padding(.horizontal, Metrics.screenPadding)
                 .appear(0)
 
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
-                        ForEach(Array(MealPlan.Kind.allCases.enumerated()), id: \.element) { index, kind in
-                            KindCard(
-                                kind: kind,
-                                tint: tint(for: kind),
-                                isCurrent: store.prefilledKind == kind
-                            ) { store.send(.kindChosen(kind)) }
-                            .appear(index + 1)
-                        }
+                GlassList {
+                    ForEach(Array(MealPlan.Kind.allCases.enumerated()), id: \.element) { index, kind in
+                        KindCard(
+                            kind: kind,
+                            tint: tint(for: kind),
+                            isCurrent: store.prefilledKind == kind
+                        ) { store.send(.kindChosen(kind)) }
+                        .appearInPlace(index + 1)
                     }
                 }
                 .padding(.horizontal, Metrics.screenPadding)
@@ -459,24 +455,22 @@ struct DinnerSheet: View {
                 .transition(.opacity)
             } else {
                 ScrollView {
-                    GlassGroup {
-                        VStack(spacing: 8) {
-                            ForEach(store.matchingRecipes) { recipe in
-                                RecipeChoice(
-                                    recipe: recipe,
-                                    isSelected: store.route == .vote
-                                        ? store.state.isOnBallot(DinnerCandidate(recipe))
-                                        : store.selection?.id == recipe.id
-                                ) {
-                                    store.send(store.route == .vote
-                                        ? .ballotToggled(DinnerCandidate(recipe))
-                                        : .recipeChosen(recipe))
-                                }
-                                .glassEffectID(recipe.id.rawValue, in: glass)
+                    GlassList {
+                        ForEach(store.matchingRecipes) { recipe in
+                            RecipeChoice(
+                                recipe: recipe,
+                                isSelected: store.route == .vote
+                                    ? store.state.isOnBallot(DinnerCandidate(recipe))
+                                    : store.selection?.id == recipe.id
+                            ) {
+                                store.send(store.route == .vote
+                                    ? .ballotToggled(DinnerCandidate(recipe))
+                                    : .recipeChosen(recipe))
                             }
+                            .glassEffectID(recipe.id.rawValue, in: glass)
                         }
-                        .padding(.horizontal, Metrics.screenPadding)
                     }
+                    .padding(.horizontal, Metrics.screenPadding)
                     .padding(.vertical, Metrics.stackSpacing)
                 }
                 .scrollBounceBehavior(.basedOnSize)

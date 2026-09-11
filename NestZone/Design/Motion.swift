@@ -61,6 +61,19 @@ extension View {
     public func appear(_ index: Int = 0, distance: CGFloat = 10) -> some View {
         modifier(AppearModifier(index: index, distance: distance))
     }
+
+    /// The same entrance for a row in a tightly-spaced list: it fades and it
+    /// staggers, but it does not travel.
+    ///
+    /// `appear`'s 10pt lift is a *render* offset — the row's slot never moves,
+    /// so the row is drawn below where it belongs and slides up. Between rows
+    /// 8pt apart that is a lift longer than the gap, and since each row arrives
+    /// on its own delay the drawn spacing visibly compresses as they settle. In
+    /// Tasks, switching to "All" made a whole batch do it at once and read as
+    /// the list re-laying itself out.
+    public func appearInPlace(_ index: Int = 0) -> some View {
+        appear(index, distance: 0)
+    }
 }
 
 // MARK: - Press feedback

@@ -374,13 +374,11 @@ public struct IssueDetailView: View {
                 symbol: "list.bullet.clipboard"
             )
 
-            GlassGroup {
-                VStack(spacing: 8) {
-                    choreRow
-                    visitRow
-                    partsRow
-                    costRow
-                }
+            GlassList {
+                choreRow
+                visitRow
+                partsRow
+                costRow
             }
         }
         .padding(.horizontal, Metrics.screenPadding)
@@ -783,10 +781,7 @@ private struct PlanRow: View {
             .buttonStyle(.pressable)
             .accessibilityLabel(Text(actionTitle))
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassCard(cornerRadius: Metrics.tightRadius)
+        .glassRow()
         .glassEffectID("plan-\(symbol)", in: glass)
         .animation(Motion.spring, value: state)
         .accessibilityElement(children: .contain)

@@ -23,6 +23,19 @@ public struct SettingsView: View {
     /// instead of springing.
     private var disclosure: Animation { reduceMotion ? Motion.fade : Motion.spring }
 
+    #if DEBUG
+    /// `GlassListLab` opens from here, with local state rather than through the
+    /// reducer, because it is scaffolding and not a feature — nothing about the
+    /// real Settings navigation changes for it.
+    ///
+    /// It needs a door at all because Xcode's canvas cannot run it: swift-
+    /// navigation swizzles `viewDidAppear:` in `+load`, preview injection loads
+    /// that image more than once, and the swizzled method ends up calling
+    /// itself until the stack runs out. Nothing in the lab causes that, and
+    /// nothing in the lab can avoid it.
+    @State private var showsGlassLab = false
+    #endif
+
     public init(store: StoreOf<SettingsFeature>) {
         self.store = store
     }
@@ -35,6 +48,9 @@ public struct SettingsView: View {
             notificationsSection
             preferencesSection
             accountSection
+            #if DEBUG
+            developerSection
+            #endif
         }
         .scrollContentBackground(.hidden)
         .background(Backdrop(tint: theme.accent))
@@ -47,7 +63,37 @@ public struct SettingsView: View {
             ManageHomesSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
+        #if DEBUG
+        .sheet(isPresented: $showsGlassLab) {
+            NavigationStack {
+                GlassListLab()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button { showsGlassLab = false } label: { Text(L10n.commonDone) }
+                        }
+                    }
+            }
+        }
+        #endif
     }
+
+    #if DEBUG
+    /// Debug-only, so the copy is literal: a String Catalog entry here would be
+    /// a key nobody could ever delete.
+    private var developerSection: some View {
+        Section {
+            Button { showsGlassLab = true } label: {
+                Label { Text(verbatim: "Glass list lab") } icon: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+            }
+        } header: {
+            Text(verbatim: "Developer")
+        } footer: {
+            Text(verbatim: "Merged-glass list settings, live. Debug builds only.")
+        }
+    }
+    #endif
 
     // MARK: - Profile
 

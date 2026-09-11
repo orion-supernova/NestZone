@@ -2620,6 +2620,11 @@ public enum L10n {
         r("tasks_compose_title", "New task")
     }
 
+    /// Deleted “%@”
+    public static func tasksTaskDeleted(_ a0: String) -> LocalizedStringResource {
+        r("tasks_task_deleted", "Deleted “\(a0)”")
+    }
+
     /// What needs doing?
     public static var tasksTitleLabel: LocalizedStringResource {
         r("tasks_title_label", "What needs doing?")

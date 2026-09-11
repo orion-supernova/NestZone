@@ -387,26 +387,24 @@ public struct HomeView: View {
                 }
             }
 
-            GlassGroup {
-                VStack(spacing: Metrics.stackSpacing) {
-                    if !store.loaded.contains(.tasks) {
-                        SkeletonList(rows: 3, height: 56)
-                    } else if store.tasks.isEmpty {
-                        EmptyStateView(
-                            title: L10n.homeTasksEmptyTitle,
-                            message: L10n.homeTasksEmptyMessage,
-                            symbol: "checkmark.seal",
-                            action: .init(title: L10n.commonAdd) {
-                                store.send(.delegate(.openTasks))
-                            },
-                            isCompact: true
-                        )
-                        .frame(maxWidth: .infinity)
-                    } else {
-                        ForEach(store.recentTasks) { task in
-                            TaskRow(task: task) { store.send(.taskToggled(task.id)) }
-                                .glassEffectID(task.id.rawValue, in: glass)
-                        }
+            GlassList {
+                if !store.loaded.contains(.tasks) {
+                    SkeletonList(rows: 3, height: 56)
+                } else if store.tasks.isEmpty {
+                    EmptyStateView(
+                        title: L10n.homeTasksEmptyTitle,
+                        message: L10n.homeTasksEmptyMessage,
+                        symbol: "checkmark.seal",
+                        action: .init(title: L10n.commonAdd) {
+                            store.send(.delegate(.openTasks))
+                        },
+                        isCompact: true
+                    )
+                    .frame(maxWidth: .infinity)
+                } else {
+                    ForEach(store.recentTasks) { task in
+                        TaskRow(task: task) { store.send(.taskToggled(task.id)) }
+                            .glassEffectID(task.id.rawValue, in: glass)
                     }
                 }
             }
@@ -483,10 +481,7 @@ private struct TaskRow: View {
                 )
             }
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassCard(cornerRadius: Metrics.tightRadius)
+        .glassRow()
         .animation(Motion.spring, value: task.isCompleted)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(task.isCompleted ? [.isButton, .isSelected] : .isButton)

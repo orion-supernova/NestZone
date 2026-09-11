@@ -53,7 +53,7 @@ public struct RecipesView: View {
     private var content: some View {
         List {
             filterBar
-                .plainRow(insets: .init(
+                .glassListRow(insets: .init(
                     top: 0, leading: 0, bottom: Metrics.stackSpacing, trailing: 0
                 ))
 
@@ -62,20 +62,15 @@ public struct RecipesView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .contentMargins(.bottom, Metrics.scrollBottomInset, for: .scrollContent)
+        // The house radius is 32, which suits a short row that reads as a pill.
+        // A recipe card is twice that tall and carries four lines, and at 32 the
+        // corners eat into the text block and it stops reading as a card. Back
+        // to `cardRadius`, said as a difference from the house style rather than
+        // as a literal, so everything else here still follows the one place.
+        .glassListStyle(.default.with(rowRadius: Metrics.cardRadius))
         // Rows are exactly as tall as their card; without this the filter bar
         // is padded out to the system's 44pt minimum.
         .environment(\.defaultMinListRowHeight, 0)
-    }
-
-    /// Card insets: the screen's horizontal padding, and a bottom gap that
-    /// stands in for the stack spacing the `VStack` used to provide.
-    private var rowInsets: EdgeInsets {
-        .init(
-            top: 0,
-            leading: Metrics.screenPadding,
-            bottom: Metrics.stackSpacing,
-            trailing: Metrics.screenPadding
-        )
     }
 
     @ViewBuilder
@@ -85,10 +80,10 @@ public struct RecipesView: View {
         // attached to it.
         if store.isWaiting {
             SkeletonList(rows: 4, height: 96)
-                .plainRow(insets: rowInsets)
+                .glassListRow()
         } else if store.visible.isEmpty {
             emptyState
-                .plainRow(insets: rowInsets)
+                .glassListRow()
         } else {
             ForEach(Array(store.visible.enumerated()), id: \.element.id) { index, recipe in
                 RecipeCard(recipe: recipe) { store.send(.recipeTapped(recipe)) }
@@ -98,7 +93,7 @@ public struct RecipesView: View {
                     // a third of a second — which reads as the list struggling
                     // to keep up rather than as an entrance.
                     .appear(index < 8 ? index : 0)
-                    .plainRow(insets: rowInsets)
+                    .glassListRow()
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         // Only the home's own shelf: an Explore recipe is
                         // bundled with the app and there is nothing to delete.
@@ -168,12 +163,17 @@ public struct RecipesView: View {
 }
 
 private struct RecipeCard: View {
+    @Environment(\.glassListStyle) private var style
+
     let recipe: Recipe
     let action: () -> Void
 
     var body: some View {
         card
-            .glassCard()
+            // Radius and lean from the style, padding from the card itself —
+            // it lays out its own content and would be padded twice by
+            // `glassRow`. The shelf overrides the radius below.
+            .glassCard(cornerRadius: style.rowRadius, interactive: style.rowInteractive)
             // Deliberately not a `Button`, and deliberately no `.contextMenu`.
             // Both hold the touch on the way down to work out whether the press
             // is going to become a tap, a long press or a menu lift, and while
@@ -597,31 +597,29 @@ struct CookingModeView: View {
             }
 
             ScrollView {
-                GlassGroup {
-                    VStack(spacing: 8) {
-                        ForEach(Array(store.recipe.ingredients.enumerated()), id: \.offset) { index, item in
-                            let isChecked = store.checkedIngredients.contains(index)
-                            Button { store.send(.ingredientToggled(index)) } label: {
-                                HStack(spacing: 12) {
-                                    Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
-                                        .font(.title3)
-                                        .foregroundStyle(isChecked ? Palette.success : Color.secondary)
-                                        .contentTransition(.symbolEffect(.replace))
-                                    Text(item)
-                                        .font(.subheadline)
-                                        .strikethrough(isChecked, color: .secondary)
-                                        .foregroundStyle(isChecked ? .secondary : .primary)
-                                        .multilineTextAlignment(.leading)
-                                    Spacer(minLength: 0)
-                                }
-                                .padding(.horizontal, Metrics.cardPadding)
-                                .padding(.vertical, 10)
-                                .contentShape(.rect)
+                GlassList {
+                    ForEach(Array(store.recipe.ingredients.enumerated()), id: \.offset) { index, item in
+                        let isChecked = store.checkedIngredients.contains(index)
+                        Button { store.send(.ingredientToggled(index)) } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                                    .font(.title3)
+                                    .foregroundStyle(isChecked ? Palette.success : Color.secondary)
+                                    .contentTransition(.symbolEffect(.replace))
+                                Text(item)
+                                    .font(.subheadline)
+                                    .strikethrough(isChecked, color: .secondary)
+                                    .foregroundStyle(isChecked ? .secondary : .primary)
+                                    .multilineTextAlignment(.leading)
+                                Spacer(minLength: 0)
                             }
-                            .buttonStyle(.pressable)
-                            .glassCard(cornerRadius: Metrics.tightRadius)
-                            .sensoryFeedback(.selection, trigger: isChecked)
+                            .padding(.horizontal, Metrics.cardPadding)
+                            .padding(.vertical, 10)
+                            .contentShape(.rect)
                         }
+                        .buttonStyle(.pressable)
+                        .glassCard(cornerRadius: Metrics.tightRadius)
+                        .sensoryFeedback(.selection, trigger: isChecked)
                     }
                 }
             }
@@ -939,10 +937,4 @@ private struct AddedToListToast: View {
 /// The cards carry their own glass surface and their own spacing, so every
 /// default the List would otherwise supply — the row background, the separator,
 /// the standard insets — is something to take away rather than to style.
-extension View {
-    fileprivate func plainRow(insets: EdgeInsets) -> some View {
-        listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(insets)
-    }
-}
+

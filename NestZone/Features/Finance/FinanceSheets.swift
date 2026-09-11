@@ -1285,47 +1285,45 @@ struct SettleUpSheet: View {
                 symbol: "sparkles"
             )
 
-            GlassGroup {
-                VStack(spacing: 8) {
-                    ForEach(store.openTransfers) { transfer in
-                        Button { store.send(.suggestionTapped(transfer)) } label: {
-                            HStack(spacing: 10) {
-                                Avatar(
-                                    initials: initials(transfer.from),
-                                    seed: transfer.from.rawValue,
-                                    size: 30
-                                )
-                                Image(systemName: "arrow.right")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(Palette.accessory)
-                                Avatar(
-                                    initials: initials(transfer.to),
-                                    seed: transfer.to.rawValue,
-                                    size: 30
-                                )
+            GlassList {
+                ForEach(store.openTransfers) { transfer in
+                    Button { store.send(.suggestionTapped(transfer)) } label: {
+                        HStack(spacing: 10) {
+                            Avatar(
+                                initials: initials(transfer.from),
+                                seed: transfer.from.rawValue,
+                                size: 30
+                            )
+                            Image(systemName: "arrow.right")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(Palette.accessory)
+                            Avatar(
+                                initials: initials(transfer.to),
+                                seed: transfer.to.rawValue,
+                                size: 30
+                            )
 
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(L10n.financeTransferLine(
-                                        store.state.name(for: transfer.from),
-                                        store.state.name(for: transfer.to)
-                                    ))
-                                    .font(.subheadline)
-                                    .lineLimit(1)
-                                }
-
-                                Spacer(minLength: 4)
-
-                                Text(Money.text(transfer.amount, currency: store.currency))
-                                    .font(.system(.subheadline, design: .rounded, weight: .bold))
-                                    .monospacedDigit()
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(L10n.financeTransferLine(
+                                    store.state.name(for: transfer.from),
+                                    store.state.name(for: transfer.to)
+                                ))
+                                .font(.subheadline)
+                                .lineLimit(1)
                             }
-                            .padding(.horizontal, Metrics.cardPadding)
-                            .padding(.vertical, 10)
-                            .contentShape(.rect)
+
+                            Spacer(minLength: 4)
+
+                            Text(Money.text(transfer.amount, currency: store.currency))
+                                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                                .monospacedDigit()
                         }
-                        .buttonStyle(.pressable)
-                        .glassCard(cornerRadius: Metrics.tightRadius)
+                        .padding(.horizontal, Metrics.cardPadding)
+                        .padding(.vertical, 10)
+                        .contentShape(.rect)
                     }
+                    .buttonStyle(.pressable)
+                    .glassCard(cornerRadius: Metrics.tightRadius)
                 }
             }
         }

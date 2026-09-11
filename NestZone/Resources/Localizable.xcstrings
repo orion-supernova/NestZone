@@ -22148,6 +22148,23 @@
         }
       }
     },
+    "tasks_task_deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted “%@”"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” silindi"
+          }
+        }
+      }
+    },
     "tasks_title_label": {
       "extractionState": "manual",
       "localizations": {

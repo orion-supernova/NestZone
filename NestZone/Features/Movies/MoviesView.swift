@@ -6,6 +6,10 @@ public struct MoviesView: View {
 
     @Environment(\.theme) private var theme
 
+    /// Which custom list has its delete button out — one at a time, as the
+    /// other stack-based lists in the app do.
+    @State private var revealedListID: MovieListID?
+
     public init(store: StoreOf<MoviesFeature>) {
         self.store = store
     }
@@ -53,17 +57,19 @@ public struct MoviesView: View {
             VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
                 SectionHeader(L10n.movieListsQuickCollections, symbol: "sparkles")
                     .padding(.horizontal, Metrics.screenPadding)
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
-                        ForEach(Array(store.presets.enumerated()), id: \.element.id) { index, list in
-                            ListRow(list: list, canDelete: false) {
-                                store.send(.listTapped(list))
-                            } onDelete: {}
-                                .appear(index)
-                        }
+                GlassList {
+                    ForEach(Array(store.presets.enumerated()), id: \.element.id) { index, list in
+                        ListRow(
+                            list: list,
+                            canDelete: false,
+                            revealedID: $revealedListID
+                        ) {
+                            store.send(.listTapped(list))
+                        } onDelete: {}
+                            .appearInPlace(index)
                     }
-                    .padding(.horizontal, Metrics.screenPadding)
                 }
+                .padding(.horizontal, Metrics.screenPadding)
             }
         }
     }
@@ -84,19 +90,21 @@ public struct MoviesView: View {
                 )
                 .padding(.vertical, 24)
             } else {
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
-                        ForEach(Array(store.customLists.enumerated()), id: \.element.id) { index, list in
-                            ListRow(list: list, canDelete: true) {
-                                store.send(.listTapped(list))
-                            } onDelete: {
-                                store.send(.deleteListTapped(list.id))
-                            }
-                            .appear(index)
+                GlassList {
+                    ForEach(Array(store.customLists.enumerated()), id: \.element.id) { index, list in
+                        ListRow(
+                            list: list,
+                            canDelete: true,
+                            revealedID: $revealedListID
+                        ) {
+                            store.send(.listTapped(list))
+                        } onDelete: {
+                            store.send(.deleteListTapped(list.id))
                         }
+                        .appearInPlace(index)
                     }
-                    .padding(.horizontal, Metrics.screenPadding)
                 }
+                .padding(.horizontal, Metrics.screenPadding)
             }
         }
     }
@@ -105,45 +113,71 @@ public struct MoviesView: View {
 private struct ListRow: View {
     let list: MovieList
     let canDelete: Bool
+    @Binding var revealedID: MovieListID?
     let action: () -> Void
     let onDelete: () -> Void
 
+    /// A deletable row carries `SwipeToDelete`; `.swipeActions` used to sit
+    /// here and did nothing at all, because it is a `List` modifier and these
+    /// rows are in a `LazyVStack`. A preset list cannot be deleted, so it stays
+    /// a plain button and keeps its press feedback.
+    @ViewBuilder
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Image(systemName: list.kind.symbol)
-                    .font(.title3)
-                    .foregroundStyle(list.kind.tint)
-                    .frame(width: 44, height: 44)
-                    .background(list.kind.tint.opacity(0.14), in: .rect(cornerRadius: 12, style: .continuous))
+        if canDelete {
+            SwipeToDelete(
+                cornerRadius: Metrics.cardRadius,
+                isRevealed: Binding(
+                    get: { revealedID == list.id },
+                    set: { revealedID = $0 ? list.id : nil }
+                ),
+                onDelete: onDelete
+            ) {
+                // Not a `Button`: inside the swipe a button holds the touch on
+                // the way down while it decides what the press is, so neither
+                // the scroll nor the swipe could start on a row. A tap gesture
+                // fails the instant the finger moves.
+                card(interactive: false)
+                    .onTapGesture(perform: action)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction(.default, action)
+            }
+        } else {
+            Button(action: action) { card(interactive: true) }
+                .buttonStyle(.pressable)
+        }
+    }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(list.displayName).font(.headline).foregroundStyle(.primary)
-                    if let summary = list.displaySummary {
-                        Text(summary)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Palette.accessory)
-            }
-            .padding(Metrics.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(.rect)
-        }
-        .buttonStyle(.pressable)
-        .glassCard(interactive: true)
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if canDelete {
-                Button(role: .destructive, action: onDelete) {
-                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
+    /// Interactive glass leans toward the finger, which means tracking it — one
+    /// more claim on a touch the scroll pan and the swipe are already sharing.
+    /// A preset row has no swipe, so it keeps the lean; a deletable one does
+    /// not. Finance and Issues carry the same note on their rows.
+    private func card(interactive: Bool) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: list.kind.symbol)
+                .font(.title3)
+                .foregroundStyle(list.kind.tint)
+                .frame(width: 44, height: 44)
+                .background(list.kind.tint.opacity(0.14), in: .rect(cornerRadius: 12, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(list.displayName).font(.headline).foregroundStyle(.primary)
+                if let summary = list.displaySummary {
+                    Text(summary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
             }
-        }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Palette.accessory)
+            }
+        .padding(Metrics.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect)
+        .glassCard(interactive: interactive)
     }
 }
 

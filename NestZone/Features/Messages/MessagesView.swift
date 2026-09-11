@@ -53,21 +53,19 @@ public struct MessagesView: View {
             )
         } else {
             ScrollView {
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
-                        ForEach(Array(store.sorted.enumerated()), id: \.element.id) { index, conversation in
-                            ConversationRow(
-                                title: store.state.title(for: conversation),
-                                preview: conversation.lastMessage,
-                                timestamp: conversation.lastMessageAt,
-                                members: store.state.avatarMembers(for: conversation)
-                            ) { store.send(.conversationTapped(conversation)) }
-                                .appear(index)
-                        }
+                GlassList {
+                    ForEach(Array(store.sorted.enumerated()), id: \.element.id) { index, conversation in
+                        ConversationRow(
+                            title: store.state.title(for: conversation),
+                            preview: conversation.lastMessage,
+                            timestamp: conversation.lastMessageAt,
+                            members: store.state.avatarMembers(for: conversation)
+                        ) { store.send(.conversationTapped(conversation)) }
+                            .appearInPlace(index)
                     }
-                    .padding(.horizontal, Metrics.screenPadding)
-                    .padding(.bottom, Metrics.scrollBottomInset)
                 }
+                .padding(.horizontal, Metrics.screenPadding)
+                .padding(.bottom, Metrics.scrollBottomInset)
             }
         }
     }

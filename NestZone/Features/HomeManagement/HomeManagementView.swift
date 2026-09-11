@@ -53,24 +53,22 @@ public struct HomeManagementView: View {
                     .padding(.horizontal, 32)
                     .appear(0)
 
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
-                        ChoiceCard(
-                            title: L10n.homeSetupCreateHomeTitle,
-                            subtitle: L10n.homeSetupCreateHomeSubtitle,
-                            symbol: "house.and.flag",
-                            tint: theme.accent
-                        ) { store.send(.createTapped) }
-                        .appear(1)
+                GlassList {
+                    ChoiceCard(
+                        title: L10n.homeSetupCreateHomeTitle,
+                        subtitle: L10n.homeSetupCreateHomeSubtitle,
+                        symbol: "house.and.flag",
+                        tint: theme.accent
+                    ) { store.send(.createTapped) }
+                    .appearInPlace(1)
 
-                        ChoiceCard(
-                            title: L10n.homeSetupJoinHomeTitle,
-                            subtitle: L10n.homeSetupJoinHomeSubtitle,
-                            symbol: "person.2.badge.key",
-                            tint: theme.support
-                        ) { store.send(.joinTapped) }
-                        .appear(2)
-                    }
+                    ChoiceCard(
+                        title: L10n.homeSetupJoinHomeTitle,
+                        subtitle: L10n.homeSetupJoinHomeSubtitle,
+                        symbol: "person.2.badge.key",
+                        tint: theme.support
+                    ) { store.send(.joinTapped) }
+                    .appearInPlace(2)
                 }
                 .padding(.horizontal, Metrics.screenPadding)
             }
@@ -91,16 +89,14 @@ public struct HomeManagementView: View {
                     .padding(.horizontal, Metrics.screenPadding)
                     .appear(0)
 
-                GlassGroup {
-                    VStack(spacing: Metrics.stackSpacing) {
-                        ForEach(Array(store.homes.enumerated()), id: \.element.id) { index, home in
-                            HomeRow(
-                                home: home,
-                                onSelect: { store.send(.homeSelected(home.id)) },
-                                onRemove: { store.send(.leaveTapped(home.id)) }
-                            )
-                            .appear(index + 1)
-                        }
+                GlassList {
+                    ForEach(Array(store.homes.enumerated()), id: \.element.id) { index, home in
+                        HomeRow(
+                            home: home,
+                            onSelect: { store.send(.homeSelected(home.id)) },
+                            onRemove: { store.send(.leaveTapped(home.id)) }
+                        )
+                        .appearInPlace(index + 1)
                     }
                 }
                 .padding(.horizontal, Metrics.screenPadding)

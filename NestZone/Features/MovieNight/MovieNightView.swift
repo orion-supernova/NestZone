@@ -770,26 +770,24 @@ struct PollHistorySheet: View {
                     )
                 } else {
                     ScrollView {
-                        GlassGroup {
-                            VStack(spacing: Metrics.stackSpacing) {
-                                ForEach(Array(store.polls.enumerated()), id: \.element.id) { index, poll in
-                                    PollHistoryRow(
-                                        poll: poll,
-                                        outcome: store.outcomes[poll.id],
-                                        isExpanded: store.expanded == poll.id,
-                                        canDelete: store.state.canDelete(poll),
-                                        onMovieTapped: { store.send(.movieTapped($0)) }
-                                    ) {
-                                        store.send(.pollTapped(poll.id))
-                                    } onDelete: {
-                                        store.send(.deleteTapped(poll.id))
-                                    }
-                                    .appear(index)
+                        GlassList {
+                            ForEach(Array(store.polls.enumerated()), id: \.element.id) { index, poll in
+                                PollHistoryRow(
+                                    poll: poll,
+                                    outcome: store.outcomes[poll.id],
+                                    isExpanded: store.expanded == poll.id,
+                                    canDelete: store.state.canDelete(poll),
+                                    onMovieTapped: { store.send(.movieTapped($0)) }
+                                ) {
+                                    store.send(.pollTapped(poll.id))
+                                } onDelete: {
+                                    store.send(.deleteTapped(poll.id))
                                 }
+                                .appearInPlace(index)
                             }
-                            .padding(.horizontal, Metrics.screenPadding)
-                            .padding(.bottom, Metrics.sectionSpacing)
                         }
+                        .padding(.horizontal, Metrics.screenPadding)
+                        .padding(.bottom, Metrics.sectionSpacing)
                     }
                 }
             }

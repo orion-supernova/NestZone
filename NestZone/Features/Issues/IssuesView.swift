@@ -680,15 +680,13 @@ public struct IssuesView: View {
             } else {
                 VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
                     SectionHeader(L10n.issuesHistoryTitle, symbol: "checkmark.seal")
-                    GlassGroup {
-                        VStack(spacing: 8) {
-                            ForEach(store.history) { issue in
-                                SettledRow(
-                                    issue: issue,
-                                    resolvedByName: store.state.name(for: issue.resolvedBy),
-                                    glass: glass
-                                ) { store.send(.issueTapped(issue.id)) }
-                            }
+                    GlassList {
+                        ForEach(store.history) { issue in
+                            SettledRow(
+                                issue: issue,
+                                resolvedByName: store.state.name(for: issue.resolvedBy),
+                                glass: glass
+                            ) { store.send(.issueTapped(issue.id)) }
                         }
                     }
                 }
@@ -768,21 +766,19 @@ public struct IssuesView: View {
     // MARK: - Rows
 
     private func rowStack(_ issues: [HouseIssue]) -> some View {
-        GlassGroup {
-            VStack(spacing: 8) {
-                ForEach(issues) { issue in
-                    IssueRow(
-                        issue: issue,
-                        assigneeName: issue.assignedTo.map { store.state.name(for: $0) },
-                        isAffected: issue.isAffected(store.currentUserID),
-                        revealedID: $revealedID,
-                        glass: glass,
-                        onTap: { store.send(.issueTapped(issue.id)) },
-                        onMeToo: { store.send(.meTooTapped(issue.id)) },
-                        onAdvance: { store.send(.advanceTapped(issue.id)) },
-                        onDelete: { store.send(.deleteTapped(issue.id)) }
-                    )
-                }
+        GlassList {
+            ForEach(issues) { issue in
+                IssueRow(
+                    issue: issue,
+                    assigneeName: issue.assignedTo.map { store.state.name(for: $0) },
+                    isAffected: issue.isAffected(store.currentUserID),
+                    revealedID: $revealedID,
+                    glass: glass,
+                    onTap: { store.send(.issueTapped(issue.id)) },
+                    onMeToo: { store.send(.meTooTapped(issue.id)) },
+                    onAdvance: { store.send(.advanceTapped(issue.id)) },
+                    onDelete: { store.send(.deleteTapped(issue.id)) }
+                )
             }
         }
     }
@@ -905,15 +901,13 @@ private struct IssueRow: View {
 
             trailing
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // No lean on this row: interactive glass tracks the finger from
+        // touch-down, and this row's finger belongs to `SwipeToDelete`. The two
+        // race for the same touch — sometimes the swipe wins, sometimes the
+        // glass does, which is worse than either. Tap-only rows keep the lean
+        // from `GlassListStyle.default`.
+        .glassRow(interactive: false)
         .contentShape(.rect)
-        // Not interactive glass: that tracks the finger so the surface can lean
-        // toward it, which is right for a floating control and wrong for a row
-        // in a ScrollView, where it is one more claim on the touch the pan
-        // needs.
-        .glassCard(cornerRadius: Metrics.tightRadius)
         .glassEffectID(issue.id.rawValue, in: glass)
         .accessibilityElement(children: .combine)
     }
@@ -1098,11 +1092,8 @@ private struct SettledRow: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassRow()
         .contentShape(.rect)
-        .glassCard(cornerRadius: Metrics.tightRadius)
         .glassEffectID(issue.id.rawValue, in: glass)
         .onTapGesture(perform: onTap)
         .accessibilityElement(children: .combine)

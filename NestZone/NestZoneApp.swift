@@ -27,11 +27,26 @@ struct NestZoneApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppView(store: Self.store)
-                // The window exists by the time its content appears, which is
-                // the earliest the recogniser has anything to attach to.
-                .onAppear { KeyboardDismisser.shared.install() }
+            #if DEBUG
+            // The Settings door to the glass bench is behind sign-in and a
+            // home, which is no use on a fresh simulator. This one is not:
+            //   xcrun simctl launch booted com.walhallaa.NestZone -glassLab
+            if ProcessInfo.processInfo.arguments.contains("-glassLab") {
+                GlassListLab()
+            } else {
+                root
+            }
+            #else
+            root
+            #endif
         }
+    }
+
+    private var root: some View {
+        AppView(store: Self.store)
+            // The window exists by the time its content appears, which is the
+            // earliest the recogniser has anything to attach to.
+            .onAppear { KeyboardDismisser.shared.install() }
     }
 }
 

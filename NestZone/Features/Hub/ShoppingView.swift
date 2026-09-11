@@ -6,44 +6,93 @@ public struct ShoppingView: View {
 
     @Environment(\.theme) private var theme
     @FocusState private var isComposerFocused: Bool
-    @Namespace private var glass
-    /// The row with its delete button showing, if any. Held here rather than in
-    /// each row so opening one closes the last, as the system list does.
-    @State private var revealedItemID: ShoppingItemID?
+
+    /// Everything the list shows, kept out of `body` — inline, the whole
+    /// screen was one expression and the compiler gave up type-checking it.
+    @ViewBuilder
+    private var content: some View {
+        if store.isLoading {
+            SkeletonList(rows: 5, height: 52)
+                .glassListRow()
+        } else if store.items.isEmpty {
+            EmptyStateView(
+                title: L10n.shoppingEmptyTitle,
+                message: L10n.shoppingEmptyMessage,
+                symbol: "cart"
+            )
+            .padding(.top, 48)
+            .glassListRow()
+        } else {
+            header
+            eventSections
+            partSections
+            mealSections
+            viewModeToggle
+            if store.isGrouped {
+                pendingSections
+            } else {
+                flatSection
+            }
+            purchasedSection
+        }
+    }
+
+    /// Every fold on the screen as one comparable value.
+    private struct Folds: Equatable {
+        let categories: Set<ShoppingItem.Category>
+        let meals: Set<RecipeID>
+        let events: Set<EventID>
+        let issues: Set<IssueID>
+    }
+
+    private var folds: Folds {
+        Folds(
+            categories: store.collapsed,
+            meals: store.collapsedMeals,
+            events: store.collapsedEvents,
+            issues: store.collapsedIssues
+        )
+    }
+
+    /// A heading row: the screen's side padding, air above it to stand in for
+    /// the section spacing the stack used to provide, and the row gap below.
+    private var headerInsets: EdgeInsets {
+        .init(
+            top: Metrics.sectionSpacing,
+            leading: Metrics.screenPadding,
+            bottom: Metrics.stackSpacing,
+            trailing: Metrics.screenPadding
+        )
+    }
 
     public init(store: StoreOf<ShoppingFeature>) {
         self.store = store
     }
 
+    /// A real `List`, so every swipe on this screen is the system's.
+    ///
+    /// It was a `LazyVStack` behind `SwipeToDelete`, which worked until the row
+    /// surface started leaning toward the finger and the two began racing for
+    /// the same touch. Recipes and Tasks went this way first;
+    /// `UISwipeActionsConfiguration` does not race anything.
+    ///
+    /// The headers are rows rather than `Section` headers on purpose: a plain
+    /// `List` pins section headers to the top as you scroll, and an aisle
+    /// heading that sticks over a card it no longer belongs to is worse than
+    /// one that scrolls away.
     public var body: some View {
-        ScrollView {
-            LazyVStack(spacing: Metrics.sectionSpacing) {
-                if store.isLoading {
-                    SkeletonList(rows: 5, height: 52)
-                        .padding(.horizontal, Metrics.screenPadding)
-                } else if store.items.isEmpty {
-                    EmptyStateView(
-                        title: L10n.shoppingEmptyTitle,
-                        message: L10n.shoppingEmptyMessage,
-                        symbol: "cart"
-                    )
-                    .padding(.top, 48)
-                } else {
-                    header
-                    eventSections
-                    partSections
-                    mealSections
-                    viewModeToggle
-                    if store.isGrouped {
-                        pendingSections
-                    } else {
-                        flatSection
-                    }
-                    purchasedSection
-                }
-            }
-            .padding(.bottom, 120)
-        }
+        List { content }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.bottom, 120, for: .scrollContent)
+        // Rows are as tall as their card; without this the chips and headers
+        // are padded out to the system's 44pt minimum.
+        .environment(\.defaultMinListRowHeight, 0)
+        // A collapse is a row insertion now, so the List animates it — but only
+        // if the change arrives inside an animation. One value for all four
+        // kinds of fold, because four `.animation` modifiers on a list this
+        // size is four more things for the type checker to chew on.
+        .animation(Motion.spring, value: folds)
         .background(Backdrop(tint: theme.accent))
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .bottom) {
@@ -129,8 +178,13 @@ public struct ShoppingView: View {
         }
         .padding(Metrics.cardPadding)
         .glassCard()
-        .padding(.horizontal, Metrics.screenPadding)
         .accessibilityElement(children: .combine)
+        .glassListRow(insets: .init(
+            top: 0,
+            leading: Metrics.screenPadding,
+            bottom: Metrics.stackSpacing,
+            trailing: Metrics.screenPadding
+        ))
     }
 
     /// Grouped by aisle, or one flat list. Remembered between visits.
@@ -149,28 +203,27 @@ public struct ShoppingView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, Metrics.screenPadding)
         .animation(Motion.spring, value: store.isGrouped)
+        .glassListRow(insets: headerInsets)
     }
 
     /// One flat list of everything outstanding.
     private var flatSection: some View {
-        GlassGroup {
-            VStack(spacing: 8) {
-                ForEach(store.pendingFlat) { item in
-                    ShoppingRow(
-                        item: item,
-                        showsCategory: true,
-                        revealedID: $revealedItemID,
-                        glass: glass,
-                        onToggle: { store.send(.togglePurchased(item.id)) },
-                        onDelete: { store.send(.deleteTapped(item.id)) }
-                    )
+        ForEach(store.pendingFlat) { item in
+            ShoppingRow(
+                item: item,
+                showsCategory: true,
+                onToggle: { store.send(.togglePurchased(item.id)) }
+            )
+            .glassListRow()
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    store.send(.deleteTapped(item.id))
+                } label: {
+                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
                 }
             }
-            .padding(.horizontal, Metrics.screenPadding)
         }
-        .transition(.opacity)
     }
 
     /// Everything that is on the list for something in the calendar, under the
@@ -184,40 +237,35 @@ public struct ShoppingView: View {
     private var eventSections: some View {
         ForEach(store.eventGroups, id: \.eventID) { group in
             let isCollapsed = store.state.isCollapsed(event: group.eventID)
-            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-                GroupHeader(
-                    symbol: "calendar",
-                    title: String(localized: L10n.shoppingForEvent(group.title)),
-                    done: store.state.doneCount(inEvent: group.eventID),
-                    total: store.state.totalCount(inEvent: group.eventID),
-                    isCollapsed: isCollapsed,
-                    isClearing: store.state.isClearing(.event(group.eventID)),
-                    onToggle: { store.send(.eventToggled(group.eventID)) },
-                    onClear: { store.send(.clearEventTapped(group.eventID)) }
-                )
-                .padding(.horizontal, Metrics.screenPadding)
+            GroupHeader(
+                symbol: "calendar",
+                title: String(localized: L10n.shoppingForEvent(group.title)),
+                done: store.state.doneCount(inEvent: group.eventID),
+                total: store.state.totalCount(inEvent: group.eventID),
+                isCollapsed: isCollapsed,
+                isClearing: store.state.isClearing(.event(group.eventID)),
+                onToggle: { store.send(.eventToggled(group.eventID)) },
+                onClear: { store.send(.clearEventTapped(group.eventID)) }
+            )
+            .glassListRow(insets: headerInsets)
 
-                if !isCollapsed {
-                    GlassGroup {
-                        VStack(spacing: 8) {
-                            ForEach(group.items) { item in
-                                ShoppingRow(
-                                    item: item,
-                                    showsCategory: false,
-                                    revealedID: $revealedItemID,
-                                    glass: glass,
-                                    onToggle: { store.send(.togglePurchased(item.id)) },
-                                    onDelete: { store.send(.deleteTapped(item.id)) }
-                                )
-                            }
+            if !isCollapsed {
+                ForEach(group.items) { item in
+                    ShoppingRow(
+                        item: item,
+                        showsCategory: false,
+                        onToggle: { store.send(.togglePurchased(item.id)) }
+                    )
+                    .glassListRow()
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            store.send(.deleteTapped(item.id))
+                        } label: {
+                            Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
                         }
-                        .padding(.horizontal, Metrics.screenPadding)
                     }
-                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
                 }
             }
-            .clipped()
-            .animation(Motion.spring, value: isCollapsed)
         }
     }
 
@@ -233,40 +281,35 @@ public struct ShoppingView: View {
     private var partSections: some View {
         ForEach(store.partGroups, id: \.issueID) { group in
             let isCollapsed = store.state.isCollapsed(issue: group.issueID)
-            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-                GroupHeader(
-                    symbol: "wrench.adjustable.fill",
-                    title: String(localized: L10n.shoppingForRepair(group.title)),
-                    done: store.state.doneCount(inIssue: group.issueID),
-                    total: store.state.totalCount(inIssue: group.issueID),
-                    isCollapsed: isCollapsed,
-                    isClearing: store.state.isClearing(.issue(group.issueID)),
-                    onToggle: { store.send(.issueToggled(group.issueID)) },
-                    onClear: { store.send(.clearPartsTapped(group.issueID)) }
-                )
-                .padding(.horizontal, Metrics.screenPadding)
+            GroupHeader(
+                symbol: "wrench.adjustable.fill",
+                title: String(localized: L10n.shoppingForRepair(group.title)),
+                done: store.state.doneCount(inIssue: group.issueID),
+                total: store.state.totalCount(inIssue: group.issueID),
+                isCollapsed: isCollapsed,
+                isClearing: store.state.isClearing(.issue(group.issueID)),
+                onToggle: { store.send(.issueToggled(group.issueID)) },
+                onClear: { store.send(.clearPartsTapped(group.issueID)) }
+            )
+            .glassListRow(insets: headerInsets)
 
-                if !isCollapsed {
-                    GlassGroup {
-                        VStack(spacing: 8) {
-                            ForEach(group.items) { item in
-                                ShoppingRow(
-                                    item: item,
-                                    showsCategory: false,
-                                    revealedID: $revealedItemID,
-                                    glass: glass,
-                                    onToggle: { store.send(.togglePurchased(item.id)) },
-                                    onDelete: { store.send(.deleteTapped(item.id)) }
-                                )
-                            }
+            if !isCollapsed {
+                ForEach(group.items) { item in
+                    ShoppingRow(
+                        item: item,
+                        showsCategory: false,
+                        onToggle: { store.send(.togglePurchased(item.id)) }
+                    )
+                    .glassListRow()
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            store.send(.deleteTapped(item.id))
+                        } label: {
+                            Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
                         }
-                        .padding(.horizontal, Metrics.screenPadding)
                     }
-                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
                 }
             }
-            .clipped()
-            .animation(Motion.spring, value: isCollapsed)
         }
     }
 
@@ -279,108 +322,92 @@ public struct ShoppingView: View {
     private var mealSections: some View {
         ForEach(store.mealGroups, id: \.recipeID) { group in
             let isCollapsed = store.state.isCollapsed(meal: group.recipeID)
-            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-                GroupHeader(
-                    symbol: "fork.knife",
-                    title: String(localized: L10n.shoppingForRecipe(group.title)),
-                    done: store.state.doneCount(inMeal: group.recipeID),
-                    total: store.state.totalCount(inMeal: group.recipeID),
-                    isCollapsed: isCollapsed,
-                    isClearing: store.state.isClearing(.meal(group.recipeID)),
-                    onToggle: { store.send(.mealToggled(group.recipeID)) },
-                    onClear: { store.send(.clearMealTapped(group.recipeID)) }
-                )
-                .padding(.horizontal, Metrics.screenPadding)
+            GroupHeader(
+                symbol: "fork.knife",
+                title: String(localized: L10n.shoppingForRecipe(group.title)),
+                done: store.state.doneCount(inMeal: group.recipeID),
+                total: store.state.totalCount(inMeal: group.recipeID),
+                isCollapsed: isCollapsed,
+                isClearing: store.state.isClearing(.meal(group.recipeID)),
+                onToggle: { store.send(.mealToggled(group.recipeID)) },
+                onClear: { store.send(.clearMealTapped(group.recipeID)) }
+            )
+            .glassListRow(insets: headerInsets)
 
-                if !isCollapsed {
-                    GlassGroup {
-                        VStack(spacing: 8) {
-                            ForEach(group.items) { item in
-                                ShoppingRow(
-                                    item: item,
-                                    showsCategory: false,
-                                    revealedID: $revealedItemID,
-                                    glass: glass,
-                                    onToggle: { store.send(.togglePurchased(item.id)) },
-                                    onDelete: { store.send(.deleteTapped(item.id)) }
-                                )
-                            }
+            if !isCollapsed {
+                ForEach(group.items) { item in
+                    ShoppingRow(
+                        item: item,
+                        showsCategory: false,
+                        onToggle: { store.send(.togglePurchased(item.id)) }
+                    )
+                    .glassListRow()
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            store.send(.deleteTapped(item.id))
+                        } label: {
+                            Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
                         }
-                        .padding(.horizontal, Metrics.screenPadding)
                     }
-                    // Grown from under its own header rather than slid in from
-                    // the top: a `.move(edge: .top)` transition animates from
-                    // outside the section's bounds, so the rows swept up across
-                    // the header above on the way in and out.
-                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
                 }
             }
-            .clipped()
-            .animation(Motion.spring, value: isCollapsed)
         }
     }
 
     private var pendingSections: some View {
         ForEach(store.pendingByCategory, id: \.category) { group in
             let isCollapsed = store.state.isCollapsed(group.category)
-            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-                CategoryHeader(
-                    category: group.category,
-                    done: store.state.doneCount(in: group.category),
-                    total: store.state.totalCount(in: group.category),
-                    isCollapsed: isCollapsed,
-                    isClearing: store.state.isClearing(.category(group.category)),
-                    onToggle: { store.send(.categoryToggled(group.category)) },
-                    onClear: { store.send(.clearCategoryTapped(group.category)) }
-                )
-                .padding(.horizontal, Metrics.screenPadding)
+            CategoryHeader(
+                category: group.category,
+                done: store.state.doneCount(in: group.category),
+                total: store.state.totalCount(in: group.category),
+                isCollapsed: isCollapsed,
+                isClearing: store.state.isClearing(.category(group.category)),
+                onToggle: { store.send(.categoryToggled(group.category)) },
+                onClear: { store.send(.clearCategoryTapped(group.category)) }
+            )
+            .glassListRow(insets: headerInsets)
 
-                if !isCollapsed {
-                    GlassGroup {
-                        VStack(spacing: 8) {
-                            ForEach(group.items) { item in
-                                ShoppingRow(
-                                    item: item,
-                                    showsCategory: false,
-                                    revealedID: $revealedItemID,
-                                    glass: glass,
-                                    onToggle: { store.send(.togglePurchased(item.id)) },
-                                    onDelete: { store.send(.deleteTapped(item.id)) }
-                                )
-                            }
-                        }
-                        .padding(.horizontal, Metrics.screenPadding)
+            if !isCollapsed {
+                ForEach(group.items) { item in
+                ShoppingRow(
+                    item: item,
+                    showsCategory: false,
+                    onToggle: { store.send(.togglePurchased(item.id)) }
+                )
+                .glassListRow()
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        store.send(.deleteTapped(item.id))
+                    } label: {
+                        Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
                     }
-                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
                 }
             }
-            .clipped()
-            .animation(Motion.spring, value: isCollapsed)
+            }
         }
     }
 
     @ViewBuilder
     private var purchasedSection: some View {
         if !store.purchased.isEmpty {
-            VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-                SectionHeader(L10n.shoppingPurchasedSection, symbol: "checkmark.circle")
-                    .padding(.horizontal, Metrics.screenPadding)
+            SectionHeader(L10n.shoppingPurchasedSection, symbol: "checkmark.circle")
+                .glassListRow(insets: headerInsets)
 
-                GlassGroup {
-                    VStack(spacing: 8) {
-                        ForEach(store.purchased) { item in
-                            ShoppingRow(
-                                item: item,
-                                showsCategory: false,
-                                revealedID: $revealedItemID,
-                                glass: glass,
-                                onToggle: { store.send(.togglePurchased(item.id)) },
-                                onDelete: { store.send(.deleteTapped(item.id)) }
-                            )
-                        }
-                    }
-                    .padding(.horizontal, Metrics.screenPadding)
+            ForEach(store.purchased) { item in
+                ShoppingRow(
+                    item: item,
+                    showsCategory: false,
+                    onToggle: { store.send(.togglePurchased(item.id)) }
+                )
+                .glassListRow()
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    store.send(.deleteTapped(item.id))
+                } label: {
+                    Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
                 }
+            }
             }
         }
     }
@@ -448,22 +475,11 @@ private struct ShoppingRow: View {
     /// The flat view has no section headers, so each row says which aisle it is
     /// in. In the grouped view that would just repeat the header.
     var showsCategory: Bool = false
-    @Binding var revealedID: ShoppingItemID?
-    let glass: Namespace.ID
     let onToggle: () -> Void
-    let onDelete: () -> Void
 
-    var body: some View {
-        SwipeToDelete(
-            isRevealed: Binding(
-                get: { revealedID == item.id },
-                set: { revealedID = $0 ? item.id : nil }
-            ),
-            onDelete: onDelete
-        ) {
-            card
-        }
-    }
+    /// Just the card. The swipe belongs to the `List` this row sits in — a
+    /// hand-built one lost the touch to whatever else wanted it.
+    var body: some View { card }
 
     private var card: some View {
         HStack(spacing: 12) {
@@ -506,11 +522,7 @@ private struct ShoppingRow: View {
                     .animation(Motion.spring, value: quantity)
             }
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassCard(cornerRadius: Metrics.tightRadius)
-        .glassEffectID(item.id.rawValue, in: glass)
+        .glassRow()
         .animation(Motion.spring, value: item.isPurchased)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(item.isPurchased ? [.isButton, .isSelected] : .isButton)

@@ -123,16 +123,14 @@ public struct ContributionsView: View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(L10n.contributionsLeaderboardTitle, symbol: "trophy.fill")
 
-            GlassGroup {
-                VStack(spacing: Metrics.stackSpacing) {
-                    ForEach(Array(store.data.ranked.enumerated()), id: \.element.id) { rank, member in
-                        MemberRow(
-                            member: member,
-                            rank: rank,
-                            share: store.data.share(of: member),
-                            isMe: member.userID == store.currentUserID
-                        )
-                    }
+            GlassList {
+                ForEach(Array(store.data.ranked.enumerated()), id: \.element.id) { rank, member in
+                    MemberRow(
+                        member: member,
+                        rank: rank,
+                        share: store.data.share(of: member),
+                        isMe: member.userID == store.currentUserID
+                    )
                 }
             }
         }
@@ -227,10 +225,7 @@ private struct MemberRow: View {
                     .lineLimit(1)
             }
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassCard(cornerRadius: Metrics.tightRadius)
+        .glassRow()
         .accessibilityElement(children: .combine)
     }
 

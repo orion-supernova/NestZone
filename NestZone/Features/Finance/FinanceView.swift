@@ -556,20 +556,18 @@ public struct FinanceView: View {
                     Text(L10n.commonSeeAll).font(.footnote.weight(.medium))
                 }
             }
-            GlassGroup {
-                VStack(spacing: 8) {
-                    ForEach(store.billsNeedingAttention.prefix(3)) { bill in
-                        BillRow(
-                            bill: bill,
-                            payerName: store.state.name(for: bill.responsible),
-                            currency: store.currency,
-                            isPaying: store.paying.contains(bill.id),
-                            glass: glass,
-                            onTap: { store.send(.billTapped(bill.id)) },
-                            onPay: { store.send(.payBillTapped(bill.id)) },
-                            onQuickPay: { store.send(.quickPayTapped(bill.id)) }
-                        )
-                    }
+            GlassList {
+                ForEach(store.billsNeedingAttention.prefix(3)) { bill in
+                    BillRow(
+                        bill: bill,
+                        payerName: store.state.name(for: bill.responsible),
+                        currency: store.currency,
+                        isPaying: store.paying.contains(bill.id),
+                        glass: glass,
+                        onTap: { store.send(.billTapped(bill.id)) },
+                        onPay: { store.send(.payBillTapped(bill.id)) },
+                        onQuickPay: { store.send(.quickPayTapped(bill.id)) }
+                    )
                 }
             }
         }
@@ -614,12 +612,10 @@ public struct FinanceView: View {
     private var eventsPreview: some View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(L10n.financeEventsTitle, symbol: "calendar")
-            GlassGroup {
-                VStack(spacing: 8) {
-                    ForEach(store.eventRows) { event in
-                        EventSpendRow(event: event) {
-                            store.send(.eventTapped(event.eventID, event.day))
-                        }
+            GlassList {
+                ForEach(store.eventRows) { event in
+                    EventSpendRow(event: event) {
+                        store.send(.eventTapped(event.eventID, event.day))
                     }
                 }
             }
@@ -636,12 +632,10 @@ public struct FinanceView: View {
     private var repairEstimates: some View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(L10n.financeRepairEstimatesTitle, symbol: "wrench.and.screwdriver")
-            GlassGroup {
-                VStack(spacing: 8) {
-                    ForEach(store.estimatedRepairRows) { repair in
-                        RepairSpendRow(repair: repair) {
-                            store.send(.repairTapped(repair.issueID))
-                        }
+            GlassList {
+                ForEach(store.estimatedRepairRows) { repair in
+                    RepairSpendRow(repair: repair) {
+                        store.send(.repairTapped(repair.issueID))
                     }
                 }
             }
@@ -657,12 +651,10 @@ public struct FinanceView: View {
     private var repairsPreview: some View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(L10n.financeRepairsTitle, symbol: "wrench.and.screwdriver")
-            GlassGroup {
-                VStack(spacing: 8) {
-                    ForEach(store.repairRows) { repair in
-                        RepairSpendRow(repair: repair) {
-                            store.send(.repairTapped(repair.issueID))
-                        }
+            GlassList {
+                ForEach(store.repairRows) { repair in
+                    RepairSpendRow(repair: repair) {
+                        store.send(.repairTapped(repair.issueID))
                     }
                 }
             }
@@ -711,24 +703,22 @@ public struct FinanceView: View {
                     )
                     .padding(.horizontal, Metrics.screenPadding)
 
-                    GlassGroup {
-                        VStack(spacing: 8) {
-                            ForEach(group.items) { expense in
-                                ExpenseRow(
-                                    expense: expense,
-                                    payerName: store.state.name(for: expense.paidBy),
-                                    eventName: store.state.eventLabel(for: expense),
-                                    issueName: store.state.issueLabel(for: expense),
-                                    yourShare: store.currentUserID.map { expense.impact(on: $0) },
-                                    revealedID: $revealedExpenseID,
-                                    glass: glass,
-                                    onTap: { store.send(.expenseTapped(expense.id)) },
-                                    onDelete: { store.send(.deleteExpenseTapped(expense.id)) }
-                                )
-                            }
+                    GlassList {
+                        ForEach(group.items) { expense in
+                            ExpenseRow(
+                                expense: expense,
+                                payerName: store.state.name(for: expense.paidBy),
+                                eventName: store.state.eventLabel(for: expense),
+                                issueName: store.state.issueLabel(for: expense),
+                                yourShare: store.currentUserID.map { expense.impact(on: $0) },
+                                revealedID: $revealedExpenseID,
+                                glass: glass,
+                                onTap: { store.send(.expenseTapped(expense.id)) },
+                                onDelete: { store.send(.deleteExpenseTapped(expense.id)) }
+                            )
                         }
-                        .padding(.horizontal, Metrics.screenPadding)
                     }
+                    .padding(.horizontal, Metrics.screenPadding)
                 }
             }
             .animation(Motion.spring, value: store.expenses)
@@ -875,20 +865,18 @@ public struct FinanceView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(title, symbol: symbol)
-            GlassGroup {
-                VStack(spacing: 8) {
-                    ForEach(bills) { bill in
-                        BillRow(
-                            bill: bill,
-                            payerName: store.state.name(for: bill.responsible),
-                            currency: store.currency,
-                            isPaying: store.paying.contains(bill.id),
-                            glass: glass,
-                            onTap: { store.send(.billTapped(bill.id)) },
-                            onPay: { store.send(.payBillTapped(bill.id)) },
-                            onQuickPay: { store.send(.quickPayTapped(bill.id)) }
-                        )
-                    }
+            GlassList {
+                ForEach(bills) { bill in
+                    BillRow(
+                        bill: bill,
+                        payerName: store.state.name(for: bill.responsible),
+                        currency: store.currency,
+                        isPaying: store.paying.contains(bill.id),
+                        glass: glass,
+                        onTap: { store.send(.billTapped(bill.id)) },
+                        onPay: { store.send(.payBillTapped(bill.id)) },
+                        onQuickPay: { store.send(.quickPayTapped(bill.id)) }
+                    )
                 }
             }
         }
@@ -964,12 +952,10 @@ public struct FinanceView: View {
     private var eventBudgets: some View {
         VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(L10n.financeEventBudgetsTitle, symbol: "calendar")
-            GlassGroup {
-                VStack(spacing: 8) {
-                    ForEach(store.budgetedEventRows) { event in
-                        EventSpendRow(event: event) {
-                            store.send(.eventTapped(event.eventID, event.day))
-                        }
+            GlassList {
+                ForEach(store.budgetedEventRows) { event in
+                    EventSpendRow(event: event) {
+                        store.send(.eventTapped(event.eventID, event.day))
                     }
                 }
             }
@@ -1123,11 +1109,13 @@ private struct ExpenseRow: View {
                 }
             }
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // No lean on this row: interactive glass tracks the finger from
+        // touch-down, and this row's finger belongs to `SwipeToDelete`. The two
+        // race for the same touch — sometimes the swipe wins, sometimes the
+        // glass does, which is worse than either. Tap-only rows keep the lean
+        // from `GlassListStyle.default`.
+        .glassRow(interactive: false)
         .contentShape(.rect)
-        .glassCard(cornerRadius: Metrics.tightRadius)
         .glassEffectID(expense.id.rawValue, in: glass)
         .accessibilityElement(children: .combine)
     }
@@ -1191,15 +1179,8 @@ private struct EventSpendRow: View {
                 }
             }
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassRow()
         .contentShape(.rect)
-        // Not interactive glass: that tracks the finger so the surface can lean
-        // toward it, which is right for a floating control and wrong for a row
-        // in a ScrollView, where it is one more claim on the touch the pan
-        // needs.
-        .glassCard(cornerRadius: Metrics.tightRadius)
         .onTapGesture(perform: onTap)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
@@ -1267,11 +1248,8 @@ private struct RepairSpendRow: View {
                 }
             }
         }
-        .padding(.horizontal, Metrics.cardPadding)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassRow()
         .contentShape(.rect)
-        .glassCard(cornerRadius: Metrics.tightRadius)
         .onTapGesture(perform: onTap)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
