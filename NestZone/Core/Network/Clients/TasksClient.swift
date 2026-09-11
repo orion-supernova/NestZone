@@ -14,6 +14,9 @@ public struct TasksClient: Sendable {
     public var archive: @Sendable (HomeID) -> AsyncThrowingStream<TaskArchive, any Error> = { _ in .never }
     public var create: @Sendable (NewTask) async throws -> Void
     public var setCompleted: @Sendable (TaskID, Bool) async throws -> Void
+    /// Put a finished chore away, or bring it back. Never touches the record of
+    /// it having been done.
+    public var setArchived: @Sendable (TaskID, Bool) async throws -> Void
     public var update: @Sendable (TaskID, TaskEdit) async throws -> Void
     /// Open tasks only — the server refuses a finished one. See `tasks:remove`.
     public var remove: @Sendable (TaskID) async throws -> Void
@@ -126,6 +129,11 @@ extension TasksClient: DependencyKey {
         setCompleted: { id, isCompleted in
             try await ConvexConnection.shared.mutate(
                 "tasks:update", args: ["id": id, "is_completed": isCompleted]
+            )
+        },
+        setArchived: { id, archived in
+            try await ConvexConnection.shared.mutate(
+                "tasks:setArchived", args: ["id": id, "archived": archived]
             )
         },
         update: { id, edit in

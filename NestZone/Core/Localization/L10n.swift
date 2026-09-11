@@ -2629,7 +2629,7 @@ public enum L10n {
     public static func tasksDoneWindowNote(_ a0: Int) -> LocalizedStringResource {
         r(
             "tasks_done_window_note",
-            "Finished in the last \(a0) days. Older ones move to the Archive and still count towards contributions."
+            "Finished in the last \(a0) days. Older ones move to the Archive, and you can put one there sooner — either way it still counts towards contributions."
         )
     }
 
@@ -2651,6 +2651,21 @@ public enum L10n {
         r("tasks_done_empty_message", "Chores you tick off land here. Older ones are in History.")
     }
 
+    /// Archived “%@”
+    public static func tasksTaskArchived(_ a0: String) -> LocalizedStringResource {
+        r("tasks_task_archived", "Archived “\(a0)”")
+    }
+
+    /// Archive
+    public static var tasksArchiveAction: LocalizedStringResource {
+        r("tasks_archive_action", "Archive")
+    }
+
+    /// Put back
+    public static var taskArchiveRestoreAction: LocalizedStringResource {
+        r("task_archive_restore_action", "Put back")
+    }
+
     /// Archive
     public static var tasksArchiveButton: LocalizedStringResource {
         r("tasks_archive_button", "Archive")
@@ -2665,7 +2680,7 @@ public enum L10n {
     public static func taskArchiveNote(_ a0: Int) -> LocalizedStringResource {
         r(
             "task_archive_note",
-            "Chores finished more than \(a0) days ago. They still count towards contributions — deleting one is the only thing that changes that."
+            "Chores finished more than \(a0) days ago, plus any you put away early. They still count towards contributions — deleting one is the only thing that changes that."
         )
     }
 

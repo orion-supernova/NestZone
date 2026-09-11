@@ -21950,13 +21950,30 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chores finished more than %lld days ago. They still count towards contributions — deleting one is the only thing that changes that."
+            "value": "Chores finished more than %lld days ago, plus any you put away early. They still count towards contributions — deleting one is the only thing that changes that."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld günden daha önce tamamlanan işler. Katkılara sayılmaya devam ederler — bunu değiştiren tek şey silmektir."
+            "value": "%lld günden önce tamamlanan işler ve erkenden kaldırdıkların. Katkılara sayılmaya devam ederler — bunu değiştiren tek şey silmektir."
+          }
+        }
+      }
+    },
+    "task_archive_restore_action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put back"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri koy"
           }
         }
       }
@@ -22008,6 +22025,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yapılacakların tamamı ve son %lld günde tamamlananlar. Daha eskiler Arşiv’de ve sayılmaya devam eder."
+          }
+        }
+      }
+    },
+    "tasks_archive_action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşivle"
           }
         }
       }
@@ -22137,13 +22171,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finished in the last %lld days. Older ones move to the Archive and still count towards contributions."
+            "value": "Finished in the last %lld days. Older ones move to the Archive, and you can put one there sooner — either way it still counts towards contributions."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Son %lld günde tamamlananlar. Daha eskiler Arşiv’e taşınır ve katkılara sayılmaya devam eder."
+            "value": "Son %lld günde tamamlananlar. Daha eskiler Arşiv’e taşınır, istersen erkenden de kaldırabilirsin — her durumda katkılara sayılır."
           }
         }
       }
@@ -22382,6 +22416,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Görevler"
+          }
+        }
+      }
+    },
+    "tasks_task_archived": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived “%@”"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” arşivlendi"
           }
         }
       }

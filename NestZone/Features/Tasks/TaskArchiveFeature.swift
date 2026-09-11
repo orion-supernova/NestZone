@@ -26,6 +26,9 @@ public struct TaskArchiveFeature: Sendable {
         public var currentUserID: UserID?
         public var archive: TaskArchive = .empty
         public var isLoading = true
+        /// Rows being put back, so the swipe does not re-offer "Put back" in
+        /// the gap between the write landing and the next push.
+        public var restoring: Set<TaskID> = []
         @Presents public var alert: AlertState<Action.Alert>?
 
         public init(homeID: HomeID, currentUserID: UserID? = nil) {
@@ -34,12 +37,18 @@ public struct TaskArchiveFeature: Sendable {
         }
 
         public var entries: [TaskCompletion] { archive.entries }
+
+        public func canRestore(_ entry: TaskCompletion) -> Bool {
+            entry.canRestore && !restoring.contains(entry.taskID)
+        }
     }
 
     public enum Action {
         case task
         case archiveUpdated(TaskArchive)
         case loadFailed(AppError)
+        case restoreTapped(TaskID)
+        case restoreFailed(TaskID, AppError)
         case deleteTapped(TaskCompletion)
         case deleteFailed(AppError)
         case alert(PresentationAction<Alert>)
@@ -73,6 +82,31 @@ public struct TaskArchiveFeature: Sendable {
             case let .archiveUpdated(archive):
                 state.isLoading = false
                 state.archive = archive
+                // A chore the server no longer offers to restore needs no mask,
+                // and keeping one would strand the swipe on it.
+                state.restoring.formIntersection(
+                    Set(archive.entries.filter(\.canRestore).map(\.taskID))
+                )
+                return .none
+
+            // Back onto the Done list. Nothing about the record changes, in
+            // either direction — which is why this one needs no dialog and the
+            // delete beside it does.
+            case let .restoreTapped(taskID):
+                guard !state.restoring.contains(taskID) else { return .none }
+                state.restoring.insert(taskID)
+                return .run { send in
+                    try await tasksClient.setArchived(taskID, false)
+                } catch: { error, send in
+                    await send(.restoreFailed(taskID, AppError(error)))
+                }
+
+            case let .restoreFailed(taskID, error):
+                // The write was refused, so the server never changed and no push
+                // is coming to correct the mask.
+                state.restoring.remove(taskID)
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
                 return .none
 
             case let .loadFailed(error):

@@ -296,6 +296,25 @@ export default defineSchema({
      * shipped until `backfillCompletions` fills it in.
      */
     completed_at: v.optional(v.number()),
+    /**
+     * When somebody put this finished chore away by hand.
+     *
+     * The Archive holds two kinds of chore and this is what separates them: one
+     * fell below the window on its own, the other was pushed. They are the same
+     * shelf and the same idea — *finished, and off the working list* — which is
+     * why there is one screen and not two, and why `Done` and the Archive stay
+     * disjoint whichever route a row took.
+     *
+     * "Archived OR old" is not one index range, but it is two, and merging two
+     * index reads is how `openTasks` has always answered "false or absent" (see
+     * lib/pending.ts). Two bounded reads beat the filter this would otherwise
+     * become.
+     *
+     * Only ever set on a completed task, and cleared on reopen: an open chore is
+     * work outstanding, and hiding it from the list of work outstanding is just
+     * losing it.
+     */
+    archived_at: v.optional(v.number()),
     image: v.optional(v.id("_storage")),
     home_id: v.id("homes"),
     priority: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
@@ -328,11 +347,18 @@ export default defineSchema({
     // `is_completed` is optional, so an open task sits under `false` *or*
     // `undefined` — see `openTasks` in lib/pending.ts.
     //
-    // The trailing field is what makes the *finished* half bounded too. Open
+    // The trailing fields are what make the *finished* half bounded too. Open
     // reads still use the `["home_id", "is_completed"]` prefix and are
-    // unaffected; the Done list ranges over `completed_at`, which is one index
-    // range rather than "take the last 500 and hope".
-    .index("by_home_completed", ["home_id", "is_completed", "completed_at"]),
+    // unaffected. Everything else is a range on this one index:
+    //
+    //   Done      eq(archived_at, undefined), gte(completed_at, cutoff)
+    //   aged out  eq(archived_at, undefined), lt(completed_at, cutoff)
+    //   put away  gte(archived_at, 0)
+    //
+    // The Archive is the last two merged — `undefined` sorts before every
+    // number in a Convex index, so "never archived" and "archived" are two
+    // clean ranges rather than one range and a filter.
+    .index("by_home_completed", ["home_id", "is_completed", "archived_at", "completed_at"]),
 
   /**
    * Every chore this household has ever finished. The record, not the work.

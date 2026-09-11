@@ -48,10 +48,10 @@ const DEFAULT_DONE_WINDOW_DAYS = 30;
  * moves it; unset, or set to anything that is not a non-negative number, and it
  * is the default above.
  *
- * It is also the only way to see the Archive without waiting a month: set it to
- * `0` and every finished chore falls below the boundary at once. Nothing is
- * rewritten by that — the boundary moves, the rows do not, and putting the
- * value back puts them back.
+ * Not a way to look at the Archive: it moves the boundary for everybody on the
+ * deployment at once, which on a single self-hosted backend means every real
+ * household. Archiving a chore by hand is how you get something into the
+ * Archive — that is what the swipe is for.
  */
 export function doneWindowDays(): number {
   const raw = Number(process.env.DONE_WINDOW_DAYS);
@@ -200,6 +200,9 @@ export const listByHome = query({
           q
             .eq("home_id", homeId)
             .eq("is_completed", true)
+            // Not put away by hand. `undefined` is its own key in a Convex
+            // index, so "never archived" is an equality rather than a filter.
+            .eq("archived_at", undefined)
             .gte("completed_at", Date.now() - windowDays * DAY_MS),
         )
         .order("desc")
@@ -210,23 +213,26 @@ export const listByHome = query({
 });
 
 /**
- * The chores that have left the Done list: everything finished longer ago than
- * the window.
+ * The chores that have left the Done list — by falling below the window, or by
+ * being put there.
  *
  * The complement of the Done list, not a superset of it. That distinction is
  * the whole difference between an archive and a second copy of the same list,
- * and the first version of this screen got it wrong — it returned every
- * completion the household had ever recorded, so a chore finished yesterday
- * appeared here *and* on the Done tab at the same time. Nothing about that is
- * an archive.
+ * and the first version of this got it wrong: it returned every completion the
+ * household had ever recorded, so a chore finished yesterday appeared here
+ * *and* on the Done tab at once.
  *
- * Both halves now read the same boundary off `completed_at`: Done is the range
- * above it, this is the range below. Disjoint by construction, with no flag to
- * keep in step and nothing to sweep.
+ * Two reads because "old or put away" is two index ranges, and merging index
+ * reads is how this codebase has always answered a question an index cannot
+ * range over in one pass — `openTasks` does exactly this for "false or absent"
+ * (see lib/pending.ts). The alternative is a filter over every finished chore
+ * the household has ever had, which is the scan the whole module exists to
+ * avoid.
  *
- * Read from `task_completions` and nothing else — no join at all. The title and
- * the kind were snapshotted when the box was ticked, which is what that table
- * is for, so the record needs no help from the tasks it describes.
+ * Read from `tasks` rather than the ledger because archiving is a property of
+ * the chore, not of the record of it, and the row already carries everything
+ * this screen draws: `completed_at` and `completed_by` are denormalised there
+ * for the Done list's index.
  */
 export const archive = query({
   args: {
@@ -238,37 +244,66 @@ export const archive = query({
     const home = await requireHomeMember(ctx, homeId);
 
     const windowDays = doneWindowDays();
+    const cutoff = Date.now() - windowDays * DAY_MS;
     const take = Math.min(Math.max(Math.floor(limit ?? ARCHIVE_LIMIT), 1), ARCHIVE_MAX);
-    const rows = await ctx.db
-      .query("task_completions")
-      .withIndex("by_home_at", (q) =>
-        q.eq("home_id", homeId).lt("completed_at", Date.now() - windowDays * DAY_MS),
-      )
-      .order("desc")
-      .take(take);
+
+    const [aged, putAway] = await Promise.all([
+      // Fell below the window on its own.
+      ctx.db
+        .query("tasks")
+        .withIndex("by_home_completed", (q) =>
+          q
+            .eq("home_id", homeId)
+            .eq("is_completed", true)
+            .eq("archived_at", undefined)
+            .lt("completed_at", cutoff),
+        )
+        .order("desc")
+        .take(take),
+      // Pushed. Ordered by when it was put away, which is all this range can
+      // order by — the merge below re-sorts both into one list.
+      ctx.db
+        .query("tasks")
+        .withIndex("by_home_completed", (q) =>
+          q.eq("home_id", homeId).eq("is_completed", true).gte("archived_at", 0),
+        )
+        .order("desc")
+        .take(take),
+    ]);
 
     const profiles = await memberProfiles(ctx, home.members ?? []);
+
+    const merged = [...aged, ...putAway]
+      .sort((a, b) => (b.completed_at ?? 0) - (a.completed_at ?? 0))
+      .slice(0, take);
 
     return {
       limit: take,
       windowDays,
-      // True when the read hit its ceiling, so the screen can say it is showing
-      // the most recent rather than implying it is showing everything.
-      isTruncated: rows.length === take,
-      entries: rows.map((row) => {
+      // True when either range hit its ceiling, so the screen can say it is
+      // showing the most recent rather than implying it is showing everything.
+      isTruncated: aged.length === take || putAway.length === take,
+      entries: merged.map((task) => {
         const credited =
-          row.user_id && profiles.has(row.user_id as string) ? row.user_id : null;
+          task.completed_by && profiles.has(task.completed_by as string)
+            ? task.completed_by
+            : null;
         const profile = credited ? profiles.get(credited as string) : undefined;
+        const at = task.completed_at ?? task.updated ?? task._creationTime;
         return {
-          id: row._id,
-          taskId: row.task_id,
-          // The chore as it was called when it was done.
-          title: row.title ?? null,
-          type: row.type ?? null,
-          completedAt: row.completed_at,
+          id: task._id,
+          taskId: task._id,
+          title: task.title ?? null,
+          type: task.type ?? null,
+          completedAt: at,
           userId: credited,
           name: profile?.name ?? null,
           email: profile?.email ?? null,
+          // Whether putting it back would actually land it somewhere. Only a
+          // chore that was *pushed* here has anything to undo, and only while
+          // it is still inside the window — a chore that aged out would fall
+          // straight back, so offering it would be a button that does nothing.
+          canRestore: task.archived_at != null && at >= cutoff,
         };
       }),
     };
@@ -356,16 +391,21 @@ export const update = mutation({
     };
 
     if (justCompleted) {
-      // Credit the chore to whoever ticked the box, and stamp when. That
-      // stamp is also what decides which of the two lists it appears on, now
-      // and for as long as it stands.
+      // Credit the chore to whoever ticked the box, and stamp when. A task
+      // arriving at "done" cannot already have been put away, so clearing that
+      // here means a reopened-then-refinished chore comes back onto the Done
+      // list rather than straight into the Archive.
       patch.completed_by = user._id;
       patch.completed_at = now;
+      patch.archived_at = undefined;
     } else if (reopened) {
       // Nobody has finished this. `undefined` in a patch removes the field,
-      // which is what that should look like.
+      // which is what that should look like — and an open chore is work still
+      // outstanding, so it has no business being hidden from the list of work
+      // still outstanding either.
       patch.completed_by = undefined;
       patch.completed_at = undefined;
+      patch.archived_at = undefined;
     }
 
     await ctx.db.patch(id, patch);
@@ -428,6 +468,38 @@ export const update = mutation({
     }
 
     return await ctx.db.get(id);
+  },
+});
+
+/**
+ * Put a finished chore away, or bring it back.
+ *
+ * The whole of what archiving does: the row leaves the Done list and the
+ * `task_completions` entry — the household's record of who did what — is not
+ * touched. The work still counts, the split does not move, and the Archive
+ * still shows it. That sentence is what the UI says out loud, and this is the
+ * code that has to keep it true.
+ *
+ * Refuses an open task. Archiving is what you do with work that is *finished*;
+ * hiding something you still have to do is just losing it.
+ */
+export const setArchived = mutation({
+  args: { id: v.id("tasks"), archived: v.boolean() },
+  handler: async (ctx, { id, archived }) => {
+    const user = await requireUser(ctx);
+    const task = await ctx.db.get(id);
+    if (!task) throw new Error("Task not found");
+    await requireDocHome(ctx, task, "Task");
+    if (archived && !task.is_completed) {
+      throw new Error("Only a finished chore can be archived.");
+    }
+    const now = Date.now();
+    await ctx.db.patch(id, {
+      archived_at: archived ? now : undefined,
+      updated_by: user._id,
+      updated: now,
+    });
+    return { ok: true };
   },
 });
 

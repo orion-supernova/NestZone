@@ -41,14 +41,20 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
     public var userID: UserID?
     public var name: String?
     public var email: String?
-        enum CodingKeys: String, CodingKey {
+    /// Whether putting it back would land it anywhere. Only a chore that was
+    /// *put* here has anything to undo, and only while it is still inside the
+    /// window — one that aged in would fall straight back, so offering it would
+    /// be a button that appears to do nothing.
+    public var canRestore: Bool
+
+    enum CodingKeys: String, CodingKey {
         case id
         case taskID = "taskId"
         case title
         case kind = "type"
         case completedAt
         case userID = "userId"
-        case name, email
+        case name, email, canRestore
     }
 
     public init(from decoder: any Decoder) throws {
@@ -61,6 +67,7 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
         userID = try c.decodeIfPresent(UserID.self, forKey: .userID)
         name = try c.decodeIfPresent(String.self, forKey: .name)
         email = try c.decodeIfPresent(String.self, forKey: .email)
+        canRestore = try c.decodeIfPresent(Bool.self, forKey: .canRestore) ?? false
     }
 
     public init(
@@ -71,7 +78,8 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
         completedAt: Timestamp,
         userID: UserID? = nil,
         name: String? = nil,
-        email: String? = nil
+        email: String? = nil,
+        canRestore: Bool = false
     ) {
         self.id = id
         self.taskID = taskID
@@ -81,6 +89,7 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
         self.userID = userID
         self.name = name
         self.email = email
+        self.canRestore = canRestore
     }
 }
 

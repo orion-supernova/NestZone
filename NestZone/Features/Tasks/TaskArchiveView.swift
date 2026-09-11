@@ -96,6 +96,21 @@ public struct TaskArchiveView: View {
                             Image(systemName: "trash")
                         }
                     }
+
+                    // Only where it would land somewhere. A chore that aged in
+                    // here has nothing to undo and would fall straight back, so
+                    // the server decides rather than the screen guessing — see
+                    // `canRestore` in convex/tasks.ts.
+                    if store.state.canRestore(entry) {
+                        Button {
+                            store.send(.restoreTapped(entry.taskID))
+                        } label: {
+                            Label { Text(L10n.taskArchiveRestoreAction) } icon: {
+                                Image(systemName: "tray.and.arrow.up")
+                            }
+                        }
+                        .tint(Palette.success)
+                    }
                 }
             }
         }

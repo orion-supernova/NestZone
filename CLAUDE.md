@@ -89,10 +89,10 @@ cd backend && npx convex deploy                   # deploy
 cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in the app
 
 # How long a finished chore stays on the Done list before it falls into the
-# Archive. Unset means 30. Set it to 0 to put every completion in the Archive
-# at once — the only way to see that screen without waiting a month, and it
-# rewrites nothing: the boundary moves, the rows do not.
-cd backend && npx convex env set DONE_WINDOW_DAYS 0
+# Archive. Unset means 30. NOT a way to look at the Archive — there is one
+# deployment and it moves the boundary for every real household on it. Archive
+# a chore by hand instead; that is what the swipe is for.
+cd backend && npx convex env set DONE_WINDOW_DAYS 14
 
 # APNs. The auth key is team-wide, not per-app: one .p8 signs for every app
 # under the same Team ID, and the bundle id travels per-request in `apns-topic`.
@@ -126,11 +126,18 @@ cd backend && npx convex env set DONE_WINDOW_DAYS 0
 - **Done and Archive are two halves of one boundary, not two lists.**
   `doneWindowDays()` splits `completed_at`: above it is `tasks:listByHome`'s
   finished half, below it is `tasks:archive`. Disjoint by construction — no
-  flag, no sweep, and no way for a chore to show up in both. There is no
-  archiving *verb*; a chore is in the Archive because it got old. An earlier
-  version had a manual `archived_at` **and** a History screen returning every
+  flag to sweep, and no way for a chore to show up in both. A chore reaches the
+  Archive by falling below the window or by being put there (`archived_at`, set
+  by `tasks:setArchived`) — one shelf, two routes, and Done excludes both. The
+  version to *not* go back to is the one where a History screen returned every
   completion ever, so a chore finished yesterday sat in Done and in History at
-  once. That is not an archive, it is a second copy of the same list.
+  once: that is not an archive, it is a second copy of the same list.
+- **"Old or put away" is two index ranges, not a filter.** `tasks:archive`
+  reads both off `by_home_completed` and merges them in JS, exactly as
+  `openTasks` has always answered "false or absent" (lib/pending.ts). Reach for
+  that pattern before concluding an index cannot express something — a filter
+  over every chore the household ever finished is the scan this module exists
+  to avoid.
   Both queries send the window back with the rows so each screen can state the
   rule it obeyed rather than hardcoding a number that can drift from it.
   `completed_at` is denormalised onto the task because it is the last field of

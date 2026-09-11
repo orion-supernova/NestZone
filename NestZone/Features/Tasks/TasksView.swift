@@ -64,7 +64,12 @@ public struct TasksView: View {
         // if the bar is sitting on the button.
         .overlay(alignment: .bottom) {
             if let pending = store.pendingRemoval {
-                UndoToast(L10n.tasksTaskDeleted(pending.title)) {
+                UndoToast(
+                    pending.kind == .archive
+                        ? L10n.tasksTaskArchived(pending.task.title)
+                        : L10n.tasksTaskDeleted(pending.task.title),
+                    symbol: pending.kind == .archive ? "archivebox" : "trash"
+                ) {
                     store.send(.undoRemovalTapped)
                 }
                 .padding(.horizontal, Metrics.screenPadding)
@@ -108,7 +113,7 @@ public struct TasksView: View {
                 // A symbol beside it costs about a quarter of the width the
                 // sentence needs, and on a small phone that is two more lines
                 // of wrap to save a glyph nobody was reading.
-                Button { store.send(.archiveTapped) } label: {
+                Button { store.send(.openArchiveTapped) } label: {
                     Text(L10n.tasksArchiveButton)
                         .font(.subheadline.weight(.medium))
                 }
@@ -165,22 +170,33 @@ public struct TasksView: View {
                 // arriving row in behind a delay.
                 .appearInPlace(index < 8 ? index : 0)
                 .glassListRow()
-                // One verb either way, and no dialog asking which of two
-                // meanings of "delete" was intended while a finger is still on
-                // the screen. The row already knows: an unfinished chore has
-                // never been done by anybody, so it goes on the undo toast; a
-                // finished one carries the record of who did it, so the same
-                // swipe stops and names them. The weight follows the stakes
-                // rather than the wording.
+                // A finished chore gets both verbs, because they are genuinely
+                // different things to want and neither is a good guess at the
+                // other: Archive files it and the record stays; Delete destroys
+                // the record and stops to say so by name. An open chore gets
+                // only Delete — nobody ever did it, so there is nothing to file
+                // and nothing to warn about.
                 //
-                // No full swipe on a finished chore — carrying on past the edge
-                // is a gesture for something cheap, and this one opens a
-                // question worth reading.
+                // Full swipe only where it is cheap. Carrying on past the edge
+                // is a gesture for something you can shrug off, which archiving
+                // is; on a finished row it would land on whichever of the two
+                // buttons happened to be outermost.
                 .swipeActions(edge: .trailing, allowsFullSwipe: !task.isCompleted) {
                     Button(role: .destructive) {
                         store.send(.deleteTapped(task.id))
                     } label: {
                         Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
+                    }
+
+                    if task.isCompleted {
+                        Button {
+                            store.send(.archiveTapped(task.id))
+                        } label: {
+                            Label { Text(L10n.tasksArchiveAction) } icon: {
+                                Image(systemName: "archivebox")
+                            }
+                        }
+                        .tint(Palette.warning)
                     }
                 }
             }

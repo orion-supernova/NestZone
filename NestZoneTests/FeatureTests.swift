@@ -330,7 +330,7 @@ struct TasksFeatureTests {
         await store.send(.deleteTapped("t1")) {
             $0.tasks.remove(id: "t1")
             $0.hidden.insert("t1")
-            $0.pendingRemoval = task
+            $0.pendingRemoval = .init(task: task, kind: .delete)
         }
         // Nothing has been sent yet — the whole point of holding it.
         #expect(deleted.value.isEmpty)
@@ -375,6 +375,60 @@ struct TasksFeatureTests {
         #expect(plainDeletes.value.isEmpty)
     }
 
+    @Test("Archiving a finished chore files it — neither delete path is touched")
+    func archivingADoneChoreFilesIt() async {
+        let task = HouseTask(id: "t1", title: "Dishes", isCompleted: true)
+        let archived = LockIsolated<[(TaskID, Bool)]>([])
+        let deleted = LockIsolated<[TaskID]>([])
+        let erased = LockIsolated<[TaskID]>([])
+        let clock = TestClock()
+
+        let store = TestStore(initialState: TasksFeature.State(homeID: "h1")) {
+            TasksFeature()
+        } withDependencies: {
+            $0.continuousClock = clock
+            $0.tasks.setArchived = { id, on in archived.withValue { $0.append((id, on)) } }
+            $0.tasks.remove = { id in deleted.withValue { $0.append(id) } }
+            $0.tasks.removeFinished = { id in erased.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.tasksUpdated(Self.list([task])))
+        await store.send(.archiveTapped("t1"))
+        // Filing, not destroying: no dialog, and the undo toast instead.
+        #expect(store.state.alert == nil)
+        #expect(store.state.pendingRemoval?.kind == .archive)
+
+        await clock.advance(by: .seconds(5))
+        await store.receive(\.removalWindowClosed)
+        #expect(archived.value.count == 1)
+        #expect(archived.value[0].1 == true)
+        // The assertion this whole arrangement exists for: filing a finished
+        // chore must never reach a path that touches the record of it.
+        #expect(deleted.value.isEmpty)
+        #expect(erased.value.isEmpty)
+    }
+
+    @Test("Archive is refused on a chore that is not finished")
+    func archiveIsRefusedOnAnOpenChore() async {
+        let task = HouseTask(id: "t1", title: "Buy milk")
+        let archived = LockIsolated<[(TaskID, Bool)]>([])
+
+        let store = TestStore(initialState: TasksFeature.State(homeID: "h1")) {
+            TasksFeature()
+        } withDependencies: {
+            $0.continuousClock = TestClock()
+            $0.tasks.setArchived = { id, on in archived.withValue { $0.append((id, on)) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.tasksUpdated(Self.list([task])))
+        await store.send(.archiveTapped("t1"))
+        // Hiding work you still have to do is just losing it.
+        #expect(store.state.pendingRemoval == nil)
+        #expect(archived.value.isEmpty)
+    }
+
     @Test("An open chore is deleted on the undo toast, with no dialog")
     func deletingAnOpenTaskDoesNotAsk() async {
         let task = HouseTask(id: "t2", title: "Buy bread")
@@ -393,7 +447,7 @@ struct TasksFeatureTests {
         await store.send(.deleteTapped("t2"))
         // Nothing was ever done by anybody, so there is no credit to warn about.
         #expect(store.state.alert == nil)
-        #expect(store.state.pendingRemoval?.id == TaskID("t2"))
+        #expect(store.state.pendingRemoval?.task.id == TaskID("t2"))
 
         await clock.advance(by: .seconds(5))
         await store.receive(\.removalWindowClosed)
@@ -581,6 +635,41 @@ struct TaskArchiveFeatureTests {
 
         await store.send(.alert(.presented(.confirmDelete(entry.taskID))))
         #expect(erased.value == [entry.taskID])
+    }
+
+    @Test("Putting a chore back clears the flag and touches nothing else")
+    func restoringAPutAwayChore() async {
+        let entry = TaskCompletion(
+            id: "c1",
+            taskID: "t1",
+            title: "Dishes",
+            completedAt: Timestamp(milliseconds: 1_700_000_000_000),
+            userID: "me",
+            name: "Ada",
+            canRestore: true
+        )
+        let calls = LockIsolated<[(TaskID, Bool)]>([])
+        let erased = LockIsolated<[TaskID]>([])
+
+        let store = TestStore(initialState: TaskArchiveFeature.State(homeID: "h1")) {
+            TaskArchiveFeature()
+        } withDependencies: {
+            $0.tasks.setArchived = { id, on in calls.withValue { $0.append((id, on)) } }
+            $0.tasks.removeFinished = { id in erased.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.archiveUpdated(TaskArchive(entries: [entry])))
+        await store.send(.restoreTapped(entry.taskID)) {
+            $0.restoring.insert(entry.taskID)
+        }
+        #expect(calls.value.count == 1)
+        #expect(calls.value[0].1 == false)
+        #expect(erased.value.isEmpty)
+
+        // Once it is out of the archive there is nothing left to mask.
+        await store.send(.archiveUpdated(TaskArchive(entries: [])))
+        #expect(store.state.restoring.isEmpty)
     }
 
     @Test("A refused delete surfaces, rather than looking like it worked")
