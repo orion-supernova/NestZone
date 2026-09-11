@@ -2625,6 +2625,85 @@ public enum L10n {
         r("tasks_task_deleted", "Deleted “\(a0)”")
     }
 
+    /// Archived “%@”
+    public static func tasksTaskArchived(_ a0: String) -> LocalizedStringResource {
+        r("tasks_task_archived", "Archived “\(a0)”")
+    }
+
+    /// Archive
+    public static var tasksArchiveAction: LocalizedStringResource {
+        r("tasks_archive_action", "Archive")
+    }
+
+    /// Finished in the last %lld days. Older and archived chores still count towards contributi...
+    public static func tasksDoneWindowNote(_ a0: Int) -> LocalizedStringResource {
+        r(
+            "tasks_done_window_note",
+            "Finished in the last \(a0) days. Older and archived chores still count towards contributions."
+        )
+    }
+
+    /// Everything to do, plus what was finished in the last %lld days. Older and archived chores...
+    public static func tasksAllWindowNote(_ a0: Int) -> LocalizedStringResource {
+        r(
+            "tasks_all_window_note",
+            "Everything to do, plus what was finished in the last \(a0) days. Older and archived chores still count towards contributions."
+        )
+    }
+
+    /// Nothing finished lately
+    public static var tasksDoneEmptyTitle: LocalizedStringResource {
+        r("tasks_done_empty_title", "Nothing finished lately")
+    }
+
+    /// Chores you tick off land here. Older ones are in History.
+    public static var tasksDoneEmptyMessage: LocalizedStringResource {
+        r("tasks_done_empty_message", "Chores you tick off land here. Older ones are in History.")
+    }
+
+    /// History
+    public static var tasksHistoryButton: LocalizedStringResource {
+        r("tasks_history_button", "History")
+    }
+
+    /// History
+    public static var taskHistoryScreenTitle: LocalizedStringResource {
+        r("task_history_screen_title", "History")
+    }
+
+    /// Every chore this home has finished. Tidying the task list never changes it — this is what...
+    public static var taskHistoryNote: LocalizedStringResource {
+        r(
+            "task_history_note",
+            "Every chore this home has finished. Tidying the task list never changes it — this is what Contributions counts."
+        )
+    }
+
+    /// Nothing finished yet
+    public static var taskHistoryEmptyTitle: LocalizedStringResource {
+        r("task_history_empty_title", "Nothing finished yet")
+    }
+
+    /// Tick a task off and it lands here for good.
+    public static var taskHistoryEmptyMessage: LocalizedStringResource {
+        r("task_history_empty_message", "Tick a task off and it lands here for good.")
+    }
+
+    /// Archived
+    public static var taskHistoryArchivedBadge: LocalizedStringResource {
+        r("task_history_archived_badge", "Archived")
+    }
+
+    /// Put back
+    public static var taskHistoryRestoreAction: LocalizedStringResource {
+        r("task_history_restore_action", "Put back")
+    }
+
+    /// Showing the %lld most recent.
+    public static func taskHistoryTruncated(_ a0: Int) -> LocalizedStringResource {
+        r("task_history_truncated", "Showing the \(a0) most recent.")
+    }
+
     /// What needs doing?
     public static var tasksTitleLabel: LocalizedStringResource {
         r("tasks_title_label", "What needs doing?")

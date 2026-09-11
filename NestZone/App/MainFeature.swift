@@ -47,6 +47,9 @@ public struct MainFeature: Sendable {
     @Reducer
     public enum HomePath {
         case tasks(TasksFeature)
+        /// Everything the household has ever finished. Pushed from the Tasks
+        /// screen, which carries only the recent half of it.
+        case taskHistory(TaskHistoryFeature)
         case contributions(ContributionsFeature)
         case movieNight(MovieNightFeature)
         /// Reached from tonight's dinner card, which is the one place on the
@@ -163,6 +166,17 @@ public struct MainFeature: Sendable {
 
             case .home(.delegate(.openTasks)):
                 state.homePath.append(.tasks(TasksFeature.State(homeID: state.homeID)))
+                return .none
+
+            // The Done list is bounded on purpose; this is where the rest of
+            // it lives. A push rather than a sheet because it is a drill-down
+            // into the same subject, and somebody reading their household's
+            // year of chores wants to come back to where they were.
+            case .homePath(.element(id: _, action: .tasks(.delegate(.openHistory)))):
+                state.homePath.append(.taskHistory(TaskHistoryFeature.State(
+                    homeID: state.homeID,
+                    currentUserID: state.user?.id
+                )))
                 return .none
 
             case .home(.delegate(.openContributions)):

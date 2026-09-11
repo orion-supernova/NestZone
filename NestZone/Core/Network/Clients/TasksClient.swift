@@ -4,10 +4,20 @@ import ConvexMobile
 
 @DependencyClient
 public struct TasksClient: Sendable {
-    public var byHome: @Sendable (HomeID) -> AsyncThrowingStream<[HouseTask], any Error> = { _ in .never }
+    /// The working list, plus the rule that bounds its finished half. An
+    /// envelope rather than a bare array because the screen states that rule to
+    /// the person reading it, and the server owns the number.
+    public var byHome: @Sendable (HomeID) -> AsyncThrowingStream<TaskList, any Error> = { _ in .never }
+    /// Everything the household has ever finished — the record, read from its
+    /// own table, unaffected by anything that happens to the task list.
+    public var history: @Sendable (HomeID) -> AsyncThrowingStream<TaskHistory, any Error> = { _ in .never }
     public var create: @Sendable (NewTask) async throws -> Void
     public var setCompleted: @Sendable (TaskID, Bool) async throws -> Void
+    /// Put a finished chore away, or bring it back. Never touches the record of
+    /// it having been done.
+    public var setArchived: @Sendable (TaskID, Bool) async throws -> Void
     public var update: @Sendable (TaskID, TaskEdit) async throws -> Void
+    /// Open tasks only — the server refuses a finished one. See `tasks:remove`.
     public var remove: @Sendable (TaskID) async throws -> Void
 }
 
@@ -84,7 +94,12 @@ extension TasksClient: DependencyKey {
     public static let liveValue = TasksClient(
         byHome: { homeID in
             ConvexConnection.shared.subscribe(
-                to: "tasks:listByHome", args: ["homeId": homeID], as: [HouseTask].self
+                to: "tasks:listByHome", args: ["homeId": homeID], as: TaskList.self
+            )
+        },
+        history: { homeID in
+            ConvexConnection.shared.subscribe(
+                to: "tasks:history", args: ["homeId": homeID], as: TaskHistory.self
             )
         },
         create: { task in
@@ -109,6 +124,11 @@ extension TasksClient: DependencyKey {
         setCompleted: { id, isCompleted in
             try await ConvexConnection.shared.mutate(
                 "tasks:update", args: ["id": id, "is_completed": isCompleted]
+            )
+        },
+        setArchived: { id, archived in
+            try await ConvexConnection.shared.mutate(
+                "tasks:setArchived", args: ["id": id, "archived": archived]
             )
         },
         update: { id, edit in

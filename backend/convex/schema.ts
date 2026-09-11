@@ -274,6 +274,35 @@ export default defineSchema({
     // never-completed tasks have none, and every row migrated from PocketBase
     // predates the field (see `creditFor` in convex/stats.ts for the fallback).
     completed_by: v.optional(v.id("users")),
+    /**
+     * When the box was ticked.
+     *
+     * The record of *that* lives in `task_completions`; this is the display
+     * copy, and it exists so the Done list can be an index range rather than a
+     * scan. Without it the nearest thing was `updated`, which every incidental
+     * edit bumps, and the only orderable field on the index was `_creationTime`
+     * — the date the chore was *written down*, which for anything that sat on
+     * the list for a fortnight is not the date it was done.
+     *
+     * Cleared when a task is reopened, alongside `completed_by`, so it never
+     * outlives the completion it describes. Absent on rows finished before it
+     * shipped until `backfillCompletions` fills it in.
+     */
+    completed_at: v.optional(v.number()),
+    /**
+     * When somebody put this finished chore away early.
+     *
+     * Archiving is a *view* operation and nothing more: it takes a row off the
+     * Done list and leaves the `task_completions` entry — the household's
+     * actual record of who did what — completely untouched. That separation is
+     * the whole point of the ledger, and it is why the swipe on a finished
+     * chore says "Archive" rather than "Delete".
+     *
+     * Only ever set on a completed task, and cleared on reopen: an open chore
+     * is work outstanding, and there is no sense in hiding it from the list of
+     * work outstanding.
+     */
+    archived_at: v.optional(v.number()),
     image: v.optional(v.id("_storage")),
     home_id: v.id("homes"),
     priority: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
@@ -305,7 +334,81 @@ export default defineSchema({
     // household had ever finished as well, which is a set that only grows.
     // `is_completed` is optional, so an open task sits under `false` *or*
     // `undefined` — see `openTasks` in lib/pending.ts.
-    .index("by_home_completed", ["home_id", "is_completed"]),
+    //
+    // The two trailing fields are what make the *finished* half bounded too.
+    // Open reads still use the `["home_id", "is_completed"]` prefix and are
+    // unaffected; the Done list adds `archived_at = undefined` (not put away by
+    // hand) and a range over `completed_at` (finished recently), which together
+    // are one index range rather than "take the last 500 and hope". Order
+    // matters: the equality goes before the range, because an index can only
+    // range over its last used field.
+    .index("by_home_completed", ["home_id", "is_completed", "archived_at", "completed_at"]),
+
+  /**
+   * Every chore this household has ever finished. The record, not the work.
+   *
+   * A task row is *current state* — it can be edited, reopened, archived and
+   * deleted. History derived from current state is history anybody can rewrite
+   * by accident, and that is exactly what happened here: the contribution
+   * split was tallied by walking the `tasks` table, so deleting a finished
+   * chore silently took somebody's credit for it with them. One swipe on the
+   * Tasks screen could change who the app said was doing the housework.
+   *
+   * So a completion is its own document, written when the box is ticked and
+   * removed only when it is *unticked* — which is the one act that genuinely
+   * means "this was not done after all", and which the person doing it can see
+   * the effect of. Deleting a finished task cannot reach this table at all;
+   * `tasks:remove` refuses completed rows outright and offers Archive instead.
+   *
+   * It is also the read `stats:contributions` wanted all along. That query used
+   * to `.collect()` every task in the household to tally six numbers — the
+   * unbounded scan the rest of this schema spends its comments fighting. Here
+   * the window the screen actually asked for *is* an index range, and the rows
+   * are a fraction of the size of the tasks they describe.
+   */
+  task_completions: defineTable({
+    home_id: v.id("homes"),
+    /**
+     * The chore this was. Kept live: a completion is deleted with its task
+     * (which can only happen once the task has been reopened, or with the whole
+     * home), so this never dangles.
+     */
+    task_id: v.id("tasks"),
+    /**
+     * Who it counts for. Absent when the app cannot say — a chore imported from
+     * PocketBase with no author, or finished by somebody who has since left.
+     * Kept as a row rather than dropped, so the shares still add up to the
+     * total.
+     */
+    user_id: v.optional(v.id("users")),
+    /**
+     * What the chore was called when it was finished, and what kind of work it
+     * was. Snapshots, so both readers of this table — the contribution tally
+     * and the History screen — can answer from it alone without fetching a task
+     * per row. `tasks:update` keeps the title in step while the task lives, so
+     * the copy is a performance decision rather than a second version of the
+     * truth.
+     */
+    title: v.optional(v.string()),
+    type: v.optional(
+      v.union(
+        v.literal("cleaning"),
+        v.literal("shopping"),
+        v.literal("maintenance"),
+        v.literal("general"),
+      ),
+    ),
+    completed_at: v.number(),
+  })
+    // For `cascadeDeleteHome`, which finds a household's rows by index rather
+    // than walking the tasks it once had.
+    .index("by_home", ["home_id"])
+    // The read behind both the contribution tally and the History screen: one
+    // household, newest first, bounded by the window that was asked for.
+    .index("by_home_at", ["home_id", "completed_at"])
+    // Retracting credit when a chore is reopened, and keeping the title snapshot
+    // in step when it is renamed.
+    .index("by_task", ["task_id"]),
 
   shopping_items: defineTable({
     pbId: v.optional(v.string()),

@@ -234,8 +234,11 @@ public struct HomeFeature: Sendable {
                     .cancellable(id: CancelID.meals, cancelInFlight: true),
 
                     .run { [homeID = state.homeID] send in
-                        for try await tasks in tasksClient.byHome(homeID) {
-                            await send(.tasksUpdated(tasks))
+                        // Only the rows; the Done window that travels with them
+                        // is the Tasks screen's business, and this tab shows a
+                        // handful of open chores.
+                        for try await list in tasksClient.byHome(homeID) {
+                            await send(.tasksUpdated(list.tasks))
                         }
                     } catch: { error, send in
                         await send(.loadFailed(AppError(error)))

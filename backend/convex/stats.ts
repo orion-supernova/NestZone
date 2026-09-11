@@ -13,7 +13,7 @@
 
 import { query } from "./_generated/server";
 import { v } from "convex/values";
-import { Doc, Id } from "./_generated/dataModel";
+import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { openTasks, outstandingItems } from "./lib/pending";
 import { READ_WINDOW } from "./messages";
@@ -169,26 +169,6 @@ const MAX_CHART_DAYS = 30;
 /** How far back a streak is allowed to run. Bounds the scan on old households. */
 const MAX_STREAK_DAYS = 400;
 
-type TaskDoc = Doc<"tasks">;
-
-/**
- * Who a finished chore counts for.
- *
- * `completed_by` is the real answer, but it only exists on tasks completed after
- * that field shipped. Everything older falls back through the next-best signals:
- * `updated_by` is whoever last touched it, which for a completed task is almost
- * always the person who ticked it; then the assignee; then the author. A task
- * that answers none of these is counted as unattributed rather than guessed at.
- */
-function creditFor(task: TaskDoc): Id<"users"> | null {
-  return task.completed_by ?? task.updated_by ?? task.assigned_to ?? task.created_by ?? null;
-}
-
-/** When a chore was finished. Completion is an update, so `updated` is the time. */
-function finishedAt(task: TaskDoc): number {
-  return task.updated ?? task._creationTime;
-}
-
 /**
  * The day `at` falls on *for the viewer*, as a day number.
  *
@@ -219,6 +199,35 @@ function streakLength(days: Set<number>, today: number): number {
   return streak;
 }
 
+/**
+ * Who does the housework, and when.
+ *
+ * Two reads, and the shape of them is the point.
+ *
+ * What has been *done* comes from `task_completions` — the household's record
+ * of finished work, written when a box is ticked and untouched by anything that
+ * happens to the task afterwards. This query used to `.collect()` the entire
+ * tasks table instead, which was wrong twice over. It was the unbounded scan
+ * the rest of this file exists to warn about: every chore the home had ever
+ * had, fetched on every open of the screen, for six integers and a bar chart —
+ * and it re-ran on *every* write to the tasks table, finished rows included,
+ * because Convex invalidates a query when anything it read changes. And it made
+ * the record editable: deleting a finished chore took its credit with it, so
+ * one swipe on the Tasks screen could change who the app said was carrying the
+ * house. Both problems were the same mistake — history derived from current
+ * state — and both go away by reading the ledger.
+ *
+ * What is still *outstanding* comes from `openTasks`, which is already an index
+ * range over the unfinished rows. The two halves answer different questions and
+ * neither needs the other's data.
+ *
+ * The read is bounded by the widest thing the answer depends on: the window
+ * that was asked for, the thirty days of histogram, and the streak — which is
+ * a property of the person rather than of the window, and so is counted from
+ * every completion up to `MAX_STREAK_DAYS` back. "All time" is the one option
+ * that reads the household's whole record, because that is what it means; it is
+ * still a purpose-built table of small rows rather than every task document.
+ */
 export const contributions = query({
   args: {
     homeId: v.id("homes"),
@@ -231,14 +240,6 @@ export const contributions = query({
     await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
 
-    const tasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_home", (q) => q.eq("home_id", homeId))
-      .collect();
-
-    const memberIds = home.members ?? [];
-    const memberDocs = await Promise.all(memberIds.map((id) => ctx.db.get(id)));
-
     const offset = tzOffsetMinutes ?? 0;
     const now = Date.now();
     const since = windowDays > 0 ? now - windowDays * DAY_MS : 0;
@@ -247,7 +248,24 @@ export const contributions = query({
     const chartDays = windowDays > 0 ? Math.min(windowDays, MAX_CHART_DAYS) : MAX_CHART_DAYS;
     const firstChartDay = today - chartDays + 1;
 
-    // Everything below is tallied in one pass over the tasks.
+    // The earliest completion any part of the answer can depend on. A streak
+    // reaches furthest back, so on a bounded window it is what sets the floor.
+    const readFrom =
+      windowDays > 0
+        ? Math.min(since, dayStart(firstChartDay, offset), now - MAX_STREAK_DAYS * DAY_MS)
+        : 0;
+
+    const [completions, open] = await Promise.all([
+      ctx.db
+        .query("task_completions")
+        .withIndex("by_home_at", (q) => q.eq("home_id", homeId).gte("completed_at", readFrom))
+        .collect(),
+      openTasks(ctx, homeId),
+    ]);
+
+    const memberIds = home.members ?? [];
+    const memberDocs = await Promise.all(memberIds.map((id) => ctx.db.get(id)));
+
     const completed = new Map<string, number>();
     const openAssigned = new Map<string, number>();
     const overdue = new Map<string, number>();
@@ -262,47 +280,50 @@ export const contributions = query({
     const bump = (map: Map<string, number>, key: string) =>
       map.set(key, (map.get(key) ?? 0) + 1);
 
-    for (const task of tasks) {
-      if (!task.is_completed) {
-        const assignee = task.assigned_to;
-        if (assignee && isMember.has(assignee)) {
-          bump(openAssigned, assignee);
-          if (task.due_date !== undefined && task.due_date < now) bump(overdue, assignee);
-        }
-        continue;
-      }
+    // What the house still owes.
+    for (const task of open) {
+      const assignee = task.assigned_to;
+      if (!assignee || !isMember.has(assignee)) continue;
+      bump(openAssigned, assignee);
+      if (task.due_date !== undefined && task.due_date < now) bump(overdue, assignee);
+    }
 
-      const credit = creditFor(task);
-      const at = finishedAt(task);
+    // What the house has done.
+    for (const entry of completions) {
+      const credit = entry.user_id;
+      const at = entry.completed_at;
       const day = dayIndex(at, offset);
+      const credited = credit && isMember.has(credit) ? credit : null;
 
       // A streak is a property of the person, not of the selected window, so it
-      // is tallied from every completion rather than only the ones in range.
-      if (credit && isMember.has(credit)) {
-        let days = streakDays.get(credit);
-        if (!days) streakDays.set(credit, (days = new Set()));
+      // is tallied from every completion in the read rather than only the ones
+      // in range.
+      if (credited) {
+        let days = streakDays.get(credited);
+        if (!days) streakDays.set(credited, (days = new Set()));
         days.add(day);
       }
 
-      if (day >= firstChartDay && day <= today && credit && isMember.has(credit)) {
+      if (credited && day >= firstChartDay && day <= today) {
         let row = histogram.get(day);
         if (!row) histogram.set(day, (row = new Map()));
-        row.set(credit, (row.get(credit) ?? 0) + 1);
+        row.set(credited, (row.get(credited) ?? 0) + 1);
       }
 
       if (at < since) continue;
 
-      if (!credit || !isMember.has(credit)) {
-        // A chore finished by someone who has since left the home still happened;
-        // dropping it would make the shares add up to less than the total.
+      if (!credited) {
+        // A chore finished by someone who has since left the home still
+        // happened; dropping it would make the shares add up to less than the
+        // total.
         unattributed++;
         continue;
       }
 
-      bump(completed, credit);
-      let kinds = byKind.get(credit);
-      if (!kinds) byKind.set(credit, (kinds = new Map()));
-      const kind = task.type ?? "general";
+      bump(completed, credited);
+      let kinds = byKind.get(credited);
+      if (!kinds) byKind.set(credited, (kinds = new Map()));
+      const kind = entry.type ?? "general";
       kinds.set(kind, (kinds.get(kind) ?? 0) + 1);
     }
 

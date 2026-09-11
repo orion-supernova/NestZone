@@ -103,6 +103,28 @@ cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in 
 
 - `stats:forHome` computes the Home tab's counters server-side. The client must
   not go back to downloading whole collections to count them.
+- **A finished chore is a document, not a flag.** Ticking a box writes a
+  `task_completions` row; unticking it is the only thing that deletes one.
+  `stats:contributions` and `tasks:history` both read that table and nothing
+  else, which is what makes the split unrewritable — it used to be tallied by
+  collecting the whole `tasks` table, so deleting a finished chore quietly took
+  somebody's credit with it, and the read grew with the household's age. So:
+  **`tasks:remove` refuses a completed task.** Delete means "this should not
+  exist" and is offered on open rows only; a finished chore is put away with
+  `tasks:setArchived`, which touches `archived_at` and nothing else. The escape
+  hatch for "this was never done" is to reopen it — which retracts the credit
+  where the person can see it happen — and then delete it as the open task it
+  has become.
+- **The Done list is bounded by `DONE_WINDOW_DAYS`**, and `tasks:listByHome`
+  returns that number alongside the rows so the screen can state the rule it is
+  obeying. Anything older lives in History. `completed_at` is denormalised onto
+  the task for exactly one reason: it is the last field of `by_home_completed`,
+  so "finished recently and not put away" is one index range. Reopening clears
+  it, `archived_at` and `completed_by` together.
+- New deployments must run `npx convex run tasks:backfillCompletions '{}'` once.
+  It is idempotent and self-scheduling, and until it has run, chores finished
+  before the ledger shipped are missing from both the contribution tally and the
+  Done list's date range.
 - `catalog:discover` / `catalog:details` proxy TMDb so the API key stays on the
   server. Nothing in the app may call api.themoviedb.org directly.
 - `finance:summary` computes the whole Finance screen server-side — balances,

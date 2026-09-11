@@ -185,9 +185,14 @@ export async function cascadeDeleteHome(
   // `issue_comments` is in here rather than behind a per-issue cascade for the
   // same reason: it carries `home_id` precisely so a household's entries are one
   // index range instead of one read per problem the household ever had.
+  //
+  // `task_completions` likewise. Nothing else in the app may delete a row of it
+  // — the record of who did the housework outlives the task, the archive and
+  // every tidy-up of the list — but it does not outlive the household it
+  // belongs to, which is what this function is for.
   const simple = [
-    "tasks", "shopping_items", "notes", "recipes", "movies", "meal_plans",
-    "expenses", "settlements", "bills", "budgets", "events",
+    "tasks", "task_completions", "shopping_items", "notes", "recipes", "movies",
+    "meal_plans", "expenses", "settlements", "bills", "budgets", "events",
     "issues", "issue_comments",
   ] as const;
   await Promise.all(

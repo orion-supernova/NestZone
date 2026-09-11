@@ -8,16 +8,25 @@ import SwiftUI
 /// one moment a person is actually looking at the row they lost.
 public struct UndoToast: View {
     private let message: LocalizedStringResource
+    private let symbol: String
     private let action: () -> Void
 
-    public init(_ message: LocalizedStringResource, action: @escaping () -> Void) {
+    /// - Parameter symbol: what just happened. The bar is offered for more than
+    ///   one verb now — a chore can be thrown away or put away, and those are
+    ///   different enough that the icon should not claim both were a delete.
+    public init(
+        _ message: LocalizedStringResource,
+        symbol: String = "trash",
+        action: @escaping () -> Void
+    ) {
         self.message = message
+        self.symbol = symbol
         self.action = action
     }
 
     public var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "trash")
+            Image(systemName: symbol)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
 
