@@ -10,6 +10,14 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
     public var updatedBy: UserID?
     public var assignedTo: UserID?
     public var isCompleted: Bool
+    /// Who ticked the box. `updated_by` is only approximately this — an edit to
+    /// the title overwrites it — so completion is recorded separately, and the
+    /// contribution split attributes a chore to whoever actually finished it.
+    ///
+    /// Decoded here so the delete warning can name the person whose credit is
+    /// about to go. A dialog that said "this will change the contribution
+    /// split" without saying whose would be a worse dialog than none.
+    public var completedBy: UserID?
     public var image: String?
     public var homeID: HomeID?
     public var priority: Priority
@@ -52,6 +60,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         case updatedBy = "updated_by"
         case assignedTo = "assigned_to"
         case isCompleted = "is_completed"
+        case completedBy = "completed_by"
         case image
         case homeID = "home_id"
         case priority
@@ -70,6 +79,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         updatedBy = try c.decodeIfPresent(UserID.self, forKey: .updatedBy)
         assignedTo = try c.decodeIfPresent(UserID.self, forKey: .assignedTo)
         isCompleted = try c.decodeIfPresent(Bool.self, forKey: .isCompleted) ?? false
+        completedBy = try c.decodeIfPresent(UserID.self, forKey: .completedBy)
         image = try c.decodeIfPresent(String.self, forKey: .image)
         homeID = try c.decodeIfPresent(HomeID.self, forKey: .homeID)
         priority = c.decodeLenient(Priority.self, forKey: .priority, default: .medium)
@@ -88,6 +98,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         updatedBy: UserID? = nil,
         assignedTo: UserID? = nil,
         isCompleted: Bool = false,
+        completedBy: UserID? = nil,
         image: String? = nil,
         homeID: HomeID? = nil,
         priority: Priority = .medium,
@@ -104,6 +115,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         self.updatedBy = updatedBy
         self.assignedTo = assignedTo
         self.isCompleted = isCompleted
+        self.completedBy = completedBy
         self.image = image
         self.homeID = homeID
         self.priority = priority

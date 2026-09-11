@@ -8,23 +8,18 @@ public struct TasksClient: Sendable {
     /// envelope rather than a bare array because the screen states that rule to
     /// the person reading it, and the server owns the number.
     public var byHome: @Sendable (HomeID) -> AsyncThrowingStream<TaskList, any Error> = { _ in .never }
-    /// Everything the household has ever finished — the record, read from its
-    /// own table, unaffected by anything that happens to the task list.
-    public var history: @Sendable (HomeID) -> AsyncThrowingStream<TaskHistory, any Error> = { _ in .never }
-    /// Just the chores that have been put away, newest first. The same row
-    /// shape as `history`, so one screen draws both.
-    public var archivedList: @Sendable (HomeID) -> AsyncThrowingStream<TaskHistory, any Error> = { _ in .never }
+    /// The chores that have left the Done list — finished longer ago than the
+    /// window, read from the ledger and so unaffected by anything that happens
+    /// to the task rows themselves.
+    public var archive: @Sendable (HomeID) -> AsyncThrowingStream<TaskArchive, any Error> = { _ in .never }
     public var create: @Sendable (NewTask) async throws -> Void
     public var setCompleted: @Sendable (TaskID, Bool) async throws -> Void
-    /// Put a finished chore away, or bring it back. Never touches the record of
-    /// it having been done.
-    public var setArchived: @Sendable (TaskID, Bool) async throws -> Void
     public var update: @Sendable (TaskID, TaskEdit) async throws -> Void
     /// Open tasks only — the server refuses a finished one. See `tasks:remove`.
     public var remove: @Sendable (TaskID) async throws -> Void
     /// The deliberate one: deletes a finished chore *and* the record of it
-    /// having been done, which moves the contribution split. Archived rows
-    /// only, and never without the dialog that says so.
+    /// having been done, which moves the contribution split. Never called
+    /// without the dialog that says so.
     public var removeFinished: @Sendable (TaskID) async throws -> Void
 }
 
@@ -104,14 +99,9 @@ extension TasksClient: DependencyKey {
                 to: "tasks:listByHome", args: ["homeId": homeID], as: TaskList.self
             )
         },
-        history: { homeID in
+        archive: { homeID in
             ConvexConnection.shared.subscribe(
-                to: "tasks:history", args: ["homeId": homeID], as: TaskHistory.self
-            )
-        },
-        archivedList: { homeID in
-            ConvexConnection.shared.subscribe(
-                to: "tasks:archived", args: ["homeId": homeID], as: TaskHistory.self
+                to: "tasks:archive", args: ["homeId": homeID], as: TaskArchive.self
             )
         },
         create: { task in
@@ -136,11 +126,6 @@ extension TasksClient: DependencyKey {
         setCompleted: { id, isCompleted in
             try await ConvexConnection.shared.mutate(
                 "tasks:update", args: ["id": id, "is_completed": isCompleted]
-            )
-        },
-        setArchived: { id, archived in
-            try await ConvexConnection.shared.mutate(
-                "tasks:setArchived", args: ["id": id, "archived": archived]
             )
         },
         update: { id, edit in

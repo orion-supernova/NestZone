@@ -64,12 +64,7 @@ public struct TasksView: View {
         // if the bar is sitting on the button.
         .overlay(alignment: .bottom) {
             if let pending = store.pendingRemoval {
-                UndoToast(
-                    pending.kind == .archive
-                        ? L10n.tasksTaskArchived(pending.task.title)
-                        : L10n.tasksTaskDeleted(pending.task.title),
-                    symbol: pending.kind == .archive ? "archivebox" : "trash"
-                ) {
+                UndoToast(L10n.tasksTaskDeleted(pending.title)) {
                     store.send(.undoRemovalTapped)
                 }
                 .padding(.horizontal, Metrics.screenPadding)
@@ -113,8 +108,8 @@ public struct TasksView: View {
                 // A symbol beside it costs about a quarter of the width the
                 // sentence needs, and on a small phone that is two more lines
                 // of wrap to save a glyph nobody was reading.
-                Button { store.send(.historyTapped) } label: {
-                    Text(L10n.tasksHistoryButton)
+                Button { store.send(.archiveTapped) } label: {
+                    Text(L10n.tasksArchiveButton)
                         .font(.subheadline.weight(.medium))
                 }
                 .buttonStyle(.glass)
@@ -170,28 +165,22 @@ public struct TasksView: View {
                 // arriving row in behind a delay.
                 .appearInPlace(index < 8 ? index : 0)
                 .glassListRow()
-                // Which verb a row gets is decided by the row, not by a dialog
-                // asking the person to choose between two meanings of "delete"
-                // while their finger is still on the screen. An unfinished
-                // chore can be thrown away; a finished one is a thing the
-                // household did, so the most the list may do is stop showing
-                // it.
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    if task.isCompleted {
-                        Button {
-                            store.send(.archiveTapped(task.id))
-                        } label: {
-                            Label { Text(L10n.tasksArchiveAction) } icon: {
-                                Image(systemName: "archivebox")
-                            }
-                        }
-                        .tint(Palette.warning)
-                    } else {
-                        Button(role: .destructive) {
-                            store.send(.deleteTapped(task.id))
-                        } label: {
-                            Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
-                        }
+                // One verb either way, and no dialog asking which of two
+                // meanings of "delete" was intended while a finger is still on
+                // the screen. The row already knows: an unfinished chore has
+                // never been done by anybody, so it goes on the undo toast; a
+                // finished one carries the record of who did it, so the same
+                // swipe stops and names them. The weight follows the stakes
+                // rather than the wording.
+                //
+                // No full swipe on a finished chore — carrying on past the edge
+                // is a gesture for something cheap, and this one opens a
+                // question worth reading.
+                .swipeActions(edge: .trailing, allowsFullSwipe: !task.isCompleted) {
+                    Button(role: .destructive) {
+                        store.send(.deleteTapped(task.id))
+                    } label: {
+                        Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
                     }
                 }
             }

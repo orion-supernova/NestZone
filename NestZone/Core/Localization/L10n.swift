@@ -2625,21 +2625,11 @@ public enum L10n {
         r("tasks_task_deleted", "Deleted “\(a0)”")
     }
 
-    /// Archived “%@”
-    public static func tasksTaskArchived(_ a0: String) -> LocalizedStringResource {
-        r("tasks_task_archived", "Archived “\(a0)”")
-    }
-
-    /// Archive
-    public static var tasksArchiveAction: LocalizedStringResource {
-        r("tasks_archive_action", "Archive")
-    }
-
     /// Finished in the last %lld days. Older and archived chores still count towards contributi...
     public static func tasksDoneWindowNote(_ a0: Int) -> LocalizedStringResource {
         r(
             "tasks_done_window_note",
-            "Finished in the last \(a0) days. Older and archived chores still count towards contributions."
+            "Finished in the last \(a0) days. Older ones move to the Archive and still count towards contributions."
         )
     }
 
@@ -2647,7 +2637,7 @@ public enum L10n {
     public static func tasksAllWindowNote(_ a0: Int) -> LocalizedStringResource {
         r(
             "tasks_all_window_note",
-            "Everything to do, plus what was finished in the last \(a0) days. Older and archived chores still count towards contributions."
+            "Everything to do, plus what was finished in the last \(a0) days. Older ones are in the Archive and still count."
         )
     }
 
@@ -2661,107 +2651,66 @@ public enum L10n {
         r("tasks_done_empty_message", "Chores you tick off land here. Older ones are in History.")
     }
 
-    /// History
-    public static var tasksHistoryButton: LocalizedStringResource {
-        r("tasks_history_button", "History")
+    /// Archive
+    public static var tasksArchiveButton: LocalizedStringResource {
+        r("tasks_archive_button", "Archive")
     }
 
-    /// History
-    public static var taskHistoryScreenTitle: LocalizedStringResource {
-        r("task_history_screen_title", "History")
+    /// Archive
+    public static var taskArchiveScreenTitle: LocalizedStringResource {
+        r("task_archive_screen_title", "Archive")
     }
 
-    /// Every chore this home has finished. Tidying the task list never changes it — this is what...
-    public static var taskHistoryNote: LocalizedStringResource {
+    /// Chores finished more than %lld days ago. They still count towards contributions — deleti...
+    public static func taskArchiveNote(_ a0: Int) -> LocalizedStringResource {
         r(
-            "task_history_note",
-            "Every chore this home has finished. Tidying the task list never changes it — this is what Contributions counts."
+            "task_archive_note",
+            "Chores finished more than \(a0) days ago. They still count towards contributions — deleting one is the only thing that changes that."
         )
     }
 
-    /// Nothing finished yet
-    public static var taskHistoryEmptyTitle: LocalizedStringResource {
-        r("task_history_empty_title", "Nothing finished yet")
+    /// Nothing here yet
+    public static var taskArchiveEmptyTitle: LocalizedStringResource {
+        r("task_archive_empty_title", "Nothing here yet")
     }
 
-    /// Tick a task off and it lands here for good.
-    public static var taskHistoryEmptyMessage: LocalizedStringResource {
-        r("task_history_empty_message", "Tick a task off and it lands here for good.")
-    }
-
-    /// Archived
-    public static var taskHistoryArchivedBadge: LocalizedStringResource {
-        r("task_history_archived_badge", "Archived")
-    }
-
-    /// Put back
-    public static var taskHistoryRestoreAction: LocalizedStringResource {
-        r("task_history_restore_action", "Put back")
-    }
-
-    /// All
-    public static var taskHistoryScopeAll: LocalizedStringResource {
-        r("task_history_scope_all", "All")
-    }
-
-    /// Archived
-    public static var taskHistoryScopeArchived: LocalizedStringResource {
-        r("task_history_scope_archived", "Archived")
-    }
-
-    /// Chores you've put away. They still count towards contributions — deleting one from here ...
-    public static var taskHistoryArchivedNote: LocalizedStringResource {
-        r(
-            "task_history_archived_note",
-            "Chores you've put away. They still count towards contributions — deleting one from here is the only thing that changes that."
-        )
-    }
-
-    /// Nothing archived
-    public static var taskHistoryArchivedEmptyTitle: LocalizedStringResource {
-        r("task_history_archived_empty_title", "Nothing archived")
-    }
-
-    /// Swipe a finished chore on the Tasks screen to put it away.
-    public static var taskHistoryArchivedEmptyMessage: LocalizedStringResource {
-        r(
-            "task_history_archived_empty_message",
-            "Swipe a finished chore on the Tasks screen to put it away."
-        )
+    /// Finished chores move here %lld days after you tick them off.
+    public static func taskArchiveEmptyMessage(_ a0: Int) -> LocalizedStringResource {
+        r("task_archive_empty_message", "Finished chores move here \(a0) days after you tick them off.")
     }
 
     /// Delete “%@” for good?
-    public static func taskHistoryDeleteTitle(_ a0: String) -> LocalizedStringResource {
-        r("task_history_delete_title", "Delete “\(a0)” for good?")
+    public static func taskArchiveDeleteTitle(_ a0: String) -> LocalizedStringResource {
+        r("task_archive_delete_title", "Delete “\(a0)” for good?")
     }
 
     /// This also removes your credit for finishing it, so the contribution split will change. It...
-    public static var taskHistoryDeleteMessageMine: LocalizedStringResource {
+    public static var taskArchiveDeleteMessageMine: LocalizedStringResource {
         r(
-            "task_history_delete_message_mine",
+            "task_archive_delete_message_mine",
             "This also removes your credit for finishing it, so the contribution split will change. It can't be undone."
         )
     }
 
     /// This also removes %@'s credit for finishing it, so the contribution split will change. It...
-    public static func taskHistoryDeleteMessageOther(_ a0: String) -> LocalizedStringResource {
+    public static func taskArchiveDeleteMessageOther(_ a0: String) -> LocalizedStringResource {
         r(
-            "task_history_delete_message_other",
+            "task_archive_delete_message_other",
             "This also removes \(a0)'s credit for finishing it, so the contribution split will change. It can't be undone."
         )
     }
 
     /// This also removes it from the contribution split. It can't be undone.
-    public static var taskHistoryDeleteMessageUnattributed: LocalizedStringResource {
+    public static var taskArchiveDeleteMessageUnattributed: LocalizedStringResource {
         r(
-            "task_history_delete_message_unattributed",
+            "task_archive_delete_message_unattributed",
             "This also removes it from the contribution split. It can't be undone."
         )
     }
 
     /// Showing the %lld most recent.
-    public static func taskHistoryTruncated(_ a0: Int) -> LocalizedStringResource {
-        r("task_history_truncated", "Showing the \(a0) most recent.")
+    public static func taskArchiveTruncated(_ a0: Int) -> LocalizedStringResource {
+        r("task_archive_truncated", "Showing the \(a0) most recent.")
     }
 
     /// What needs doing?

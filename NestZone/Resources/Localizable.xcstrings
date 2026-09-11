@@ -21842,75 +21842,7 @@
         }
       }
     },
-    "task_history_archived_badge": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archived"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arşivde"
-          }
-        }
-      }
-    },
-    "task_history_archived_empty_message": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swipe a finished chore on the Tasks screen to put it away."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Görevler ekranında tamamlanmış bir işi kaydırarak kaldırabilirsin."
-          }
-        }
-      }
-    },
-    "task_history_archived_empty_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing archived"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arşivde bir şey yok"
-          }
-        }
-      }
-    },
-    "task_history_archived_note": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chores you've put away. They still count towards contributions — deleting one from here is the only thing that changes that."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kaldırdığın işler. Katkılara sayılmaya devam ederler — bunu değiştiren tek şey buradan silmektir."
-          }
-        }
-      }
-    },
-    "task_history_delete_message_mine": {
+    "task_archive_delete_message_mine": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -21927,7 +21859,7 @@
         }
       }
     },
-    "task_history_delete_message_other": {
+    "task_archive_delete_message_other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -21944,7 +21876,7 @@
         }
       }
     },
-    "task_history_delete_message_unattributed": {
+    "task_archive_delete_message_unattributed": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -21961,7 +21893,7 @@
         }
       }
     },
-    "task_history_delete_title": {
+    "task_archive_delete_title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -21978,98 +21910,64 @@
         }
       }
     },
-    "task_history_empty_message": {
+    "task_archive_empty_message": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tick a task off and it lands here for good."
+            "value": "Finished chores move here %lld days after you tick them off."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir görevi işaretle, kalıcı olarak buraya düşsün."
+            "value": "Tamamlanan işler, işaretlemenden %lld gün sonra buraya taşınır."
           }
         }
       }
     },
-    "task_history_empty_title": {
+    "task_archive_empty_title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing finished yet"
+            "value": "Nothing here yet"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Henüz tamamlanan yok"
+            "value": "Burada henüz bir şey yok"
           }
         }
       }
     },
-    "task_history_note": {
+    "task_archive_note": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every chore this home has finished. Tidying the task list never changes it — this is what Contributions counts."
+            "value": "Chores finished more than %lld days ago. They still count towards contributions — deleting one is the only thing that changes that."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu evin tamamladığı her iş. Görev listesini toparlamak burayı değiştirmez — Katkılar’ın saydığı şey budur."
+            "value": "%lld günden daha önce tamamlanan işler. Katkılara sayılmaya devam ederler — bunu değiştiren tek şey silmektir."
           }
         }
       }
     },
-    "task_history_restore_action": {
+    "task_archive_screen_title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Put back"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geri koy"
-          }
-        }
-      }
-    },
-    "task_history_scope_all": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tümü"
-          }
-        }
-      }
-    },
-    "task_history_scope_archived": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archived"
+            "value": "Archive"
           }
         },
         "tr": {
@@ -22080,24 +21978,7 @@
         }
       }
     },
-    "task_history_screen_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geçmiş"
-          }
-        }
-      }
-    },
-    "task_history_truncated": {
+    "task_archive_truncated": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -22120,18 +22001,18 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything to do, plus what was finished in the last %lld days. Older and archived chores still count towards contributions."
+            "value": "Everything to do, plus what was finished in the last %lld days. Older ones are in the Archive and still count."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yapılacakların tamamı ve son %lld günde tamamlananlar. Daha eski ve arşivlenen işler katkılara sayılmaya devam eder."
+            "value": "Yapılacakların tamamı ve son %lld günde tamamlananlar. Daha eskiler Arşiv’de ve sayılmaya devam eder."
           }
         }
       }
     },
-    "tasks_archive_action": {
+    "tasks_archive_button": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -22143,7 +22024,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Arşivle"
+            "value": "Arşiv"
           }
         }
       }
@@ -22256,13 +22137,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finished in the last %lld days. Older and archived chores still count towards contributions."
+            "value": "Finished in the last %lld days. Older ones move to the Archive and still count towards contributions."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Son %lld günde tamamlananlar. Daha eski ve arşivlenen işler katkılara sayılmaya devam eder."
+            "value": "Son %lld günde tamamlananlar. Daha eskiler Arşiv’e taşınır ve katkılara sayılmaya devam eder."
           }
         }
       }
@@ -22331,23 +22212,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yapılacak"
-          }
-        }
-      }
-    },
-    "tasks_history_button": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geçmiş"
           }
         }
       }
@@ -22518,23 +22382,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Görevler"
-          }
-        }
-      }
-    },
-    "tasks_task_archived": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archived “%@”"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "“%@” arşivlendi"
           }
         }
       }

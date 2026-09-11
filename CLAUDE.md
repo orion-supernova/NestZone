@@ -105,32 +105,30 @@ cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in 
   not go back to downloading whole collections to count them.
 - **A finished chore is a document, not a flag.** Ticking a box writes a
   `task_completions` row; unticking it is the only thing that deletes one.
-  `stats:contributions` and `tasks:history` both read that table and nothing
-  else, which is what makes the split unrewritable — it used to be tallied by
-  collecting the whole `tasks` table, so deleting a finished chore quietly took
-  somebody's credit with it, and the read grew with the household's age. So:
-  **`tasks:remove` refuses a completed task.** Delete means "this should not
-  exist" and is offered on open rows only; a finished chore is put away with
-  `tasks:setArchived`, which touches `archived_at` and nothing else.
-- **A completion can only be destroyed from the archive.** `tasks:removeFinished`
-  is the deliberate path — a separate mutation from `remove` so no swipe on the
-  working list can reach it however the client is written, and it refuses
-  anything not both completed *and* archived. Two acts, not one: putting a chore
-  away says the row has done its job, deleting it from the archive says it should
-  never have existed. The client only ever calls it behind a dialog that names
-  whose credit goes with it. The gentler escape hatch is still there — reopen the
-  chore, which retracts the credit visibly, then delete it as an open task.
-- `tasks:archived` makes the archive a *place* rather than a flag, via
-  `by_home_archived`. Without it, putting a chore away hid it with no route back:
-  restoring meant finding its badge among every completion the home had recorded,
-  and anything finished outside the Done window could be neither restored nor
-  deleted. Any archived row must always offer at least one way out.
-- **The Done list is bounded by `DONE_WINDOW_DAYS`**, and `tasks:listByHome`
-  returns that number alongside the rows so the screen can state the rule it is
-  obeying. Anything older lives in History. `completed_at` is denormalised onto
-  the task for exactly one reason: it is the last field of `by_home_completed`,
-  so "finished recently and not put away" is one index range. Reopening clears
-  it, `archived_at` and `completed_by` together.
+  `stats:contributions` and `tasks:archive` read that table and nothing else,
+  which is what makes the split unrewritable by accident — it used to be tallied
+  by collecting the whole `tasks` table, so deleting a finished chore quietly
+  took somebody's credit with it, and the read grew with the household's age.
+- **Erasing a completion is a different function from deleting a task.**
+  `tasks:remove` takes open chores only and needs no confirming — nothing was
+  ever done. `tasks:removeFinished` takes the completion with the task, and the
+  client never calls it except behind a dialog that names the chore, names whose
+  credit goes, and says the split will change. The point was never to make the
+  record unreachable; it was to stop reaching it being silent. The gentler route
+  is still there — reopen the chore, which retracts the credit visibly, then
+  delete it as an open task.
+- **Done and Archive are two halves of one boundary, not two lists.**
+  `DONE_WINDOW_DAYS` splits `completed_at`: above it is `tasks:listByHome`'s
+  finished half, below it is `tasks:archive`. Disjoint by construction — no
+  flag, no sweep, and no way for a chore to show up in both. There is no
+  archiving *verb*; a chore is in the Archive because it got old. An earlier
+  version had a manual `archived_at` **and** a History screen returning every
+  completion ever, so a chore finished yesterday sat in Done and in History at
+  once. That is not an archive, it is a second copy of the same list.
+  Both queries send the window back with the rows so each screen can state the
+  rule it obeyed rather than hardcoding a number that can drift from it.
+  `completed_at` is denormalised onto the task because it is the last field of
+  `by_home_completed`; reopening clears it with `completed_by`.
 - New deployments must run `npx convex run tasks:backfillCompletions '{}'` once.
   It is idempotent and self-scheduling, and until it has run, chores finished
   before the ledger shipped are missing from both the contribution tally and the

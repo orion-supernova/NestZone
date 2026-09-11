@@ -284,25 +284,18 @@ export default defineSchema({
      * — the date the chore was *written down*, which for anything that sat on
      * the list for a fortnight is not the date it was done.
      *
+     * It is also the whole of what "archived" means here. A chore is on the
+     * Done list if it was finished inside the window and in the Archive if it
+     * was not, which makes the two lists disjoint by construction — there is no
+     * flag to set, nothing to sweep, and no way for a chore to appear in both.
+     * An archive that also carried everything still on the working list would
+     * not be an archive; it would be a second copy of it.
+     *
      * Cleared when a task is reopened, alongside `completed_by`, so it never
      * outlives the completion it describes. Absent on rows finished before it
      * shipped until `backfillCompletions` fills it in.
      */
     completed_at: v.optional(v.number()),
-    /**
-     * When somebody put this finished chore away early.
-     *
-     * Archiving is a *view* operation and nothing more: it takes a row off the
-     * Done list and leaves the `task_completions` entry — the household's
-     * actual record of who did what — completely untouched. That separation is
-     * the whole point of the ledger, and it is why the swipe on a finished
-     * chore says "Archive" rather than "Delete".
-     *
-     * Only ever set on a completed task, and cleared on reopen: an open chore
-     * is work outstanding, and there is no sense in hiding it from the list of
-     * work outstanding.
-     */
-    archived_at: v.optional(v.number()),
     image: v.optional(v.id("_storage")),
     home_id: v.id("homes"),
     priority: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
@@ -335,22 +328,11 @@ export default defineSchema({
     // `is_completed` is optional, so an open task sits under `false` *or*
     // `undefined` — see `openTasks` in lib/pending.ts.
     //
-    // The two trailing fields are what make the *finished* half bounded too.
-    // Open reads still use the `["home_id", "is_completed"]` prefix and are
-    // unaffected; the Done list adds `archived_at = undefined` (not put away by
-    // hand) and a range over `completed_at` (finished recently), which together
-    // are one index range rather than "take the last 500 and hope". Order
-    // matters: the equality goes before the range, because an index can only
-    // range over its last used field.
-    .index("by_home_completed", ["home_id", "is_completed", "archived_at", "completed_at"])
-    // The archive, as a place rather than as a property of rows elsewhere.
-    //
-    // Ranging over `archived_at` from zero selects exactly the put-away chores:
-    // a Convex index sorts `undefined` before every number, so "never archived"
-    // falls outside the range instead of having to be filtered out of it. Newest
-    // put away first, which is the order somebody looking for the thing they
-    // just archived by mistake expects to find it in.
-    .index("by_home_archived", ["home_id", "archived_at"]),
+    // The trailing field is what makes the *finished* half bounded too. Open
+    // reads still use the `["home_id", "is_completed"]` prefix and are
+    // unaffected; the Done list ranges over `completed_at`, which is one index
+    // range rather than "take the last 500 and hope".
+    .index("by_home_completed", ["home_id", "is_completed", "completed_at"]),
 
   /**
    * Every chore this household has ever finished. The record, not the work.

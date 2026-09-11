@@ -41,21 +41,14 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
     public var userID: UserID?
     public var name: String?
     public var email: String?
-    /// Whether the chore behind this was put away early.
-    public var isArchived: Bool
-    /// Whether putting it back would actually return it to the Done list. False
-    /// once the completion is older than the Done window, where restoring it
-    /// would be a button that appears to do nothing.
-    public var canRestore: Bool
-
-    enum CodingKeys: String, CodingKey {
+        enum CodingKeys: String, CodingKey {
         case id
         case taskID = "taskId"
         case title
         case kind = "type"
         case completedAt
         case userID = "userId"
-        case name, email, isArchived, canRestore
+        case name, email
     }
 
     public init(from decoder: any Decoder) throws {
@@ -68,8 +61,6 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
         userID = try c.decodeIfPresent(UserID.self, forKey: .userID)
         name = try c.decodeIfPresent(String.self, forKey: .name)
         email = try c.decodeIfPresent(String.self, forKey: .email)
-        isArchived = try c.decodeIfPresent(Bool.self, forKey: .isArchived) ?? false
-        canRestore = try c.decodeIfPresent(Bool.self, forKey: .canRestore) ?? false
     }
 
     public init(
@@ -80,9 +71,7 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
         completedAt: Timestamp,
         userID: UserID? = nil,
         name: String? = nil,
-        email: String? = nil,
-        isArchived: Bool = false,
-        canRestore: Bool = false
+        email: String? = nil
     ) {
         self.id = id
         self.taskID = taskID
@@ -92,8 +81,6 @@ public struct TaskCompletion: Codable, Identifiable, Hashable, Sendable {
         self.userID = userID
         self.name = name
         self.email = email
-        self.isArchived = isArchived
-        self.canRestore = canRestore
     }
 }
 
@@ -107,20 +94,36 @@ extension TaskCompletion {
     public var initials: String? { displayName.map(User.initials(from:)) }
 }
 
-/// A page of the household's record of finished work.
-public struct TaskHistory: Codable, Hashable, Sendable {
+/// The chores that have left the Done list — everything finished longer ago
+/// than `windowDays`.
+///
+/// The complement of the Done list rather than a superset of it, which is the
+/// whole difference between an archive and a second copy of the same list. The
+/// first version of this got it wrong and returned every completion the home
+/// had ever recorded, so a chore finished yesterday appeared in both places at
+/// once.
+public struct TaskArchive: Codable, Hashable, Sendable {
     public var entries: [TaskCompletion]
+    /// How long a chore stays on the Done list before it lands here. The same
+    /// number `TaskList` carries, from the same constant on the server.
+    public var windowDays: Int
     /// How many rows the server was willing to return.
     public var limit: Int
     /// Whether that ceiling was reached, so the screen can say it is showing
     /// the most recent rather than implying it is showing everything.
     public var isTruncated: Bool
 
-    public init(entries: [TaskCompletion] = [], limit: Int = 200, isTruncated: Bool = false) {
+    public init(
+        entries: [TaskCompletion] = [],
+        windowDays: Int = 30,
+        limit: Int = 200,
+        isTruncated: Bool = false
+    ) {
         self.entries = entries
+        self.windowDays = windowDays
         self.limit = limit
         self.isTruncated = isTruncated
     }
 
-    public static let empty = TaskHistory()
+    public static let empty = TaskArchive()
 }

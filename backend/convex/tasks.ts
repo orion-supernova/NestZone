@@ -48,9 +48,9 @@ export const DONE_WINDOW_DAYS = 30;
  */
 const DONE_LIMIT = 500;
 
-/** How many completions the History screen carries back in one read. */
-const HISTORY_LIMIT = 200;
-const HISTORY_MAX = 500;
+/** How many completions the Archive screen carries back in one read. */
+const ARCHIVE_LIMIT = 200;
+const ARCHIVE_MAX = 500;
 
 // ---------------------------------------------------------------------------
 // The record of work done.
@@ -179,9 +179,6 @@ export const listByHome = query({
           q
             .eq("home_id", homeId)
             .eq("is_completed", true)
-            // Not put away by hand. `undefined` is its own key in a Convex
-            // index, so "never archived" is an equality rather than a filter.
-            .eq("archived_at", undefined)
             .gte("completed_at", Date.now() - DONE_WINDOW_DAYS * DAY_MS),
         )
         .order("desc")
@@ -192,18 +189,25 @@ export const listByHome = query({
 });
 
 /**
- * Everything this household has ever finished, newest first.
+ * The chores that have left the Done list: everything finished longer ago than
+ * the window.
  *
- * Read from `task_completions` rather than from the tasks themselves, which is
- * the whole reason that table exists: this is the record, and it does not
- * change when somebody tidies their task list. It is also exactly what the
- * contribution split is counted from, so the two screens cannot disagree.
+ * The complement of the Done list, not a superset of it. That distinction is
+ * the whole difference between an archive and a second copy of the same list,
+ * and the first version of this screen got it wrong — it returned every
+ * completion the household had ever recorded, so a chore finished yesterday
+ * appeared here *and* on the Done tab at the same time. Nothing about that is
+ * an archive.
  *
- * The task behind each row is fetched for one reason — to say whether there is
- * still something there to put back on the Done list. Bounded by `limit`, and
- * off every launch path.
+ * Both halves now read the same boundary off `completed_at`: Done is the range
+ * above it, this is the range below. Disjoint by construction, with no flag to
+ * keep in step and nothing to sweep.
+ *
+ * Read from `task_completions` and nothing else — no join at all. The title and
+ * the kind were snapshotted when the box was ticked, which is what that table
+ * is for, so the record needs no help from the tasks it describes.
  */
-export const history = query({
+export const archive = query({
   args: {
     homeId: v.id("homes"),
     limit: v.optional(v.number()),
@@ -212,118 +216,37 @@ export const history = query({
     await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
 
-    const take = Math.min(Math.max(Math.floor(limit ?? HISTORY_LIMIT), 1), HISTORY_MAX);
+    const take = Math.min(Math.max(Math.floor(limit ?? ARCHIVE_LIMIT), 1), ARCHIVE_MAX);
     const rows = await ctx.db
       .query("task_completions")
-      .withIndex("by_home_at", (q) => q.eq("home_id", homeId))
-      .order("desc")
-      .take(take);
-
-    const [tasks, profiles] = await Promise.all([
-      Promise.all(rows.map((row) => ctx.db.get(row.task_id))),
-      memberProfiles(ctx, home.members ?? []),
-    ]);
-
-    // A chore put back on the Done list has to actually land on it, and the
-    // list only carries the last `DONE_WINDOW_DAYS`. Offering "put back" on
-    // something finished six months ago would be a button that appears to do
-    // nothing, so the server decides here rather than letting the screen guess.
-    const restorableFrom = Date.now() - DONE_WINDOW_DAYS * DAY_MS;
-
-    return {
-      limit: take,
-      // True when the read hit its ceiling, so the screen can say so rather
-      // than implying this is everything the household has ever done.
-      isTruncated: rows.length === take,
-      entries: rows.map((row, index) => {
-        const task = tasks[index];
-        const credited = row.user_id && profiles.has(row.user_id as string)
-          ? row.user_id
-          : null;
-        const profile = credited ? profiles.get(credited as string) : undefined;
-        const isArchived = task != null && task.archived_at != null;
-        return {
-          id: row._id,
-          taskId: row.task_id,
-          // The chore as it was called when it was done. Falls back to the live
-          // task for rows written before the snapshot, and to nothing at all
-          // once the task itself is gone.
-          title: row.title ?? task?.title ?? null,
-          type: row.type ?? task?.type ?? null,
-          completedAt: row.completed_at,
-          userId: credited,
-          name: profile?.name ?? null,
-          email: profile?.email ?? null,
-          isArchived,
-          canRestore: isArchived && row.completed_at >= restorableFrom,
-        };
-      }),
-    };
-  },
-});
-
-/**
- * The archive, as a list you can open rather than a badge on rows elsewhere.
- *
- * This was the hole in the first version of the archive: putting a chore away
- * hid it from the Done list, and the only way back to it was to spot its badge
- * among every completion the household had ever recorded. Archive the wrong
- * thing — a test row, a chore somebody made twice — and it was gone somewhere
- * you could not go, with no way to restore it and no way to delete it.
- *
- * Read from `tasks` rather than from the ledger, because an archived chore is a
- * *task* that has been put away, and everything needed to draw it is already on
- * the row: `archived_at` orders the list, and `completed_at` / `completed_by`
- * are denormalised there for the Done list's index. No join, one index range.
- *
- * Shaped to match `history` exactly, so the screen draws both with one row.
- */
-export const archived = query({
-  args: {
-    homeId: v.id("homes"),
-    limit: v.optional(v.number()),
-  },
-  handler: async (ctx, { homeId, limit }) => {
-    await requireUser(ctx);
-    const home = await requireHomeMember(ctx, homeId);
-
-    const take = Math.min(Math.max(Math.floor(limit ?? HISTORY_LIMIT), 1), HISTORY_MAX);
-    const rows = await ctx.db
-      .query("tasks")
-      .withIndex("by_home_archived", (q) =>
-        // Zero rather than `undefined`: a Convex index sorts `undefined` before
-        // every number, so a range from 0 selects exactly the rows that carry a
-        // timestamp — the put-away ones — and excludes the rest by ordering
-        // rather than by filtering.
-        q.eq("home_id", homeId).gte("archived_at", 0),
+      .withIndex("by_home_at", (q) =>
+        q.eq("home_id", homeId).lt("completed_at", Date.now() - DONE_WINDOW_DAYS * DAY_MS),
       )
       .order("desc")
       .take(take);
 
     const profiles = await memberProfiles(ctx, home.members ?? []);
-    const restorableFrom = Date.now() - DONE_WINDOW_DAYS * DAY_MS;
 
     return {
       limit: take,
+      windowDays: DONE_WINDOW_DAYS,
+      // True when the read hit its ceiling, so the screen can say it is showing
+      // the most recent rather than implying it is showing everything.
       isTruncated: rows.length === take,
-      entries: rows.map((task) => {
+      entries: rows.map((row) => {
         const credited =
-          task.completed_by && profiles.has(task.completed_by as string)
-            ? task.completed_by
-            : null;
+          row.user_id && profiles.has(row.user_id as string) ? row.user_id : null;
         const profile = credited ? profiles.get(credited as string) : undefined;
-        const at = task.completed_at ?? task.updated ?? task._creationTime;
         return {
-          id: task._id,
-          taskId: task._id,
-          title: task.title ?? null,
-          type: task.type ?? null,
-          completedAt: at,
+          id: row._id,
+          taskId: row.task_id,
+          // The chore as it was called when it was done.
+          title: row.title ?? null,
+          type: row.type ?? null,
+          completedAt: row.completed_at,
           userId: credited,
           name: profile?.name ?? null,
           email: profile?.email ?? null,
-          isArchived: true,
-          canRestore: at >= restorableFrom,
         };
       }),
     };
@@ -411,21 +334,16 @@ export const update = mutation({
     };
 
     if (justCompleted) {
-      // Credit the chore to whoever ticked the box, and stamp when. Archiving
-      // is a finished-chore verb, so a task arriving at "done" cannot already
-      // be put away — clearing it here means a reopened-then-refinished chore
-      // comes back onto the list rather than straight into the archive.
+      // Credit the chore to whoever ticked the box, and stamp when. That
+      // stamp is also what decides which of the two lists it appears on, now
+      // and for as long as it stands.
       patch.completed_by = user._id;
       patch.completed_at = now;
-      patch.archived_at = undefined;
     } else if (reopened) {
       // Nobody has finished this. `undefined` in a patch removes the field,
-      // which is what that should look like — and an open chore is work still
-      // outstanding, so it has no business being hidden from the list of work
-      // still outstanding either.
+      // which is what that should look like.
       patch.completed_by = undefined;
       patch.completed_at = undefined;
-      patch.archived_at = undefined;
     }
 
     await ctx.db.patch(id, patch);
@@ -492,38 +410,6 @@ export const update = mutation({
 });
 
 /**
- * Put a finished chore away, or bring it back.
- *
- * The swipe on a finished chore, and the whole of what that swipe does: the row
- * leaves the Done list and the `task_completions` entry is not touched. The
- * work still counts, the split does not move, and the History screen still
- * shows it — which is the sentence the UI says out loud, and this is the code
- * that has to keep it true.
- *
- * Refuses an open task. Archiving is what you do with work that is *finished*;
- * hiding something you still have to do is just losing it.
- */
-export const setArchived = mutation({
-  args: { id: v.id("tasks"), archived: v.boolean() },
-  handler: async (ctx, { id, archived }) => {
-    const user = await requireUser(ctx);
-    const task = await ctx.db.get(id);
-    if (!task) throw new Error("Task not found");
-    await requireDocHome(ctx, task, "Task");
-    if (archived && !task.is_completed) {
-      throw new Error("Only a finished chore can be archived.");
-    }
-    const now = Date.now();
-    await ctx.db.patch(id, {
-      archived_at: archived ? now : undefined,
-      updated_by: user._id,
-      updated: now,
-    });
-    return { ok: true };
-  },
-});
-
-/**
  * Delete a chore that should not exist.
  *
  * Open tasks only, and that restriction is the point rather than a limitation.
@@ -532,11 +418,11 @@ export const setArchived = mutation({
  * record of who did it — and one swipe did both without saying so. The
  * contribution split was editable by anybody with a finger.
  *
- * So delete keeps the first meaning only. A finished chore is put away with
- * `setArchived`, which leaves the record alone; and if somebody genuinely means
- * "this was never done", the way there is to untick it — which retracts the
- * credit visibly, in front of them — and then delete it as the open task it has
- * become.
+ * So this keeps the first meaning only, and it is the one that needs no
+ * confirming: an open chore has never been done by anybody, so there is no
+ * credit to take away and nothing to warn about. Erasing finished work goes
+ * through `removeFinished`, which is a different function precisely so that no
+ * call site can arrive at it by accident.
  */
 export const remove = mutation({
   args: { id: v.id("tasks") },
@@ -545,9 +431,7 @@ export const remove = mutation({
     if (!task) return { ok: true };
     await requireDocHome(ctx, task, "Task");
     if (task.is_completed) {
-      throw new Error(
-        "A finished chore can't be deleted here. Archive it and delete it from the archive, or reopen it first.",
-      );
+      throw new Error("A finished chore can't be deleted here. Use removeFinished.");
     }
     // An open task has no completion to retract. Called anyway, because this is
     // the last moment a stray row could be orphaned, and an index lookup that
@@ -561,21 +445,21 @@ export const remove = mutation({
 /**
  * Delete a finished chore and the record of it having been done.
  *
- * A separate mutation from `remove`, and the separation is the safety. `remove`
- * is the one the task list calls and it refuses anything completed, so no swipe
- * on the working list can reach a completion however the client is written.
- * This is the deliberate path: reachable only from the archive, behind a dialog
- * that names the person whose credit goes with it, and named for what it does
- * so a future call site cannot arrive here thinking it meant the other one.
+ * A separate mutation from `remove`, and the separation is the safety rather
+ * than a formality. `remove` is what the working list calls and it refuses
+ * anything completed, so no ordinary delete path can reach a completion however
+ * the client is written; arriving here takes naming this function, which is a
+ * thing you cannot do by accident.
  *
- * Archived only, for the same reason. Putting a chore away is already a
- * statement that the row has served its purpose; deleting it from the archive
- * is a second, separate statement that it should never have existed. Two acts
- * rather than one is the whole difference between this and the behaviour it
- * replaces, where a single swipe on the Done list did both silently.
+ * The other half of the safety is on the client, and it is the only part a
+ * person sees: every call goes through a dialog that names the chore, names
+ * whose credit goes with it, and says the contribution split will change. That
+ * is the whole difference between this and the behaviour it replaces — not that
+ * the record became unreachable, but that reaching it stopped being silent.
  *
- * This *does* change the contribution split — that is the point of it, and why
- * the only way here is through a dialog that says so.
+ * Offered on both lists. Restricting it to the Archive was tempting and wrong:
+ * a chore added by mistake is noticed the same day, and a rule that made you
+ * wait a month to delete it would be a dead end wearing a safety jacket.
  */
 export const removeFinished = mutation({
   args: { id: v.id("tasks") },
@@ -585,9 +469,6 @@ export const removeFinished = mutation({
     await requireDocHome(ctx, task, "Task");
     if (!task.is_completed) {
       throw new Error("That chore is not finished. Delete it from the task list instead.");
-    }
-    if (task.archived_at === undefined || task.archived_at === null) {
-      throw new Error("Archive the chore first, then delete it from the archive.");
     }
     await retractCompletion(ctx, id);
     await ctx.db.delete(id);

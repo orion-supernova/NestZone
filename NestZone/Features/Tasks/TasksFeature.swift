@@ -13,6 +13,9 @@ public struct TasksFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
         public var homeID: HomeID
+        /// Who is looking, so the delete warning can say "your credit" rather
+        /// than naming somebody at themselves.
+        public var currentUserID: UserID?
         public var members: IdentifiedArrayOf<User> = []
         public var tasks: IdentifiedArrayOf<HouseTask> = []
         public var isLoading = true
@@ -23,9 +26,14 @@ public struct TasksFeature: Sendable {
         public var doneWindowDays: Int = 30
         /// Swiped away, but not yet sent to the server. The row is already gone
         /// from `tasks`; if the undo window closes without a tap, this is what
-        /// gets written for real. One at a time — a second swipe commits the
+        /// gets deleted for real. One at a time — a second swipe commits the
         /// first, the way a mail client does.
-        public var pendingRemoval: PendingRemoval?
+        ///
+        /// Only ever an *open* chore. Deleting a finished one destroys the
+        /// record of who did it, which is not a thing to offer on a five-second
+        /// timer — that one goes through a dialog instead, and once agreed to
+        /// it is sent at once.
+        public var pendingRemoval: HouseTask?
         /// Rows this screen is pretending are gone while their write is held or
         /// in flight. Every read here is a live subscription, so without the
         /// mask the next push from the server would put the row straight back.
@@ -36,30 +44,9 @@ public struct TasksFeature: Sendable {
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
-        public init(homeID: HomeID) { self.homeID = homeID }
-
-        /// A swipe held for a few seconds so it can be taken back.
-        ///
-        /// Two verbs share the mechanism because they share the shape: the row
-        /// leaves the list at once, the write is held, and undo cancels it
-        /// rather than reversing it. What they do *not* share is meaning, and
-        /// which one a row gets is decided by the row rather than by a dialog —
-        /// an unfinished chore can be thrown away, a finished one can only be
-        /// put away.
-        public struct PendingRemoval: Equatable, Sendable {
-            public var task: HouseTask
-            public var kind: Kind
-
-            public enum Kind: Equatable, Sendable {
-                /// A chore that should not exist: a mistake, or something that
-                /// was called off. It was never done, so there is no record of
-                /// it having been done and nothing to take away.
-                case delete
-                /// A finished chore, off the working list. The completion stays
-                /// exactly where it is — it still counts, and History still
-                /// shows it.
-                case archive
-            }
+        public init(homeID: HomeID, currentUserID: UserID? = nil) {
+            self.homeID = homeID
+            self.currentUserID = currentUserID
         }
 
         public enum Filter: String, CaseIterable, Hashable, Sendable {
@@ -132,15 +119,15 @@ public struct TasksFeature: Sendable {
         case composeTapped
         case toggled(TaskID)
         case deleteTapped(TaskID)
-        case archiveTapped(TaskID)
         case undoRemovalTapped
         case removalWindowClosed(TaskID)
         case removalCommitFailed(HouseTask, AppError)
-        case historyTapped
+        case deleteFinishedFailed(AppError)
+        case archiveTapped
         case delegate(Delegate)
 
         public enum Delegate: Equatable {
-            case openHistory
+            case openArchive
         }
         case toggleFailed(TaskID, wasCompleted: Bool, AppError)
         case writeFailed(AppError)
@@ -148,7 +135,10 @@ public struct TasksFeature: Sendable {
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<Alert>)
 
-        public enum Alert: Equatable {}
+        public enum Alert: Equatable {
+            /// Confirmed at the dialog that named what it costs.
+            case confirmDelete(TaskID)
+        }
     }
 
     private enum CancelID { case tasks, members, undo }
@@ -228,36 +218,39 @@ public struct TasksFeature: Sendable {
                     await send(.toggleFailed(id, wasCompleted: task.isCompleted, AppError(error)))
                 }
 
-            // Delete is for work that should not exist — a mistake, or a chore
-            // that was called off. It is offered on open rows only, and the
-            // server refuses it on anything finished: a completed chore is a
-            // thing the household *did*, and the record of who did it is not a
-            // by-product of a task row that anybody can swipe away.
+            // One verb, two weights, decided by the row rather than by a
+            // dialog asking which kind of delete you meant.
+            //
+            // An open chore has never been done by anybody, so throwing it away
+            // costs nothing and gets the undo toast — the write is simply held
+            // for a few seconds. A finished one carries the household's record
+            // of who did it, so the same swipe stops and says so by name before
+            // anything is sent.
             case let .deleteTapped(id):
-                guard let task = state.tasks[id: id], !task.isCompleted else { return .none }
-                return hold(.init(task: task, kind: .delete), &state)
-
-            // Archive is for work that is done and no longer worth looking at.
-            // It takes the row off the list and leaves the completion alone —
-            // the chore still counts, and History still shows it.
-            case let .archiveTapped(id):
-                guard let task = state.tasks[id: id], task.isCompleted else { return .none }
-                return hold(.init(task: task, kind: .archive), &state)
+                guard let task = state.tasks[id: id] else { return .none }
+                guard task.isCompleted else { return hold(task, &state) }
+                state.alert = TaskDeleteWarning.alert(
+                    chore: task.title,
+                    creditedTo: task.completedBy.flatMap { state.members[id: $0]?.displayName },
+                    isMine: task.completedBy != nil && task.completedBy == state.currentUserID,
+                    confirm: Action.Alert.confirmDelete(task.id)
+                )
+                return .none
 
             case .undoRemovalTapped:
-                guard let pending = state.pendingRemoval else { return .none }
+                guard let task = state.pendingRemoval else { return .none }
                 state.pendingRemoval = nil
-                state.hidden.remove(pending.task.id)
+                state.hidden.remove(task.id)
                 // Nothing was ever sent, so putting the row back is the whole
                 // restore. The live subscription still holds the task and will
                 // agree on its next push.
-                state.tasks.append(pending.task)
+                state.tasks.append(task)
                 return .cancel(id: CancelID.undo)
 
             case let .removalWindowClosed(id):
-                guard let pending = state.pendingRemoval, pending.task.id == id else { return .none }
+                guard let task = state.pendingRemoval, task.id == id else { return .none }
                 state.pendingRemoval = nil
-                return commit(pending)
+                return commit(task)
 
             case let .removalCommitFailed(task, error):
                 // The write was refused, so the server never changed and no push
@@ -266,8 +259,23 @@ public struct TasksFeature: Sendable {
                 state.tasks.append(task)
                 return .send(.writeFailed(error))
 
-            case .historyTapped:
-                return .send(.delegate(.openHistory))
+            // Agreed to at the dialog, so it goes at once — there is nothing
+            // left to reconsider, and an undo toast after a confirmation is a
+            // second question about a decision already made. The row vanishes
+            // when the subscription confirms it, which for a delete the server
+            // accepted is the next push.
+            case let .alert(.presented(.confirmDelete(id))):
+                return .run { send in
+                    try await tasksClient.removeFinished(id)
+                } catch: { error, send in
+                    await send(.deleteFinishedFailed(AppError(error)))
+                }
+
+            case let .deleteFinishedFailed(error):
+                return .send(.writeFailed(error))
+
+            case .archiveTapped:
+                return .send(.delegate(.openArchive))
 
             case let .toggleFailed(id, wasCompleted, error):
                 state.tasks[id: id]?.isCompleted = wasCompleted
@@ -294,17 +302,13 @@ public struct TasksFeature: Sendable {
     ///
     /// Waiting for the server reads as a swipe that did not take, so the list
     /// changes at once; but nothing is sent until the undo window closes, which
-    /// is what lets undo *cancel* the write rather than reverse it. Reversing
-    /// would need a restore endpoint on one path and a second mutation on the
-    /// other — and on the delete path there is nothing left to restore.
-    private func hold(
-        _ pending: State.PendingRemoval,
-        _ state: inout State
-    ) -> Effect<Action> {
-        state.tasks.remove(id: pending.task.id)
-        state.hidden.insert(pending.task.id)
+    /// is what lets undo *cancel* the write rather than reverse it. There is no
+    /// trash and no restore endpoint to reverse it with.
+    private func hold(_ task: HouseTask, _ state: inout State) -> Effect<Action> {
+        state.tasks.remove(id: task.id)
+        state.hidden.insert(task.id)
         let superseded = state.pendingRemoval
-        state.pendingRemoval = pending
+        state.pendingRemoval = task
 
         return .merge(
             // A second swipe ends the first one's window: that row was offered
@@ -313,7 +317,7 @@ public struct TasksFeature: Sendable {
 
             .run { send in
                 try await clock.sleep(for: Self.undoWindow)
-                await send(.removalWindowClosed(pending.task.id))
+                await send(.removalWindowClosed(task.id))
             }
             .cancellable(id: CancelID.undo, cancelInFlight: true)
         )
@@ -323,13 +327,9 @@ public struct TasksFeature: Sendable {
     ///
     /// Takes the whole task rather than its id so a failure can put the row
     /// back: the screen dropped it optimistically and nothing else remembers it.
-    private func commit(_ pending: State.PendingRemoval) -> Effect<Action> {
-        let task = pending.task
-        return .run { [kind = pending.kind] _ in
-            switch kind {
-            case .delete: try await tasksClient.remove(task.id)
-            case .archive: try await tasksClient.setArchived(task.id, true)
-            }
+    private func commit(_ task: HouseTask) -> Effect<Action> {
+        .run { _ in
+            try await tasksClient.remove(task.id)
         } catch: { error, send in
             await send(.removalCommitFailed(task, AppError(error)))
         }

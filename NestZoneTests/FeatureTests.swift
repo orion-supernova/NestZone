@@ -330,7 +330,7 @@ struct TasksFeatureTests {
         await store.send(.deleteTapped("t1")) {
             $0.tasks.remove(id: "t1")
             $0.hidden.insert("t1")
-            $0.pendingRemoval = .init(task: task, kind: .delete)
+            $0.pendingRemoval = task
         }
         // Nothing has been sent yet — the whole point of holding it.
         #expect(deleted.value.isEmpty)
@@ -342,112 +342,87 @@ struct TasksFeatureTests {
         #expect(deleted.value == ["t1"])
     }
 
-    @Test("Swiping a finished chore archives it — the record is not touched")
-    func archivingADoneTask() async {
-        let task = HouseTask(id: "t1", title: "Dishes", isCompleted: true)
-        let archived = LockIsolated<[(TaskID, Bool)]>([])
-        let deleted = LockIsolated<[TaskID]>([])
+    @Test("Deleting a finished chore asks first, and names what it costs")
+    func deletingADoneTaskAsksFirst() async {
+        let task = HouseTask(id: "t1", title: "Dishes", isCompleted: true, completedBy: "me")
+        let erased = LockIsolated<[TaskID]>([])
+        let plainDeletes = LockIsolated<[TaskID]>([])
+
+        let store = TestStore(
+            initialState: TasksFeature.State(homeID: "h1", currentUserID: "me")
+        ) {
+            TasksFeature()
+        } withDependencies: {
+            $0.continuousClock = TestClock()
+            $0.tasks.removeFinished = { id in erased.withValue { $0.append(id) } }
+            $0.tasks.remove = { id in plainDeletes.withValue { $0.append(id) } }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.tasksUpdated(Self.list([task])))
+        await store.send(.deleteTapped("t1"))
+
+        // No undo toast and nothing sent: a finished chore carries the record
+        // of who did it, so the swipe stops and asks rather than starting a
+        // five-second timer.
+        #expect(store.state.pendingRemoval == nil)
+        #expect(erased.value.isEmpty)
+        #expect(store.state.alert != nil)
+
+        await store.send(.alert(.presented(.confirmDelete("t1"))))
+        #expect(erased.value == ["t1"])
+        // Never the open-task path, which would leave the completion behind.
+        #expect(plainDeletes.value.isEmpty)
+    }
+
+    @Test("An open chore is deleted on the undo toast, with no dialog")
+    func deletingAnOpenTaskDoesNotAsk() async {
+        let task = HouseTask(id: "t2", title: "Buy bread")
+        let erased = LockIsolated<[TaskID]>([])
         let clock = TestClock()
 
         let store = TestStore(initialState: TasksFeature.State(homeID: "h1")) {
             TasksFeature()
         } withDependencies: {
             $0.continuousClock = clock
-            $0.tasks.setArchived = { id, value in
-                archived.withValue { $0.append((id, value)) }
-            }
-            $0.tasks.remove = { id in deleted.withValue { $0.append(id) } }
+            $0.tasks.remove = { id in erased.withValue { $0.append(id) } }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
         await store.send(.tasksUpdated(Self.list([task])))
-        await store.send(.archiveTapped("t1")) {
-            $0.tasks.remove(id: "t1")
-            $0.hidden.insert("t1")
-            $0.pendingRemoval = .init(task: task, kind: .archive)
-        }
+        await store.send(.deleteTapped("t2"))
+        // Nothing was ever done by anybody, so there is no credit to warn about.
+        #expect(store.state.alert == nil)
+        #expect(store.state.pendingRemoval?.id == TaskID("t2"))
 
         await clock.advance(by: .seconds(5))
-        await store.receive(\.removalWindowClosed) {
-            $0.pendingRemoval = nil
-        }
-
-        #expect(archived.value.count == 1)
-        #expect(archived.value[0].1 == true)
-        // The one assertion this whole change exists for: putting a finished
-        // chore away must never reach the delete path, because that is what
-        // used to take somebody's credit for it away with it.
-        #expect(deleted.value.isEmpty)
-    }
-
-    @Test("Delete is not offered on a finished chore, even if the action arrives")
-    func deleteIsRefusedOnADoneTask() async {
-        let task = HouseTask(id: "t1", title: "Dishes", isCompleted: true)
-        let deleted = LockIsolated<[TaskID]>([])
-
-        let store = TestStore(initialState: TasksFeature.State(homeID: "h1")) {
-            TasksFeature()
-        } withDependencies: {
-            $0.continuousClock = TestClock()
-            $0.tasks.remove = { id in deleted.withValue { $0.append(id) } }
-        }
-        store.exhaustivity = .off(showSkippedAssertions: false)
-
-        await store.send(.tasksUpdated(Self.list([task])))
-        // The swipe does not offer it, and the reducer does not honour it
-        // either — the rule lives in one place rather than in the view's
-        // `if`.
-        await store.send(.deleteTapped("t1"))
-        #expect(store.state.pendingRemoval == nil)
-        #expect(deleted.value.isEmpty)
-    }
-
-    @Test("Archive is refused on a chore that is not finished")
-    func archiveIsRefusedOnAnOpenTask() async {
-        let task = HouseTask(id: "t1", title: "Buy milk")
-        let archived = LockIsolated<[(TaskID, Bool)]>([])
-
-        let store = TestStore(initialState: TasksFeature.State(homeID: "h1")) {
-            TasksFeature()
-        } withDependencies: {
-            $0.continuousClock = TestClock()
-            $0.tasks.setArchived = { id, value in
-                archived.withValue { $0.append((id, value)) }
-            }
-        }
-        store.exhaustivity = .off(showSkippedAssertions: false)
-
-        await store.send(.tasksUpdated(Self.list([task])))
-        await store.send(.archiveTapped("t1"))
-        #expect(store.state.pendingRemoval == nil)
-        #expect(archived.value.isEmpty)
+        await store.receive(\.removalWindowClosed)
+        #expect(erased.value == ["t2"])
     }
 
     @Test("Undo cancels the write rather than reversing it")
     func undoCancelsTheWrite() async {
-        let task = HouseTask(id: "t1", title: "Dishes", isCompleted: true)
-        let archived = LockIsolated<[(TaskID, Bool)]>([])
+        let task = HouseTask(id: "t1", title: "Buy milk")
+        let erased = LockIsolated<[TaskID]>([])
         let clock = TestClock()
 
         let store = TestStore(initialState: TasksFeature.State(homeID: "h1")) {
             TasksFeature()
         } withDependencies: {
             $0.continuousClock = clock
-            $0.tasks.setArchived = { id, value in
-                archived.withValue { $0.append((id, value)) }
-            }
+            $0.tasks.remove = { id in erased.withValue { $0.append(id) } }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
         await store.send(.tasksUpdated(Self.list([task])))
-        await store.send(.archiveTapped("t1"))
+        await store.send(.deleteTapped("t1"))
         await store.send(.undoRemovalTapped) {
             $0.pendingRemoval = nil
             $0.hidden.remove("t1")
             $0.tasks.append(task)
         }
         await clock.advance(by: .seconds(10))
-        #expect(archived.value.isEmpty)
+        #expect(erased.value.isEmpty)
     }
 
     @Test("A second swipe commits the first")
@@ -468,24 +443,24 @@ struct TasksFeatureTests {
         await store.send(.deleteTapped("t1"))
         await store.send(.deleteTapped("t2"))
         #expect(deleted.value == ["t1"])
-        #expect(store.state.pendingRemoval?.task.id == TaskID("t2"))
+        #expect(store.state.pendingRemoval?.id == TaskID("t2"))
     }
 
     @Test("A refused write puts the row back")
-    func aRefusedArchivePutsTheRowBack() async {
-        let task = HouseTask(id: "t1", title: "Dishes", isCompleted: true)
+    func aRefusedDeletePutsTheRowBack() async {
+        let task = HouseTask(id: "t1", title: "Buy milk")
         let clock = TestClock()
 
         let store = TestStore(initialState: TasksFeature.State(homeID: "h1")) {
             TasksFeature()
         } withDependencies: {
             $0.continuousClock = clock
-            $0.tasks.setArchived = { _, _ in throw AppError.offline }
+            $0.tasks.remove = { _ in throw AppError.offline }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
         await store.send(.tasksUpdated(Self.list([task])))
-        await store.send(.archiveTapped("t1"))
+        await store.send(.deleteTapped("t1"))
         await clock.advance(by: .seconds(5))
         await store.receive(\.removalWindowClosed)
         // The server never changed, so no push is coming to undo the optimistic
@@ -538,8 +513,8 @@ struct TasksFeatureTests {
         #expect(String(localized: done!) != String(localized: all!))
     }
 
-    @Test("History is reached from the Tasks screen")
-    func historyIsPushedFromTasks() async {
+    @Test("The Archive is reached from the Tasks screen")
+    func archiveIsPushedFromTasks() async {
         let store = TestStore(
             initialState: MainFeature.State(
                 homeID: "h1",
@@ -556,76 +531,51 @@ struct TasksFeatureTests {
             Issue.record("expected the Tasks screen on the stack")
             return
         }
-        await store.send(.homePath(.element(id: id, action: .tasks(.delegate(.openHistory)))))
+        await store.send(.homePath(.element(id: id, action: .tasks(.delegate(.openArchive)))))
 
         #expect(store.state.homePath.count == 2)
-        guard case let .taskHistory(history) = store.state.homePath.last else {
-            Issue.record("expected the history screen on the stack")
+        guard case let .taskArchive(archive) = store.state.homePath.last else {
+            Issue.record("expected the archive on the stack")
             return
         }
-        #expect(history.homeID == HomeID("h1"))
-        #expect(history.currentUserID == UserID("me"))
+        #expect(archive.homeID == HomeID("h1"))
+        #expect(archive.currentUserID == UserID("me"))
     }
 }
 
 @MainActor
-@Suite("Task history")
-struct TaskHistoryFeatureTests {
+@Suite("Task archive")
+struct TaskArchiveFeatureTests {
 
-    private static func completion(
-        id: String,
-        title: String,
-        archived: Bool = false,
-        canRestore: Bool = false
-    ) -> TaskCompletion {
+    private static func completion(id: String, title: String) -> TaskCompletion {
         TaskCompletion(
             id: id,
             taskID: TaskID(rawValue: "task-\(id)"),
             title: title,
             completedAt: Timestamp(milliseconds: 1_700_000_000_000),
             userID: "me",
-            name: "Ada",
-            isArchived: archived,
-            canRestore: canRestore
+            name: "Ada"
         )
     }
 
-    @Test("The archive is its own list, and it is where delete lives")
-    func archiveIsItsOwnScope() async {
-        let kept = Self.completion(id: "c1", title: "Dishes")
-        let putAway = Self.completion(id: "c2", title: "Test row", archived: true, canRestore: true)
-
-        let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
-            TaskHistoryFeature()
-        }
-        store.exhaustivity = .off(showSkippedAssertions: false)
-
-        await store.send(.recordUpdated(TaskHistory(entries: [kept, putAway])))
-        await store.send(.archiveUpdated(TaskHistory(entries: [putAway])))
-
-        #expect(store.state.entries.count == 2)
-        await store.send(.binding(.set(\.listing, .archived)))
-        #expect(store.state.entries.map(\.id) == ["c2"])
-    }
-
-    @Test("Deleting a completion asks first, and names what it costs")
+    @Test("Deleting from the archive asks first, then erases the record with it")
     func deleteAsksBeforeItErases() async {
-        let entry = Self.completion(id: "c1", title: "Test row", archived: true)
+        let entry = Self.completion(id: "c1", title: "Test row")
         let erased = LockIsolated<[TaskID]>([])
 
         let store = TestStore(
-            initialState: TaskHistoryFeature.State(homeID: "h1", currentUserID: "me")
+            initialState: TaskArchiveFeature.State(homeID: "h1", currentUserID: "me")
         ) {
-            TaskHistoryFeature()
+            TaskArchiveFeature()
         } withDependencies: {
             $0.tasks.removeFinished = { id in erased.withValue { $0.append(id) } }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
-        await store.send(.archiveUpdated(TaskHistory(entries: [entry])))
+        await store.send(.archiveUpdated(TaskArchive(entries: [entry])))
         await store.send(.deleteTapped(entry))
-        // Nothing is sent on the swipe alone. This is the one act in the app
-        // that moves the contribution split, so it goes through the dialog.
+        // Nothing on the swipe alone. This is the one act in the app that moves
+        // the contribution split on purpose, so it goes through the dialog.
         #expect(erased.value.isEmpty)
         #expect(store.state.alert != nil)
 
@@ -633,86 +583,35 @@ struct TaskHistoryFeatureTests {
         #expect(erased.value == [entry.taskID])
     }
 
-    @Test("An archived chore too old to restore can still be deleted")
-    func oldArchivedChoreIsNotADeadEnd() async {
-        // The hole in the first version of the archive: put away, past the Done
-        // window, so `canRestore` is false — and with no delete it could be
-        // neither brought back nor got rid of.
-        let stuck = Self.completion(id: "c1", title: "Old test row", archived: true, canRestore: false)
-        let erased = LockIsolated<[TaskID]>([])
+    @Test("A refused delete surfaces, rather than looking like it worked")
+    func refusedDeleteSurfaces() async {
+        let entry = Self.completion(id: "c1", title: "Test row")
 
-        let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
-            TaskHistoryFeature()
+        let store = TestStore(initialState: TaskArchiveFeature.State(homeID: "h1")) {
+            TaskArchiveFeature()
         } withDependencies: {
-            $0.tasks.removeFinished = { id in erased.withValue { $0.append(id) } }
+            $0.tasks.removeFinished = { _ in throw AppError.offline }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
-        await store.send(.archiveUpdated(TaskHistory(entries: [stuck])))
-        await store.send(.deleteTapped(stuck))
-        await store.send(.alert(.presented(.confirmDelete(stuck.taskID))))
-        #expect(erased.value == [stuck.taskID])
-    }
-
-    @Test("Putting a chore back clears the archive flag and nothing else")
-    func restoringAnArchivedChore() async {
-        let entry = Self.completion(id: "c1", title: "Dishes", archived: true, canRestore: true)
-        let calls = LockIsolated<[(TaskID, Bool)]>([])
-
-        let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
-            TaskHistoryFeature()
-        } withDependencies: {
-            $0.tasks.setArchived = { id, value in calls.withValue { $0.append((id, value)) } }
-        }
-        store.exhaustivity = .off(showSkippedAssertions: false)
-
-        await store.send(.archiveUpdated(TaskHistory(entries: [entry])))
-        await store.send(.restoreTapped(entry.taskID)) {
-            $0.restoring.insert(entry.taskID)
-        }
-        #expect(calls.value.count == 1)
-        #expect(calls.value[0].1 == false)
-    }
-
-    @Test("A refused restore lets the badge come back")
-    func refusedRestoreRestoresTheBadge() async {
-        let entry = Self.completion(id: "c1", title: "Dishes", archived: true, canRestore: true)
-
-        let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
-            TaskHistoryFeature()
-        } withDependencies: {
-            $0.tasks.setArchived = { _, _ in throw AppError.offline }
-        }
-        store.exhaustivity = .off(showSkippedAssertions: false)
-
-        await store.send(.archiveUpdated(TaskHistory(entries: [entry])))
-        await store.send(.restoreTapped(entry.taskID))
-        await store.receive(\.restoreFailed) {
-            $0.restoring.remove(entry.taskID)
+        await store.send(.archiveUpdated(TaskArchive(entries: [entry])))
+        await store.send(.deleteTapped(entry))
+        await store.send(.alert(.presented(.confirmDelete(entry.taskID))))
+        await store.receive(\.deleteFailed) {
             $0.alert = .failure(.offline)
         }
     }
 
-    @Test("A push that no longer calls the chore archived drops the mask")
-    func serverAgreementClearsTheMask() async {
-        let archived = Self.completion(id: "c1", title: "Dishes", archived: true, canRestore: true)
-
-        let store = TestStore(initialState: TaskHistoryFeature.State(homeID: "h1")) {
-            TaskHistoryFeature()
-        } withDependencies: {
-            $0.tasks.setArchived = { _, _ in }
+    @Test("The window the server used travels with the rows")
+    func windowComesFromTheServer() async {
+        let store = TestStore(initialState: TaskArchiveFeature.State(homeID: "h1")) {
+            TaskArchiveFeature()
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
-        await store.send(.archiveUpdated(TaskHistory(entries: [archived])))
-        await store.send(.restoreTapped(archived.taskID))
-        #expect(store.state.restoring.contains(archived.taskID))
-
-        // Restored, so it leaves the archive entirely.
-        await store.send(.archiveUpdated(TaskHistory(entries: [])))
-        // The mask is self-clearing: once the server stops calling it archived
-        // there is nothing left to hide, and keeping the mask would strand it.
-        #expect(store.state.restoring.isEmpty)
+        await store.send(.archiveUpdated(TaskArchive(entries: [], windowDays: 14)))
+        // The screen says "more than N days ago" and the server decided N.
+        #expect(store.state.archive.windowDays == 14)
     }
 }
 
