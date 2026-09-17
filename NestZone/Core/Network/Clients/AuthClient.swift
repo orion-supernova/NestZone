@@ -78,7 +78,11 @@ extension AuthClient: DependencyKey {
                 }
             },
             currentUser: {
-                connection.subscribe(to: "users:me", as: User?.self)
+                connection
+                    .subscribe(to: "users:me", as: User?.self)
+                    // Your own face, for the screens that draw it before the
+                    // household list has arrived.
+                    .recordingAvatars { AvatarDirectory.record($0) }
             },
             signInWithApple: { credential in
                 connection.authProvider.pending = .init(

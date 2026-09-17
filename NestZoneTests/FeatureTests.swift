@@ -497,7 +497,7 @@ struct TasksFeatureTests {
         await store.send(.deleteTapped("t1"))
         await store.send(.deleteTapped("t2"))
         #expect(deleted.value == ["t1"])
-        #expect(store.state.pendingRemoval?.id == TaskID("t2"))
+        #expect(store.state.pendingRemoval?.task.id == TaskID("t2"))
     }
 
     @Test("A refused write puts the row back")
@@ -5389,3 +5389,179 @@ struct HubCountsTests {
         #expect(store.state.shoppingCount == 0)
     }
 }
+
+extension PhotoUpload {
+    /// Stand-in bytes for a reducer test, which never looks inside them.
+    static func stub(_ marker: String) -> PhotoUpload {
+        PhotoUpload(data: Data(marker.utf8), contentType: "image/heic")
+    }
+}
+
+@MainActor
+@Suite("Profile photo")
+struct SettingsAvatarTests {
+
+    nonisolated private static let me = User(
+        id: "me",
+        name: "Ada Lovelace",
+        avatar: "storage-old",
+        avatarURL: URL(string: "https://example.com/old.jpg")
+    )
+
+    nonisolated private static func photographed(_ storageID: String?) -> User {
+        User(
+            id: "me",
+            name: "Ada Lovelace",
+            avatar: storageID,
+            avatarURL: storageID.flatMap { URL(string: "https://example.com/\($0).jpg") }
+        )
+    }
+
+    @Test("A chosen photo goes to storage first, and only its id to the mutation")
+    func uploadThenPoint() async {
+        let uploaded = LockIsolated<[PhotoUpload]>([])
+        let pointedAt = LockIsolated<[String?]>([])
+        let photo = PhotoUpload(data: Data("heic-bytes".utf8), contentType: "image/heic")
+
+        let store = TestStore(
+            initialState: SettingsFeature.State(homeID: "h1", user: Self.me)
+        ) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.users.uploadAvatar = { upload in
+                uploaded.withValue { $0.append(upload) }
+                return "storage-new"
+            }
+            $0.users.setAvatar = { id in
+                pointedAt.withValue { $0.append(id) }
+                return Self.photographed(id)
+            }
+        }
+
+        await store.send(.avatarSelected(photo)) {
+            $0.isUpdatingAvatar = true
+        }
+        await store.receive(\.avatarUpdated) {
+            $0.isUpdatingAvatar = false
+            $0.user = Self.photographed("storage-new")
+        }
+
+        #expect(uploaded.value == [photo])
+        // The type goes with the bytes, or Convex serves every HEIC avatar
+        // labelled as something it is not.
+        #expect(uploaded.value.first?.contentType == "image/heic")
+        // The bytes never went through the mutation — only the id storage
+        // answered with.
+        #expect(pointedAt.value == ["storage-new"])
+    }
+
+    @Test("A second change cannot be started on top of one still in flight")
+    func oneChangeAtATime() async {
+        let attempts = LockIsolated(0)
+        let store = TestStore(
+            initialState: SettingsFeature.State(homeID: "h1", user: Self.me)
+        ) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.users.uploadAvatar = { _ in
+                attempts.withValue { $0 += 1 }
+                return "storage-new"
+            }
+            $0.users.setAvatar = { Self.photographed($0) }
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.avatarSelected(.stub("a")))
+        await store.send(.avatarSelected(.stub("b")))
+        await store.receive(\.avatarUpdated)
+        #expect(attempts.value == 1)
+    }
+
+    @Test("A refused upload says so and leaves the old face alone")
+    func failedUploadChangesNothing() async {
+        let store = TestStore(
+            initialState: SettingsFeature.State(homeID: "h1", user: Self.me)
+        ) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.users.uploadAvatar = { _ in throw AppError.offline }
+        }
+
+        await store.send(.avatarSelected(.stub("jpeg"))) {
+            $0.isUpdatingAvatar = true
+        }
+        await store.receive(\.avatarUpdateFailed) {
+            $0.isUpdatingAvatar = false
+            $0.alert = .failure(.offline)
+        }
+        // Nothing was changed optimistically on the way out, so there is
+        // nothing to put back: the photo is still the one on the server.
+        #expect(store.state.user == Self.me)
+    }
+
+    @Test("Removing takes the photo off before the server answers")
+    func removalIsOptimistic() async {
+        let store = TestStore(
+            initialState: SettingsFeature.State(homeID: "h1", user: Self.me)
+        ) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.users.setAvatar = { _ in Self.photographed(nil) }
+        }
+
+        await store.send(.avatarRemoved) {
+            $0.user?.avatar = nil
+            $0.user?.avatarURL = nil
+            $0.isUpdatingAvatar = true
+        }
+        await store.receive(\.avatarUpdated) {
+            $0.isUpdatingAvatar = false
+            $0.user = Self.photographed(nil)
+        }
+    }
+
+    @Test("A refused removal puts the face back itself")
+    func failedRemovalRestoresTheFace() async {
+        let store = TestStore(
+            initialState: SettingsFeature.State(homeID: "h1", user: Self.me)
+        ) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.users.setAvatar = { _ in throw AppError.offline }
+        }
+
+        await store.send(.avatarRemoved) {
+            $0.user?.avatar = nil
+            $0.user?.avatarURL = nil
+            $0.isUpdatingAvatar = true
+        }
+        // A write that failed changed nothing on the server, so no push is
+        // coming to correct this — the failure action carries the photo it took
+        // off, and puts it back.
+        await store.receive(\.avatarUpdateFailed) {
+            $0.isUpdatingAvatar = false
+            $0.user = Self.me
+            $0.alert = .failure(.offline)
+        }
+    }
+
+    @Test("Removing is refused when there is no photo to remove")
+    func removalNeedsAPhoto() async {
+        let store = TestStore(
+            initialState: SettingsFeature.State(
+                homeID: "h1",
+                user: User(id: "me", name: "Ada Lovelace")
+            )
+        ) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.users.setAvatar = { _ in
+                Issue.record("setAvatar should not be called with nothing to remove")
+                return Self.photographed(nil)
+            }
+        }
+
+        await store.send(.avatarRemoved)
+    }
+}
+

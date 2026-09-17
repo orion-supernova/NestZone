@@ -366,10 +366,13 @@ struct EventComposerSheet: View {
                         let isOn = store.attendees.contains(member.id)
                         Button { store.send(.attendeeToggled(member.id)) } label: {
                             HStack(spacing: 6) {
+                                // Inside the attendee toggle: the tap adds
+                                // or removes them, never opens a photo.
                                 Avatar(
                                     initials: member.initials,
                                     seed: member.id.rawValue,
-                                    size: 22
+                                    size: 22,
+                                    viewable: false
                                 )
                                 Text(member.id == store.currentUserID
                                     ? String(localized: L10n.financeYou)

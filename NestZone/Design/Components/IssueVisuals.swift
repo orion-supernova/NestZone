@@ -629,7 +629,11 @@ public struct IssuePhotoStrip: View {
                 ForEach(Array(photos.enumerated()), id: \.element.id) { position, photo in
                     RemoteImage(
                         url: URL(string: photo.url),
-                        targetSize: CGSize(width: 400, height: height)
+                        targetSize: CGSize(width: 400, height: height),
+                        // A problem gets reopened — to check on it, to show
+                        // somebody, to add to it — and paging back and forth
+                        // through six photographs should not re-fetch them.
+                        persistence: .disk
                     )
                     .frame(maxWidth: .infinity)
                     .frame(height: height)
@@ -684,39 +688,73 @@ public struct IssuePhotoStrip: View {
 ///
 /// A modern phone photo is a twelve-megapixel HEIC of several megabytes, and
 /// what this feature needs is "a picture of the leak" — legible on a phone
-/// screen, over a household's wifi, on a plan somebody pays for. Downsampling to
-/// 2000px on the long edge and re-encoding as JPEG turns four megabytes into
-/// about three hundred kilobytes with no visible difference at the size it is
-/// ever drawn, and it also normalises HEIC, which not every viewer of a signed
-/// storage URL can decode.
+/// screen, over a household's wifi, on a plan somebody pays for.
 ///
-/// The orientation is baked in rather than left in the EXIF: a photo taken
-/// sideways is stored sideways, so no consumer has to remember to honour a tag.
+/// Two files come out, not one, and that is the important part. The board draws
+/// a 44-point thumbnail on every row, and it used to draw it by downloading the
+/// *full* picture and throwing away 99% of the pixels — a 2000-pixel photo per
+/// problem, on every device, the first time anybody opened the screen. A
+/// household with fifteen photographed problems paid four megabytes to fill
+/// fifteen postage stamps.
 public enum IssuePhoto {
+    /// The full picture, for the detail screen's strip.
+    ///
+    /// JPEG only, deliberately, where an avatar is allowed HEIC: this is the
+    /// kind of picture somebody forwards to a plumber, and a signed storage URL
+    /// opened in a browser that cannot decode HEIC is a broken image at the
+    /// moment it is most needed. The budget alone still takes an unbounded
+    /// several megabytes down to a stated 300 KB.
+    public static let plan = PhotoCompressionPlan(
+        byteBudget: 300 * 1024,
+        qualitySteps: [0.7, 0.6, 0.5, 0.4],
+        edgeLadder: [2000, 1600, 1200],
+        allowsHEIC: false
+    )
+
+    /// The thumbnail the board row draws.
+    ///
+    /// 320 pixels covers a 44-point row on a 3× screen with room to spare, and
+    /// lands around 20 KB — which is what turns that four-megabyte board into
+    /// three hundred kilobytes.
+    public static let thumbnailPlan = PhotoCompressionPlan(
+        byteBudget: 40 * 1024,
+        qualitySteps: [0.6, 0.45, 0.35],
+        edgeLadder: [320, 240],
+        allowsHEIC: false
+    )
+
     /// The longest edge an uploaded photo keeps.
-    public static let maxEdge: CGFloat = 2000
-    /// Well past where JPEG artefacts are visible on a photograph.
-    public static let quality: CGFloat = 0.8
+    public static var maxEdge: CGFloat { plan.edgeLadder[0] }
 
-    public static func encode(_ data: Data) -> Data? {
-        guard let image = UIImage(data: data) else { return nil }
-        let longest = max(image.size.width, image.size.height)
-        guard longest > 0 else { return nil }
+    /// Both files for one picked photo, or `nil` if it could not be read.
+    public static func encode(_ data: Data) -> IssuePhotoUpload? {
+        guard let image = upright(data) else { return nil }
+        guard let full = PhotoCompressor.compress(image, plan: plan),
+              let thumbnail = PhotoCompressor.compress(image, plan: thumbnailPlan)
+        else { return nil }
+        return IssuePhotoUpload(full: full.upload, thumbnail: thumbnail.upload)
+    }
 
-        let scale = min(1, maxEdge / longest)
-        let target = CGSize(
-            width: (image.size.width * scale).rounded(),
-            height: (image.size.height * scale).rounded()
-        )
-
-        // `UIGraphicsImageRenderer` draws in the orientation the image reports,
-        // so the result is upright with no EXIF tag left to interpret.
-        let format = UIGraphicsImageRendererFormat.default()
-        format.scale = 1
-        format.opaque = true
-        let rendered = UIGraphicsImageRenderer(size: target, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: target))
+    /// Decodes and rights the picker's bytes in one pass.
+    ///
+    /// The orientation is baked into the pixels rather than left in the EXIF: a
+    /// photo taken sideways is stored sideways, so no consumer has to remember
+    /// to honour a tag. Thumbnailing through `CGImageSource` also means the
+    /// twelve-megapixel original is never decoded at full size.
+    static func upright(_ data: Data) -> UIImage? {
+        let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {
+            return nil
         }
-        return rendered.jpegData(compressionQuality: quality)
+        let options = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxEdge,
+        ] as CFDictionary
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage, scale: 1, orientation: .up)
     }
 }

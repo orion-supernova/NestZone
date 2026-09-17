@@ -506,7 +506,14 @@ struct ExpenseComposerSheet: View {
                             .foregroundStyle(isOn ? theme.accent : Color.secondary)
                             .contentTransition(.symbolEffect(.replace))
 
-                        Avatar(initials: member.initials, seed: member.id.rawValue, size: 26)
+                        // Inside the participant toggle: the tap decides
+                        // who the expense is split between.
+                        Avatar(
+                            initials: member.initials,
+                            seed: member.id.rawValue,
+                            size: 26,
+                            viewable: false
+                        )
 
                         // One line, and the first thing to give way: the row
                         // has an amount to show on the other side of it.
@@ -1289,10 +1296,13 @@ struct SettleUpSheet: View {
                 ForEach(store.openTransfers) { transfer in
                     Button { store.send(.suggestionTapped(transfer)) } label: {
                         HStack(spacing: 10) {
+                            // Both inside the settle-up suggestion: the
+                            // tap records the payment.
                             Avatar(
                                 initials: initials(transfer.from),
                                 seed: transfer.from.rawValue,
-                                size: 30
+                                size: 30,
+                                viewable: false
                             )
                             Image(systemName: "arrow.right")
                                 .font(.caption2.weight(.bold))
@@ -1300,7 +1310,8 @@ struct SettleUpSheet: View {
                             Avatar(
                                 initials: initials(transfer.to),
                                 seed: transfer.to.rawValue,
-                                size: 30
+                                size: 30,
+                                viewable: false
                             )
 
                             VStack(alignment: .leading, spacing: 1) {

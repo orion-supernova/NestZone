@@ -31,9 +31,11 @@ extension HomesClient: DependencyKey {
     public static let liveValue = HomesClient(
         mine: { ConvexConnection.shared.subscribe(to: "homes:listMine", as: [Home].self) },
         members: { homeID in
-            ConvexConnection.shared.subscribe(
-                to: "homes:members", args: ["homeId": homeID], as: [User].self
-            )
+            ConvexConnection.shared
+                .subscribe(to: "homes:members", args: ["homeId": homeID], as: [User].self)
+                // Seven features hold this subscription, so it is also the read
+                // that tells the whole app what the household looks like.
+                .recordingAvatars { AvatarDirectory.record($0) }
         },
         create: { name in
             let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -54,8 +54,11 @@ public struct IssuesClient: Sendable {
     /// the phone posts straight to it, and only the id it answers with goes into
     /// the document. A five-megapixel photo does not belong in the transaction
     /// that records it.
-    public var uploadPhoto: @Sendable (Data) async throws -> String
-    public var attachPhotos: @Sendable (IssueID, [String]) async throws -> Void
+    /// Uploads both sizes and hands back both ids. They are taken together
+    /// because they are stored together — a full picture filed without its
+    /// thumbnail leaves the board drawing the wrong row's photo.
+    public var uploadPhoto: @Sendable (IssuePhotoUpload) async throws -> IssuePhotoIDs
+    public var attachPhotos: @Sendable (IssueID, [IssuePhotoIDs]) async throws -> Void
     public var removePhoto: @Sendable (IssueID, String) async throws -> Void
 }
 
@@ -144,7 +147,8 @@ extension IssuesClient: DependencyKey {
             if !new.photos.isEmpty {
                 // `[String]` is not `ConvexEncodable` — only `[ConvexEncodable?]`
                 // is — so the array has to be widened element by element.
-                args["photos"] = new.photos.map { $0 as ConvexEncodable? }
+                args["photos"] = new.photos.map { $0.full as ConvexEncodable? }
+                args["photoThumbs"] = new.photos.map { $0.thumbnail as ConvexEncodable? }
             }
             return try await ConvexConnection.shared.mutate(
                 "issues:create", args: args, as: IssueID.self
@@ -245,33 +249,34 @@ extension IssuesClient: DependencyKey {
             )
         },
 
-        uploadPhoto: { data in
-            let destination = try await ConvexConnection.shared.mutate(
-                "issues:uploadUrl", args: [:], as: String.self
+        uploadPhoto: { photo in
+            // Two round trips, not one: the bytes never pass through a mutation,
+            // so each size needs its own signed URL. They are small and they go
+            // out together.
+            async let full = ConvexConnection.shared.upload(
+                photo.full.data,
+                contentType: photo.full.contentType,
+                signedBy: "issues:uploadUrl"
             )
-            guard let url = URL(string: destination) else {
-                throw AppError.server("The upload address made no sense")
-            }
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            // JPEG on the way out, whatever the picker handed over — see
-            // `IssuePhoto.encode`. Convex stores whatever content type it is
-            // told, and it is what comes back on the way in.
-            request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
-
-            let (body, response) = try await URLSession.shared.upload(for: request, from: data)
-            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
-                throw AppError.server("The photo upload failed (\(code))")
-            }
-            return try JSONDecoder().decode(UploadedFile.self, from: body).storageId
+            async let thumbnail = ConvexConnection.shared.upload(
+                photo.thumbnail.data,
+                contentType: photo.thumbnail.contentType,
+                signedBy: "issues:uploadUrl"
+            )
+            return try await IssuePhotoIDs(full: full, thumbnail: thumbnail)
         },
 
-        attachPhotos: { id, storageIDs in
-            guard !storageIDs.isEmpty else { return }
+        attachPhotos: { id, photos in
+            guard !photos.isEmpty else { return }
             try await ConvexConnection.shared.mutate(
                 "issues:attachPhotos",
-                args: ["id": id, "storageIds": storageIDs.map { $0 as ConvexEncodable? }]
+                args: [
+                    "id": id,
+                    "storageIds": photos.map { $0.full as ConvexEncodable? },
+                    // Same order, same length. `attachPhotos` pairs them by
+                    // index, so the two arrays are one value in two fields.
+                    "thumbIds": photos.map { $0.thumbnail as ConvexEncodable? },
+                ]
             )
         },
 
@@ -323,11 +328,6 @@ private struct AffectedCount: Decodable {
 /// can offer to open it.
 private struct ScheduledVisit: Decodable {
     let eventId: EventID
-}
-
-/// What a Convex upload URL answers with.
-private struct UploadedFile: Decodable {
-    let storageId: String
 }
 
 extension DependencyValues {

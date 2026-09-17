@@ -291,8 +291,11 @@ struct IssueComposerSheet: View {
 
             ScrollView(.horizontal) {
                 HStack(spacing: 10) {
-                    ForEach(Array(store.photos.enumerated()), id: \.offset) { index, data in
-                        if let image = UIImage(data: data) {
+                    ForEach(Array(store.photos.enumerated()), id: \.offset) { index, photo in
+                        // The thumbnail, not the full picture: this is an
+                        // 84-point tile, and decoding the 2000-pixel copy for
+                        // it is the same waste the board used to pay for.
+                        if let image = UIImage(data: photo.thumbnail.data) {
                             Image(uiImage: image)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)

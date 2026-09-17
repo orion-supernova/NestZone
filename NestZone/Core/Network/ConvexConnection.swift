@@ -315,6 +315,47 @@ public final class ConvexConnection: @unchecked Sendable {
         }
     }
 
+    // MARK: - Files
+
+    /// Posts bytes to a one-shot upload URL and hands back the storage id.
+    ///
+    /// The bytes never pass through a mutation. `signedBy` names a mutation
+    /// that returns a signed URL, the phone posts straight to it, and only the
+    /// id it answers with goes into the document that records it — a
+    /// five-megapixel photo does not belong in a transaction.
+    ///
+    /// One implementation for both of the app's uploads. House-problem photos
+    /// and profile photos had the same twenty lines each, which is one place
+    /// for the status check to be forgotten and two places to fix it.
+    public func upload(
+        _ data: Data,
+        contentType: String = "image/jpeg",
+        signedBy mutation: String
+    ) async throws -> String {
+        let destination = try await mutate(mutation, args: [:], as: String.self)
+        guard let url = URL(string: destination) else {
+            throw AppError.server("The upload address made no sense")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        // Convex stores whatever content type it is told, and that is what
+        // comes back on the way in — so this has to be the truth about the
+        // bytes, which both callers guarantee by re-encoding as JPEG first.
+        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+
+        let (body, response) = try await URLSession.shared.upload(for: request, from: data)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+            throw AppError.server("The upload failed (\(code))")
+        }
+        return try JSONDecoder().decode(UploadedFile.self, from: body).storageId
+    }
+
+    /// What a Convex upload URL answers with.
+    private struct UploadedFile: Decodable {
+        let storageId: String
+    }
+
     /// Decodes successfully from any JSON value, retaining nothing.
     struct Discarded: Decodable {
         init(from decoder: any Decoder) throws {}

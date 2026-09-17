@@ -989,6 +989,17 @@ export default defineSchema({
      * what to do with. Capped — see `MAX_PHOTOS`.
      */
     photos: v.optional(v.array(v.id("_storage"))),
+    /// Board-sized copies of `photos`, one per entry and in the same order.
+    ///
+    /// A parallel array rather than a field on a photo object, because `photos`
+    /// is already `v.array(v.id("_storage"))` in every deployed household and
+    /// changing its shape would strand all of them. Optional for the same
+    /// reason: a problem photographed before this existed has no thumbnail, and
+    /// `byHome` falls back to the full picture for it.
+    ///
+    /// The invariant — same length, same order — is held by `attachPhotos` and
+    /// `removePhoto` being the only things that write either one.
+    photo_thumbs: v.optional(v.array(v.id("_storage"))),
 
     /** When it has to be sorted by, if anything makes it urgent. */
     due_by: v.optional(v.number()),

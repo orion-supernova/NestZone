@@ -206,7 +206,13 @@ public struct AppFeature: Sendable {
                         // Including a registration still backing off. It would
                         // authorise as nobody, and the token belongs to whoever
                         // signs in next.
-                        .cancel(id: CancelID.deviceRegistration)
+                        .cancel(id: CancelID.deviceRegistration),
+                        // On the same terms as the cached home list above: a
+                        // household's faces are a household's data, and the
+                        // directory outlives every screen that filled it. An
+                        // effect rather than a line in the reducer because it
+                        // is the main actor's state, not this one's.
+                        .run { _ in await AvatarDirectory.shared.clear() }
                     )
 
                 default:

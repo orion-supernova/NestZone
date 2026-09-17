@@ -238,6 +238,30 @@ public enum Palette {
         endPoint: .bottom
     )
 
+    /// Behind a photo opened full screen. Black rather than a material: the
+    /// picture is the only thing on the screen, and anything that lets the app
+    /// show through competes with it.
+    public static let viewerBackdrop = Color.black
+
+    /// A control floating over a photograph, which may be any brightness.
+    public static let viewerControl = Color.black.opacity(0.45)
+
+    /// The ring drawn around the crop circle, so its edge is visible against a
+    /// photo of any brightness.
+    public static let cropRing = Color.white.opacity(0.9)
+
+    /// Laid over a control whose change is still in flight, to say the tap
+    /// landed and the result is not in yet.
+    public static let busyScrim = Color.black.opacity(0.35)
+
+    /// Everything the crop circle is not.
+    ///
+    /// Dark enough that the discarded edges read as excluded rather than merely
+    /// shaded, and light enough to still show what is being given up — the
+    /// whole job of the editor is letting someone see what falls outside the
+    /// circle before they commit to it.
+    public static let cropScrim = Color.black.opacity(0.55)
+
     static let basicGradient = gradient(violet, indigo)
     static let cyberpunkGradient = gradient(magenta, neonGreen)
     static let retroWaveGradient = gradient(hotPink, ultraviolet)

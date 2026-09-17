@@ -432,9 +432,16 @@ export const byHome = query({
     // every picture on every problem would be a storage read per photo on every
     // push — for pictures nothing on this screen is going to draw.
     const thumbnails = await Promise.all(
-      rows.map((issue) =>
-        issue.photos?.length ? ctx.storage.getUrl(issue.photos[0]) : null,
-      ),
+      rows.map((issue) => {
+        // The board-sized copy where there is one, the full picture where there
+        // is not. Reaching straight for `photos[0]` is what this screen used to
+        // do, and it meant every row downloading a 2000-pixel photograph to
+        // fill a 44-point square — once per device, for every problem in the
+        // household. Older problems still take that path; new ones cost about a
+        // tenth of it.
+        const source = issue.photo_thumbs?.[0] ?? issue.photos?.[0];
+        return source ? ctx.storage.getUrl(source) : null;
+      }),
     );
 
     const issues = rows.map((issue, index) => ({
@@ -715,6 +722,7 @@ export const create = mutation({
     vendorUrl: v.optional(v.string()),
     warrantyUntil: v.optional(v.number()),
     photos: v.optional(v.array(v.id("_storage"))),
+    photoThumbs: v.optional(v.array(v.id("_storage"))),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -739,6 +747,7 @@ export const create = mutation({
       reported_by: user._id,
       assigned_to: args.assignedTo,
       photos: args.photos?.slice(0, MAX_PHOTOS),
+      photo_thumbs: args.photoThumbs?.slice(0, MAX_PHOTOS),
       due_by: args.dueBy,
       cost_estimate:
         args.costEstimate === undefined ? undefined : requireEstimate(args.costEstimate),
@@ -1139,8 +1148,13 @@ export const uploadUrl = mutation({
 });
 
 export const attachPhotos = mutation({
-  args: { id: v.id("issues"), storageIds: v.array(v.id("_storage")) },
-  handler: async (ctx, { id, storageIds }) => {
+  args: {
+    id: v.id("issues"),
+    storageIds: v.array(v.id("_storage")),
+    /// Board-sized copies, one per `storageIds` entry and in the same order.
+    thumbIds: v.optional(v.array(v.id("_storage"))),
+  },
+  handler: async (ctx, { id, storageIds, thumbIds }) => {
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
@@ -1149,9 +1163,28 @@ export const attachPhotos = mutation({
 
     const existing = issue.photos ?? [];
     const merged = [...existing];
-    for (const storageId of storageIds) {
+    // Padded with the pictures themselves, not with holes. A problem
+    // photographed before thumbnails existed has a shorter array than its
+    // photos, and the two have to line up again before anything is appended or
+    // index 0 stops meaning photo 0.
+    //
+    // It pads with `existing[i]` rather than `undefined` because Convex rejects
+    // an array containing `undefined` outright — which would have failed the
+    // whole mutation for every problem that already has photos, i.e. every
+    // problem in every deployed household. Pairing a legacy picture with itself
+    // is also exactly what `byHome`'s `photo_thumbs[0] ?? photos[0]` fallback
+    // already means, and `removePhoto` knows not to delete a file twice when
+    // the two ids are the same.
+    const mergedThumbs = [...(issue.photo_thumbs ?? [])];
+    while (mergedThumbs.length < existing.length) {
+      mergedThumbs.push(existing[mergedThumbs.length]);
+    }
+
+    for (const [index, storageId] of storageIds.entries()) {
       if (merged.length >= MAX_PHOTOS) break;
-      if (!merged.includes(storageId)) merged.push(storageId);
+      if (merged.includes(storageId)) continue;
+      merged.push(storageId);
+      mergedThumbs.push(thumbIds?.[index] ?? storageId);
     }
 
     await record(
@@ -1165,7 +1198,7 @@ export const attachPhotos = mutation({
             ? "Added a photo"
             : `Added ${merged.length - existing.length} photos`,
       },
-      { photos: merged },
+      { photos: merged, photo_thumbs: mergedThumbs },
     );
     return { photos: merged.length };
   },
@@ -1179,12 +1212,30 @@ export const removePhoto = mutation({
     if (!issue) throw new Error("Problem not found");
     await requireDocHome(ctx, issue, "Problem");
 
-    const remaining = (issue.photos ?? []).filter((p) => p !== storageId);
-    await ctx.db.patch(id, { photos: remaining, updated: Date.now() });
+    // By index, so the thumbnail that goes is the one belonging to the picture
+    // that goes. Filtering each array on its own id would work until the same
+    // file were ever attached twice, and then it would silently misalign every
+    // row after it.
+    const photos = issue.photos ?? [];
+    const thumbs = issue.photo_thumbs ?? [];
+    const index = photos.indexOf(storageId);
+    if (index === -1) return { photos: photos.length };
+
+    const remaining = photos.filter((_, at) => at !== index);
+    const remainingThumbs = thumbs.filter((_, at) => at !== index);
+    await ctx.db.patch(id, {
+      photos: remaining,
+      photo_thumbs: remainingThumbs,
+      updated: Date.now(),
+    });
+
     // Deleted, not orphaned. A file nothing points at is a file nothing will
     // ever point at again, and storage that only grows is storage somebody
-    // eventually pays for.
+    // eventually pays for. The thumbnail goes with it — unless it *is* the
+    // picture, which is what an older problem's fallback pairing means.
+    const thumb = thumbs[index];
     await ctx.storage.delete(storageId);
+    if (thumb && thumb !== storageId) await ctx.storage.delete(thumb);
     return { photos: remaining.length };
   },
 });

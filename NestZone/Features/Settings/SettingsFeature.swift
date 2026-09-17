@@ -30,6 +30,10 @@ public struct SettingsFeature: Sendable {
         /// The stack shows four avatars and a "+2". Who those people are is a
         /// question the row can answer in place.
         public var isShowingMembers = false
+        /// A profile photo is being uploaded or taken off. Drives the spinner
+        /// over the avatar, and stops a second change being started on top of
+        /// the first.
+        public var isUpdatingAvatar = false
 
         /// `.denied` can only be undone in Settings.app, so the row becomes a
         /// link there rather than a toggle that would silently do nothing.
@@ -125,6 +129,12 @@ public struct SettingsFeature: Sendable {
         case pushTokenCopyExpired
         case membersUpdated([User])
         case editNameTapped
+        case avatarSelected(PhotoUpload)
+        case avatarRemoved
+        case avatarUpdated(User)
+        /// Carries what it takes to undo the change, which for a removal is the
+        /// photo that was taken off. See `AvatarRollback`.
+        case avatarUpdateFailed(AppError, restoring: AvatarRollback?)
         case themeSelected(AppTheme)
         case languageSelected(AppLanguage)
         case copyInviteCodeTapped
@@ -153,6 +163,7 @@ public struct SettingsFeature: Sendable {
 
     @Dependency(\.homes) var homes
     @Dependency(\.auth) var auth
+    @Dependency(\.users) var usersClient
     @Dependency(\.continuousClock) var clock
     @Dependency(\.pasteboard) var pasteboard
     @Dependency(\.push) var push
@@ -278,6 +289,63 @@ public struct SettingsFeature: Sendable {
                 state.destination = .editName(
                     EditNameFeature.State(name: state.user?.name ?? "")
                 )
+                return .none
+
+            // Two writes, one after the other: the bytes go straight to
+            // storage over a signed URL, and only the id it answers with
+            // reaches a mutation.
+            //
+            // Nothing is changed in state on the way out, which is the one
+            // place this feature departs from the app's optimistic rule — and
+            // it departs because it cannot comply. An optimistic write puts the
+            // final value in immediately, and the final value here is a URL
+            // only the server can mint. So the photo the user just cropped is
+            // held by `AvatarPickerButton`, which has the bitmap anyway, and
+            // shown until this lands. Removal below *can* comply, and does.
+            case let .avatarSelected(upload):
+                guard !state.isUpdatingAvatar else { return .none }
+                state.isUpdatingAvatar = true
+                return .run { send in
+                    let storageID = try await usersClient.uploadAvatar(upload)
+                    await send(.avatarUpdated(try await usersClient.setAvatar(storageID)))
+                } catch: { error, send in
+                    await send(.avatarUpdateFailed(AppError(error), restoring: nil))
+                }
+
+            case .avatarRemoved:
+                guard !state.isUpdatingAvatar, let user = state.user,
+                      user.avatar != nil || user.avatarURL != nil
+                else { return .none }
+
+                // Read before clearing. A refused write changed nothing on the
+                // server, so no push is coming to put the face back — the
+                // failure has to carry it.
+                let rollback = AvatarRollback(storageID: user.avatar, url: user.avatarURL)
+                state.user?.avatar = nil
+                state.user?.avatarURL = nil
+                state.isUpdatingAvatar = true
+                return .run { send in
+                    await send(.avatarUpdated(try await usersClient.setAvatar(nil)))
+                } catch: { error, send in
+                    await send(.avatarUpdateFailed(AppError(error), restoring: rollback))
+                }
+
+            // Applied here rather than left to the `users:me` push, so the
+            // spinner and the new photo appear in the same frame. The push
+            // arrives moments later carrying the same document and is dropped
+            // as a duplicate.
+            case let .avatarUpdated(user):
+                state.isUpdatingAvatar = false
+                state.user = user
+                return .none
+
+            case let .avatarUpdateFailed(error, rollback):
+                state.isUpdatingAvatar = false
+                if let rollback {
+                    state.user?.avatar = rollback.storageID
+                    state.user?.avatarURL = rollback.url
+                }
+                state.alert = .failure(error)
                 return .none
 
             case let .themeSelected(theme):

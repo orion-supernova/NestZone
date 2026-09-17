@@ -49,6 +49,62 @@ only place that knows the shape of the whole app.
   `L10n.r(_:_:)` hides the key behind a parameter, so the extractor cannot see it
   and re-adds every English default as its own key on each build. Turning it back
   on re-pollutes the catalog with hundreds of duplicates.
+- **Avatars are looked up, not passed.** `Avatar(initials:seed:size:)` resolves
+  the photo itself from `AvatarDirectory`, keyed on the `seed` — which is
+  already the user's id at every call site, because the tint has to match their
+  slice of the contributions ring. So a screen holding a member *row* rather
+  than a `User` draws photographs without being edited. The directory is a
+  mirror of the server, filled inside the clients for the three reads a `User`
+  arrives through (`users:me`, `homes:members`, `users:byIds`), so there is no
+  path by which one arrives and the directory misses it. It holds no optimistic
+  state and is cleared on sign-out. Faces load through `RemoteImage` with
+  `persistence: .disk`, and `AvatarPhoto.renderSize` rounds the app's eight
+  drawn sizes onto two so a member is one decoded bitmap, not eight.
+  Tapping one opens it full screen, everywhere, off the same lookup — the
+  directory carries the name so the photo has a title. That is `viewable`, and
+  it defaults **on**: turn it off (and only off) where the avatar sits inside a
+  control whose tap means something else — a member-selection row, a settle-up
+  suggestion, a `Menu` label, `AvatarStack`. It works by `allowsHitTesting`, so
+  a non-viewable avatar is transparent to touches rather than merely inert; an
+  inert tap gesture would still swallow the row's tap.
+  Uploads are capped by a **byte budget**, not a quality setting — quality is a
+  knob on an encoder, not a size, and the same 0.85 that gives 90 KB for a plain
+  background gives half a megabyte for a face in front of foliage. `compress`
+  walks quality down and then resolution down until it fits `byteBudget`, trying
+  HEIC *and* JPEG at each step and keeping the smaller: HEIC is about half the
+  bytes on a photograph but hits a floor on detail it cannot model, where JPEG
+  walks past it. The content type travels with the bytes (`PhotoUpload`) because
+  Convex serves back whatever it was told. Real numbers: 137–212 KB before,
+  23–73 KB after, at the same 1024px.
+- **Every upload goes through `PhotoCompressor` and a `PhotoCompressionPlan`.**
+  One ladder, two plans. `AvatarPhoto.plan` allows HEIC because a face is drawn
+  by this app and nothing else ever sees it; `IssuePhoto.plan` does not, because
+  a picture of a leak is the kind of thing somebody forwards to a plumber, and a
+  storage URL opened in a browser that cannot decode HEIC is a broken image at
+  the worst moment. Adding a third upload means adding a plan, not a ladder.
+- **A house-problem photo is stored twice, and the pair is the point.**
+  `issues.photos` holds the full picture and `issues.photo_thumbs` a 320-pixel
+  copy — parallel arrays, written only by `attachPhotos` and `removePhoto` so
+  they cannot drift, and `byHome` serves `photo_thumbs[0] ?? photos[0]`. The
+  board used to draw its 44-point square by downloading the 2000-pixel original,
+  once per device per problem: three photographed problems cost 532 KB to fill
+  three postage stamps, and now cost 51 KB. `photo_thumbs` is optional and falls
+  back, so problems photographed before it existed still draw.
+- **`NSCameraUsageDescription` is required and localized; the photo-library one
+  is deliberately absent.** Presenting a camera without the key is an instant
+  crash, not a denial. The copy lives in `Resources/InfoPlist.xcstrings` (a
+  second catalog — the Swift one cannot reach Info.plist), with the value in
+  `Info.plist` as the base for an unlisted language. A system permission prompt
+  follows the *device* language, not the in-app picker, so it has to be
+  localized there or a Turkish phone gets English. No
+  `NSPhotoLibraryUsageDescription`: every library read goes through
+  `PhotosPicker`, which runs out of process, asks for nothing, and hands back
+  only what was picked — declaring the key would claim access never requested.
+- **Faces and problem photos load with `persistence: .disk`.** `.session` leaves
+  survival across a relaunch to the `Cache-Control` header on a signed storage
+  URL. Anything drawn on every screen, or on every row of one, gets `.disk`; a
+  browsing surface with thousands of images (posters) stays on `.session`, which
+  is what `URLCache` and its byte budget are for.
 - **Colours** are `static let` constants in `Palette`. Never build a `Color` or
   gradient inside a `body`.
 - **Glass goes on things that float** — cards, controls, bars. Never on a

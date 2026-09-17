@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { cascadeDeleteHome } from "./lib/relations";
+import { publicUsers } from "./lib/users";
 import { internal } from "./_generated/api";
 
 /**
@@ -43,13 +44,25 @@ export const get = query({
   },
 });
 
-/** Member user docs for a home. */
+/**
+ * Member user docs for a home, each carrying a loadable avatar URL.
+ *
+ * This is the subscription seven features already hold — Home, Tasks, Messages,
+ * Calendar, Finance, Issues and Settings all read the household off it — so it
+ * is also the cheapest place in the app to learn what everybody looks like.
+ * Resolving the photo here is what lets `AvatarDirectory` fill itself from a
+ * read every screen was doing anyway, instead of an avatar having to be
+ * threaded through eight features' member models.
+ */
 export const members = query({
   args: { homeId: v.id("homes") },
   handler: async (ctx, { homeId }) => {
     const home = await requireHomeMember(ctx, homeId);
     const docs = await Promise.all((home.members ?? []).map((id) => ctx.db.get(id)));
-    return docs.filter(Boolean);
+    return await publicUsers(
+      ctx,
+      docs.filter((doc): doc is NonNullable<typeof doc> => doc !== null),
+    );
   },
 });
 

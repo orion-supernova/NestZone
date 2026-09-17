@@ -97,30 +97,51 @@ public struct SettingsView: View {
 
     // MARK: - Profile
 
+    /// Two controls in one row, not one.
+    ///
+    /// The row used to be a single button that edited the name, with the avatar
+    /// inside it as decoration — so the one thing on the screen that looks most
+    /// like "tap me to change my picture" changed your name instead. Splitting
+    /// them means the photo answers for itself and the rest of the row still
+    /// goes where it always went.
     private var profileSection: some View {
         Section {
-            Button { store.send(.editNameTapped) } label: {
-                HStack(spacing: 14) {
-                    Avatar(
-                        initials: store.user?.initials ?? "?",
-                        seed: store.user?.id.rawValue ?? "",
-                        size: 52
-                    )
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(store.user?.displayName ?? "")
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                        Text(L10n.settingsProfileCustomizeExperience)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+            HStack(spacing: 14) {
+                AvatarPickerButton(
+                    initials: store.user?.initials ?? "?",
+                    seed: store.user?.id.rawValue ?? "",
+                    name: store.user?.displayName ?? "",
+                    photo: store.user?.avatarURL,
+                    size: 52,
+                    isBusy: store.isUpdatingAvatar,
+                    onSelected: { store.send(.avatarSelected($0)) },
+                    onRemoved: { store.send(.avatarRemoved) }
+                )
+
+                Button { store.send(.editNameTapped) } label: {
+                    HStack(spacing: 0) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(store.user?.displayName ?? "")
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text(L10n.settingsProfileCustomizeExperience)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "pencil")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Palette.accessory)
                     }
-                    Spacer(minLength: 0)
-                    Image(systemName: "pencil")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Palette.accessory)
+                    // Without this the button is only tappable on the text
+                    // itself, and the gap beside it — most of the row — does
+                    // nothing.
+                    .contentShape(.rect)
                 }
-                .padding(.vertical, 4)
+                .buttonStyle(.plain)
+                .accessibilityHint(Text(L10n.settingsEditNameTitle))
             }
+            .padding(.vertical, 4)
         }
     }
 

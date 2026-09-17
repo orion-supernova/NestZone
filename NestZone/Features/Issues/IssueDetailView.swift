@@ -246,10 +246,13 @@ public struct IssueDetailView: View {
         } label: {
             HStack(spacing: 7) {
                 if let assignee = store.state.member(issue.assignedTo) {
+                    // This is a `Menu`'s label. A tap has to open the
+                    // menu, or the only way to reassign a problem is gone.
                     Avatar(
                         initials: assignee.initials,
                         seed: assignee.id.rawValue,
-                        size: 24
+                        size: 24,
+                        viewable: false
                     )
                     Text(store.state.name(for: issue.assignedTo))
                         .font(.caption.weight(.medium))

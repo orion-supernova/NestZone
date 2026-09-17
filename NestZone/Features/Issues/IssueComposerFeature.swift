@@ -63,7 +63,7 @@ public struct IssueComposerFeature: Sendable {
         /// at a time — a composer that had to reconcile "these three are
         /// already up, this one is new, that one is going" is a second photo
         /// model to keep in step.
-        public var photos: [Data] = []
+        public var photos: [IssuePhotoUpload] = []
         public var isPreparingPhotos = false
 
         public var isSubmitting = false
@@ -207,7 +207,7 @@ public struct IssueComposerFeature: Sendable {
         case submitTapped
         /// Images straight from the picker, before re-encoding.
         case photosPicked([Data])
-        case photosPrepared([Data])
+        case photosPrepared([IssuePhotoUpload])
         case photoRemoved(Int)
         case severityTapped(IssueSeverity)
         case areaTapped(IssueArea)
@@ -261,7 +261,7 @@ public struct IssueComposerFeature: Sendable {
                     // so a report is never written half-illustrated: if an
                     // upload fails the whole thing fails and the sheet is still
                     // there, with everything typed into it, to try again.
-                    var stored: [String] = []
+                    var stored: [IssuePhotoIDs] = []
                     for photo in photos {
                         stored.append(try await issuesClient.uploadPhoto(photo))
                     }

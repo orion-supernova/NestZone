@@ -593,10 +593,10 @@ public struct IssueDetailFeature: Sendable {
                     // twelve-megapixel photo is tens of milliseconds and holding
                     // several decoded bitmaps at once is how a phone with a full
                     // camera roll runs out of memory mid-report.
-                    var stored: [String] = []
+                    var stored: [IssuePhotoIDs] = []
                     for image in images {
-                        guard let jpeg = IssuePhoto.encode(image) else { continue }
-                        stored.append(try await issuesClient.uploadPhoto(jpeg))
+                        guard let encoded = IssuePhoto.encode(image) else { continue }
+                        stored.append(try await issuesClient.uploadPhoto(encoded))
                     }
                     try await issuesClient.attachPhotos(id, stored)
                     await send(.photosAttached)

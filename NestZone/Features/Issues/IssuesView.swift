@@ -918,7 +918,18 @@ private struct IssueRow: View {
     private var leading: some View {
         ZStack {
             if let thumbnail = issue.thumbnailURL, let url = URL(string: thumbnail) {
-                RemoteImage(url: url, targetSize: CGSize(width: 44, height: 44)) {
+                // On disk, like a face. This is the most-drawn picture in the
+                // app after an avatar — every row of the board, every time it
+                // is opened — and `.session` leaves whether it survives a
+                // relaunch to the `Cache-Control` header on a signed storage
+                // URL. A downsampled 44-point thumbnail is a few kilobytes on
+                // disk and the difference between a board that is drawn and a
+                // board that is fetched.
+                RemoteImage(
+                    url: url,
+                    targetSize: CGSize(width: 44, height: 44),
+                    persistence: .disk
+                ) {
                     Rectangle().fill(issue.severity.tint.opacity(0.16))
                 }
                 .frame(width: 44, height: 44)

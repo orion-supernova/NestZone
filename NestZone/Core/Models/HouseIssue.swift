@@ -1133,7 +1133,10 @@ public struct NewIssue: Equatable, Sendable {
     public var warrantyUntil: Date?
     /// `_storage` ids already uploaded by the composer. The bytes never travel
     /// through a mutation — see `IssuesClient.uploadPhoto`.
-    public var photos: [String]
+    /// Storage id pairs for photos already uploaded, in the order they were
+    /// picked. Both sizes, because the board and the detail screen want
+    /// different ones.
+    public var photos: [IssuePhotoIDs]
 
     public init(
         homeID: HomeID,
@@ -1150,7 +1153,7 @@ public struct NewIssue: Equatable, Sendable {
         vendorPhone: String? = nil,
         vendorURL: String? = nil,
         warrantyUntil: Date? = nil,
-        photos: [String] = []
+        photos: [IssuePhotoIDs] = []
     ) {
         self.homeID = homeID
         self.title = title

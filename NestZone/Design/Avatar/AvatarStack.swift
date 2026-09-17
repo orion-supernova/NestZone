@@ -1,36 +1,9 @@
 import SwiftUI
 
-/// A person, drawn as their initials on their own colour.
-///
-/// The colour comes from `MemberTint`, which derives it from the id — so the
-/// same member is the same colour on every screen and across devices with
-/// nothing to store, and their avatar matches their slice of the contributions
-/// ring.
-public struct Avatar: View {
-    private let initials: String
-    private let seed: String
-    private let size: CGFloat
-
-    public init(initials: String, seed: String, size: CGFloat = 36) {
-        self.initials = initials
-        self.seed = seed
-        self.size = size
-    }
-
-    public var body: some View {
-        Circle()
-            .fill(MemberTint.gradient(for: seed))
-            .frame(width: size, height: size)
-            .overlay {
-                Text(initials)
-                    .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-            }
-            .accessibilityHidden(true)
-    }
-}
-
 /// Overlapping avatars for "who's in this home / chat".
+///
+/// Draws `Avatar`, so it gained photographs the moment `Avatar` did — the id it
+/// already carried for the tint is the same id the directory is keyed on.
 public struct AvatarStack: View {
     public struct Member: Identifiable, Hashable, Sendable {
         public let id: String
@@ -55,7 +28,11 @@ public struct AvatarStack: View {
     public var body: some View {
         HStack(spacing: -size * 0.32) {
             ForEach(members.prefix(maxVisible)) { member in
-                Avatar(initials: member.initials, seed: member.id, size: size)
+                // A summary, not a roster: the stack stands for "these
+                // people" and is routinely the label of something that expands
+                // it. Opening one face out of an overlapping pile is a guess
+                // about which one was tapped.
+                Avatar(initials: member.initials, seed: member.id, size: size, viewable: false)
                     .overlay(Circle().strokeBorder(.background, lineWidth: 1.5))
             }
             if members.count > maxVisible {
@@ -71,6 +48,6 @@ public struct AvatarStack: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("\(members.count) members"))
+        .accessibilityLabel(Text(L10n.membersAccessibility(members.count)))
     }
 }

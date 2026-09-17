@@ -6567,4 +6567,111 @@ public enum L10n {
     public static var issuesRemindDayBefore: LocalizedStringResource {
         r("issues_remind_day_before", "The day before")
     }
+
+    // MARK: Profile photo
+
+    /// Profile Photo
+    public static var avatarDialogTitle: LocalizedStringResource {
+        r("avatar_dialog_title", "Profile Photo")
+    }
+
+    /// Choose Photo
+    public static var avatarChoosePhoto: LocalizedStringResource {
+        r("avatar_choose_photo", "Choose Photo")
+    }
+
+    /// Remove Photo
+    public static var avatarRemovePhoto: LocalizedStringResource {
+        r("avatar_remove_photo", "Remove Photo")
+    }
+
+    /// Change profile photo
+    public static var avatarChangePhoto: LocalizedStringResource {
+        r("avatar_change_photo", "Change profile photo")
+    }
+
+    /// Add a profile photo
+    public static var avatarAddPhoto: LocalizedStringResource {
+        r("avatar_add_photo", "Add a profile photo")
+    }
+
+    /// That photo could not be opened. Try another one.
+    public static var avatarUnreadable: LocalizedStringResource {
+        r("avatar_unreadable", "That photo could not be opened. Try another one.")
+    }
+
+    /// Move and Scale
+    public static var avatarCropTitle: LocalizedStringResource {
+        r("avatar_crop_title", "Move and Scale")
+    }
+
+    /// Drag to move the photo, pinch to zoom.
+    public static var avatarCropHint: LocalizedStringResource {
+        r("avatar_crop_hint", "Drag to move the photo, pinch to zoom.")
+    }
+
+    /// Use Photo
+    public static var avatarCropConfirm: LocalizedStringResource {
+        r("avatar_crop_confirm", "Use Photo")
+    }
+
+    /// That photo could not be prepared. Try another one.
+    public static var avatarCropFailedMessage: LocalizedStringResource {
+        r("avatar_crop_failed_message", "That photo could not be prepared. Try another one.")
+    }
+
+    /// Photo position
+    public static var avatarCropAccessibilityLabel: LocalizedStringResource {
+        r("avatar_crop_accessibility_label", "Photo position")
+    }
+
+    /// Zoomed to 120 percent
+    public static func avatarCropAccessibilityValue(_ a0: Int) -> LocalizedStringResource {
+        r("avatar_crop_accessibility_value", "Zoomed to \(a0) percent")
+    }
+
+    /// 4 members
+    public static func membersAccessibility(_ a0: Int) -> LocalizedStringResource {
+        r("members_accessibility", "\(a0) members")
+    }
+
+    /// Take Photo
+    public static var avatarTakePhoto: LocalizedStringResource {
+        r("avatar_take_photo", "Take Photo")
+    }
+
+    /// Use the camera now
+    public static var avatarTakePhotoDetail: LocalizedStringResource {
+        r("avatar_take_photo_detail", "Use the camera now")
+    }
+
+    /// Pick one you already have
+    public static var avatarChoosePhotoDetail: LocalizedStringResource {
+        r("avatar_choose_photo_detail", "Pick one you already have")
+    }
+
+    /// View Photo
+    public static var avatarViewPhoto: LocalizedStringResource {
+        r("avatar_view_photo", "View Photo")
+    }
+
+    /// See it full screen
+    public static var avatarViewPhotoDetail: LocalizedStringResource {
+        r("avatar_view_photo_detail", "See it full screen")
+    }
+
+    /// Go back to your initials
+    public static var avatarRemovePhotoDetail: LocalizedStringResource {
+        r("avatar_remove_photo_detail", "Go back to your initials")
+    }
+
+    /// Someone
+    public static var avatarSomeone: LocalizedStringResource {
+        r("avatar_someone", "Someone")
+    }
+
+    /// Photo of Ada
+    public static func avatarViewerAccessibility(_ a0: String) -> LocalizedStringResource {
+        r("avatar_viewer_accessibility", "Photo of \(a0)")
+    }
 }

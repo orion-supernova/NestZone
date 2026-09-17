@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Testing
 @testable import NestZone
 
@@ -725,3 +726,415 @@ extension FinanceLogicTests {
         #expect(Money.parse("-5", currency: "EUR") == 500)
     }
 }
+
+@Suite("Avatar geometry")
+struct AvatarCropTests {
+
+    /// 2000×1000 drawn into a 300-point square: the photo is fitted to its
+    /// shorter edge, so it overhangs by 300 points on each side.
+    private func landscape(scale: CGFloat = 1, offset: CGSize = .zero) -> AvatarCrop {
+        AvatarCrop(
+            imageSize: CGSize(width: 2000, height: 1000),
+            viewport: 300,
+            scale: scale,
+            offset: offset
+        )
+    }
+
+    @Test("Untouched, the circle takes the middle of the photo")
+    func centredByDefault() {
+        #expect(landscape().sourceRect == CGRect(x: 500, y: 0, width: 1000, height: 1000))
+    }
+
+    @Test("The photo is fitted to its shorter edge, so the circle is always full")
+    func fillsTheViewport() {
+        let crop = landscape()
+        #expect(crop.fillScale == 0.3)
+        #expect(crop.displayedSize == CGSize(width: 600, height: 300))
+        // Only the overhanging axis may move. Panning the other one would show
+        // background inside the circle.
+        #expect(crop.maximumOffset == CGSize(width: 150, height: 0))
+    }
+
+    @Test("Pushing the photo right shows what was to its left")
+    func panMovesTheWindowAgainstIt() {
+        let crop = landscape(offset: CGSize(width: 150, height: 0))
+        #expect(crop.sourceRect == CGRect(x: 0, y: 0, width: 1000, height: 1000))
+    }
+
+    @Test("A pan past the edge settles at the edge rather than showing nothing")
+    func panIsClamped() {
+        let far = landscape(offset: CGSize(width: 4000, height: 900))
+        #expect(far.clamped().offset == CGSize(width: 150, height: 0))
+        // And the rectangle it produces is the same as the one at the limit.
+        #expect(far.sourceRect == landscape(offset: CGSize(width: 150, height: 0)).sourceRect)
+    }
+
+    @Test("Zooming in narrows the window onto the source")
+    func zoomShrinksTheSourceWindow() {
+        #expect(landscape(scale: 2).sourceRect == CGRect(x: 750, y: 250, width: 500, height: 500))
+    }
+
+    @Test("Zoom stays within range, so the circle can never be under-filled")
+    func zoomIsClamped() {
+        #expect(landscape(scale: 0.2).clamped().scale == AvatarCrop.minimumScale)
+        #expect(landscape(scale: 99).clamped().scale == AvatarCrop.maximumScale)
+    }
+
+    @Test("A portrait photo pans vertically and is pinned horizontally")
+    func portraitPinsTheOtherAxis() {
+        let crop = AvatarCrop(
+            imageSize: CGSize(width: 1000, height: 2000),
+            viewport: 300
+        )
+        #expect(crop.maximumOffset == CGSize(width: 0, height: 150))
+        #expect(crop.sourceRect == CGRect(x: 0, y: 500, width: 1000, height: 1000))
+    }
+
+    @Test("The crop is always square, and always inside the photo")
+    func staysSquareAndInBounds() {
+        let bounds = CGRect(x: 0, y: 0, width: 2000, height: 1000)
+        for scale in stride(from: 1.0, through: 6.0, by: 0.7) {
+            for dx in stride(from: -900.0, through: 900.0, by: 150) {
+                let rect = landscape(scale: scale, offset: CGSize(width: dx, height: 0)).sourceRect
+                #expect(rect.width == rect.height)
+                #expect(bounds.contains(rect))
+            }
+        }
+    }
+
+    @Test("A photo with no size at all does not produce a broken rectangle")
+    func degenerateImage() {
+        let crop = AvatarCrop(imageSize: .zero, viewport: 300)
+        #expect(crop.fillScale == 1)
+        #expect(crop.sourceRect == .zero)
+    }
+}
+
+@Suite("Avatar sizing")
+struct AvatarPhotoTests {
+
+    @Test("Every avatar in the app lands on one of two decoded sizes")
+    func renderSizesAreBucketed() {
+        // The sizes actually used across the eight features that draw a member.
+        let drawn: [CGFloat] = [18, 26, 28, 34, 36, 40, 52]
+        #expect(Set(drawn.map(AvatarPhoto.renderSize(for:))) == [56])
+        #expect(AvatarPhoto.renderSize(for: 96) == 128)
+        // Nothing falls off the end of the ladder.
+        #expect(AvatarPhoto.renderSize(for: 400) == 128)
+    }
+
+    /// A square of structureless detail: the hardest thing any encoder can be
+    /// handed, and far worse than any photograph of a person.
+    private func noise(edge: Int) throws -> UIImage {
+        let context = try #require(CGContext(
+            data: nil,
+            width: edge,
+            height: edge,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ))
+        // Filled through the context's own buffer rather than from a Swift
+        // array, whose lifetime would end before `CGContext` was finished with
+        // the pointer.
+        let buffer = try #require(context.data).assumingMemoryBound(to: UInt8.self)
+        var seed: UInt64 = 0x2545_F491
+        for index in 0 ..< (context.bytesPerRow * edge) {
+            seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+            buffer[index] = UInt8(truncatingIfNeeded: seed >> 33)
+        }
+        return UIImage(cgImage: try #require(context.makeImage()), scale: 1, orientation: .up)
+    }
+
+    @Test("An avatar is compressed to a stated ceiling, not a hoped-for one")
+    func staysUnderBudget() throws {
+        let selection = try #require(AvatarPhoto.compress(try noise(edge: 1024)))
+        // The whole point of a budget: a quality setting is a knob on an
+        // encoder, and this image is the case that proves it is not a size.
+        // Uncompressible detail forces the ladder down through four qualities
+        // and onto a smaller square, and it still has to land under the ceiling.
+        #expect(selection.upload.byteCount <= AvatarPhoto.byteBudget)
+    }
+
+    @Test("The bytes are labelled with what they actually are")
+    func labelsTheFormat() throws {
+        let selection = try #require(AvatarPhoto.compress(try noise(edge: 256)))
+        // Either is correct — HEIC needs a hardware encoder the simulator does
+        // not always have, and the fallback is the point. What must never
+        // happen is a constant: Convex serves back whatever content type it was
+        // told, so a mislabelled avatar stays mislabelled for everyone.
+        #expect(["image/heic", "image/jpeg"].contains(selection.upload.contentType))
+    }
+
+    @Test("The bitmap handed back is the one that was actually encoded")
+    func returnsWhatWasEncoded() throws {
+        let selection = try #require(AvatarPhoto.compress(try noise(edge: 1024)))
+        // It primes the cache under the URL the server answers with, so if the
+        // budget forced a smaller square this has to be that square — otherwise
+        // the local copy and the remote one are two different pictures sharing
+        // one address.
+        #expect(selection.image.size.width == selection.image.size.height)
+        #expect(selection.image.size.width <= AvatarPhoto.storedEdge)
+        #expect(AvatarPhoto.edgeLadder.contains(selection.image.size.width))
+    }
+
+    @Test("A plain photograph keeps the full square, and is nowhere near the ceiling")
+    func anOrdinaryPhotoIsCheap() throws {
+        // A smooth gradient stands in for an ordinary portrait: structure an
+        // encoder can model. This is the common case, and it should settle on
+        // the top rung — full resolution, best quality — with room to spare.
+        let edge = 1024
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        format.opaque = true
+        let size = CGSize(width: edge, height: edge)
+        let gradient = UIGraphicsImageRenderer(size: size, format: format).image { context in
+            UIColor.systemTeal.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            UIColor.systemPink.withAlphaComponent(0.6).setFill()
+            context.cgContext.fillEllipse(in: CGRect(x: 120, y: 120, width: 700, height: 700))
+        }
+        let selection = try #require(AvatarPhoto.compress(gradient))
+        #expect(selection.upload.byteCount <= AvatarPhoto.byteBudget)
+        // No rung was given up to get there.
+        #expect(selection.image.size.width == AvatarPhoto.storedEdge)
+    }
+
+    @Test("The stored square is big enough for the largest thing done with it")
+    func storedEdgeCoversTheViewer() {
+        // Which is no longer a 52-point circle but a full-screen photo, so the
+        // upload has to out-resolve the viewer's request on a 3x screen.
+        #expect(AvatarPhoto.storedEdge >= AvatarPhoto.viewerEdge * 2)
+    }
+}
+
+@Suite("Photo zoom")
+struct PhotoZoomTests {
+
+    private let screen = CGSize(width: 390, height: 844)
+
+    /// A square avatar — which is the only kind there is — on a tall screen.
+    private func zoom(_ scale: CGFloat = 1, _ offset: CGSize = .zero) -> PhotoZoom {
+        PhotoZoom(
+            imageSize: CGSize(width: 1, height: 1),
+            viewport: screen,
+            scale: scale,
+            offset: offset
+        )
+    }
+
+    @Test("At rest the whole photo is visible, and there is nothing to pan")
+    func atRestItIsPinned() {
+        #expect(zoom().displayedSize == CGSize(width: 390, height: 390))
+        #expect(zoom().maximumOffset == .zero)
+        #expect(zoom().isAtRest)
+        // Which is what lets a downward drag mean "close this" instead.
+        #expect(zoom(1, CGSize(width: 200, height: 200)).clamped().offset == .zero)
+    }
+
+    @Test("Zoomed in it pans exactly as far as it overflows, and no further")
+    func panMatchesTheOverflow() {
+        let zoomed = zoom(3)
+        #expect(zoomed.displayedSize == CGSize(width: 1170, height: 1170))
+        #expect(zoomed.maximumOffset == CGSize(width: 390, height: 163))
+        #expect(!zoomed.isAtRest)
+        #expect(zoom(3, CGSize(width: 9999, height: 9999)).clamped().offset
+            == CGSize(width: 390, height: 163))
+    }
+
+    @Test("Zoom stays in range")
+    func zoomIsClamped() {
+        #expect(zoom(0.1).clamped().scale == PhotoZoom.minimumScale)
+        #expect(zoom(99).clamped().scale == PhotoZoom.maximumScale)
+    }
+
+    @Test("A double tap zooms in, and on the way out recentres rather than stranding it")
+    func doubleTapToggles() {
+        #expect(zoom().toggledZoom().scale == PhotoZoom.doubleTapScale)
+        let dragged = zoom(3, CGSize(width: 300, height: 100))
+        #expect(dragged.toggledZoom().scale == PhotoZoom.minimumScale)
+        // A photo that fits has exactly one right position, and nothing left to
+        // drag it back with.
+        #expect(dragged.toggledZoom().offset == .zero)
+    }
+
+    @Test("A viewer fits where a crop fills — the one word that separates them")
+    func fitsRatherThanFills() {
+        let square = CGSize(width: 1000, height: 2000)
+        let fit = PhotoZoom(imageSize: square, viewport: CGSize(width: 300, height: 300))
+        let fill = AvatarCrop(imageSize: square, viewport: 300)
+        // Fit shows all of it and leaves bars; fill covers and overhangs.
+        #expect(fit.displayedSize == CGSize(width: 150, height: 300))
+        #expect(fill.displayedSize == CGSize(width: 300, height: 600))
+    }
+
+    @Test("A degenerate viewport does not divide by zero")
+    func degenerate() {
+        let empty = PhotoZoom(imageSize: .zero, viewport: .zero)
+        #expect(empty.fitScale == 1)
+        #expect(empty.clamped().offset == .zero)
+    }
+}
+
+@Suite("Avatar directory")
+@MainActor
+struct AvatarDirectoryTests {
+
+    private func user(_ id: String, photo: String?) -> User {
+        User(id: UserID(rawValue: id), name: "Ada", avatarURL: photo.flatMap(URL.init(string:)))
+    }
+
+    @Test("A face recorded once is found by id from anywhere")
+    func recordsByID() {
+        let directory = AvatarDirectory()
+        directory.record([user("u1", photo: "https://example.com/1.jpg")])
+        #expect(directory.url(for: "u1") == URL(string: "https://example.com/1.jpg"))
+        #expect(directory.url(for: "u2") == nil)
+    }
+
+    @Test("Taking a photo off puts the initials back everywhere, but keeps the name")
+    func removalIsAFactToo() {
+        let directory = AvatarDirectory()
+        directory.record([user("u1", photo: "https://example.com/1.jpg")])
+        // Not "no news": a user who arrives without a photo has had it removed,
+        // and leaving the old URL would strand a stale face on every screen but
+        // the one that made the change.
+        directory.record([user("u1", photo: nil)])
+        #expect(directory.url(for: "u1") == nil)
+        // The name is still true, and a tappable avatar needs it.
+        #expect(directory.name(for: "u1") == "Ada")
+    }
+
+    @Test("The name travels with the face, so no call site has to pass one")
+    func recordsTheName() {
+        let directory = AvatarDirectory()
+        directory.record([user("u1", photo: "https://example.com/1.jpg")])
+        #expect(directory.name(for: "u1") == "Ada")
+        #expect(directory.name(for: "nobody") == nil)
+    }
+
+    @Test("A session that has ended leaves no faces behind")
+    func clearingForgetsTheHousehold() {
+        let directory = AvatarDirectory()
+        directory.record([user("u1", photo: "https://example.com/1.jpg")])
+        directory.clear()
+        #expect(directory.url(for: "u1") == nil)
+    }
+}
+
+@Suite("User payload")
+struct UserDecodingTests {
+
+    private func decode(_ json: String) throws -> User {
+        try JSONDecoder().decode(User.self, from: Data(json.utf8))
+    }
+
+    @Test("A resolved avatar URL travels with the user")
+    func decodesAvatarURL() throws {
+        let user = try decode("""
+        {"_id":"u1","name":"Ada","avatar":"storage-1","avatar_url":"https://example.com/a.jpg"}
+        """)
+        #expect(user.avatar == "storage-1")
+        #expect(user.avatarURL == URL(string: "https://example.com/a.jpg"))
+    }
+
+    @Test("A user with no photo, and a URL the phone cannot parse, both mean initials")
+    func degradesToInitials() throws {
+        #expect(try decode(#"{"_id":"u1","name":"Ada"}"#).avatarURL == nil)
+        // Degrades this one field rather than throwing and blanking the whole
+        // household list — the same contract `decodeLenient` gives enums.
+        #expect(try decode(#"{"_id":"u1","name":"Ada","avatar_url":123}"#).avatarURL == nil)
+    }
+}
+
+@Suite("House-problem photos")
+struct IssuePhotoTests {
+
+    /// A wide picture, so the aspect-ratio behaviour is actually exercised —
+    /// a photo of a leak is never square.
+    private func photograph(width: Int, height: Int) throws -> Data {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        format.opaque = true
+        let size = CGSize(width: width, height: height)
+        let image = UIGraphicsImageRenderer(size: size, format: format).image { context in
+            UIColor.systemBrown.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            UIColor.systemGray.withAlphaComponent(0.7).setFill()
+            context.cgContext.fillEllipse(
+                in: CGRect(x: 40, y: 40, width: width - 80, height: height - 80)
+            )
+        }
+        return try #require(image.jpegData(compressionQuality: 1))
+    }
+
+    @Test("A picked photo yields both sizes, each inside its own ceiling")
+    func bothSizesAreBudgeted() throws {
+        let encoded = try #require(IssuePhoto.encode(try photograph(width: 4032, height: 3024)))
+        #expect(encoded.full.byteCount <= IssuePhoto.plan.byteBudget)
+        #expect(encoded.thumbnail.byteCount <= IssuePhoto.thumbnailPlan.byteBudget)
+    }
+
+    @Test("The board downloads a fraction of what the detail screen does")
+    func theThumbnailIsTheWholePoint() throws {
+        let encoded = try #require(IssuePhoto.encode(try photograph(width: 4032, height: 3024)))
+        // The board used to draw its 44-point square by downloading the full
+        // picture. This ratio is the reason it no longer does.
+        #expect(encoded.thumbnail.byteCount < encoded.full.byteCount / 2)
+    }
+
+    @Test("House-problem photos stay JPEG, where an avatar may be HEIC")
+    func staysReadableEverywhere() throws {
+        let encoded = try #require(IssuePhoto.encode(try photograph(width: 1200, height: 900)))
+        // Deliberate, and the one place the two plans disagree: this is the
+        // kind of picture somebody forwards to a plumber, and a signed storage
+        // URL opened in a browser that cannot decode HEIC is a broken image at
+        // the moment it is most needed.
+        #expect(encoded.full.contentType == "image/jpeg")
+        #expect(encoded.thumbnail.contentType == "image/jpeg")
+        #expect(!IssuePhoto.plan.allowsHEIC)
+        #expect(AvatarPhoto.plan.allowsHEIC)
+    }
+
+    @Test("Unreadable bytes are refused rather than uploaded as a blank")
+    func refusesRubbish() {
+        #expect(IssuePhoto.encode(Data("not an image".utf8)) == nil)
+    }
+}
+
+@Suite("Photo compression")
+struct PhotoCompressorTests {
+
+    private func image(width: Int, height: Int) -> UIImage {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        format.opaque = true
+        let size = CGSize(width: width, height: height)
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            UIColor.systemIndigo.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+    }
+
+    @Test("Resizing keeps the proportions — a wide photo does not become square")
+    func resizingKeepsProportions() {
+        let resized = PhotoCompressor.resized(image(width: 4000, height: 3000), longEdge: 2000)
+        #expect(resized.size == CGSize(width: 2000, height: 1500))
+    }
+
+    @Test("A picture already smaller than the limit is left alone, not upscaled")
+    func neverUpscales() {
+        let small = image(width: 300, height: 200)
+        let resized = PhotoCompressor.resized(small, longEdge: 2000)
+        #expect(resized.size == small.size)
+    }
+
+    @Test("The long edge is the one that is limited, whichever it is")
+    func limitsTheLongEdge() {
+        let tall = PhotoCompressor.resized(image(width: 1000, height: 4000), longEdge: 2000)
+        #expect(tall.size == CGSize(width: 500, height: 2000))
+    }
+}
+

@@ -559,10 +559,13 @@ struct NewConversationSheet: View {
                     ForEach(store.selectableMembers) { member in
                         Button { store.send(.memberToggled(member.id)) } label: {
                             HStack(spacing: 12) {
+                                // Inside the member toggle: the tap picks
+                                // who is in the conversation.
                                 Avatar(
                                     initials: member.initials,
                                     seed: member.id.rawValue,
-                                    size: 34
+                                    size: 34,
+                                    viewable: false
                                 )
                                 Text(member.displayName).foregroundStyle(.primary)
                                 Spacer(minLength: 0)
