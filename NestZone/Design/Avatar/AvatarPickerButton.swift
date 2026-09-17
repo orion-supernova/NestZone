@@ -8,6 +8,12 @@ import SwiftUI
 /// profile photo adds one view and an action, not a sheet, a camera, a picker,
 /// an encoder and six pieces of state it has to keep in step.
 ///
+/// The tap is the whole avatar, not the badge on it. The badge says what the
+/// circle does; it is not the part you are meant to hit. That is also why the
+/// face inside is drawn `viewable: false` — a viewable `Avatar` takes the touch
+/// for itself and opens full screen, which left this button reachable only at
+/// its corner. Looking at the photo is the sheet's first row instead.
+///
 /// Whose job is what: this owns choosing and cropping, which is view work and
 /// dies with the screen. The caller owns the write, because a write needs a
 /// rollback and rollbacks belong in a reducer — `isBusy` and `photo` are how it
@@ -83,6 +89,10 @@ public struct AvatarPickerButton: View {
                 size: size,
                 isBusy: isBusy || isPreparing
             )
+            // The face, the badge and the corner between them are one target.
+            // Without this the button is only tappable where something is
+            // actually drawn, which leaves a notch out of the circle.
+            .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .disabled(isBusy || isPreparing)

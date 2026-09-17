@@ -56,7 +56,17 @@ struct AvatarPickerFace: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
         } else {
-            Avatar(initials: initials, seed: seed, size: size, source: .photo(photo))
+            // Not viewable, or the face opens itself full screen and the only
+            // thing left that reaches the button is the badge — eighteen points
+            // of it, in the corner. The whole circle has to be the control, and
+            // looking at the photo is a row in the sheet it opens.
+            Avatar(
+                initials: initials,
+                seed: seed,
+                size: size,
+                source: .photo(photo),
+                viewable: false
+            )
         }
     }
 }
