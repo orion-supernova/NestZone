@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<!-- Required. Presenting a camera without this is an instant crash, not a
-	     denial. Localized through Resources/InfoPlist.xcstrings; this value is
-	     the base, and what a device in an unlisted language sees.
-
-	     There is deliberately no NSPhotoLibraryUsageDescription: every library
-	     read in the app goes through PhotosPicker, which runs out of process
-	     and hands back only what the person picked. It asks for no permission,
-	     so declaring one would be claiming access the app never requests. -->
-	<key>NSCameraUsageDescription</key>
-	<string>So you can take a profile photo without leaving NestZone. The camera opens only when you tap Take Photo.</string>
-</dict>
+<dict/>
 </plist>

@@ -18,8 +18,9 @@ import SwiftUI
 ///
 /// Tapping one opens it full screen, wherever it is drawn — which is the same
 /// trick again: the name for the title comes out of the directory, so no caller
-/// has to pass one. It is off in the six places the avatar sits inside a control
-/// that owns the tap (see `viewable`).
+/// has to pass one. It is off wherever the avatar sits inside a control that owns
+/// the tap — including `AvatarPickerButton`, whose whole circle is the control
+/// (see `viewable`).
 public struct Avatar: View {
     /// Where the photo comes from.
     public enum Source: Equatable, Sendable {
