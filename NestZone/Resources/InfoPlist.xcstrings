@@ -1,23 +1,47 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "NSCameraUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "So you can take a profile photo without leaving NestZone. The camera opens only when you tap Take Photo."
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Bungalaven"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "NestZone"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So you can take a profile photo without leaving NestZone. The camera opens only when you tap Take Photo."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NestZone'dan çıkmadan profil fotoğrafı çekebilmen için. Kamera yalnızca Fotoğraf Çek'e dokunduğunda açılır."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NestZone'dan çıkmadan profil fotoğrafı çekebilmen için. Kamera yalnızca Fotoğraf Çek'e dokunduğunda açılır."
           }
         }
       }
     }
   },
-  "version": "1.1"
+  "version" : "1.1"
 }
