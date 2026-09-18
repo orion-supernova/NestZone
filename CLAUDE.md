@@ -20,7 +20,8 @@ NestZone/                 the app target — one module, four layers
 backend/convex/           Convex functions (queries, mutations, actions)
 backend/changelog.json    the app's release notes — see "Shipping a change"
 backend/DEPRECATIONS.md   what may be removed from the backend, and when
-deploy.sh                 the whole release: backend, changelog, archive, upload
+deploy.sh                 the release: backend, changelog, version, merge to stage
+XCODE_CLOUD.md            what builds the app once stage is pushed, and its setup
 ```
 
 Features never reach into each other. They meet in `MainFeature`, which is the
@@ -29,23 +30,31 @@ only place that knows the shape of the whole app.
 ## Shipping a change
 
 ```bash
-./deploy.sh              # backend, changelog, archive, upload — the lot
-./deploy.sh --backend    # backend + changelog only
+./deploy.sh              # backend, changelog, version, merge dev -> stage, push
+./deploy.sh --backend    # backend + changelog only, no release
 ./deploy.sh --bump patch # 1.9.0 -> 1.9.1 first
 ./deploy.sh --dry-run    # say what would happen, touch nothing
+./deploy.sh --local      # archive and upload from this Mac instead
 ```
 
-**Backend first, then the app** — which is the order the script uses and the
-reason it is one script. A new app build needs backend functions that only a
-new backend has; an old app build must keep working against that same backend.
-Deploy the backend first and both hold at every moment in between. Ship the app
-first and there is a window — minutes if it goes well, a week if the upload
-fails — where the newest build calls functions that do not exist.
+**Two branches, and `stage` is not a copy of the code.** `dev` is where work
+happens; `stage` is a pointer at the commit being released, moved only by this
+script, one push per release. **Xcode Cloud watches `stage`** and does the
+build, the signing and the TestFlight upload — see `XCODE_CLOUD.md` for the
+workflow setup and how to tell whether it fired.
 
-The script refuses to ship a version with no changelog entry, bumps the build
-number before archiving (Apple rejects a repeat, and it tells you *after* the
-upload), and skips the upload cleanly when `ASC_KEY_ID` / `ASC_ISSUER_ID` are
-unset.
+**Backend first, then the app.** A new app build needs backend functions that
+only a new backend has; an old app build must keep working against that same
+backend. Deploy the backend first and both hold at every moment in between.
+Ship the app first and there is a window — minutes if it goes well, a week if
+review is slow — where the newest build calls functions that do not exist.
+
+The script refuses to release a version with no changelog entry, refuses to
+release with a dirty tree (the cloud builds what was *pushed*, so uncommitted
+work is simply not in the binary), bumps and commits the build number before
+pushing (Apple rejects a repeat, and tells you *after* the upload), and prints
+the version census afterwards so the question "can I remove this yet" is in
+front of you at the moment it matters.
 
 ## One deployment, every app version
 

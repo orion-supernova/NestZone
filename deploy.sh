@@ -2,28 +2,43 @@
 #
 # Ship NestZone.
 #
-# One command for the whole release: check, deploy the backend, sync the
-# changelog, archive the app, upload it to App Store Connect.
-#
-#   ./deploy.sh                 # the lot
-#   ./deploy.sh --backend       # backend + changelog only
-#   ./deploy.sh --app           # archive + upload only
+#   ./deploy.sh                 # backend, changelog, version, merge to stage, push
+#   ./deploy.sh --backend       # backend + changelog only, no release
 #   ./deploy.sh --bump patch    # 1.9.0 -> 1.9.1 first, then the lot
-#   ./deploy.sh --no-upload     # build and archive, stop before Apple
+#   ./deploy.sh --local         # archive and upload from this Mac instead
 #   ./deploy.sh --dry-run       # say what would happen, touch nothing
 #
-# ORDER MATTERS, and it is backend first.
+# WHO BUILDS THE APP
 #
-# A new app build expects backend functions that a new backend has; an old app
-# build must keep working against that same backend, which is what
-# backend/DEPRECATIONS.md is for. Deploy the backend first and both hold at
-# every moment in between: the old app still works (the change was additive)
-# and the new app has what it needs by the time it reaches anybody. Ship the app
-# first and there is a window — minutes if it goes well, a week if the upload
-# fails — where the newest build is calling functions that do not exist.
+# Xcode Cloud does, and this script does not. It takes the release as far as a
+# pushed `stage` branch and stops; Apple's builders take it from there, sign it
+# and send it to TestFlight. Two reasons that division is the right one and not
+# just a convenience:
+#
+#   - Convex cannot deploy from Xcode Cloud (it has no deploy key there, and
+#     should not), and Xcode Cloud is the only one of the two that can sign a
+#     build without this particular Mac being awake with the right identities
+#     in its keychain. Each side does the half only it can do.
+#   - Xcode Cloud builds what was *pushed*. That makes "you cannot ship
+#     uncommitted work" a property of the pipeline rather than a warning this
+#     script prints and you dismiss.
+#
+# `--local` is the fallback for when the cloud is queued or unavailable. It
+# needs ASC_KEY_ID and ASC_ISSUER_ID (see the upload step). Do not run both for
+# one version: each bumps the build number, so you would end up with two
+# different binaries claiming to be the same release.
+#
+# ORDER, AND WHY IT IS THIS ONE
+#
+# Backend first, always. A new app build needs backend functions that only a
+# new backend has; an old app build must keep working against that same backend
+# (see backend/DEPRECATIONS.md). Deploy the backend first and both are true at
+# every moment in between. Ship the app first and there is a window — minutes
+# if it goes well, a week if review is slow — where the newest build on a phone
+# is calling functions that do not exist.
 #
 # Everything here is re-runnable. `convex deploy` is idempotent, the changelog
-# sync is idempotent by slug, and a failed upload can simply be run again.
+# sync is idempotent by slug, and a failed push can simply be run again.
 
 set -euo pipefail
 
@@ -39,11 +54,21 @@ ARCHIVE="$BUILD_DIR/$SCHEME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 SIM_DESTINATION="platform=iOS Simulator,name=iPhone 17"
 
+# Where work happens, and what Xcode Cloud watches. `stage` is not a second
+# copy of the code — it is a pointer at the commit that is being released, and
+# the only thing that ever moves it is this script.
+WORK_BRANCH="dev"
+RELEASE_BRANCH="stage"
+REMOTE="origin"
+
 DO_BACKEND=1
-DO_APP=1
-DO_UPLOAD=1
+DO_RELEASE=1
+BUILD_WHERE="cloud"
 DRY_RUN=0
 BUMP=""
+
+# Set on the way in so the trap can put things back.
+STARTING_BRANCH=""
 
 # ---------------------------------------------------------------- output ----
 
@@ -61,16 +86,33 @@ run() {
   "$@"
 }
 
+# Whatever happens — a conflict, a refused push, a Ctrl-C — end up back on the
+# branch the work is done on. A script that leaves somebody on `stage` without
+# saying so is one that gets a day's work committed to the wrong place.
+restore_branch() {
+  local code=$?
+  if [[ -n "$STARTING_BRANCH" && $DRY_RUN == 0 ]]; then
+    local now
+    now="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ "$now" != "$STARTING_BRANCH" ]]; then
+      git -C "$ROOT" checkout -q "$STARTING_BRANCH" 2>/dev/null \
+        && printf "\033[2m    (back on %s)\033[0m\n" "$STARTING_BRANCH"
+    fi
+  fi
+  exit $code
+}
+trap restore_branch EXIT INT TERM
+
 # ------------------------------------------------------------------ args ----
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --backend)   DO_APP=0 ;;
-    --app)       DO_BACKEND=0 ;;
-    --no-upload) DO_UPLOAD=0 ;;
+    --backend)   DO_RELEASE=0 ;;
+    --local)     BUILD_WHERE="local" ;;
+    --cloud)     BUILD_WHERE="cloud" ;;
     --dry-run)   DRY_RUN=1 ;;
     --bump)      BUMP="${2:-}"; shift ;;
-    -h|--help)   sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help)   sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)           die "Unknown option: $1 (try --help)" ;;
   esac
   shift
@@ -95,27 +137,22 @@ build_number() {
     | sed -E 's/.*CURRENT_PROJECT_VERSION = ([^;]+);.*/\1/' | tr -d ' '
 }
 
-# Rewrites the app target's version everywhere it appears at that value.
-#
 # `sed` over the pbxproj rather than agvtool, which rewrites both the project
-# and the Info.plists and disagrees with this project's build settings about
-# where the truth lives.
+# and the Info.plists and then disagrees with this project's build settings
+# about which one is the truth.
 set_marketing_version() {
-  local from="$1" to="$2"
-  run /usr/bin/sed -i '' "s/MARKETING_VERSION = ${from};/MARKETING_VERSION = ${to};/g" "$PBXPROJ"
+  run /usr/bin/sed -i '' "s/MARKETING_VERSION = ${1};/MARKETING_VERSION = ${2};/g" "$PBXPROJ"
 }
 
 set_build_number() {
-  local to="$1"
-  run /usr/bin/sed -i '' -E "s/CURRENT_PROJECT_VERSION = [^;]+;/CURRENT_PROJECT_VERSION = ${to};/g" "$PBXPROJ"
+  run /usr/bin/sed -i '' -E "s/CURRENT_PROJECT_VERSION = [^;]+;/CURRENT_PROJECT_VERSION = ${1};/g" "$PBXPROJ"
 }
 
 bump_version() {
-  local current="$1" kind="$2"
   local major minor patch
-  IFS=. read -r major minor patch <<< "$current"
+  IFS=. read -r major minor patch <<< "$1"
   major=${major:-0}; minor=${minor:-0}; patch=${patch:-0}
-  case "$kind" in
+  case "$2" in
     major) major=$((major + 1)); minor=0; patch=0 ;;
     minor) minor=$((minor + 1)); patch=0 ;;
     patch) patch=$((patch + 1)) ;;
@@ -130,26 +167,34 @@ step "Preflight"
 command -v xcodebuild >/dev/null || die "xcodebuild not found. Install Xcode."
 command -v npx >/dev/null        || die "npx not found. Install Node."
 command -v python3 >/dev/null    || die "python3 not found."
+command -v git >/dev/null        || die "git not found."
 
 git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 || die "Not a git repository."
 
-BRANCH="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD)"
-info "branch: $BRANCH"
+STARTING_BRANCH="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD)"
+info "branch: $STARTING_BRANCH"
 
+if [[ $DO_RELEASE == 1 && "$STARTING_BRANCH" != "$WORK_BRANCH" ]]; then
+  die "Releases are cut from '$WORK_BRANCH'; you are on '$STARTING_BRANCH'."
+fi
+
+# A release has to be reproducible from the repository afterwards, and with
+# Xcode Cloud it is stricter than a preference: the cloud builds what was
+# pushed, so anything uncommitted is simply not in the build. A warning that
+# said "continue anyway?" would be inviting somebody to ship a binary that does
+# not match any commit.
 if [[ -n "$(git -C "$ROOT" status --porcelain --untracked-files=no)" ]]; then
-  warn "Working tree has uncommitted changes."
-  warn "Shipping something that is not committed means the build cannot be"
-  warn "reproduced from the repository afterwards."
-  if [[ $DRY_RUN == 0 ]]; then
-    read -r -p "    Continue anyway? [y/N] " reply
-    [[ "$reply" =~ ^[Yy]$ ]] || die "Stopped. Commit first."
+  if [[ $DO_RELEASE == 1 ]]; then
+    git -C "$ROOT" status --short --untracked-files=no | sed 's/^/      /'
+    die "Uncommitted changes. Xcode Cloud builds what is pushed, so these would not be in it. Commit first."
   fi
+  warn "Uncommitted changes (not shipping the app, so continuing)."
 fi
 
 if [[ -n "$BUMP" ]]; then
   CURRENT="$(marketing_version)"
   NEXT="$(bump_version "$CURRENT" "$BUMP")"
-  step "Bumping version: $CURRENT -> $NEXT"
+  step "Version: $CURRENT -> $NEXT"
   set_marketing_version "$CURRENT" "$NEXT"
 fi
 
@@ -159,11 +204,9 @@ bold ""
 bold "  NestZone $VERSION (build $BUILD)"
 bold ""
 
-# The changelog rule, enforced rather than remembered.
-#
-# An entry for the version being shipped is the whole point of the Updates tab:
-# a release that reaches phones with no note is a release nobody is told about,
-# and by the time anybody notices, the context for writing one is gone.
+# The changelog rule, enforced rather than remembered. A release that reaches
+# phones with no note is a release nobody is told about, and by the time anyone
+# notices, the context for writing one is gone.
 step "Changelog"
 
 CHANGELOG="$BACKEND/changelog.json"
@@ -225,72 +268,134 @@ if [[ $DO_BACKEND == 1 ]]; then
     || die "Backend does not typecheck."
   info "ok"
 
-  step "Backend: compatibility reminder"
+  step "Backend: deploy"
   info "One deployment serves every app version that exists."
   info "Add, never remove. Widen, never narrow. Default, never require."
-  info "See backend/DEPRECATIONS.md — and after this deploy:"
-  info "  npx convex run inbox:versionCensus '{}'"
-
-  step "Backend: deploy"
   ( cd "$BACKEND" && run npx convex deploy -y ) || die "convex deploy failed."
 
   step "Changelog: sync"
-  # Idempotent by slug: safe on every deploy, and a re-sync never re-announces
-  # an entry that already has a publication date.
   ( cd "$BACKEND" && run npx convex run inbox:syncChangelog "$(cat "$CHANGELOG")" ) \
     || die "Changelog sync failed."
+
+  step "Who is still out there"
+  # Printed on every deploy rather than kept in a runbook, because the moment
+  # it matters is the moment somebody is about to remove something. See
+  # backend/DEPRECATIONS.md — `unknown` means a build too old to report, and
+  # every number is a floor.
+  ( cd "$BACKEND" && run npx convex run inbox:versionCensus '{}' ) || true
 fi
 
-# -------------------------------------------------------------------- app ---
+[[ $DO_RELEASE == 0 ]] && { step "Done"; info "backend deployed, changelog synced"; exit 0; }
 
-if [[ $DO_APP == 1 ]]; then
-  # A build number Apple has already seen is rejected on upload, after the
-  # archive and after the transfer — the slowest possible place to find out.
-  # Bumped before the archive so the number in the binary is the one that goes.
-  if [[ $DO_UPLOAD == 1 ]]; then
-    NEXT_BUILD=$((BUILD + 1))
-    step "Build number: $BUILD -> $NEXT_BUILD"
-    set_build_number "$NEXT_BUILD"
-    BUILD="$NEXT_BUILD"
+# ---------------------------------------------------------- the build no. ---
+
+# A build number Apple has already seen is rejected on upload — after the
+# build, after the transfer, which is the slowest possible place to find out.
+# Bumped and committed before anything is pushed, so the number in the binary
+# is the number in the repository whichever side builds it.
+NEXT_BUILD=$((BUILD + 1))
+step "Build number: $BUILD -> $NEXT_BUILD"
+set_build_number "$NEXT_BUILD"
+BUILD="$NEXT_BUILD"
+
+if [[ $DRY_RUN == 0 ]]; then
+  git -C "$ROOT" add "$PBXPROJ"
+  git -C "$ROOT" commit -q -m "version bump" || true
+  info "committed on $WORK_BRANCH"
+else
+  info "would commit the bump on $WORK_BRANCH"
+fi
+
+# ------------------------------------------------------------------- ship ---
+
+if [[ "$BUILD_WHERE" == "cloud" ]]; then
+  step "Release: $WORK_BRANCH -> $RELEASE_BRANCH"
+
+  # A cheap build first. Xcode Cloud takes minutes to tell you the same thing,
+  # and a red build on `stage` is a commit you have to chase with another.
+  info "compiling first, so a broken build never reaches the branch"
+  run xcodebuild -scheme "$SCHEME" -destination "$SIM_DESTINATION" build \
+    > /dev/null 2>&1 || die "It does not build. Nothing pushed."
+  info "builds clean"
+
+  if [[ $DRY_RUN == 0 ]]; then
+    git -C "$ROOT" push -q "$REMOTE" "$WORK_BRANCH" || die "Could not push $WORK_BRANCH."
+    info "pushed $WORK_BRANCH"
+
+    # Create the release branch on first use rather than making it a
+    # prerequisite somebody has to know about.
+    if ! git -C "$ROOT" show-ref --verify --quiet "refs/heads/$RELEASE_BRANCH"; then
+      git -C "$ROOT" branch "$RELEASE_BRANCH" "$WORK_BRANCH"
+      info "created $RELEASE_BRANCH"
+    fi
+
+    git -C "$ROOT" checkout -q "$RELEASE_BRANCH"
+    # --no-ff so every release is one commit on this branch with a message
+    # saying what it was. Fast-forwarded, `stage` would just be a moving
+    # pointer and its log would say nothing about releases at all.
+    if ! git -C "$ROOT" merge --no-ff "$WORK_BRANCH" -m "Release $VERSION (build $BUILD)"; then
+      git -C "$ROOT" merge --abort || true
+      die "Merge conflict on $RELEASE_BRANCH. Nothing pushed; resolve it there by hand."
+    fi
+    git -C "$ROOT" push -q -u "$REMOTE" "$RELEASE_BRANCH" || die "Could not push $RELEASE_BRANCH."
+    info "merged and pushed $RELEASE_BRANCH"
+    git -C "$ROOT" checkout -q "$WORK_BRANCH"
+  else
+    info "would push $WORK_BRANCH"
+    info "would merge $WORK_BRANCH into $RELEASE_BRANCH (--no-ff) and push it"
+    info "would check out $WORK_BRANCH again"
   fi
 
-  step "App: build for the simulator"
-  # Cheap, and it fails in seconds rather than in the middle of an archive.
-  run xcodebuild -scheme "$SCHEME" -destination "$SIM_DESTINATION" build \
-    | tail -3 || die "Simulator build failed."
+  step "Done"
+  info "NestZone $VERSION (build $BUILD)"
+  info "backend deployed, changelog synced, $RELEASE_BRANCH pushed"
+  echo ""
+  info "Xcode Cloud takes it from here — if the workflow is on and watching"
+  info "'$RELEASE_BRANCH'. Watch it in Xcode: Product > Xcode Cloud > Builds,"
+  info "or in App Store Connect under the app's Xcode Cloud tab."
+  info "Never run this and not seen a build? See XCODE_CLOUD.md."
+  exit 0
+fi
 
-  step "App: archive"
-  run rm -rf "$ARCHIVE" "$EXPORT_DIR"
-  run mkdir -p "$BUILD_DIR"
-  run xcodebuild archive \
-    -project "$PROJECT" \
-    -scheme "$SCHEME" \
-    -destination "generic/platform=iOS" \
-    -archivePath "$ARCHIVE" \
-    -allowProvisioningUpdates \
-    | tail -3 || die "Archive failed."
-  info "archived: $ARCHIVE"
+# ------------------------------------------------------ local, as a fallback -
 
-  if [[ $DO_UPLOAD == 1 ]]; then
-    step "App: upload to App Store Connect"
+step "Release: archive on this Mac"
+warn "Local build. If Xcode Cloud also builds '$RELEASE_BRANCH', do not push"
+warn "this version there as well — two binaries, one build number."
 
-    # An API key rather than an Apple ID and an app-specific password: it does
-    # not expire on a password change, it carries no second factor, and it is
-    # the only form that works unattended.
-    #
-    #   export ASC_KEY_ID=XXXXXXXXXX
-    #   export ASC_ISSUER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    #
-    # with AuthKey_$ASC_KEY_ID.p8 in ~/.appstoreconnect/private_keys/, which is
-    # where xcodebuild looks for it without being told.
-    if [[ -z "${ASC_KEY_ID:-}" || -z "${ASC_ISSUER_ID:-}" ]]; then
-      warn "ASC_KEY_ID / ASC_ISSUER_ID are not set — skipping the upload."
-      warn "The archive is ready; open it in Xcode's Organizer to send it by hand:"
-      warn "  open '$ARCHIVE'"
-    else
-      OPTIONS="$BUILD_DIR/ExportOptions.plist"
-      if [[ $DRY_RUN == 0 ]]; then
-        cat > "$OPTIONS" <<PLIST
+run rm -rf "$ARCHIVE" "$EXPORT_DIR"
+run mkdir -p "$BUILD_DIR"
+run xcodebuild archive \
+  -project "$PROJECT" \
+  -scheme "$SCHEME" \
+  -destination "generic/platform=iOS" \
+  -archivePath "$ARCHIVE" \
+  -allowProvisioningUpdates \
+  | tail -3 || die "Archive failed."
+info "archived: $ARCHIVE"
+
+step "Release: upload"
+
+# An API key rather than an Apple ID and an app-specific password: it does not
+# expire on a password change, it carries no second factor, and it is the only
+# form that works unattended.
+#
+#   export ASC_KEY_ID=XXXXXXXXXX        # from the .p8 filename
+#   export ASC_ISSUER_ID=<uuid>         # App Store Connect > Users and Access
+#                                       #   > Integrations > App Store Connect API
+#
+# with AuthKey_$ASC_KEY_ID.p8 in ~/.appstoreconnect/private_keys/, which is
+# where xcodebuild looks without being told.
+if [[ -z "${ASC_KEY_ID:-}" || -z "${ASC_ISSUER_ID:-}" ]]; then
+  warn "ASC_KEY_ID / ASC_ISSUER_ID are not set — skipping the upload."
+  warn "The archive is ready; send it from Xcode's Organizer instead:"
+  warn "  open '$ARCHIVE'"
+  exit 0
+fi
+
+OPTIONS="$BUILD_DIR/ExportOptions.plist"
+if [[ $DRY_RUN == 0 ]]; then
+  cat > "$OPTIONS" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -302,33 +407,20 @@ if [[ $DO_APP == 1 ]]; then
 </dict>
 </plist>
 PLIST
-      fi
-      # `manageAppVersionAndBuildNumber` is false on purpose: with it true,
-      # Xcode silently rewrites the build number it feels like using, and the
-      # number in the archive stops matching the number in the repository.
-      run xcodebuild -exportArchive \
-        -archivePath "$ARCHIVE" \
-        -exportOptionsPlist "$OPTIONS" \
-        -exportPath "$EXPORT_DIR" \
-        -allowProvisioningUpdates \
-        -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-        -authenticationKeyID "$ASC_KEY_ID" \
-        -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
-        | tail -5 || die "Upload failed."
-      info "sent to App Store Connect"
-    fi
-  fi
 fi
-
-# ------------------------------------------------------------------ done ----
+# `manageAppVersionAndBuildNumber` false on purpose: with it true, Xcode
+# silently substitutes a build number of its own and the binary stops matching
+# the repository.
+run xcodebuild -exportArchive \
+  -archivePath "$ARCHIVE" \
+  -exportOptionsPlist "$OPTIONS" \
+  -exportPath "$EXPORT_DIR" \
+  -allowProvisioningUpdates \
+  -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+  -authenticationKeyID "$ASC_KEY_ID" \
+  -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
+  | tail -5 || die "Upload failed."
 
 step "Done"
-info "NestZone $VERSION (build $BUILD)"
-[[ $DO_BACKEND == 1 ]] && info "backend deployed, changelog synced"
-[[ $DO_APP == 1 && $DO_UPLOAD == 1 ]] && info "build sent — it appears in App Store Connect in a few minutes"
-
-if [[ $DRY_RUN == 0 && $DO_APP == 1 ]]; then
-  echo ""
-  info "The version and build number in project.pbxproj changed. Commit them:"
-  info "  git add NestZone.xcodeproj/project.pbxproj && git commit -m 'version bump'"
-fi
+info "NestZone $VERSION (build $BUILD) sent from this Mac"
+info "Commit the version bump and push when you are ready."
