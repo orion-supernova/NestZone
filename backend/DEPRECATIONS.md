@@ -72,7 +72,7 @@ wish.
 
 | What | Deprecated in | Replaced by | Remove when | Steps |
 |---|---|---|---|---|
-| _(nothing yet)_ | | | | |
+| `inbox:activity` accepting `category: null` | 1.9.1 | the key being absent | `versionCensus` shows no devices on 1.9.0, and `unknown` is 0 | Change the validator back to `v.optional(v.string())` and drop the `?? undefined` in the handler. |
 
 ### Row format
 
@@ -86,9 +86,22 @@ wish.
 
 ## Notes on what is already here
 
-Nothing has been deprecated yet. Two things in the current backend are worth
-knowing about because they are instances of the rule rather than exceptions to
-it:
+The row above is what this rule looks like when it is actually load-bearing.
+1.9.0 shipped a client that sends `category: null` to `inbox:activity` — a
+Swift dictionary written as `["category": value?.rawValue]` puts the key in
+with a nil value rather than leaving it out — and Convex rejects null against
+`v.optional`. Every unfiltered read of the feed was refused and the panel
+showed an error the instant it opened.
+
+The client is fixed in 1.9.1. The tempting response is to leave the validator
+strict, since the bug is on the client — but the fix only reaches a phone when
+a *build* does, and this deployment serves the build that is on people's phones
+right now. So the validator was widened to accept both spellings, which fixed
+every installed copy without anybody updating anything, and the narrowing is
+recorded above as work to do once nobody needs it.
+
+Two more things are worth knowing about because they are instances of the rule
+rather than exceptions to it:
 
 - **`push:registerDevice` takes `appVersion` as optional, and it must stay
   optional.** Every build already on a phone calls this mutation without it.

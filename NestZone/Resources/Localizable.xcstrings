@@ -10768,6 +10768,40 @@
         }
       }
     },
+    "inbox_admin_translation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dilinde"
+          }
+        }
+      }
+    },
+    "inbox_admin_translation_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave blank to fall back to the English above"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boş bırakırsanız yukarıdaki İngilizce metin kullanılır"
+          }
+        }
+      }
+    },
     "inbox_admin_unpublish": {
       "extractionState": "manual",
       "localizations": {

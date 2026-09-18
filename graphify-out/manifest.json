@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1789731746.329945,
-    "ast_hash": "acefc149f7523250571fed0aa57e0ee5",
+    "mtime": 1789735232.246903,
+    "ast_hash": "4d6b2d5d13a8d38726132087e878043a",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1789733357.8518486,
-    "ast_hash": "8de92974926d4b2b313ff4a427115178",
+    "mtime": 1789734353.7291033,
+    "ast_hash": "70e22c634221af66823fe0b71b39104f",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -230,13 +230,13 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
-    "mtime": 1788890336.183688,
-    "ast_hash": "b304076b9eede1045463575b01f3612c",
+    "mtime": 1789735426.953856,
+    "ast_hash": "d5f016c79965b0bc5cd16e7024c6814f",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1789731940.9712436,
-    "ast_hash": "096076a039e7d92a6fac347383dbf933",
+    "mtime": 1789735437.7151325,
+    "ast_hash": "4fd58eb1dd6cdf789a172fed7ce5c5db",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -1100,13 +1100,13 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Inbox.swift": {
-    "mtime": 1789733410.047422,
-    "ast_hash": "2a7c45fb2afdcc05a8971e53e667cc81",
+    "mtime": 1789735341.4716973,
+    "ast_hash": "99aa9e265eb9dcd3f7a5f42e4776d662",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/InboxClient.swift": {
-    "mtime": 1789731808.912957,
-    "ast_hash": "567392c451c796dfa7ea1774d14baaf8",
+    "mtime": 1789735355.1393638,
+    "ast_hash": "485efce0f937ef91caca5c6cc966ee20",
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxAdminFeature.swift": {
@@ -1115,8 +1115,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxAdminView.swift": {
-    "mtime": 1789731199.9064658,
-    "ast_hash": "1fb7b9a99db31d192460503a701ce101",
+    "mtime": 1789735457.0261688,
+    "ast_hash": "441ef1128f8bca81d3192c30974fb680",
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxFeature.swift": {
@@ -1125,18 +1125,18 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxView.swift": {
-    "mtime": 1789731199.906195,
-    "ast_hash": "0213eebc465e171ef2bc4a9fcb996144",
+    "mtime": 1789735323.3159833,
+    "ast_hash": "bb9f480369c3c4c0a5fd5fb1a77c867f",
     "semantic_hash": ""
   },
   "backend/changelog.json": {
-    "mtime": 1789731383.8197277,
-    "ast_hash": "930614cb208f2114545d0ea1518e241e",
+    "mtime": 1789735613.58568,
+    "ast_hash": "c18c970959b304595f276a69af117fb0",
     "semantic_hash": ""
   },
   "backend/convex/inbox.ts": {
-    "mtime": 1789732179.1991148,
-    "ast_hash": "d4e58cff1715a2cf25828e28ae374785",
+    "mtime": 1789735521.1099539,
+    "ast_hash": "0d5fd4b7bc5b0634ee2f1fe27c8245e3",
     "semantic_hash": ""
   },
   "backend/convex/lib/admin.ts": {
@@ -1150,13 +1150,23 @@
     "semantic_hash": ""
   },
   "backend/DEPRECATIONS.md": {
-    "mtime": 1789732055.595751,
-    "ast_hash": "7ed486bdc6cd82cffb90f64191b9d162",
+    "mtime": 1789735542.0154011,
+    "ast_hash": "d220c4ad70b35c63280c148249ca7d76",
     "semantic_hash": ""
   },
   "XCODE_CLOUD.md": {
-    "mtime": 1789733333.4351587,
-    "ast_hash": "d45419845130650698107857a5244fd7",
+    "mtime": 1789734353.729283,
+    "ast_hash": "0c6159535c7a07eb07dcf359b908ec98",
+    "semantic_hash": ""
+  },
+  "ci_scripts/ci_post_clone.sh": {
+    "mtime": 1789734353.7294247,
+    "ast_hash": "3905ec946db9ae17cc7f236da340bc6d",
+    "semantic_hash": ""
+  },
+  "ci_scripts/macros.json": {
+    "mtime": 1789734353.7295148,
+    "ast_hash": "e313635dfda857dc8ca91fd74ad73f21",
     "semantic_hash": ""
   }
 }

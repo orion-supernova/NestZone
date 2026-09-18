@@ -265,11 +265,29 @@ export const badge = query({
 export const activity = query({
   args: {
     homeId: v.id("homes"),
-    category: v.optional(v.string()),
+    /**
+     * Absent **or null** for "everything".
+     *
+     * `v.optional(v.string())` would be the honest validator and it is the
+     * wrong one, because 1.9.0 shipped a client that sends an explicit
+     * `null` here — a Swift dictionary written as `["category": value?.raw]`
+     * puts the key in with a nil value rather than leaving it out — and Convex
+     * rejects null against `v.optional`. Every unfiltered read of the feed was
+     * refused, so the panel showed an error the moment it opened.
+     *
+     * The client is fixed, but the fix only reaches a phone when a build does,
+     * and this deployment serves the build that is on people's phones today.
+     * Widening costs a `?? undefined` below; narrowing it back would break
+     * 1.9.0 for as long as anybody is still running it. See
+     * backend/DEPRECATIONS.md — this is the rule, not an exception to it.
+     */
+    category: v.optional(v.union(v.string(), v.null())),
     before: v.optional(v.number()),
     limit: v.optional(v.number()),
   },
-  handler: async (ctx, { homeId, category, before, limit }) => {
+  handler: async (ctx, { homeId, category: requested, before, limit }) => {
+    // One shape from here down: null and absent both mean "no filter".
+    const category = requested ?? undefined;
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, homeId);
 
@@ -461,6 +479,47 @@ export const markUpdatesRead = mutation({
   },
 });
 
+/**
+ * One release note in one other language.
+ *
+ * Shared by `saveUpdate` and `syncChangelog` so the two cannot drift — they
+ * write the same field and a difference between them would be a note that
+ * loses its Turkish the first time somebody edits it in the app.
+ */
+const translationValidator = v.object({
+  language: v.string(),
+  title: v.string(),
+  body: v.string(),
+  highlights: v.optional(v.array(v.string())),
+});
+
+/** Trims a set of translations and drops the ones with nothing in them. */
+function cleanTranslations(
+  rows: Array<{
+    language: string;
+    title: string;
+    body: string;
+    highlights?: string[];
+  }>,
+) {
+  const cleaned = rows
+    .map((t) => ({
+      language: t.language.trim(),
+      title: t.title.trim(),
+      body: t.body.trim(),
+      highlights: (t.highlights ?? [])
+        .map((h) => h.trim())
+        .filter((h) => h.length > 0)
+        .slice(0, 12),
+    }))
+    // A language with a title but no body, or the reverse, is half a note.
+    // Dropped rather than stored, so the reader falls back to a complete
+    // English one instead of reading a heading with nothing under it.
+    .filter((t) => t.language && t.title && t.body)
+    .map((t) => (t.highlights.length > 0 ? t : { ...t, highlights: undefined }));
+  return cleaned.length > 0 ? cleaned : undefined;
+}
+
 // MARK: - The admin panel
 
 /**
@@ -508,6 +567,7 @@ export const saveUpdate = mutation({
     title: v.string(),
     body: v.string(),
     highlights: v.optional(v.array(v.string())),
+    translations: v.optional(v.array(translationValidator)),
     pinned: v.optional(v.boolean()),
     publish: v.boolean(),
   },
@@ -532,6 +592,7 @@ export const saveUpdate = mutation({
       title,
       body,
       highlights: highlights.length > 0 ? highlights : undefined,
+      translations: cleanTranslations(args.translations ?? []),
       pinned: args.pinned ?? false,
       updated: now,
     };
@@ -1020,6 +1081,7 @@ export const syncChangelog = internalMutation({
         title: v.string(),
         body: v.string(),
         highlights: v.optional(v.array(v.string())),
+        translations: v.optional(v.array(translationValidator)),
         pinned: v.optional(v.boolean()),
         /** Left out means published. A draft has to say so. */
         draft: v.optional(v.boolean()),
@@ -1068,6 +1130,7 @@ export const syncChangelog = internalMutation({
         title,
         body,
         highlights: highlights.length > 0 ? highlights : undefined,
+        translations: cleanTranslations(entry.translations ?? []),
         pinned: entry.pinned ?? false,
         updated: now,
       };
@@ -1137,6 +1200,7 @@ function present(row: Doc<"app_updates">) {
     title: row.title,
     body: row.body,
     highlights: row.highlights ?? [],
+    translations: row.translations ?? [],
     pinned: row.pinned ?? false,
     published_at: row.published_at ?? null,
     created: row.created,

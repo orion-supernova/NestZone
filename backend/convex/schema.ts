@@ -1293,6 +1293,31 @@ export default defineSchema({
     body: v.string(),
     /** Short bullets, drawn as a list under the body. */
     highlights: v.optional(v.array(v.string())),
+    /**
+     * The same note in the app's other languages.
+     *
+     * The fields above are the **base text and the fallback**, written in
+     * English; this is what a reader sees instead when the app is in a language
+     * that is present here. Written this way round rather than making every
+     * field a map because the base has to exist — a release note with no
+     * translations must still read correctly, and a note whose Turkish was
+     * forgotten should fall back to English rather than to nothing.
+     *
+     * An array rather than a keyed object so the language is a field that can
+     * be validated like any other, and so the order in the file is the order a
+     * person wrote them in.
+     */
+    translations: v.optional(
+      v.array(
+        v.object({
+          /** A language code matching `AppLanguage` in Swift: "tr". */
+          language: v.string(),
+          title: v.string(),
+          body: v.string(),
+          highlights: v.optional(v.array(v.string())),
+        }),
+      ),
+    ),
     /** Floats to the top of the feed until it is unpinned. */
     pinned: v.optional(v.boolean()),
     /**

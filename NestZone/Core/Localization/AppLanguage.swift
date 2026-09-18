@@ -35,6 +35,20 @@ public enum AppLanguage: String, CaseIterable, Sendable, Codable, Identifiable {
         }
     }
 
+    /// The language every string in this app is *written* in, and the one a
+    /// release note falls back to when it has no translation.
+    public static let base: AppLanguage = .english
+
+    /// The languages a release note can be translated into: every real language
+    /// the app ships, minus the base it is already written in, and minus
+    /// `.system`, which is a preference rather than a language.
+    ///
+    /// Derived rather than listed so that adding a language to this enum adds a
+    /// section to the changelog composer without anybody remembering to.
+    public static var translatable: [AppLanguage] {
+        allCases.filter { $0 != .system && $0 != base }
+    }
+
     public var flag: String {
         switch self {
         case .system: "globe"

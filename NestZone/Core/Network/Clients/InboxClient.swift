@@ -116,6 +116,30 @@ public struct ReleaseCheck: Decodable, Equatable, Sendable {
     }
 }
 
+/// Arguments for `inbox:activity`, with the category **left out** when there is
+/// none rather than sent as null.
+///
+/// The distinction is not cosmetic and this is the second time this codebase has
+/// had to learn it: Convex rejects an explicit `null` against `v.optional`,
+/// which means "the key may be absent", not "the value may be null". A Swift
+/// dictionary literal holding `category?.rawValue` writes the key with a nil
+/// value — an explicit null on the wire — so every unfiltered read of the feed
+/// was refused outright with
+///
+///     ArgumentValidationError: Path: .category  Value: null
+///
+/// and the panel showed an error the moment it opened. `issues:assign` documents
+/// the same rule from the other side: it *wants* to send null, so its validator
+/// is `v.union(v.id("users"), v.null())` rather than `v.optional`.
+private func activityArgs(
+    _ homeID: HomeID,
+    _ category: ActivityCategory?
+) -> [String: ConvexEncodable?] {
+    var args: [String: ConvexEncodable?] = ["homeId": homeID]
+    if let category { args["category"] = category.rawValue }
+    return args
+}
+
 extension InboxClient: DependencyKey {
     public static let liveValue = InboxClient(
         badge: { homeID in
@@ -126,27 +150,15 @@ extension InboxClient: DependencyKey {
 
         activity: { homeID, category in
             ConvexConnection.shared.subscribe(
-                to: "inbox:activity",
-                args: [
-                    "homeId": homeID,
-                    // Absent rather than null for "everything": the server
-                    // branches on which index to read, and an explicit null is
-                    // not the same statement as an omitted argument.
-                    "category": category?.rawValue,
-                ],
-                as: ActivityPage.self
+                to: "inbox:activity", args: activityArgs(homeID, category), as: ActivityPage.self
             )
         },
 
         olderActivity: { homeID, category, before in
-            try await ConvexConnection.shared.first(
-                "inbox:activity",
-                args: [
-                    "homeId": homeID,
-                    "category": category?.rawValue,
-                    "before": before.milliseconds,
-                ],
-                as: ActivityPage.self
+            var args = activityArgs(homeID, category)
+            args["before"] = before.milliseconds
+            return try await ConvexConnection.shared.first(
+                "inbox:activity", args: args, as: ActivityPage.self
             )
         },
 
@@ -214,6 +226,37 @@ extension InboxClient: DependencyKey {
                 // `[String]` is not `ConvexEncodable` — only `[ConvexEncodable?]`
                 // is — so the array has to be widened element by element.
                 args["highlights"] = highlights.map { $0 as ConvexEncodable? }
+            }
+
+            // Sorted so a save produces the same payload twice running, which
+            // is what keeps a no-op edit from looking like a change.
+            let translations = draft.translations
+                .sorted { $0.key < $1.key }
+                .compactMap { code, text -> (any ConvexEncodable)? in
+                    let title = text.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let body = text.body.trimmingCharacters(in: .whitespacesAndNewlines)
+                    // Half a note is worse than none: the reader would get a
+                    // Turkish heading over an empty space rather than the
+                    // English note that does exist. The server drops these too;
+                    // not sending them keeps the payload honest either way.
+                    guard !title.isEmpty, !body.isEmpty else { return nil }
+                    var row: [String: ConvexEncodable?] = [
+                        "language": code,
+                        "title": title,
+                        "body": body,
+                    ]
+                    let bullets = text.highlights
+                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                        .filter { !$0.isEmpty }
+                    if !bullets.isEmpty {
+                        row["highlights"] = bullets.map { $0 as ConvexEncodable? }
+                    }
+                    return row
+                }
+            // Widened to the optional element type the SDK's array encoding
+            // wants, for the same reason `highlights` is just above.
+            if !translations.isEmpty {
+                args["translations"] = translations.map { $0 as ConvexEncodable? }
             }
 
             return try await ConvexConnection.shared.mutate(

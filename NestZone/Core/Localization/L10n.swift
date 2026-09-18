@@ -7086,4 +7086,14 @@ public enum L10n {
     public static func settingsCheckedAt(_ a0: String) -> LocalizedStringResource {
         r("settings_checked_at", "Checked at \(a0)")
     }
+
+    /// Leave blank to fall back to the English above
+    public static var inboxAdminTranslationNote: LocalizedStringResource {
+        r("inbox_admin_translation_note", "Leave blank to fall back to the English above")
+    }
+
+    /// In %@
+    public static func inboxAdminTranslation(_ a0: String) -> LocalizedStringResource {
+        r("inbox_admin_translation", "In \(a0)")
+    }
 }
