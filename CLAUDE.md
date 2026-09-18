@@ -22,6 +22,7 @@ backend/changelog.json    the app's release notes — see "Shipping a change"
 backend/DEPRECATIONS.md   what may be removed from the backend, and when
 deploy.sh                 the release: backend, changelog, version, merge to stage
 XCODE_CLOUD.md            what builds the app once stage is pushed, and its setup
+ci_scripts/               Xcode Cloud's post-clone hook: trusts this app's macros
 ```
 
 Features never reach into each other. They meet in `MainFeature`, which is the

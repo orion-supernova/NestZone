@@ -72,9 +72,59 @@ Leave it empty. Nothing in this app needs a secret at build time — the Convex
 deployment URL is a constant in `ConvexConnection`, and every third-party key
 (TMDb, APNs) lives in Convex's environment on the server, never in the app.
 
-There is also no `ci_scripts/` directory, deliberately. Xcode Cloud resolves
-Swift packages and builds this project without help, and a post-clone script
-that does nothing is a file that eventually does something surprising.
+## `ci_scripts/` — why the first builds failed
+
+The first Xcode Cloud run failed five times over with variations on:
+
+> Macro "ComposableArchitectureMacros" from package
+> "swift-composable-architecture" must be enabled before it can be used
+
+and the same for `swift-perception`, `swift-navigation`, `swift-case-paths` and
+`swift-dependencies` — five of the five macro packages this app is built out of.
+
+Nothing was wrong with the code. A Swift macro runs arbitrary code inside the
+compiler, so SwiftPM will not execute one until a human has agreed to it, and
+it records that agreement as a fingerprint in
+
+```
+~/Library/org.swift.swiftpm/security/macros.json
+```
+
+The load-bearing character is `~`. That file is **per user, per machine**, and
+it is nowhere in this repository — on a laptop Xcode writes it the first time
+it shows the "Trust & Enable" sheet, and nobody thinks about it again. Xcode
+Cloud is a fresh machine with nobody at the keyboard, so it has no such file
+and cannot be asked to make one.
+
+`ci_scripts/ci_post_clone.sh` copies `ci_scripts/macros.json` into place before
+anything resolves or builds. That file is this project's answer to the trust
+sheet, checked in where it can be read: five named macros at five exact
+fingerprints.
+
+It deliberately does **not** set `IDESkipMacroFingerprintValidation`, which is
+the usual advice found online and which turns the check off altogether. That
+would trust any macro from any dependency, present or future, in the one
+environment where nobody is watching the build. An allowlist of five is a list
+you can review; a skip flag is a thing nobody revisits.
+
+**It will break again, on purpose.** A fingerprint belongs to a package
+*version*, so bumping any of those five changes it and CI starts failing with
+the same message. New macro code deserves a fresh look. The fix is one line,
+after Xcode has prompted you locally:
+
+```bash
+cp ~/Library/org.swift.swiftpm/security/macros.json ci_scripts/macros.json
+```
+
+Commit it in the same commit as the `Package.resolved` change that caused it —
+they describe the same fact.
+
+**If a build still refuses a macro** after this, the escape hatch is to add
+this line to `ci_post_clone.sh`, ship a green build, and then work out why:
+
+```sh
+defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+```
 
 ### Finally
 
