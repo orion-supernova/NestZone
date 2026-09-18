@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1789732229.4790227,
-    "ast_hash": "ca3cda8f63dce45f5671d989ba675725",
+    "mtime": 1789733357.8518486,
+    "ast_hash": "8de92974926d4b2b313ff4a427115178",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -1100,8 +1100,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Inbox.swift": {
-    "mtime": 1789731338.2999742,
-    "ast_hash": "93c9a2dc32a30ef0570f3b56d3af1524",
+    "mtime": 1789733410.047422,
+    "ast_hash": "2a7c45fb2afdcc05a8971e53e667cc81",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/InboxClient.swift": {
@@ -1145,13 +1145,18 @@
     "semantic_hash": ""
   },
   "deploy.sh": {
-    "mtime": 1789732117.8213928,
-    "ast_hash": "b7ab490f7091d1de0e0027245a5a4136",
+    "mtime": 1789733293.183127,
+    "ast_hash": "107a8aef44e1d63a392e551077da6085",
     "semantic_hash": ""
   },
   "backend/DEPRECATIONS.md": {
     "mtime": 1789732055.595751,
     "ast_hash": "7ed486bdc6cd82cffb90f64191b9d162",
+    "semantic_hash": ""
+  },
+  "XCODE_CLOUD.md": {
+    "mtime": 1789733333.4351587,
+    "ast_hash": "d45419845130650698107857a5244fd7",
     "semantic_hash": ""
   }
 }
