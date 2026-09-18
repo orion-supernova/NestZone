@@ -369,7 +369,12 @@ public struct ActivityCategoryCounts: Decodable, Equatable, Sendable {
 // MARK: - The changelog
 
 /// One release note.
-public struct AppUpdate: Codable, Identifiable, Hashable, Sendable {
+///
+/// `Decodable` rather than `Codable`: nothing ever sends one of these back —
+/// writes go through `UpdateDraft`, which is a different shape — and its
+/// `translations` arrive as an array and are held as a dictionary, so a
+/// synthesised encoder would not round-trip anyway.
+public struct AppUpdate: Decodable, Identifiable, Hashable, Sendable {
     public let id: AppUpdateID
     /// "1.4.0", or `nil` for an announcement not tied to a release.
     public var version: String?
@@ -378,6 +383,13 @@ public struct AppUpdate: Codable, Identifiable, Hashable, Sendable {
     public var body: String
     /// Short bullets, drawn as a list under the body.
     public var highlights: [String]
+    /// The same note in the app's other languages, keyed by language code.
+    ///
+    /// The fields above are the base text *and* the fallback. A note whose
+    /// Turkish was never written reads in English rather than reading as
+    /// nothing, which is the only sensible failure for a changelog — see
+    /// `text(for:)`.
+    public var translations: [String: LocalizedUpdate]
     /// Floats to the top of the feed.
     public var isPinned: Bool
     /// `nil` while it is a draft — which is the only state in which anybody but
@@ -394,7 +406,7 @@ public struct AppUpdate: Codable, Identifiable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case version, kind, title, body, highlights, created, updated
+        case version, kind, title, body, highlights, translations, created, updated
         case isPinned = "pinned"
         case publishedAt = "published_at"
     }
@@ -406,6 +418,7 @@ public struct AppUpdate: Codable, Identifiable, Hashable, Sendable {
         title: String,
         body: String,
         highlights: [String] = [],
+        translations: [String: LocalizedUpdate] = [:],
         isPinned: Bool = false,
         publishedAt: Timestamp? = nil,
         created: Timestamp,
@@ -417,6 +430,7 @@ public struct AppUpdate: Codable, Identifiable, Hashable, Sendable {
         self.title = title
         self.body = body
         self.highlights = highlights
+        self.translations = translations
         self.isPinned = isPinned
         self.publishedAt = publishedAt
         self.created = created
@@ -431,10 +445,39 @@ public struct AppUpdate: Codable, Identifiable, Hashable, Sendable {
         title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
         body = try c.decodeIfPresent(String.self, forKey: .body) ?? ""
         highlights = try c.decodeIfPresent([String].self, forKey: .highlights) ?? []
+        // An array on the wire so the language is a validated field like any
+        // other; a dictionary here because every read of it is a lookup by code.
+        let rows = ((try? c.decodeIfPresent([LocalizedUpdate.Row].self, forKey: .translations)) ?? nil) ?? []
+        translations = rows.reduce(into: [:]) { acc, row in
+            let code = row.language.lowercased()
+            guard !code.isEmpty else { return }
+            acc[code] = LocalizedUpdate(
+                title: row.title, body: row.body, highlights: row.highlights
+            )
+        }
         isPinned = ((try? c.decodeIfPresent(Bool.self, forKey: .isPinned)) ?? nil) ?? false
         publishedAt = try c.decodeIfPresent(Timestamp.self, forKey: .publishedAt)
         created = try c.decode(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
+    }
+
+    /// The note as this reader should see it.
+    ///
+    /// The base text is the fallback, and it is a real fallback rather than a
+    /// placeholder: an untranslated note reads in English, which somebody can
+    /// at least act on, where an empty card is a bug with rounded corners.
+    ///
+    /// Matched on the language code alone, so `tr-TR` and `tr` find the same
+    /// entry — a household's phone is rarely set to the bare code. Defaults to
+    /// `L10n.locale` rather than the system's, because this app has its own
+    /// language picker and the changelog has to follow the same one every other
+    /// string in the app does.
+    public func text(for locale: Locale = L10n.locale) -> LocalizedUpdate {
+        let base = LocalizedUpdate(title: title, body: body, highlights: highlights)
+        guard let code = locale.language.languageCode?.identifier.lowercased() else {
+            return base
+        }
+        return translations[code] ?? base
     }
 
     /// Whether this was published after the panel was last opened.
@@ -442,6 +485,42 @@ public struct AppUpdate: Codable, Identifiable, Hashable, Sendable {
         guard let published = publishedAt else { return false }
         guard let watermark else { return true }
         return published > watermark
+    }
+}
+
+/// One release note's words, in one language.
+public struct LocalizedUpdate: Equatable, Hashable, Sendable {
+    public var title: String
+    public var body: String
+    public var highlights: [String]
+
+    public init(title: String, body: String, highlights: [String] = []) {
+        self.title = title
+        self.body = body
+        self.highlights = highlights
+    }
+
+    public var isEmpty: Bool {
+        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// How one arrives: an array element carrying its own language code.
+    struct Row: Decodable {
+        let language: String
+        let title: String
+        let body: String
+        let highlights: [String]
+
+        enum CodingKeys: String, CodingKey { case language, title, body, highlights }
+
+        init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            language = try c.decodeIfPresent(String.self, forKey: .language) ?? ""
+            title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+            body = try c.decodeIfPresent(String.self, forKey: .body) ?? ""
+            highlights = try c.decodeIfPresent([String].self, forKey: .highlights) ?? []
+        }
     }
 }
 
@@ -497,6 +576,11 @@ public struct UpdateDraft: Equatable, Sendable {
     public var title: String
     public var body: String
     public var highlights: [String]
+    /// The other languages, keyed by code. Half-written ones — a title with no
+    /// body, or the reverse — are dropped by the server rather than stored, so
+    /// the reader falls back to a complete English note instead of reading a
+    /// heading with nothing under it.
+    public var translations: [String: LocalizedUpdate]
     public var isPinned: Bool
     /// Explicit on every save rather than inherited, because "leave it alone"
     /// is precisely the wrong default for the flag that decides whether a
@@ -510,6 +594,7 @@ public struct UpdateDraft: Equatable, Sendable {
         title: String = "",
         body: String = "",
         highlights: [String] = [],
+        translations: [String: LocalizedUpdate] = [:],
         isPinned: Bool = false,
         publish: Bool = false
     ) {
@@ -519,6 +604,7 @@ public struct UpdateDraft: Equatable, Sendable {
         self.title = title
         self.body = body
         self.highlights = highlights
+        self.translations = translations
         self.isPinned = isPinned
         self.publish = publish
     }
@@ -532,6 +618,7 @@ public struct UpdateDraft: Equatable, Sendable {
             title: update.title,
             body: update.body,
             highlights: update.highlights,
+            translations: update.translations,
             isPinned: update.isPinned,
             publish: !update.isDraft
         )

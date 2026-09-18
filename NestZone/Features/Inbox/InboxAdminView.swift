@@ -261,6 +261,9 @@ struct InboxComposerSheet: View {
                         kindPicker
                         fields
                         highlights
+                        ForEach(AppLanguage.translatable) { language in
+                            translation(language)
+                        }
                         options
                     }
                     .padding(Metrics.screenPadding)
@@ -406,6 +409,99 @@ struct InboxComposerSheet: View {
                 .glassCard(cornerRadius: Metrics.tightRadius)
             }
         }
+    }
+
+    /// The same note in one other language.
+    ///
+    /// Driven by `AppLanguage.translatable` rather than a hardcoded Turkish
+    /// section, so adding a language to the app adds it to this form without
+    /// anybody remembering to. Leaving one blank is fine and is the normal
+    /// case — an untranslated note falls back to the English above it.
+    private func translation(_ language: AppLanguage) -> some View {
+        // Built by hand rather than with a defaulted dictionary subscript: the
+        // store's dynamic member lookup does not reach through one, and a
+        // missing entry has to read as an empty note rather than as nothing to
+        // bind to.
+        let code = language.rawValue
+        let binding = Binding<LocalizedUpdate>(
+            get: { store.draft.translations[code] ?? LocalizedUpdate(title: "", body: "") },
+            set: { $store.draft.translations.wrappedValue[code] = $0 }
+        )
+        return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            SectionHeader(
+                L10n.inboxAdminTranslation(language.endonym),
+                subtitle: L10n.inboxAdminTranslationNote,
+                symbol: "character.bubble"
+            ) {
+                Text(verbatim: language.flag)
+            }
+
+            GlassTextField(
+                L10n.inboxAdminFieldTitle,
+                text: binding.title,
+                symbol: "textformat"
+            )
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.inboxAdminFieldBody)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 4)
+                TextEditor(text: binding.body)
+                    .font(.callout)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 100)
+                    .padding(10)
+                    .glassCard(cornerRadius: Metrics.tightRadius)
+            }
+
+            // Bullets track the English ones by position, so the form shows
+            // exactly as many slots as there are bullets to translate — one
+            // more would be a bullet with no counterpart, which the card has
+            // nowhere to draw.
+            ForEach(Array(store.draft.highlights.enumerated()), id: \.offset) { index, english in
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(store.draft.kind.tint)
+                    TextField(
+                        english.isEmpty
+                            ? String(localized: L10n.inboxAdminHighlightPlaceholder)
+                            : english,
+                        text: highlightBinding(binding, index)
+                    )
+                    .font(.footnote)
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 44)
+                .glassCard(cornerRadius: Metrics.tightRadius)
+            }
+        }
+    }
+
+    /// A binding into one bullet of one language, padding the array out to
+    /// reach it.
+    ///
+    /// The translated bullets are a parallel array to the English ones, and a
+    /// person may well fill in the third before the first. Writing straight to
+    /// `highlights[index]` would trap on an array that is still empty, so the
+    /// setter grows it with blanks and the getter treats "not there yet" as "".
+    private func highlightBinding(
+        _ translation: Binding<LocalizedUpdate>,
+        _ index: Int
+    ) -> Binding<String> {
+        Binding(
+            get: {
+                let all = translation.wrappedValue.highlights
+                return all.indices.contains(index) ? all[index] : ""
+            },
+            set: { value in
+                var all = translation.wrappedValue.highlights
+                while all.count <= index { all.append("") }
+                all[index] = value
+                translation.wrappedValue.highlights = all
+            }
+        )
     }
 
     private var options: some View {

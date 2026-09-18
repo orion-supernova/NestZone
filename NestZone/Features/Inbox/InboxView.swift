@@ -532,23 +532,29 @@ private struct UpdateCard: View {
     private var availability: UpdateAvailability { update.availability() }
     private var isComingSoon: Bool { availability == .comingSoon }
 
+    /// The words, in the language this app is set to — which is `L10n.locale`
+    /// and not the device's, because the app has its own picker and a changelog
+    /// that ignored it would be the one screen in a Turkish household reading
+    /// English.
+    private var text: LocalizedUpdate { update.text() }
+
     var body: some View {
         GlassCard(tint: cardTint) {
             VStack(alignment: .leading, spacing: 10) {
                 header
 
-                Text(update.title)
+                Text(text.title)
                     .font(.system(.title3, design: .rounded, weight: .bold))
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text(update.body)
+                Text(text.body)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                if !update.highlights.isEmpty {
+                if !text.highlights.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        ForEach(Array(update.highlights.enumerated()), id: \.offset) { _, line in
+                        ForEach(Array(text.highlights.enumerated()), id: \.offset) { _, line in
                             HStack(alignment: .firstTextBaseline, spacing: 8) {
                                 Image(systemName: "checkmark")
                                     .font(.caption2.weight(.bold))
