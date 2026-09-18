@@ -327,18 +327,34 @@ public struct ActivityCategoryCounts: Decodable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         total = c.decodeNumber(forKey: .total)
         let rows = try c.decodeIfPresent([Row].self, forKey: .categories) ?? []
-        // Merged rather than assigned: an unrecognised category folds into
-        // `.other` alongside whatever is already there, so the chip's count is
-        // the truth about what the "Other" filter will actually show.
+        // A category this build does not recognise gets **no chip**, rather
+        // than being folded into `.other`.
+        //
+        // Folding looks kinder and is a lie. A chip is a filter, the filter is
+        // sent back to the server as a category string, and `other` there means
+        // rows literally stored as `"other"` — not "everything this build has
+        // no name for". So a chip counting five rows from a module added
+        // server-side would open on none of them, which is the one thing a
+        // count over a list may never do.
+        //
+        // They are not lost: `All` has no category argument at all, so it
+        // returns them like anything else. An unnamed chip is worse than no
+        // chip; a chip that lies is worse than both.
         counts = rows.reduce(into: [:]) { acc, row in
-            let key = ActivityCategory(rawValue: row.category) ?? .other
+            guard let key = ActivityCategory(rawValue: row.category) else { return }
             acc[key, default: 0] += row.count
         }
     }
 
-    /// The categories that have anything in them, busiest first. Only these get
-    /// a chip — a filter that is guaranteed to be empty is a filter that wastes
-    /// a tap.
+    /// The categories that have anything in them, busiest first.
+    ///
+    /// Only these get a chip, for two reasons: a filter guaranteed to come back
+    /// empty wastes a tap, and — see the decoder — a category this build cannot
+    /// name is one it cannot filter by either.
+    ///
+    /// `total` is deliberately *not* the sum of these. It counts every row the
+    /// caller can see, including ones in categories with no chip, because it is
+    /// what `All` will actually show.
     public var present: [(category: ActivityCategory, count: Int)] {
         counts
             .map { (category: $0.key, count: $0.value) }
