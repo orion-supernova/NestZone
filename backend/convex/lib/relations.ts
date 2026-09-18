@@ -190,10 +190,15 @@ export async function cascadeDeleteHome(
   // — the record of who did the housework outlives the task, the archive and
   // every tidy-up of the list — but it does not outlive the household it
   // belongs to, which is what this function is for.
+  //
+  // `home_activity` and `activity_reads` are in here for the ordinary reason:
+  // both are home-scoped, both carry `by_home`, and a feed that outlived its
+  // household would be rows nobody can reach and nobody can delete. The
+  // changelog is not — `app_updates` belongs to the app, not to any home.
   const simple = [
     "tasks", "task_completions", "shopping_items", "notes", "recipes", "movies",
     "meal_plans", "expenses", "settlements", "bills", "budgets", "events",
-    "issues", "issue_comments",
+    "issues", "issue_comments", "home_activity", "activity_reads",
   ] as const;
   await Promise.all(
     simple.map(async (table) => {

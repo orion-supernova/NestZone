@@ -47,6 +47,7 @@ public struct SettingsView: View {
             appearanceSection
             notificationsSection
             preferencesSection
+            aboutSection
             accountSection
             #if DEBUG
             developerSection
@@ -456,6 +457,121 @@ public struct SettingsView: View {
             Text(L10n.settingsGeneralTitle)
         } footer: {
             Text(L10n.settingsAdultTitlesFooter)
+        }
+    }
+
+    // MARK: - About
+
+    /// What this build is, and whether it is the newest one.
+    ///
+    /// Two versions are worth saying and they are different facts. The App
+    /// Store's is what tapping Update would actually get you. The changelog's
+    /// runs *ahead* of it — release notes are published when the work lands and
+    /// the build is still in review — so "there is something coming" is a true
+    /// and useful thing to say to somebody who is already up to date.
+    ///
+    /// The comparison happens here rather than on the server, for the same
+    /// reason a release note draws itself as "coming soon" on an older phone:
+    /// only this build knows what this build is.
+    private var aboutSection: some View {
+        Section {
+            LabeledContent {
+                Text(verbatim: AppVersion.current.raw)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            } label: {
+                Label { Text(L10n.settingsVersionTitle) } icon: {
+                    Image(systemName: "app.badge.checkmark")
+                }
+            }
+
+            Button { store.send(.checkForUpdatesTapped) } label: {
+                HStack {
+                    Label { Text(L10n.settingsCheckUpdates) } icon: {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                    }
+                    Spacer(minLength: 8)
+                    if case .checking = store.updateCheck {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+            }
+            .disabled(store.updateCheck == .checking)
+
+            updateOutcome
+        } header: {
+            Text(L10n.settingsAboutTitle)
+        } footer: {
+            if case let .result(check) = store.updateCheck {
+                Text(L10n.settingsCheckedAt(
+                    check.checkedAt.date.formatted(
+                        Date.FormatStyle(date: .omitted, time: .shortened).locale(L10n.locale)
+                    )
+                ))
+            }
+        }
+    }
+
+    /// What the check found, as a row rather than an alert.
+    @ViewBuilder
+    private var updateOutcome: some View {
+        switch store.updateCheck {
+        case .idle, .checking:
+            EmptyView()
+
+        case .failed:
+            Label {
+                Text(L10n.settingsCheckFailed)
+                    .foregroundStyle(.secondary)
+            } icon: {
+                Image(systemName: "wifi.exclamationmark").foregroundStyle(Palette.amber)
+            }
+            .font(.footnote)
+
+        case let .result(check):
+            // The store's answer first: it is the only one somebody can act on.
+            if let version = check.storeVersion,
+               AppVersion(version) > AppVersion.current {
+                if let url = check.storeURL {
+                    Button { store.send(.openAppStoreTapped(url)) } label: {
+                        Label {
+                            Text(L10n.settingsUpdateAvailable(version))
+                                .font(.footnote.weight(.semibold))
+                        } icon: {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .foregroundStyle(theme.accent)
+                        }
+                    }
+                } else {
+                    Label {
+                        Text(L10n.settingsUpdateAvailable(version)).font(.footnote)
+                    } icon: {
+                        Image(systemName: "arrow.down.circle").foregroundStyle(theme.accent)
+                    }
+                }
+            } else if let coming = check.changelogVersion,
+                      AppVersion(coming) > AppVersion.current {
+                // Up to date as far as the store is concerned, but the notes
+                // for a newer version are already written. Saying so is the
+                // honest version of "nothing to do" — and it is what the
+                // Updates tab is already showing as "coming soon".
+                Label {
+                    Text(L10n.settingsUpdateComing(coming))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } icon: {
+                    Image(systemName: "clock").foregroundStyle(Palette.amber)
+                }
+            } else {
+                Label {
+                    Text(L10n.settingsUpToDate)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Palette.emerald)
+                }
+            }
         }
     }
 

@@ -202,6 +202,24 @@ const financeCategory = v.union(
   v.literal("other"),
 );
 
+// --- The changelog ---------------------------------------------------------
+
+/**
+ * What a release note *is*, which is the only thing that decides how it is
+ * drawn — its symbol, its colour and the word on its chip.
+ *
+ * Four, not more. A changelog people read is one where every entry is obviously
+ * one of "you can now do a thing", "a thing you do got better", "a thing that
+ * was broken isn't" and "something we want to tell you". A longer vocabulary
+ * only moves the argument from the reader to the author.
+ */
+const updateKind = v.union(
+  v.literal("feature"),
+  v.literal("improvement"),
+  v.literal("fix"),
+  v.literal("announcement"),
+);
+
 export default defineSchema({
   ...authTables,
 
@@ -235,6 +253,27 @@ export default defineSchema({
     /// Which APNs gateway this token is valid on. A sandbox token is rejected
     /// by the production gateway and vice versa, so it must be stored.
     environment: v.union(v.literal("sandbox"), v.literal("production")),
+    /**
+     * The app version this device was last seen running.
+     *
+     * Here rather than in a table of its own because registration already
+     * happens once per launch, so recording it costs **no extra round trip** —
+     * and a version report that cost a mutation of its own would be a network
+     * call added to every launch to answer a question asked twice a year.
+     *
+     * It answers exactly one question, and it is the question that makes
+     * `backend/DEPRECATIONS.md` more than a wish: *is anybody still running the
+     * version that needs this?* Nothing is ever removed from this backend until
+     * that answer is no.
+     *
+     * Optional, and biased. Optional because a client older than this field
+     * does not send one — which is itself the signal that old clients exist.
+     * Biased because a device that declined notifications never registers, so
+     * this undercounts. It is a floor on who is out there, not a census, and a
+     * floor is the safe direction for a question whose wrong answer breaks
+     * somebody's app.
+     */
+    app_version: v.optional(v.string()),
     created: v.number(),
     updated: v.number(),
   })
@@ -1095,4 +1134,216 @@ export default defineSchema({
   })
     .index("by_issue", ["issue_id"])
     .index("by_home", ["home_id"]),
+
+  // --- The inbox -------------------------------------------------------------
+  //
+  // Two feeds behind one bell, and they are deliberately not one table.
+  //
+  // `home_activity` is what the *household* did: somebody added milk, somebody
+  // paid the internet bill, somebody said the radiator is cold again. It is
+  // per-home, it is high volume, it is disposable, and every row of it already
+  // existed as a push notification that vanished the moment it was swiped away.
+  // `app_updates` is what the *app* did: a release, a fix, a note from whoever
+  // builds this. It is global, it is low volume, it is written by hand, and it
+  // is worth keeping forever.
+  //
+  // Same button, opposite lifecycles — which is why merging them would mean a
+  // retention sweep that has to know not to delete half its own table, and a
+  // per-home index over rows that belong to no home.
+
+  /**
+   * One row per thing that happened in a household.
+   *
+   * Written by `inbox.record`, which `push.notifyHome` and `push.notifyUsers`
+   * call on the way past — so every one of the thirty-odd places in this
+   * backend that already notifies a household lands in the feed without
+   * knowing the feed exists, and a new one cannot forget to. The alternative
+   * was a second call beside each of those, which is thirty chances to write
+   * the notification and not the record.
+   *
+   * Recorded even when APNs is unconfigured or the push is dropped: the feed is
+   * the durable half. A notification is a tap on the shoulder that may or may
+   * not arrive; this is the thing you scroll back through on Sunday.
+   */
+  home_activity: defineTable({
+    home_id: v.id("homes"),
+    /**
+     * Which part of the app it came from — `tasks`, `shopping`, `finance`…
+     *
+     * A free string rather than a union, and deliberately so. It is the same
+     * value `push` routes a tap by, it is supplied by twelve modules, and a
+     * validator here would mean that adding a thirteenth category to a push
+     * call makes the *recording* throw — turning a cosmetic omission into a
+     * failed notification. The client decodes it leniently and falls back to
+     * `other`, which is what every other enum in this app does for the same
+     * reason.
+     */
+    category: v.string(),
+    title: v.string(),
+    body: v.string(),
+    /** Who did it. Absent for something the app noticed by itself — a sweep. */
+    actor: v.optional(v.id("users")),
+    /**
+     * The actor's name as it stood when this happened.
+     *
+     * Denormalised for the reason `shopping_items.issue_title` is: the feed is
+     * read a page at a time and resolving a name per row is a read per row.
+     * The face is *not* stored alongside it — `Avatar(initials:seed:)` resolves
+     * the photo from `AvatarDirectory` off the user id, so a row carrying an id
+     * and a name draws a photograph without being told about one.
+     */
+    actor_name: v.optional(v.string()),
+    /**
+     * Exactly who may see it. Absent means the whole household.
+     *
+     * Present only for the handful of notifications that are already addressed
+     * rather than broadcast — a direct message, a repair handed to one person.
+     * Those go out through `push.notifyUsers`, and a household feed that
+     * repeated them to everybody would leak the existence of a private chat to
+     * the people not in it.
+     */
+    audience: v.optional(v.array(v.id("users"))),
+    /**
+     * Epoch-ms, and **unique within a home** — `inbox.record` nudges a
+     * collision forward by a millisecond before inserting.
+     *
+     * That uniqueness is load-bearing. The feed pages by `created` with a
+     * strict `<` cursor, which is the cheapest correct cursor there is *only*
+     * while no two rows share a value: two rows on the same millisecond
+     * straddling a page boundary would drop one of them silently, and a
+     * notification you never see is the one failure this table exists to
+     * prevent.
+     */
+    created: v.number(),
+  })
+    // For `cascadeDeleteHome`, which deletes by this name on every table.
+    .index("by_home", ["home_id"])
+    // The feed, and the unread count: one descending range per page.
+    .index("by_home_created", ["home_id", "created"])
+    // The category filter. A range, not a `filter` — the chips are read as
+    // often as the unfiltered feed, and filtering would walk every row the
+    // household has ever produced to show the four about money.
+    .index("by_home_category_created", ["home_id", "category", "created"])
+    // For the nightly retention sweep, which is the one activity read that is
+    // not home-scoped.
+    .index("by_created", ["created"]),
+
+  /**
+   * How far each person has read their household's feed.
+   *
+   * A watermark rather than a flag per row: a household of four that reads a
+   * hundred notifications a week would otherwise write four hundred rows a week
+   * to record that nothing happened. Anything newer than `read_at` is unread,
+   * which is one number, one patch, and a count that is an index range.
+   */
+  activity_reads: defineTable({
+    user_id: v.id("users"),
+    home_id: v.id("homes"),
+    /** Epoch-ms of the newest row this person has seen. */
+    read_at: v.number(),
+  })
+    .index("by_user_home", ["user_id", "home_id"])
+    .index("by_home", ["home_id"]),
+
+  /**
+   * The app's own changelog, written from the in-app admin panel.
+   *
+   * Global rather than per-home: a release happens to everybody. Not pushed,
+   * ever — a household agreed to hear about the heating, not about a typo fix,
+   * and an app that pushes its own release notes is an app people mute.
+   */
+  app_updates: defineTable({
+    /**
+     * The app version this ships in — "1.9.0" — and the **gate the client
+     * reads**, not a decoration.
+     *
+     * Deploying the backend is not the same event as a build reaching a phone,
+     * and it never will be: the entry for 1.9.0 is published the moment the
+     * work lands, while the households reading it are on 1.8.1, 1.7 and
+     * whatever Apple has not finished reviewing. So the note carries the
+     * version it belongs to and every client decides for itself whether that
+     * version is *here yet* — at or below its own, and the feature is
+     * something it has; above, and the entry draws as "coming soon" instead of
+     * promising a button that is not in this build.
+     *
+     * Absent means "always available": an announcement is not tied to a
+     * release and a note about the service is true on every build.
+     *
+     * Compared semantically, not as text — see `AppVersion` in
+     * Core/Models/AppVersion.swift. "1.10.0" is above "1.9.0" and a string
+     * comparison says the opposite.
+     */
+    version: v.optional(v.string()),
+    /**
+     * A stable key for this entry, so publishing is idempotent.
+     *
+     * The changelog is written from a file in the repo and synced by
+     * `syncChangelog`, which runs on every deploy. Without a key, a sync is an
+     * insert and every deploy files the release notes again; with one it is an
+     * upsert, and a typo fixed in a note six weeks old updates that note rather
+     * than announcing it a second time.
+     *
+     * By convention `"<version>-<short-slug>"`, e.g. `"1.9.0-inbox"`. Absent
+     * only for an entry written by hand in the admin panel, which has a human
+     * deciding when to press save.
+     */
+    slug: v.optional(v.string()),
+    kind: updateKind,
+    title: v.string(),
+    body: v.string(),
+    /** Short bullets, drawn as a list under the body. */
+    highlights: v.optional(v.array(v.string())),
+    /** Floats to the top of the feed until it is unpinned. */
+    pinned: v.optional(v.boolean()),
+    /**
+     * When it went live. **Absent while it is a draft**, which is what keeps a
+     * half-written release note off everybody's phone.
+     *
+     * Also the sort key and the unread watermark, so a draft is invisible to
+     * the feed by construction rather than by a `filter` somebody has to
+     * remember: an absent value sorts before every number in a Convex index,
+     * so a range from any real timestamp excludes every draft there is.
+     */
+    published_at: v.optional(v.number()),
+    author: v.id("users"),
+    created: v.number(),
+    updated: v.number(),
+  })
+    .index("by_published", ["published_at"])
+    // The admin list, which shows drafts and published notes together in the
+    // order they were written.
+    .index("by_created", ["created"])
+    // The upsert key `syncChangelog` reads.
+    .index("by_slug", ["slug"]),
+
+  /**
+   * What the App Store is currently serving, as iTunes last reported it.
+   *
+   * A singleton, and cached, because the question "is there a newer version"
+   * is asked by a person pressing a button and answered by somebody else's
+   * public endpoint. Without a cache, a household of four tapping it out of
+   * curiosity is four requests to Apple for a value that changes when a build
+   * is approved — which is to say, rarely.
+   *
+   * Server-side rather than in the app for the reason every third-party call
+   * in this backend is: the app talks to this deployment and this deployment
+   * talks to the world. iTunes Lookup needs no key, so this one is about
+   * having a single place to cache and a single place to change, not about
+   * secrets.
+   */
+  release_checks: defineTable({
+    /** Always "ios". Exists so the singleton can be reached by index. */
+    platform: v.string(),
+    /** `nil` when the app is not on the store yet, which is not an error. */
+    store_version: v.optional(v.string()),
+    /** Where to send somebody who wants the update. */
+    store_url: v.optional(v.string()),
+    checked_at: v.number(),
+  }).index("by_platform", ["platform"]),
+
+  /** The same watermark as `activity_reads`, for the changelog. */
+  update_reads: defineTable({
+    user_id: v.id("users"),
+    read_at: v.number(),
+  }).index("by_user", ["user_id"]),
 });

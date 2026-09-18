@@ -20,7 +20,16 @@ extension DevicesClient: DependencyKey {
         register: { token, environment in
             try await ConvexConnection.shared.mutate(
                 "push:registerDevice",
-                args: ["token": token, "environment": environment]
+                args: [
+                    "token": token,
+                    "environment": environment,
+                    // Free: registration already happens once per launch, so
+                    // this rides along rather than costing a call of its own.
+                    // It is the only thing that tells the backend which builds
+                    // are still in the wild, which is what makes retiring
+                    // anything safe — see backend/DEPRECATIONS.md.
+                    "appVersion": AppVersion.current.raw,
+                ]
             )
         },
         unregister: { token in

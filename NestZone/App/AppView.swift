@@ -119,6 +119,24 @@ struct MainView: View {
                     path: $store.scope(state: \.homePath, action: \.homePath)
                 ) {
                     HomeView(store: store.scope(state: \.homeTab, action: \.home))
+                        // Attached here rather than inside `HomeView` because
+                        // the bell belongs to the whole session, not to the
+                        // Home tab: its badge subscription is opened by this
+                        // view's `.task` below and outlives every tab switch,
+                        // and the row that is tapped in it is routed by
+                        // `MainFeature`, which is the only thing that knows
+                        // where each module lives.
+                        //
+                        // The Home tab is simply where the button is *drawn* —
+                        // it is the screen the app opens on and the one people
+                        // come back to.
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                InboxBell(
+                                    store: store.scope(state: \.inbox, action: \.inbox)
+                                )
+                            }
+                        }
                 } destination: { store in
                     switch store.case {
                     case let .tasks(store): TasksView(store: store)
@@ -169,6 +187,11 @@ struct MainView: View {
             .accessibilityIdentifier("SettingsTab")
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        // The badge, for as long as this home is open. One subscription, and
+        // the only one the inbox holds while the panel is shut — the feeds
+        // themselves are opened by the panel's own `.task` and torn down with
+        // it.
+        .task { await store.send(.inbox(.task)).finish() }
     }
 
     private func tabLabel(_ tab: MainFeature.Tab) -> some View {

@@ -35,6 +35,24 @@ public struct SettingsFeature: Sendable {
         /// the first.
         public var isUpdatingAvatar = false
 
+        /// Where the "check for updates" row stands.
+        ///
+        /// A button rather than a poll. The answer changes when a build is
+        /// approved — a handful of times a year — so an app that watched it
+        /// live would hold a socket open for a string that does not move, and
+        /// one that checked on every launch would ask Apple a question nobody
+        /// had. The server caches its side for six hours on top of that.
+        public var updateCheck: UpdateCheck = .idle
+
+        public enum UpdateCheck: Equatable, Sendable {
+            case idle
+            case checking
+            case result(ReleaseCheck)
+            /// Somebody else's endpoint was unreachable. Worth saying plainly
+            /// on a row somebody pressed on purpose, and not worth an alert.
+            case failed
+        }
+
         /// `.denied` can only be undone in Settings.app, so the row becomes a
         /// link there rather than a toggle that would silently do nothing.
         public var notificationsDenied: Bool { notificationStatus == .denied }
@@ -140,6 +158,9 @@ public struct SettingsFeature: Sendable {
         case copyInviteCodeTapped
         case inviteCodeCopyExpired
         case manageHomesTapped
+        case checkForUpdatesTapped
+        case updateCheckFinished(Result<ReleaseCheck, AppError>)
+        case openAppStoreTapped(URL)
         case signOutTapped
         case signOutConfirmed
         case binding(BindingAction<State>)
@@ -169,6 +190,7 @@ public struct SettingsFeature: Sendable {
     @Dependency(\.push) var push
     @Dependency(\.devices) var devices
     @Dependency(\.openURL) var openURL
+    @Dependency(\.inbox) var inbox
 
     public init() {}
 
@@ -215,6 +237,29 @@ public struct SettingsFeature: Sendable {
                     guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                     await openURL(url)
                 }
+
+            case .checkForUpdatesTapped:
+                guard state.updateCheck != .checking else { return .none }
+                state.updateCheck = .checking
+                return .run { send in
+                    await send(.updateCheckFinished(Result {
+                        try await inbox.latestRelease()
+                    }.mapError { AppError($0) }))
+                }
+
+            case let .updateCheckFinished(.success(check)):
+                state.updateCheck = .result(check)
+                return .none
+
+            case let .updateCheckFinished(.failure(error)):
+                // Not an alert. Somebody pressed a button out of curiosity and
+                // a third-party endpoint did not answer; the row says so and
+                // offers the tap again, which is the whole remedy.
+                state.updateCheck = error.isSilent ? .idle : .failed
+                return .none
+
+            case let .openAppStoreTapped(url):
+                return .run { _ in await openURL(url) }
 
             case .sendTestPushTapped:
                 guard !state.isSendingTestPush else { return .none }

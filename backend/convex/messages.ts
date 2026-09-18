@@ -91,6 +91,7 @@ export const send = mutation({
     await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
       userIds: convo.participants ?? [],
       actor: user._id,
+      homeId: convo.home_id,
       title: user.name ?? NOTIFY_TITLE,
       body: kind === "image" ? "Sent a photo" : content.slice(0, 120),
       category: "messages",

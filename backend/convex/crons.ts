@@ -1,6 +1,7 @@
 // Scheduled work.
 //
-// Two jobs: the bill reminder sweep and the event reminder sweep.
+// Four jobs: the bill, event and house-problem reminder sweeps, and the one
+// that throws old household activity away.
 //
 // Daily rather than hourly, and at a fixed UTC hour, because a `bills` row has
 // no timezone on it — the household that owns it does, and the server does not
@@ -56,6 +57,25 @@ crons.daily(
   "house problem nudges",
   { hourUTC: 9, minuteUTC: 0 },
   internal.issues.sweepStale,
+);
+
+// The household's own notification log, pruned.
+//
+// The odd one out here: every other sweep exists to *send* something, and this
+// one exists to forget. A feed row is the only thing in this schema that is
+// meant to expire — "somebody added bread" stopped being useful the week it was
+// written, and the cost of keeping it forever is not storage but the bell: the
+// badge, the filter chips and the first page all read ranges that grow with how
+// long the household has been running.
+//
+// At 03:00, when nothing else is scheduled and no household is looking. It
+// deletes in batches and reschedules itself while there is more, so a
+// deployment that arrives at this with a year of backlog drains over a few
+// minutes rather than timing out on its first pass and never getting further.
+crons.daily(
+  "activity retention",
+  { hourUTC: 3, minuteUTC: 0 },
+  internal.inbox.sweep,
 );
 
 export default crons;

@@ -25,6 +25,15 @@ public struct MainFeature: Sendable {
         public var messages: MessagesFeature.State
         public var settings: SettingsFeature.State
 
+        /// The bell in the corner.
+        ///
+        /// Here rather than on the Home tab, though that is where the button
+        /// is drawn, because its badge subscription has to outlive whichever
+        /// tab happens to be on screen — and because the row that is tapped in
+        /// it routes to whatever module owns the thing that happened, which is
+        /// knowledge only this reducer has.
+        public var inbox: InboxFeature.State
+
         public init(homeID: HomeID, home: Home? = nil, user: User? = nil) {
             self.homeID = homeID
             self.home = home
@@ -38,6 +47,7 @@ public struct MainFeature: Sendable {
             self.notes = NotesFeature.State(homeID: homeID, currentUserID: user?.id)
             self.messages = MessagesFeature.State(homeID: homeID, currentUserID: user?.id)
             self.settings = SettingsFeature.State(homeID: homeID, home: home, user: user)
+            self.inbox = InboxFeature.State(homeID: homeID, currentUserID: user?.id)
         }
 
         /// How many people have to say yes for a movie-night match.
@@ -89,6 +99,7 @@ public struct MainFeature: Sendable {
         case notes(NotesFeature.Action)
         case messages(MessagesFeature.Action)
         case settings(SettingsFeature.Action)
+        case inbox(InboxFeature.Action)
     }
 
     public init() {}
@@ -99,6 +110,7 @@ public struct MainFeature: Sendable {
         Scope(state: \.notes, action: \.notes) { NotesFeature() }
         Scope(state: \.messages, action: \.messages) { MessagesFeature() }
         Scope(state: \.settings, action: \.settings) { SettingsFeature() }
+        Scope(state: \.inbox, action: \.inbox) { InboxFeature() }
 
         Reduce { state, action in
             switch action {
@@ -203,11 +215,127 @@ public struct MainFeature: Sendable {
                 )))
                 return .none
 
-            case .homePath, .home, .hub, .notes, .messages, .settings:
+            // A row in the notification panel goes to whatever module owns
+            // the thing that happened. The panel deliberately does not know
+            // where anything lives — it hands over a category, and this is the
+            // one place in the app that knows the shape of the whole of it.
+            case let .inbox(.delegate(.open(category))):
+                return route(&state, to: category)
+
+            case .homePath, .home, .hub, .notes, .messages, .settings, .inbox:
                 return .none
             }
         }
         .forEach(\.homePath, action: \.homePath)
+    }
+
+    /// Opens whatever owns a category of notification.
+    ///
+    /// The same map `push` routes a tapped banner by, which is why both sides
+    /// speak in categories: a notification that opened one place from the lock
+    /// screen and another from the panel would be two behaviours for one tap.
+    ///
+    /// Category rather than the specific document, and honestly so — the screen
+    /// is the answer to "where did this happen", and every row can give it. A
+    /// row that claimed to open one particular chore and did not would be
+    /// worse than one that opens the chore list.
+    private func route(
+        _ state: inout State,
+        to category: ActivityCategory
+    ) -> Effect<Action> {
+        switch category {
+        case .tasks:
+            pushHome(&state, .tasks(TasksFeature.State(
+                homeID: state.homeID,
+                currentUserID: state.user?.id
+            )))
+
+        case .shopping:
+            pushHub(&state, .shopping(ShoppingFeature.State(homeID: state.homeID)))
+
+        case .calendar:
+            pushHub(&state, .calendar(CalendarFeature.State(
+                homeID: state.homeID,
+                currentUserID: state.user?.id
+            )))
+
+        case .finance:
+            pushHub(&state, .finance(FinanceFeature.State(
+                homeID: state.homeID,
+                currentUserID: state.user?.id
+            )))
+
+        case .issues:
+            pushHub(&state, .issues(IssuesFeature.State(
+                homeID: state.homeID,
+                currentUserID: state.user?.id
+            )))
+
+        case .movies:
+            pushHub(&state, .movies(MoviesFeature.State(homeID: state.homeID)))
+
+        // A meal plan and a recipe are the same shelf seen from two sides, and
+        // the shelf is where both notifications lead.
+        case .meals, .recipes:
+            pushHub(&state, .recipes(RecipesFeature.State(homeID: state.homeID)))
+
+        // The household's votes live in the movie-night game, which is the only
+        // screen that presents one.
+        case .polls:
+            pushHome(&state, .movieNight(MovieNightFeature.State(
+                homeID: state.homeID,
+                memberCount: state.memberCount,
+                currentUserID: state.user?.id
+            )))
+
+        case .notes:
+            state.selectedTab = .notes
+
+        case .messages:
+            state.selectedTab = .messages
+
+        // Membership, invites, somebody joining or leaving — all of which are
+        // Settings' subject.
+        case .home:
+            state.selectedTab = .settings
+
+        // Unreachable: `.other` is not routable, and the panel refuses to send
+        // a delegate for one. Handled rather than defaulted so that adding a
+        // category to `ActivityCategory` is a compile error here, which is the
+        // only reliable way to be reminded to give it a destination.
+        case .other:
+            break
+        }
+        return .none
+    }
+
+    /// Pushes onto the Hub's stack, switching to it first.
+    ///
+    /// Skips the push when that screen is already on top, so tapping two
+    /// notifications about the shopping in a row leaves one shopping list on
+    /// the stack rather than two to back out of.
+    private func pushHub(_ state: inout State, _ destination: HubFeature.Path.State) {
+        state.selectedTab = .hub
+        guard !isSameCase(state.hub.path.last, destination) else { return }
+        state.hub.path.append(destination)
+    }
+
+    private func pushHome(_ state: inout State, _ destination: HomePath.State) {
+        state.selectedTab = .home
+        guard !isSameCase(state.homePath.last, destination) else { return }
+        state.homePath.append(destination)
+    }
+
+    /// Whether two destinations are the same screen, ignoring their contents.
+    ///
+    /// Compared by case name rather than by value: two `ShoppingFeature.State`
+    /// built a second apart are not equal — one has rows in it and the other
+    /// does not — but they are unmistakably the same screen, and pushing the
+    /// second on top of the first is the bug this exists to prevent.
+    private func isSameCase<T>(_ lhs: T?, _ rhs: T) -> Bool {
+        guard let lhs else { return false }
+        return String(describing: lhs).prefix(while: { $0 != "(" })
+            == String(describing: rhs).prefix(while: { $0 != "(" })
     }
 }
 
@@ -223,6 +351,7 @@ extension MainFeature.State {
         messages.apply(currentUserID: user?.id, homeName: home?.name)
         settings.user = user
         settings.home = home
+        inbox.currentUserID = user?.id
     }
 }
 

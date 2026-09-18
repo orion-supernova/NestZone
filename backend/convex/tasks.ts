@@ -461,6 +461,7 @@ export const update = mutation({
       await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
         userIds: [fields.assigned_to],
         actor: user._id,
+        homeId: task.home_id,
         title: user.name ? `${user.name} assigned you a task` : "New task for you",
         body: fields.title ?? task.title ?? "",
         category: "tasks",

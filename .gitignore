@@ -16,3 +16,7 @@ backend/data/
 # (CLAUDE.md workflow depends on them); the AST cache and dated snapshots are not.
 graphify-out/cache/
 graphify-out/20*/
+
+# Release artefacts from ./deploy.sh — archives, exported ipas and the
+# ExportOptions.plist it writes. All reproducible from a tag; none of it small.
+build/

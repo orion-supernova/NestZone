@@ -15,12 +15,128 @@ NestZone/                 the app target — one module, four layers
     Localization/         L10n accessors for the String Catalog
   Design/                 Liquid Glass surfaces, theme, motion, components
   Features/               one folder per feature: <Name>Feature.swift + <Name>View.swift
+    Inbox/                the bell: household activity + the app's changelog
   Resources/              Localizable.xcstrings, bundled sample recipes
 backend/convex/           Convex functions (queries, mutations, actions)
+backend/changelog.json    the app's release notes — see "Shipping a change"
+backend/DEPRECATIONS.md   what may be removed from the backend, and when
+deploy.sh                 the whole release: backend, changelog, archive, upload
 ```
 
 Features never reach into each other. They meet in `MainFeature`, which is the
 only place that knows the shape of the whole app.
+
+## Shipping a change
+
+```bash
+./deploy.sh              # backend, changelog, archive, upload — the lot
+./deploy.sh --backend    # backend + changelog only
+./deploy.sh --bump patch # 1.9.0 -> 1.9.1 first
+./deploy.sh --dry-run    # say what would happen, touch nothing
+```
+
+**Backend first, then the app** — which is the order the script uses and the
+reason it is one script. A new app build needs backend functions that only a
+new backend has; an old app build must keep working against that same backend.
+Deploy the backend first and both hold at every moment in between. Ship the app
+first and there is a window — minutes if it goes well, a week if the upload
+fails — where the newest build calls functions that do not exist.
+
+The script refuses to ship a version with no changelog entry, bumps the build
+number before archiving (Apple rejects a repeat, and it tells you *after* the
+upload), and skips the upload cleanly when `ASC_KEY_ID` / `ASC_ISSUER_ID` are
+unset.
+
+## One deployment, every app version
+
+**A backend change must not break any app version still in use.** Add, never
+remove. Widen, never narrow. Default, never require.
+
+There is one deployment and it serves every build that exists — including the
+one from March on the phone of somebody with automatic updates off, and the one
+still in review. None of them can be asked to update first. Convex makes the
+failure mode sharp: argument validation is **strict**, so an unexpected or
+missing argument rejects the whole request, and the screen that called it stops
+working on a build you cannot patch.
+
+A rename or a signature change therefore takes three deploys, never one: add
+the new thing beside the old, ship an app build that uses it, wait until nobody
+needs the old one, then remove it.
+
+**`backend/DEPRECATIONS.md` is where that waiting is recorded** — what is
+deprecated, what replaced it, the condition for removing it, and the steps. A
+row without a removal condition is a wish, not a deprecation. Write the row in
+the same commit that deprecates the thing.
+
+Whether it is safe yet is a question with an answer:
+
+```bash
+cd backend && npx convex run inbox:versionCensus '{}'
+```
+
+Every device reports its version when it registers for notifications — which
+already happens once per launch, so it costs nothing extra. Two things to hold
+in mind: **`unknown` is the important row** (a build too old to report at all),
+and every number is a **floor**, because a device that declined notifications
+never registers.
+
+
+**A change a household would actually notice gets a changelog entry, in the
+same commit as the change.** The entry goes at the top of
+`backend/changelog.json`, and it reaches people through the bell on the Home
+tab — the Updates half of it. A feature nobody is told about is a feature
+nobody finds.
+
+**Most commits do not earn one.** This is a changelog, not a commit log: it is
+read by the people living in the house, and its only job is to tell them
+something they can act on. The bar is *would somebody notice this without being
+told, and be glad they were?*
+
+- **Worth an entry:** a new screen or capability; a change to how something
+  already works that people have to relearn; something that was broken and is
+  now fixed, where people knew it was broken; anything that changes what the
+  app costs, asks for or keeps.
+- **Not worth an entry:** refactors, renames, comments, tests, dependency
+  bumps, schema or index work, a padding tweak, a colour, a log line, a
+  performance win nobody could feel, a bug fixed before anybody hit it. None of
+  these are secrets — they are simply not news, and a changelog padded with
+  them is one people stop opening, which costs the entries that mattered.
+- **One entry per release, not per commit,** unless a release genuinely did two
+  unrelated things. Six bullet points under one headline beat six headlines;
+  that is what `highlights` is for.
+- Write it for the household, not for the repository: "Notifications and
+  updates, in one place", never "Add inbox module". If the entry cannot be
+  written without naming a file, it probably should not exist.
+
+```bash
+cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
+```
+
+Idempotent by `slug`, so this runs on every deploy. Re-syncing does not
+re-announce: an entry that already has a `published_at` keeps it, which is what
+makes fixing a typo in an old note free.
+
+- **`version` is a gate, not a label.** Put the app version the change ships
+  in. Deploying the backend is not the same event as a build reaching a phone
+  and never will be — the notes go live the moment the work lands, while the
+  households reading them are on the last version, or two back, or waiting on
+  review. A client compares its own `CFBundleShortVersionString` against the
+  entry (`AppVersion` in `Core/Models/AppVersion.swift`, compared numerically —
+  "1.10.0" is above "1.9.0" and a string comparison says the opposite) and
+  draws anything above its own as **Coming soon** rather than promising a
+  button that is not in this build. Omit it only for an announcement that is
+  true on every version.
+- **Bump `MARKETING_VERSION` when you write an entry for a new version.** The
+  entry and the build have to agree or your own device shows your own work as
+  "coming soon".
+- **Never change a `slug` after it has shipped.** The slug is the upsert key;
+  changing one files a second copy of the same note.
+- `draft: true` keeps an entry out of the feed entirely — for a note written
+  ahead of the release it describes.
+- The in-app admin panel (the bell → ⋯ → Manage updates, for the accounts in
+  `backend/convex/lib/admin.ts`) writes the same table and is for one-offs and
+  emergencies. The file is what the repository can be read back from, so
+  anything meant to last belongs in it.
 
 ## Conventions
 
@@ -150,6 +266,19 @@ cd backend && npx convex env set TMDB_API_KEY <k> # secrets live here, never in 
 # a chore by hand instead; that is what the swipe is for.
 cd backend && npx convex env set DONE_WINDOW_DAYS 14
 
+# Release notes. Idempotent by slug — run it on every deploy.
+cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
+
+# Who may write the changelog from inside the app. The built-in admin is
+# hardcoded in convex/lib/admin.ts; these add to it and never remove it.
+#   npx convex env set ADMIN_EMAILS   "someone@example.com"
+#   npx convex env set ADMIN_USER_IDS "jh7abc..."
+# Prefer the id when Sign in with Apple is involved: Apple sends an email only
+# on the FIRST authorization and sends a private-relay alias when "Hide My
+# Email" was used, so the address on a users row is not reliably the one its
+# owner would tell you. `npx convex run inbox:whoAmI '{}'` prints the id, and
+# the Admin panel shows it too.
+
 # APNs. The auth key is team-wide, not per-app: one .p8 signs for every app
 # under the same Team ID, and the bundle id travels per-request in `apns-topic`.
 #   npx convex env set APNS_KEY_ID    <10-char id, from the .p8 filename>
@@ -241,6 +370,41 @@ cd backend && npx convex env set DONE_WINDOW_DAYS 14
   keys for the cycle just closed. `issues:sweepStale` runs at 09:00 on the same
   terms, keyed by `<due_by>:overdue` and `<last_activity_at>:stale` — any
   activity at all retires the stale key, so a quiet stretch nudges exactly once.
+- **The notification feed is written by `push`, not by its callers.**
+  `push.notifyHome` and `push.notifyUsers` call `inbox.record` on the way past,
+  so all thirty-odd places that already tell a household something land in the
+  in-app panel without knowing it exists — and a module that starts notifying
+  tomorrow cannot ship having remembered the push and forgotten the record. It
+  runs *before* the APNs configuration check, because the feed is the durable
+  half: a push may never arrive, and the panel has to be there either way.
+  `notifyUsers` takes a `homeId` so an addressed notification can be filed with
+  an `audience`, which is what keeps a private conversation out of everybody
+  else's feed.
+- **`inbox:badge` is the one query that is open all the time, so it is
+  floored.** It never counts further back than a fortnight whatever the read
+  watermark says, which is what stops the cost of the bell growing with the
+  household's age. It returns both counts, both watermarks, both floors and the
+  admin flag in one payload — a count and the list under it have to come from
+  one read, the same rule `issues:byHome` follows. The floors travel with the
+  counts so the "new" marks on the rows cannot disagree with the number on the
+  bell.
+- **The feed's newest page is live; its history is not.** An activity row is
+  immutable — it records something that already happened — so there is no later
+  state a subscription could deliver, and paging back through a household's
+  year costs one query per page instead of one live query per page held open.
+  This is the one place in the app where `ConvexConnection.first` is the right
+  answer for a list.
+- **Read state is a watermark, not a flag per row.** A household of four
+  reading a hundred notifications a week would otherwise write four hundred rows
+  a week to record that nothing happened.
+- `home_activity.created` is **unique within a home** — `inbox.record` nudges a
+  collision forward a millisecond. The feed pages on a strict `<` cursor, which
+  is the cheapest correct cursor there is and is correct only while no two rows
+  share a value.
+- `convex/crons.ts` runs `inbox:sweep` daily at 03:00 UTC, which drops household
+  activity older than 90 days in self-rescheduling batches. The feed is the one
+  table here that is *meant* to be forgotten; kept forever it is not a storage
+  bill but a slow bell.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

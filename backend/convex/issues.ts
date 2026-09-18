@@ -997,6 +997,7 @@ export const assign = mutation({
       await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
         userIds: [userId],
         actor: user._id,
+        homeId: issue.home_id,
         title: user.name ? `${user.name} asked you to fix this` : "A repair for you",
         body: issue.title ?? "A house problem",
         category: "issues",
@@ -1324,6 +1325,7 @@ export const makeChore = mutation({
       await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
         userIds: [assignee],
         actor: user._id,
+        homeId: issue.home_id,
         title: user.name ? `${user.name} assigned you a repair` : "A repair for you",
         body: issue.title ?? "A house problem",
         category: "tasks",

@@ -6674,4 +6674,416 @@ public enum L10n {
     public static func avatarViewerAccessibility(_ a0: String) -> LocalizedStringResource {
         r("avatar_viewer_accessibility", "Photo of \(a0)")
     }
+
+    // MARK: - Notifications and updates
+
+    /// Notifications
+    public static var inboxTitle: LocalizedStringResource {
+        r("inbox_title", "Notifications")
+    }
+
+    /// Notifications and updates
+    public static var inboxOpenPanel: LocalizedStringResource {
+        r("inbox_open_panel", "Notifications and updates")
+    }
+
+    /// Nothing new
+    public static var inboxNothingNew: LocalizedStringResource {
+        r("inbox_nothing_new", "Nothing new")
+    }
+
+    /// House
+    public static var inboxTabActivity: LocalizedStringResource {
+        r("inbox_tab_activity", "House")
+    }
+
+    /// Updates
+    public static var inboxTabUpdates: LocalizedStringResource {
+        r("inbox_tab_updates", "Updates")
+    }
+
+    /// Mark all as read
+    public static var inboxMarkAllRead: LocalizedStringResource {
+        r("inbox_mark_all_read", "Mark all as read")
+    }
+
+    /// Manage updates
+    public static var inboxAdminOpen: LocalizedStringResource {
+        r("inbox_admin_open", "Manage updates")
+    }
+
+    /// All
+    public static var inboxFilterAll: LocalizedStringResource {
+        r("inbox_filter_all", "All")
+    }
+
+    /// Unread
+    public static var inboxFilterUnread: LocalizedStringResource {
+        r("inbox_filter_unread", "Unread")
+    }
+
+    /// Clear filters
+    public static var inboxClearFilters: LocalizedStringResource {
+        r("inbox_clear_filters", "Clear filters")
+    }
+
+    /// Today
+    public static var inboxDayToday: LocalizedStringResource {
+        r("inbox_day_today", "Today")
+    }
+
+    /// Yesterday
+    public static var inboxDayYesterday: LocalizedStringResource {
+        r("inbox_day_yesterday", "Yesterday")
+    }
+
+    /// Nothing has happened yet
+    public static var inboxEmptyActivityTitle: LocalizedStringResource {
+        r("inbox_empty_activity_title", "Nothing has happened yet")
+    }
+
+    /// When somebody adds to the shopping, ticks off a chore or reports a problem, it shows up here.
+    public static var inboxEmptyActivityMessage: LocalizedStringResource {
+        r("inbox_empty_activity_message", "When somebody adds to the shopping, ticks off a chore or reports a problem, it shows up here.")
+    }
+
+    /// Nothing matches
+    public static var inboxEmptyFilteredTitle: LocalizedStringResource {
+        r("inbox_empty_filtered_title", "Nothing matches")
+    }
+
+    /// There is more here — this filter is just hiding it.
+    public static var inboxEmptyFilteredMessage: LocalizedStringResource {
+        r("inbox_empty_filtered_message", "There is more here — this filter is just hiding it.")
+    }
+
+    /// No updates yet
+    public static var inboxEmptyUpdatesTitle: LocalizedStringResource {
+        r("inbox_empty_updates_title", "No updates yet")
+    }
+
+    /// New features and fixes will be announced here.
+    public static var inboxEmptyUpdatesMessage: LocalizedStringResource {
+        r("inbox_empty_updates_message", "New features and fixes will be announced here.")
+    }
+
+    /// New
+    public static var inboxNew: LocalizedStringResource {
+        r("inbox_new", "New")
+    }
+
+    /// Pinned
+    public static var inboxPinned: LocalizedStringResource {
+        r("inbox_pinned", "Pinned")
+    }
+
+    /// Coming soon
+    public static var inboxComingSoon: LocalizedStringResource {
+        r("inbox_coming_soon", "Coming soon")
+    }
+
+    /// Chores
+    public static var inboxCategoryTasks: LocalizedStringResource {
+        r("inbox_category_tasks", "Chores")
+    }
+
+    /// Shopping
+    public static var inboxCategoryShopping: LocalizedStringResource {
+        r("inbox_category_shopping", "Shopping")
+    }
+
+    /// Money
+    public static var inboxCategoryFinance: LocalizedStringResource {
+        r("inbox_category_finance", "Money")
+    }
+
+    /// Calendar
+    public static var inboxCategoryCalendar: LocalizedStringResource {
+        r("inbox_category_calendar", "Calendar")
+    }
+
+    /// Problems
+    public static var inboxCategoryIssues: LocalizedStringResource {
+        r("inbox_category_issues", "Problems")
+    }
+
+    /// Notes
+    public static var inboxCategoryNotes: LocalizedStringResource {
+        r("inbox_category_notes", "Notes")
+    }
+
+    /// Messages
+    public static var inboxCategoryMessages: LocalizedStringResource {
+        r("inbox_category_messages", "Messages")
+    }
+
+    /// Films
+    public static var inboxCategoryMovies: LocalizedStringResource {
+        r("inbox_category_movies", "Films")
+    }
+
+    /// Meals
+    public static var inboxCategoryMeals: LocalizedStringResource {
+        r("inbox_category_meals", "Meals")
+    }
+
+    /// Recipes
+    public static var inboxCategoryRecipes: LocalizedStringResource {
+        r("inbox_category_recipes", "Recipes")
+    }
+
+    /// Votes
+    public static var inboxCategoryPolls: LocalizedStringResource {
+        r("inbox_category_polls", "Votes")
+    }
+
+    /// Household
+    public static var inboxCategoryHome: LocalizedStringResource {
+        r("inbox_category_home", "Household")
+    }
+
+    /// Other
+    public static var inboxCategoryOther: LocalizedStringResource {
+        r("inbox_category_other", "Other")
+    }
+
+    /// New
+    public static var inboxKindFeature: LocalizedStringResource {
+        r("inbox_kind_feature", "New")
+    }
+
+    /// Better
+    public static var inboxKindImprovement: LocalizedStringResource {
+        r("inbox_kind_improvement", "Better")
+    }
+
+    /// Fixed
+    public static var inboxKindFix: LocalizedStringResource {
+        r("inbox_kind_fix", "Fixed")
+    }
+
+    /// News
+    public static var inboxKindAnnouncement: LocalizedStringResource {
+        r("inbox_kind_announcement", "News")
+    }
+
+    /// Updates
+    public static var inboxAdminTitle: LocalizedStringResource {
+        r("inbox_admin_title", "Updates")
+    }
+
+    /// Write an update
+    public static var inboxAdminNew: LocalizedStringResource {
+        r("inbox_admin_new", "Write an update")
+    }
+
+    /// New update
+    public static var inboxAdminNewTitle: LocalizedStringResource {
+        r("inbox_admin_new_title", "New update")
+    }
+
+    /// Edit update
+    public static var inboxAdminEditTitle: LocalizedStringResource {
+        r("inbox_admin_edit_title", "Edit update")
+    }
+
+    /// Nothing written yet
+    public static var inboxAdminEmptyTitle: LocalizedStringResource {
+        r("inbox_admin_empty_title", "Nothing written yet")
+    }
+
+    /// Release notes you write here show up on everybody's Updates tab.
+    public static var inboxAdminEmptyMessage: LocalizedStringResource {
+        r("inbox_admin_empty_message", "Release notes you write here show up on everybody's Updates tab.")
+    }
+
+    /// Drafts
+    public static var inboxAdminDrafts: LocalizedStringResource {
+        r("inbox_admin_drafts", "Drafts")
+    }
+
+    /// Nobody can see these yet
+    public static var inboxAdminDraftsNote: LocalizedStringResource {
+        r("inbox_admin_drafts_note", "Nobody can see these yet")
+    }
+
+    /// Draft
+    public static var inboxAdminDraft: LocalizedStringResource {
+        r("inbox_admin_draft", "Draft")
+    }
+
+    /// Published
+    public static var inboxAdminPublished: LocalizedStringResource {
+        r("inbox_admin_published", "Published")
+    }
+
+    /// Publish
+    public static var inboxAdminPublish: LocalizedStringResource {
+        r("inbox_admin_publish", "Publish")
+    }
+
+    /// Unpublish
+    public static var inboxAdminUnpublish: LocalizedStringResource {
+        r("inbox_admin_unpublish", "Unpublish")
+    }
+
+    /// Save and publish
+    public static var inboxAdminSavePublish: LocalizedStringResource {
+        r("inbox_admin_save_publish", "Save and publish")
+    }
+
+    /// Save as draft
+    public static var inboxAdminSaveDraft: LocalizedStringResource {
+        r("inbox_admin_save_draft", "Save as draft")
+    }
+
+    /// What kind of update
+    public static var inboxAdminKind: LocalizedStringResource {
+        r("inbox_admin_kind", "What kind of update")
+    }
+
+    /// Headline
+    public static var inboxAdminFieldTitle: LocalizedStringResource {
+        r("inbox_admin_field_title", "Headline")
+    }
+
+    /// Version (optional)
+    public static var inboxAdminFieldVersion: LocalizedStringResource {
+        r("inbox_admin_field_version", "Version (optional)")
+    }
+
+    /// What changed
+    public static var inboxAdminFieldBody: LocalizedStringResource {
+        r("inbox_admin_field_body", "What changed")
+    }
+
+    /// Highlights
+    public static var inboxAdminHighlights: LocalizedStringResource {
+        r("inbox_admin_highlights", "Highlights")
+    }
+
+    /// Short bullets, up to twelve
+    public static var inboxAdminHighlightsNote: LocalizedStringResource {
+        r("inbox_admin_highlights_note", "Short bullets, up to twelve")
+    }
+
+    /// Add a highlight
+    public static var inboxAdminHighlightAdd: LocalizedStringResource {
+        r("inbox_admin_highlight_add", "Add a highlight")
+    }
+
+    /// One short line
+    public static var inboxAdminHighlightPlaceholder: LocalizedStringResource {
+        r("inbox_admin_highlight_placeholder", "One short line")
+    }
+
+    /// Pin to the top
+    public static var inboxAdminPin: LocalizedStringResource {
+        r("inbox_admin_pin", "Pin to the top")
+    }
+
+    /// Stays above everything else until unpinned
+    public static var inboxAdminPinNote: LocalizedStringResource {
+        r("inbox_admin_pin_note", "Stays above everything else until unpinned")
+    }
+
+    /// Delete this update?
+    public static var inboxAdminDeleteTitle: LocalizedStringResource {
+        r("inbox_admin_delete_title", "Delete this update?")
+    }
+
+    /// Written in the repository
+    public static var inboxAdminSyncTitle: LocalizedStringResource {
+        r("inbox_admin_sync_title", "Written in the repository")
+    }
+
+    /// Release notes live in backend/changelog.json and are synced on deploy. Anything typed here is a one-off.
+    public static var inboxAdminSyncNote: LocalizedStringResource {
+        r("inbox_admin_sync_note", "Release notes live in backend/changelog.json and are synced on deploy. Anything typed here is a one-off.")
+    }
+
+    /// Give the update a headline first.
+    public static var inboxAdminErrorTitle: LocalizedStringResource {
+        r("inbox_admin_error_title", "Give the update a headline first.")
+    }
+
+    /// Say what changed.
+    public static var inboxAdminErrorBody: LocalizedStringResource {
+        r("inbox_admin_error_body", "Say what changed.")
+    }
+
+    /// v%@
+    public static func inboxVersionChip(_ a0: String) -> LocalizedStringResource {
+        r("inbox_version_chip", "v\(a0)")
+    }
+
+    /// You are on version %@
+    public static func inboxVersionFooter(_ a0: String) -> LocalizedStringResource {
+        r("inbox_version_footer", "You are on version \(a0)")
+    }
+
+    /// Arrives in %1$@ — you are on %2$@
+    public static func inboxArrivesIn(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("inbox_arrives_in", "Arrives in \(a0) — you are on \(a1)")
+    }
+
+    /// The app version this ships in. Anyone on an older build sees it as “coming soon”. You are on %@.
+    public static func inboxAdminVersionHelp(_ a0: String) -> LocalizedStringResource {
+        r("inbox_admin_version_help", "The app version this ships in. Anyone on an older build sees it as “coming soon”. You are on \(a0).")
+    }
+
+    /// “%@” will be gone for everybody. This cannot be undone.
+    public static func inboxAdminDeleteMessage(_ a0: String) -> LocalizedStringResource {
+        r("inbox_admin_delete_message", "“\(a0)” will be gone for everybody. This cannot be undone.")
+    }
+
+    /// 1 unread
+    public static func inboxUnreadCount(_ a0: Int) -> LocalizedStringResource {
+        r("inbox_unread_count", "\(a0) unread")
+    }
+
+    /// Activity is kept for 1 day
+    public static func inboxRetentionNote(_ a0: Int) -> LocalizedStringResource {
+        r("inbox_retention_note", "Activity is kept for \(a0) days")
+    }
+
+    /// Your account id
+    public static var inboxAdminYourID: LocalizedStringResource {
+        r("inbox_admin_your_id", "Your account id")
+    }
+
+    /// Version
+    public static var settingsVersionTitle: LocalizedStringResource {
+        r("settings_version_title", "Version")
+    }
+
+    /// Check for updates
+    public static var settingsCheckUpdates: LocalizedStringResource {
+        r("settings_check_updates", "Check for updates")
+    }
+
+    /// You have the latest version
+    public static var settingsUpToDate: LocalizedStringResource {
+        r("settings_up_to_date", "You have the latest version")
+    }
+
+    /// Couldn't reach the App Store. Try again in a moment.
+    public static var settingsCheckFailed: LocalizedStringResource {
+        r("settings_check_failed", "Couldn't reach the App Store. Try again in a moment.")
+    }
+
+    /// Version %@ is available
+    public static func settingsUpdateAvailable(_ a0: String) -> LocalizedStringResource {
+        r("settings_update_available", "Version \(a0) is available")
+    }
+
+    /// Version %@ is on the way
+    public static func settingsUpdateComing(_ a0: String) -> LocalizedStringResource {
+        r("settings_update_coming", "Version \(a0) is on the way")
+    }
+
+    /// Checked at %@
+    public static func settingsCheckedAt(_ a0: String) -> LocalizedStringResource {
+        r("settings_checked_at", "Checked at \(a0)")
+    }
 }

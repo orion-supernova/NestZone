@@ -74,8 +74,22 @@ function isConfigured(): boolean {
  * with them rather than keep receiving the previous owner's notifications.
  */
 export const registerDevice = mutation({
-  args: { token: v.string(), environment },
-  handler: async (ctx, { token, environment }) => {
+  args: {
+    token: v.string(),
+    environment,
+    /**
+     * What this build calls itself.
+     *
+     * **Optional, and it must stay optional.** Every version of this app that
+     * is already on somebody's phone calls this mutation without it, and
+     * Convex rejects the whole request on an unexpected argument — so making
+     * it required would break notifications for every device that has not
+     * updated yet. See `backend/DEPRECATIONS.md` for the rule this is an
+     * instance of.
+     */
+    appVersion: v.optional(v.string()),
+  },
+  handler: async (ctx, { token, environment, appVersion }) => {
     const user = await requireUser(ctx);
     const now = Date.now();
 
@@ -88,6 +102,10 @@ export const registerDevice = mutation({
       await ctx.db.patch(existing._id, {
         user_id: user._id,
         environment,
+        // Only when the client said. An absent argument means "a build too old
+        // to tell us", and overwriting a known version with nothing would turn
+        // the one signal that says old builds exist into silence.
+        ...(appVersion ? { app_version: appVersion } : {}),
         updated: now,
       });
       return;
@@ -97,6 +115,7 @@ export const registerDevice = mutation({
       user_id: user._id,
       token,
       environment,
+      app_version: appVersion,
       created: now,
       updated: now,
     });
@@ -388,6 +407,26 @@ export const notifyHome = internalAction({
     ...alertArgs,
   },
   handler: async (ctx, args) => {
+    // The feed first, and unconditionally.
+    //
+    // A push is a tap on the shoulder that may not arrive — the phone is off,
+    // the permission was declined, this deployment has no APNs keys yet — and
+    // the in-app panel is the half that has to be there afterwards either way.
+    // Putting it above the configuration check is what makes the bell work on
+    // a deployment that has never sent a notification in its life.
+    //
+    // Here rather than at the thirty-odd call sites for the same reason the
+    // notification itself is: a module that learns to notify a household gets
+    // the record for free, and cannot ship having remembered one and not the
+    // other.
+    await ctx.runMutation(internal.inbox.record, {
+      homeId: args.homeId,
+      category: args.category,
+      title: args.title,
+      body: args.body,
+      actor: args.actor,
+    });
+
     if (!isConfigured()) return { sent: 0, dropped: 0 };
 
     const devices: Device[] = await ctx.runQuery(internal.push.tokensForHome, {
@@ -412,9 +451,34 @@ export const notifyUsers = internalAction({
   args: {
     userIds: v.array(v.id("users")),
     actor: v.optional(v.id("users")),
+    /**
+     * Which household this belongs to, so it can be filed in that home's feed.
+     *
+     * Optional only because an addressed notification does not *need* a home to
+     * be delivered — but every caller in this backend has one in hand, and one
+     * that omits it sends a push that leaves no trace in the app.
+     */
+    homeId: v.optional(v.id("homes")),
     ...alertArgs,
   },
   handler: async (ctx, args) => {
+    // Filed with an explicit audience, which is what keeps it out of everybody
+    // else's feed. `notifyHome` needs no such thing: its audience is the home.
+    if (args.homeId) {
+      await ctx.runMutation(internal.inbox.record, {
+        homeId: args.homeId,
+        category: args.category,
+        title: args.title,
+        body: args.body,
+        actor: args.actor,
+        // The actor included: the sender of a message belongs in the thread's
+        // own record of itself even though the push deliberately skips them.
+        audience: Array.from(
+          new Set([...args.userIds, ...(args.actor ? [args.actor] : [])]),
+        ),
+      });
+    }
+
     if (!isConfigured()) return { sent: 0, dropped: 0 };
 
     const recipients = args.userIds.filter((id) => id !== args.actor);
