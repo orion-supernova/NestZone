@@ -6,9 +6,10 @@ import SwiftUI
 /// database holds (`"yellow"`, `"purple"`, …). `parse` also accepts a hex string
 /// so nothing breaks if a value written by another client turns up.
 ///
-/// The swatches are Post-it pastels rather than system colours: the text on a
+/// The swatches are paper tones rather than system colours: the text on a
 /// sticky note is near-black, and `.red`/`.purple` at full saturation make that
-/// unreadable.
+/// unreadable. They are not *pastels* though — see `Palette.paperYellow` and
+/// the rest, which were washed out and are now a step up in saturation.
 public enum StickyColor: String, CaseIterable, Sendable, Identifiable {
     case yellow, orange, pink, red, green, blue, purple
 
@@ -63,14 +64,37 @@ public enum StickyColor: String, CaseIterable, Sendable, Identifiable {
 }
 
 extension Palette {
-    // Paper tones — light enough to carry near-black text at any size.
-    public static let paperYellow = Color(hex: "FDE68A")
-    public static let paperOrange = Color(hex: "FDBA74")
-    public static let paperPink = Color(hex: "FBCFE8")
-    public static let paperRed = Color(hex: "FCA5A5")
-    public static let paperGreen = Color(hex: "BBF7D0")
-    public static let paperBlue = Color(hex: "BFDBFE")
-    public static let paperPurple = Color(hex: "DDD6FE")
+    // Paper tones.
+    //
+    // A board of notes is the most colourful thing in the app and these were
+    // the palest — barely-tinted white, which read as faded rather than as
+    // paper. They are a step up in saturation now, and the ceiling on that
+    // step is the near-black text `StickyNote` writes on them
+    // (`.black.opacity(0.85)`), which has to stay comfortably readable.
+    //
+    // Measured contrast of that text against each sheet, against WCAG's 4.5:1
+    // for body text and 7:1 for the stricter grade:
+    //
+    // | sheet  |  was  |  now  |
+    // |--------|------:|------:|
+    // | yellow | 12.64 |  9.98 |
+    // | orange |  9.91 |  7.72 |
+    // | pink   | 11.66 |  6.75 |
+    // | red    |  8.96 |  6.51 |
+    // | green  | 12.99 |  9.71 |
+    // | blue   | 11.39 |  6.97 |
+    // | purple | 11.64 |  6.56 |
+    //
+    // So there is room to go further on yellow, orange and green and very
+    // little on red and purple — the next step down on those lands under 4.5
+    // and the text stops being legible on a note somebody wrote in a hurry.
+    public static let paperYellow = Color(hex: "FBBF24")
+    public static let paperOrange = Color(hex: "FB923C")
+    public static let paperPink = Color(hex: "F472B6")
+    public static let paperRed = Color(hex: "F87171")
+    public static let paperGreen = Color(hex: "4ADE80")
+    public static let paperBlue = Color(hex: "60A5FA")
+    public static let paperPurple = Color(hex: "A78BFA")
 }
 
 /// A note, drawn as a square of paper pinned to the board.
