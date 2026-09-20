@@ -382,7 +382,15 @@ public enum HubModule: String, CaseIterable, Identifiable, Sendable {
         case .movies: Palette.violet
         case .maintenance: Palette.cyan
         case .finance: Palette.indigo
-        case .calendar: Palette.danger
+        // Not `Palette.danger`, which is what it used to be. Red is the one
+        // hue on this grid that means something: `isAlarming` paints the House
+        // Problems count red when a repair is urgent, over a tile that stays
+        // cyan. With a permanently-red Calendar two tiles away, that signal was
+        // invisible — the alarm looked like the ordinary state of the tile next
+        // to it, and the red-on-cyan tile looked like a colouring mistake. A
+        // calendar is also not a hazard, and every other module here is a hue
+        // rather than a semantic colour.
+        case .calendar: Palette.hotPink
         }
     }
 
