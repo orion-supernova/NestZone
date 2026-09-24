@@ -7096,4 +7096,129 @@ public enum L10n {
     public static func inboxAdminTranslation(_ a0: String) -> LocalizedStringResource {
         r("inbox_admin_translation", "In \(a0)")
     }
+
+    /// Edit the series
+    public static var calendarEditSeries: LocalizedStringResource {
+        r("calendar_edit_series", "Edit the series")
+    }
+
+    /// Past
+    public static var calendarRecapBadge: LocalizedStringResource {
+        r("calendar_recap_badge", "Past")
+    }
+
+    /// Who was coming
+    public static var calendarRecapWhoWasComing: LocalizedStringResource {
+        r("calendar_recap_who_was_coming", "Who was coming")
+    }
+
+    /// %@ under
+    public static func calendarUnderBudget(_ a0: String) -> LocalizedStringResource {
+        r("calendar_under_budget", "\(a0) under")
+    }
+
+    /// Remove unbought (%lld)
+    public static func calendarLeftoversClear(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_leftovers_clear", "Remove unbought (\(a0))")
+    }
+
+    /// Take them off the shopping list?
+    public static var calendarLeftoversConfirmTitle: LocalizedStringResource {
+        r("calendar_leftovers_confirm_title", "Take them off the shopping list?")
+    }
+
+    /// Remove
+    public static var calendarLeftoversConfirmAction: LocalizedStringResource {
+        r("calendar_leftovers_confirm_action", "Remove")
+    }
+
+    /// Everything still unbought for “%@” comes off the list. Anything someone still needs can be added again.
+    public static func calendarLeftoversConfirmMessage(_ a0: String) -> LocalizedStringResource {
+        r("calendar_leftovers_confirm_message", "Everything still unbought for “\(a0)” comes off the list. Anything someone still needs can be added again.")
+    }
+
+    /// How it went
+    public static var calendarRecapTitle: LocalizedStringResource {
+        r("calendar_recap_title", "How it went")
+    }
+
+    /// Spent
+    public static var calendarRecapSpent: LocalizedStringResource {
+        r("calendar_recap_spent", "Spent")
+    }
+
+    /// No budget set
+    public static var calendarRecapNoBudget: LocalizedStringResource {
+        r("calendar_recap_no_budget", "No budget set")
+    }
+
+    /// Said yes
+    public static var calendarRecapSaidYes: LocalizedStringResource {
+        r("calendar_recap_said_yes", "Said yes")
+    }
+
+    /// of %lld
+    public static func calendarRecapAsked(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_recap_asked", "of \(a0)")
+    }
+
+    /// Bought
+    public static var calendarRecapBought: LocalizedStringResource {
+        r("calendar_recap_bought", "Bought")
+    }
+
+    /// All of it
+    public static var calendarRecapAllBought: LocalizedStringResource {
+        r("calendar_recap_all_bought", "All of it")
+    }
+
+    /// Not bought: %lld
+    public static func calendarRecapNotBought(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_recap_not_bought", "Not bought: \(a0)")
+    }
+
+    /// On the menu
+    public static var calendarRecapMenu: LocalizedStringResource {
+        r("calendar_recap_menu", "On the menu")
+    }
+
+    /// Past events
+    public static var calendarHistoryTitle: LocalizedStringResource {
+        r("calendar_history_title", "Past events")
+    }
+
+    /// Nothing here yet
+    public static var calendarHistoryEmptyTitle: LocalizedStringResource {
+        r("calendar_history_empty_title", "Nothing here yet")
+    }
+
+    /// Events land here once they're over, with what they cost.
+    public static var calendarHistoryEmptyMessage: LocalizedStringResource {
+        r("calendar_history_empty_message", "Events land here once they're over, with what they cost.")
+    }
+
+    /// Last %lld months
+    public static func calendarHistoryWindow(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_history_window", "Last \(a0) months")
+    }
+
+    /// Events held
+    public static var calendarHistoryHeld: LocalizedStringResource {
+        r("calendar_history_held", "Events held")
+    }
+
+    /// Over budget
+    public static var calendarHistoryOverBudget: LocalizedStringResource {
+        r("calendar_history_over_budget", "Over budget")
+    }
+
+    /// Also spent: %@
+    public static func calendarHistoryAlsoSpent(_ a0: String) -> LocalizedStringResource {
+        r("calendar_history_also_spent", "Also spent: \(a0)")
+    }
+
+    /// %lld times · last on %@
+    public static func calendarHistoryTimes(_ a0: Int, _ a1: String) -> LocalizedStringResource {
+        r("calendar_history_times", "\(a0) times · last on \(a1)")
+    }
 }

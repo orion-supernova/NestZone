@@ -69,6 +69,22 @@ public struct EventDetailFeature: Sendable {
 
         public var myRSVP: RSVPStatus? { occurrence.rsvp(of: currentUserID) }
 
+        /// This occurrence has finished, and the sheet is a recap rather than
+        /// a plan: what it cost, who said they were coming, what was bought and
+        /// cooked. Everything that plans ahead — answering, stocking up, adding
+        /// to the list, making it dinner, the ticket — is gone. Logging what it
+        /// cost stays, because receipts arrive after the party.
+        public var isOver: Bool { occurrence.isPast }
+
+        /// Whether "Edit" is offered at all. See `EventOccurrence.isEditable`.
+        public var canEdit: Bool { occurrence.isEditable }
+
+        /// Unbought lines for an event that is over — sitting on today's list
+        /// for a party that has been and gone.
+        public var leftovers: [EventPlan.LinkedItem] {
+            isOver ? (plan?.outstandingItems ?? []) : []
+        }
+
         public func name(for id: UserID?) -> String {
             guard let id else { return String(localized: L10n.calendarSomeone) }
             if id == currentUserID { return String(localized: L10n.financeYou) }
@@ -131,7 +147,10 @@ public struct EventDetailFeature: Sendable {
         /// means remembering to buy the ice. An event with none of those gets
         /// the invitation instead of four empty cards.
         public var isPlanned: Bool {
-            occurrence.budget != nil
+            // Nothing is planned after the fact: an empty shopping card on a
+            // finished event is an invitation to shop for the past.
+            if isOver { return false }
+            return occurrence.budget != nil
                 || !occurrence.recipeIDs.isEmpty
                 || occurrence.url?.isEmpty == false
                 || (plan?.shoppingTotal ?? 0) > 0
@@ -153,7 +172,8 @@ public struct EventDetailFeature: Sendable {
             // event and remembering what it needs.
             if (plan?.shoppingTotal ?? 0) > 0 || isPlanned { sections.append(.shopping) }
             if !occurrence.recipeIDs.isEmpty { sections.append(.menu) }
-            if occurrence.url?.isEmpty == false { sections.append(.tickets) }
+            // A ticket to something that has happened opens nothing useful.
+            if occurrence.url?.isEmpty == false && !isOver { sections.append(.tickets) }
             return sections
         }
 
@@ -168,7 +188,7 @@ public struct EventDetailFeature: Sendable {
         /// told everything was already listed — a control whose only outcome is
         /// "that did nothing" should not look like a control.
         public var canStockUp: Bool {
-            guard let plan, !plan.recipes.isEmpty else { return false }
+            guard !isOver, let plan, !plan.recipes.isEmpty else { return false }
             return plan.stockUpPending > 0
         }
 
@@ -230,6 +250,8 @@ public struct EventDetailFeature: Sendable {
         case writeFailed(AppError)
         case shoppingExpandToggled
         case expensesExpandToggled
+        case clearLeftoversTapped
+        case leftoversClearFailed(EventPlan, AppError)
 
         case addExpenseTapped
         case planAsDinnerTapped
@@ -251,7 +273,9 @@ public struct EventDetailFeature: Sendable {
             case deleteAll
         }
 
-        public enum Alert: Equatable {}
+        public enum Alert: Equatable {
+            case confirmClearLeftovers
+        }
 
         public enum Delegate: Equatable {
             case edit(EventOccurrence, EventScope)
@@ -305,7 +329,7 @@ public struct EventDetailFeature: Sendable {
             // on the server, so no push is coming to correct the button.
 
             case let .rsvpTapped(status):
-                guard let userID = state.currentUserID, !state.isAnsweringRSVP else {
+                guard let userID = state.currentUserID, !state.isAnsweringRSVP, !state.isOver else {
                     return .none
                 }
                 let previous = state.occurrence.rsvps
@@ -339,7 +363,9 @@ public struct EventDetailFeature: Sendable {
             // MARK: Shopping
 
             case let .itemToggled(id, purchased):
-                guard !state.toggling.contains(id) else { return .none }
+                // Read-only once it is over: the list is a record of what was
+                // bought for it, and ticking today's shopping belongs to Shopping.
+                guard !state.toggling.contains(id), !state.isOver else { return .none }
                 state.toggling.insert(id)
                 // Optimistic on the rolled-up copy. The subscription will agree
                 // in a moment; until then the tick has to move under the finger.
@@ -357,7 +383,7 @@ public struct EventDetailFeature: Sendable {
 
             case .addItemTapped:
                 let name = state.newItem.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !name.isEmpty, !state.isAddingItem else { return .none }
+                guard !name.isEmpty, !state.isAddingItem, !state.isOver else { return .none }
                 state.isAddingItem = true
                 // Cleared now rather than on success: the field is the input, and
                 // a line that lingers after Return reads as a key that did not
@@ -372,7 +398,7 @@ public struct EventDetailFeature: Sendable {
                 }
 
             case .stockUpTapped:
-                guard !state.isStockingUp else { return .none }
+                guard !state.isStockingUp, state.canStockUp else { return .none }
                 state.isStockingUp = true
                 let id = state.occurrence.eventID
                 return .run { send in
@@ -406,6 +432,37 @@ public struct EventDetailFeature: Sendable {
             case .expensesExpandToggled:
                 state.isExpensesExpanded.toggle()
                 return .none
+
+            // MARK: Leftovers
+            //
+            // Asked first, because the list is shared: the milk nobody got for
+            // Saturday may be milk somebody still wants. Optimistic once
+            // confirmed, and the failure carries the whole previous plan so the
+            // rows, the ring and the count all come back together.
+
+            case .clearLeftoversTapped:
+                guard !state.leftovers.isEmpty else { return .none }
+                state.alert = .confirmClearLeftovers(title: state.occurrence.title)
+                return .none
+
+            case .alert(.presented(.confirmClearLeftovers)):
+                guard let previous = state.plan else { return .none }
+                let ids = state.leftovers.map(\.id)
+                guard !ids.isEmpty else { return .none }
+                var plan = previous
+                plan.shopping.removeAll { !$0.isPurchased }
+                plan.shoppingTotal = plan.shopping.count
+                plan.shoppingPurchased = plan.shopping.count
+                state.plan = plan
+                return .run { _ in
+                    try await shopping.removeMany(ids)
+                } catch: { error, send in
+                    await send(.leftoversClearFailed(previous, AppError(error)))
+                }
+
+            case let .leftoversClearFailed(previous, error):
+                state.plan = previous
+                return .send(.writeFailed(error))
 
             // MARK: Money
 
@@ -478,6 +535,12 @@ public struct EventDetailFeature: Sendable {
             // MARK: Editing
 
             case .editTapped:
+                guard state.canEdit else { return .none }
+                // Over, but the series carries on: only the series is left to
+                // edit, so there is no "this one or all?" to ask.
+                if state.isOver {
+                    return .send(.delegate(.edit(state.occurrence, .series)))
+                }
                 guard state.occurrence.isRecurring else {
                     return .send(.delegate(.edit(state.occurrence, .series)))
                 }
@@ -568,6 +631,27 @@ extension ConfirmationDialogState where Action == EventDetailFeature.Action.Scop
             }
         } message: {
             TextState(String(localized: L10n.calendarScopeDeleteMessage))
+        }
+    }
+}
+
+// MARK: - Leftovers
+
+extension AlertState where Action == EventDetailFeature.Action.Alert {
+    /// Names the event, because the list is shared and what it removes is
+    /// somebody else's shopping as much as yours.
+    static func confirmClearLeftovers(title: String) -> Self {
+        AlertState {
+            TextState(String(localized: L10n.calendarLeftoversConfirmTitle))
+        } actions: {
+            ButtonState(role: .destructive, action: .confirmClearLeftovers) {
+                TextState(String(localized: L10n.calendarLeftoversConfirmAction))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.calendarLeftoversConfirmMessage(title)))
         }
     }
 }

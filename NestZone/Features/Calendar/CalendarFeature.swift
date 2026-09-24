@@ -381,6 +381,7 @@ public struct CalendarFeature: Sendable {
     public enum Destination {
         case compose(EventComposerFeature)
         case detail(EventDetailFeature)
+        case history(EventHistoryFeature)
     }
 
     public enum Action: BindableAction {
@@ -409,6 +410,7 @@ public struct CalendarFeature: Sendable {
         case filtersCleared
 
         case addTapped
+        case historyTapped
         case addOnDayTapped(CalendarDay)
         case eventTapped(EventOccurrence.ID)
         case editTapped(EventOccurrence, EventScope)
@@ -509,6 +511,13 @@ public struct CalendarFeature: Sendable {
                 case var .compose(compose):
                     compose.members = incoming
                     state.destination = .compose(compose)
+                case var .history(history):
+                    history.members = incoming
+                    if var detail = history.detail {
+                        detail.members = incoming
+                        history.detail = detail
+                    }
+                    state.destination = .history(history)
                 case .none:
                     break
                 }
@@ -603,6 +612,14 @@ public struct CalendarFeature: Sendable {
                 ))
                 return .none
 
+            case .historyTapped:
+                state.destination = .history(EventHistoryFeature.State(
+                    homeID: state.homeID,
+                    members: state.members,
+                    currentUserID: state.currentUserID
+                ))
+                return .none
+
             case let .eventTapped(id):
                 guard let occurrence = state.occurrences[id: id] else { return .none }
                 state.destination = .detail(EventDetailFeature.State(
@@ -613,6 +630,10 @@ public struct CalendarFeature: Sendable {
                 return .none
 
             case let .editTapped(occurrence, scope):
+                // The last line before the composer: a finished occurrence is
+                // a record, and its series is editable only while it carries on.
+                guard occurrence.isEditable else { return .none }
+                let scope: EventScope = occurrence.isPast ? .series : scope
                 state.destination = .compose(EventComposerFeature.State(
                     homeID: state.homeID,
                     members: state.members,
@@ -636,6 +657,7 @@ public struct CalendarFeature: Sendable {
 
             case let .rsvpTapped(occurrence, status):
                 guard let userID = state.currentUserID,
+                      !occurrence.isPast,
                       !state.rsvpInFlight.contains(occurrence.eventID) else { return .none }
                 let eventID = occurrence.eventID
                 let previous = occurrence.rsvps
@@ -721,6 +743,16 @@ public struct CalendarFeature: Sendable {
                 return .send(.editTapped(occurrence, scope))
 
             case let .destination(.presented(.detail(.delegate(.deleted(occurrence, scope))))):
+                state.destination = nil
+                return .send(.deleteTapped(occurrence, scope))
+
+            // Past events hand edits and deletes back here, which owns the
+            // composer and the undo window.
+            case let .destination(.presented(.history(.delegate(.edit(occurrence, scope))))):
+                state.destination = nil
+                return .send(.editTapped(occurrence, scope))
+
+            case let .destination(.presented(.history(.delegate(.deleted(occurrence, scope))))):
                 state.destination = nil
                 return .send(.deleteTapped(occurrence, scope))
 

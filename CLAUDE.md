@@ -341,6 +341,21 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   It is idempotent and self-scheduling, and until it has run, chores finished
   before the ledger shipped are missing from both the contribution tally and the
   Done list's date range.
+- **A finished event is a record, not a plan.** `requireNotOver` in
+  `events.ts` refuses `update`, `rsvp`, `stockUp` and `addItems` once the
+  thing written to has ended — the whole series (`series_end`), or one
+  occurrence's own end for an occurrence-scope edit. A series with dates still
+  to come stays editable from a past date, as the series. Two writes still
+  belong after the fact: logging an expense (`finance`, not here — receipts
+  arrive late) and deleting ("that never happened" is a correction). The client
+  hides the same controls (`EventOccurrence.isEditable`), and the detail sheet
+  becomes a recap. `events:history` is the look back: one row per series with
+  its latest finished occurrence, money per currency, a year by default.
+- **A series edit never sends the occurrence's date as the series start.**
+  `EventComposerFeature.times` sends no times when the time was not touched and
+  shifts the series by the same amount when it was. Sending the date the sheet
+  was opened from moved the series there, which dropped every earlier date and
+  cleared `exdates`.
 - `catalog:discover` / `catalog:details` proxy TMDb so the API key stays on the
   server. Nothing in the app may call api.themoviedb.org directly.
 - `finance:summary` computes the whole Finance screen server-side — balances,

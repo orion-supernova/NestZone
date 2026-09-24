@@ -56,6 +56,32 @@
   ],
   "entries": [
     {
+      "slug": "1.10.0-past-events",
+      "version": "1.10.0",
+      "kind": "feature",
+      "title": "Past events, and what they came to",
+      "body": "Once an event is over, opening it shows how it went — what it cost against the budget, who said they were coming, what got bought and what was on the menu — instead of a plan you could still change. The calendar has a new Past events page too: a year of what the house did, with the spending on each and in total.",
+      "highlights": [
+        "A finished event can't be moved, re-planned or stocked up for by accident",
+        "You can still log a receipt that turns up after the party",
+        "Leftover shopping for an event that's over comes off the list in one tap",
+        "Editing a repeating event no longer wipes its earlier dates"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Geçmiş etkinlikler ve neye mal oldukları",
+          "body": "Bir etkinlik bittiğinde, açtığınızda hâlâ değiştirilebilen bir plan yerine nasıl geçtiğini görürsünüz: bütçeye göre ne kadar tuttuğu, kimlerin geleceğini söylediği, neyin alındığı ve menüde ne olduğu. Takvimde yeni bir Geçmiş etkinlikler sayfası da var: evin bir yıl boyunca yaptıkları, her birinin ve toplamın harcamasıyla.",
+          "highlights": [
+            "Bitmiş bir etkinlik yanlışlıkla taşınamaz, yeniden planlanamaz, alışverişi yapılamaz",
+            "Partiden sonra gelen bir fişi yine de ekleyebilirsiniz",
+            "Bitmiş bir etkinlikten kalan alışveriş tek dokunuşla listeden çıkar",
+            "Tekrarlanan bir etkinliği düzenlemek artık önceki tarihlerini silmiyor"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.9.1-inbox-fixes",
       "version": "1.9.1",
       "kind": "fix",

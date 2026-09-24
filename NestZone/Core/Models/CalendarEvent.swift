@@ -662,6 +662,23 @@ extension EventOccurrence {
 
     public var isPast: Bool { end < Date() }
 
+    /// A repeating series with dates still to come — so last Friday's sheet can
+    /// still edit the Fridays ahead, even though last Friday itself is over.
+    public var seriesContinues: Bool {
+        guard isRecurring, let rule = recurrence else { return false }
+        guard let until = rule.until else { return true }
+        return until.date.addingTimeInterval(duration) >= Date()
+    }
+
+    /// Whether anything about this can still be changed.
+    ///
+    /// A finished event is a record, not a plan: moving it, re-planning it or
+    /// stocking up for it after the fact rewrites what happened. The server
+    /// refuses the same writes (`requireNotOver`); this is what keeps the
+    /// controls from being offered in the first place. A past occurrence of a
+    /// series that carries on is editable only as the series.
+    public var isEditable: Bool { !isPast || seriesContinues }
+
     /// Under way right now. What the "happening now" band on the agenda is for.
     public var isInProgress: Bool {
         let now = Date()
@@ -1101,4 +1118,142 @@ public enum EventScope: String, Sendable, Equatable {
     /// This one date only — skipped on the series, and re-written as its own
     /// event if it is an edit rather than a delete.
     case occurrence
+}
+
+// MARK: - History
+
+/// What the household has already done, and what it came to — `events:history`.
+///
+/// One row per series rather than per occurrence: a weekly game night held
+/// forty times is one row that says forty. Money is per currency throughout,
+/// for the reason it is everywhere else in the app.
+public struct EventHistory: Codable, Equatable, Sendable {
+    /// How far back this looks, in days.
+    public var days: Int
+    public var rows: [Row]
+    /// Occurrences held in the window, across every row.
+    public var held: Int
+    /// Largest first.
+    public var spent: [CurrencyTotal]
+    /// One-offs that came in over their budget, and how many had one at all —
+    /// "2 over budget" means little without "of 5".
+    public var overBudget: Int
+    public var budgeted: Int
+
+    public static let empty = EventHistory(days: 365)
+
+    public init(
+        days: Int,
+        rows: [Row] = [],
+        held: Int = 0,
+        spent: [CurrencyTotal] = [],
+        overBudget: Int = 0,
+        budgeted: Int = 0
+    ) {
+        self.days = days
+        self.rows = rows
+        self.held = held
+        self.spent = spent
+        self.overBudget = overBudget
+        self.budgeted = budgeted
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case days, rows, held, spent, budgeted
+        case overBudget = "over_budget"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        days = c.decodeNumber(forKey: .days)
+        // Row by row, so one malformed series costs its own row rather than
+        // blanking the whole look back.
+        rows = ((try? c.decodeIfPresent([LenientRow].self, forKey: .rows)) ?? [])
+            .compactMap(\.row)
+        held = c.decodeNumber(forKey: .held)
+        spent = (try? c.decodeIfPresent([CurrencyTotal].self, forKey: .spent)) ?? []
+        overBudget = c.decodeNumber(forKey: .overBudget)
+        budgeted = c.decodeNumber(forKey: .budgeted)
+    }
+
+    /// The headline figure — the currency most of the money was in.
+    public var primarySpend: CurrencyTotal? { spent.first }
+
+    public struct Row: Codable, Identifiable, Equatable, Sendable {
+        /// The latest finished occurrence, which is what opens on a tap.
+        public var occurrence: EventOccurrence
+        /// How many times it was held in the window. One for a one-off.
+        public var times: Int
+        /// Minor units in `currency`.
+        public var spent: Int
+        public var currency: String?
+        /// Only a one-off carries one: a repeating series' budget is per
+        /// occurrence and cannot be held against a year of them.
+        public var budget: Int?
+        public var going: Int
+
+        public var id: EventID { occurrence.eventID }
+
+        public var isOverBudget: Bool {
+            guard let budget else { return false }
+            return spent > budget
+        }
+
+        public init(
+            occurrence: EventOccurrence,
+            times: Int = 1,
+            spent: Int = 0,
+            currency: String? = nil,
+            budget: Int? = nil,
+            going: Int = 0
+        ) {
+            self.occurrence = occurrence
+            self.times = times
+            self.spent = spent
+            self.currency = currency
+            self.budget = budget
+            self.going = going
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case occurrence, times, spent, currency, budget, going
+        }
+
+        public init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            occurrence = try c.decode(EventOccurrence.self, forKey: .occurrence)
+            times = max(1, c.decodeNumber(forKey: .times))
+            spent = c.decodeNumber(forKey: .spent)
+            currency = try c.decodeIfPresent(String.self, forKey: .currency)
+            budget = c.decodeNumberIfPresent(forKey: .budget)
+            going = c.decodeNumber(forKey: .going)
+        }
+    }
+
+    public struct CurrencyTotal: Codable, Equatable, Sendable {
+        public var currency: String
+        public var amount: Int
+
+        public init(currency: String, amount: Int) {
+            self.currency = currency
+            self.amount = amount
+        }
+
+        enum CodingKeys: String, CodingKey { case currency, amount }
+
+        public init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            currency = try c.decode(String.self, forKey: .currency)
+            amount = c.decodeNumber(forKey: .amount)
+        }
+    }
+}
+
+/// One history row that may fail to decode without taking its neighbours down.
+private struct LenientRow: Decodable {
+    let row: EventHistory.Row?
+
+    init(from decoder: any Decoder) throws {
+        row = try? EventHistory.Row(from: decoder)
+    }
 }

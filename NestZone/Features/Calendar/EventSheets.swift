@@ -736,14 +736,20 @@ struct EventDetailSheet: View {
             ScrollView {
                 VStack(spacing: Metrics.sectionSpacing) {
                     hero.appear(0)
-                    rsvpCard.appear(1)
+                    // Over, the question "are you coming?" has been answered
+                    // by the date. The recap takes its place.
+                    if store.state.isOver {
+                        if !recapTiles.isEmpty { recapCard.appear(1) }
+                    } else {
+                        rsvpCard.appear(1)
+                    }
                     if !store.state.roster.isEmpty { rosterCard.appear(2) }
 
                     ForEach(Array(store.state.visibleSections.enumerated()), id: \.element) { index, section in
                         planCard(section).appear(index + 3)
                     }
 
-                    if !store.hasPlan && !store.isLoadingPlan {
+                    if !store.hasPlan && !store.isLoadingPlan && !store.state.isOver {
                         planInvitation.appear(3)
                     }
 
@@ -777,8 +783,15 @@ struct EventDetailSheet: View {
 
     private var overflow: some View {
         Menu {
-            Button { store.send(.editTapped) } label: {
-                Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
+            if store.state.canEdit {
+                Button { store.send(.editTapped) } label: {
+                    Label {
+                        // From a finished date only the series is left to edit,
+                        // and saying so is what stops "Edit" reading as a way
+                        // to change last Friday.
+                        Text(store.state.isOver ? L10n.calendarEditSeries : L10n.commonEdit)
+                    } icon: { Image(systemName: "pencil") }
+                }
             }
             if store.occurrence.budget != nil || !(store.plan?.expenses.isEmpty ?? true) {
                 Button { store.send(.addExpenseTapped) } label: {
@@ -811,9 +824,14 @@ struct EventDetailSheet: View {
                     .bounces(when: store.occurrence.isInProgress)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(store.occurrence.kind.title)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(store.occurrence.kind.tint)
+                    HStack(spacing: 6) {
+                        Text(store.occurrence.kind.title)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(store.occurrence.kind.tint)
+                        if store.state.isOver {
+                            Badge(String(localized: L10n.calendarRecapBadge), tint: .secondary)
+                        }
+                    }
                     CountdownText(store.occurrence.start)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
@@ -926,7 +944,7 @@ struct EventDetailSheet: View {
     private var rosterCard: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 10) {
-                Text(L10n.calendarWhoIsComing)
+                Text(store.state.isOver ? L10n.calendarRecapWhoWasComing : L10n.calendarWhoIsComing)
                     .font(.subheadline.weight(.semibold))
                 ForEach(store.state.roster, id: \.user) { row in
                     HStack(spacing: 10) {
@@ -997,9 +1015,13 @@ struct EventDetailSheet: View {
                             }
                         }
                         if let remaining = plan.remaining {
+                            // "Left" is a plan's word. Once it is over, what was
+                            // not spent is not left to spend — it is saved.
                             Text(plan.isOverBudget
                                 ? L10n.calendarOverBudget(Money.text(-remaining, currency: currency))
-                                : L10n.calendarLeftToSpend(Money.text(remaining, currency: currency)))
+                                : store.state.isOver
+                                    ? L10n.calendarUnderBudget(Money.text(remaining, currency: currency))
+                                    : L10n.calendarLeftToSpend(Money.text(remaining, currency: currency)))
                                 .font(.caption)
                                 .foregroundStyle(plan.isOverBudget ? Palette.danger : Palette.success)
                         }
@@ -1119,7 +1141,11 @@ struct EventDetailSheet: View {
                 .animation(Motion.spring, value: plan.shoppingPurchased)
                 .animation(Motion.spring, value: store.isShoppingExpanded)
 
-                addItemField
+                if store.state.isOver {
+                    if !store.state.leftovers.isEmpty { leftoversButton }
+                } else {
+                    addItemField
+                }
             }
         }
     }
@@ -1155,7 +1181,155 @@ struct EventDetailSheet: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        // A record once it is over — disabled rather than hidden, so the list
+        // still says what was and was not bought.
+        .disabled(store.state.isOver)
         .sensoryFeedback(.impact(weight: .light), trigger: item.isPurchased)
+    }
+
+    /// Takes a finished event's unbought lines off the shared list.
+    private var leftoversButton: some View {
+        Button { store.send(.clearLeftoversTapped) } label: {
+            Label {
+                Text(L10n.calendarLeftoversClear(store.state.leftovers.count))
+            } icon: {
+                Image(systemName: "cart.badge.minus")
+            }
+            .font(.subheadline.weight(.medium))
+            .frame(maxWidth: .infinity)
+            .frame(height: 40)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.glass)
+        .tint(Palette.danger)
+    }
+
+    // MARK: Recap
+
+    /// One figure of the recap: what it is, the number, and a line under it.
+    private struct RecapTile: Identifiable {
+        let id: String
+        let symbol: String
+        let tint: Color
+        let title: LocalizedStringResource
+        let value: String
+        let caption: String?
+        var captionTint: Color = .secondary
+    }
+
+    /// Only the figures this event actually has. An event nobody budgeted,
+    /// shopped or cooked for is not four zeros — it is a date that happened,
+    /// and the hero already says that.
+    private var recapTiles: [RecapTile] {
+        let plan = store.plan ?? .empty
+        let currency = store.state.planCurrency
+        var tiles: [RecapTile] = []
+
+        if plan.budget != nil || plan.spent > 0 {
+            let caption: String?
+            var captionTint: Color = .secondary
+            if let remaining = plan.remaining {
+                if remaining < 0 {
+                    caption = String(localized: L10n.calendarOverBudget(Money.text(-remaining, currency: currency)))
+                    captionTint = Palette.danger
+                } else {
+                    caption = String(localized: L10n.calendarUnderBudget(Money.text(remaining, currency: currency)))
+                    captionTint = Palette.success
+                }
+            } else {
+                caption = String(localized: L10n.calendarRecapNoBudget)
+            }
+            tiles.append(RecapTile(
+                id: "spent",
+                symbol: "creditcard.fill",
+                tint: Palette.indigo,
+                title: L10n.calendarRecapSpent,
+                value: Money.text(plan.spent, currency: currency),
+                caption: caption,
+                captionTint: captionTint
+            ))
+        }
+
+        if !store.state.roster.isEmpty {
+            tiles.append(RecapTile(
+                id: "going",
+                symbol: "person.2.fill",
+                tint: Palette.success,
+                title: L10n.calendarRecapSaidYes,
+                value: store.goingCount.formatted(),
+                caption: String(localized: L10n.calendarRecapAsked(store.state.roster.count))
+            ))
+        }
+
+        if plan.shoppingTotal > 0 {
+            tiles.append(RecapTile(
+                id: "bought",
+                symbol: "cart.fill",
+                tint: Palette.success,
+                title: L10n.calendarRecapBought,
+                value: "\(plan.shoppingPurchased)/\(plan.shoppingTotal)",
+                caption: plan.shoppingIsDone
+                    ? String(localized: L10n.calendarRecapAllBought)
+                    : String(localized: L10n.calendarRecapNotBought(plan.shoppingTotal - plan.shoppingPurchased))
+            ))
+        }
+
+        if !plan.recipes.isEmpty {
+            tiles.append(RecapTile(
+                id: "menu",
+                symbol: "fork.knife",
+                tint: Palette.warning,
+                title: L10n.calendarRecapMenu,
+                value: plan.recipes.count.formatted(),
+                caption: plan.recipes.first?.title
+            ))
+        }
+        return tiles
+    }
+
+    private var recapCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(L10n.calendarRecapTitle)
+                    .font(.subheadline.weight(.semibold))
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                    alignment: .leading,
+                    spacing: 10
+                ) {
+                    ForEach(recapTiles) { tile in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label {
+                                Text(tile.title)
+                            } icon: {
+                                Image(systemName: tile.symbol)
+                                    .foregroundStyle(tile.tint)
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            Text(tile.value)
+                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .contentTransition(.numericText())
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                            // Always a line, blank or not, so the tiles in a row
+                            // are the same height.
+                            Text(tile.caption ?? " ")
+                                .font(.caption2)
+                                .foregroundStyle(tile.captionTint)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .background(
+                            tile.tint.opacity(0.08),
+                            in: .rect(cornerRadius: Metrics.tightRadius, style: .continuous)
+                        )
+                    }
+                }
+            }
+        }
+        .animation(Motion.spring, value: store.plan)
     }
 
     private var addItemField: some View {
@@ -1228,45 +1402,48 @@ struct EventDetailSheet: View {
 
                 // The one button that makes the whole module worth having: a
                 // menu becomes a shopping list in one write, tagged to this
-                // event, skipping anything already on the list.
-                Button { store.send(.stockUpTapped) } label: {
-                    HStack(spacing: 8) {
-                        if store.isStockingUp {
-                            ProgressView().controlSize(.small)
-                        } else {
-                            Image(systemName: hasNothingToStockUp
-                                ? "checkmark.circle.fill"
-                                : "cart.badge.plus")
-                                .contentTransition(.symbolEffect(.replace))
-                                .bounces(when: store.state.suggestsStockUp)
+                // event, skipping anything already on the list. Not after the
+                // event: that would be shopping for a dinner already eaten.
+                if !store.state.isOver {
+                    Button { store.send(.stockUpTapped) } label: {
+                        HStack(spacing: 8) {
+                            if store.isStockingUp {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Image(systemName: hasNothingToStockUp
+                                    ? "checkmark.circle.fill"
+                                    : "cart.badge.plus")
+                                    .contentTransition(.symbolEffect(.replace))
+                                    .bounces(when: store.state.suggestsStockUp)
+                            }
+                            Text(stockUpTitle)
                         }
-                        Text(stockUpTitle)
-                    }
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 42)
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.glassProminent)
-                .tint(hasNothingToStockUp ? Palette.accessory : Palette.warning)
-                .disabled(store.isStockingUp || !store.state.canStockUp)
-                // Spelled out rather than left to the button style: a prominent
-                // glass button barely dims on its own, and a live-looking
-                // control whose only outcome is "that did nothing" is worse
-                // than one that plainly says there is nothing to do.
-                .opacity(hasNothingToStockUp ? 0.55 : 1)
-                .animation(Motion.fade, value: hasNothingToStockUp)
-
-                // Suppressed when it would only repeat the button above it:
-                // after a press that added nothing, both say the same sentence.
-                // A press that *did* add something still reports what it did.
-                if let result = store.lastStockUp,
-                   !(result.added == 0 && hasNothingToStockUp) {
-                    Text(stockUpSummary(result))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
-                        .transition(.opacity)
+                        .frame(height: 42)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .tint(hasNothingToStockUp ? Palette.accessory : Palette.warning)
+                    .disabled(store.isStockingUp || !store.state.canStockUp)
+                    // Spelled out rather than left to the button style: a prominent
+                    // glass button barely dims on its own, and a live-looking
+                    // control whose only outcome is "that did nothing" is worse
+                    // than one that plainly says there is nothing to do.
+                    .opacity(hasNothingToStockUp ? 0.55 : 1)
+                    .animation(Motion.fade, value: hasNothingToStockUp)
+
+                    // Suppressed when it would only repeat the button above it:
+                    // after a press that added nothing, both say the same sentence.
+                    // A press that *did* add something still reports what it did.
+                    if let result = store.lastStockUp,
+                       !(result.added == 0 && hasNothingToStockUp) {
+                        Text(stockUpSummary(result))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .transition(.opacity)
+                    }
                 }
 
                 // The other half of the dinner link. A dinner party is a meal
