@@ -59,6 +59,7 @@
       "slug": "1.10.0-problem-sheet-crash",
       "version": "1.10.0",
       "kind": "fix",
+      "pinned": true,
       "title": "No more crash when you close a note on a house problem",
       "body": "Closing a status note, a parts list or a visit on a house problem could crash the app. Fixed. Big thanks to @goksu.ozahishali for catching it on TestFlight!",
       "highlights": [
@@ -81,24 +82,24 @@
       "slug": "1.10.0-past-events",
       "version": "1.10.0",
       "kind": "feature",
-      "title": "Past events, and what they came to",
-      "body": "Once an event is over, opening it shows how it went — what it cost against the budget, who said they were coming, what got bought and what was on the menu — instead of a plan you could still change. The calendar has a new Past events page too: a year of what the house did, with the spending on each and in total.",
+      "title": "Past events, and what they cost",
+      "body": "Open an event that's over and you'll see how it went: what it cost against the budget, who said they'd come, what got bought, what was on the menu. No more fiddling with a plan for something that already happened. There's a new Past events page in the calendar too: everything the house did this year, and what each one cost.",
       "highlights": [
-        "A finished event can't be moved, re-planned or stocked up for by accident",
-        "You can still log a receipt that turns up after the party",
-        "Leftover shopping for an event that's over comes off the list in one tap",
-        "Editing a repeating event no longer wipes its earlier dates"
+        "Finished events can't get moved or re-planned by accident",
+        "Receipt showed up after the party? You can still add it",
+        "Clear an old event's leftover shopping in one tap",
+        "Editing a repeating event doesn't wipe its earlier dates anymore"
       ],
       "translations": [
         {
           "language": "tr",
-          "title": "Geçmiş etkinlikler ve neye mal oldukları",
-          "body": "Bir etkinlik bittiğinde, açtığınızda hâlâ değiştirilebilen bir plan yerine nasıl geçtiğini görürsünüz: bütçeye göre ne kadar tuttuğu, kimlerin geleceğini söylediği, neyin alındığı ve menüde ne olduğu. Takvimde yeni bir Geçmiş etkinlikler sayfası da var: evin bir yıl boyunca yaptıkları, her birinin ve toplamın harcamasıyla.",
+          "title": "Geçmiş etkinlikler: nasıl geçti, kaça patladı",
+          "body": "Bitmiş bir etkinliği açınca artık nasıl geçtiğini görüyorsun: bütçeye göre kaça patladı, kimler geleceğini söyledi, neler alındı, menüde ne vardı. Olup bitmiş bir şeyin planıyla uğraşmak yok. Takvimde bir de Geçmiş etkinlikler sayfası var: evin bu yıl yaptığı her şey, her birinin masrafıyla.",
           "highlights": [
-            "Bitmiş bir etkinlik yanlışlıkla taşınamaz, yeniden planlanamaz, alışverişi yapılamaz",
-            "Partiden sonra gelen bir fişi yine de ekleyebilirsiniz",
-            "Bitmiş bir etkinlikten kalan alışveriş tek dokunuşla listeden çıkar",
-            "Tekrarlanan bir etkinliği düzenlemek artık önceki tarihlerini silmiyor"
+            "Bitmiş etkinlik yanlışlıkla kaymıyor, baştan planlanmıyor",
+            "Fiş partiden sonra mı geldi? Yine ekleyebilirsin",
+            "Bitmiş etkinlikten kalan alışverişi tek dokunuşla listeden sil",
+            "Tekrarlanan etkinliği düzenleyince eski tarihleri artık silinmiyor"
           ]
         }
       ]
@@ -107,20 +108,20 @@
       "slug": "1.9.1-inbox-fixes",
       "version": "1.9.1",
       "kind": "fix",
-      "title": "The notifications panel opens again, and speaks Turkish",
-      "body": "Opening the bell showed an error instead of the household's activity. It does not any more. Release notes are also translated now, so the Updates tab reads in whichever language the app is set to rather than always in English.",
+      "title": "The bell works again, and speaks Turkish now",
+      "body": "Tapping the bell was showing an error instead of what's been going on at home. Fixed. Update notes are translated now too, so they show up in whatever language the app is set to.",
       "highlights": [
-        "Tapping the bell no longer shows an error",
-        "Update notes now follow the app's language"
+        "No more error when you tap the bell",
+        "Update notes follow the app's language"
       ],
       "translations": [
         {
           "language": "tr",
-          "title": "Bildirimler paneli yeniden açılıyor, üstelik Türkçe konuşuyor",
-          "body": "Zile dokununca evin hareketleri yerine bir hata görünüyordu; artık görünmüyor. Sürüm notları da çevrildi: Güncellemeler sekmesi her zaman İngilizce olmak yerine uygulamanın diline göre okunuyor.",
+          "title": "Zil yine çalışıyor, artık Türkçe de konuşuyor",
+          "body": "Zile dokununca evde olup bitenler yerine hata çıkıyordu. Düzelttik. Güncelleme notları da artık çevriliyor, uygulama hangi dildeyse o dilde görünüyor.",
           "highlights": [
-            "Zile dokunmak artık hata vermiyor",
-            "Sürüm notları uygulamanın dilini takip ediyor"
+            "Zile dokununca artık hata çıkmıyor",
+            "Güncelleme notları uygulamanın dilinde"
           ]
         }
       ]
@@ -129,25 +130,25 @@
       "slug": "1.9.0-inbox",
       "version": "1.9.0",
       "kind": "feature",
-      "title": "Notifications and updates, in one place",
-      "body": "Every notification your household has ever sent now stays put. Tap the bell on the Home tab to scroll back through what everyone has been doing, filter it by what you care about, and read what has changed in the app itself — two feeds, one button.",
-      "highlights": [
-        "Nothing is lost to a swiped-away banner any more",
-        "Filter the household feed by chores, money, shopping and the rest",
-        "A separate changelog, so app news never buries a leaking tap",
-        "Your own actions never light the badge"
-      ],
       "pinned": false,
+      "title": "All your notifications, in one place",
+      "body": "Notifications don't vanish anymore when you swipe them away. Tap the bell on the Home tab to scroll back through what everyone's been up to, filter it down to what you care about, and see what's new in the app. Two feeds, one button.",
+      "highlights": [
+        "Swiped a notification away? It's still in the bell",
+        "Filter by chores, money, shopping and more",
+        "App news gets its own tab, so it never buries the leaky tap",
+        "Your own stuff doesn't light up the badge"
+      ],
       "translations": [
         {
           "language": "tr",
-          "title": "Bildirimler ve güncellemeler, tek bir yerde",
-          "body": "Evinizde gönderilen her bildirim artık kayboluyor değil. Ana sayfadaki zile dokunun; herkesin neler yaptığını geriye doğru okuyun, ilgilendiğiniz konulara göre süzün ve uygulamanın kendisinde nelerin değiştiğini görün — iki akış, tek bir düğme.",
+          "title": "Tüm bildirimler tek yerde",
+          "body": "Bildirimi kaydırıp geçince artık kaybolmuyor. Ana sayfadaki zile dokun: evde kim ne yapmış geriye doğru bak, istediğin konuya göre filtrele, uygulamada neler değişmiş gör. İki akış, tek düğme.",
           "highlights": [
-            "Kaydırıp geçtiğiniz bir bildirim artık kaybolmuyor",
-            "Ev akışını işlere, paraya, alışverişe ve diğerlerine göre süzün",
-            "Ayrı bir sürüm notu akışı; uygulama haberleri akan bir musluğu gömmüyor",
-            "Kendi yaptıklarınız rozeti hiç yakmıyor"
+            "Kaydırıp geçtiğin bildirim zilde duruyor",
+            "İşlere, paraya, alışverişe ve diğerlerine göre filtrele",
+            "Uygulama haberleri ayrı sekmede, akan musluğun önüne geçmiyor",
+            "Kendi yaptıkların rozeti yakmıyor"
           ]
         }
       ]
