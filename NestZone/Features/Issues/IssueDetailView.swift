@@ -84,42 +84,39 @@ public struct IssueDetailView: View {
         }
         .alert($store.scope(state: \.alert, action: \.alert))
         .confirmationDialog($store.scope(state: \.confirm, action: \.confirm))
-        // `Binding(_:)` on an optional binding is the projection these three
-        // want: it hands back a non-optional binding while the value is there
-        // and `nil` once it is gone. A sheet keeps its content alive for a frame
-        // after its item is cleared, so anything that force-unwrapped would
-        // crash on exactly the dismissal it was written to support.
-        .sheet(item: $store.statusNote) { _ in
-            if let note = Binding($store.statusNote) {
-                StatusNoteSheet(
-                    note: note.wrappedValue,
-                    text: note.text,
-                    onConfirm: { store.send(.statusNoteConfirmed) },
-                    onCancel: { store.send(.statusNoteDismissed) }
-                )
-                .presentationDetents([.height(320)])
-            }
+        // A sheet keeps its content alive for a moment after its item is
+        // cleared, and its text field reads its binding on its own update,
+        // before this body runs again. `Binding(_:)` on an optional only checks
+        // once, when it is made — every read after that force-unwraps, so the
+        // dismissal it was meant to survive is exactly where it crashed (1.9.1,
+        // TestFlight). `holding(_:)` reads the last value instead of trapping.
+        .sheet(item: $store.statusNote) { presented in
+            let note = $store.statusNote.holding(presented)
+            StatusNoteSheet(
+                note: note.wrappedValue,
+                text: note.text,
+                onConfirm: { store.send(.statusNoteConfirmed) },
+                onCancel: { store.send(.statusNoteDismissed) }
+            )
+            .presentationDetents([.height(320)])
         }
-        .sheet(item: $store.partsDraft) { _ in
-            if let draft = Binding($store.partsDraft) {
-                PartsSheet(
-                    text: draft.text,
-                    isReady: draft.wrappedValue.isReady,
-                    onConfirm: { store.send(.partsConfirmed) },
-                    onCancel: { store.send(.binding(.set(\.partsDraft, nil))) }
-                )
-                .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $store.partsDraft) { presented in
+            let draft = $store.partsDraft.holding(presented)
+            PartsSheet(
+                text: draft.text,
+                isReady: draft.wrappedValue.isReady,
+                onConfirm: { store.send(.partsConfirmed) },
+                onCancel: { store.send(.binding(.set(\.partsDraft, nil))) }
+            )
+            .presentationDetents([.medium, .large])
         }
-        .sheet(item: $store.visitDraft) { _ in
-            if let draft = Binding($store.visitDraft) {
-                VisitSheet(
-                    draft: draft,
-                    onConfirm: { store.send(.visitConfirmed) },
-                    onCancel: { store.send(.binding(.set(\.visitDraft, nil))) }
-                )
-                .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $store.visitDraft) { presented in
+            VisitSheet(
+                draft: $store.visitDraft.holding(presented),
+                onConfirm: { store.send(.visitConfirmed) },
+                onCancel: { store.send(.binding(.set(\.visitDraft, nil))) }
+            )
+            .presentationDetents([.medium, .large])
         }
         .sheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
             ExpenseComposerSheet(store: store)
@@ -894,5 +891,29 @@ private struct TimelineRow: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+private extension Binding {
+    /// A non-optional view of an optional binding that never traps: it reads
+    /// `fallback` once the value is gone, and drops writes made after that so a
+    /// field still typing into a dismissed sheet cannot present it again.
+    func holding<Wrapped: Equatable>(_ fallback: Wrapped) -> Binding<Wrapped> where Value == Wrapped? {
+        self[dynamicMember: \Optional<Wrapped>[holding: Fallback(value: fallback)]]
+    }
+}
+
+/// A key-path subscript argument has to be `Hashable`; equality is what
+/// SwiftUI compares, so the constant hash is correct, merely unhelpful.
+private struct Fallback<Wrapped: Equatable>: Hashable {
+    let value: Wrapped
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.value == rhs.value }
+    func hash(into hasher: inout Hasher) {}
+}
+
+private extension Optional where Wrapped: Equatable {
+    subscript(holding fallback: Fallback<Wrapped>) -> Wrapped {
+        get { self ?? fallback.value }
+        set { if self != nil { self = newValue } }
     }
 }

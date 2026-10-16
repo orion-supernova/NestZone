@@ -56,6 +56,28 @@
   ],
   "entries": [
     {
+      "slug": "1.10.0-problem-sheet-crash",
+      "version": "1.10.0",
+      "kind": "fix",
+      "title": "Closing a note on a house problem no longer crashes the app",
+      "body": "Finishing or cancelling a status note, a parts list or a visit on a house problem could close the whole app instead of just the sheet. That's fixed. Thanks to @goksu.ozahishali for reporting it from TestFlight.",
+      "highlights": [
+        "Status notes, parts lists and visit sheets close cleanly",
+        "Thanks @goksu.ozahishali for the crash report"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Ev sorunlarında not kapatmak artık uygulamayı çökertmiyor",
+          "body": "Bir ev sorununda durum notunu, parça listesini ya da ziyaret planını tamamlamak veya iptal etmek, yalnızca sayfayı değil bütün uygulamayı kapatabiliyordu. Düzeltildi. Hatayı TestFlight'tan bildirdiği için @goksu.ozahishali'ye teşekkürler.",
+          "highlights": [
+            "Durum notu, parça listesi ve ziyaret sayfaları sorunsuz kapanıyor",
+            "Çökme raporu için teşekkürler @goksu.ozahishali"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.10.0-past-events",
       "version": "1.10.0",
       "kind": "feature",
