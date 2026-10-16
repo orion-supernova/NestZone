@@ -322,9 +322,15 @@ if [[ "$BUILD_WHERE" == "cloud" ]]; then
     git -C "$ROOT" push -q "$REMOTE" "$WORK_BRANCH" || die "Could not push $WORK_BRANCH."
     info "pushed $WORK_BRANCH"
 
-    # Create the release branch on first use rather than making it a
-    # prerequisite somebody has to know about.
-    if ! git -C "$ROOT" show-ref --verify --quiet "refs/heads/$RELEASE_BRANCH"; then
+    # Start from the remote's release branch, not from whatever this clone
+    # happens to have — or not have. A clone that never had `stage` locally
+    # used to make one from `dev`, which was missing every earlier release
+    # merge, and the push was rejected as non-fast-forward. Only a repository
+    # with no remote `stage` at all gets one made from `dev`.
+    git -C "$ROOT" fetch -q "$REMOTE" || die "Could not fetch $REMOTE."
+    if git -C "$ROOT" show-ref --verify --quiet "refs/remotes/$REMOTE/$RELEASE_BRANCH"; then
+      git -C "$ROOT" branch -f "$RELEASE_BRANCH" "$REMOTE/$RELEASE_BRANCH"
+    elif ! git -C "$ROOT" show-ref --verify --quiet "refs/heads/$RELEASE_BRANCH"; then
       git -C "$ROOT" branch "$RELEASE_BRANCH" "$WORK_BRANCH"
       info "created $RELEASE_BRANCH"
     fi

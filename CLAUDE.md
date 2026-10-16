@@ -117,6 +117,15 @@ told, and be glad they were?*
 - Write it for the household, not for the repository: "Notifications and
   updates, in one place", never "Add inbox module". If the entry cannot be
   written without naming a file, it probably should not exist.
+- **Write it the way people talk, in both languages.** Everyday, casual
+  voice: "No more crash when you close a note", "Hallettik", "sağ ol" — not
+  a translated press release. Correct grammar is the floor, not the goal; a
+  sentence can be grammatical and still read like nobody would say it. The
+  Turkish is written as Turkish, not translated off the English. A suffix on
+  a handle or name goes the way the person says it out loud, which is not
+  always what vowel harmony on the spelling gives:
+  `@goksu.ozahishali'ya`, not `'ye`. When a tester reports what got fixed,
+  thank them by handle in the entry.
 
 ```bash
 cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
