@@ -59,7 +59,6 @@
       "slug": "1.10.0-problem-sheet-crash",
       "version": "1.10.0",
       "kind": "fix",
-      "pinned": true,
       "title": "No more crash when you close a note on a house problem",
       "body": "Closing a status note, a parts list or a visit on a house problem could crash the app. Fixed. Big thanks to @goksu.ozahishali for catching it on TestFlight!",
       "highlights": [

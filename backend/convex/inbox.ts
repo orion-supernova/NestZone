@@ -1110,7 +1110,7 @@ export const syncChangelog = internalMutation({
     // *new* row, and an existing row keeps whoever wrote it.
     const fallbackAuthor = author ?? (await anyAdminId(ctx));
 
-    for (const entry of entries) {
+    for (const [index, entry] of entries.entries()) {
       const slug = entry.slug.trim();
       if (!slug) continue;
 
@@ -1161,7 +1161,10 @@ export const syncChangelog = internalMutation({
 
       await ctx.db.insert("app_updates", {
         ...fields,
-        published_at: entry.draft ? undefined : now,
+        // A millisecond apart in file order, so the top of the file is the
+        // newest. Two notes released in one sync used to share `now` exactly,
+        // and the feed's order between them was whatever the index said.
+        published_at: entry.draft ? undefined : now - index,
         author: fallbackAuthor,
         created: now,
       });
