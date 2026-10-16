@@ -145,12 +145,12 @@ enum HubLayout {
     static let cardPadding: CGFloat = 16
     /// Between the icon and the text it labels.
     static let cardInnerGap: CGFloat = 14
-    /// What the card's own contents come to at the default text size: the
-    /// padding twice, the icon, the gap, a one-line name and a two-line
-    /// description. A floor rather than a height, so a larger text size can
-    /// have more, and a constant rather than a measurement, so all six are
-    /// identical on every device.
-    static let cardHeight: CGFloat = 150
+    /// The lines every card keeps room for, whether its own words need them
+    /// or not. Reserved rather than measured, so all six are the same height
+    /// at every text size and in every language, and the height still grows
+    /// with Dynamic Type.
+    static let titleLines = 2
+    static let subtitleLines = 3
 
     static let iconSide: CGFloat = 46
     static let iconRadius: CGFloat = 14
@@ -185,11 +185,6 @@ private struct ModuleTile: View {
 
     var body: some View {
         Button(action: action) {
-            // Centred, not pinned top and bottom. The card is a little taller
-            // than its contents on most screens, and that difference reads as
-            // padding when it is split above and below and as a hole when it
-            // is all in the middle. The columns are offset anyway, so there is
-            // no cross-card alignment for centring to break.
             VStack(alignment: .leading, spacing: HubLayout.cardInnerGap) {
                 HStack(alignment: .center, spacing: 8) {
                     icon
@@ -197,28 +192,24 @@ private struct ModuleTile: View {
                     if module.isAvailable { number }
                 }
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(module.title)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        // "Calendar & Events" is one line in English and two in
-                        // Turkish, and truncating a module's name is a worse
-                        // trade than a second line.
-                        .lineLimit(2)
-                    Text(module.subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
+                // The real text is laid over a blank of the longest text any
+                // card is allowed, so every card is that tall whatever its own
+                // words come to. The description still follows its title
+                // directly — reserving the title's second line instead would
+                // leave a hole under every one-line name.
+                ZStack(alignment: .topLeading) {
+                    textBlock(title: Text(verbatim: " "), subtitle: Text(verbatim: " "), reservesSpace: true)
+                        .hidden()
+                        .accessibilityHidden(true)
+                    textBlock(title: Text(module.title), subtitle: Text(module.subtitle), reservesSpace: false)
+                }
 
-                    if !module.isAvailable {
-                        Badge(String(localized: L10n.hubComingSoon), tint: .secondary)
-                            .padding(.top, 4)
-                    }
+                if !module.isAvailable {
+                    Badge(String(localized: L10n.hubComingSoon), tint: .secondary)
                 }
             }
             .padding(HubLayout.cardPadding)
-            .frame(maxWidth: .infinity, minHeight: HubLayout.cardHeight, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .contentShape(.rect)
         }
         .buttonStyle(.pressable)
@@ -227,6 +218,26 @@ private struct ModuleTile: View {
         .opacity(module.isAvailable ? 1 : 0.55)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(module.isAvailable ? .isButton : [])
+    }
+
+    /// The name and the line under it, with the line counts every card shares.
+    ///
+    /// Title up to two lines — "Calendar & Events" is one line in English and
+    /// two in Turkish, and truncating a module's name is a worse trade than a
+    /// second line. Description up to three, which is what the longest of
+    /// them needs at a two-column width.
+    private func textBlock(title: Text, subtitle: Text, reservesSpace: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            title
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(HubLayout.titleLines, reservesSpace: reservesSpace)
+            subtitle
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(HubLayout.subtitleLines, reservesSpace: reservesSpace)
+                .multilineTextAlignment(.leading)
+        }
     }
 
     private var tint: Color { module.isAvailable ? module.tint : Color.secondary }

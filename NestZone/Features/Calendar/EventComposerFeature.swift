@@ -245,7 +245,12 @@ public struct EventComposerFeature: Sendable {
 
         public var isEditing: Bool { editing != nil }
         /// An edit to something that repeats has to say which of it it means.
-        public var needsScopeChoice: Bool { editing?.isRecurring == true }
+        /// A finished date has no "just this one" left to edit — only the
+        /// series it belongs to, which is what the sheet was opened for.
+        public var needsScopeChoice: Bool {
+            guard let editing else { return false }
+            return editing.isRecurring && !editing.isPast
+        }
 
         public var trimmedTitle: String {
             title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -716,6 +721,31 @@ public struct EventComposerFeature: Sendable {
         )
     }
 
+    /// What to write as the start and end, or `nil` to leave them alone.
+    ///
+    /// The sheet shows the *occurrence* it was opened from, but a series edit
+    /// writes the *series*, whose start is its first date. Sending the
+    /// occurrence's own date as the series start moved the whole series to it:
+    /// every earlier date — the ones already held, with their spending and
+    /// their RSVPs — dropped out of the calendar and out of Past events, and the
+    /// skipped dates came back, all for renaming "Game night". So a series edit
+    /// sends nothing when the time was not touched, and when it was, moves the
+    /// series by exactly as much as this date was moved.
+    static func times(
+        for state: State,
+        editing: EventOccurrence,
+        scope: EventScope
+    ) -> (start: Date, end: Date)? {
+        if scope == .occurrence || !editing.isRecurring {
+            return (state.startsAt, state.endsAt)
+        }
+        guard state.startsAt != editing.start || state.endsAt != editing.end else { return nil }
+        let start = editing.seriesStart.date.addingTimeInterval(
+            state.startsAt.timeIntervalSince(editing.start)
+        )
+        return (start, start.addingTimeInterval(state.endsAt.timeIntervalSince(state.startsAt)))
+    }
+
     private func save(_ state: inout State, scope: EventScope) -> Effect<Action> {
         state.isSubmitting = true
         state.inlineError = nil
@@ -732,13 +762,14 @@ public struct EventComposerFeature: Sendable {
         let drafts = state.sections.contains(.shopping) ? state.shoppingDraft : []
 
         if let editing = state.editing {
+            let times = Self.times(for: state, editing: editing, scope: scope)
             let edit = EventEdit(
                 title: state.trimmedTitle,
                 notes: state.notes,
                 location: state.location,
                 kind: state.kind,
-                startsAt: state.startsAt,
-                endsAt: state.endsAt,
+                startsAt: times?.start,
+                endsAt: times?.end,
                 isAllDay: state.isAllDay,
                 // An occurrence lifted out of a series never repeats — it is
                 // one date now, by definition.

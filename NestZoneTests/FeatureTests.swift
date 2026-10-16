@@ -4516,7 +4516,8 @@ struct CalendarFeatureTests {
                 answered.withValue { $0.append((id, status)) }
             }
         }
-        let start = Date(timeIntervalSince1970: 1_757_000_000)
+        // Ahead of now: a finished series takes no answer.
+        let start = Date().addingTimeInterval(86_400)
         let weekly = (0..<3).map { week in
             EventOccurrence(
                 eventID: "e9",
@@ -5081,7 +5082,8 @@ struct EventComposerTests {
 
     @Test("Editing one occurrence of a series writes it as its own one-off")
     func editingOneOccurrenceDetachesIt() async {
-        let start = Date(timeIntervalSince1970: 1_757_000_000)
+        // Ahead of now: a finished date has no "just this one" left to edit.
+        let start = Date().addingTimeInterval(7 * 86_400)
         let occurrence = EventOccurrence(
             eventID: "e1",
             title: "Standup",
@@ -5126,6 +5128,41 @@ struct EventComposerTests {
         // The detached copy is one date now, by definition.
         #expect(edit.recurrence == .some(nil))
     }
+
+    @Test("Editing a series from a later date leaves its start alone, or moves it by the same amount")
+    func seriesEditKeepsTheSeriesStart() async {
+        let seriesStart = Date().addingTimeInterval(-60 * 86_400)
+        let later = seriesStart.addingTimeInterval(9 * 7 * 86_400)
+        let occurrence = EventOccurrence(
+            eventID: "e1",
+            title: "Game night",
+            startsAt: Timestamp(later),
+            endsAt: Timestamp(later.addingTimeInterval(3 * 3600)),
+            recurrence: Recurrence(frequency: .weekly),
+            seriesStart: Timestamp(seriesStart)
+        )
+        var state = EventComposerFeature.State(
+            homeID: "h1",
+            members: Self.members,
+            currentUserID: "u1",
+            day: CalendarDay(later),
+            editing: occurrence
+        )
+
+        // Renaming it is not moving it: sending this date as the series start
+        // is what used to drop every earlier week out of the calendar.
+        #expect(EventComposerFeature.times(for: state, editing: occurrence, scope: .series) == nil)
+
+        state.startsAt = later.addingTimeInterval(3600)
+        state.endsAt = later.addingTimeInterval(4 * 3600)
+        let moved = EventComposerFeature.times(for: state, editing: occurrence, scope: .series)
+        #expect(moved?.start == seriesStart.addingTimeInterval(3600))
+        #expect(moved?.end == seriesStart.addingTimeInterval(4 * 3600))
+
+        // One date lifted out keeps exactly what the sheet says.
+        let detached = EventComposerFeature.times(for: state, editing: occurrence, scope: .occurrence)
+        #expect(detached?.start == state.startsAt)
+    }
 }
 
 @MainActor
@@ -5137,12 +5174,119 @@ struct EventPlanTests {
         homeID: "h1",
         title: "House party",
         kind: .houseParty,
-        startsAt: Timestamp(Date(timeIntervalSince1970: 1_757_000_000)),
-        endsAt: Timestamp(Date(timeIntervalSince1970: 1_757_014_400)),
+        startsAt: Timestamp(upcoming),
+        endsAt: Timestamp(upcoming.addingTimeInterval(4 * 3600)),
         budget: 15_000,
         currency: "EUR",
         recipeIDs: ["r1"]
     )
+
+    /// Ahead of now, so the sheet is a planner. The same event already held is
+    /// `Self.finished`, and the sheet is a recap.
+    private static let upcoming = Date().addingTimeInterval(7 * 86_400)
+
+    private static var finished: EventOccurrence {
+        var past = occurrence
+        past.startsAt = Timestamp(Date().addingTimeInterval(-3 * 86_400))
+        past.endsAt = Timestamp(Date().addingTimeInterval(-3 * 86_400 + 4 * 3600))
+        return past
+    }
+
+    @Test("A finished event is a recap: nothing that plans ahead does anything")
+    func finishedEventIsReadOnly() async {
+        let plan = EventPlan(
+            eventID: "e1",
+            currency: "EUR",
+            shopping: [EventPlan.LinkedItem(id: "s1", name: "Ice")],
+            shoppingTotal: 1,
+            recipes: [EventPlan.MenuRecipe(id: "r1", title: "Lasagne", ingredientCount: 4)],
+            stockUpPending: 4
+        )
+        let store = TestStore(
+            initialState: EventDetailFeature.State(
+                occurrence: Self.finished,
+                members: [],
+                currentUserID: "u1"
+            )
+        ) {
+            EventDetailFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.planUpdated(plan))
+        #expect(store.state.isOver)
+        #expect(!store.state.canStockUp)
+        #expect(!store.state.canPlanDinner)
+        #expect(!store.state.canEdit)
+        #expect(!store.state.visibleSections.contains(.tickets))
+        // No dependency is stubbed, so any of these reaching the network fails
+        // the test outright.
+        await store.send(.rsvpTapped(.going))
+        await store.send(.stockUpTapped)
+        await store.send(.itemToggled("s1", true))
+        await store.send(.editTapped)
+        #expect(store.state.occurrence.rsvps.isEmpty)
+        #expect(store.state.plan?.shopping.first?.isPurchased == false)
+        // Leftovers are what is still unbought once it is over.
+        #expect(store.state.leftovers.map(\.id) == ["s1"])
+    }
+
+    @Test("A finished date of a series that carries on edits the series, without asking")
+    func finishedDateEditsTheSeries() async {
+        var past = Self.finished
+        past.recurrence = Recurrence(frequency: .weekly)
+        past.isRecurring = true
+        let store = TestStore(
+            initialState: EventDetailFeature.State(occurrence: past, members: [], currentUserID: "u1")
+        ) {
+            EventDetailFeature()
+        }
+        store.exhaustivity = .off
+
+        #expect(store.state.canEdit)
+        await store.send(.editTapped)
+        await store.receive(\.delegate, .edit(past, .series))
+        #expect(store.state.scopeDialog == nil)
+    }
+
+    @Test("Clearing leftovers asks, drops them at once, and puts them back if the write fails")
+    func clearingLeftoversRollsBack() async {
+        let plan = EventPlan(
+            eventID: "e1",
+            shopping: [
+                EventPlan.LinkedItem(id: "s1", name: "Ice", isPurchased: true),
+                EventPlan.LinkedItem(id: "s2", name: "Candles"),
+            ],
+            shoppingTotal: 2,
+            shoppingPurchased: 1
+        )
+        let removed = LockIsolated<[ShoppingItemID]>([])
+        let store = TestStore(
+            initialState: EventDetailFeature.State(
+                occurrence: Self.finished,
+                members: [],
+                currentUserID: "u1"
+            )
+        ) {
+            EventDetailFeature()
+        } withDependencies: {
+            $0.shopping.removeMany = { ids in
+                removed.withValue { $0 = ids }
+                throw AppError.offline
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.planUpdated(plan))
+        await store.send(.clearLeftoversTapped)
+        #expect(store.state.alert != nil)
+
+        await store.send(.alert(.presented(.confirmClearLeftovers)))
+        await store.receive(\.leftoversClearFailed)
+        // Only the unbought line was sent; the bought one is the record.
+        #expect(removed.value == ["s2"])
+        #expect(store.state.plan == plan)
+    }
 
     @Test("Ticking an item off moves the counter, not just the row")
     func tickingAnItemMovesTheTotal() async {

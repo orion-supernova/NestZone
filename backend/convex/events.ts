@@ -309,6 +309,24 @@ function seriesEndFor(startsAt: number, endsAt: number, rec: Recurrence | undefi
   return rec.until + Math.max(0, endsAt - startsAt);
 }
 
+/**
+ * Refuses a write that would rewrite something already over.
+ *
+ * A finished event is a record: what it cost, who said they were coming, what
+ * was bought and cooked for it. Moving it, re-planning it or stocking up for it
+ * after the fact changes the history rather than the plan, and the shopping it
+ * would add lands on today's list for a party that has been and gone. Logging
+ * what it cost is the one write that still belongs — receipts arrive late — and
+ * that goes through `finance`, not here. Deleting stays too: "that never
+ * happened" is a correction, not a rewrite.
+ *
+ * `end` is the last instant the thing being written to can matter: the whole
+ * series' `series_end`, or one occurrence's own end.
+ */
+function requireNotOver(end: number) {
+  if (end < Date.now()) throw new Error("This event is already over");
+}
+
 // MARK: - Reading
 
 /**
@@ -446,6 +464,109 @@ export const upcoming = query({
     const count = Math.min(Math.max(1, Math.floor(limit ?? 20)), 100);
     const series = await seriesFor(ctx, homeId, now, horizon);
     return collect(series, now, horizon).slice(0, count);
+  },
+});
+
+/**
+ * What the household has already done, and what it came to.
+ *
+ * The calendar's other direction. `inRange` answers "what is on"; this answers
+ * "what did we do, and what did it cost" — which is a question about events as
+ * a whole rather than about a month, so it is not a month's window.
+ *
+ * One row per *series*, not per occurrence. A one-off is a row of its own; a
+ * weekly game night held forty times is one row that says forty, because forty
+ * identical rows is a calendar printed out, not a look back. Each row carries
+ * its latest finished occurrence, which is what opens when it is tapped.
+ *
+ * Money is attributed to a series through `expenses.event_id`, the same link
+ * `detail` reads. A one-off counts everything linked to it, however late the
+ * receipt was logged; a repeating series counts what was spent inside the
+ * window, since "game night" in 2024 is not this year's game night. Sums are
+ * scoped to a currency, as everywhere else — the totals come back per currency
+ * and nothing converts between them.
+ */
+export const history = query({
+  args: { homeId: v.id("homes"), days: v.optional(v.number()) },
+  handler: async (ctx, { homeId, days }) => {
+    await requireHomeMember(ctx, homeId);
+    const now = Date.now();
+    const window = Math.min(Math.max(1, Math.floor(days ?? 365)), 731);
+    const from = now - window * DAY;
+
+    const series = await seriesFor(ctx, homeId, from, now);
+
+    type Row = {
+      occurrence: Occurrence;
+      times: number;
+      spent: number;
+      currency: string | null;
+      budget: number | null;
+      going: number;
+    };
+    const rows: Row[] = [];
+    const totals = new Map<string, number>();
+    let held = 0;
+    let overBudget = 0;
+    let budgeted = 0;
+
+    await Promise.all(
+      series.map(async (event) => {
+        // Finished only: something under way right now is not history yet.
+        const starts = expand(event, from, now).filter(
+          (start) => start + Math.max(0, event.ends_at - event.starts_at) < now,
+        );
+        if (!starts.length) return;
+
+        const expenses = await ctx.db
+          .query("expenses")
+          .withIndex("by_event", (q) => q.eq("event_id", event._id))
+          .collect();
+        const counted = event.recurrence
+          ? expenses.filter((e) => e.spent_at >= from && e.spent_at <= now)
+          : expenses;
+
+        const currency = event.currency ?? counted[0]?.currency ?? null;
+        const spent = counted
+          .filter((e) => currency === null || e.currency === currency)
+          .reduce((sum, e) => sum + e.amount, 0);
+        for (const e of counted) totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount);
+
+        // A budget is for one occasion, so only a one-off can be over it. A
+        // repeating series' budget is per occurrence, and holding forty
+        // occurrences' spend against one of them would call every series
+        // over budget.
+        const budget = event.budget ?? null;
+        if (budget !== null && !event.recurrence) {
+          budgeted++;
+          if (spent > budget) overBudget++;
+        }
+
+        held += starts.length;
+        rows.push({
+          occurrence: occurrence(event, starts[starts.length - 1]),
+          times: starts.length,
+          spent,
+          currency,
+          budget: event.recurrence ? null : budget,
+          going: (event.rsvps ?? []).filter((r) => r.status === "going").length,
+        });
+      }),
+    );
+
+    rows.sort((a, b) => b.occurrence.starts_at - a.occurrence.starts_at);
+
+    return {
+      days: window,
+      rows,
+      held,
+      /** Largest first, so the headline figure is the currency most of it was in. */
+      spent: [...totals.entries()]
+        .map(([currency, amount]) => ({ currency, amount }))
+        .sort((a, b) => b.amount - a.amount),
+      over_budget: overBudget,
+      budgeted,
+    };
   },
 });
 
@@ -665,6 +786,7 @@ export const stockUp = mutation({
     const event = await ctx.db.get(id);
     if (!event) throw new Error("Event not found");
     await requireDocHome(ctx, event, "Event");
+    requireNotOver(event.series_end);
 
     const recipeIds = event.recipe_ids ?? [];
     if (!recipeIds.length) return { added: 0, skipped: 0 };
@@ -753,6 +875,7 @@ export const addItems = mutation({
     const event = await ctx.db.get(id);
     if (!event) throw new Error("Event not found");
     await requireDocHome(ctx, event, "Event");
+    requireNotOver(event.series_end);
 
     const outstanding = await outstandingNames(ctx, event.home_id);
 
@@ -892,6 +1015,15 @@ export const update = mutation({
     const event = await ctx.db.get(args.id);
     if (!event) throw new Error("Event not found");
     const home = await requireDocHome(ctx, event, "Event");
+
+    // One occurrence is over when *it* has ended; the series only when its
+    // last one has — editing "every Friday" from last Friday's sheet is still
+    // editing the Fridays to come.
+    if ((args.scope ?? "series") === "occurrence" && args.occurrenceStart !== undefined) {
+      requireNotOver(args.occurrenceStart + Math.max(0, event.ends_at - event.starts_at));
+    } else {
+      requireNotOver(event.series_end);
+    }
 
     if (args.title !== undefined && !args.title.trim()) {
       throw new Error("An event needs a name");
@@ -1048,6 +1180,8 @@ export const rsvp = mutation({
     const event = await ctx.db.get(id);
     if (!event) throw new Error("Event not found");
     await requireDocHome(ctx, event, "Event");
+    // Per series, so a series with dates still to come still takes an answer.
+    requireNotOver(event.series_end);
 
     const others = (event.rsvps ?? []).filter((r) => r.user_id !== user._id);
     const rsvps = status === null ? others : [...others, { user_id: user._id, status }];

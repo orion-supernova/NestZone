@@ -1,16 +1,16 @@
-# Graph Report - NestZone  (2026-09-20)
+# Graph Report - NestZone  (2026-09-23)
 
 ## Corpus Check
-- 226 files · ~495,710 words
+- 228 files · ~501,041 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5568 nodes · 11863 edges · 275 communities (261 shown, 14 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 405 edges (avg confidence: 0.79)
+- 5648 nodes · 12061 edges · 269 communities (255 shown, 14 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 412 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `73075360`
+- Built from commit: `80ae653a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -216,6 +216,7 @@
 - crons.ts
 - ChoiceCard
 - NewShoppingItem
+- PhotoZoom
 - CancelID
 - StatTile
 - AuthFeature.swift
@@ -259,47 +260,40 @@
 - Community 242
 - Alert
 - Community 245
+- IssuePhotoIDs
 - CancelID
 - .newestFirst
 - MovieList.Kind
 - ci_post_clone.sh
 - BillCycle
+- IssueComposerFeature
 - PushRegistration
 - HomeStats
-- AvatarRollback
-- .commit
-- NotesClient
-- Path
 - Alert
-- ClearTarget
 - Alert
 - Community 263
 - State
 - .image
 - HomeStats
-- Seed
 - Delegate
-- .clear
 - Community 270
 - StepDuration
-- ConfirmationDialogState
 - Loaded
-- Alert
 - Community 279
 - Community 281
 - Community 292
 
 ## God Nodes (most connected - your core abstractions)
-1. `L10n` - 176 edges
-2. `Timestamp` - 104 edges
-3. `Foundation` - 90 edges
-4. `SwiftUI` - 89 edges
-5. `AppError` - 85 edges
-6. `ComposableArchitecture` - 82 edges
-7. `User` - 82 edges
+1. `L10n` - 184 edges
+2. `Timestamp` - 105 edges
+3. `Foundation` - 91 edges
+4. `SwiftUI` - 90 edges
+5. `AppError` - 86 edges
+6. `ComposableArchitecture` - 84 edges
+7. `User` - 84 edges
 8. `CodingKeys` - 79 edges
-9. `Date` - 76 edges
-10. `Color` - 72 edges
+9. `Date` - 78 edges
+10. `Color` - 74 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `MovieHandoffTests` --calls--> `MovieList`  [INFERRED]
@@ -319,19 +313,19 @@
 ## Hyperedges (group relationships)
 - **Generic polls data model (polls, items, votes scoped to homes)** — docs_pocketbase_readme_polls, docs_pocketbase_readme_poll_items, docs_pocketbase_readme_poll_votes, docs_pocketbase_readme_homes [EXTRACTED 1.00]
 
-## Communities (275 total, 14 thin omitted)
+## Communities (269 total, 14 thin omitted)
 
 ### Community 0 - "What-To-Watch Voting"
 Cohesion: 0.07
-Nodes (32): ContentMode, CryptoKit, KeyedDecodingContainer, Int, T, ImageDiskCache, CGFloat, String (+24 more)
+Nodes (34): ContentMode, CryptoKit, KeyedDecodingContainer, Int, T, ImageDiskCache, CGFloat, String (+26 more)
 
 ### Community 1 - "Localization Strings"
-Cohesion: 0.25
-Nodes (3): BillComposerTests, ExpenseComposerTests, Bill
+Cohesion: 0.17
+Nodes (5): BillComposerTests, ExpenseComposerTests, SettleUpTests, Bill, IdentifiedArrayOf
 
 ### Community 2 - "Model Coding Keys"
-Cohesion: 0.12
-Nodes (18): Action, alert, binding, contributionsUpdated, loadFailed, task, Alert, CancelID (+10 more)
+Cohesion: 0.10
+Nodes (22): ContributionWindow, allTime, month, week, LocalizedStringResource, Action, alert, binding (+14 more)
 
 ### Community 3 - "Confetti & Realtime Models"
 Cohesion: 0.03
@@ -343,7 +337,7 @@ Nodes (15): AvatarCrop, CGFloat, CGRect, CGSize, Self, AvatarCropSheet, Accessib
 
 ### Community 5 - "Recipe Theming"
 Cohesion: 0.06
-Nodes (4): L10n, Int, Locale, StaticString
+Nodes (4): L10n, Int, Locale, LocalizedStringResource
 
 ### Community 6 - "Movie List Model"
 Cohesion: 0.03
@@ -358,16 +352,16 @@ Cohesion: 0.14
 Nodes (13): Footer, Palette, StickyColor, blue, green, orange, pink, purple (+5 more)
 
 ### Community 10 - "DTO Coding Keys"
-Cohesion: 0.07
-Nodes (42): ActivityID, Decodable, ActivityCategory, calendar, finance, home, issues, meals (+34 more)
+Cohesion: 0.14
+Nodes (20): Decodable, ActivityCategoryCounts, ActivityPage, AppUpdate, translations, InboxBadge, LocalizedUpdate, Row (+12 more)
 
 ### Community 11 - "Movie Lists Manager"
-Cohesion: 0.04
-Nodes (52): CodingKeys, amount, attendees, budget, category, cookTime, created, createdBy (+44 more)
+Cohesion: 0.03
+Nodes (60): CodingKeys, amount, attendees, budget, budgeted, category, cookTime, created (+52 more)
 
 ### Community 12 - "Messages View"
-Cohesion: 0.05
-Nodes (37): Action, actionsDismissed, alert, backgroundTapped, binding, bubbleHeld, composeTapped, conversationsUpdated (+29 more)
+Cohesion: 0.04
+Nodes (49): Action, actionsDismissed, alert, backgroundTapped, binding, bubbleHeld, composeTapped, conversationsUpdated (+41 more)
 
 ### Community 13 - "PocketBase Networking"
 Cohesion: 0.04
@@ -390,16 +384,16 @@ Cohesion: 0.05
 Nodes (33): addParts, assign, attachPhotos, byHome, comment, create, detail, EntryKind (+25 more)
 
 ### Community 18 - "Sample Recipes"
-Cohesion: 0.06
-Nodes (32): Action, addOnDayTapped, addTapped, alert, binding, daySelected, deleteCommitFailed, deleteTapped (+24 more)
+Cohesion: 0.05
+Nodes (42): Action, addOnDayTapped, addTapped, alert, binding, daySelected, deleteCommitFailed, deleteTapped (+34 more)
 
 ### Community 19 - "Management Tab ViewModel"
-Cohesion: 0.14
-Nodes (18): Category, cleaning, groceries, household, other, ShoppingItem, Bool, Decoder (+10 more)
+Cohesion: 0.16
+Nodes (17): Category, cleaning, groceries, household, other, ShoppingItem, Bool, Decoder (+9 more)
 
 ### Community 20 - "Notes ViewModel"
-Cohesion: 0.15
-Nodes (3): Decimal, SplitMath, FinanceLogicTests
+Cohesion: 0.10
+Nodes (5): Decimal, Money, health, Set, FinanceLogicTests
 
 ### Community 21 - "Unit & UI Tests"
 Cohesion: 0.13
@@ -426,40 +420,40 @@ Cohesion: 0.08
 Nodes (24): @auth/core, dependencies, @auth/core, convex, @convex-dev/auth, jose, description, devDependencies (+16 more)
 
 ### Community 27 - "Cooking Mode"
-Cohesion: 0.09
-Nodes (21): BillCycle, biweekly, monthly, once, quarterly, weekly, yearly, NewBill (+13 more)
+Cohesion: 0.17
+Nodes (16): AmountField, BillComposerSheet, BudgetEditorSheet, ComposerToolbar, ExpenseComposerSheet, InlineError, MemberLabel, PayBillSheet (+8 more)
 
 ### Community 28 - "Poll Type Selection"
-Cohesion: 0.07
-Nodes (33): addItems, cleanWeekdays(), collect(), create, detail, EventDoc, eventKind, EventNudge (+25 more)
+Cohesion: 0.06
+Nodes (34): addItems, cleanWeekdays(), collect(), create, detail, EventDoc, eventKind, EventNudge (+26 more)
 
 ### Community 29 - "List & Difficulty Enums"
-Cohesion: 0.06
-Nodes (80): Codable, Hashable, AreaCount, CategoryCount, HouseIssue, IssueArea, balcony, basement (+72 more)
+Cohesion: 0.07
+Nodes (80): Codable, Hashable, Identifiable, AreaCount, CategoryCount, HouseIssue, IssueArea, balcony (+72 more)
 
 ### Community 30 - "Movie List Detail"
 Cohesion: 0.05
 Nodes (41): Action, alert, avatarRemoved, avatarSelected, avatarUpdated, avatarUpdateFailed, binding, checkForUpdatesTapped (+33 more)
 
 ### Community 31 - "Note Color Extensions"
-Cohesion: 0.18
-Nodes (13): Poll, PollDetail, PollItem, PollOutcome, Result, agreed, closest, nothing (+5 more)
+Cohesion: 0.21
+Nodes (10): PollDetail, PollItem, PollOutcome, Result, agreed, closest, nothing, Int (+2 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.20
-Nodes (18): HouseHealthRing, IssueArea, IssueCategory, IssuePhotoStrip, IssueSeverity, IssueStatus, MeTooButton, RoomTile (+10 more)
+Cohesion: 0.05
+Nodes (47): Context, CameraPicker, Coordinator, Any, Bool, Data, Void, HouseHealthRing (+39 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.06
 Nodes (34): Action, alert, backTapped, ballotToggled, binding, cuisineChosen, customAdded, delegate (+26 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.28
-Nodes (5): Effect, activity, updates, ConversationID, Effect
+Cohesion: 0.20
+Nodes (15): BillCycle, State, AlertState, Bill, Bool, EventID, HomeID, IdentifiedArrayOf (+7 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.04
-Nodes (41): AvatarInitials, CGFloat, String, AvatarPickerFace, Bool, CGFloat, String, UIImage (+33 more)
+Cohesion: 0.05
+Nodes (37): AuthenticationServices, ComposableArchitecture, LaunchView, OfflineView, Void, CurrencyDefaults, Shared<String?>, SharedKey (+29 more)
 
 ### Community 36 - "Auth Manager"
 Cohesion: 0.06
@@ -470,16 +464,16 @@ Cohesion: 0.06
 Nodes (31): accounts, activity, activityCategories, allUpdates, anyAdminId(), badge, cachedReleaseCheck, countsAsUnread() (+23 more)
 
 ### Community 38 - "Premium Text Field"
-Cohesion: 0.09
-Nodes (36): LaunchView, OfflineView, Void, AlreadyDecidedBanner, DinnerPlanCard, KindCard, RecipeChoice, RoundView (+28 more)
+Cohesion: 0.10
+Nodes (25): MealPlanID, MealPlan, Cuisine, HomeID, Kind, Recipe, UserID, AlreadyDecidedBanner (+17 more)
 
 ### Community 39 - "Simple Movie Detail"
 Cohesion: 0.06
 Nodes (31): Action, addFailed, addFinished, addTapped, alert, binding, categoryToggled, clearCategoryTapped (+23 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.16
-Nodes (10): Budget, Money, Settlement, BudgetID, Decoder, Int, IssueSeverity, Set (+2 more)
+Cohesion: 0.12
+Nodes (17): CodingKeys, assignedTo, completedBy, created, createdBy, details, dueDate, homeID (+9 more)
 
 ### Community 41 - "App Services Core"
 Cohesion: 0.12
@@ -490,8 +484,8 @@ Cohesion: 0.33
 Nodes (10): polls.candidates JSON (lightweight external IDs), PocketBase Generic Polls (REST, no realtime), Home membership access rules, homes collection (members relation), Migration path candidates JSON to poll_items, poll_items collection, poll_votes collection, Client polling without SSE/realtime (+2 more)
 
 ### Community 43 - "Chat Detail"
-Cohesion: 0.05
-Nodes (37): CaseIterable, AppLanguage, english, system, turkish, L10n, Locale, Mode (+29 more)
+Cohesion: 0.04
+Nodes (54): CaseIterable, AppLanguage, english, system, turkish, L10n, Locale, Group (+46 more)
 
 ### Community 44 - "Movie Search Row"
 Cohesion: 0.06
@@ -502,60 +496,60 @@ Cohesion: 0.09
 Nodes (19): Error, AppError, cancelled, decoding, noHomeSelected, notAuthenticated, offline, server (+11 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.11
-Nodes (20): parts, Kind, cuisine, custom, recipe, Route, set, vote (+12 more)
+Cohesion: 0.12
+Nodes (19): parts, Kind, cuisine, custom, recipe, Route, set, vote (+11 more)
 
 ### Community 47 - "New Message Group"
-Cohesion: 0.13
-Nodes (15): State, Action, AlertState, Bill, BillID, Bool, Destination, ExpenseID (+7 more)
+Cohesion: 0.12
+Nodes (17): members, State, Action, AlertState, Bill, BillID, Bool, Destination (+9 more)
 
 ### Community 48 - "Poll Input Sheets"
-Cohesion: 0.25
-Nodes (5): LockIsolated, Message, Kind, ChatFeature, MessagesTests
+Cohesion: 0.09
+Nodes (26): LockIsolated, MainFeature.State, Conversation, Kind, audio, document, gif, image (+18 more)
 
 ### Community 49 - "Previous Polls"
 Cohesion: 0.06
 Nodes (31): Action, addMoviesTapped, addTapped, alert, allMoviesUpdated, binding, createListTapped, deleteListTapped (+23 more)
 
 ### Community 50 - "Theme Selection"
-Cohesion: 0.05
-Nodes (37): MainView, Action, home, homePath, hub, inbox, messages, notes (+29 more)
+Cohesion: 0.09
+Nodes (24): Action, home, homePath, hub, inbox, messages, notes, settings (+16 more)
 
 ### Community 51 - "Recipe List View"
-Cohesion: 0.09
-Nodes (37): EventPlan, EventReminder, atTime, oneDay, oneHour, oneWeek, tenMinutes, thirtyMinutes (+29 more)
+Cohesion: 0.08
+Nodes (43): CurrencyTotal, EventHistory, EventPlan, EventReminder, atTime, oneDay, oneHour, oneWeek (+35 more)
 
 ### Community 52 - "Read Receipts"
-Cohesion: 0.12
-Nodes (16): Action, alert, archiveUpdated, deleteFailed, deleteTapped, loadFailed, restoreFailed, restoreTapped (+8 more)
+Cohesion: 0.14
+Nodes (14): Action, alert, archiveUpdated, deleteFailed, deleteTapped, loadFailed, restoreFailed, restoreTapped (+6 more)
 
 ### Community 53 - "Note Creator"
-Cohesion: 0.07
-Nodes (30): Action, addExpenseTapped, addItemTapped, alert, binding, bulkAddFinished, delegate, deleteTapped (+22 more)
+Cohesion: 0.05
+Nodes (44): Action, addExpenseTapped, addItemTapped, alert, binding, bulkAddFinished, clearLeftoversTapped, delegate (+36 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.07
 Nodes (30): Action, activityFailed, activityUpdated, admin, adminTapped, alert, badgeFailed, badgeUpdated (+22 more)
 
 ### Community 55 - "Swipe Deck"
-Cohesion: 0.07
-Nodes (30): CodingKeys, activity, activityFloor, activityReadAt, actor, actorName, body, cap (+22 more)
+Cohesion: 0.06
+Nodes (31): CodingKeys, activity, activityFloor, activityReadAt, actor, actorName, body, cap (+23 more)
 
 ### Community 56 - "Home Selection View"
-Cohesion: 0.17
-Nodes (10): Element, Error, Sendable, AvatarDirectory, String, URL, AvatarEntry, String (+2 more)
+Cohesion: 0.32
+Nodes (4): AvatarDirectory, String, URL, AvatarDirectoryTests
 
 ### Community 57 - "Switch Home Sheet"
-Cohesion: 0.04
-Nodes (56): Action, alert, archiveTapped, binding, composeTapped, delegate, deleteFinishedFailed, deleteTapped (+48 more)
+Cohesion: 0.07
+Nodes (28): Action, alert, archiveTapped, binding, composeTapped, delegate, deleteFinishedFailed, deleteTapped (+20 more)
 
 ### Community 58 - "Genre Picker"
 Cohesion: 0.26
 Nodes (11): DependencyValues, DinnerDecision, MealsClient, async, Cuisine, Error, EventID, HomeID (+3 more)
 
 ### Community 59 - "Swipe Card"
-Cohesion: 0.10
-Nodes (23): Kind, actor, decade, director, genre, nowPlaying, popular, topRated (+15 more)
+Cohesion: 0.22
+Nodes (11): State, Action, AlertState, Bool, Destination, HomeID, Int, Kind (+3 more)
 
 ### Community 60 - "Recipe Card"
 Cohesion: 0.05
@@ -578,8 +572,8 @@ Cohesion: 0.25
 Nodes (12): createRecipe(), DependencyValues, NewRecipe, RecipesClient, async, Bool, Error, HomeID (+4 more)
 
 ### Community 65 - "Community 65"
-Cohesion: 0.15
-Nodes (8): PollCandidate, ConvexEncodable, String, DinnerCandidate, DinnerFeature, ReducerOf, DinnerTests, Recipe
+Cohesion: 0.18
+Nodes (6): DinnerCandidate, DinnerFeature, HomeID, ReducerOf, DinnerTests, Recipe
 
 ### Community 66 - "Loading Button"
 Cohesion: 0.11
@@ -590,8 +584,8 @@ Cohesion: 0.14
 Nodes (16): pending, path, members, Pending, State, Action, AlertState, Bool (+8 more)
 
 ### Community 68 - "Search Results List"
-Cohesion: 0.20
-Nodes (13): Expense, ExpenseSplit, ExpenseWeight, NewExpense, SplitMode, equal, exact, shares (+5 more)
+Cohesion: 0.08
+Nodes (48): Bill, Budget, BudgetProgress, CalendarMonth, CategoryTotal, EventSpend, Expense, ExpenseSplit (+40 more)
 
 ### Community 69 - "Language Selection"
 Cohesion: 0.10
@@ -602,20 +596,20 @@ Cohesion: 0.08
 Nodes (24): 10. Suggested cutover order, 10b. Troubleshooting: `InvalidAccountId` on sign‑in, 11. Gotchas checklist, 1. The mental-model shift (read this first), 2. Add the Convex Swift SDK, 3. Auth: replace `PocketBaseAuthManager`, 4. Replace `PocketBaseManager` with typed calls, 5. Models / DTOs (`PocketBaseModels.swift`) (+16 more)
 
 ### Community 71 - "Vibrant Module Card"
-Cohesion: 0.11
-Nodes (20): out, AsyncThrowingStream, DependencyValues, EventEdit, EventsClient, StockUpResult, async, Bool (+12 more)
+Cohesion: 0.08
+Nodes (26): Calendar, BinaryInteger, Date, Decoder, Double, DependencyValues, EventEdit, EventsClient (+18 more)
 
 ### Community 72 - "Chat Header"
 Cohesion: 0.16
 Nodes (13): State, StepTimer, Action, AlertState, Bool, Destination, Double, HomeID (+5 more)
 
 ### Community 73 - "Message Input"
-Cohesion: 0.12
-Nodes (28): CastMember, Kind, custom, watched, wishlist, Movie, MovieExtras, MovieList (+20 more)
+Cohesion: 0.11
+Nodes (31): CastMember, Kind, custom, watched, wishlist, Movie, MovieExtras, MovieList (+23 more)
 
 ### Community 74 - "Community 74"
-Cohesion: 0.20
-Nodes (16): Identifiable, ContributionDay, ContributionSlice, ContributionWindow, allTime, month, week, Count (+8 more)
+Cohesion: 0.28
+Nodes (10): ContributionDay, ContributionSlice, Count, HomeContributions, MemberContribution, Bool, Double, Int (+2 more)
 
 ### Community 75 - "Community 75"
 Cohesion: 0.08
@@ -634,16 +628,16 @@ Cohesion: 0.28
 Nodes (4): DependencyValues, CalendarFeatureTests, Double, Void
 
 ### Community 79 - "Management Tab Screen"
-Cohesion: 0.11
-Nodes (22): Anchor, BubbleActionsAnchor, BubbleActionsAnchorKey, ChatView, ConversationRow, MessageActionsBar, MessageBubble, MessagesView (+14 more)
+Cohesion: 0.09
+Nodes (27): Anchor, AvatarStack, Member, CGFloat, Int, String, BubbleActionsAnchor, BubbleActionsAnchorKey (+19 more)
 
 ### Community 80 - "Community 80"
 Cohesion: 0.12
 Nodes (14): FALSY, openTasks(), outstandingItems(), outstandingNames(), category, create, createFromRecipe, listByHome (+6 more)
 
 ### Community 81 - "Note Card"
-Cohesion: 0.23
-Nodes (8): EventOccurrence, CalendarView, Bool, Gesture, Int, LocalizedStringResource, StoreOf, UserID
+Cohesion: 0.22
+Nodes (7): CalendarView, Bool, Gesture, Int, LocalizedStringResource, StoreOf, UserID
 
 ### Community 82 - "Community 82"
 Cohesion: 0.13
@@ -658,16 +652,16 @@ Cohesion: 0.11
 Nodes (17): 1. Where the codebase actually stands, 2. Who is the subscriber?, 3. The seams, 4. The rule that makes it tractable, 5. Which features should be premium, 6. What to build before deciding any of it, 7. Open questions, Calendar ↔ Shopping and Recipes (+9 more)
 
 ### Community 85 - "Community 85"
-Cohesion: 0.25
-Nodes (9): State, Action, AlertState, AppUpdate, Bool, HomeID, IdentifiedArrayOf, Tab (+1 more)
+Cohesion: 0.12
+Nodes (16): ActivityID, HomeActivity, UserID, ActivitySection, State, Action, AlertState, AppUpdate (+8 more)
 
 ### Community 86 - "Community 86"
 Cohesion: 0.11
 Nodes (19): Action, alert, authorsResolved, binding, colorSelected, composeTapped, deleteFailed, deleteTapped (+11 more)
 
 ### Community 87 - "Notes View"
-Cohesion: 0.08
-Nodes (25): content, Color, String, Backdrop, BudgetProgress.Health, GlassCard, GlassGroup, Metrics (+17 more)
+Cohesion: 0.09
+Nodes (21): Color, String, Backdrop, ConfettiBurst, TimeInterval, StatTile, Int, LocalizedStringResource (+13 more)
 
 ### Community 88 - "Task Priority"
 Cohesion: 0.18
@@ -678,16 +672,16 @@ Cohesion: 0.11
 Nodes (18): CodingKeys, category, created, createdBy, details, eventID, eventTitle, homeID (+10 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.06
-Nodes (41): DependencyValues, PushClient, PushTokenBroker, AsyncStream, Bool, Data, Error, Int (+33 more)
+Cohesion: 0.13
+Nodes (17): DependencyValues, PushClient, PushTokenBroker, AsyncStream, Bool, Data, Error, Int (+9 more)
 
 ### Community 92 - "Community 92"
-Cohesion: 0.18
-Nodes (15): Kind, generic, movie, recipe, PollVote, Status, active, closed (+7 more)
+Cohesion: 0.15
+Nodes (18): Kind, generic, movie, recipe, Poll, PollVote, Status, active (+10 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.19
-Nodes (12): Animatable, IntegerFormatStyle, AnimatedNumber, AppearModifier, ButtonStyle, Motion, PressableButtonStyle, ShakeModifier (+4 more)
+Cohesion: 0.13
+Nodes (18): Animatable, Configuration, GeometryEffect, IntegerFormatStyle, AnimatedNumber, AppearModifier, ButtonStyle, Motion (+10 more)
 
 ### Community 94 - "Community 94"
 Cohesion: 0.11
@@ -698,16 +692,16 @@ Cohesion: 0.43
 Nodes (5): Badge, Chip, Bool, String, Void
 
 ### Community 96 - "Community 96"
-Cohesion: 0.09
-Nodes (27): CodingKeys, cookTime, created, createdBy, difficulty, homeID, id, image (+19 more)
+Cohesion: 0.12
+Nodes (16): CodingKeys, cookTime, created, createdBy, difficulty, homeID, id, image (+8 more)
 
 ### Community 97 - "Community 97"
 Cohesion: 0.12
 Nodes (12): archive, backfillCompletions, create, listByHome, priority, recordCompletion(), remove, removeFinished (+4 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.52
-Nodes (6): IssueRow, RowBadge, SettledRow, Namespace, String, Void
+Cohesion: 0.29
+Nodes (10): IssueRow, IssuesView, RowBadge, SettledRow, Bool, IssueID, Namespace, StoreOf (+2 more)
 
 ### Community 99 - "Community 99"
 Cohesion: 0.22
@@ -718,15 +712,15 @@ Cohesion: 0.33
 Nodes (5): ⚠️ Auth caveat (the one real gotcha), Nestzone — PocketBase → Convex migration, Steps, Type/field mapping applied, What's here
 
 ### Community 101 - "Community 101"
-Cohesion: 0.14
-Nodes (15): SectionHeader, LocalizedStringResource, String, AdminUpdateRow, InboxAdminView, InboxComposerSheet, AppUpdate, Binding (+7 more)
+Cohesion: 0.18
+Nodes (11): AdminUpdateRow, InboxAdminView, InboxComposerSheet, AppUpdate, Binding, Bool, Int, LocalizedStringResource (+3 more)
 
 ### Community 102 - "Community 102"
-Cohesion: 0.33
-Nodes (6): Kind, cook, order, MealDate, Calendar, String
+Cohesion: 0.22
+Nodes (9): Kind, cook, order, out, MealDate, Calendar, Decoder, EventID (+1 more)
 
 ### Community 103 - "Community 103"
-Cohesion: 0.22
+Cohesion: 0.24
 Nodes (11): AnyShapeStyle, ActivityChart, Arc, ContributionDonut, ContributionLegend, ContributionSlice, ShareBar, CGFloat (+3 more)
 
 ### Community 104 - "Community 104"
@@ -735,23 +729,23 @@ Nodes (5): LoadingView, SkeletonList, CGFloat, Int, LocalizedStringResource
 
 ### Community 105 - "Community 105"
 Cohesion: 0.10
-Nodes (21): CalendarFeature, CancelID, events, members, undo, PendingDelete, State, Action (+13 more)
+Nodes (21): EventOccurrence, CalendarFeature, members, PendingDelete, State, Action, AlertState, Bool (+13 more)
 
 ### Community 106 - "Community 106"
 Cohesion: 0.16
 Nodes (12): Alert, confirmDelete, AlertState, CancelID, notes, ComposeNoteFeature, Destination, compose (+4 more)
 
 ### Community 107 - "Community 107"
-Cohesion: 0.18
-Nodes (10): CancelID, all, lists, movies, saved, search, MovieList.Kind, MoviesFeature.Destination.State (+2 more)
+Cohesion: 0.33
+Nodes (6): CancelID, all, lists, movies, saved, search
 
 ### Community 108 - "Community 108"
 Cohesion: 0.18
 Nodes (12): ImageIO, PhotoCompressionPlan, Bool, CGFloat, Int, PhotoCompressor, Bool, CGFloat (+4 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.11
-Nodes (20): Equatable, Alert, CalendarFeature.Destination.State, Alert, Alert, Alert, CancelID, conversations (+12 more)
+Cohesion: 0.08
+Nodes (28): Alert, confirmDelete, CancelID, members, tasks, undo, Delegate, openArchive (+20 more)
 
 ### Community 110 - "Community 110"
 Cohesion: 0.11
@@ -766,20 +760,20 @@ Cohesion: 0.25
 Nodes (9): bold(), die(), info(), run(), set_build_number(), set_marketing_version(), deploy.sh script, step() (+1 more)
 
 ### Community 113 - "Community 113"
-Cohesion: 0.48
-Nodes (6): Note, Decoder, HomeID, NoteID, String, UserID
+Cohesion: 0.26
+Nodes (8): Note, Decoder, HomeID, NoteID, String, UserID, NotesFeature, NotesTests
 
 ### Community 114 - "Community 114"
 Cohesion: 0.15
 Nodes (15): CatalogQuery, Kind, actor, decade, director, genre, nowPlaying, popular (+7 more)
 
 ### Community 115 - "Community 115"
-Cohesion: 0.08
-Nodes (12): NestZone, ManageHomesFeature, ReducerOf, Self, SettingsFeature, ManageHomesTests, PhotoUpload, SettingsAvatarTests (+4 more)
+Cohesion: 0.07
+Nodes (14): NestZone, ManageHomesFeature, ReducerOf, Self, SettingsFeature, ManageHomesTests, PhotoUpload, PresetListTests (+6 more)
 
 ### Community 116 - "Community 116"
-Cohesion: 0.13
-Nodes (15): CodingKeys, conversationID, created, file, homeID, id, isGroupChat, kind (+7 more)
+Cohesion: 0.06
+Nodes (32): CodingKeys, content, conversationID, created, file, homeID, id, isGroupChat (+24 more)
 
 ### Community 117 - "Community 117"
 Cohesion: 0.13
@@ -790,48 +784,48 @@ Cohesion: 0.25
 Nodes (8): Backend notes, Commands, Conventions, graphify, Layout, NestZone, One deployment, every app version, Shipping a change
 
 ### Community 119 - "Community 119"
-Cohesion: 0.21
-Nodes (9): State, Action, AlertState, Bool, Destination, HomeID, IdentifiedArrayOf, Set (+1 more)
+Cohesion: 0.16
+Nodes (12): MovieList.Kind, State, Action, AlertState, Bool, Destination, HomeID, IdentifiedArrayOf (+4 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.08
 Nodes (32): IssueEdit, IssuePhotoUpload, PhotoUpload, Action, areaTapped, assigneeTapped, binding, categoryTapped (+24 more)
 
 ### Community 121 - "Community 121"
-Cohesion: 0.18
-Nodes (7): Destination, compose, detail, EventDetailFeature, ReducerOf, DinnerOccasionTests, EventPlanTests
+Cohesion: 0.22
+Nodes (4): EventDetailFeature, ReducerOf, DinnerOccasionTests, EventPlanTests
 
 ### Community 122 - "Community 122"
-Cohesion: 0.12
-Nodes (20): CancelID, detail, PartsDraft, State, StatusNote, Action, AlertState, Bool (+12 more)
+Cohesion: 0.15
+Nodes (17): PartsDraft, State, StatusNote, Action, AlertState, Bool, ConfirmationDialogState, Effect (+9 more)
 
 ### Community 123 - "Community 123"
 Cohesion: 0.24
 Nodes (6): HubFeature, Duration, ReducerOf, Self, HubCountsTests, HubNavigationTests
 
 ### Community 124 - "Community 124"
-Cohesion: 0.11
-Nodes (11): HomeFeature, ReducerOf, ShoppingFeature, Duration, ReducerOf, HomeFeatureTests, ShoppingTests, Duration (+3 more)
+Cohesion: 0.10
+Nodes (14): ShoppingFeature, Duration, ReducerOf, RecipeDetailFeature, Duration, TasksFeature, RecipeShoppingTests, ShoppingTests (+6 more)
 
 ### Community 125 - "Community 125"
-Cohesion: 0.15
-Nodes (16): Conversation, Kind, audio, document, gif, image, system, text (+8 more)
+Cohesion: 0.22
+Nodes (12): AvatarPickerButton, Editing, Handover, Bool, CGFloat, Data, PhotosPickerItem, PhotoUpload (+4 more)
 
 ### Community 126 - "Community 126"
 Cohesion: 0.13
 Nodes (15): Delegate, notificationsEnabled, openCalendar, openContributions, openEvent, openEventID, openIssues, openMessages (+7 more)
 
 ### Community 127 - "Community 127"
-Cohesion: 0.12
-Nodes (18): IssueComposerFeature, ReducerOf, Self, State, Action, AlertState, Bool, HomeID (+10 more)
+Cohesion: 0.14
+Nodes (16): members, State, Action, AlertState, Bool, HomeID, IdentifiedArrayOf, Int (+8 more)
 
 ### Community 128 - "Community 128"
-Cohesion: 0.07
-Nodes (39): BillCycle, Action, alert, binding, delegate, deleteTapped, everyoneTapped, failed (+31 more)
+Cohesion: 0.08
+Nodes (24): Action, alert, binding, delegate, deleteTapped, everyoneTapped, failed, onlyMeTapped (+16 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.25
-Nodes (8): Comparable, CalendarDay, Calendar, Self, CalendarMonth, MonthGrid, Calendar, String
+Cohesion: 0.13
+Nodes (12): AvatarSource, camera, library, remove, view, Bool, LocalizedStringResource, AvatarSourceRow (+4 more)
 
 ### Community 130 - "Community 130"
 Cohesion: 0.18
@@ -846,16 +840,16 @@ Cohesion: 0.18
 Nodes (14): activityArgs(), DependencyValues, InboxClient, ReleaseCheck, AppUpdate, AppUpdateID, async, ConvexEncodable (+6 more)
 
 ### Community 133 - "Community 133"
-Cohesion: 0.31
-Nodes (4): ReducerOf, Self, TaskArchiveFeature, TaskArchiveFeatureTests
+Cohesion: 0.16
+Nodes (10): RelativeTime, RelativeTimeClock, Duration, Int, Never, Task, Text, Void (+2 more)
 
 ### Community 134 - "Community 134"
-Cohesion: 0.09
-Nodes (22): Action, alert, binding, createTapped, destination, homeSelected, homesFailed, homesUpdated (+14 more)
+Cohesion: 0.07
+Nodes (31): Action, alert, binding, createTapped, destination, homeSelected, homesFailed, homesUpdated (+23 more)
 
 ### Community 135 - "Community 135"
-Cohesion: 0.32
-Nodes (6): HomeView, NowBadge, SuggestedDinnerCard, StoreOf, Void, TaskRow
+Cohesion: 0.38
+Nodes (5): HomeView, SuggestedDinnerCard, StoreOf, Void, TaskRow
 
 ### Community 136 - "Community 136"
 Cohesion: 0.25
@@ -866,24 +860,28 @@ Cohesion: 0.21
 Nodes (6): ContributionsFeature, ReducerOf, Self, ContributionsView, StoreOf, ContributionsFeatureTests
 
 ### Community 138 - "Community 138"
-Cohesion: 0.14
-Nodes (16): MealPlanID, MealPlan, Cuisine, HomeID, Kind, Recipe, UserID, GlassTextField (+8 more)
+Cohesion: 0.43
+Nodes (5): GlassTextField, Binding, Bool, LocalizedStringResource, String
 
 ### Community 139 - "Community 139"
 Cohesion: 0.11
-Nodes (25): ColorScheme, Control, Glass, restingTilt(), Double, String, GlassListLab, LabRow (+17 more)
+Nodes (23): ColorScheme, Control, restingTilt(), Double, String, GlassListLab, LabRow, Model (+15 more)
 
 ### Community 140 - "Community 140"
 Cohesion: 0.32
 Nodes (8): Cache, Recipe, SampleRecipe, SampleRecipeLoader, Bool, Int, Recipe, String
 
+### Community 141 - "Community 141"
+Cohesion: 0.33
+Nodes (3): RelativeTimeTests, Int, TimeInterval
+
 ### Community 142 - "Community 142"
-Cohesion: 0.23
-Nodes (12): State, Action, AlertState, Double, EventID, HomeID, IdentifiedArrayOf, Int (+4 more)
+Cohesion: 0.15
+Nodes (18): ClearTarget, category, event, issue, meal, purchased, State, Action (+10 more)
 
 ### Community 143 - "Community 143"
-Cohesion: 0.14
-Nodes (13): AddItemField, DisclosureRow, EventComposerSheet, EventComposerToolbar, EventDetailSheet, RecipePickerSheet, Bool, LocalizedStringResource (+5 more)
+Cohesion: 0.10
+Nodes (28): AddItemField, DisclosureRow, EventComposerSheet, EventComposerToolbar, EventDetailSheet, RecapTile, RecipePickerSheet, Bool (+20 more)
 
 ### Community 144 - "Community 144"
 Cohesion: 0.36
@@ -895,23 +893,23 @@ Nodes (11): apiKey(), details, discover, fetchJSON(), fetchPages(), GENRE_NAMES,
 
 ### Community 146 - "Community 146"
 Cohesion: 0.06
-Nodes (29): AppFeature, ReducerOf, Self, AppView, StoreOf, CodingKeys, address, created (+21 more)
+Nodes (31): AppFeature, ReducerOf, Self, AppView, StoreOf, CodingKeys, address, created (+23 more)
 
 ### Community 147 - "Community 147"
-Cohesion: 0.20
-Nodes (11): ListChip, ListRow, MovieInfoSheet, PosterCard, Bool, Int, LocalizedStringResource, MovieListID (+3 more)
+Cohesion: 0.18
+Nodes (12): Alert, CancelID, history, Delegate, deleted, edit, State, Action (+4 more)
 
 ### Community 148 - "Community 148"
 Cohesion: 0.15
 Nodes (13): CodingKeys, cleaning, completed, count, email, general, maintenance, name (+5 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.29
-Nodes (7): DependencyValues, PollsClient, async, Error, HomeID, PollID, Void
+Cohesion: 0.20
+Nodes (10): DependencyValues, PollCandidate, PollsClient, async, ConvexEncodable, Error, HomeID, PollID (+2 more)
 
 ### Community 150 - "State"
 Cohesion: 0.14
-Nodes (12): AvatarViewer, AccessibilityAdjustmentDirection, CGFloat, CGSize, Double, Gesture, Void, PhotoZoom (+4 more)
+Nodes (10): AvatarSubject, String, URL, AvatarViewer, AccessibilityAdjustmentDirection, CGFloat, CGSize, Double (+2 more)
 
 ### Community 151 - "SectionHeader"
 Cohesion: 0.23
@@ -922,32 +920,32 @@ Cohesion: 0.18
 Nodes (11): InboxFeature, ReducerOf, Self, ActivityRow, InboxBell, InboxPanel, AppUpdate, Bool (+3 more)
 
 ### Community 153 - "Community 153"
-Cohesion: 0.13
-Nodes (17): AppleCredential, AuthClient, AuthStatus, authenticated, unauthenticated, unknown, DependencyValues, RestoreOutcome (+9 more)
+Cohesion: 0.14
+Nodes (15): AuthClient, AuthStatus, authenticated, unauthenticated, unknown, DependencyValues, RestoreOutcome, noSession (+7 more)
 
 ### Community 154 - "Alert"
 Cohesion: 0.20
 Nodes (10): CodingKeys, canRestore, completedAt, email, id, kind, name, taskID (+2 more)
 
 ### Community 155 - "Community 155"
-Cohesion: 0.33
-Nodes (6): CodingKey, CodingKeys, changelogVersion, checkedAt, storeUrl, storeVersion
+Cohesion: 0.12
+Nodes (15): CodingKey, CodingKeys, avatar, avatarURL, created, email, homeIDs, id (+7 more)
 
 ### Community 156 - "Community 156"
 Cohesion: 0.25
 Nodes (9): Layout, FlowLayout, Row, CGFloat, CGRect, CGSize, Int, ProposedViewSize (+1 more)
 
 ### Community 157 - "Community 157"
-Cohesion: 0.23
-Nodes (11): State, Action, Bool, ConfirmationDialogState, HomeID, IdentifiedArrayOf, Int, Recipe (+3 more)
+Cohesion: 0.24
+Nodes (3): HomeFeature, ReducerOf, HomeFeatureTests
 
 ### Community 158 - "Community 158"
-Cohesion: 0.17
-Nodes (10): CurrencyDefaults, Shared<String?>, SharedKey, HomeID, Self, String, CurrencyPicker, Bool (+2 more)
+Cohesion: 0.26
+Nodes (11): Difficulty, easy, hard, medium, Recipe, Decoder, HomeID, Int (+3 more)
 
 ### Community 159 - "Community 159"
-Cohesion: 0.22
-Nodes (13): DayCell, DayTimeline, EventRow, Placed, PlanRing, Bool, CGFloat, ClosedRange (+5 more)
+Cohesion: 0.13
+Nodes (20): CalendarDay, Calendar, Self, DayCell, DayTimeline, EventRow, MonthGrid, Placed (+12 more)
 
 ### Community 160 - "RecipeDetailFeature"
 Cohesion: 0.32
@@ -966,16 +964,16 @@ Cohesion: 0.28
 Nodes (7): State, Action, AlertState, Bool, HomeID, Set, UserID
 
 ### Community 164 - "SettingsView"
-Cohesion: 0.08
-Nodes (23): Alert, confirmSignOut, AlertState, CancelID, copyReset, members, pushTokenCopyReset, Delegate (+15 more)
+Cohesion: 0.07
+Nodes (30): Equatable, Alert, confirmDelete, AvatarRollback, String, URL, Alert, confirmSignOut (+22 more)
 
 ### Community 165 - "HomeStats"
-Cohesion: 0.13
-Nodes (15): Alert, confirmDelete, AlertState, BillComposerFeature, BudgetEditorFeature, ExpenseComposerFeature, PayBillFeature, ReducerOf (+7 more)
+Cohesion: 0.15
+Nodes (13): AlertState, BillComposerFeature, BudgetEditorFeature, ExpenseComposerFeature, PayBillFeature, ReducerOf, Self, Destination (+5 more)
 
 ### Community 166 - "Delegate"
-Cohesion: 0.22
-Nodes (8): AlertState, CancelID, items, undo, ShoppingItem.Category, LocalizedStringResource, Self, String
+Cohesion: 0.20
+Nodes (9): AlertState, CancelID, items, undo, ShoppingItem.Category, Int, LocalizedStringResource, Self (+1 more)
 
 ### Community 167 - "Cache"
 Cohesion: 0.15
@@ -1006,20 +1004,20 @@ Cohesion: 0.18
 Nodes (11): CodingKeys, issuesChange, messagesChange, notes, notesChange, openIssues, openTasks, shoppingChange (+3 more)
 
 ### Community 174 - "MainFeature"
-Cohesion: 0.29
-Nodes (9): Bool, Decoder, Int, String, TaskID, UserID, TaskArchive, TaskCompletion (+1 more)
+Cohesion: 0.12
+Nodes (18): Bool, Decoder, Int, String, TaskID, UserID, TaskArchive, TaskCompletion (+10 more)
 
 ### Community 175 - "Recipe"
-Cohesion: 0.29
-Nodes (7): DependencyValues, MoviesClient, async, Error, HomeID, MovieListID, Void
+Cohesion: 0.17
+Nodes (12): Action, alert, delegate, detail, historyFailed, historyUpdated, rowTapped, task (+4 more)
 
 ### Community 176 - "SpendCategory"
 Cohesion: 0.15
 Nodes (13): Cuisine, american, chinese, indian, italian, japanese, korean, mediterranean (+5 more)
 
 ### Community 177 - "Kind"
-Cohesion: 0.16
-Nodes (13): Alert, confirmLeave, Delegate, dismissRequested, switchRequested, ManageHomesFeature.Destination.State, State, Action (+5 more)
+Cohesion: 0.08
+Nodes (28): Action, alert, createTapped, delegate, destination, doneTapped, homeTapped, joinTapped (+20 more)
 
 ### Community 178 - "MainFeature"
 Cohesion: 0.14
@@ -1034,12 +1032,12 @@ Cohesion: 0.22
 Nodes (13): AddedCount, DependencyValues, NewShoppingItem, RecipeIngredients, ShoppingClient, async, Double, Error (+5 more)
 
 ### Community 181 - "TaskEdit"
-Cohesion: 0.10
-Nodes (31): CGPoint, CategoryTotal, SpendPoint, Arc, BalanceBars, Bill, Bill.Urgency, BillCycle (+23 more)
+Cohesion: 0.11
+Nodes (28): CGPoint, Arc, BalanceBars, Bill, Bill.Urgency, BillCycle, BudgetProgress.Health, BudgetRing (+20 more)
 
 ### Community 182 - "HomesClient"
-Cohesion: 0.17
-Nodes (11): Context, CameraPicker, Coordinator, Any, Bool, Data, Void, UIImagePickerController (+3 more)
+Cohesion: 0.20
+Nodes (7): EventHistoryFeature, ReducerOf, Self, EventHistorySheet, LocalizedStringResource, StoreOf, String
 
 ### Community 183 - "ManageHomesFeature.swift"
 Cohesion: 0.10
@@ -1065,37 +1063,41 @@ Nodes (7): AppleIdToken, { auth, signIn, signOut, store, isAuthenticated }, http
 Cohesion: 0.21
 Nodes (11): Action, countsUpdated, moduleTapped, path, showShoppingList, task, HubFeature.Path.State, IssueCounts (+3 more)
 
+### Community 189 - "Community 189"
+Cohesion: 0.17
+Nodes (12): Kind, actor, decade, director, genre, nowPlaying, popular, topRated (+4 more)
+
 ### Community 190 - "State"
-Cohesion: 0.19
-Nodes (12): State, Action, AlertState, Bool, ConfirmationDialogState, IdentifiedArrayOf, Int, Set (+4 more)
+Cohesion: 0.20
+Nodes (10): AppleCredential, String, Action, alert, appleSignInFailed, appleSignInSucceeded, signInFailed, signInSucceeded (+2 more)
 
 ### Community 191 - "Delegate"
-Cohesion: 0.13
-Nodes (15): Action, alert, createTapped, delegate, destination, doneTapped, homeTapped, joinTapped (+7 more)
+Cohesion: 0.22
+Nodes (9): DependencyValues, MessagesClient, async, ConversationID, Error, HomeID, Int, MessageID (+1 more)
 
 ### Community 192 - "Community 192"
-Cohesion: 0.13
-Nodes (9): CoreGraphics, Foundation, IssuePhotoIDs, String, Action, AlertState, Bool, String (+1 more)
+Cohesion: 0.10
+Nodes (12): CoreGraphics, Foundation, DependencyValues, StatsClient, Error, HomeID, Action, AlertState (+4 more)
 
 ### Community 193 - "ConfirmationDialogState"
-Cohesion: 0.19
-Nodes (11): AppTheme, basic, cyberpunk, deepOcean, neonNight, retroWave, EnvironmentValues, Palette (+3 more)
+Cohesion: 0.33
+Nodes (8): Avatar, Source, directory, photo, Bool, CGFloat, String, URL
 
 ### Community 194 - "CalendarView"
-Cohesion: 0.09
-Nodes (20): ASAuthorization, AuthenticationServices, Action, alert, appleSignInFailed, appleSignInSucceeded, signInFailed, signInSucceeded (+12 more)
+Cohesion: 0.27
+Nodes (7): ASAuthorization, AuthFeature, ReducerOf, Self, AuthView, Error, StoreOf
 
 ### Community 195 - "Cuisine"
-Cohesion: 0.18
-Nodes (13): PlanRow, PlanState, active, done, empty, Double, LocalizedStringResource, Namespace (+5 more)
+Cohesion: 0.17
+Nodes (14): PlanRow, PlanState, active, done, empty, Bool, Double, LocalizedStringResource (+6 more)
 
 ### Community 197 - "Community 197"
-Cohesion: 0.24
-Nodes (5): HomeManagementFeature, ReducerOf, HomeManagementView, StoreOf, HomeManagementTests
+Cohesion: 0.33
+Nodes (7): APNSEnvironment, DependencyValues, DevicesClient, PushResult, Int, String, Void
 
 ### Community 198 - "crons.ts"
-Cohesion: 0.18
-Nodes (10): CreateMovieListFeature, Destination, createList, list, MovieListFeature, ReducerOf, AddMoviesSheet, CreateMovieListSheet (+2 more)
+Cohesion: 0.16
+Nodes (14): AlertState, CreateMovieListFeature, Destination, createList, list, MovieListFeature, MoviesFeature, MoviesFeature.Destination.State (+6 more)
 
 ### Community 199 - "ChoiceCard"
 Cohesion: 0.33
@@ -1105,73 +1107,73 @@ Nodes (6): ChoiceCard, HomeRow, Bool, LocalizedStringResource, String, Void
 Cohesion: 0.20
 Nodes (10): Field, CreateHomeSheet, FormSheet, JoinHomeSheet, Bool, Int, LocalizedStringResource, StoreOf (+2 more)
 
+### Community 201 - "PhotoZoom"
+Cohesion: 0.39
+Nodes (5): PhotoZoom, Bool, CGFloat, CGSize, Self
+
 ### Community 202 - "CancelID"
-Cohesion: 0.22
-Nodes (8): CancelID, bills, budgets, expenses, members, summary, undo, UserID
+Cohesion: 0.29
+Nodes (5): Glass, LabSurface, CGFloat, Content, ViewModifier
 
 ### Community 203 - "StatTile"
-Cohesion: 0.24
-Nodes (9): State, Action, AlertState, Bool, Destination, HomeID, IdentifiedArrayOf, String (+1 more)
+Cohesion: 0.13
+Nodes (15): PushRegistration, failed, none, registered, Bool, String, State, Action (+7 more)
 
 ### Community 204 - "AuthFeature.swift"
 Cohesion: 0.35
 Nodes (3): ContributionsMathTests, Int, String
 
 ### Community 205 - "Community 205"
-Cohesion: 0.19
-Nodes (9): HubLayout, HubView, ModuleTile, Bool, CGFloat, Double, Int, StoreOf (+1 more)
+Cohesion: 0.17
+Nodes (10): HubLayout, HubView, ModuleTile, Bool, CGFloat, Double, Int, StoreOf (+2 more)
 
 ### Community 206 - "CoreLogicTests"
 Cohesion: 0.20
 Nodes (9): CodingKeys, body, color, created, createdBy, homeID, id, image (+1 more)
 
 ### Community 207 - "IssuesFeature"
-Cohesion: 0.09
-Nodes (17): App, KeyboardDismisser, Bool, AppDelegate, NestZoneApp, View, Void, NSObject (+9 more)
+Cohesion: 0.15
+Nodes (11): App, AppDelegate, NestZoneApp, View, Void, Scene, UIApplicationDelegate, UNNotification (+3 more)
 
 ### Community 208 - "PollsClient"
 Cohesion: 0.25
 Nodes (8): State, Action, AlertState, AppUpdate, Bool, IdentifiedArrayOf, Set, UserID
 
 ### Community 209 - "Urgency"
-Cohesion: 0.06
-Nodes (38): ComposableArchitecture, ConvexMobile, DependencyKey, CatalogClient, DependencyValues, async, APNSEnvironment, DependencyValues (+30 more)
-
-### Community 210 - "Delegate"
-Cohesion: 0.18
-Nodes (9): EventScope, occurrence, series, Delegate, chose, deleted, saved, Effect (+1 more)
+Cohesion: 0.08
+Nodes (28): ConvexMobile, DependencyKey, DependencyValues, MoviesClient, async, Error, HomeID, MovieListID (+20 more)
 
 ### Community 211 - "AvatarPickerFace"
-Cohesion: 0.24
-Nodes (8): ComposeNoteSheet, NoteCard, NotesView, Bool, Content, StoreOf, String, Void
+Cohesion: 0.31
+Nodes (7): ComposeNoteSheet, NoteCard, NotesView, Bool, StoreOf, String, Void
 
 ### Community 212 - "Source"
-Cohesion: 0.17
-Nodes (15): BudgetProgress, EventSpend, FinanceSummary, Health, close, healthy, over, MemberFinance (+7 more)
+Cohesion: 0.40
+Nodes (4): Health, close, healthy, over
 
 ### Community 213 - "SymbolBounceModifier"
-Cohesion: 0.25
-Nodes (7): Configuration, PulseModifier, Bool, Content, SymbolBounceModifier, View, ViewModifier
+Cohesion: 0.36
+Nodes (4): PulseModifier, Bool, Content, SymbolBounceModifier
 
 ### Community 214 - "Delegate"
-Cohesion: 0.15
-Nodes (16): Double, AffectedCount, DependencyValues, IssueEdit, IssuesClient, ScheduledVisit, async, ConvexEncodable (+8 more)
+Cohesion: 0.17
+Nodes (15): AffectedCount, DependencyValues, IssueEdit, IssuesClient, ScheduledVisit, async, ConvexEncodable, Error (+7 more)
 
 ### Community 215 - "CancelID"
-Cohesion: 0.22
-Nodes (6): CancelID, recipes, ConfirmationDialogState, RecipePickerFeature, ReducerOf, Self
+Cohesion: 0.16
+Nodes (7): AsyncThrowingStream, ConfirmationDialogState, EventComposerFeature, RecipePickerFeature, ReducerOf, Self, EventComposerTests
 
 ### Community 216 - "UndoToast"
-Cohesion: 0.25
-Nodes (7): Alert, Delegate, openEvent, openIssue, FinanceFeature.Destination.State, EventID, IssueID
+Cohesion: 0.40
+Nodes (5): Delegate, openEvent, openIssue, EventID, IssueID
 
 ### Community 217 - "IssueComposerFeature"
-Cohesion: 0.26
-Nodes (8): Binding, Bool, CGFloat, Content, Gesture, LocalizedStringResource, Void, SwipeToDelete
+Cohesion: 0.53
+Nodes (4): SectionHeader, LocalizedStringResource, String, Trailing
 
 ### Community 218 - "InboxAdminFeature"
-Cohesion: 0.22
-Nodes (8): CancelID, badge, categories, feed, Delegate, open, LocalizedStringResource, Tab
+Cohesion: 0.09
+Nodes (21): ActivityCategory, calendar, finance, home, issues, meals, messages, movies (+13 more)
 
 ### Community 220 - "CancelID"
 Cohesion: 0.25
@@ -1182,84 +1184,84 @@ Cohesion: 0.33
 Nodes (5): client, data, dataDir, __dir, wipe
 
 ### Community 222 - "Alert"
-Cohesion: 0.18
-Nodes (9): AlertState, State, Action, AlertState, Bool, Destination, IdentifiedArrayOf, Self (+1 more)
+Cohesion: 0.53
+Nodes (4): LocalizedStringResource, String, Void, UndoToast
 
 ### Community 223 - "Community 223"
-Cohesion: 0.29
-Nodes (6): PushRegistration, failed, none, registered, Bool, String
+Cohesion: 0.33
+Nodes (4): Alert, State, Action, AlertState
 
 ### Community 224 - "Community 224"
-Cohesion: 0.06
-Nodes (40): CodingKeys, assignedTo, completedBy, created, createdBy, details, dueDate, homeID (+32 more)
+Cohesion: 0.15
+Nodes (19): HouseTask, Kind, cleaning, general, maintenance, shopping, Priority, high (+11 more)
 
 ### Community 225 - ".alert"
-Cohesion: 0.15
-Nodes (11): IssuesFeature, Duration, Effect, ReducerOf, Self, IssuesView, Bool, IssueID (+3 more)
+Cohesion: 0.14
+Nodes (12): Path, calendar, finance, issues, movies, recipes, shopping, IssuesFeature (+4 more)
 
 ### Community 226 - "HomeStats"
 Cohesion: 0.18
 Nodes (10): Alert, enableNotifications, AlertState, CancelID, events, meals, members, stats (+2 more)
 
 ### Community 227 - "AppSettings.swift"
-Cohesion: 0.13
-Nodes (14): AlertState, ComposeRecipeFeature, Delegate, openShoppingList, Destination, compose, detail, Phase (+6 more)
+Cohesion: 0.11
+Nodes (17): Alert, confirmDelete, confirmQuit, ComposeRecipeFeature, Delegate, openShoppingList, Destination, compose (+9 more)
 
 ### Community 228 - "Community 228"
 Cohesion: 0.40
 Nodes (4): c, http, iv, t0
 
 ### Community 229 - "FinanceFeature"
-Cohesion: 0.31
-Nodes (5): FinanceFeature, Duration, Effect, ReducerOf, Self
+Cohesion: 0.14
+Nodes (13): Alert, CancelID, bills, budgets, expenses, summary, undo, FinanceFeature (+5 more)
+
+### Community 230 - "Self"
+Cohesion: 0.33
+Nodes (5): ComposeTaskFeature, Destination, compose, ReducerOf, Self
 
 ### Community 231 - "StepDuration"
-Cohesion: 0.33
-Nodes (6): Delegate, deleteRequested, openEvent, openShoppingList, EventID, IssueID
+Cohesion: 0.17
+Nodes (11): Alert, CancelID, detail, Confirm, delete, Delegate, deleteRequested, openEvent (+3 more)
 
 ### Community 233 - "PasteboardClient"
-Cohesion: 0.24
-Nodes (6): Destination, compose, MessagesFeature, NewConversationFeature, ReducerOf, Self
+Cohesion: 0.60
+Nodes (3): AvatarEntry, String, URL
 
 ### Community 234 - "Community 234"
 Cohesion: 0.50
 Nodes (3): client, iv, started
-
-### Community 235 - "Community 235"
-Cohesion: 0.27
-Nodes (4): MoviesFeature, MoviesView, StoreOf, PresetListTests
 
 ### Community 236 - "Scope"
 Cohesion: 0.40
 Nodes (5): Scope, deleteAll, deleteThisOne, saveAll, saveThisOne
 
 ### Community 237 - "AvatarSourceSheet"
-Cohesion: 0.22
-Nodes (8): Alert, CancelID, plan, Scope, deleteAll, deleteThisOne, editAll, editThisOne
+Cohesion: 0.14
+Nodes (12): Alert, confirmClearLeftovers, AlertState, CancelID, plan, ConfirmationDialogState, Scope, deleteAll (+4 more)
 
 ### Community 238 - "AvatarViewerBar"
 Cohesion: 0.40
 Nodes (3): RecipesFeature, SavedRecipeTests, RecipeID
 
 ### Community 239 - "CancelID"
-Cohesion: 0.20
-Nodes (9): Alert, CancelID, board, handoff, undo, Delegate, openEvent, openShoppingList (+1 more)
+Cohesion: 0.50
+Nodes (4): CancelID, board, handoff, undo
 
 ### Community 240 - "PollCandidate"
 Cohesion: 0.22
 Nodes (9): HubModule, calendar, finance, maintenance, movies, recipes, shopping, Bool (+1 more)
 
 ### Community 243 - "Alert"
-Cohesion: 0.33
-Nodes (5): ArchiveRow, Bool, StoreOf, String, TaskArchiveView
+Cohesion: 0.50
+Nodes (3): Element, Error, Sendable
 
 ### Community 245 - "Community 245"
-Cohesion: 0.06
-Nodes (37): EventKind, anniversary, appointment, birthday, chore, cinema, concert, deadline (+29 more)
+Cohesion: 0.09
+Nodes (23): EventKind, anniversary, appointment, birthday, chore, cinema, concert, deadline (+15 more)
 
 ### Community 248 - "CancelID"
-Cohesion: 0.28
-Nodes (7): IssueDetailFeature, ReducerOf, Self, IssueDetailView, Bool, PhotosPickerItem, StoreOf
+Cohesion: 0.32
+Nodes (6): IssueDetailFeature, ReducerOf, Self, IssueDetailView, PhotosPickerItem, StoreOf
 
 ### Community 249 - ".newestFirst"
 Cohesion: 0.32
@@ -1270,48 +1272,24 @@ Cohesion: 0.22
 Nodes (9): Delegate, deleted, deleteRequested, paid, saved, settled, BillID, BudgetID (+1 more)
 
 ### Community 252 - "BillCycle"
-Cohesion: 0.29
-Nodes (6): Bill, Urgency, dueSoon, dueToday, overdue, upcoming
-
-### Community 254 - "PushRegistration"
-Cohesion: 0.40
-Nodes (4): GeometryEffect, ShakeEffect, CGSize, ProjectionTransform
-
-### Community 255 - "HomeStats"
-Cohesion: 0.43
-Nodes (5): AvatarStack, Member, CGFloat, Int, String
-
-### Community 256 - "AvatarRollback"
-Cohesion: 0.60
-Nodes (3): AvatarRollback, String, URL
-
-### Community 257 - ".commit"
-Cohesion: 0.43
-Nodes (5): StatTile, Int, LocalizedStringResource, String, Void
-
-### Community 258 - "NotesClient"
 Cohesion: 0.33
-Nodes (6): DependencyValues, NotesClient, async, Error, HomeID, Void
+Nodes (6): Comparable, Urgency, dueSoon, dueToday, overdue, upcoming
 
-### Community 259 - "Path"
-Cohesion: 0.29
-Nodes (7): Path, calendar, finance, issues, movies, recipes, shopping
+### Community 253 - "IssueComposerFeature"
+Cohesion: 0.50
+Nodes (3): IssueComposerFeature, ReducerOf, Self
 
 ### Community 260 - "Alert"
 Cohesion: 0.33
 Nodes (6): Alert, confirmClearCategory, confirmClearEvent, confirmClearMeal, confirmClearParts, confirmClearPurchased
 
-### Community 261 - "ClearTarget"
-Cohesion: 0.33
-Nodes (6): ClearTarget, category, event, issue, meal, purchased
-
 ### Community 262 - "Alert"
-Cohesion: 0.33
-Nodes (5): Alert, confirmDeleteList, AlertState, MovieListID, Self
+Cohesion: 0.67
+Nodes (3): Alert, confirmDeleteList, MovieListID
 
 ### Community 263 - "Community 263"
-Cohesion: 0.14
-Nodes (5): Self, FinanceTests, BillID, ExpenseID, Int
+Cohesion: 0.15
+Nodes (4): Self, FinanceTests, BillID, ExpenseID
 
 ### Community 264 - "State"
 Cohesion: 0.60
@@ -1321,17 +1299,13 @@ Nodes (4): State, HomeID, Loaded, UserID
 Cohesion: 0.50
 Nodes (3): HomeStats, Decoder, Int
 
-### Community 267 - "Seed"
-Cohesion: 0.60
-Nodes (3): Seed, RecipeID, String
-
 ### Community 268 - "Delegate"
 Cohesion: 0.40
 Nodes (5): Delegate, deleted, edit, rsvpChanged, EventID
 
 ### Community 270 - "Community 270"
-Cohesion: 0.11
-Nodes (16): Calendar, BinaryInteger, Date, Decoder, Double, NewTask, Bool, ConvexEncodable (+8 more)
+Cohesion: 0.42
+Nodes (7): NewTask, Bool, ConvexEncodable, HomeID, String, UserID, TaskEdit
 
 ### Community 271 - "StepDuration"
 Cohesion: 0.50
@@ -1341,41 +1315,37 @@ Nodes (4): StepDuration, Int, Regex, Substring
 Cohesion: 0.67
 Nodes (3): Loaded, Int, OptionSet
 
-### Community 274 - "Alert"
-Cohesion: 0.67
-Nodes (3): Alert, confirmDelete, confirmQuit
-
 ### Community 279 - "Community 279"
 Cohesion: 0.47
 Nodes (4): PhotoUpload, Data, Int, String
 
 ### Community 281 - "Community 281"
 Cohesion: 0.09
-Nodes (17): CodingKeys, avatar, avatarURL, created, email, homeIDs, id, name (+9 more)
+Nodes (19): MainView, MainFeature, State, Bool, Effect, HomeID, Int, ReducerOf (+11 more)
 
 ### Community 292 - "Community 292"
-Cohesion: 0.06
-Nodes (33): Action, allDayToggled, attendeeToggled, binding, delegate, deleteTapped, doneTapped, draftItemRemoved (+25 more)
+Cohesion: 0.04
+Nodes (63): EventScope, occurrence, series, PlanSection, budget, menu, shopping, tickets (+55 more)
 
 ## Knowledge Gaps
-- **1849 isolated node(s):** `id`, `targets`, `launching`, `signedOut`, `offline` (+1844 more)
+- **1874 isolated node(s):** `id`, `targets`, `launching`, `signedOut`, `offline` (+1869 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Foundation` connect `Community 192` to `What-To-Watch Voting`, `AvatarRollback`, `NotesClient`, `Model Coding Keys`, `Community 132`, `Community 134`, `Realtime Event Manager`, `HomeStats`, `DTO Coding Keys`, `Community 140`, `Community 270`, `Home Creation & Tasks`, `Community 146`, `Management Tab ViewModel`, `Community 149`, `SectionHeader`, `Community 279`, `Community 281`, `Community 153`, `Messages Manager`, `List & Difficulty Enums`, `Note Color Extensions`, `Community 35`, `SettingsView`, `HomeStats`, `Delegate`, `App Services Core`, `Chat Detail`, `No-Homes Onboarding`, `MainFeature`, `Recipe`, `Kind`, `MainFeature`, `Theme Selection`, `Recipe List View`, `Action`, `Read Receipts`, `ManageHomesFeature.swift`, `Home Selection View`, `FinanceFeature`, `Genre Picker`, `Switch Home Sheet`, `recipes.ts`, `Community 64`, `CalendarView`, `Vibrant Module Card`, `Message Input`, `Community 74`, `Custom List Row`, `CoreLogicTests`, `Urgency`, `Source`, `Delegate`, `CancelID`, `UndoToast`, `InboxAdminFeature`, `Community 91`, `Community 223`, `Community 224`, `Community 96`, `HomeStats`, `AppSettings.swift`, `Community 102`, `Community 105`, `Community 106`, `Community 107`, `AvatarSourceSheet`, `Community 109`, `CancelID`, `Community 115`, `Community 120`, `Community 122`, `Community 125`?**
-  _High betweenness centrality (0.110) - this node is a cross-community bridge._
-- **Why does `L10n` connect `Recipe Theming` to `Movie UI Components`, `Community 35`?**
+- **Why does `Foundation` connect `Community 192` to `What-To-Watch Voting`, `Community 132`, `Community 134`, `Realtime Event Manager`, `HomeStats`, `DTO Coding Keys`, `Community 140`, `Messages View`, `Home Creation & Tasks`, `Community 146`, `Management Tab ViewModel`, `Sample Recipes`, `Community 149`, `State`, `SectionHeader`, `Community 279`, `Community 153`, `Community 147`, `Community 155`, `Messages Manager`, `List & Difficulty Enums`, `Community 158`, `Community 35`, `Community 292`, `HomeStats`, `Delegate`, `SettingsView`, `App Services Core`, `Chat Detail`, `No-Homes Onboarding`, `MainFeature`, `Poll Input Sheets`, `Kind`, `MainFeature`, `Recipe List View`, `Theme Selection`, `Action`, `ManageHomesFeature.swift`, `FinanceFeature`, `Genre Picker`, `recipes.ts`, `Delegate`, `Community 64`, `Search Results List`, `Community 197`, `crons.ts`, `Vibrant Module Card`, `Message Input`, `Community 74`, `StatTile`, `Custom List Row`, `CoreLogicTests`, `Urgency`, `Delegate`, `InboxAdminFeature`, `Community 91`, `Community 92`, `Community 223`, `Community 224`, `HomeStats`, `AppSettings.swift`, `FinanceFeature`, `Community 102`, `StepDuration`, `PasteboardClient`, `Community 106`, `AvatarSourceSheet`, `Community 109`, `Community 115`, `IssuePhotoIDs`, `Community 120`?**
+  _High betweenness centrality (0.111) - this node is a cross-community bridge._
+- **Why does `L10n` connect `Recipe Theming` to `Community 192`, `Movie UI Components`?**
   _High betweenness centrality (0.071) - this node is a cross-community bridge._
-- **Why does `SwiftUI` connect `Community 35` to `What-To-Watch Voting`, `.commit`, `Model Coding Keys`, `Community 130`, `Movie API (TMDb)`, `Community 135`, `Polls Manager`, `DTO Coding Keys`, `Community 138`, `Community 139`, `Community 137`, `Community 143`, `Community 144`, `Community 146`, `Community 147`, `State`, `Match & Poll Summary`, `Community 152`, `PocketBase Models`, `Community 156`, `Community 158`, `Community 159`, `Community 32`, `Community 161`, `RecipeDetailFeature`, `Premium Text Field`, `Recipe List View`, `Read Receipts`, `TaskEdit`, `HomesClient`, `ManageHomesFeature.swift`, `Switch Home Sheet`, `recipes.ts`, `Chat Messages List`, `ConfirmationDialogState`, `CalendarView`, `Cuisine`, `ChoiceCard`, `NewShoppingItem`, `Overlay Views`, `Community 205`, `IssuesFeature`, `Management Tab Screen`, `Urgency`, `AvatarPickerFace`, `Notes View`, `CancelID`, `IssueComposerFeature`, `UndoToast`, `Community 91`, `Task Priority`, `Community 93`, `Community 95`, `Community 98`, `Community 99`, `AppSettings.swift`, `Community 101`, `Community 103`, `Community 104`, `Community 105`, `Community 107`, `Community 108`, `AvatarSourceSheet`, `CancelID`, `Alert`, `.newestFirst`, `HomeStats`?**
-  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+- **Why does `SwiftUI` connect `Community 35` to `What-To-Watch Voting`, `Community 129`, `Community 130`, `Movie API (TMDb)`, `Community 133`, `Community 135`, `Polls Manager`, `DTO Coding Keys`, `Community 138`, `Community 139`, `Community 137`, `Community 143`, `Community 144`, `Sample Recipes`, `Community 146`, `State`, `Match & Poll Summary`, `Community 152`, `PocketBase Models`, `Cooking Mode`, `Community 156`, `Community 159`, `Community 32`, `Community 161`, `RecipeDetailFeature`, `Community 292`, `Premium Text Field`, `MainFeature`, `Recipe List View`, `TaskEdit`, `HomesClient`, `ManageHomesFeature.swift`, `recipes.ts`, `Chat Messages List`, `Community 192`, `ConfirmationDialogState`, `Cuisine`, `crons.ts`, `ChoiceCard`, `NewShoppingItem`, `Overlay Views`, `Community 205`, `Management Tab Screen`, `IssuesFeature`, `AvatarPickerFace`, `Notes View`, `Task Priority`, `IssueComposerFeature`, `Community 93`, `Alert`, `Community 95`, `Community 98`, `Community 99`, `AppSettings.swift`, `FinanceFeature`, `Community 101`, `Community 103`, `Community 104`, `Community 108`, `AvatarSourceSheet`, `Community 109`, `Community 116`, `.newestFirst`, `Community 125`?**
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **What connects `id`, `targets`, `launching` to the rest of the system?**
-  _1849 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1874 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `What-To-Watch Voting` be split into smaller, more focused modules?**
-  _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0655367231638418 - nodes in this community are weakly interconnected._
 - **Should `Model Coding Keys` be split into smaller, more focused modules?**
-  _Cohesion score 0.11904761904761904 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10144927536231885 - nodes in this community are weakly interconnected._
 - **Should `Confetti & Realtime Models` be split into smaller, more focused modules?**
   _Cohesion score 0.02631578947368421 - nodes in this community are weakly interconnected._

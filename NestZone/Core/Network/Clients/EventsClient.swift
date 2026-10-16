@@ -15,6 +15,9 @@ public struct EventsClient: Sendable {
     public var inRange: @Sendable (HomeID, Date, Date) -> AsyncThrowingStream<[EventOccurrence], any Error> = { _, _, _ in .never }
     /// The next few things, whenever they are — for the Hub tile.
     public var upcoming: @Sendable (HomeID, Int) -> AsyncThrowingStream<[EventOccurrence], any Error> = { _, _ in .never }
+    /// Live look back: every series with an occurrence that finished in the
+    /// last `days`, newest first, with what each cost.
+    public var history: @Sendable (HomeID, Int) -> AsyncThrowingStream<EventHistory, any Error> = { _, _ in .never }
     /// Writes a new event and hands back its id.
     ///
     /// The id matters because a plan is written in two steps: the event first,
@@ -190,6 +193,13 @@ extension EventsClient: DependencyKey {
                 to: "events:upcoming",
                 args: ["homeId": homeID, "limit": limit.convexNumber],
                 as: [EventOccurrence].self
+            )
+        },
+        history: { homeID, days in
+            ConvexConnection.shared.subscribe(
+                to: "events:history",
+                args: ["homeId": homeID, "days": days.convexNumber],
+                as: EventHistory.self
             )
         },
         create: { event in

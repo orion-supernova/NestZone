@@ -72,6 +72,7 @@ public struct CalendarView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { searchToggle }
+            ToolbarItem(placement: .primaryAction) { historyButton }
             ToolbarItem(placement: .primaryAction) { addButton }
         }
         .safeAreaInset(edge: .bottom) {
@@ -100,9 +101,23 @@ public struct CalendarView: View {
         )) { store in
             EventDetailSheet(store: store)
         }
+        .sheet(item: $store.scope(
+            state: \.destination?.history,
+            action: \.destination.history
+        )) { store in
+            EventHistorySheet(store: store)
+        }
     }
 
     // MARK: - Chrome
+
+    /// Where finished events go: a year of them, and what they came to.
+    private var historyButton: some View {
+        Button { store.send(.historyTapped) } label: {
+            Image(systemName: "clock.arrow.circlepath")
+        }
+        .accessibilityLabel(Text(L10n.calendarHistoryTitle))
+    }
 
     private var addButton: some View {
         Button { store.send(.addTapped) } label: {
@@ -782,18 +797,26 @@ public struct CalendarView: View {
                     .glassCard(cornerRadius: Metrics.tightRadius)
                 }
                 .contextMenu {
-                    ForEach(RSVPStatus.allCases) { status in
-                        Button { store.send(.rsvpTapped(occurrence, status)) } label: {
-                            Label { Text(status.title) } icon: {
-                                Image(systemName: status.symbol)
+                    // Nothing to answer once it is over, and nothing to edit
+                    // unless the series it belongs to carries on.
+                    if !occurrence.isPast {
+                        ForEach(RSVPStatus.allCases) { status in
+                            Button { store.send(.rsvpTapped(occurrence, status)) } label: {
+                                Label { Text(status.title) } icon: {
+                                    Image(systemName: status.symbol)
+                                }
                             }
                         }
+                        Divider()
                     }
-                    Divider()
-                    Button {
-                        store.send(.editTapped(occurrence, .series))
-                    } label: {
-                        Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
+                    if occurrence.isEditable {
+                        Button {
+                            store.send(.editTapped(occurrence, .series))
+                        } label: {
+                            Label {
+                                Text(occurrence.isPast ? L10n.calendarEditSeries : L10n.commonEdit)
+                            } icon: { Image(systemName: "pencil") }
+                        }
                     }
                     if occurrence.isRecurring {
                         Button(role: .destructive) {
