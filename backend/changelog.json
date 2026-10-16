@@ -60,7 +60,7 @@
       "version": "1.10.0",
       "kind": "fix",
       "title": "No more crash when you close a note on a house problem",
-      "body": "Closing a status note, a parts list or a visit on a house problem could take the whole app down with it. Fixed. Big thanks to @goksu.ozahishali for catching it on TestFlight!",
+      "body": "Closing a status note, a parts list or a visit on a house problem could crash the app. Fixed. Big thanks to @goksu.ozahishali for catching it on TestFlight!",
       "highlights": [
         "Notes, parts and visit sheets close like they should",
         "Shout-out to @goksu.ozahishali for the crash report"
@@ -69,7 +69,7 @@
         {
           "language": "tr",
           "title": "Ev sorunlarında notu kapatınca uygulama artık çökmüyor",
-          "body": "Bir ev sorununda notu, parça listesini ya da usta ziyaretini kapatınca uygulama komple kapanıyordu. Hallettik. TestFlight'tan haber verdiği için @goksu.ozahishali'ya çok teşekkürler!",
+          "body": "Bir ev sorununda notu, parça listesini ya da usta ziyaretini kapatınca uygulama çöküyordu. Hallettik. TestFlight'tan haber verdiği için @goksu.ozahishali'ya çok teşekkürler!",
           "highlights": [
             "Not, parça ve ziyaret ekranları artık düzgün kapanıyor",
             "Çökmeyi yakaladığın için sağ ol @goksu.ozahishali"

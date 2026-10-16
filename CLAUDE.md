@@ -120,7 +120,9 @@ told, and be glad they were?*
 - **Write it the way people talk, in both languages.** Everyday, casual
   voice: "No more crash when you close a note", "Hallettik", "sağ ol" — not
   a translated press release. Correct grammar is the floor, not the goal; a
-  sentence can be grammatical and still read like nobody would say it. The
+  sentence can be grammatical and still read like nobody would say it. Say
+  the thing plainly: "çöküyordu", not "uygulama komple kapanıyordu"; "could
+  crash the app", not "take the whole app down with it". The
   Turkish is written as Turkish, not translated off the English. A suffix on
   a handle or name goes the way the person says it out loud, which is not
   always what vowel harmony on the spelling gives:
