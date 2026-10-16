@@ -111,9 +111,25 @@ told, and be glad they were?*
   performance win nobody could feel, a bug fixed before anybody hit it. None of
   these are secrets — they are simply not news, and a changelog padded with
   them is one people stop opening, which costs the entries that mattered.
-- **One entry per release, not per commit,** unless a release genuinely did two
-  unrelated things. Six bullet points under one headline beat six headlines;
-  that is what `highlights` is for.
+- **Writing it is part of the change, not a step somebody asks for.** When a
+  commit clears the bar above, it adds to the notes for the next version in
+  the same commit, unprompted. When it does not, it adds nothing. Nobody
+  should have to remember to ask "and the changelog?".
+- **Two tiers, and a version has at most one of the second.**
+  - *A feature* gets its own entry: a headline, a short paragraph, a few
+    highlights. Only for something people would open the app to try.
+  - *Everything smaller* goes in one running entry per version, slug
+    `<version>-fixes`, kind `fix` (or `improvement` if nothing in it was
+    broken), titled "Fixes and improvements" / "Düzeltmeler ve iyileştirmeler".
+    The body is one sentence; each highlight is one short line that starts
+    with what happened: "Fixed …", "Improved …", "Added …" / "… düzeldi",
+    "… artık daha hızlı", "… eklendi". The next small fix in that version is a
+    new highlight on that entry, never a new entry.
+  - A fix gets promoted to its own entry only when people were actually
+    bitten by it and need to hear it is over: a crash, lost data, a screen
+    that would not open.
+- **Six bullet points under one headline beat six headlines.** That is what
+  `highlights` is for.
 - Write it for the household, not for the repository: "Notifications and
   updates, in one place", never "Add inbox module". If the entry cannot be
   written without naming a file, it probably should not exist.
