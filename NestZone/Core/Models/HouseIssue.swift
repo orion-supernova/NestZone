@@ -403,9 +403,13 @@ extension HouseIssue {
     public var isOpen: Bool { status.isOpen }
 
     /// Past its date and still not sorted out.
-    public var isOverdue: Bool {
+    public var isOverdue: Bool { isOverdue(now: Date()) }
+
+    /// The same question against a given clock — Today's, which moves on by
+    /// itself, so a problem passes its date there without a push to say so.
+    public func isOverdue(now: Date) -> Bool {
         guard let dueBy, isOpen else { return false }
-        return dueBy.date < Date()
+        return dueBy.date < now
     }
 
     /// Whole days until the date. Negative once it has passed.

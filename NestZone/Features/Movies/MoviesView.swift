@@ -14,6 +14,38 @@ public struct MoviesView: View {
         self.store = store
     }
 
+    /// "What should we watch?" — the swipe game, at the top of the films it
+    /// picks from. It used to live only at the bottom of the Home tab, a long
+    /// way from any film.
+    private var movieNightCard: some View {
+        Button { store.send(.movieNightTapped) } label: {
+            HStack(spacing: 16) {
+                Image(systemName: "popcorn.fill")
+                    .font(.title2)
+                    .foregroundStyle(.white)
+                    .frame(width: 54, height: 54)
+                    .background(theme.gradient, in: .rect(cornerRadius: 15, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.homeMinigamesWatchTitle).font(.headline)
+                    Text(L10n.homeMinigamesWatchDescription)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Palette.accessory)
+            }
+            .padding(Metrics.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+        .glassCard(interactive: true)
+        .accessibilityIdentifier("MovieNightCard")
+    }
+
     public var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
@@ -21,6 +53,8 @@ public struct MoviesView: View {
                     SkeletonList(rows: 3, height: 76)
                         .padding(.horizontal, Metrics.screenPadding)
                 } else {
+                    movieNightCard
+                        .padding(.horizontal, Metrics.screenPadding)
                     presetSection
                     customSection
                 }

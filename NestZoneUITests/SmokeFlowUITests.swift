@@ -19,6 +19,17 @@ final class SmokeFlowUITests: XCTestCase {
         }
     }
 
+    /// Opens one module of a grouped tab — Lists, Plans or House.
+    @MainActor
+    private func open(_ tab: String, module: String, in app: XCUIApplication) throws {
+        app.buttons[tab].tap()
+        let segment = app.buttons["Segment.\(module)"]
+        guard segment.waitForExistence(timeout: 15) else {
+            throw XCTSkip("\(tab) never rendered its switch.")
+        }
+        segment.tap()
+    }
+
     @MainActor
     private func assertNoErrorAlert(_ app: XCUIApplication, _ context: String) {
         let alert = app.alerts.firstMatch
@@ -35,14 +46,7 @@ final class SmokeFlowUITests: XCTestCase {
         let app = launch()
         try requireSignedIn(app)
 
-        app.buttons["HubTab"].tap()
-        let shopping = app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'Shopping'")
-        ).firstMatch
-        guard shopping.waitForExistence(timeout: 15) else {
-            throw XCTSkip("Hub tiles never rendered; backend unreachable.")
-        }
-        shopping.tap()
+        try open("ListsTab", module: "shopping", in: app)
 
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10), "composer missing")
@@ -63,12 +67,11 @@ final class SmokeFlowUITests: XCTestCase {
         let app = launch()
         try requireSignedIn(app)
 
-        app.buttons["HomeTab"].tap()
-        let card = app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'watch'")
-        ).firstMatch
+        // At the top of Movies, in Plans, with the films.
+        try open("PlansTab", module: "movies", in: app)
+        let card = app.buttons["MovieNightCard"]
         guard card.waitForExistence(timeout: 15) else {
-            throw XCTSkip("Home tab never rendered.")
+            throw XCTSkip("Movies never rendered.")
         }
         card.tap()
 

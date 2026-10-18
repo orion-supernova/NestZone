@@ -1,6 +1,13 @@
 import ComposableArchitecture
 import SwiftUI
 
+/// Today.
+///
+/// From the top: the day in one sentence, the one thing that is wrong (if
+/// anything is), then this person's sections in their order — each drawn only
+/// when it has something in it, unless it was set to Always — and a short row
+/// of ways into everything else. No section draws an empty state: "nothing
+/// here" is what the sentence is for.
 public struct HomeView: View {
     @Bindable var store: StoreOf<HomeFeature>
 
@@ -13,16 +20,21 @@ public struct HomeView: View {
 
     public var body: some View {
         ScrollView {
-            LazyVStack(spacing: Metrics.sectionSpacing) {
-                greeting.appear(0)
-                tonightCard.appear(1)
-                statsGrid.appear(2)
-                if !store.state.upNext.isEmpty {
-                    upNextSection.appear(3)
+            VStack(alignment: .leading, spacing: 22) {
+                header.appear(0)
+                if store.showsSetup {
+                    setupCard.appear(1)
                 }
-                tasksSection.appear(4)
-                movieNightCard.appear(5)
+                if let hero = store.hero {
+                    heroCard(hero).appear(1)
+                }
+                ForEach(Array(store.layout.shown.enumerated()), id: \.element) { index, section in
+                    self.section(section).appear(index + 2)
+                }
+                shelf
             }
+            .animation(Motion.spring, value: store.layout.shown)
+            .animation(Motion.spring, value: store.hero)
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, Metrics.scrollBottomInset)
         }
@@ -31,418 +43,664 @@ public struct HomeView: View {
         .navigationTitle(Text(L10n.tabBarHome))
         .navigationBarTitleDisplayMode(.inline)
         .task { await store.send(.task).finish() }
-        .sheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
-            DinnerSheet(store: $0)
-        }
-        .sheet(item: $store.scope(state: \.occasion, action: \.occasion)) {
-            EventComposerSheet(store: $0)
-        }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
 
-    private var greeting: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(L10n.homeHelloUser(store.user?.displayName ?? ""))
-                .font(.system(.title, design: .rounded, weight: .bold))
-            Text(L10n.homeHeaderSubtitle)
-                .font(.subheadline)
+    // MARK: - The sentence
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(eyebrow)
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
+            glanceText
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .fixedSize(horizontal: false, vertical: true)
+                .contentTransition(.numericText())
+                .animation(Motion.spring, value: store.glance)
+                .accessibilityAddTraits(.isHeader)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 4)
+        .redacted(reason: store.loaded.contains([.tasks, .bills, .issues]) ? [] : .placeholder)
     }
 
-    // MARK: - Tonight
-
-    /// What the household is doing about dinner, or an invitation to decide.
-    ///
-    /// Top of the tab on purpose: it is the question a shared home asks itself
-    /// every single day, and the answer changes what the shopping list and the
-    /// recipes are for.
-    private var tonightCard: some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            SectionHeader(L10n.dinnerTonightTitle, symbol: "moon.stars.fill") {
-                if store.tonight != nil {
-                    Button { store.send(.decideDinnerTapped) } label: {
-                        Text(L10n.dinnerChangeButton)
-                            .font(.footnote.weight(.semibold))
-                    }
-                    .buttonStyle(.glass)
-                    .controlSize(.small)
-                }
-            }
-
-            Group {
-                if let plan = store.tonight {
-                    DinnerPlanCard(
-                        plan: plan,
-                        action: {
-                            if let recipe = plan.recipe {
-                                store.send(.delegate(.openRecipe(recipe)))
-                            } else {
-                                store.send(.decideDinnerTapped)
-                            }
-                        },
-                        onOpenEvent: plan.event.map { event in
-                            {
-                                store.send(.delegate(.openEventID(
-                                    event.id,
-                                    CalendarDay(MealDate.date(plan.date) ?? Date())
-                                )))
-                            }
-                        },
-                        onMakeOccasion: { store.send(.makeOccasionTapped) }
-                    )
-                    .transition(.scale(scale: 0.96).combined(with: .opacity))
-                } else if let occurrence = store.state.dinnerSuggestion {
-                    // The household has already answered "what are we eating" —
-                    // it just answered it in the calendar. Offering it here
-                    // beats making somebody remember to open the event and
-                    // press a button in it.
-                    SuggestedDinnerCard(
-                        occurrence: occurrence,
-                        onAccept: { store.send(.dinnerSuggestionAccepted) },
-                        onDecideOther: { store.send(.decideDinnerTapped) }
-                    )
-                    .transition(.scale(scale: 0.96).combined(with: .opacity))
-                } else {
-                    UndecidedDinnerCard { store.send(.decideDinnerTapped) }
-                        .transition(.scale(scale: 0.96).combined(with: .opacity))
-                }
-            }
-            .animation(Motion.spring, value: store.tonight)
-            .animation(Motion.spring, value: store.state.dinnerSuggestion)
+    /// "Tuesday evening · Hi Murat".
+    private var eyebrow: String {
+        let weekday = store.now.formatted(Date.FormatStyle().weekday(.wide).locale(L10n.locale))
+        let part = switch store.dayPart {
+        case .morning: L10n.homeDayMorning(weekday)
+        case .afternoon: L10n.homeDayAfternoon(weekday)
+        case .evening: L10n.homeDayEvening(weekday)
+        case .night: L10n.homeDayNight(weekday)
         }
+        guard let name = store.greetingName else { return String(localized: part) }
+        return "\(String(localized: part)) · \(String(localized: L10n.homeHi(name)))"
     }
 
-    // MARK: - Stats
+    private var glanceText: Text {
+        let clauses = store.glance
+        guard !clauses.isEmpty else { return Text(L10n.glanceAllClear) }
+        var text = Text(verbatim: "")
+        for (index, clause) in clauses.enumerated() {
+            if index > 0 {
+                text = text + Text(verbatim: " · ").foregroundStyle(Palette.accessory)
+            }
+            text = text + clauseText(clause)
+        }
+        return text
+    }
 
-    private var statsGrid: some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            SectionHeader(L10n.homeStatsTitle, symbol: "chart.bar.fill")
-
-            GlassGroup(spacing: 18) {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 150), spacing: Metrics.stackSpacing)],
-                    spacing: Metrics.stackSpacing
-                ) {
-                    // One task tile, not two. It used to carry "Tasks Done" —
-                    // an all-time total that only ever grows — beside "Issues",
-                    // a high-priority count that reads 0 in any household that
-                    // never sets priority. Both were about tasks, and the Tasks
-                    // section directly below now tells the whole story: the
-                    // split, the recent rows, and the done count in the ring
-                    // behind it. What is left is the one task number that moves
-                    // day to day, and `openTasks` had been computed server-side
-                    // and thrown away this whole time.
-                    Group {
-                    StatTile(
-                        title: L10n.homeStatsTodoTitle,
-                        value: store.stats.openTasks,
-                        symbol: "checklist.unchecked",
-                        tint: Palette.statTasks
-                    ) { store.send(.delegate(.openTasks)) }
-
-                    StatTile(
-                        title: L10n.homeStatsShoppingTitle,
-                        value: store.stats.shoppingItems,
-                        change: store.stats.shoppingChange,
-                        symbol: "cart.fill",
-                        tint: Palette.statShopping
-                    ) { store.send(.delegate(.openShoppingList)) }
-
-                    StatTile(
-                        title: L10n.homeStatsNotesTitle,
-                        value: store.stats.notes,
-                        change: store.stats.notesChange,
-                        symbol: "note.text",
-                        tint: Palette.statNotes
-                    ) { store.send(.delegate(.openNotes)) }
-
-                    // `stats:forHome` has counted unread messages since the
-                    // server took the tiles over; nothing had ever displayed it.
-                    StatTile(
-                        title: L10n.homeStatsMessagesTitle,
-                        value: store.stats.unreadMessages,
-                        change: store.stats.messagesChange,
-                        symbol: "bubble.left.and.bubble.right.fill",
-                        tint: Palette.statMessages
-                    ) { store.send(.delegate(.openMessages)) }
-
-                    // What is still broken.
-                    //
-                    // Not the tile that used to sit here under this name: that
-                    // one counted high-priority *tasks* and read 0 in any home
-                    // that never set a priority, which is why it went. This is
-                    // its own table, its own index, and a number that falls
-                    // when somebody fixes something. It goes red when any of it
-                    // is urgent or overdue — the one counter on this grid where
-                    // "3" and "3, one of them a leak" are different facts.
-                    StatTile(
-                        title: L10n.homeStatsIssuesTitle,
-                        value: store.stats.openIssues,
-                        change: store.stats.issuesChange,
-                        symbol: "wrench.adjustable.fill",
-                        tint: store.stats.urgentIssues > 0 ? Palette.danger : Palette.statIssues
-                    ) { store.send(.delegate(.openIssues)) }
-                    }
-                    // The five counters that come off `stats:forHome`, so they
-                    // wait on it and on nothing else. A `Group` inside a grid
-                    // flattens to its children, so these stay five cells and the
-                    // modifier lands on each.
-                    .redacted(reason: store.loaded.contains(.stats) ? [] : .placeholder)
-
-                    // The one tile whose number is not from `stats:forHome`.
-                    // It is counted here from the short agenda the card below
-                    // already subscribes to, rather than added to the server's
-                    // summary — one capped query answers both, and a badge that
-                    // could disagree with the list under it is the exact failure
-                    // the Finance screen's bill counters were moved client-side
-                    // to avoid.
-                    StatTile(
-                        title: L10n.homeStatsEventsTitle,
-                        value: store.state.eventsThisWeek,
-                        symbol: "calendar",
-                        tint: Palette.statEvents
-                    ) { store.send(.delegate(.openCalendar)) }
-                    // Counted from the agenda, so it waits on the agenda.
-                    .redacted(reason: store.loaded.contains(.upcoming) ? [] : .placeholder)
-                }
+    private func clauseText(_ clause: GlanceClause) -> Text {
+        switch clause {
+        case let .alarm(.issue(issue)):
+            Text(L10n.glanceIssue(issue.title)).foregroundStyle(Palette.danger)
+        case let .alarm(.bill(bill)):
+            switch bill.urgency(now: store.now) {
+            case .overdue:
+                Text(lateText(bill)).foregroundStyle(Palette.danger)
+            case .dueToday:
+                Text(L10n.glanceBillToday(bill.title))
+            case .dueSoon, .upcoming:
+                Text(L10n.glanceBillDue(bill.title, weekday(bill.dueDate.date)))
+            }
+        case let .happening(event):
+            Text(L10n.glanceHappening(event.title))
+        case let .eventToday(event):
+            Text(L10n.glanceEventToday(event.title, event.start.formatted(
+                Date.FormatStyle(date: .omitted, time: .shortened).locale(L10n.locale)
+            )))
+        case let .tonight(plan):
+            Text(L10n.glanceTonight(plan.dockHeadline))
+        case let .chores(count):
+            Text(L10n.glanceChores(count))
+        case let .next(event):
+            if Calendar.current.isDate(event.start, inSameDayAs: store.now.addingTimeInterval(24 * 3600)) {
+                Text(L10n.glanceNextTomorrow(event.title))
+            } else {
+                Text(L10n.glanceNextOn(event.title, weekday(event.start)))
             }
         }
     }
 
-    // MARK: - Up next
+    /// "Internet is 3 days late" — a day said as a day, not as "1 days".
+    private func lateText(_ bill: Bill) -> LocalizedStringResource {
+        let days = max(-bill.daysUntilDue(now: store.now), 1)
+        return days == 1 ? L10n.glanceBillLateOneDay(bill.title) : L10n.glanceBillLateDays(bill.title, days)
+    }
 
-    /// What the household is about to do, and what it is doing right now.
-    ///
-    /// A count cannot say "the party started an hour ago", which is the one
-    /// thing on this tab that stops being true while you are looking at it —
-    /// hence a live countdown and a badge rather than another number.
-    private var upNextSection: some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            // Its own section, with its own heading. It used to hang off the
-            // bottom of the statistics grid, which made a list of dated things
-            // read as a footnote to four counters rather than as the answer to
-            // a different question.
-            SectionHeader(L10n.homeUpNextTitle, symbol: "calendar.badge.clock") {
-                // The same glass control the Tasks section uses. Bare accent
-                // text next to a glass capsule two sections down read as two
-                // different kinds of thing when they do the same job.
-                //
-                // No icon button beside it, unlike Tasks: that one opens
-                // Contributions, a different screen about the same data, and
-                // events have no equivalent second destination. An icon that
-                // went where "See all" already goes would be decoration.
-                Button { store.send(.delegate(.openCalendar)) } label: {
-                    Text(L10n.commonSeeAll).font(.subheadline.weight(.medium))
-                }
-                .buttonStyle(.glass)
-                .controlSize(.small)
+    /// A weekday within the week, a short date beyond it.
+    private func weekday(_ date: Date) -> String {
+        if date.timeIntervalSince(store.now) < 6 * 24 * 3600 {
+            return date.formatted(Date.FormatStyle().weekday(.wide).locale(L10n.locale))
+        }
+        return date.formatted(Date.FormatStyle().day().month(.abbreviated).locale(L10n.locale))
+    }
+
+    // MARK: - Sections
+
+    @ViewBuilder
+    private func section(_ section: TodaySection) -> some View {
+        let visibility = store.layout.visibility(of: section)
+        switch section {
+        case .needsYou:
+            if !store.needsRows.isEmpty {
+                block(section) { needsRows }
+            } else if visibility == .always, store.hero == nil {
+                block(section) { quietLine(L10n.homeNeedsYouClear) }
             }
-            upNextCard
+        case .tonight:
+            if store.showsTonight {
+                block(section) { tonight }
+            }
+        case .tasks:
+            if !store.chores.isEmpty {
+                block(section) { chores }
+            } else if visibility == .always, store.loaded.contains(.tasks) {
+                block(section) { quietLine(L10n.homeTasksClear) }
+            }
+        case .upNext:
+            if !store.comingUp.isEmpty {
+                block(section) { comingUp }
+            } else if visibility == .always, store.loaded.contains(.upcoming) {
+                block(section) { quietLine(L10n.homeUpNextClear) }
+            }
+        case .movieNight:
+            if visibility == .always || store.movieNightIsTimely {
+                movieNightRow
+            }
+        case .stats:
+            if visibility == .always {
+                block(section) { statsGrid }
+            } else if !store.counters.isEmpty {
+                counters
+            }
         }
     }
 
-    private var upNextCard: some View {
-        GlassCard(padding: 0) {
-            VStack(spacing: 0) {
-                ForEach(Array(store.state.upNext.enumerated()), id: \.element.id) { index, occurrence in
-                    if index > 0 {
-                        Divider().opacity(0.4).padding(.leading, 52)
-                    }
-                    upNextRow(occurrence).appear(index)
-                }
-            }
+    /// A section: a small label over its rows. The label is a footnote, not a
+    /// headline with an icon and a button — those used to be taller than the
+    /// rows under them.
+    private func block(_ section: TodaySection, @ViewBuilder content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(section.title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .padding(.leading, 4)
+                .accessibilityAddTraits(.isHeader)
+            content()
         }
-        .animation(Motion.spring, value: store.state.upNext.map(\.id))
     }
 
-    private func upNextRow(_ occurrence: EventOccurrence) -> some View {
-        Button { store.send(.delegate(.openEvent(occurrence))) } label: {
-            HStack(spacing: 12) {
-                Image(systemName: occurrence.kind.symbol)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(occurrence.kind.tint)
-                    .frame(width: 32, height: 32)
-                    .background(occurrence.kind.tint.opacity(0.14), in: .circle)
-                    .bounces(when: occurrence.isInProgress)
+    /// What a section set to Always says when it has nothing: one line, not a
+    /// card with an illustration and a button.
+    private func quietLine(_ text: LocalizedStringResource) -> some View {
+        Text(text)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .padding(.leading, 4)
+    }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(occurrence.title)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                        if occurrence.isInProgress {
-                            NowBadge()
-                        }
-                    }
-                    Text(whenText(occurrence))
-                        .font(.caption)
+    // MARK: - Getting started
+
+    /// What a new household gets instead of a welcome sheet: four things that
+    /// make the app useful, each of which ticks itself once it is true.
+    private var setupCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(L10n.homeSetupTitle)
+                    .font(.headline)
+                Spacer(minLength: 0)
+                Button { store.send(.setupClosed) } label: {
+                    Image(systemName: "xmark")
+                        .font(.footnote.weight(.semibold))
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .frame(width: 28, height: 28)
+                        .contentShape(.rect)
                 }
-
-                Spacer(minLength: 4)
-
-                if occurrence.isInProgress {
-                    // The countdown has nothing left to count, and the badge
-                    // beside the title has already said it.
-                    EmptyView()
-                } else {
-                    CountdownText(occurrence.start)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(theme.accent)
-                        .contentTransition(.numericText())
-                        .monospacedDigit()
-                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(L10n.commonClose))
             }
-            .padding(.horizontal, Metrics.cardPadding)
-            .padding(.vertical, 11)
-            .contentShape(.rect)
+            ForEach(HomeFeature.State.SetupStep.allCases) { step in
+                setupRow(step, isDone: store.finishedSetup.contains(step))
+            }
         }
-        .buttonStyle(.pressable)
+        .padding(Metrics.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+        .animation(Motion.spring, value: store.finishedSetup)
     }
 
-    /// "Today · 19:00 – 23:00", or the day for anything further out.
-    private func whenText(_ occurrence: EventOccurrence) -> String {
-        let day = CalendarDay(occurrence.start)
-        let today = CalendarDay.today
-        let label: String = if day == today {
-            String(localized: L10n.calendarToday)
-        } else if day == today.advanced(by: 1) {
-            String(localized: L10n.calendarTomorrowLabel)
-        } else {
-            occurrence.start.formatted(
-                Date.FormatStyle(date: .abbreviated, time: .omitted).locale(L10n.locale)
-            )
-        }
-        return occurrence.isAllDay ? label : "\(label) · \(occurrence.timeText)"
-    }
-
-    // MARK: - Movie night
-
-    private var movieNightCard: some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            SectionHeader(L10n.homeMinigamesTitle, symbol: "sparkles")
-
-            Button { store.send(.delegate(.openMovieNight)) } label: {
-                HStack(spacing: 16) {
-                    Image(systemName: "popcorn.fill")
-                        .font(.title2)
-                        .foregroundStyle(.white)
-                        .frame(width: 54, height: 54)
-                        .background(theme.gradient, in: .rect(cornerRadius: 15, style: .continuous))
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(L10n.homeMinigamesWatchTitle).font(.headline)
-                        Text(L10n.homeMinigamesWatchDescription)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.leading)
-                    }
-                    Spacer(minLength: 0)
+    private func setupRow(_ step: HomeFeature.State.SetupStep, isDone: Bool) -> some View {
+        Button { store.send(.setupStepTapped(step)) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isDone ? Palette.success : Color.secondary)
+                    .contentTransition(.symbolEffect(.replace))
+                Text(setupTitle(step))
+                    .font(.subheadline.weight(.medium))
+                    .strikethrough(isDone, color: .secondary)
+                    .foregroundStyle(isDone ? .secondary : .primary)
+                Spacer(minLength: 0)
+                if !isDone {
                     Image(systemName: "chevron.right")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(Palette.accessory)
                 }
-                .padding(Metrics.cardPadding)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(.rect)
             }
-            .buttonStyle(.pressable)
-            .glassCard(interactive: true)
+            .frame(minHeight: 32)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+        .disabled(isDone)
+        .accessibilityIdentifier("Setup.\(step.rawValue)")
+    }
+
+    private func setupTitle(_ step: HomeFeature.State.SetupStep) -> LocalizedStringResource {
+        switch step {
+        case .invite: L10n.homeSetupInvite
+        case .firstChore: L10n.homeSetupFirstChore
+        case .dinner: L10n.homeSetupDinner
+        case .customize: L10n.homeSetupCustomize
         }
     }
 
-    // MARK: - Tasks
+    // MARK: - The one card
 
-    /// Chores, and the way into who has been doing them.
-    ///
-    /// The split lives behind the chart button in this header rather than in a
-    /// card above the rows. It was tried as a full-width strip at the top of
-    /// this stack, and it read as a very large first task: two different kinds
-    /// of thing — a summary and the items it summarises — stacked in one column
-    /// with the same surface. A header control says "there is more about this
-    /// section" without competing with the rows for the same glance.
-    private var tasksSection: some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            SectionHeader(L10n.homeTasksTitle, symbol: "checklist") {
-                HStack(spacing: 8) {
-                    Button { store.send(.delegate(.openContributions)) } label: {
-                        Image(systemName: "chart.pie.fill")
-                            .font(.subheadline.weight(.medium))
-                    }
-                    .buttonStyle(.glass)
-                    .controlSize(.small)
-                    .accessibilityLabel(Text(L10n.contributionsSectionTitle))
-                    .accessibilityIdentifier("ContributionsButton")
+    @ViewBuilder
+    private func heroCard(_ alarm: HomeFeature.State.Alarm) -> some View {
+        switch alarm {
+        case let .issue(issue):
+            HeroCard(
+                symbol: "wrench.adjustable.fill",
+                kicker: issueKicker(issue),
+                title: issue.title,
+                primary: claimAction(issue),
+                open: { store.send(.delegate(.openIssue(issue.id))) }
+            )
+        case let .bill(bill):
+            HeroCard(
+                symbol: "dollarsign.circle.fill",
+                kicker: String(localized: lateText(bill)),
+                title: bill.title,
+                primary: nil,
+                open: { store.send(.delegate(.openFinance)) }
+            )
+        }
+    }
 
-                    Button { store.send(.delegate(.openTasks)) } label: {
-                        Text(L10n.commonSeeAll).font(.subheadline.weight(.medium))
-                    }
-                    .buttonStyle(.glass)
-                    .controlSize(.small)
-                }
-            }
+    /// "Urgent · nobody's on it" — who has it is the question an urgent repair
+    /// actually raises.
+    private func issueKicker(_ issue: HouseIssue) -> String {
+        let state = String(localized: issue.isOverdue ? L10n.homeHeroOverdue : L10n.homeHeroUrgent)
+        let who: String = if issue.assignedTo == nil {
+            String(localized: L10n.homeHeroNobody)
+        } else if issue.assignedTo == store.user?.id {
+            String(localized: L10n.homeHeroYou)
+        } else {
+            String(localized: L10n.homeHeroSomeone(
+                store.members[id: issue.assignedTo!]?.displayName ?? ""
+            ))
+        }
+        return "\(state) · \(who)"
+    }
 
-            GlassList {
-                if !store.loaded.contains(.tasks) {
-                    SkeletonList(rows: 3, height: 56)
-                } else if store.tasks.isEmpty {
-                    EmptyStateView(
-                        title: L10n.homeTasksEmptyTitle,
-                        message: L10n.homeTasksEmptyMessage,
-                        symbol: "checkmark.seal",
-                        action: .init(title: L10n.commonAdd) {
-                            store.send(.delegate(.openTasks))
-                        },
-                        isCompact: true
-                    )
-                    .frame(maxWidth: .infinity)
-                } else {
-                    ForEach(store.recentTasks) { task in
-                        TaskRow(task: task) { store.send(.taskToggled(task.id)) }
-                            .glassEffectID(task.id.rawValue, in: glass)
-                    }
+    private func claimAction(_ issue: HouseIssue) -> (LocalizedStringResource, () -> Void)? {
+        guard store.user != nil, issue.assignedTo != store.user?.id else { return nil }
+        return (L10n.homeHeroClaim, { store.send(.issueClaimed(issue.id)) })
+    }
+
+    // MARK: - Needs you
+
+    private var needsRows: some View {
+        GlassList {
+            ForEach(store.needsRows) { alarm in
+                switch alarm {
+                case let .issue(issue):
+                    needsRow(
+                        symbol: "wrench.adjustable.fill",
+                        tint: Palette.danger,
+                        title: issue.title,
+                        detail: String(localized: issue.isOverdue ? L10n.homeNeedsYouOverdue : L10n.homeNeedsYouUrgent)
+                    ) { store.send(.delegate(.openIssue(issue.id))) }
+                case let .bill(bill):
+                    needsRow(
+                        symbol: "dollarsign.circle.fill",
+                        tint: bill.urgency(now: store.now) == .overdue ? Palette.danger : Palette.warning,
+                        title: bill.title,
+                        detail: billDetail(bill)
+                    ) { store.send(.delegate(.openFinance)) }
                 }
             }
         }
-        .animation(Motion.spring, value: store.tasks)
+        .animation(Motion.spring, value: store.needsRows)
+    }
+
+    private func needsRow(
+        symbol: String,
+        tint: Color,
+        title: String,
+        detail: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: 32, height: 32)
+                    .background(tint.opacity(0.14), in: .circle)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(tint)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Palette.accessory)
+            }
+            .contentShape(.rect)
+            .glassRow()
+        }
+        .buttonStyle(.pressable)
+    }
+
+    private func billDetail(_ bill: Bill) -> String {
+        switch bill.urgency(now: store.now) {
+        case .overdue: String(localized: L10n.homeNeedsYouOverdue)
+        case .dueToday: String(localized: L10n.homeNeedsYouDueToday)
+        case .dueSoon, .upcoming:
+            String(localized: L10n.homeNeedsYouDue(
+                bill.dueDate.date.formatted(Date.FormatStyle().weekday(.wide).locale(L10n.locale))
+            ))
+        }
+    }
+
+    // MARK: - Tonight
+
+    @ViewBuilder
+    private var tonight: some View {
+        Group {
+            if let plan = store.tonight {
+                DinnerPlanCard(
+                    plan: plan,
+                    action: {
+                        if let recipe = plan.recipe {
+                            store.send(.delegate(.openRecipe(recipe)))
+                        } else {
+                            store.send(.delegate(.decideDinner))
+                        }
+                    },
+                    onOpenEvent: plan.event.map { event in
+                        {
+                            store.send(.delegate(.openEventID(
+                                event.id,
+                                CalendarDay(MealDate.date(plan.date) ?? store.now)
+                            )))
+                        }
+                    },
+                    onMakeOccasion: { store.send(.delegate(.makeOccasion)) }
+                )
+            } else if let occurrence = store.dinnerSuggestion {
+                SuggestedDinnerCard(
+                    occurrence: occurrence,
+                    onAccept: { store.send(.delegate(.acceptDinnerSuggestion)) },
+                    onDecideOther: { store.send(.delegate(.decideDinner)) }
+                )
+            } else {
+                UndecidedDinnerCard { store.send(.delegate(.decideDinner)) }
+            }
+        }
+        .transition(.scale(scale: 0.96).combined(with: .opacity))
+        .animation(Motion.spring, value: store.tonight)
+        .animation(Motion.spring, value: store.dinnerSuggestion)
+    }
+
+    // MARK: - Chores
+
+    private var chores: some View {
+        GlassList {
+            ForEach(store.visibleChores) { task in
+                TaskRow(
+                    task: task,
+                    assignee: task.assignedTo.flatMap { store.members[id: $0] },
+                    isMine: task.assignedTo != nil && task.assignedTo == store.user?.id,
+                    now: store.now
+                ) { store.send(.taskToggled(task.id)) }
+                    .glassEffectID(task.id.rawValue, in: glass)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+            if store.hiddenChoreCount > 0 {
+                Button { store.send(.showMoreChoresTapped) } label: {
+                    Text(L10n.homeMoreChores(store.hiddenChoreCount))
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(theme.accent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 4)
+                        .frame(minHeight: 32)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.pressable)
+            }
+        }
+        .animation(Motion.spring, value: store.visibleChores.map(\.id))
+    }
+
+    // MARK: - Coming up
+
+    private var comingUp: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            GlassGroup(spacing: 8) {
+                HStack(spacing: 8) {
+                    ForEach(store.comingUp) { occurrence in
+                        Button { store.send(.delegate(.openEvent(occurrence))) } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: occurrence.kind.symbol)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(occurrence.kind.tint)
+                                Text(occurrence.title)
+                                    .font(.subheadline.weight(.medium))
+                                    .lineLimit(1)
+                                Text(whenText(occurrence))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 36)
+                            .glassControl()
+                        }
+                        .buttonStyle(.pressable)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .scrollClipDisabled()
+    }
+
+    /// "20:00" today, "tomorrow", the weekday this week, a short date after.
+    private func whenText(_ occurrence: EventOccurrence) -> String {
+        if Calendar.current.isDate(occurrence.start, inSameDayAs: store.now) {
+            return occurrence.isAllDay ? String(localized: L10n.calendarToday) : occurrence.timeText
+        }
+        if Calendar.current.isDate(occurrence.start, inSameDayAs: store.now.addingTimeInterval(24 * 3600)) {
+            return String(localized: L10n.calendarTomorrowLabel)
+        }
+        return weekday(occurrence.start)
+    }
+
+    // MARK: - Counters
+
+    /// The counters, as the few that are asking for something.
+    private var counters: some View {
+        FlowLayout(spacing: 8, lineSpacing: 8) {
+            ForEach(store.counters, id: \.self) { counter in
+                Button { open(counter) } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: symbol(counter))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(tint(counter))
+                        Text(title(counter))
+                            .font(.footnote.weight(.medium))
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 32)
+                    .glassControl()
+                }
+                .buttonStyle(.pressable)
+            }
+        }
+    }
+
+    private func open(_ counter: HomeFeature.State.Counter) {
+        switch counter {
+        case .shopping: store.send(.delegate(.openShoppingList))
+        case .unread: store.send(.delegate(.openMessages))
+        case .problems: store.send(.delegate(.openIssues))
+        case .events: store.send(.delegate(.openCalendar))
+        }
+    }
+
+    private func title(_ counter: HomeFeature.State.Counter) -> LocalizedStringResource {
+        switch counter {
+        case let .shopping(n): L10n.homeCounterShopping(n)
+        case let .unread(n): L10n.homeCounterUnread(n)
+        case let .problems(n): L10n.homeCounterProblems(n)
+        case let .events(n): L10n.homeCounterEvents(n)
+        }
+    }
+
+    private func symbol(_ counter: HomeFeature.State.Counter) -> String {
+        switch counter {
+        case .shopping: "cart.fill"
+        case .unread: "bubble.left.and.bubble.right.fill"
+        case .problems: "wrench.adjustable.fill"
+        case .events: "calendar"
+        }
+    }
+
+    private func tint(_ counter: HomeFeature.State.Counter) -> Color {
+        switch counter {
+        case .shopping: Palette.statShopping
+        case .unread: Palette.statMessages
+        case .problems: store.stats.urgentIssues > 0 ? Palette.danger : Palette.statIssues
+        case .events: Palette.statEvents
+        }
+    }
+
+    /// The full grid, for anybody who set the counters to Always.
+    private var statsGrid: some View {
+        HouseStatsGrid(
+            stats: store.stats,
+            eventsThisWeek: store.eventsThisWeek,
+            statsLoaded: store.loaded.contains(.stats),
+            eventsLoaded: store.loaded.contains(.upcoming)
+        ) { tile in
+            switch tile {
+            case .tasks: store.send(.delegate(.openTasks))
+            case .shopping: store.send(.delegate(.openShoppingList))
+            case .notes: store.send(.delegate(.openNotes))
+            case .messages: store.send(.delegate(.openMessages))
+            case .issues: store.send(.delegate(.openIssues))
+            case .events: store.send(.delegate(.openCalendar))
+            }
+        }
+    }
+
+    // MARK: - Movie night
+
+    private var movieNightRow: some View {
+        Button { store.send(.delegate(.openMovieNight)) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "popcorn.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(theme.gradient, in: .circle)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.homeMinigamesWatchTitle)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(store.movieRoundIsOpen ? L10n.homeMovieRoundOpen : L10n.homeMinigamesWatchDescription)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Palette.accessory)
+            }
+            .contentShape(.rect)
+            .glassRow()
+        }
+        .buttonStyle(.pressable)
+    }
+
+    // MARK: - The shelf
+
+    /// Ways into the things Today summarises, as plain links at the bottom —
+    /// where the "See all" capsules and the unlabelled chart button on every
+    /// section header used to be.
+    private var shelf: some View {
+        FlowLayout(spacing: 16, lineSpacing: 6) {
+            shelfLink(L10n.homeShelfAllChores) { store.send(.delegate(.openTasks)) }
+            shelfLink(L10n.homeShelfContributions) { store.send(.delegate(.openContributions)) }
+                .accessibilityIdentifier("ContributionsButton")
+            shelfLink(L10n.hubStatsTitle) { store.send(.delegate(.openStats)) }
+            shelfLink(L10n.homeShelfEditToday) { store.send(.delegate(.openCustomize)) }
+                .accessibilityIdentifier("EditTodayButton")
+        }
+        .padding(.leading, 4)
+        .padding(.top, 4)
+    }
+
+    private func shelfLink(_ title: LocalizedStringResource, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(theme.accent)
+                .frame(minHeight: 32)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
     }
 }
 
+/// The one big card on Today: something wrong, who has it, and the way to
+/// take it on without leaving the tab.
+private struct HeroCard: View {
+    let symbol: String
+    let kicker: String
+    let title: String
+    let primary: (LocalizedStringResource, () -> Void)?
+    let open: () -> Void
 
-/// "Now" — the household is in the middle of this.
-///
-/// The only endlessly-repeating animation on this tab, and there is never more
-/// than one on screen: a row is either happening or it is not, and the whole
-/// point of the badge is that it is alive.
-private struct NowBadge: View {
     var body: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(Palette.danger)
-                .frame(width: 5, height: 5)
-                .pulse()
-            Text(L10n.calendarNowBadge)
-                .font(.system(size: 9, weight: .bold))
-                .textCase(.uppercase)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.headline)
+                    .foregroundStyle(Palette.danger)
+                    .frame(width: 44, height: 44)
+                    .background(Palette.danger.opacity(0.16), in: .rect(cornerRadius: 12, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(kicker)
+                        .font(.caption2.weight(.bold))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.danger)
+                        .lineLimit(1)
+                    Text(title)
+                        .font(.headline)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 0)
+            }
+            HStack(spacing: 12) {
+                if let primary {
+                    Button(action: primary.1) {
+                        Text(primary.0)
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 6)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .tint(Palette.danger)
+                    .accessibilityIdentifier("HeroClaim")
+                }
+                Button(action: open) {
+                    HStack(spacing: 4) {
+                        Text(L10n.commonOpen)
+                        Image(systemName: "chevron.right").font(.caption.weight(.bold))
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .frame(minHeight: Metrics.minTapTarget)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .foregroundStyle(Palette.danger)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 3)
-        .background(Palette.danger.opacity(0.14), in: .capsule)
-        .transition(.scale.combined(with: .opacity))
+        .padding(Metrics.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard(tinted: Palette.danger.opacity(0.12))
+        .accessibilityElement(children: .contain)
     }
 }
 
 private struct TaskRow: View {
     let task: HouseTask
+    let assignee: User?
+    let isMine: Bool
+    let now: Date
     let onToggle: () -> Void
-
-    @Environment(\.theme) private var theme
 
     var body: some View {
         HStack(spacing: 12) {
@@ -464,21 +722,17 @@ private struct TaskRow: View {
                     .foregroundStyle(task.isCompleted ? .secondary : .primary)
                     .lineLimit(1)
 
-                if let due = task.dueDate {
-                    Text(due.date, format: .relative(presentation: .named))
+                if let due = task.dueDate, !task.isCompleted {
+                    Text(dueText(due.date))
                         .font(.caption2)
-                        .foregroundStyle(task.isOverdue ? Palette.danger : .secondary)
+                        .foregroundStyle(due.date < Calendar.current.startOfDay(for: now) ? Palette.danger : .secondary)
                 }
             }
 
             Spacer(minLength: 0)
 
-            if task.isUrgent {
-                Badge(
-                    String(localized: L10n.tasksPriorityHigh),
-                    tint: Palette.danger,
-                    symbol: "exclamationmark"
-                )
+            if let assignee {
+                Avatar(user: assignee, size: 22, viewable: false)
             }
         }
         .glassRow()
@@ -487,8 +741,14 @@ private struct TaskRow: View {
         .accessibilityAddTraits(task.isCompleted ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction(named: Text(L10n.tasksToggleAction), onToggle)
     }
-}
 
+    private func dueText(_ date: Date) -> String {
+        if Calendar.current.isDate(date, inSameDayAs: now) {
+            return String(localized: L10n.homeChoreDueToday)
+        }
+        return date.formatted(.relative(presentation: .named).locale(L10n.locale))
+    }
+}
 
 /// Tonight is undecided, but something in the calendar today has a menu.
 ///
@@ -507,14 +767,14 @@ private struct SuggestedDinnerCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 16) {
+            HStack(spacing: 14) {
                 Image(systemName: occurrence.kind.symbol)
-                    .font(.title2)
+                    .font(.headline)
                     .foregroundStyle(occurrence.kind.tint)
-                    .frame(width: 52, height: 52)
+                    .frame(width: 44, height: 44)
                     .background(
                         occurrence.kind.tint.opacity(0.14),
-                        in: .rect(cornerRadius: 14, style: .continuous)
+                        in: .rect(cornerRadius: 12, style: .continuous)
                     )
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -528,19 +788,22 @@ private struct SuggestedDinnerCard: View {
                 Spacer(minLength: 0)
             }
 
-            PrimaryButton(L10n.homeDinnerFromEventAction, symbol: "fork.knife") {
-                onAccept()
-            }
+            HStack(spacing: 12) {
+                Button(action: onAccept) {
+                    Label { Text(L10n.homeDinnerFromEventAction) } icon: { Image(systemName: "fork.knife") }
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.glassProminent)
 
-            Button(action: onDecideOther) {
-                Text(L10n.homeDinnerFromEventOther)
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: Metrics.minTapTarget)
-                    .contentShape(.rect)
+                Button(action: onDecideOther) {
+                    Text(L10n.homeDinnerFromEventOther)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .frame(minHeight: Metrics.minTapTarget)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.pressable)
         }
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)

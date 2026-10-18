@@ -40,13 +40,21 @@ public struct MoviesFeature: Sendable {
         case loadFailed(AppError)
         case listTapped(MovieList)
         case createListTapped
+        /// The game that picks tonight's film, which lives with the films.
+        case movieNightTapped
         case deleteListTapped(MovieListID)
         case writeFailed(AppError)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<Alert>)
+        case delegate(Delegate)
 
         public enum Alert: Equatable {
             case confirmDeleteList(MovieListID)
+        }
+
+        public enum Delegate: Equatable {
+            /// The game is its own screen; the tab container opens it.
+            case openMovieNight
         }
     }
 
@@ -126,7 +134,10 @@ public struct MoviesFeature: Sendable {
                 state.destination = nil
                 return .none
 
-            case .destination, .alert:
+            case .movieNightTapped:
+                return .send(.delegate(.openMovieNight))
+
+            case .destination, .alert, .delegate:
                 return .none
             }
         }

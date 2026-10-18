@@ -56,6 +56,66 @@
   ],
   "entries": [
     {
+      "slug": "1.11.0-new-tabs",
+      "version": "1.11.0",
+      "kind": "feature",
+      "title": "Tabs that make sense, and a calmer Today",
+      "body": "Lists, Plans and House each keep the things that go together, so nothing needs a tab of its own anymore. Today sums up your day in one sentence and only shows what actually needs someone. When there's nothing to do, it just says so.",
+      "highlights": [
+        "Lists: chores, shopping and notes, one tap apart",
+        "Plans: the calendar, meals and movies together",
+        "House: money, and the problems that need fixing",
+        "Empty sections on Today don't show up at all",
+        "Something urgent gets one big card, with \"I'll handle it\" right on it",
+        "Tick off today's chores without leaving Today",
+        "Choose what Today shows in Settings: Automatic, Always or Off"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Daha mantıklı sekmeler, daha sakin bir Bugün",
+          "body": "Listeler, Planlar ve Ev artık birbirine ait şeyleri bir arada tutuyor, hiçbir şeyin kendi sekmesine ihtiyacı kalmadı. Bugün ekranı da günü tek cümlede özetliyor ve sadece gerçekten birini bekleyen şeyleri gösteriyor. Yapacak bir şey yoksa bunu söylüyor, o kadar.",
+          "highlights": [
+            "Listeler: görevler, alışveriş ve notlar, tek dokunuş uzağında",
+            "Planlar: takvim, yemekler ve filmler bir arada",
+            "Ev: para işleri ve tamir bekleyen sorunlar",
+            "Bugün'de boş bölümler artık hiç görünmüyor",
+            "Acil bir şey varsa tek büyük kartta, \"Ben hallederim\" de hemen üstünde",
+            "Bugünkü görevleri Bugün ekranından çıkmadan işaretle",
+            "Bugün'de ne görüneceğini Ayarlar'dan seç: Otomatik, Her zaman ya da Kapalı"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.11.0-add-anything",
+      "version": "1.11.0",
+      "kind": "feature",
+      "title": "Add anything, from any tab",
+      "body": "There's a bar above the tabs now. It shows what's going on right now, like tonight's dinner or the event that's about to start, and its + lets you add anything without going anywhere. Type it the way you'd text your housemates: \"milk, eggs, bread\" goes on the shopping list, \"the bathroom tap is leaking\" becomes a house problem.",
+      "highlights": [
+        "Type a few things with commas and they all go on the list",
+        "It gets dates: \"take the bins out tomorrow\" is due tomorrow",
+        "You see where it's going before it's saved, and one tap changes it",
+        "In the evening, the bar asks what's for dinner",
+        "Tonight's dinner also has its own card at the top of Meals"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Her şeyi her sekmeden ekle",
+          "body": "Sekmelerin üstünde artık bir çubuk var. O an ne oluyorsa onu gösteriyor, bu akşamın yemeği ya da birazdan başlayacak etkinlik gibi. Yanındaki + ile de hiçbir yere gitmeden her şeyi ekleyebiliyorsun. Ev arkadaşına mesaj atar gibi yaz: \"süt, yumurta, ekmek\" alışveriş listesine gidiyor, \"banyo musluğu akıyor\" ev sorunu oluyor.",
+          "highlights": [
+            "Virgülle birkaç şey yaz, hepsi listeye eklensin",
+            "Tarihleri anlıyor: \"yarın çöpü çıkar\" yarına yazılıyor",
+            "Kaydetmeden önce nereye gideceğini görüyorsun, tek dokunuşla değiştirebiliyorsun",
+            "Akşamları çubuk bu akşam ne yiyeceğinizi soruyor",
+            "Bu akşamın yemeğinin Yemekler'in en üstünde kendi kartı da var"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.10.0-problem-sheet-crash",
       "version": "1.10.0",
       "kind": "fix",

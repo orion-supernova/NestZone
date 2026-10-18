@@ -6,6 +6,11 @@ import ConvexMobile
 public struct ShoppingClient: Sendable {
     public var byHome: @Sendable (HomeID) -> AsyncThrowingStream<[ShoppingItem], any Error> = { _ in .never }
     public var create: @Sendable (NewShoppingItem) async throws -> Void
+    /// Several items typed at once — "süt, yumurta, ekmek" — in one write, one
+    /// live push and one notification. Returns the ids actually inserted: the
+    /// server skips anything already on the list and unbought, and anything
+    /// typed twice, so the count is what the household actually gained.
+    public var createMany: @Sendable (HomeID, [String]) async throws -> [ShoppingItemID]
     /// Sends a recipe's ingredients to the list in one round trip. Returns how
     /// many were added — the server skips anything already outstanding, so the
     /// count is what the person actually gained.
@@ -76,6 +81,27 @@ extension ShoppingClient: DependencyKey {
             ]
             if let quantity = item.quantity { args["quantity"] = quantity }
             try await ConvexConnection.shared.mutate("shopping:create", args: args)
+        },
+        createMany: { homeID, names in
+            let trimmed = names
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            guard !trimmed.isEmpty else {
+                throw AppError.validation(String(
+                    localized: "validation.itemNameEmpty",
+                    defaultValue: "Name the item first."
+                ))
+            }
+            return try await ConvexConnection.shared.mutate(
+                "shopping:createMany",
+                args: [
+                    "homeId": homeID,
+                    // Widened element by element, as `createFromRecipe` does:
+                    // `[String]` is not `ConvexEncodable`.
+                    "names": trimmed.map { $0 as ConvexEncodable? },
+                ],
+                as: [ShoppingItemID].self
+            )
         },
         addFromRecipe: { batch in
             let names = batch.names

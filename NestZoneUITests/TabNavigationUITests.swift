@@ -29,7 +29,7 @@ final class TabNavigationUITests: XCTestCase {
     func testEveryTabOpens() throws {
         try requireSignedIn()
 
-        for identifier in ["HomeTab", "HubTab", "NotesTab", "MessagesTab", "SettingsTab"] {
+        for identifier in ["HomeTab", "ListsTab", "PlansTab", "HouseTab", "MessagesTab"] {
             let tab = app.buttons[identifier]
             XCTAssertTrue(tab.waitForExistence(timeout: 5), "\(identifier) is missing")
             tab.tap()
@@ -48,32 +48,38 @@ final class TabNavigationUITests: XCTestCase {
         }
     }
 
-    func testHubOpensShoppingList() throws {
+    /// Every segment of every grouped tab mounts: the switch is the only way
+    /// to most modules now, so a segment that crashes strands one.
+    func testEverySegmentOpens() throws {
         try requireSignedIn()
 
-        app.buttons["HubTab"].tap()
-        let shopping = app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'Shopping'")
-        ).firstMatch
-        guard shopping.waitForExistence(timeout: 10) else {
-            throw XCTSkip("Hub tiles not rendered; backend may be unreachable.")
+        let groups = [
+            ("ListsTab", ["tasks", "shopping", "notes"]),
+            ("PlansTab", ["calendar", "recipes", "movies"]),
+            ("HouseTab", ["finance", "maintenance"]),
+        ]
+        for (tab, modules) in groups {
+            app.buttons[tab].tap()
+            for module in modules {
+                let segment = app.buttons["Segment.\(module)"]
+                XCTAssertTrue(segment.waitForExistence(timeout: 10), "\(tab) is missing \(module)")
+                segment.tap()
+                XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
+            }
         }
-        shopping.tap()
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
     }
 
-    /// The chart button in the Tasks header is the only way into the
-    /// contributions breakdown, so a button that stops working strands a whole
-    /// screen. Unconditional, unlike the summary card it replaced: a household
-    /// that has finished nothing still gets there, and finds an empty state
-    /// explaining what will fill it.
+    /// "Who's doing what" at the bottom of Today is one of two ways into the
+    /// contributions breakdown, so a link that stops working strands a whole
+    /// screen. Unconditional: a household that has finished nothing still
+    /// gets there, and finds an empty state explaining what will fill it.
     func testHomeOpensContributions() throws {
         try requireSignedIn()
 
         app.buttons["HomeTab"].tap()
 
         let button = app.buttons["ContributionsButton"]
-        XCTAssertTrue(button.waitForExistence(timeout: 15), "chart button is missing")
+        XCTAssertTrue(button.waitForExistence(timeout: 15), "Who's doing what link is missing")
         app.swipeUp()
 
         let home = XCTAttachment(screenshot: app.screenshot())
@@ -101,7 +107,7 @@ final class TabNavigationUITests: XCTestCase {
     func testSettingsShowsThemeAndLanguage() throws {
         try requireSignedIn()
 
-        app.buttons["SettingsTab"].tap()
+        app.buttons["SettingsButton"].firstMatch.tap()
         XCTAssertTrue(
             app.staticTexts["Theme"].waitForExistence(timeout: 10)
                 || app.cells.containing(NSPredicate(format: "label CONTAINS[c] 'Theme'"))

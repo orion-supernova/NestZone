@@ -92,6 +92,101 @@ export const create = mutation({
   },
 });
 
+/// The most a single typed list may add. Far past anything a person types in
+/// one go — "süt, yumurta, ekmek" is three — and low enough that one mutation
+/// stays well inside its one-second budget. Add anything caps its preview at
+/// the same number, so what a person is shown is what is sent; this only ever
+/// refuses a caller that skipped that.
+const MANY_LIMIT = 50;
+
+/// A bound on the names read before any of them is checked, so the loop below
+/// stays short whatever a caller sends. Generous, because duplicates and names
+/// already on the list are dropped after it and only what is left counts
+/// against `MANY_LIMIT`.
+const MANY_INPUT_LIMIT = 500;
+
+/// Several things typed at once — "süt, yumurta, ekmek" from Add anything — in
+/// one round trip.
+///
+/// Beside `create` rather than instead of it: every build already in people's
+/// hands calls `create`, and keeps doing so. Same per-item fields, same
+/// membership check, but one write, one live push and one notification for the
+/// batch, for the reasons `createFromRecipe` below gives.
+///
+/// Names already on the list and not yet bought are skipped, as they are for a
+/// recipe, and so is a name typed twice in the same breath — "milk" said twice
+/// is still one carton. Returns the ids actually inserted, so the caller can
+/// say how many it added rather than how many it sent.
+export const createMany = mutation({
+  args: {
+    homeId: v.id("homes"),
+    names: v.array(v.string()),
+    category: v.optional(category),
+  },
+  returns: v.array(v.id("shopping_items")),
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    await requireHomeMember(ctx, args.homeId);
+
+    if (args.names.length > MANY_INPUT_LIMIT) {
+      throw new Error(`At most ${MANY_LIMIT} items at once`);
+    }
+    const cleaned = args.names.map((n) => n.trim()).filter((n) => n.length > 0);
+
+    const outstanding = await outstandingNames(ctx, args.homeId);
+    const seen = new Set<string>();
+    const wanted: string[] = [];
+    for (const name of cleaned) {
+      const key = name.toLowerCase();
+      if (outstanding.has(key) || seen.has(key)) continue;
+      seen.add(key);
+      wanted.push(name);
+    }
+    // Counted after the duplicates are gone: sixty names that are ten things
+    // is ten things. Refused whole rather than truncated — dropping the tail
+    // of somebody's list without a word is the one outcome they could not
+    // notice.
+    if (wanted.length > MANY_LIMIT) {
+      throw new Error(`At most ${MANY_LIMIT} items at once`);
+    }
+
+    const now = Date.now();
+    // One round of inserts, not one at a time — see `createFromRecipe`.
+    const ids = await Promise.all(
+      wanted.map((name) =>
+        ctx.db.insert("shopping_items", {
+          home_id: args.homeId,
+          name,
+          // What the list screen adds under when nobody picks an aisle.
+          category: args.category ?? "groceries",
+          is_purchased: false,
+          created_by: user._id,
+          updated_by: user._id,
+          created: now,
+          updated: now,
+        }),
+      ),
+    );
+
+    if (wanted.length > 0) {
+      // One notification for the batch. The names themselves rather than a
+      // count: "Milk, eggs, bread" is what the rest of the house wants to read,
+      // and it needs no translating on a server that cannot know the language.
+      const shown = wanted.slice(0, 3).join(", ");
+      const more = wanted.length > 3 ? ` +${wanted.length - 3}` : "";
+      await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+        homeId: args.homeId,
+        actor: user._id,
+        title: user.name ? `${user.name} added` : NOTIFY_TITLE,
+        body: `${shown}${more}`,
+        category: "shopping",
+      });
+    }
+
+    return ids;
+  },
+});
+
 /// Everything a recipe needs, in one round trip.
 ///
 /// One mutation rather than one per ingredient: a twelve-line recipe was

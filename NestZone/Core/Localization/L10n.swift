@@ -193,14 +193,45 @@ public enum L10n {
         r("user_unknown", "Unknown User")
     }
 
-    /// Home
+    /// Today
     public static var tabBarHome: LocalizedStringResource {
-        r("tab_bar_home", "Home")
+        r("tab_bar_home", "Today")
     }
 
-    /// Hub
-    public static var tabBarHub: LocalizedStringResource {
-        r("tab_bar_hub", "Hub")
+
+    /// Tasks
+    public static var tabBarTasks: LocalizedStringResource {
+        r("tab_bar_tasks", "Tasks")
+    }
+
+    /// Shopping
+    public static var tabBarShopping: LocalizedStringResource {
+        r("tab_bar_shopping", "Shopping")
+    }
+
+    /// Calendar
+    public static var tabBarCalendar: LocalizedStringResource {
+        r("tab_bar_calendar", "Calendar")
+    }
+
+    /// Meals
+    public static var tabBarRecipes: LocalizedStringResource {
+        r("tab_bar_recipes", "Meals")
+    }
+
+    /// Movies
+    public static var tabBarMovies: LocalizedStringResource {
+        r("tab_bar_movies", "Movies")
+    }
+
+    /// Money
+    public static var tabBarFinance: LocalizedStringResource {
+        r("tab_bar_finance", "Money")
+    }
+
+    /// Problems
+    public static var tabBarProblems: LocalizedStringResource {
+        r("tab_bar_problems", "Problems")
     }
 
     /// Notes
@@ -223,24 +254,12 @@ public enum L10n {
         r("tab_bar_loading", "Loading...")
     }
 
-    /// Hello %@!
-    public static func homeHelloUser(_ a0: String) -> LocalizedStringResource {
-        r("home_hello_user", "Hello \(a0)!")
-    }
 
-    /// Manage your shared home together!
-    public static var homeHeaderSubtitle: LocalizedStringResource {
-        r("home_header_subtitle", "Manage your shared home together!")
-    }
 
-    /// Mini Games
-    public static var homeMinigamesTitle: LocalizedStringResource {
-        r("home_minigames_title", "Mini Games")
-    }
 
-    /// What to watch tonight
+    /// Movie night
     public static var homeMinigamesWatchTitle: LocalizedStringResource {
-        r("home_minigames_watch_title", "What to watch tonight")
+        r("home_minigames_watch_title", "Movie night")
     }
 
     /// Can't decide what to watch tonight? Let's play a quick game to pick one!
@@ -248,10 +267,6 @@ public enum L10n {
         r("home_minigames_watch_description", "Can't decide what to watch tonight? Let's play a quick game to pick one!")
     }
 
-    /// House Statistics
-    public static var homeStatsTitle: LocalizedStringResource {
-        r("home_stats_title", "House Statistics")
-    }
 
     /// Notes
     public static var homeStatsNotesTitle: LocalizedStringResource {
@@ -430,10 +445,6 @@ public enum L10n {
         r("notes_empty_state_subtitle", "Create your first family note\nand start sharing thoughts")
     }
 
-    /// Management Hub
-    public static var managementScreenTitle: LocalizedStringResource {
-        r("management_screen_title", "Management Hub")
-    }
 
     /// Management Hub 🏠
     public static var managementHeaderTitle: LocalizedStringResource {
@@ -445,75 +456,37 @@ public enum L10n {
         r("management_header_subtitle", "Manage everything in one place! ✨")
     }
 
-    /// Shopping Lists
+    /// Shopping
     public static var managementModuleShoppingTitle: LocalizedStringResource {
-        r("management_module_shopping_title", "Shopping Lists")
+        r("management_module_shopping_title", "Shopping")
     }
 
-    /// Manage your shopping lists
-    public static var managementModuleShoppingSubtitle: LocalizedStringResource {
-        r("management_module_shopping_subtitle", "Manage your shopping lists")
-    }
 
-    /// Recipes
-    public static var managementModuleRecipesTitle: LocalizedStringResource {
-        r("management_module_recipes_title", "Recipes")
-    }
 
-    /// Save delicious recipes & meal plans
-    public static var managementModuleRecipesSubtitle: LocalizedStringResource {
-        r("management_module_recipes_subtitle", "Save delicious recipes & meal plans")
-    }
 
-    /// Movies
-    public static var managementModuleMoviesTitle: LocalizedStringResource {
-        r("management_module_movies_title", "Movies")
-    }
 
-    /// Create & manage movie lists
-    public static var managementModuleMoviesSubtitle: LocalizedStringResource {
-        r("management_module_movies_subtitle", "Create & manage movie lists")
-    }
 
-    /// House Problems
+    /// Problems
     public static var managementModuleMaintenanceTitle: LocalizedStringResource {
-        r("management_module_maintenance_title", "House Problems")
+        r("management_module_maintenance_title", "Problems")
     }
 
-    /// Track repairs & maintenance tasks
-    public static var managementModuleMaintenanceSubtitle: LocalizedStringResource {
-        r("management_module_maintenance_subtitle", "Track repairs & maintenance tasks")
-    }
 
-    /// Bills & Finance
+    /// Money
     public static var managementModuleFinanceTitle: LocalizedStringResource {
-        r("management_module_finance_title", "Bills & Finance")
+        r("management_module_finance_title", "Money")
     }
 
-    /// Split bills & manage expenses
-    public static var managementModuleFinanceSubtitle: LocalizedStringResource {
-        r("management_module_finance_subtitle", "Split bills & manage expenses")
-    }
 
-    /// Notes & Ideas
-    public static var managementModuleNotesTitle: LocalizedStringResource {
-        r("management_module_notes_title", "Notes & Ideas")
-    }
 
-    /// Capture ideas & important notes
-    public static var managementModuleNotesSubtitle: LocalizedStringResource {
-        r("management_module_notes_subtitle", "Capture ideas & important notes")
-    }
 
-    /// Calendar & Events
+
+
+    /// Calendar
     public static var managementModuleCalendarTitle: LocalizedStringResource {
-        r("management_module_calendar_title", "Calendar & Events")
+        r("management_module_calendar_title", "Calendar")
     }
 
-    /// Organize events & schedules
-    public static var managementModuleCalendarSubtitle: LocalizedStringResource {
-        r("management_module_calendar_subtitle", "Organize events & schedules")
-    }
 
     /// Soon!
     public static var managementComingSoon: LocalizedStringResource {
@@ -1995,15 +1968,7 @@ public enum L10n {
         r("year_input_picker_title", "Year")
     }
 
-    /// Added %d pending items
-    public static func managementModuleShoppingSubtitleDynamic(_ a0: Int) -> LocalizedStringResource {
-        r("management_module_shopping_subtitle_dynamic", "Added \(a0) pending items")
-    }
 
-    /// No items yet
-    public static var managementModuleShoppingSubtitleEmpty: LocalizedStringResource {
-        r("management_module_shopping_subtitle_empty", "No items yet")
-    }
 
     /// Failed to update item: %@
     public static func managementErrorUpdateItem(_ a0: String) -> LocalizedStringResource {
@@ -5289,9 +5254,9 @@ public enum L10n {
         r("calendar_now_badge", "Now")
     }
 
-    /// Up next
+    /// Coming up
     public static var homeUpNextTitle: LocalizedStringResource {
-        r("home_up_next_title", "Up next")
+        r("home_up_next_title", "Coming up")
     }
 
     /// Make it dinner that day
@@ -7220,5 +7185,503 @@ public enum L10n {
     /// %lld times · last on %@
     public static func calendarHistoryTimes(_ a0: Int, _ a1: String) -> LocalizedStringResource {
         r("calendar_history_times", "\(a0) times · last on \(a1)")
+    }
+
+    /// Needs you
+    public static var homeNeedsYouTitle: LocalizedStringResource {
+        r("home_needs_you_title", "Needs you")
+    }
+
+    /// Overdue
+    public static var homeNeedsYouOverdue: LocalizedStringResource {
+        r("home_needs_you_overdue", "Overdue")
+    }
+
+    /// Urgent
+    public static var homeNeedsYouUrgent: LocalizedStringResource {
+        r("home_needs_you_urgent", "Urgent")
+    }
+
+    /// Due today
+    public static var homeNeedsYouDueToday: LocalizedStringResource {
+        r("home_needs_you_due_today", "Due today")
+    }
+
+    /// Due %@
+    public static func homeNeedsYouDue(_ a0: String) -> LocalizedStringResource {
+        r("home_needs_you_due", "Due \(a0)")
+    }
+
+
+    /// Customize
+    public static var customizeTitle: LocalizedStringResource {
+        r("customize_title", "Customize")
+    }
+
+
+
+
+    /// Restore defaults
+    public static var customizeReset: LocalizedStringResource {
+        r("customize_reset", "Restore defaults")
+    }
+
+
+
+
+
+    /// Show on Today
+    public static var customizeTodayTitle: LocalizedStringResource {
+        r("customize_today_title", "Show on Today")
+    }
+
+    /// Automatic shows a section only when there's something in it. Drag to reorder. Turning one off doesn't remove anything: it's all still in Lists, Plans and House.
+    public static var customizeTodayFooter: LocalizedStringResource {
+        r("customize_today_footer", "Automatic shows a section only when there's something in it. Drag to reorder. Turning one off doesn't remove anything: it's all still in Lists, Plans and House.")
+    }
+
+
+
+
+
+
+    /// At a glance
+    public static var hubStatsTitle: LocalizedStringResource {
+        r("hub_stats_title", "At a glance")
+    }
+
+
+    /// Customize Today
+    public static var settingsCustomizeTitle: LocalizedStringResource {
+        r("settings_customize_title", "Customize Today")
+    }
+
+    // MARK: - Tabs, Today and the dock
+
+    /// Lists
+    public static var tabBarLists: LocalizedStringResource {
+        r("tab_bar_lists", "Lists")
+    }
+
+    /// Plans
+    public static var tabBarPlans: LocalizedStringResource {
+        r("tab_bar_plans", "Plans")
+    }
+
+    /// House
+    public static var tabBarHouse: LocalizedStringResource {
+        r("tab_bar_house", "House")
+    }
+
+    /// Automatic
+    public static var customizeVisibilityAutomatic: LocalizedStringResource {
+        r("customize_visibility_automatic", "Automatic")
+    }
+
+    /// Always
+    public static var customizeVisibilityAlways: LocalizedStringResource {
+        r("customize_visibility_always", "Always")
+    }
+
+    /// Off
+    public static var customizeVisibilityOff: LocalizedStringResource {
+        r("customize_visibility_off", "Off")
+    }
+
+    /// Shows dinner once somebody has decided it. In the evening, the bar above the tabs asks.
+    public static var customizeAutoTonight: LocalizedStringResource {
+        r("customize_auto_tonight", "Shows dinner once somebody has decided it. In the evening, the bar above the tabs asks.")
+    }
+
+    /// Shows urgent repairs and bills due in the next few days.
+    public static var customizeAutoNeedsYou: LocalizedStringResource {
+        r("customize_auto_needs_you", "Shows urgent repairs and bills due in the next few days.")
+    }
+
+    /// Shows what's next in the calendar.
+    public static var customizeAutoUpNext: LocalizedStringResource {
+        r("customize_auto_up_next", "Shows what's next in the calendar.")
+    }
+
+    /// Shows chores that are due, yours, and ones nobody has taken yet.
+    public static var customizeAutoTasks: LocalizedStringResource {
+        r("customize_auto_tasks", "Shows chores that are due, yours, and ones nobody has taken yet.")
+    }
+
+    /// Shows only the counts that need something, like what's left to buy. Always shows every counter.
+    public static var customizeAutoStats: LocalizedStringResource {
+        r("customize_auto_stats", "Shows only the counts that need something, like what's left to buy. Always shows every counter.")
+    }
+
+    /// Shows up on Friday and Saturday evenings, and while a round is open.
+    public static var customizeAutoMovieNight: LocalizedStringResource {
+        r("customize_auto_movie_night", "Shows up on Friday and Saturday evenings, and while a round is open.")
+    }
+
+    /// Add anything…
+    public static var dockAddPlaceholder: LocalizedStringResource {
+        r("dock_add_placeholder", "Add anything…")
+    }
+
+    /// Tonight: %@
+    public static func dockTonight(_ a0: String) -> LocalizedStringResource {
+        r("dock_tonight", "Tonight: \(a0)")
+    }
+
+    /// Tonight's dinner
+    public static var dockTonightSubtitle: LocalizedStringResource {
+        r("dock_tonight_subtitle", "Tonight's dinner")
+    }
+
+    /// Make it tonight's dinner?
+    public static var dockSuggestionSubtitle: LocalizedStringResource {
+        r("dock_suggestion_subtitle", "Make it tonight's dinner?")
+    }
+
+    /// On now · until %@
+    public static func dockHappeningUntil(_ a0: String) -> LocalizedStringResource {
+        r("dock_happening_until", "On now · until \(a0)")
+    }
+
+    /// Movie night is on
+    public static var dockMovieRoundTitle: LocalizedStringResource {
+        r("dock_movie_round_title", "Movie night is on")
+    }
+
+    /// Swipe to vote
+    public static var dockMovieRoundSubtitle: LocalizedStringResource {
+        r("dock_movie_round_subtitle", "Swipe to vote")
+    }
+
+    /// %@ morning
+    public static func homeDayMorning(_ a0: String) -> LocalizedStringResource {
+        r("home_day_morning", "\(a0) morning")
+    }
+
+    /// %@ afternoon
+    public static func homeDayAfternoon(_ a0: String) -> LocalizedStringResource {
+        r("home_day_afternoon", "\(a0) afternoon")
+    }
+
+    /// %@ evening
+    public static func homeDayEvening(_ a0: String) -> LocalizedStringResource {
+        r("home_day_evening", "\(a0) evening")
+    }
+
+    /// %@ night
+    public static func homeDayNight(_ a0: String) -> LocalizedStringResource {
+        r("home_day_night", "\(a0) night")
+    }
+
+    /// Hi %@
+    public static func homeHi(_ a0: String) -> LocalizedStringResource {
+        r("home_hi", "Hi \(a0)")
+    }
+
+    /// All clear. Nothing needs anybody today.
+    public static var glanceAllClear: LocalizedStringResource {
+        r("glance_all_clear", "All clear. Nothing needs anybody today.")
+    }
+
+    /// %@ needs fixing
+    public static func glanceIssue(_ a0: String) -> LocalizedStringResource {
+        r("glance_issue", "\(a0) needs fixing")
+    }
+
+    /// %@ is a day late
+    public static func glanceBillLateOneDay(_ a0: String) -> LocalizedStringResource {
+        r("glance_bill_late_one_day", "\(a0) is a day late")
+    }
+
+    /// %1$@ is %2$lld days late
+    public static func glanceBillLateDays(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("glance_bill_late_days", "\(a0) is \(a1) days late")
+    }
+
+    /// %@ is due today
+    public static func glanceBillToday(_ a0: String) -> LocalizedStringResource {
+        r("glance_bill_today", "\(a0) is due today")
+    }
+
+    /// %1$@ due %2$@
+    public static func glanceBillDue(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("glance_bill_due", "\(a0) due \(a1)")
+    }
+
+    /// %@ is on now
+    public static func glanceHappening(_ a0: String) -> LocalizedStringResource {
+        r("glance_happening", "\(a0) is on now")
+    }
+
+    /// %1$@ at %2$@
+    public static func glanceEventToday(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("glance_event_today", "\(a0) at \(a1)")
+    }
+
+    /// %@ for dinner
+    public static func glanceTonight(_ a0: String) -> LocalizedStringResource {
+        r("glance_tonight", "\(a0) for dinner")
+    }
+
+    /// %lld chores
+    public static func glanceChores(_ a0: Int) -> LocalizedStringResource {
+        r("glance_chores", "\(a0) chores")
+    }
+
+    /// %@ tomorrow
+    public static func glanceNextTomorrow(_ a0: String) -> LocalizedStringResource {
+        r("glance_next_tomorrow", "\(a0) tomorrow")
+    }
+
+    /// %1$@ on %2$@
+    public static func glanceNextOn(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("glance_next_on", "\(a0) on \(a1)")
+    }
+
+    /// Nothing urgent
+    public static var homeNeedsYouClear: LocalizedStringResource {
+        r("home_needs_you_clear", "Nothing urgent")
+    }
+
+    /// Nothing due today
+    public static var homeTasksClear: LocalizedStringResource {
+        r("home_tasks_clear", "Nothing due today")
+    }
+
+    /// Nothing in the calendar
+    public static var homeUpNextClear: LocalizedStringResource {
+        r("home_up_next_clear", "Nothing in the calendar")
+    }
+
+    /// Due today
+    public static var homeChoreDueToday: LocalizedStringResource {
+        r("home_chore_due_today", "Due today")
+    }
+
+    /// %lld more
+    public static func homeMoreChores(_ a0: Int) -> LocalizedStringResource {
+        r("home_more_chores", "\(a0) more")
+    }
+
+    /// Getting started
+    public static var homeSetupTitle: LocalizedStringResource {
+        r("home_setup_title", "Getting started")
+    }
+
+    /// Invite your housemates
+    public static var homeSetupInvite: LocalizedStringResource {
+        r("home_setup_invite", "Invite your housemates")
+    }
+
+    /// Add your first chore
+    public static var homeSetupFirstChore: LocalizedStringResource {
+        r("home_setup_first_chore", "Add your first chore")
+    }
+
+    /// Decide tonight's dinner
+    public static var homeSetupDinner: LocalizedStringResource {
+        r("home_setup_dinner", "Decide tonight's dinner")
+    }
+
+    /// Choose what Today shows
+    public static var homeSetupCustomize: LocalizedStringResource {
+        r("home_setup_customize", "Choose what Today shows")
+    }
+
+    /// Urgent
+    public static var homeHeroUrgent: LocalizedStringResource {
+        r("home_hero_urgent", "Urgent")
+    }
+
+    /// Overdue
+    public static var homeHeroOverdue: LocalizedStringResource {
+        r("home_hero_overdue", "Overdue")
+    }
+
+    /// nobody's on it
+    public static var homeHeroNobody: LocalizedStringResource {
+        r("home_hero_nobody", "nobody's on it")
+    }
+
+    /// you're on it
+    public static var homeHeroYou: LocalizedStringResource {
+        r("home_hero_you", "you're on it")
+    }
+
+    /// %@ is on it
+    public static func homeHeroSomeone(_ a0: String) -> LocalizedStringResource {
+        r("home_hero_someone", "\(a0) is on it")
+    }
+
+    /// I'll handle it
+    public static var homeHeroClaim: LocalizedStringResource {
+        r("home_hero_claim", "I'll handle it")
+    }
+
+    /// %lld things to buy
+    public static func homeCounterShopping(_ a0: Int) -> LocalizedStringResource {
+        r("home_counter_shopping", "\(a0) things to buy")
+    }
+
+    /// %lld unread
+    public static func homeCounterUnread(_ a0: Int) -> LocalizedStringResource {
+        r("home_counter_unread", "\(a0) unread")
+    }
+
+    /// %lld open problems
+    public static func homeCounterProblems(_ a0: Int) -> LocalizedStringResource {
+        r("home_counter_problems", "\(a0) open problems")
+    }
+
+    /// %lld events this week
+    public static func homeCounterEvents(_ a0: Int) -> LocalizedStringResource {
+        r("home_counter_events", "\(a0) events this week")
+    }
+
+    /// A round is open, go vote
+    public static var homeMovieRoundOpen: LocalizedStringResource {
+        r("home_movie_round_open", "A round is open, go vote")
+    }
+
+    /// All chores
+    public static var homeShelfAllChores: LocalizedStringResource {
+        r("home_shelf_all_chores", "All chores")
+    }
+
+    /// Who's doing what
+    public static var homeShelfContributions: LocalizedStringResource {
+        r("home_shelf_contributions", "Who's doing what")
+    }
+
+    /// Edit Today
+    public static var homeShelfEditToday: LocalizedStringResource {
+        r("home_shelf_edit_today", "Edit Today")
+    }
+
+    // MARK: - Add anything
+
+    /// Add anything
+    public static var captureTitle: LocalizedStringResource {
+        r("capture_title", "Add anything")
+    }
+
+    /// Milk, eggs… anything really
+    public static var capturePlaceholder: LocalizedStringResource {
+        r("capture_placeholder", "Milk, eggs… anything really")
+    }
+
+    /// What do you want to add?
+    public static var captureFieldLabel: LocalizedStringResource {
+        r("capture_field_label", "What do you want to add?")
+    }
+
+    /// Shopping
+    public static var captureKindShopping: LocalizedStringResource {
+        r("capture_kind_shopping", "Shopping")
+    }
+
+    /// Chore
+    public static var captureKindChore: LocalizedStringResource {
+        r("capture_kind_chore", "Chore")
+    }
+
+    /// Note
+    public static var captureKindNote: LocalizedStringResource {
+        r("capture_kind_note", "Note")
+    }
+
+    /// Problem
+    public static var captureKindProblem: LocalizedStringResource {
+        r("capture_kind_problem", "Problem")
+    }
+
+    /// Event
+    public static var captureKindEvent: LocalizedStringResource {
+        r("capture_kind_event", "Event")
+    }
+
+    /// Expense
+    public static var captureKindExpense: LocalizedStringResource {
+        r("capture_kind_expense", "Expense")
+    }
+
+    /// Add
+    public static var captureAdd: LocalizedStringResource {
+        r("capture_add", "Add")
+    }
+
+    /// Add %lld to Shopping
+    public static func captureAddShopping(_ a0: Int) -> LocalizedStringResource {
+        r("capture_add_shopping", "Add \(a0) to Shopping")
+    }
+
+    /// Add chore
+    public static var captureAddChore: LocalizedStringResource {
+        r("capture_add_chore", "Add chore")
+    }
+
+    /// Add note
+    public static var captureAddNote: LocalizedStringResource {
+        r("capture_add_note", "Add note")
+    }
+
+    /// Continue
+    public static var captureContinue: LocalizedStringResource {
+        r("capture_continue", "Continue")
+    }
+
+    /// You'll finish it in the full form
+    public static var captureContinuesInForm: LocalizedStringResource {
+        r("capture_continues_in_form", "You'll finish it in the full form")
+    }
+
+    /// Say what needs doing
+    public static var captureChoreNeedsWords: LocalizedStringResource {
+        r("capture_chore_needs_words", "Say what needs doing")
+    }
+
+    /// Paid by %@
+    public static func capturePaidBy(_ a0: String) -> LocalizedStringResource {
+        r("capture_paid_by", "Paid by \(a0)")
+    }
+
+    /// For %@
+    public static func captureFor(_ a0: String) -> LocalizedStringResource {
+        r("capture_for", "For \(a0)")
+    }
+
+    /// Added %lld to Shopping
+    public static func captureAddedShopping(_ a0: Int) -> LocalizedStringResource {
+        r("capture_added_shopping", "Added \(a0) to Shopping")
+    }
+
+    /// Already on the list
+    public static var captureAlreadyListed: LocalizedStringResource {
+        r("capture_already_listed", "Already on the list")
+    }
+
+    /// Chore added
+    public static var captureAddedChore: LocalizedStringResource {
+        r("capture_added_chore", "Chore added")
+    }
+
+    /// Note added
+    public static var captureAddedNote: LocalizedStringResource {
+        r("capture_added_note", "Note added")
+    }
+
+    /// Problem reported
+    public static var captureAddedProblem: LocalizedStringResource {
+        r("capture_added_problem", "Problem reported")
+    }
+
+    /// Event added
+    public static var captureAddedEvent: LocalizedStringResource {
+        r("capture_added_event", "Event added")
+    }
+
+    /// Expense added
+    public static var captureAddedExpense: LocalizedStringResource {
+        r("capture_added_expense", "Expense added")
     }
 }

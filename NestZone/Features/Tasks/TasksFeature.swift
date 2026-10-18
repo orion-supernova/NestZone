@@ -147,10 +147,14 @@ public struct TasksFeature: Sendable {
         case removalCommitFailed(HouseTask, AppError)
         case deleteFinishedFailed(AppError)
         case openArchiveTapped
+        case contributionsTapped
         case delegate(Delegate)
 
         public enum Delegate: Equatable {
             case openArchive
+            /// Who has been doing the chores — the same screen Today links to
+            /// at its foot, so the split is reachable from the list it is about.
+            case openContributions
         }
         case toggleFailed(TaskID, wasCompleted: Bool, AppError)
         case writeFailed(AppError)
@@ -312,6 +316,9 @@ public struct TasksFeature: Sendable {
 
             case .openArchiveTapped:
                 return .send(.delegate(.openArchive))
+
+            case .contributionsTapped:
+                return .send(.delegate(.openContributions))
 
             case let .toggleFailed(id, wasCompleted, error):
                 state.tasks[id: id]?.isCompleted = wasCompleted

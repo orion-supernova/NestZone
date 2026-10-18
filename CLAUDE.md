@@ -8,7 +8,9 @@ Composable Architecture on the client, self-hosted Convex on the server.
 
 ```
 NestZone/                 the app target — one module, four layers
-  App/                    AppFeature (root), MainFeature (tabs), AppView
+  App/                    AppFeature (root), MainFeature (tabs), Route (every
+                          pushable screen, one stack per tab), Modules (which
+                          module lives in which tab group), AppView
   Core/
     Models/               domain types, typed ids, Timestamp, AppError
     Network/              ConvexConnection + one @DependencyClient per domain
@@ -16,6 +18,9 @@ NestZone/                 the app target — one module, four layers
   Design/                 Liquid Glass surfaces, theme, motion, components
   Features/               one folder per feature: <Name>Feature.swift + <Name>View.swift
     Inbox/                the bell: household activity + the app's changelog
+    Customize/            Today's sections: Automatic, Always or Off, and their order
+    Now/                  the dock over the tab bar, and tonight's dinner
+    Capture/              Add anything: one field that files a line in the right module
   Resources/              Localizable.xcstrings, bundled sample recipes
 backend/convex/           Convex functions (queries, mutations, actions)
 backend/changelog.json    the app's release notes — see "Shipping a change"
@@ -27,6 +32,42 @@ ci_scripts/               Xcode Cloud's post-clone hook: trusts this app's macro
 
 Features never reach into each other. They meet in `MainFeature`, which is the
 only place that knows the shape of the whole app.
+
+## Navigation
+
+Five tabs: **Today**, **Lists** (Tasks, Shopping, Notes), **Plans** (Calendar,
+Meals, Movies), **House** (Money, Problems) and **Messages**. Every module lives
+in exactly one group (`HubModule.group`), behind a segment switch at the top of
+its tab, so it is never on two tabs and never on none. There are no pinned
+single-module tabs and no Household list any more — testers called a tab for
+the shopping list alone overkill. The segment each tab was left on is
+remembered per device (`TabSegments`).
+
+- **A tap switches tab or opens a screen in place — never both.** A whole
+  module goes to its tab, switched to its segment and popped to root. A
+  specific thing (an event, a problem, the chore split) is opened on the stack
+  the request came from. The old Home → Hub tab-jump left the back button
+  leading somewhere the person had never been.
+- Screens ask; they do not navigate. A feature raises a delegate, `RouteStack`
+  turns it into a `Target`, and `MainFeature.open` decides. A new cross-link is
+  a new `Target` case, not a push from inside a feature.
+- **The dock** (`NowFeature`, drawn by `NowDock` as the tab bar's bottom
+  accessory) shows the one live thing — an event under way or within three
+  hours, tonight's dinner after 16:00, an open movie round — and always a `+`
+  for Add anything. It lives for the whole tab bar, so its subscriptions do
+  too. `tabViewBottomAccessory(isEnabled:)` is 26.1, behind `#available`: the
+  app's floor stays 26.0.
+- **Tonight's dinner has one owner.** `NowFeature` holds the meal plan and
+  presents the dinner sheet; Today, Meals and the dock all ask it, and
+  `MainFeature.propagateNow` hands tonight down to the screens that draw it.
+- **Today draws nothing to say "nothing".** Every section is Automatic (drawn
+  only when it has something), Always (one quiet line when empty) or Off, set in
+  Customize. A quiet day is the sentence "All clear" and the links at the foot.
+- **Nothing is removed to simplify navigation — it is moved or made
+  optional.** A section Off on Today is still in its tab (the counters under
+  House → At a glance, the movie game at the top of Movies).
+- Segments and Today's layout are per-device `@Shared` app storage, not server
+  state, so no backend or older app version is involved.
 
 ## Shipping a change
 
@@ -93,7 +134,7 @@ never registers.
 
 **A change a household would actually notice gets a changelog entry, in the
 same commit as the change.** The entry goes at the top of
-`backend/changelog.json`, and it reaches people through the bell on the Home
+`backend/changelog.json`, and it reaches people through the bell on every
 tab — the Updates half of it. A feature nobody is told about is a feature
 nobody finds.
 

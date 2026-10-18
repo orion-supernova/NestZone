@@ -52,6 +52,14 @@ public struct RecipesView: View {
     /// the cards no longer reach for one another. Glass rows, separate shapes.
     private var content: some View {
         List {
+            tonightCard
+                .glassListRow(insets: .init(
+                    top: 0,
+                    leading: Metrics.screenPadding,
+                    bottom: Metrics.sectionSpacing,
+                    trailing: Metrics.screenPadding
+                ))
+
             filterBar
                 .glassListRow(insets: .init(
                     top: 0, leading: 0, bottom: Metrics.stackSpacing, trailing: 0
@@ -71,6 +79,41 @@ public struct RecipesView: View {
         // Rows are exactly as tall as their card; without this the filter bar
         // is padded out to the system's 44pt minimum.
         .environment(\.defaultMinListRowHeight, 0)
+    }
+
+    /// Tonight's dinner, at the top of Meals: what it is, or the way to
+    /// decide it. The same decision the dock and Today open — one sheet,
+    /// owned by the tab bar — so wherever it is made, all three agree.
+    private var tonightCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(L10n.dinnerTonightTitle)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .padding(.leading, 4)
+                Spacer(minLength: 0)
+                if store.tonight != nil {
+                    Button { store.send(.changeTonightTapped) } label: {
+                        Text(L10n.dinnerChangeButton)
+                            .font(.footnote.weight(.semibold))
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                }
+            }
+            if let plan = store.tonight {
+                DinnerPlanCard(
+                    plan: plan,
+                    action: { store.send(.tonightTapped) },
+                    onOpenEvent: plan.event.map { _ in { store.send(.tonightEventTapped) } }
+                )
+            } else {
+                UndecidedDinnerCard { store.send(.tonightTapped) }
+            }
+        }
+        .animation(Motion.spring, value: store.tonight)
+        .accessibilityIdentifier("MealsTonight")
     }
 
     @ViewBuilder

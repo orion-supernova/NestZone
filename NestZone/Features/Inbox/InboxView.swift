@@ -8,6 +8,27 @@ import SwiftUI
 /// One view rather than a button in one file and a sheet in another: the badge
 /// and the panel read the same store and are the same feature, and separating
 /// them would mean two call sites to keep in step.
+extension View {
+    /// Presents the notification panel whenever a bell asks for it.
+    ///
+    /// Attached once, above the tabs, rather than by each bell: there is a
+    /// bell on every tab, a `TabView` keeps tabs it has shown alive, and five
+    /// sheets bound to one flag is four too many for SwiftUI to present.
+    public func inboxPanel(_ store: StoreOf<InboxFeature>) -> some View {
+        modifier(InboxPanelHost(store: store))
+    }
+}
+
+private struct InboxPanelHost: ViewModifier {
+    @Bindable var store: StoreOf<InboxFeature>
+
+    func body(content: Content) -> some View {
+        content.sheet(isPresented: $store.isOpen) {
+            InboxPanel(store: store)
+        }
+    }
+}
+
 public struct InboxBell: View {
     @Bindable var store: StoreOf<InboxFeature>
 
@@ -58,9 +79,6 @@ public struct InboxBell: View {
                 ? Text(L10n.inboxUnreadCount(store.badge.total))
                 : Text(L10n.inboxNothingNew)
         )
-        .sheet(isPresented: $store.isOpen) {
-            InboxPanel(store: store)
-        }
     }
 
     /// What colour the pip is.
