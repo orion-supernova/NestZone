@@ -54,6 +54,15 @@ public struct TasksView: View {
                 }
                 .accessibilityLabel(Text(L10n.tasksComposeTitle))
             }
+            // A header control, not a card over the rows: tried as a strip at
+            // the top of a list, the split read as a very large first task.
+            ToolbarItem(placement: .primaryAction) {
+                Button { store.send(.contributionsTapped) } label: {
+                    Image(systemName: "chart.pie")
+                }
+                .accessibilityLabel(Text(L10n.contributionsSectionTitle))
+                .accessibilityIdentifier("TasksContributionsButton")
+            }
         }
         .task { await store.send(.task).finish() }
         .sheet(item: $store.scope(

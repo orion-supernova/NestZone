@@ -1,59 +1,79 @@
 import ComposableArchitecture
 import Foundation
 
-/// The Home tab: who you are, how the household is doing, what needs doing.
+/// Today: what needs somebody, said in one sentence, with the rest underneath
+/// only when it has something in it.
+///
+/// It used to be six equal sections, each with a header and an empty state,
+/// and an empty household spent nearly three quarters of the screen saying
+/// that dinner was undecided and there were no chores. A tester called it too
+/// complex, and said empty sections took too much room even when there was
+/// nothing to do. So the rule now is that a section with nothing in it is not
+/// drawn at all — unless this person set it to Always in Customize — and a
+/// quiet day reads "All clear" in one line.
 @Reducer
 public struct HomeFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
         public var homeID: HomeID
         public var user: User?
-        /// How many people have to agree for a dinner round to match.
+        /// How many people live here.
         public var memberCount = 1
         public var stats: HomeStats = .empty
         public var tasks: IdentifiedArrayOf<HouseTask> = []
-        /// Planned meals from today onwards, soonest first.
-        public var meals: [MealPlan] = []
         /// The next few things in the calendar, soonest first.
         ///
         /// A short capped agenda, not a window: this tab only ever asks "is
         /// anything coming", and `events:upcoming` answers that with at most a
         /// handful of rows however many years of events the household has.
         public var upcoming: [EventOccurrence] = []
+        /// Who lives here: the getting-started checklist asks whether anybody
+        /// else has joined yet, and a problem's row says who is on it.
+        public var members: IdentifiedArrayOf<User> = []
+        /// Every bill and every problem, as the server sent them. "Needs you"
+        /// is worked out from these against `now` rather than filtered once
+        /// on arrival: a bill crosses into the three-day window at midnight
+        /// and a problem passes its date in the afternoon, and neither sends a
+        /// push when it does.
+        public var bills: [Bill] = []
+        public var issues: [HouseIssue] = []
         /// Which of the tab's subscriptions have answered.
         ///
-        /// This was one `isLoading` flag for the whole screen, cleared by
-        /// whichever query happened to land first. That is wrong in both
-        /// directions: the first answer un-redacted tiles whose own data had not
-        /// arrived, and — the half that hurt — one slow query held the entire
-        /// tab as a skeleton while the sections either side of it were sitting
-        /// there ready to draw. Each section waits on its own answer now, so a
-        /// screen made of five queries appears in five pieces rather than
-        /// waiting for the slowest.
+        /// Each part of the screen waits on its own answer, so a screen made
+        /// of six queries appears in six pieces rather than waiting for the
+        /// slowest — and an answer that has not arrived is never mistaken for
+        /// one that arrived empty.
         public var loaded: Loaded = []
 
         public struct Loaded: OptionSet, Equatable, Sendable {
             public let rawValue: Int
             public init(rawValue: Int) { self.rawValue = rawValue }
-            /// `stats:forHome` — the four counter tiles.
             public static let stats = Loaded(rawValue: 1 << 0)
-            /// `tasks:listByHome` — the task list below.
             public static let tasks = Loaded(rawValue: 1 << 1)
-            /// `events:upcoming` — the agenda card and the events tile, which is
-            /// counted from it rather than from the server's summary.
             public static let upcoming = Loaded(rawValue: 1 << 2)
+            public static let members = Loaded(rawValue: 1 << 3)
+            public static let bills = Loaded(rawValue: 1 << 4)
+            public static let issues = Loaded(rawValue: 1 << 5)
         }
-        /// Who lives here.
-        ///
-        /// Subscribed to for one reason: turning tonight's dinner into an
-        /// occasion opens the event composer here, and an event written with no
-        /// attendees is a party nobody was invited to. One small live query for
-        /// the household, which is a handful of rows.
-        public var members: IdentifiedArrayOf<User> = []
-        @Presents public var dinner: DinnerFeature.State?
-        /// The event composer, opened from tonight's card to turn a meal that
-        /// has already been decided into an occasion.
-        @Presents public var occasion: EventComposerFeature.State?
+
+        /// Tonight's dinner and the calendar's offer of one, handed down by
+        /// the tab container, which owns the one dinner sheet the whole tab
+        /// bar shares.
+        public var tonight: MealPlan?
+        public var dinnerSuggestion: EventOccurrence?
+        /// Whether the household has a movie round open, also handed down.
+        public var movieRoundIsOpen = false
+        /// The container's clock, which moves on every half minute. Today reads
+        /// the time of day off it — "Tuesday evening" — and so does the
+        /// decision about which chores are due.
+        public var now: Date
+
+        /// Chores ticked here a moment ago, kept on screen long enough for the
+        /// tick to be seen — and to be taken back — before the row leaves.
+        public var justTicked: Set<TaskID> = []
+        /// Whether the chore list has been opened past its first few rows.
+        public var showsAllChores = false
+
         @Presents public var alert: AlertState<Action.Alert>?
 
         /// Whether the household has already been asked about notifications.
@@ -61,94 +81,296 @@ public struct HomeFeature: Sendable {
         /// every visit to this tab.
         @Shared(.hasAskedForNotifications) public var hasAskedForNotifications: Bool
 
-        public init(homeID: HomeID, user: User? = nil) {
+        /// Which sections show, when, and in what order. Live: saving
+        /// Customize rearranges this screen without anything being sent to it.
+        @Shared(.todayLayoutRaw) public var layoutRaw: String
+        @Shared(.todaySetupDone) public var setupDone: Bool
+
+        public init(homeID: HomeID, user: User? = nil, now: Date = Date()) {
             self.homeID = homeID
             self.user = user
+            self.now = now
         }
 
-        /// What the household is eating tonight, if anyone has said.
-        public var tonight: MealPlan? {
-            meals.first { $0.date == MealDate.today }
+        public var layout: TodayLayout { TodayLayout(raw: layoutRaw) }
+
+        /// Bills already late or due within `needsYouBillDays`, soonest first.
+        public var billsDue: [Bill] {
+            bills
+                .filter { !$0.isArchived && $0.daysUntilDue(now: now) <= HomeFeature.needsYouBillDays }
+                .sorted { $0.dueDate.date < $1.dueDate.date }
         }
 
-        /// Something the household is in the middle of right now.
+        /// Open problems that are urgent or past their date, worst first.
+        public var urgentIssues: [HouseIssue] {
+            issues
+                .filter { $0.isOpen && ($0.severity == .urgent || $0.isOverdue(now: now)) }
+                .sorted {
+                    ($0.isOverdue(now: now) ? 0 : 1, -$0.severity.rank)
+                        < ($1.isOverdue(now: now) ? 0 : 1, -$1.severity.rank)
+                }
+        }
+
+        // MARK: Chores
+
+        /// The chores that belong on Today: anything late or due today,
+        /// whoever has it, then this person's own and anybody's that nobody
+        /// has taken. Everybody else's undated chores live on the Tasks list.
         ///
-        /// The one thing on this tab that is true only for a few hours, which is
-        /// why it gets its own badge rather than a number: "3 events" is a
-        /// figure, "the party is happening" is a fact.
-        public var happeningNow: EventOccurrence? {
-            upcoming.first(where: \.isInProgress)
+        /// It used to be the five newest chores *created*, finished ones
+        /// included — so a chore struck through yesterday could push today's
+        /// out of sight.
+        public var chores: [HouseTask] {
+            let me = user?.id
+            let today = Calendar.current.startOfDay(for: now)
+            func tier(_ task: HouseTask) -> Int? {
+                if let due = task.dueDate?.date {
+                    if due < today { return 0 }
+                    if Calendar.current.isDate(due, inSameDayAs: now) { return 1 }
+                }
+                if task.assignedTo == me, me != nil { return 2 }
+                if task.assignedTo == nil { return 3 }
+                return nil
+            }
+            return tasks
+                .filter { !$0.isCompleted || justTicked.contains($0.id) }
+                .compactMap { task in tier(task).map { (task, $0) } }
+                .sorted { lhs, rhs in
+                    if lhs.1 != rhs.1 { return lhs.1 < rhs.1 }
+                    switch (lhs.0.dueDate?.date, rhs.0.dueDate?.date) {
+                    case let (l?, r?) where l != r: return l < r
+                    case (_?, nil): return true
+                    case (nil, _?): return false
+                    default: return Timestamp.newestFirst(lhs.0.created, rhs.0.created)
+                    }
+                }
+                .map(\.0)
         }
 
-        /// The next thing that has not started yet.
-        public var nextEvent: EventOccurrence? {
-            upcoming.first { !$0.isInProgress && $0.start > Date() }
+        /// How many rows the chore list shows before "N more".
+        static let choreLimit = 4
+
+        public var visibleChores: ArraySlice<HouseTask> {
+            showsAllChores ? chores[...] : chores.prefix(Self.choreLimit)
         }
 
-        /// What the card shows: whatever is under way, then what is next, up to
-        /// three rows. Three because a fourth pushes the tasks below the fold on
-        /// a small phone, and this is a summary tab.
-        public var upNext: [EventOccurrence] {
-            Array(upcoming.prefix(3))
-        }
+        public var hiddenChoreCount: Int { showsAllChores ? 0 : max(chores.count - Self.choreLimit, 0) }
 
-        /// Events in the next seven days. Same rule as the Hub's bill tile: a
-        /// tile is worth reading only when its number is asking for something,
-        /// and "312 events" asks for nothing.
-        public var eventsThisWeek: Int {
-            let horizon = Date().addingTimeInterval(7 * 24 * 3600)
-            return upcoming.count { $0.start <= horizon }
-        }
+        // MARK: Needs you
 
-        /// An event on today with a menu, when nobody has said what is for
-        /// dinner yet.
-        ///
-        /// The reverse of the link the event sheet writes, and the half that was
-        /// missing. Planning Saturday's dinner party — menu, shopping, budget —
-        /// did nothing for Saturday's tonight card unless somebody remembered to
-        /// open the event and press "make it dinner". The household had already
-        /// answered "what are we eating"; it just had not answered it *here*.
-        ///
-        /// Offered, never written behind anyone's back. An event with a menu is
-        /// strong evidence about dinner, not a decision — and this tab already
-        /// holds today's events, so it costs no subscription to ask.
-        public var dinnerSuggestion: EventOccurrence? {
-            guard tonight == nil else { return nil }
-            let today = CalendarDay.today
-            return upcoming.first { occurrence in
-                !occurrence.recipeIDs.isEmpty
-                    && !occurrence.isMultiDay
-                    && CalendarDay(occurrence.start) == today
+        /// Something wrong in the house, with a date that has passed or a
+        /// severity that will not wait.
+        public enum Alarm: Equatable, Identifiable, Sendable {
+            case issue(HouseIssue)
+            case bill(Bill)
+
+            public var id: String {
+                switch self {
+                case let .issue(issue): "issue-\(issue.id.rawValue)"
+                case let .bill(bill): "bill-\(bill.id.rawValue)"
+                }
             }
         }
 
-        /// Newest first, capped — the Home tab is a summary, not the task list.
-        public var recentTasks: ArraySlice<HouseTask> {
-            tasks
-                .sorted { Timestamp.newestFirst($0.created, $1.created) }
-                .prefix(5)
+        /// Everything "Needs you" holds, worst first: urgent or overdue
+        /// problems, then bills by due date.
+        public var needs: [Alarm] {
+            urgentIssues.map(Alarm.issue) + billsDue.map(Alarm.bill)
+        }
+
+        /// The one thing that gets the big card: an urgent problem or a bill
+        /// already late. A normal day has none — a card drawn every day for
+        /// whatever happens to be first stops meaning anything.
+        public var hero: Alarm? {
+            guard layout.visibility(of: .needsYou) != .off else { return nil }
+            if let issue = urgentIssues.first { return .issue(issue) }
+            if let bill = billsDue.first(where: { $0.urgency(now: now) == .overdue }) { return .bill(bill) }
+            return nil
+        }
+
+        /// What "Needs you" lists under the card.
+        public var needsRows: [Alarm] {
+            needs.filter { $0 != hero }
+        }
+
+        // MARK: Coming up
+
+        /// What is coming, not what is under way — the dock above the tab bar
+        /// already says what is happening now.
+        public var comingUp: [EventOccurrence] {
+            Array(upcoming.filter { !$0.isInProgress && $0.start > now }.prefix(4))
+        }
+
+        /// Events in the next seven days, the way the counters count them.
+        public var eventsThisWeek: Int {
+            let horizon = now.addingTimeInterval(7 * 24 * 3600)
+            return upcoming.count { $0.start <= horizon }
+        }
+
+        // MARK: Counters
+
+        /// The counters that are asking for something. "0 to buy" is good
+        /// news, and a row of zeros under "Nothing to do" was the clearest
+        /// sign the old Today was talking for the sake of it.
+        public var counters: [Counter] {
+            var counters: [Counter] = []
+            if stats.shoppingItems > 0 { counters.append(.shopping(stats.shoppingItems)) }
+            if stats.unreadMessages > 0 { counters.append(.unread(stats.unreadMessages)) }
+            if stats.openIssues > 0 { counters.append(.problems(stats.openIssues)) }
+            if eventsThisWeek > 0 { counters.append(.events(eventsThisWeek)) }
+            return counters
+        }
+
+        public enum Counter: Equatable, Hashable, Sendable {
+            case shopping(Int), unread(Int), problems(Int), events(Int)
+        }
+
+        // MARK: Movie night
+
+        /// Whether Automatic shows the movie-night row: while a round is open,
+        /// and on Friday and Saturday evenings, which is when people ask.
+        public var movieNightIsTimely: Bool {
+            if movieRoundIsOpen { return true }
+            let calendar = Calendar.current
+            let weekday = calendar.component(.weekday, from: now)
+            let hour = calendar.component(.hour, from: now)
+            return (weekday == 6 || weekday == 7) && hour >= DockItem.eveningStarts
+        }
+
+        // MARK: Getting started
+
+        public enum SetupStep: String, CaseIterable, Identifiable, Sendable {
+            case invite, firstChore, dinner, customize
+            public var id: String { rawValue }
+        }
+
+        /// The steps already done, read off the household rather than ticked
+        /// by hand, so the list can never claim something that is not true.
+        public var finishedSetup: Set<SetupStep> {
+            var done: Set<SetupStep> = []
+            if members.count > 1 { done.insert(.invite) }
+            if !tasks.isEmpty { done.insert(.firstChore) }
+            if tonight != nil { done.insert(.dinner) }
+            if layoutRaw != TodayLayout.default.raw { done.insert(.customize) }
+            return done
+        }
+
+        /// The checklist a new household gets in place of the welcome sheet.
+        ///
+        /// Only for a household that is actually new: nothing at all written
+        /// down yet — no chores, nothing to buy, no notes, nothing in the
+        /// calendar — whether or not anybody else has joined. A household that
+        /// simply does not use chores is not new, and neither is somebody who
+        /// has kept a year of shopping lists on their own; a "Getting started"
+        /// card over either would be talking to somebody who is not there.
+        ///
+        /// Not drawn while the answers are still arriving, or it would flash
+        /// for everybody — and not on a members list that never arrived: a
+        /// real answer always includes the person asking, so an empty one is
+        /// a read that failed, not a household of nobody.
+        public var showsSetup: Bool {
+            guard !setupDone, !members.isEmpty,
+                  loaded.contains([.members, .tasks, .stats, .upcoming])
+            else { return false }
+            let isEmpty = tasks.isEmpty && stats.shoppingItems == 0 && stats.notes == 0 && upcoming.isEmpty
+            guard isEmpty else { return false }
+            return finishedSetup.count < SetupStep.allCases.count
+        }
+
+        // MARK: The sentence
+
+        /// The day in one sentence, from the parts in `GlanceClause`.
+        ///
+        /// At most three: what is wrong, then tonight, then chores, then what
+        /// is next — and "All clear" when the first three have nothing to say,
+        /// because a quiet day led by "Ece's birthday on Friday" reads like a
+        /// reminder somebody forgot to finish.
+        public var glance: [GlanceClause] {
+            var clauses: [GlanceClause] = []
+            if let hero {
+                clauses.append(.alarm(hero))
+            } else if let first = needs.first {
+                clauses.append(.alarm(first))
+            }
+            if let event = upcoming.first(where: { $0.isInProgress && !$0.isAllDay }) {
+                clauses.append(.happening(event))
+            } else if let event = upcoming.first(where: {
+                !$0.isAllDay && !$0.isMultiDay && $0.start > now
+                    && Calendar.current.isDate($0.start, inSameDayAs: now)
+            }) {
+                clauses.append(.eventToday(event))
+            } else if let tonight {
+                clauses.append(.tonight(tonight))
+            }
+            // Late or due today — the backlog of undated chores is on the
+            // list below, but it is not what makes today a busy day, and
+            // counting it meant a household with any backlog never read
+            // "All clear".
+            let endOfToday = Calendar.current.date(
+                byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: now)
+            ) ?? now
+            let due = chores.count { task in
+                guard !task.isCompleted, let date = task.dueDate?.date else { return false }
+                return date < endOfToday
+            }
+            if due > 0 { clauses.append(.chores(due)) }
+            guard !clauses.isEmpty else { return [] }
+            if clauses.count < 3, let next = comingUp.first(where: {
+                !Calendar.current.isDate($0.start, inSameDayAs: now)
+            }) {
+                clauses.append(.next(next))
+            }
+            return Array(clauses.prefix(3))
+        }
+
+        /// "Tuesday evening" — the eyebrow over the sentence.
+        public var dayPart: DayPart { DayPart(now) }
+
+        /// The name to greet: the first word of what the household calls this
+        /// person, rather than a whole handle like "muratcankoc".
+        public var greetingName: String? {
+            guard let name = user?.displayName.split(separator: " ").first else { return nil }
+            return String(name)
+        }
+
+        /// Whether "Tonight" is drawn: Automatic shows a dinner somebody has
+        /// decided or the calendar is offering, because those are facts.
+        /// Undecided, it stays off Today — the dock asks in the evening, and
+        /// asking every morning is the nag the old card was.
+        public var showsTonight: Bool {
+            switch layout.visibility(of: .tonight) {
+            case .off: false
+            case .always: true
+            case .automatic: tonight != nil || dinnerSuggestion != nil
+            }
         }
     }
 
     public enum Action: Equatable {
         case task
         case statsUpdated(HomeStats)
+        case billsUpdated([Bill])
+        case issuesUpdated([HouseIssue])
         case tasksUpdated([HouseTask])
-        case mealsUpdated([MealPlan])
         case upcomingEventsUpdated([EventOccurrence])
         case membersUpdated([User])
-        case makeOccasionTapped
-        case occasion(PresentationAction<EventComposerFeature.Action>)
-        case occasionLinked
         case loadFailed(AppError)
+        /// One of the quiet reads failed: its part stops waiting, with nothing
+        /// in it, and nobody is shown an alert over a section that would only
+        /// ever have said "nothing here".
+        case partFailed(State.Loaded)
         case taskToggled(TaskID)
-        case decideDinnerTapped
-        case clearDinnerTapped
-        /// Take the event the tonight card is offering as today's dinner.
-        case dinnerSuggestionAccepted
-        case dinnerSuggestionSaved
-        case dinner(PresentationAction<DinnerFeature.Action>)
         case toggleFailed(TaskID, wasCompleted: Bool, AppError)
+        /// A ticked chore's moment on screen is over.
+        case tickSettled(TaskID)
+        case showMoreChoresTapped
+        /// "I'll handle it" on an urgent problem.
+        case issueClaimed(IssueID)
+        case claimFailed(IssueID, previous: UserID?, AppError)
+        case setupStepTapped(State.SetupStep)
+        case setupClosed
+        /// Asks about notifications if nobody has yet. Sent by `.task`.
+        case askForNotificationsIfNeeded
         /// The tab has settled and nobody has been asked about notifications
         /// yet. Raised by an effect rather than from `.task` directly so the
         /// prompt lands on a drawn screen, not a blank one.
@@ -164,25 +386,31 @@ public struct HomeFeature: Sendable {
             case openMessages
             case openMovieNight
             case openTasks
-            /// Raised by the chart button in the Tasks header. The tab holds no
-            /// contribution state of its own — the screen behind this subscribes
-            /// when it opens, so the Home tab pays for no query it cannot show.
+            /// The chore split. The tab holds no contribution state of its own
+            /// — the screen behind this subscribes when it opens.
             case openContributions
             case openRecipe(Recipe)
-            /// The calendar lives in the Hub, so the tab container has to both
-            /// switch tabs and push — which is why this is a delegate rather
-            /// than navigation this screen does itself.
             case openCalendar
-            /// House Problems is a Hub module too, so opening it is the same
-            /// shape as opening the calendar: a tab switch and a push, which
-            /// only the tab container can do.
             case openIssues
+            case openFinance
+            /// One problem, opened at itself.
+            case openIssue(IssueID)
+            case openStats
+            case openCustomize
             case openEvent(EventOccurrence)
-            /// Opening an event the Home tab only knows the *id* of — the
-            /// occasion a meal plan points at. The tab never subscribes to the
-            /// calendar, so it has the id and the day and nothing else; the
-            /// calendar resolves the rest from the window it opens on.
+            /// Opening an event the tab only knows the *id* of — the occasion
+            /// a meal plan points at.
             case openEventID(EventID, CalendarDay)
+            /// Deciding, accepting or dressing up tonight's dinner: the sheet
+            /// for all three belongs to the container.
+            case decideDinner
+            case acceptDinnerSuggestion
+            case makeOccasion
+            /// Inviting somebody, which lives in Settings with the invite code.
+            case openInvite
+            /// Adding a chore where the person is, in Add anything — not a
+            /// trip to the chore list to find its add button.
+            case addChore
             /// Permission was just granted here. `AppFeature` answers by asking
             /// iOS for a token and registering it with the backend.
             case notificationsEnabled
@@ -193,11 +421,20 @@ public struct HomeFeature: Sendable {
         }
     }
 
-    private enum CancelID { case stats, tasks, meals, events, members }
+    private enum CancelID { case stats, tasks, events, members, bills, issues }
+
+    /// How close a bill has to be before Today mentions it. Closer than the
+    /// Finance screen's "due soon" week: Today is for what needs doing now.
+    static let needsYouBillDays = 3
+
+    /// How long a ticked chore stays on Today: long enough to see the tick
+    /// land, and to tap it again if it was the wrong one.
+    static let tickLinger: Duration = .milliseconds(1200)
 
     @Dependency(\.stats) var statsClient
+    @Dependency(\.finance) var financeClient
+    @Dependency(\.issues) var issuesClient
     @Dependency(\.tasks) var tasksClient
-    @Dependency(\.meals) var mealsClient
     @Dependency(\.events) var eventsClient
     @Dependency(\.homes) var homesClient
     @Dependency(\.push) var push
@@ -209,12 +446,9 @@ public struct HomeFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .task:
-                // Three live subscriptions, opened once. The old screen instead
-                // re-fetched four collections on every appearance and on every
-                // `homeDidChange` notification, with a hardcoded 100 ms sleep in
-                // front "to prevent request conflicts".
+                let homeID = state.homeID
                 return .merge(
-                    .run { [homeID = state.homeID] send in
+                    .run { send in
                         for try await stats in statsClient.forHome(homeID) {
                             await send(.statsUpdated(stats))
                         }
@@ -223,20 +457,9 @@ public struct HomeFeature: Sendable {
                     }
                     .cancellable(id: CancelID.stats, cancelInFlight: true),
 
-                    .run { [homeID = state.homeID] send in
-                        for try await meals in mealsClient.fromDate(homeID, MealDate.today) {
-                            await send(.mealsUpdated(meals))
-                        }
-                    } catch: { _, _ in
-                        // No dinner plan is the normal case, and a card that
-                        // cannot load is not worth an alert over the whole tab.
-                    }
-                    .cancellable(id: CancelID.meals, cancelInFlight: true),
-
-                    .run { [homeID = state.homeID] send in
+                    .run { send in
                         // Only the rows; the Done window that travels with them
-                        // is the Tasks screen's business, and this tab shows a
-                        // handful of open chores.
+                        // is the Tasks screen's business.
                         for try await list in tasksClient.byHome(homeID) {
                             await send(.tasksUpdated(list.tasks))
                         }
@@ -245,162 +468,126 @@ public struct HomeFeature: Sendable {
                     }
                     .cancellable(id: CancelID.tasks, cancelInFlight: true),
 
-                    .run { [homeID = state.homeID] send in
-                        for try await events in eventsClient.upcoming(homeID, 10) {
+                    .run { send in
+                        // The same capped agenda At a glance reads, so the
+                        // week's count is the same number in both places.
+                        for try await events in eventsClient.upcoming(homeID, 20) {
                             await send(.upcomingEventsUpdated(events))
                         }
-                    } catch: { _, _ in
-                        // An empty calendar is the normal case, and a card that
+                    } catch: { _, send in
+                        // An empty calendar is the normal case, and a list that
                         // cannot load is not worth an alert over the whole tab.
+                        await send(.partFailed(.upcoming))
                     }
                     .cancellable(id: CancelID.events, cancelInFlight: true),
 
-                    .run { [homeID = state.homeID] send in
+                    .run { send in
                         for try await members in homesClient.members(homeID) {
                             await send(.membersUpdated(members))
                         }
-                    } catch: { _, _ in }
-                        .cancellable(id: CancelID.members, cancelInFlight: true),
-
-                    // The one place a newcomer is asked about notifications.
-                    // Everyone lands here — creating a home and joining one both
-                    // end on this tab — and it is the first screen where the
-                    // ask means something, because there is finally a household
-                    // to be notified about.
-                    .run { [asked = state.hasAskedForNotifications] send in
-                        guard !asked else { return }
-                        // A permission sheet over a tab that has not finished
-                        // drawing reads as an ambush.
-                        try? await clock.sleep(for: .seconds(1.5))
-                        guard await push.authorizationStatus() == .notDetermined
-                        else { return }
-                        await send(.notificationPromptReady)
+                    } catch: { _, send in
+                        await send(.partFailed(.members))
                     }
+                    .cancellable(id: CancelID.members, cancelInFlight: true),
+
+                    // "Needs you": the two things in the house with a date that
+                    // can pass. Quiet on failure — the section simply stays
+                    // away, which is also what it does when all is well.
+                    .run { send in
+                        for try await bills in financeClient.bills(homeID) {
+                            await send(.billsUpdated(bills))
+                        }
+                    } catch: { _, send in
+                        await send(.partFailed(.bills))
+                    }
+                    .cancellable(id: CancelID.bills, cancelInFlight: true),
+
+                    .run { send in
+                        for try await board in issuesClient.board(homeID) {
+                            await send(.issuesUpdated(board.issues))
+                        }
+                    } catch: { _, send in
+                        await send(.partFailed(.issues))
+                    }
+                    .cancellable(id: CancelID.issues, cancelInFlight: true),
+
+                    .send(.askForNotificationsIfNeeded)
                 )
+
+            // The one place a newcomer is asked about notifications. Everyone
+            // lands here — creating a home and joining one both end on this
+            // tab — and it is the first screen where the ask means something,
+            // because there is finally a household to be notified about.
+            case .askForNotificationsIfNeeded:
+                guard !state.hasAskedForNotifications else { return .none }
+                return .run { send in
+                    // A permission sheet over a tab that has not finished
+                    // drawing reads as an ambush.
+                    try? await clock.sleep(for: .seconds(1.5))
+                    guard await push.authorizationStatus() == .notDetermined
+                    else { return }
+                    await send(.notificationPromptReady)
+                }
+
+            case let .billsUpdated(bills):
+                state.loaded.insert(.bills)
+                guard bills != state.bills else { return .none }
+                state.bills = bills
+                return .none
+
+            case let .issuesUpdated(issues):
+                state.loaded.insert(.issues)
+                guard issues != state.issues else { return .none }
+                state.issues = issues
+                return .none
+
+            // A read that failed quietly still stops its part of the screen
+            // waiting. Without this a dead `finance:bills` left the sentence
+            // greyed out for as long as the tab was open.
+            case let .partFailed(part):
+                state.loaded.insert(part)
+                return .none
 
             case let .statsUpdated(stats):
                 state.loaded.insert(.stats)
+                guard stats != state.stats else { return .none }
                 state.stats = stats
                 return .none
 
-            case let .mealsUpdated(meals):
-                state.meals = meals
-                return .none
-
             case let .membersUpdated(members):
+                state.loaded.insert(.members)
                 let incoming = IdentifiedArray(uniqueElements: members)
                 guard incoming != state.members else { return .none }
                 state.members = incoming
                 return .none
 
-            // MARK: Making tonight an occasion
-            //
-            // The path that was missing. The Dinner sheet offers this while a
-            // meal is being decided, but a meal already decided had nowhere to
-            // go — and "we settled on lasagne, now let us make an evening of it"
-            // is the normal way round.
-            //
-            // The composer rather than a silent write: an occasion needs a time,
-            // and once it is open it may as well carry the budget, the shopping
-            // and the guest list too.
-
-            case .makeOccasionTapped:
-                guard let plan = state.tonight, plan.event == nil else { return .none }
-                let title = plan.headline ?? String(localized: L10n.dinnerOccasionFallbackTitle)
-                state.occasion = EventComposerFeature.State(
-                    homeID: state.homeID,
-                    members: state.members,
-                    currentUserID: state.user?.id,
-                    day: CalendarDay(MealDate.date(plan.date) ?? Date()),
-                    seed: EventComposerFeature.State.Seed(
-                        kind: .dinnerParty,
-                        title: title,
-                        startsAt: MealDate.eveningOf(plan.date),
-                        recipeIDs: plan.recipe.map { [$0.id] } ?? []
-                    )
-                )
-                return .none
-
-            case let .occasion(.presented(.delegate(.saved(eventID)))):
-                state.occasion = nil
-                // The link, written second. The event exists now, so the meal
-                // plan has something to point at — and the plan keeps every
-                // other field it already had, because `meals:set` upserts on
-                // the home and the day.
-                guard let eventID, let plan = state.tonight else { return .none }
-                return .run { [homeID = state.homeID] send in
-                    try await mealsClient.set(DinnerDecision(
-                        homeID: homeID,
-                        date: plan.date,
-                        kind: plan.kind,
-                        recipeID: plan.recipe?.id,
-                        title: plan.recipe == nil ? plan.title : nil,
-                        cuisine: plan.cuisine,
-                        place: plan.place,
-                        eventID: eventID
-                    ))
-                    await send(.occasionLinked)
-                } catch: { error, send in
-                    await send(.loadFailed(AppError(error)))
-                }
-
-            case .occasionLinked:
-                // Nothing to write here: the meals subscription brings the
-                // linked plan back and the card grows its badge.
-                return .none
-
-            case .dinnerSuggestionAccepted:
-                // The same write the event sheet's "make it dinner" performs,
-                // from the other end. One field — `meal_plans.event_id` —
-                // because a dinner party is a meal *and* an event, and two
-                // copies of the menu is two things that can disagree.
-                guard let occurrence = state.dinnerSuggestion else { return .none }
-                return .run { [homeID = state.homeID] send in
-                    try await mealsClient.set(DinnerDecision(
-                        homeID: homeID,
-                        date: MealDate.key(occurrence.start),
-                        kind: .cook,
-                        recipeID: occurrence.recipeIDs.first,
-                        // A menu whose recipes have all been deleted still names
-                        // a dinner: the event's own title stands in.
-                        title: occurrence.recipeIDs.isEmpty ? occurrence.title : nil,
-                        eventID: occurrence.eventID
-                    ))
-                    await send(.dinnerSuggestionSaved)
-                } catch: { error, send in
-                    await send(.loadFailed(AppError(error)))
-                }
-
-            case .dinnerSuggestionSaved:
-                // The meals subscription brings the plan back, which is what
-                // swaps the offer for the card.
-                return .none
-
             case let .upcomingEventsUpdated(events):
-                // Marked answered before the comparison below, not after. A
-                // household with nothing coming up delivers an empty array that
-                // matches the initial state, and the early return would leave
-                // the agenda skeletoning forever on exactly the screens that had
-                // the least to show.
+                // Marked answered before the comparison below, not after: a
+                // household with nothing coming delivers an empty array that
+                // matches the initial state, and an early return would leave it
+                // waiting forever.
                 state.loaded.insert(.upcoming)
-                // Compared before assigning, like every other push on this tab:
-                // Convex re-publishes the whole query set on any change, so this
-                // lands far more often than the calendar actually moves, and an
-                // identical array would still invalidate every view reading it.
                 guard events != state.upcoming else { return .none }
                 state.upcoming = events
                 return .none
 
             case let .tasksUpdated(tasks):
                 state.loaded.insert(.tasks)
-                state.tasks = IdentifiedArray(uniqueElements: tasks)
+                var incoming = IdentifiedArray(uniqueElements: tasks)
+                // A chore ticked a moment ago keeps the tick the person just
+                // gave it until its moment is over, even if the push carrying
+                // the write has not landed yet.
+                for id in state.justTicked {
+                    incoming[id: id]?.isCompleted = state.tasks[id: id]?.isCompleted ?? true
+                }
+                guard incoming != state.tasks else { return .none }
+                state.tasks = incoming
                 return .none
 
             case let .loadFailed(error):
                 // Everything stops waiting, not just the query that failed:
-                // `loadFailed` does not say which one it was, and a section left
-                // skeletoning forever is worse than one showing its empty state.
-                state.loaded = [.stats, .tasks, .upcoming]
+                // `loadFailed` does not say which one it was.
+                state.loaded = [.stats, .tasks, .upcoming, .members, .bills, .issues]
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
@@ -413,11 +600,71 @@ public struct HomeFeature: Sendable {
                 // the failure carries the value to put back, because nothing
                 // else will.
                 state.tasks[id: id]?.isCompleted = newValue
-                return .run { send in
-                    try await tasksClient.setCompleted(id, newValue)
+                state.justTicked.insert(id)
+                return .merge(
+                    .run { _ in
+                        try await tasksClient.setCompleted(id, newValue)
+                    } catch: { error, send in
+                        await send(.toggleFailed(id, wasCompleted: task.isCompleted, AppError(error)))
+                    },
+                    .run { send in
+                        try await clock.sleep(for: Self.tickLinger)
+                        await send(.tickSettled(id))
+                    }
+                    .cancellable(id: id, cancelInFlight: true)
+                )
+
+            case let .tickSettled(id):
+                state.justTicked.remove(id)
+                return .none
+
+            case let .toggleFailed(id, wasCompleted, error):
+                // The write never happened, so the server has nothing to push
+                // and no correction is on its way. The checkbox goes back here
+                // or it stays wrong until something unrelated reloads the list.
+                state.tasks[id: id]?.isCompleted = wasCompleted
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .showMoreChoresTapped:
+                state.showsAllChores = true
+                return .none
+
+            case let .issueClaimed(id):
+                guard let me = state.user?.id,
+                      let index = state.issues.firstIndex(where: { $0.id == id })
+                else { return .none }
+                let previous = state.issues[index].assignedTo
+                guard previous != me else { return .none }
+                state.issues[index].assignedTo = me
+                return .run { _ in
+                    try await issuesClient.assign(id, me)
                 } catch: { error, send in
-                    await send(.toggleFailed(id, wasCompleted: task.isCompleted, AppError(error)))
+                    await send(.claimFailed(id, previous: previous, AppError(error)))
                 }
+
+            case let .claimFailed(id, previous, error):
+                if let index = state.issues.firstIndex(where: { $0.id == id }) {
+                    state.issues[index].assignedTo = previous
+                }
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case let .setupStepTapped(step):
+                switch step {
+                case .invite: return .send(.delegate(.openInvite))
+                case .firstChore: return .send(.delegate(.addChore))
+                case .dinner: return .send(.delegate(.decideDinner))
+                case .customize: return .send(.delegate(.openCustomize))
+                }
+
+            // Put away. It does not come back; everything on it is reachable
+            // from where it always lives.
+            case .setupClosed:
+                state.$setupDone.withLock { $0 = true }
+                return .none
 
             case .notificationPromptReady:
                 // Marked as asked the moment the alert goes up, not when it is
@@ -438,43 +685,35 @@ public struct HomeFeature: Sendable {
                 guard granted else { return .none }
                 return .send(.delegate(.notificationsEnabled))
 
-            case let .toggleFailed(id, wasCompleted, error):
-                // The write never happened, so the server has nothing to push
-                // and no correction is on its way. The checkbox goes back here
-                // or it stays wrong until something unrelated reloads the list.
-                state.tasks[id: id]?.isCompleted = wasCompleted
-                guard !error.isSilent else { return .none }
-                state.alert = .failure(error)
-                return .none
-
-            // Re-deciding opens on what was already chosen rather than blank.
-            case .decideDinnerTapped:
-                state.dinner = DinnerFeature.State(
-                    homeID: state.homeID,
-                    memberCount: state.memberCount,
-                    existing: state.tonight
-                )
-                return .none
-
-            case .clearDinnerTapped:
-                return .run { [homeID = state.homeID] _ in
-                    try await mealsClient.clear(homeID, MealDate.today)
-                } catch: { _, _ in
-                    // The live subscription is the source of truth; a failed
-                    // clear simply leaves the card where it was.
-                }
-
-            case .dinner(.presented(.delegate(.finished))):
-                state.dinner = nil
-                return .none
-
-            case .dinner, .delegate, .alert, .occasion:
+            case .delegate, .alert:
                 return .none
             }
         }
-        .ifLet(\.$dinner, action: \.dinner) { DinnerFeature() }
-        .ifLet(\.$occasion, action: \.occasion) { EventComposerFeature() }
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+/// One part of Today's sentence.
+public enum GlanceClause: Equatable, Sendable {
+    case alarm(HomeFeature.State.Alarm)
+    case happening(EventOccurrence)
+    case eventToday(EventOccurrence)
+    case tonight(MealPlan)
+    case chores(Int)
+    case next(EventOccurrence)
+}
+
+/// Morning, afternoon, evening or night — said with the weekday in front.
+public enum DayPart: Equatable, Sendable {
+    case morning, afternoon, evening, night
+
+    public init(_ date: Date, calendar: Calendar = .current) {
+        switch calendar.component(.hour, from: date) {
+        case 5..<12: self = .morning
+        case 12..<DockItem.eveningStarts: self = .afternoon
+        case DockItem.eveningStarts..<22: self = .evening
+        default: self = .night
+        }
     }
 }
 

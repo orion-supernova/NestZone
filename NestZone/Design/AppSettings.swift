@@ -66,6 +66,23 @@ extension SharedKey where Self == AppStorageKey<String>.Default {
     }
 }
 
+extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// The segment each grouped tab was last left on, as comma-joined
+    /// `HubModule` raw values. Read it through `TabSegments`, which places
+    /// each name in its own group and fills in any group with nothing stored.
+    public static var tabSegmentsRaw: Self {
+        Self[.appStorage("appTabSegments"), default: ""]
+    }
+
+    /// Today's sections in the order this person arranged them, as
+    /// comma-joined `TodaySection` raw values: plain for Automatic, `+` for
+    /// Always, `-` for Off. Read it through `TodayLayout`, which fills in
+    /// anything missing.
+    public static var todayLayoutRaw: Self {
+        Self[.appStorage("appTodayLayout"), default: TodayLayout.default.raw]
+    }
+}
+
 extension SharedKey where Self == FileStorageKey<[Home]>.Default {
     /// The household list as it stood at the end of the last session.
     ///
@@ -102,6 +119,12 @@ extension SharedKey where Self == AppStorageKey<Bool>.Default {
     /// Remembered, because people reliably prefer one or the other.
     public static var shoppingGrouped: Self {
         Self[.appStorage("appShoppingGrouped"), default: true]
+    }
+
+    /// Set once Today's getting-started checklist has been finished or put
+    /// away. It is offered only while a household is new, and only until then.
+    public static var todaySetupDone: Self {
+        Self[.appStorage("appTodaySetupDone"), default: false]
     }
 
     /// Set once the intro has been seen, so it never shows twice.

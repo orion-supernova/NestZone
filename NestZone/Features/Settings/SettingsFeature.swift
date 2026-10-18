@@ -158,6 +158,7 @@ public struct SettingsFeature: Sendable {
         case copyInviteCodeTapped
         case inviteCodeCopyExpired
         case manageHomesTapped
+        case customizeTapped
         case checkForUpdatesTapped
         case updateCheckFinished(Result<ReleaseCheck, AppError>)
         case openAppStoreTapped(URL)
@@ -177,6 +178,9 @@ public struct SettingsFeature: Sendable {
             case homeSwitched(HomeID)
             case languageChanged(AppLanguage)
             case notificationsEnabled
+            /// Customize belongs to the tab bar, not to Settings, so the tab
+            /// container opens it — over this sheet.
+            case customizeTapped
         }
     }
 
@@ -414,6 +418,9 @@ public struct SettingsFeature: Sendable {
             case .inviteCodeCopyExpired:
                 state.didCopyInviteCode = false
                 return .none
+
+            case .customizeTapped:
+                return .send(.delegate(.customizeTapped))
 
             case .manageHomesTapped:
                 state.destination = .manageHomes(

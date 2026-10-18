@@ -10,30 +10,27 @@ public struct MessagesView: View {
         self.store = store
     }
 
+    /// The conversation list. The stack it pushes chats onto is built by the
+    /// tab — see `MessagesStack` — so the tab can put the same avatar and bell
+    /// on this screen as on every other.
     public var body: some View {
-        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-            list
-                .background(Backdrop(tint: theme.accent))
-                .scrollEdgeEffectStyle(.soft, for: .top)
-                .navigationTitle(Text(L10n.messagesScreenTitle))
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button { store.send(.composeTapped) } label: {
-                            Image(systemName: "square.and.pencil")
-                        }
-                        .accessibilityLabel(Text(L10n.messagesNewMessageButton))
+        list
+            .background(Backdrop(tint: theme.accent))
+            .scrollEdgeEffectStyle(.soft, for: .top)
+            .navigationTitle(Text(L10n.messagesScreenTitle))
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { store.send(.composeTapped) } label: {
+                        Image(systemName: "square.and.pencil")
                     }
+                    .accessibilityLabel(Text(L10n.messagesNewMessageButton))
                 }
-                .task { await store.send(.task).finish() }
-                .sheet(item: $store.scope(
-                    state: \.destination?.compose, action: \.destination.compose
-                )) { NewConversationSheet(store: $0) }
-                .alert($store.scope(state: \.alert, action: \.alert))
-        } destination: { store in
-            switch store.case {
-            case let .chat(store): ChatView(store: store)
             }
-        }
+            .task { await store.send(.task).finish() }
+            .sheet(item: $store.scope(
+                state: \.destination?.compose, action: \.destination.compose
+            )) { NewConversationSheet(store: $0) }
+            .alert($store.scope(state: \.alert, action: \.alert))
     }
 
     @ViewBuilder
@@ -620,5 +617,29 @@ struct NewConversationSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+/// The Chat tab: the conversation list, and the threads pushed on it.
+///
+/// `root` is whatever the tab draws at the bottom of the stack — the list,
+/// dressed with the tab's own toolbar.
+public struct MessagesStack<Root: View>: View {
+    @Bindable var store: StoreOf<MessagesFeature>
+    let root: Root
+
+    public init(store: StoreOf<MessagesFeature>, @ViewBuilder root: () -> Root) {
+        self.store = store
+        self.root = root()
+    }
+
+    public var body: some View {
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+            root
+        } destination: { store in
+            switch store.case {
+            case let .chat(store): ChatView(store: store)
+            }
+        }
     }
 }

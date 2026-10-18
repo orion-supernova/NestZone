@@ -34,6 +34,14 @@ public struct RecipesFeature: Sendable {
         /// server confirms, and without the mask each push puts them back.
         public var hidden: Set<RecipeID> = []
 
+        /// Tonight's dinner, handed down by the tab container, which owns the
+        /// one dinner decision the whole tab bar shares.
+        ///
+        /// Meals is the second permanent way in to that decision. It used to
+        /// have one — a card on Today — and hiding that card left the household
+        /// no way to say what it was eating.
+        public var tonight: MealPlan?
+
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
@@ -120,6 +128,11 @@ public struct RecipesFeature: Sendable {
         case samplesLoaded([Recipe])
         case loadFailed(AppError)
         case recipeTapped(Recipe)
+        /// The tonight card: the recipe, if there is one, otherwise the
+        /// decision.
+        case tonightTapped
+        case changeTonightTapped
+        case tonightEventTapped
         case composeTapped
         case clearFiltersTapped
         case deleteTapped(RecipeID)
@@ -139,6 +152,11 @@ public struct RecipesFeature: Sendable {
             /// Relayed from an open recipe: the tab container owns navigation,
             /// and the shopping list lives under a different module.
             case openShoppingList
+            /// Deciding tonight's dinner, which is a sheet over the whole tab
+            /// bar rather than this screen's.
+            case decideDinner
+            /// The occasion tonight's dinner belongs to.
+            case openEvent(EventID, CalendarDay)
         }
     }
 
@@ -198,6 +216,22 @@ public struct RecipesFeature: Sendable {
                     )
                 )
                 return .none
+
+            case .tonightTapped:
+                if let recipe = state.tonight?.recipe {
+                    return .send(.recipeTapped(recipe))
+                }
+                return .send(.delegate(.decideDinner))
+
+            case .changeTonightTapped:
+                return .send(.delegate(.decideDinner))
+
+            case .tonightEventTapped:
+                guard let plan = state.tonight, let event = plan.event else { return .none }
+                return .send(.delegate(.openEvent(
+                    event.id,
+                    CalendarDay(MealDate.date(plan.date) ?? Date())
+                )))
 
             case .composeTapped:
                 state.destination = .compose(

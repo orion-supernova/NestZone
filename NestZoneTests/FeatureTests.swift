@@ -9,16 +9,18 @@ import UserNotifications
 @Suite("Home tab")
 struct HomeFeatureTests {
 
-    @Test("Ticking a task updates the row before the server answers")
+    @Test("Ticking a chore updates the row before the server answers, then lets it go")
     func optimisticToggle() async {
         let task = HouseTask(id: "t1", title: "Dishes")
         let confirmed = LockIsolated<[(TaskID, Bool)]>([])
+        let clock = TestClock()
 
         let store = TestStore(
             initialState: HomeFeature.State(homeID: "h1")
         ) {
             HomeFeature()
         } withDependencies: {
+            $0.continuousClock = clock
             $0.tasks.setCompleted = { id, done in
                 confirmed.withValue { $0.append((id, done)) }
             }
@@ -31,8 +33,16 @@ struct HomeFeatureTests {
 
         await store.send(.taskToggled("t1")) {
             $0.tasks[id: "t1"]?.isCompleted = true
+            $0.justTicked = ["t1"]
         }
+        // Still on Today, ticked, for long enough to be seen and taken back.
+        #expect(store.state.chores.map(\.id) == ["t1"])
 
+        await clock.advance(by: HomeFeature.tickLinger)
+        await store.receive(\.tickSettled) {
+            $0.justTicked = []
+        }
+        #expect(store.state.chores.isEmpty)
         #expect(confirmed.value.count == 1)
         #expect(confirmed.value[0].1 == true)
     }
@@ -40,11 +50,13 @@ struct HomeFeatureTests {
     @Test("A failed toggle puts the checkbox back")
     func failedToggleRestoresTheCheckbox() async {
         let task = HouseTask(id: "t1", title: "Dishes")
+        let clock = TestClock()
         let store = TestStore(
             initialState: HomeFeature.State(homeID: "h1")
         ) {
             HomeFeature()
         } withDependencies: {
+            $0.continuousClock = clock
             $0.tasks.setCompleted = { _, _ in throw AppError.offline }
         }
 
@@ -54,6 +66,7 @@ struct HomeFeatureTests {
         }
         await store.send(.taskToggled("t1")) {
             $0.tasks[id: "t1"]?.isCompleted = true
+            $0.justTicked = ["t1"]
         }
         // A refused write leaves the server unchanged, so no push is coming to
         // correct the checkbox — the reducer has to put it back itself, or the
@@ -62,121 +75,133 @@ struct HomeFeatureTests {
             $0.tasks[id: "t1"]?.isCompleted = false
             $0.alert = .failure(.offline)
         }
+        await clock.advance(by: HomeFeature.tickLinger)
+        await store.receive(\.tickSettled) {
+            $0.justTicked = []
+        }
     }
 
-    @Test("A dinner already decided can still become an occasion")
-    func decidedDinnerCanBecomeAnOccasion() async {
-        let recipe = Recipe(id: "r1", title: "Lasagne", ingredients: ["Pasta"], homeID: "h1")
-        let day = MealDate.today
-        let plan = MealPlan(id: "m1", homeID: "h1", kind: .cook, recipe: recipe, date: day)
-        let planned = LockIsolated<[DinnerDecision]>([])
+    @Test("Today's chores are the ones due, this person's and nobody's — never finished ones")
+    func choresAreTheOnesThatBelongOnToday() {
+        let now = Date()
+        let yesterday = now.addingTimeInterval(-36 * 3600)
+        var state = HomeFeature.State(homeID: "h1", user: User(id: "me", name: "Ada"), now: now)
+        state.tasks = [
+            HouseTask(id: "done", title: "Old", isCompleted: true, created: Timestamp(now)),
+            HouseTask(id: "theirs", title: "Bea's", assignedTo: "bea"),
+            HouseTask(id: "nobody", title: "Anyone", created: Timestamp(now.addingTimeInterval(-60))),
+            HouseTask(id: "mine", title: "Mine", assignedTo: "me"),
+            HouseTask(id: "late", title: "Late", assignedTo: "bea", dueDate: Timestamp(yesterday)),
+        ]
+        // It used to be the five newest chores *created*, finished ones
+        // included, so yesterday's ticked chore pushed today's out of sight.
+        #expect(state.chores.map(\.id) == ["late", "mine", "nobody"])
+    }
 
-        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
+    @Test("A long chore list shows four and says how many more")
+    func choreListIsCapped() {
+        var state = HomeFeature.State(homeID: "h1")
+        state.tasks = IdentifiedArray(uniqueElements: (1...6).map {
+            HouseTask(id: TaskID("t\($0)"), title: "Task \($0)")
+        })
+        #expect(state.visibleChores.count == 4)
+        #expect(state.hiddenChoreCount == 2)
+        state.showsAllChores = true
+        #expect(state.visibleChores.count == 6)
+        #expect(state.hiddenChoreCount == 0)
+    }
+
+    @Test("A quiet day says all clear, in one line")
+    func quietDayIsAllClear() {
+        var state = HomeFeature.State(homeID: "h1")
+        #expect(state.glance.isEmpty)
+        #expect(state.hero == nil)
+
+        // Something coming on Friday is not, alone, a reason to say anything
+        // but "all clear": the sentence is about today.
+        let friday = Date().addingTimeInterval(4 * 24 * 3600)
+        state.upcoming = [EventOccurrence(
+            eventID: "e1",
+            title: "Birthday",
+            startsAt: Timestamp(friday),
+            endsAt: Timestamp(friday.addingTimeInterval(3600))
+        )]
+        #expect(state.glance.isEmpty)
+        #expect(state.comingUp.count == 1)
+    }
+
+    @Test("Something wrong leads the sentence and gets the one card")
+    func urgentProblemLeads() {
+        var state = HomeFeature.State(homeID: "h1")
+        let leak = HouseIssue(id: "i1", title: "Boiler", severity: .urgent)
+        state.issues = [leak]
+        state.tasks = [
+            HouseTask(id: "t1", title: "Bins", dueDate: Timestamp(Date())),
+            // Undated backlog is listed, but it is not what makes today busy.
+            HouseTask(id: "t2", title: "Sort the loft"),
+        ]
+        #expect(state.hero == .issue(leak))
+        #expect(state.glance.first == .alarm(.issue(leak)))
+        #expect(state.glance.contains(.chores(1)))
+        // The card's problem is not listed a second time under it.
+        #expect(state.needsRows.isEmpty)
+
+        // Off in Customize means off: no card either.
+        state.$layoutRaw.withLock { $0 = "-needsYou" }
+        #expect(state.hero == nil)
+    }
+
+    @Test("\"I'll handle it\" takes the problem at once, and gives it back if the write fails")
+    func claimingAProblem() async {
+        let leak = HouseIssue(id: "i1", title: "Boiler", severity: .urgent)
+        let store = TestStore(
+            initialState: HomeFeature.State(homeID: "h1", user: User(id: "me", name: "Ada"))
+        ) {
             HomeFeature()
         } withDependencies: {
-            $0.meals.set = { decision in planned.withValue { $0.append(decision) } }
+            $0.issues.assign = { _, _ in throw AppError.offline }
         }
-        store.exhaustivity = .off
-
-        await store.send(.mealsUpdated([plan]))
-        await store.send(.membersUpdated([User(id: "u1", name: "Ada"), User(id: "u2", name: "Bea")]))
-
-        await store.send(.makeOccasionTapped)
-        // The composer, not a silent write: an occasion needs a time, and the
-        // Dinner sheet's toggle only ever covered the case where somebody knew
-        // in advance.
-        guard let composer = store.state.occasion else {
-            Issue.record("expected the event composer to open")
-            return
+        await store.send(.issuesUpdated([leak])) {
+            $0.loaded.insert(.issues)
+            $0.issues = [leak]
         }
-        #expect(composer.kind == .dinnerParty)
-        #expect(composer.title == "Lasagne")
-        // The dish arrives as the menu, which is what makes the shopping list
-        // and the budget work on the other side.
-        #expect(composer.recipeIDs == ["r1"])
-        #expect(composer.sections.contains(.menu))
-        #expect(composer.attendees == ["u1", "u2"])
-
-        await store.send(.occasion(.presented(.delegate(.saved("e-new")))))
-        await store.receive(\.occasionLinked)
-
-        // The link is written second: the event exists, so the plan has
-        // something to point at, and it keeps every field it already had.
-        #expect(planned.value.count == 1)
-        #expect(planned.value[0].eventID == "e-new")
-        #expect(planned.value[0].recipeID == "r1")
-        #expect(planned.value[0].date == day)
+        await store.send(.issueClaimed("i1")) {
+            $0.issues[0].assignedTo = "me"
+        }
+        #expect(store.state.urgentIssues.first?.assignedTo == "me")
+        await store.receive(\.claimFailed) {
+            $0.issues[0].assignedTo = nil
+            $0.alert = .failure(.offline)
+        }
     }
 
-    @Test("A meal already part of an occasion is not offered another")
-    func linkedDinnerIsNotOfferedAgain() async {
-        let plan = MealPlan(
-            id: "m1",
-            homeID: "h1",
-            kind: .cook,
-            title: "Lasagne",
-            date: MealDate.today,
-            event: MealPlan.LinkedEvent(id: "e1", title: "Birthday")
-        )
-        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
-            HomeFeature()
-        }
-        store.exhaustivity = .off
+    @Test("The getting-started list is for new households only")
+    func setupIsForNewHouseholds() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            var state = HomeFeature.State(homeID: "h1")
+            state.loaded = [.members, .tasks, .stats, .upcoming]
+            // A members read that failed is not a household of nobody.
+            #expect(!state.showsSetup)
 
-        await store.send(.mealsUpdated([plan]))
-        await store.send(.makeOccasionTapped)
-        #expect(store.state.occasion == nil)
+            state.members = [User(id: "me", name: "Ada")]
+            #expect(state.showsSetup)
+
+            // Something written down: not new, alone or not, whatever the
+            // chore list says.
+            state.stats.shoppingItems = 4
+            #expect(!state.showsSetup)
+
+            // Put away, it stays away.
+            state.stats.shoppingItems = 0
+            state.$setupDone.withLock { $0 = true }
+            #expect(!state.showsSetup)
+        }
     }
 
-    @Test("The Home tab surfaces what is on now and what is next")
-    func upcomingEventsReachTheHomeTab() async {
-        let now = Date()
-        let inProgress = EventOccurrence(
-            eventID: "e1",
-            title: "Dinner party",
-            kind: .dinnerParty,
-            startsAt: Timestamp(now.addingTimeInterval(-3600)),
-            endsAt: Timestamp(now.addingTimeInterval(3600))
-        )
-        let soon = EventOccurrence(
-            eventID: "e2",
-            title: "Concert",
-            kind: .concert,
-            startsAt: Timestamp(now.addingTimeInterval(3 * 24 * 3600)),
-            endsAt: Timestamp(now.addingTimeInterval(3 * 24 * 3600 + 7200))
-        )
-        let faraway = EventOccurrence(
-            eventID: "e3",
-            title: "Trip",
-            kind: .trip,
-            startsAt: Timestamp(now.addingTimeInterval(30 * 24 * 3600)),
-            endsAt: Timestamp(now.addingTimeInterval(33 * 24 * 3600))
-        )
-
-        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
-            HomeFeature()
-        }
-
-        await store.send(.upcomingEventsUpdated([inProgress, soon, faraway])) {
-            $0.upcoming = [inProgress, soon, faraway]
-        }
-
-        // "3 events" is a figure; "the party is happening" is a fact, and only
-        // one of them stops being true while you are looking at it.
-        #expect(store.state.happeningNow?.id == inProgress.id)
-        #expect(store.state.nextEvent?.id == soon.id)
-        // The tile counts the week, not the whole agenda — a month-away trip is
-        // not asking for anything today.
-        #expect(store.state.eventsThisWeek == 2)
-
-        // An identical push must not invalidate every view reading the card:
-        // Convex re-publishes the whole query set on any change, so this lands
-        // far more often than the calendar actually moves.
-        await store.send(.upcomingEventsUpdated([inProgress, soon, faraway]))
-    }
-
-    @Test("Opening an event from the Home tab lands on the calendar, on its day")
-    func openingAnEventSwitchesTabsAndPushes() async {
+    @Test("Opening an event from Today lands on the calendar, on its day, on Today")
+    func openingAnEventPushesInPlace() async {
         let start = Date().addingTimeInterval(4 * 24 * 3600)
         let occurrence = EventOccurrence(
             eventID: "e1",
@@ -192,9 +217,11 @@ struct HomeFeatureTests {
         store.exhaustivity = .off
 
         await store.send(.home(.delegate(.openEvent(occurrence))))
-        // The calendar is a Hub module, so this is both a tab switch and a push.
-        #expect(store.state.selectedTab == .hub)
-        guard case .calendar(let calendar) = store.state.hub.path.last else {
+        // A specific event opens where the person is — never a tab switch and
+        // a push at once, which left the back button leading somewhere the
+        // person had never been.
+        #expect(store.state.selectedTab == .today)
+        guard case .calendar(let calendar) = store.state.today.path.last else {
             Issue.record("expected the calendar to be pushed")
             return
         }
@@ -277,30 +304,116 @@ struct HomeFeatureTests {
         }
         await store.send(.loadFailed(.cancelled)) {
             // Every section stops waiting, not just the one that failed.
-            $0.loaded = [.stats, .tasks, .upcoming]
+            $0.loaded = [.stats, .tasks, .upcoming, .members, .bills, .issues]
         }
         #expect(store.state.alert == nil)
     }
+}
 
-    @Test("Only the five most recent tasks reach the summary")
-    func recentTasksAreCapped() async {
-        let tasks = (1...8).map {
-            HouseTask(
-                id: TaskID("t\($0)"),
-                title: "Task \($0)",
-                created: Timestamp(milliseconds: Double($0) * 1000)
+@MainActor
+@Suite("Now and tonight")
+struct NowFeatureTests {
+
+    @Test("A dinner already decided can still become an occasion")
+    func decidedDinnerCanBecomeAnOccasion() async {
+        let recipe = Recipe(id: "r1", title: "Lasagne", ingredients: ["Pasta"], homeID: "h1")
+        let day = MealDate.today
+        let plan = MealPlan(id: "m1", homeID: "h1", kind: .cook, recipe: recipe, date: day)
+        let planned = LockIsolated<[DinnerDecision]>([])
+
+        let store = TestStore(initialState: NowFeature.State(homeID: "h1")) {
+            NowFeature()
+        } withDependencies: {
+            $0.meals.set = { decision in planned.withValue { $0.append(decision) } }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.mealsUpdated([plan]))
+        await store.send(.membersUpdated([User(id: "u1", name: "Ada"), User(id: "u2", name: "Bea")]))
+
+        await store.send(.makeOccasionTapped)
+        // The composer, not a silent write: an occasion needs a time, and the
+        // Dinner sheet's toggle only ever covered the case where somebody knew
+        // in advance.
+        guard let composer = store.state.occasion else {
+            Issue.record("expected the event composer to open")
+            return
+        }
+        #expect(composer.kind == .dinnerParty)
+        #expect(composer.title == "Lasagne")
+        // The dish arrives as the menu, which is what makes the shopping list
+        // and the budget work on the other side.
+        #expect(composer.recipeIDs == ["r1"])
+        #expect(composer.sections.contains(.menu))
+        #expect(composer.attendees == ["u1", "u2"])
+
+        await store.send(.occasion(.presented(.delegate(.saved("e-new")))))
+        await store.receive(\.occasionLinked)
+
+        // The link is written second: the event exists, so the plan has
+        // something to point at, and it keeps every field it already had.
+        #expect(planned.value.count == 1)
+        #expect(planned.value[0].eventID == "e-new")
+        #expect(planned.value[0].recipeID == "r1")
+        #expect(planned.value[0].date == day)
+    }
+
+    @Test("A meal already part of an occasion is not offered another")
+    func linkedDinnerIsNotOfferedAgain() async {
+        let plan = MealPlan(
+            id: "m1",
+            homeID: "h1",
+            kind: .cook,
+            title: "Lasagne",
+            date: MealDate.today,
+            event: MealPlan.LinkedEvent(id: "e1", title: "Birthday")
+        )
+        let store = TestStore(initialState: NowFeature.State(homeID: "h1")) {
+            NowFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.mealsUpdated([plan]))
+        await store.send(.makeOccasionTapped)
+        #expect(store.state.occasion == nil)
+    }
+
+    @Test("Only today's plan is tonight's dinner")
+    func tonightIsToday() {
+        let today = MealPlan(id: "m1", kind: .out, cuisine: .turkish, date: MealDate.today)
+        let tomorrow = MealPlan(id: "m2", kind: .cook, date: "2099-01-01")
+
+        var state = NowFeature.State(homeID: "h1")
+        state.meals = [today, tomorrow]
+        #expect(state.tonight?.id == "m1")
+
+        state.meals = [tomorrow]
+        #expect(state.tonight == nil)
+    }
+
+    @Test("The dock shows what is happening, then what is soon, then dinner in the evening")
+    func dockOrder() {
+        let calendar = Calendar(identifier: .gregorian)
+        let evening = calendar.date(from: DateComponents(year: 2026, month: 10, day: 16, hour: 18))!
+        let morning = calendar.date(from: DateComponents(year: 2026, month: 10, day: 16, hour: 9))!
+        func event(_ id: EventID, from start: Date, hours: Double) -> EventOccurrence {
+            EventOccurrence(
+                eventID: id,
+                title: id.rawValue,
+                startsAt: Timestamp(start),
+                endsAt: Timestamp(start.addingTimeInterval(hours * 3600))
             )
         }
-        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) {
-            HomeFeature()
-        }
-        await store.send(.tasksUpdated(tasks)) {
-            $0.loaded.insert(.tasks)
-            $0.tasks = IdentifiedArray(uniqueElements: tasks)
-        }
-        #expect(store.state.recentTasks.count == 5)
-        // Newest first.
-        #expect(store.state.recentTasks.first?.id == TaskID("t8"))
+        let now = event("now", from: evening.addingTimeInterval(-1800), hours: 2)
+        let soon = event("soon", from: evening.addingTimeInterval(3600), hours: 2)
+        let later = event("later", from: evening.addingTimeInterval(6 * 3600), hours: 2)
+
+        #expect(DockItem(now: evening, upcoming: [now, soon], tonight: nil, suggestion: nil, movieRound: nil, calendar: calendar) == .happening(now))
+        #expect(DockItem(now: evening, upcoming: [soon], tonight: nil, suggestion: nil, movieRound: nil, calendar: calendar) == .startingSoon(soon))
+        // Six hours off is not "soon"; in the evening, dinner is the question.
+        #expect(DockItem(now: evening, upcoming: [later], tonight: nil, suggestion: nil, movieRound: nil, calendar: calendar) == .dinnerUndecided)
+        // In the morning, nobody is asked about dinner.
+        #expect(DockItem(now: morning, upcoming: [], tonight: nil, suggestion: nil, movieRound: nil, calendar: calendar) == .add)
     }
 }
 
@@ -567,13 +680,14 @@ struct TasksFeatureTests {
         #expect(String(localized: done!) != String(localized: all!))
     }
 
-    @Test("The Archive is reached from the Tasks screen")
+    @Test("The Archive is reached from the Tasks screen, on the Lists tab")
     func archiveIsPushedFromTasks() async {
         let store = TestStore(
             initialState: MainFeature.State(
                 homeID: "h1",
                 home: Home(id: "h1", name: "The Nest", members: ["me", "you"]),
-                user: User(id: "me", name: "Ada")
+                user: User(id: "me", name: "Ada"),
+                segments: [.lists: .shopping]
             )
         ) {
             MainFeature()
@@ -581,14 +695,16 @@ struct TasksFeatureTests {
         store.exhaustivity = .off(showSkippedAssertions: false)
 
         await store.send(.home(.delegate(.openTasks)))
-        guard let id = store.state.homePath.ids.first else {
-            Issue.record("expected the Tasks screen on the stack")
-            return
-        }
-        await store.send(.homePath(.element(id: id, action: .tasks(.delegate(.openArchive)))))
+        // Tasks lives on Lists, so this is a switch to it, at its segment —
+        // and nothing is pushed on Today.
+        #expect(store.state.selectedTab == .lists)
+        #expect(store.state.lists.selected == .tasks)
+        #expect(store.state.today.path.isEmpty)
 
-        #expect(store.state.homePath.count == 2)
-        guard case let .taskArchive(archive) = store.state.homePath.last else {
+        await store.send(.lists(.segments(.element(id: .tasks, action: .screen(.tasks(.delegate(.openArchive)))))))
+
+        #expect(store.state.lists.path.count == 1)
+        guard case let .taskArchive(archive) = store.state.lists.path.last else {
             Issue.record("expected the archive on the stack")
             return
         }
@@ -723,8 +839,8 @@ struct ContributionsNavigationTests {
 
         await store.send(.home(.delegate(.openContributions)))
 
-        #expect(store.state.homePath.count == 1)
-        guard case let .contributions(contributions) = store.state.homePath.first else {
+        #expect(store.state.today.path.count == 1)
+        guard case let .contributions(contributions) = store.state.today.path.first else {
             Issue.record("expected the contributions screen on the stack")
             return
         }
@@ -1331,19 +1447,6 @@ struct DinnerTests {
         #expect(reopened.source == .custom)
         #expect(reopened.customTitle == "Leftovers")
     }
-
-    @Test("Only today's plan is tonight's dinner")
-    func tonightIsToday() {
-        let today = MealPlan(id: "m1", kind: .out, cuisine: .turkish, date: MealDate.today)
-        let tomorrow = MealPlan(id: "m2", kind: .cook, date: "2099-01-01")
-
-        var state = HomeFeature.State(homeID: "h1")
-        state.meals = [today, tomorrow]
-        #expect(state.tonight?.id == "m1")
-
-        state.meals = [tomorrow]
-        #expect(state.tonight == nil)
-    }
 }
 
 @MainActor
@@ -1497,12 +1600,12 @@ struct ShoppingTests {
         var shopping = ShoppingFeature.State(homeID: "h1")
         shopping.pendingDeletion = Self.milk
 
-        var hub = HubFeature.State(homeID: "h1")
-        hub.path.append(.shopping(shopping))
-        let id = hub.path.ids[0]
+        var stack = RouteStack.State()
+        stack.path.append(.shopping(shopping))
+        let id = stack.path.ids[0]
 
-        let store = TestStore(initialState: hub) {
-            HubFeature()
+        let store = TestStore(initialState: stack) {
+            RouteStack()
         } withDependencies: {
             $0.shopping.remove = { itemID in removed.withValue { $0.append(itemID) } }
         }
@@ -2591,61 +2694,179 @@ struct SavedRecipeTests {
 }
 
 @MainActor
-@Suite("Hub navigation")
-struct HubNavigationTests {
+@Suite("Tab navigation")
+struct TabNavigationTests {
 
-    private static func hubWithRecipesOpen() -> HubFeature.State {
-        var state = HubFeature.State(homeID: "h1")
+    private static func main(segments: [TabGroup: HubModule] = [:]) -> MainFeature.State {
+        MainFeature.State(
+            homeID: "h1",
+            home: Home(id: "h1", name: "The Nest", members: ["me", "you"]),
+            user: User(id: "me", name: "Ada"),
+            segments: segments
+        )
+    }
+
+    @Test("Every module lives in exactly one group, and every group has a module")
+    func everyModuleHasOneHome() {
+        for module in HubModule.allCases {
+            #expect(TabGroup.allCases.filter { $0.modules.contains(module) }.count == 1)
+        }
+        #expect(TabGroup.allCases.allSatisfy { !$0.modules.isEmpty })
+        let state = Self.main()
+        #expect(state.lists.segments.ids.elements == [.tasks, .shopping, .notes])
+        #expect(state.plans.segments.ids.elements == [.calendar, .recipes, .movies])
+        #expect(state.house.segments.ids.elements == [.finance, .maintenance])
+    }
+
+    @Test("A module is a tab switch to its segment, back to the root")
+    func moduleSwitchesTabAndSegment() async {
+        var state = Self.main(segments: [.lists: .tasks])
+        state.lists.path.append(.taskArchive(TaskArchiveFeature.State(homeID: "h1")))
+        let store = TestStore(initialState: state) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.home(.delegate(.openShoppingList)))
+        #expect(store.state.selectedTab == .lists)
+        #expect(store.state.lists.selected == .shopping)
+        // The list is what was asked for, not whatever was left on top of it.
+        #expect(store.state.lists.path.isEmpty)
+        #expect(store.state.today.path.isEmpty)
+    }
+
+    @Test("A specific thing opens where the person already is, once")
+    func specificThingPushesInPlace() async {
+        let store = TestStore(initialState: Self.main()) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.home(.delegate(.openIssue("i1"))))
+        #expect(store.state.selectedTab == .today)
+        guard case .issues = store.state.today.path.last else {
+            Issue.record("expected the problem on Today's stack")
+            return
+        }
+
+        // Asking again does not stack a second copy.
+        await store.send(.home(.delegate(.openIssue("i1"))))
+        #expect(store.state.today.path.count == 1)
+    }
+
+    @Test("A segment picked is kept, and is where the tab opens next time")
+    func segmentIsRemembered() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            let store = TestStore(initialState: Self.main()) { MainFeature() }
+            store.exhaustivity = .off(showSkippedAssertions: false)
+
+            await store.send(.plans(.segmentPicked(.movies)))
+            #expect(store.state.plans.selected == .movies)
+            #expect(TabSegments.stored[.plans] == .movies)
+            #expect(MainFeature.State(homeID: "h1").plans.selected == .movies)
+        }
+    }
+
+    @Test("Stored segments land in their own group, whatever was stored")
+    func segmentsAreSanitised() {
+        #expect(TabSegments.parse("") == [.lists: .tasks, .plans: .calendar, .house: .finance])
+        // A module in the wrong slot, a name a later build retired, and a
+        // second choice for the same group: each lands where it belongs or is
+        // skipped.
+        #expect(TabSegments.parse("movies,gone,notes,shopping") == [.lists: .notes, .plans: .movies, .house: .finance])
+    }
+
+    @Test("A request from Messages opens on the tab that owns its subject")
+    func requestFromMessagesOpensOnItsOwner() async {
+        var state = Self.main()
+        state.selectedTab = .messages
+        let store = TestStore(initialState: state) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.now(.delegate(.openMovieNight)))
+        #expect(store.state.selectedTab == .plans)
+        guard case .movieNight = store.state.plans.path.last else {
+            Issue.record("expected the movie game on Plans")
+            return
+        }
+    }
+
+    @Test("House's counters button pushes At a glance on House")
+    func statsFromHouse() async {
+        let store = TestStore(initialState: Self.main()) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.house(.statsTapped))
+        await store.receive(\.house.delegate)
+        guard case .stats = store.state.house.path.last else {
+            Issue.record("expected the counters on House's stack")
+            return
+        }
+    }
+
+    @Test("Tonight reaches Today and the top of Meals")
+    func tonightIsHandedDown() async {
+        let plan = MealPlan(id: "m1", kind: .cook, title: "Menemen", date: MealDate.today)
+        let store = TestStore(initialState: Self.main()) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.now(.mealsUpdated([plan])))
+        #expect(store.state.homeTab.tonight == plan)
+        guard case let .recipes(recipes) = store.state.plans.segments[id: .recipes]?.screen else {
+            Issue.record("expected Meals in Plans")
+            return
+        }
+        #expect(recipes.tonight == plan)
+    }
+}
+
+@MainActor
+@Suite("Recipe to shopping hand-off")
+struct RecipeHandoffTests {
+
+    private static func stackWithRecipesOpen() -> RouteStack.State {
+        var state = RouteStack.State()
         state.path.append(.recipes(RecipesFeature.State(homeID: "h1")))
         return state
     }
 
-    @Test("Going to the list from a recipe unwinds the stack before pushing")
-    func recipeHandoffUnwindsFirst() async {
+    @Test("Going to the list from a recipe waits out the dismissal first")
+    func recipeHandoffWaits() async {
         let clock = TestClock()
-        let state = Self.hubWithRecipesOpen()
+        let state = Self.stackWithRecipesOpen()
         let id = state.path.ids[0]
 
-        let store = TestStore(initialState: state) { HubFeature() } withDependencies: {
+        let store = TestStore(initialState: state) { RouteStack() } withDependencies: {
             $0.continuousClock = clock
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
         await store.send(.path(.element(id: id, action: .recipes(.delegate(.openShoppingList)))))
-        // Popping and pushing together is what left the recipe on screen while
-        // the state said "shopping", so nothing may be pushed yet.
-        #expect(store.state.path.isEmpty)
+        // Dismissing and moving the stack together is what left the recipe on
+        // screen while the state said "shopping", so nothing may happen yet.
+        await store.skipReceivedActions()
 
         await clock.advance(by: .milliseconds(350))
-        await store.receive(\.showShoppingList)
-        #expect(store.state.path.count == 1)
-        guard case .shopping = store.state.path.first else {
-            Issue.record("expected the shopping list on the stack")
-            return
-        }
+        await store.receive(\.deferredOpen)
+        await store.receive(\.delegate)
     }
 
-    @Test("Tapping another module mid-unwind wins over the deferred push")
+    @Test("Going somewhere else mid-unwind wins over the deferred hand-off")
     func handoffDoesNotYankYouBack() async {
         let clock = TestClock()
-        let state = Self.hubWithRecipesOpen()
+        let state = Self.stackWithRecipesOpen()
         let id = state.path.ids[0]
 
-        let store = TestStore(initialState: state) { HubFeature() } withDependencies: {
+        let store = TestStore(initialState: state) { RouteStack() } withDependencies: {
             $0.continuousClock = clock
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
         await store.send(.path(.element(id: id, action: .recipes(.delegate(.openShoppingList)))))
-        await store.send(.moduleTapped(.movies))
+        await store.send(.path(.push(id: StackElementID(integerLiteral: 99), state: .movies(MoviesFeature.State(homeID: "h1")))))
 
         await clock.advance(by: .milliseconds(350))
-        await store.receive(\.showShoppingList)
-        #expect(store.state.path.count == 1)
-        guard case .movies = store.state.path.first else {
-            Issue.record("the person went to Movies; the list must not pull them away")
-            return
-        }
+        await store.receive(\.deferredOpen)
+        // The person went to Movies; the list must not pull them away.
+        #expect(store.state.path.count == 2)
     }
 }
 
@@ -5497,40 +5718,153 @@ struct DinnerOccasionTests {
 }
 
 @MainActor
-@Suite("Hub module counts")
-struct HubCountsTests {
+@Suite("Today's layout")
+struct TodayLayoutTests {
 
-    @Test("A tile that has not answered is pending, not zero")
-    func countsStartPending() async {
-        let state = HubFeature.State(homeID: "h1")
-        // Every count reads 0 before anything arrives, which is also what an
-        // empty household reads. The tiles have to be able to tell those apart
-        // or the Hub opens stating, as fact, that there is nothing anywhere.
-        #expect(state.shoppingCount == 0)
-        #expect(state.loaded.isEmpty)
+    @Test("A stored layout keeps its order and fills in anything it never mentioned")
+    func layoutParsing() {
+        let layout = TodayLayout(raw: "tasks,-tonight,+stats,gone,tasks")
+        #expect(layout.order.prefix(3) == [.tasks, .tonight, .stats])
+        #expect(layout.visibility(of: .tonight) == .off)
+        #expect(layout.visibility(of: .stats) == .always)
+        #expect(layout.visibility(of: .tasks) == .automatic)
+        // Every section is still there — a stored value can turn one off,
+        // never lose it.
+        #expect(Set(layout.order) == Set(TodaySection.allCases))
+        #expect(TodayLayout(raw: layout.raw) == layout)
     }
 
-    @Test("Each subscription settles its own tile and leaves the rest waiting")
-    func countsSettleIndependently() async {
-        let store = TestStore(initialState: HubFeature.State(homeID: "h1")) {
-            HubFeature()
-        }
+    @Test("Everything starts Automatic, with what is wrong first")
+    func defaultIsAutomatic() {
+        let layout = TodayLayout.default
+        #expect(TodaySection.allCases.allSatisfy { layout.visibility(of: $0) == .automatic })
+        #expect(layout.order.first == .needsYou)
+        #expect(layout.shown.count == TodaySection.allCases.count)
+    }
 
-        await store.send(.countsUpdated(recipes: 4)) {
-            $0.recipeCount = 4
-            $0.loaded.insert(.recipes)
-        }
-        // The other four have said nothing, so they are still pending rather
-        // than reporting the zero they were initialised with.
-        #expect(!store.state.loaded.contains(.shopping))
-        #expect(!store.state.loaded.contains(.billsDue))
+    @Test("Needs you holds urgent or late problems and bills due within three days")
+    func needsYouFilters() async {
+        let soon = Bill(id: "b1", title: "Power", amount: 100,
+                        dueDate: Timestamp(Date().addingTimeInterval(24 * 3600)))
+        let later = Bill(id: "b2", title: "Rent", amount: 100,
+                         dueDate: Timestamp(Date().addingTimeInterval(20 * 24 * 3600)))
+        let leak = HouseIssue(id: "i1", title: "Leak", severity: .urgent)
+        let squeak = HouseIssue(id: "i2", title: "Squeak", severity: .minor)
+        let fixed = HouseIssue(id: "i3", title: "Old leak", severity: .urgent, status: .fixed)
 
-        await store.send(.countsUpdated(shopping: 0)) {
-            $0.loaded.insert(.shopping)
+        let store = TestStore(initialState: HomeFeature.State(homeID: "h1")) { HomeFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.billsUpdated([later, soon]))
+        #expect(store.state.billsDue.map(\.id) == ["b1"])
+
+        await store.send(.issuesUpdated([squeak, leak, fixed]))
+        #expect(store.state.urgentIssues.map(\.id) == ["i1"])
+        #expect(store.state.needs.count == 2)
+    }
+}
+
+@MainActor
+@Suite("Customize")
+struct CustomizeTests {
+
+    @Test("Done writes the choices, and Today reads them at once")
+    func doneWrites() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            var state = MainFeature.State(homeID: "h1", user: User(id: "me", name: "Ada"))
+            state.customize = CustomizeFeature.State()
+            let store = TestStore(initialState: state) { MainFeature() }
+            store.exhaustivity = .off(showSkippedAssertions: false)
+
+            await store.send(.customize(.presented(.visibilityPicked(.stats, .always))))
+            await store.send(.customize(.presented(.visibilityPicked(.movieNight, .off))))
+            await store.send(.customize(.presented(.doneTapped)))
+            await store.receive(\.customize.presented.delegate)
+
+            #expect(store.state.customize == nil)
+            #expect(store.state.homeTab.layout.visibility(of: .stats) == .always)
+            #expect(!store.state.homeTab.layout.shown.contains(.movieNight))
         }
-        // Zero is an answer. Having arrived, the tile stops waiting and shows it.
-        #expect(store.state.loaded.contains(.shopping))
-        #expect(store.state.shoppingCount == 0)
+    }
+
+    @Test("Cancel writes nothing")
+    func cancelWritesNothing() async {
+        await withDependencies {
+            $0.defaultAppStorage = .inMemory
+        } operation: {
+            let store = TestStore(initialState: CustomizeFeature.State()) { CustomizeFeature() }
+            store.exhaustivity = .off(showSkippedAssertions: false)
+            await store.send(.visibilityPicked(.tasks, .off))
+            await store.send(.cancelTapped)
+
+            @Shared(.todayLayoutRaw) var raw: String
+            #expect(TodayLayout(raw: raw) == .default)
+        }
+    }
+}
+
+@MainActor
+@Suite("House and Lists extras")
+struct GroupExtrasTests {
+
+    private static func main() -> MainFeature.State {
+        MainFeature.State(
+            homeID: "h1",
+            home: Home(id: "h1", name: "The Nest", members: ["me", "you"]),
+            user: User(id: "me", name: "Ada"),
+            segments: [:]
+        )
+    }
+
+    @Test("The movie game opens from the top of Movies, on Plans")
+    func movieNightFromMovies() async {
+        let store = TestStore(initialState: Self.main()) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.plans(.segments(.element(id: .movies, action: .screen(.movies(.movieNightTapped))))))
+        await store.skipReceivedActions()
+        guard case .movieNight = store.state.plans.path.last else {
+            Issue.record("expected the game on Plans' stack")
+            return
+        }
+    }
+
+    @Test("Unread from At a glance switches to Messages")
+    func statsToMessages() async {
+        var state = Self.main()
+        state.house.path.append(.stats(HouseStatsFeature.State(homeID: "h1")))
+        let id = state.house.path.ids[0]
+        let store = TestStore(initialState: state) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.house(.path(.element(id: id, action: .stats(.tileTapped(.messages))))))
+        await store.skipReceivedActions()
+        #expect(store.state.selectedTab == .messages)
+    }
+
+    @Test("Who does what opens from the Tasks segment too")
+    func contributionsFromTasks() async {
+        let store = TestStore(initialState: Self.main()) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.lists(.segments(.element(id: .tasks, action: .screen(.tasks(.contributionsTapped))))))
+        await store.skipReceivedActions()
+        guard case .contributions = store.state.lists.path.last else {
+            Issue.record("expected the breakdown on Lists")
+            return
+        }
+    }
+
+    @Test("Meals' tonight card asks the tab bar for the dinner sheet")
+    func mealsOpensTheDinnerSheet() async {
+        let store = TestStore(initialState: Self.main()) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.plans(.segments(.element(id: .recipes, action: .screen(.recipes(.tonightTapped))))))
+        await store.skipReceivedActions()
+        #expect(store.state.now.dinner != nil)
     }
 }
 

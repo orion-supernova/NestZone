@@ -245,6 +245,13 @@ public struct SettingsView: View {
 
     private var appearanceSection: some View {
         Section {
+            Button { store.send(.customizeTapped) } label: {
+                Label { Text(L10n.settingsCustomizeTitle) } icon: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+            }
+            .accessibilityIdentifier("SettingsCustomize")
+
             Picker(selection: Binding(
                 get: { store.theme },
                 set: { store.send(.themeSelected($0)) }
