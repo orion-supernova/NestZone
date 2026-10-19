@@ -1,0 +1,1660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NestZone Companion Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="duck.css">
+<style>
+/* Layout: one reading column for the argument; mockups, tables, the chart and the catalog break out to full width. */
+:root {
+  --bg: #F5F4F9; --surface: #FFFFFF; --fg: #18151F; --muted: #5F5973; --line: #E2DEEC;
+  --accent: #6A3FDB; --accent-soft: #EEE8FD; --leaf: #2E8B57; --leaf-soft: #E3F4EA; --warn: #B4531B; --gold: #9A6B00; --gold-soft: #FBF1D9;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --app-ink: #F3F0FA; --app-dim: rgba(235,232,245,.62); --app-faint: rgba(235,232,245,.4);
+  --app-glass: rgba(255,255,255,.075); --app-edge: rgba(255,255,255,.12); --app-violet: #8B5CF6; --app-gold: #FFD27A;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #100E16; --surface: #1A1722; --fg: #EDEAF5; --muted: #A49EB7; --line: #2B2638;
+    --accent: #A68BFF; --accent-soft: #241D3A; --leaf: #5FD394; --leaf-soft: #15291F; --warn: #F0965E; --gold: #F2C25B; --gold-soft: #2A2214; color-scheme: dark; }
+}
+* { box-sizing: border-box }
+[hidden] { display: none !important; }
+html { scroll-padding-top: 68px; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto } }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 44px max(16px, env(safe-area-inset-right)) 120px max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 72px; }
+.col { max-width: 760px; display: flex; flex-direction: column; gap: 16px; }
+.wide { display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(36px, 6.4vw, 62px); line-height: 1.0; font-weight: 800; }
+h2 { font-size: clamp(25px, 3.4vw, 34px); line-height: 1.1; font-weight: 700; }
+h3 { font-size: 19px; line-height: 1.25; font-weight: 700; }
+p { margin: 0 }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lead { font-size: 19px; color: var(--muted); max-width: 66ch; }
+.muted { color: var(--muted) }
+code { font-family: var(--mono); font-size: .86em; background: var(--accent-soft); padding: 1px 5px; border-radius: 5px; }
+a { color: var(--accent) }
+button.act { font: 600 15px var(--body); border-radius: 999px; padding: 10px 18px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+button.act.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.act:focus-visible, .chip:focus-visible, .tabbtn:focus-visible, .catbtn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* What changed */
+.changes { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 22px; display: flex; flex-direction: column; gap: 10px; }
+.changes ul { margin: 0; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 6px 28px; font-size: 15px; }
+
+/* Numbers strip */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); border-top: 1px solid var(--line); }
+.fact { padding: 16px 18px 16px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.fact b { font-family: var(--display); font-size: 42px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 14px; color: var(--muted) }
+
+/* Demo */
+.demo { display: grid; grid-template-columns: 340px 1fr; gap: 40px; align-items: center; }
+@media (max-width: 760px) { .demo { grid-template-columns: 1fr; justify-items: center } }
+.controls { display: flex; flex-direction: column; gap: 14px; }
+.callouts { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.callouts li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; font-size: 15px; }
+.callouts li::before { content: attr(data-n); font-family: var(--mono); font-size: 12px; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; margin-top: 1px; }
+
+/* Phones */
+.phones { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 32px 24px; justify-items: center; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 12px; width: 320px; max-width: 100%; }
+figcaption { font-size: 14px; color: var(--muted) }
+figcaption strong { color: var(--fg); display: block; font-family: var(--display); font-size: 17px; }
+.phone { width: 320px; max-width: 100%; height: 676px; border-radius: 50px; padding: 8px; background: #050407; box-shadow: 0 0 0 1px #2c2838, 0 24px 60px -24px rgba(40,20,90,.45); }
+.screen { position: relative; height: 100%; border-radius: 42px; overflow: hidden; color: var(--app-ink);
+  font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; font-size: 12.5px; line-height: 1.3;
+  background: radial-gradient(110% 55% at 15% 0%, #2B1754 0%, #150D26 48%, #09080D 100%); }
+.sb { position: absolute; inset: 0 0 auto; height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-weight: 600; font-size: 12px; }
+.island { position: absolute; top: 9px; left: 50%; width: 88px; height: 25px; margin-left: -44px; background: #000; border-radius: 20px; z-index: 3; }
+.nav { position: absolute; top: 44px; left: 12px; right: 12px; height: 34px; display: flex; align-items: center; justify-content: space-between; z-index: 2; }
+.nav .t { font-weight: 600; font-size: 13px; }
+.av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; flex: none; background: linear-gradient(135deg, #F59E0B, #EC4899); }
+.av.b { background: linear-gradient(135deg, #06B6D4, #6366F1) } .av.c { background: linear-gradient(135deg, #34D399, #0EA5E9) } .av.d { background: linear-gradient(135deg, #F472B6, #8B5CF6) }
+.bell { width: 30px; height: 30px; border-radius: 50%; background: var(--app-glass); border: 1px solid var(--app-edge); }
+.body { position: absolute; top: 84px; left: 0; right: 0; bottom: 0; padding: 0 14px; display: flex; flex-direction: column; gap: 12px; }
+.eb { font-size: 11px; font-weight: 600; color: var(--app-dim); }
+.glance { font-size: 18px; font-weight: 800; line-height: 1.18; }
+.scene { position: relative; border-radius: 26px; overflow: hidden; background: var(--app-glass); border: 1px solid var(--app-edge); }
+.scene iframe { display: block; width: 100%; border: 0; }
+.scene .cap { padding: 4px 12px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.scene .cap b { font-size: 13px } .scene .cap span { font-size: 10.5px; color: var(--app-dim) }
+.drops { display: flex; gap: 3px } .drops i { width: 9px; height: 11px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #7cc8ff; display: inline-block; }
+.drops i.off { background: rgba(255,255,255,.18) }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; background: var(--app-glass); border: 1px solid var(--app-edge); font-size: 11px; font-weight: 600; }
+.care { position: absolute; right: 10px; top: 10px; }
+.lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--app-faint); margin-bottom: -6px; }
+.row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 22px; background: var(--app-glass); border: 1px solid var(--app-edge); }
+.row b { font-weight: 600 } .row small { display: block; font-size: 10px; color: var(--app-dim) }
+.tick { width: 18px; height: 18px; border-radius: 50%; border: 1.6px solid var(--app-faint); flex: none; }
+.shelf { display: flex; gap: 12px; flex-wrap: wrap; font-size: 10.5px; color: #B79CFF; font-weight: 600; }
+.strip { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 22px; background: var(--app-glass); border: 1px solid var(--app-edge); }
+.strip img { width: 44px; height: 44px; object-fit: cover; object-position: 50% 70%; border-radius: 16px; background: rgba(255,255,255,.05); }
+.strip .t { flex: 1; min-width: 0 } .strip b { font-size: 12.5px } .strip small { display: block; font-size: 10px; color: var(--app-dim) }
+.hero { border-radius: 24px; padding: 13px; display: flex; flex-direction: column; gap: 8px; background: rgba(255,90,95,.13); border: 1px solid rgba(255,90,95,.32); }
+.hero .k { font-size: 9.5px; font-weight: 800; letter-spacing: .07em; color: #FF8A8E; text-transform: uppercase; }
+.dock { position: absolute; left: 14px; right: 14px; bottom: 66px; height: 40px; border-radius: 22px; background: rgba(40,32,58,.82); border: 1px solid var(--app-edge); display: flex; align-items: center; gap: 9px; padding: 0 6px 0 14px; color: var(--app-dim); z-index: 2; }
+.dock > span:first-child { flex: 1 } .plus { width: 30px; height: 30px; border-radius: 50%; background: var(--app-violet); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 18px; }
+.tabbar { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 48px; border-radius: 26px; background: rgba(30,25,42,.86); border: 1px solid var(--app-edge); display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 4px; font-size: 8.5px; color: var(--app-dim); text-align: center; z-index: 2; }
+.tabbar .on { color: #B79CFF; background: rgba(139,92,246,.16); border-radius: 20px; padding: 10px 0; }
+.glow { animation: glow 2.4s ease-in-out infinite; }
+@keyframes glow { 50% { box-shadow: 0 0 0 1px rgba(255,210,122,.5), 0 0 34px rgba(255,210,122,.35); } }
+.ready { position: absolute; left: 10px; right: 10px; top: 10px; display: flex; justify-content: space-between; align-items: center; padding: 8px 8px 8px 12px; border-radius: 18px; background: rgba(20,12,40,.72); border: 1px solid rgba(255,210,122,.45); font-size: 11px; font-weight: 700; color: var(--app-gold); }
+.ready i { font-style: normal; background: var(--app-gold); color: #2a1a00; padding: 5px 10px; border-radius: 12px; }
+.wallet { display: flex; gap: 6px; } .wallet .pill { padding: 5px 9px; }
+.shopgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sitem { border-radius: 18px; background: var(--app-glass); border: 1px solid var(--app-edge); padding: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.sitem .g { font-size: 26px; line-height: 1; } .sitem b { font-size: 11.5px } .sitem small { font-size: 10px; color: var(--app-dim) }
+.sitem .price { margin-top: 2px; font-size: 10.5px; font-weight: 700; padding: 4px 8px; border-radius: 10px; background: rgba(255,255,255,.1); }
+.sitem.prem { background: linear-gradient(160deg, rgba(255,210,122,.16), rgba(139,92,246,.14)); border-color: rgba(255,210,122,.35); }
+.seg { display: flex; gap: 4px; padding: 3px; border-radius: 14px; background: var(--app-glass); border: 1px solid var(--app-edge); } .seg span { flex: 1; text-align: center; padding: 5px; border-radius: 11px; font-size: 10.5px; font-weight: 600; color: var(--app-dim) } .seg span.on { background: rgba(255,255,255,.14); color: var(--app-ink) }
+
+/* Ceremony */
+.ceremony { position: absolute; inset: 0; background: rgba(6,3,16,.0); transition: background .8s; z-index: 4; pointer-events: none; }
+.ceremony.on { background: rgba(6,3,16,.88); pointer-events: auto; }
+.cm { position: absolute; left: 18px; right: 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; opacity: 0; transform: translateY(8px); transition: opacity .6s, transform .6s; }
+.cm.show { opacity: 1; transform: none; }
+.cm-title { font: 800 21px/1.15 ui-rounded, system-ui; } .cm-sub { font-size: 12px; color: var(--app-dim) }
+.cm.cm-row { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.cm-lapse img { width: 38px; height: 44px; object-fit: cover; object-position: 50% 75%; border-radius: 8px; background: rgba(255,255,255,.06); opacity: 0; transform: scale(.7); transition: .35s; }
+.cm-lapse img.show { opacity: 1; transform: none; }
+.cm-lapse small { display: block; font-size: 8px; color: var(--app-faint); }
+.cm-ring { display: flex; justify-content: center } .cm-ring .av { margin-left: -6px; border: 2px solid #120a24; width: 32px; height: 32px; }
+.polaroid { position: absolute; top: 24%; left: 50%; margin-left: -75px; width: 150px; background: #f7f3ea; padding: 8px 8px 26px; border-radius: 6px; box-shadow: 0 16px 40px rgba(0,0,0,.5); color: #2a2433; font-size: 11px; font-weight: 700; transform: rotate(-4deg) scale(.6); opacity: 0; transition: transform .9s cubic-bezier(.2,.9,.3,1.3), opacity .6s; }
+.polaroid img { width: 100%; display: block; border-radius: 3px; background: #1b1030; }
+.polaroid.show { opacity: 1; transform: rotate(-4deg) scale(1); }
+.polaroid.away { transform: translate(110px, 300px) rotate(18deg) scale(.15); opacity: 0; transition: transform 1s ease-in, opacity 1s ease-in; }
+.cm-next span { padding: 9px 16px; border-radius: 16px; font-weight: 700; font-size: 12px; background: var(--app-glass); border: 1px solid var(--app-edge); }
+.cm-next span.p { background: var(--app-violet); border-color: var(--app-violet); }
+.coin { color: var(--app-gold); font-weight: 800; }
+.petal { position: absolute; top: -12px; width: 9px; height: 6px; border-radius: 50%; opacity: .9; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(700px) rotate(540deg); opacity: .2 } }
+@media (prefers-reduced-motion: reduce) { .cm, .cm-lapse img, .polaroid { transition: opacity .3s; transform: none !important } .petal, .glow { animation: none } }
+
+/* Stages, moods, album */
+.stages { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; overflow-x: auto; }
+@media (max-width: 760px) { .stages { grid-template-columns: repeat(7, 120px) } }
+.stage { background: #150D26; border-radius: 16px; padding: 6px 6px 10px; display: flex; flex-direction: column; gap: 6px; color: var(--app-ink); }
+.stage img { width: 100%; aspect-ratio: 34/36; object-fit: cover; border-radius: 12px; background: radial-gradient(110% 80% at 30% 0%, #2B1754, #150D26); }
+.stage b { font-size: 13px; padding: 0 4px; } .stage span { font-size: 11.5px; color: var(--app-dim); padding: 0 4px; font-family: var(--mono); }
+.moods { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.mood { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+.mood img { width: 100%; height: 190px; object-fit: cover; object-position: 50% 80%; background: radial-gradient(110% 80% at 30% 0%, #2B1754, #150D26); }
+.mood div { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 4px; font-size: 14.5px; }
+.mood div b { font-family: var(--display); font-size: 17px; }
+.albumgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.card { background: #f7f3ea; color: #2a2433; border-radius: 8px; padding: 6px 6px 10px; display: flex; flex-direction: column; gap: 3px; box-shadow: 0 8px 18px rgba(0,0,0,.35); }
+.card:nth-child(odd) { transform: rotate(-1.5deg) } .card:nth-child(even) { transform: rotate(1.2deg) }
+.card img { width: 100%; aspect-ratio: 1; object-fit: cover; object-position: 50% 70%; border-radius: 4px; background: radial-gradient(110% 80% at 30% 0%, #2B1754, #150D26); }
+.card b { font-size: 11.5px } .card small { font-size: 9px; color: #6b6377 }
+.empty-slot { border: 1.5px dashed rgba(255,255,255,.25); border-radius: 8px; display: grid; place-items: center; font-size: 10px; color: var(--app-dim); text-align: center; padding: 10px; }
+
+/* Tables, boxes, chart, diagram */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; white-space: nowrap; }
+tr:last-child td { border-bottom: 0 }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.min640 { min-width: 640px } .min860 { min-width: 860px }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.box ul, .box ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 28px; margin: 0; padding: 0; list-style: none; counter-reset: l; }
+.lessons li { border-top: 1px solid var(--line); padding: 14px 0; display: flex; flex-direction: column; gap: 4px; font-size: 15px; counter-increment: l; }
+.lessons li b { font-family: var(--display); font-size: 17px; }
+.lessons li b::before { content: counter(l) ". "; color: var(--accent); }
+.lessons li span { color: var(--muted); font-size: 14px; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; display: inline-block; white-space: nowrap; }
+.tag.keep { background: var(--leaf-soft); color: var(--leaf) } .tag.avoid { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn) } .tag.gold { background: var(--gold-soft); color: var(--gold) } .tag.violet { background: var(--accent-soft); color: var(--accent) }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 8px; overflow-x: auto; position: relative; }
+.chart svg { display: block; min-width: 640px; width: 100%; height: auto; }
+.chart text { font-family: var(--body); fill: var(--muted); font-size: 12px; }
+.chart .lab { fill: var(--fg); font-size: 13px; }
+.chart .grid line { stroke: var(--line); }
+.chart .rng { stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+.chart .med { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.chart .hit { fill: transparent; }
+.chart .floor { stroke: var(--warn); stroke-dasharray: 4 4; }
+.chart .stress text.lab { fill: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 13px; padding: 7px 10px; border-radius: 8px; white-space: nowrap; opacity: 0; transition: opacity .12s; }
+pre { margin: 0; overflow-x: auto; background: #120F1A; color: #E8E3F5; border-radius: 14px; padding: 16px 18px; font: 12.5px/1.55 var(--mono); }
+.phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+.phase { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.phase .when { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+.phase ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+.decided { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px 24px; margin: 0; padding: 0; list-style: none; }
+.decided li { display: grid; grid-template-columns: 24px 1fr; gap: 8px; font-size: 15px; border-top: 1px solid var(--line); padding-top: 10px; }
+.decided li::before { content: "✓"; color: var(--leaf); font-weight: 700; }
+.decided li.yours::before { content: "★"; color: var(--gold); }
+.decide { display: flex; flex-direction: column; gap: 12px; counter-reset: q; }
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; display: grid; gap: 6px; }
+.q h3::before { counter-increment: q; content: counter(q) ". "; color: var(--accent); }
+.q .rec { font-size: 15px; } .q .rec b { color: var(--leaf); font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-right: 6px; }
+.q .alt { font-size: 14px; color: var(--muted); }
+details { font-size: 14px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.sources { columns: 2 280px; font-size: 13px; margin: 10px 0 0; padding-left: 18px; }
+.sources li { break-inside: avoid; margin-bottom: 4px; word-break: break-all; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.diagram rect { fill: var(--bg); stroke: var(--line); }
+.diagram rect.key { fill: var(--accent-soft); stroke: var(--accent); }
+.diagram rect.app { fill: var(--leaf-soft); stroke: var(--leaf); }
+.diagram rect.money { fill: var(--gold-soft); stroke: var(--gold); }
+.diagram text { font-family: var(--body); font-size: 12.5px; fill: var(--fg); }
+.diagram text.s { font-size: 11px; fill: var(--muted); font-family: var(--mono); }
+.diagram path { fill: none; stroke: var(--muted); stroke-width: 1.4; }
+.names { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.name { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.name b { font-family: var(--display); font-size: 26px; line-height: 1.05; }
+.name .tl { font-size: 15px; } .name .tr { font-size: 14px; color: var(--muted); font-style: italic; } .name .why { font-size: 13.5px; color: var(--muted); }
+.name.pick { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+/* Q&A, ownership, pets */
+.faq { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.faq .box h3 { font-size: 17px; }
+.faq .box p { font-size: 15px; }
+.faq .box a { font-size: 14px; }
+.story { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; counter-reset: st; margin: 0; padding: 0; list-style: none; }
+.story li { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14.5px; counter-increment: st; }
+.story li::before { content: counter(st); font-family: var(--mono); font-size: 12px; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 22px; height: 22px; display: inline-grid; place-items: center; margin-right: 8px; }
+.petdemo { display: grid; grid-template-columns: 320px 1fr; gap: 32px; align-items: center; }
+@media (max-width: 760px) { .petdemo { grid-template-columns: 1fr; } }
+.petstage { position: relative; height: 330px; border-radius: 28px; overflow: hidden; background: radial-gradient(110% 80% at 30% 0%, #2B1754, #150D26 70%); border: 1px solid #2c2838; display: grid; place-items: end center; padding-bottom: 30px; color: var(--app-ink); }
+.petstage svg { width: 230px; height: 230px; overflow: visible; }
+.petstage .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 70px; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.05)); }
+.petstage .lab { position: absolute; left: 16px; top: 14px; font: 600 13px ui-rounded, system-ui; } .petstage .lab small { display: block; font-weight: 500; color: var(--app-dim); }
+.petrow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; overflow-x: auto; }
+@media (max-width: 760px) { .petrow { grid-template-columns: repeat(7, 110px) } }
+.petrow .stage svg { width: 100%; height: 110px; overflow: visible; }
+.range { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; font-size: 14px; color: var(--muted); }
+.range input { accent-color: var(--accent); }
+
+/* Catalog */
+.catbtn { position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 20; font: 700 15px var(--body); background: var(--accent); color: #fff; border: 0; border-radius: 999px; padding: 13px 20px 13px 16px; box-shadow: 0 12px 30px -8px rgba(80,40,180,.55); cursor: pointer; display: flex; gap: 8px; align-items: center; }
+.catbtn span { font-size: 18px; line-height: 1 }
+dialog#catalog { width: min(1120px, calc(100vw - 24px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--line); border-radius: 22px; background: var(--bg); color: var(--fg); overflow: hidden; }
+dialog#catalog::backdrop { background: rgba(10,6,24,.55); backdrop-filter: blur(4px); }
+.cat-head { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 20px 22px 12px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid var(--line); }
+.cat-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.cat-close { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 50%; width: 38px; height: 38px; font-size: 18px; cursor: pointer; flex: none; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabbtn { font: 600 14px var(--body); padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+.tabbtn[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font: 500 13px var(--body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.cat-body { overflow-y: auto; max-height: calc(100vh - 250px); padding: 18px 22px 26px; }
+.catgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.ccard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+.ccard .art { position: relative; height: 150px; display: grid; place-items: center; overflow: hidden; }
+.ccard .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 58%; }
+.ccard .art .em { font-size: 64px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.ccard .art .badge { position: absolute; left: 8px; top: 8px; font-family: var(--mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: rgba(0,0,0,.45); color: #fff; }
+.ccard .meta { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.ccard .meta b { font-family: var(--display); font-size: 17px; line-height: 1.15; }
+.ccard .meta .trn { font-size: 13px; color: var(--muted); }
+.ccard .meta .per { font-size: 13px; }
+.ccard .meta .foot { margin-top: auto; padding-top: 8px; display: flex; justify-content: space-between; gap: 6px; align-items: center; flex-wrap: wrap; }
+.cat-sum { font-size: 14px; color: var(--muted); }
+.cat-empty { color: var(--muted); padding: 30px 0; text-align: center; }
+/* Menu bar */
+.topnav { position: sticky; top: 0; z-index: 15; background: color-mix(in srgb, var(--bg) 84%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+.topnav div { max-width: 1140px; margin: 0 auto; display: flex; gap: 2px; overflow-x: auto; padding: 9px max(12px, env(safe-area-inset-left)); scrollbar-width: none; }
+.topnav div::-webkit-scrollbar { display: none }
+.topnav a { flex: none; text-decoration: none; color: var(--fg); font: 600 14px var(--body); padding: 7px 12px; border-radius: 999px; }
+.topnav a:hover, .topnav a:focus-visible { background: var(--accent-soft); color: var(--accent); outline: none; }
+.topnav a.hot { background: var(--accent); color: #fff; }
+/* Switches used by the demos */
+.seg2 { align-self: flex-start; display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.seg2 button { font: 600 14px var(--body); border: 0; background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+.seg2 button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.seg2 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.ctl-label { font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: -6px; }
+.duckscene { position: relative; height: 250px; display: grid; place-items: end center; padding-bottom: 18px; background: linear-gradient(180deg, #2a1a4c 0%, #1a1030 100%); transition: filter .6s; overflow: hidden; }
+.duckscene.quiet, .petstage.quiet { filter: saturate(.55) brightness(.82); }
+.duckscene svg { width: 170px; height: 170px; overflow: visible; }
+/* Moods */
+.moodpets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.moodpets div { background: #150D26; border-radius: 16px; padding: 6px 6px 10px; color: var(--app-ink); text-align: center; font: 600 13px ui-rounded, system-ui; }
+.moodpets svg { width: 100%; height: 100px; overflow: visible; }
+.mood .tr { font-size: 13px; color: var(--muted); font-style: italic; }
+.mood ul { margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; display: flex; flex-direction: column; gap: 3px; }
+/* Decorate */
+.decodemo { display: grid; grid-template-columns: 340px 1fr; gap: 40px; align-items: start; }
+@media (max-width: 760px) { .decodemo { grid-template-columns: 1fr; justify-items: center } }
+.decophone { width: 340px; max-width: 100%; border-radius: 50px; padding: 8px; background: #050407; box-shadow: 0 0 0 1px #2c2838, 0 24px 60px -24px rgba(40,20,90,.45); }
+.decophone .screen { height: auto; padding-bottom: 14px; }
+.decophone .nav { position: static; padding: 50px 16px 6px; height: auto; }
+.decophone .nav button { font: 700 13px ui-rounded, system-ui; color: #C4A7FF; background: none; border: 0; cursor: pointer; padding: 4px; }
+.decophone iframe { display: block; width: 100%; height: 330px; border: 0; }
+.tray { margin: 8px 10px 0; border-radius: 24px; background: rgba(255,255,255,.07); border: 1px solid var(--app-edge); padding: 12px 12px 12px; display: flex; flex-direction: column; gap: 10px; min-height: 162px; }
+.tray .th { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.tray .th b { font-size: 13.5px } .tray .th span { font-size: 10.5px; color: var(--app-dim); text-align: right; }
+.titems { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.titem { flex: none; width: 82px; border-radius: 16px; background: rgba(255,255,255,.07); border: 1px solid var(--app-edge); padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--app-ink); font: 600 10.5px ui-rounded, system-ui; cursor: pointer; text-align: center; }
+.titem .g { font-size: 26px; line-height: 1.1 } .titem small { font-size: 9.5px; color: var(--app-dim); font-weight: 600; }
+.titem.on { border-color: #FFD27A; background: rgba(255,210,122,.14); } .titem.on small { color: #FFD27A; }
+.titem.prem small { color: #FFD27A; }
+.titem:focus-visible { outline: 2px solid #C4A7FF; outline-offset: 1px; }
+.tray .empty { font-size: 11.5px; color: var(--app-dim); line-height: 1.45; }
+.preview { font-size: 10.5px; color: #FFD27A; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--app-edge); padding-top: 8px; }
+.preview i { font-style: normal; background: #FFD27A; color: #2a1a00; padding: 5px 10px; border-radius: 10px; font-weight: 800; }
+/* Seasons */
+.scenes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.scenecard { width: auto; margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; gap: 0; }
+.scenecard img { width: 100%; height: 290px; object-fit: cover; object-position: 50% 96%; display: block; background: #1a1030; }
+.scenecard figcaption { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; color: var(--fg); font-size: 14px; }
+.scenecard figcaption b { font-family: var(--display); font-size: 18px; }
+.scenecard ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 13.5px; }
+.cal { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.ev { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.ev .d { font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.ev b { font-family: var(--display); font-size: 16px; } .ev .t { color: var(--muted); font-style: italic; font-size: 13px; }
+.ev.launch { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.ev.free { border-style: dashed; }
+.note { border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 14px 14px 0; padding: 14px 18px; font-size: 15px; display: flex; flex-direction: column; gap: 6px; }
+/* Parts kit */
+.kitfig { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+@media (max-width: 820px) { .kitfig { grid-template-columns: 1fr } }
+.kitfig img { width: 100%; display: block; border-radius: 18px; background: linear-gradient(180deg, #2a1a4c 0%, #1a1030 100%); }
+.kitfig .eq { display: grid; grid-template-columns: 1.5fr auto 1fr; align-items: center; gap: 10px; }
+.kitfig .eq span { font: 800 28px var(--display); color: var(--muted); }
+details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
+.filmstrip { margin: 0; width: auto; display: flex; flex-direction: column; gap: 8px; }
+.filmstrip img { width: 100%; display: block; border-radius: 18px; background: #1a1030; }
+.filmstrip figcaption { font-size: 14px; color: var(--muted); }
+.appshots { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: start; }
+.appshots figure { width: auto; }
+.appshots img { width: 100%; display: block; border-radius: 22px; }
+.families { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.family { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; display: flex; flex-direction: column; gap: 4px; }
+.family b { font-family: var(--display); font-size: 16px; }
+.family .how { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+.teaser { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--muted);stroke:none"/></marker>
+</defs></svg>
+
+<button class="catbtn" id="openCatalog2" aria-haspopup="dialog"><span aria-hidden="true">🌱</span>Catalog</button>
+
+<nav class="topnav" aria-label="Sections"><div>
+  <a href="#answers">Answers</a><a href="#mvp" class="hot">In the app</a><a href="#demo">Live demo</a><a href="#moods">Moods</a><a href="#waking">Waking up</a><a href="#pets">🐤 The duck</a><a href="#decorate">Decorate</a><a href="#seasons">Seasons</a><a href="#coins">House jar</a><a href="#owning">Who owns what</a><a href="#art">Art in code</a><a href="#roadmap">Roadmap</a><a href="#open">Still open</a><a href="duck.html">Duck page ↗</a>
+</div></nav>
+
+<div class="wrap">
+
+  <header class="col">
+    <span class="eyebrow">Nestie · companion plan · version 5 · 20 October 2026</span>
+    <h1>A companion that grows with the house</h1>
+    <p class="lead">Your household picks a plant or a pet. It lives at the top of Today and grows from what the house already does: chores ticked, the shopping bought, dinner decided, a leak fixed, a movie night that happened. In about two weeks it's fully grown: a short ceremony, a card in the album, Leaves for the shop, and the next one chosen together. Everything ships in one release.</p>
+    <div class="btns"><button class="act primary" id="openCatalog" aria-haspopup="dialog">Open the catalog</button><span class="muted" style="font-size:14px">39 companions and 32 decorations at launch</span></div>
+  </header>
+
+  <section class="changes" aria-labelledby="chg">
+    <h3 id="chg">What changed in this version</h3>
+    <ul>
+      <li><b>It's in the app.</b> A working MVP on development builds, at the top of Today. <a href="#mvp">See it</a>.</li>
+      <li><b>Waking up.</b> A thirsty plant revives and a dozing duck wakes, with its own little animation, in the app and in the prototypes.</li>
+      <li><b>Nestie, for now.</b> One string to change if the name (or the app's) changes.</li>
+      <li><b>$0 art.</b> I'm the illustrator, animator and motion designer: everything is drawn and moved in code. No Rive, no paid tools.</li>
+      <li><b>One house jar.</b> Whatever anyone buys goes into the house's jar, and everyone spends from it.</li>
+      <li><b>Every calendar.</b> 49 days from 11 traditions, each house choosing its own, with dates checked against official sources.</li>
+    </ul>
+    <details class="earlier"><summary>What changed in version 4</summary>
+    <ul style="margin-top:8px">
+      <li>Moods you can see from across the room; the duck in the top demo and on its own page; the parts kit explained; decorating in eight spots; seasons.</li>
+    </ul></details>
+    <details class="earlier"><summary>What changed in version 3 (Sparkles and per-person purchases were later replaced by the house jar)</summary>
+    <ul style="margin-top:8px">
+      <li><b>Buying never delays the finale.</b> It counts only what can be had without paying; paid items have their own shelf.</li>
+      <li><b>Purchases belong to a house</b>, like real furniture: two homes means buying twice, or moving it and the old home losing it. They leave with the buyer.</li>
+      <li><b>All paid items are bought with Sparkles</b>, because Apple's one-off purchases can't be bought twice or tied to a house.</li>
+      <li><b>One release</b>, about 10 weeks, instead of two.</li>
+      <li><b>Pets explained and shown</b>: a little duckling below that hatches, grows, hops and naps.</li>
+      <li><b>Fits your subscription plans</b>: the companion stays free, and a house without a subscription grows just as fast.</li>
+      <li><b>Leaves and Sparkles in plain words</b>, and who can actually make the art.</li>
+    </ul></details>
+  </section>
+
+  <section class="wide" id="answers">
+    <div class="col">
+      <span class="eyebrow">Your questions</span>
+      <h2>Short answers first</h2>
+    </div>
+    <div class="faq">
+      <div class="box"><h3>Can it revive or wake up when someone helps?</h3><p>Yes, and it's in the app already. A thirsty plant gets a splash in its soil, its leaves lift a little past where they rest and settle, its buds open and the fallen leaves go. A dozing one has its glass dome lifted off first. A sleepy duck flutters its eyes open, stretches, shakes, and its nightcap flies off. New stages pop with a ring of light.</p><a href="#waking">The wake-up, frame by frame →</a></div>
+      <div class="box"><h3>Nestie for now?</h3><p>Done. The name lives in one string, and nothing else in the code says it (inside, the feature is called "companion"). Renaming it, or the app, later is a one-line change in both languages.</p><a href="#names">Names →</a></div>
+      <div class="box"><h3>You'll be the illustrator and the motion team?</h3><p>Yes, and nothing needs buying. Every tree, the duckling, 40 decorations, every mood and every movement are drawn in code. That costs nothing to license, adds nothing to the download, and can change in a day. The trade-off is a flat, rounded style rather than painted illustration, which suits the glass look anyway.</p><a href="#art">How →</a></div>
+      <div class="box"><h3>One house jar, or separate banks?</h3><p>One jar, your way. Whatever anyone buys goes into the house's jar (Kumbara), everyone spends from it, and the feed says who put in and who spent. It's simpler and it's what a real house does. It changes one earlier rule: nothing leaves with a person any more, because a shared jar has no "mine". I recommend that; it's in Still open for you to confirm.</p><a href="#coins">The jar →</a></div>
+      <div class="box"><h3>All the world's holidays?</h3><p>49 days from 11 traditions: worldwide, Christian (Western and Orthodox), Muslim, Jewish, Hindu, Sikh, Buddhist, East Asian, Persian, Turkish and national days. Most are worked out with the calendars built into iOS. The rest come from India's official holiday list and Drik Panchang, checked one by one. Each house picks its own days, starting from suggestions for its country, and seasons flip south of the equator.</p><a href="#seasons">Every calendar →</a></div>
+      <div class="box"><h3>An MVP to try on the phone?</h3><p>Build and run from Xcode and it's at the top of Today. It only shows on development builds, so TestFlight and App Store builds don't see it. Nothing is sent to the server yet. A Lab lets you grow it, make it thirsty and pretend it's Halloween.</p><a href="#mvp">What's in it →</a></div>
+    </div>
+    <details class="earlier"><summary>Answers from earlier rounds (some since replaced: the house jar instead of Sparkles, code instead of an illustrator and Rive)</summary>
+    <div class="faq">
+      <div class="box"><h3>"Thirsty and happy are barely different"</h3><p>Fixed in version 4: six things change at once, from posture to the soil, plus a water-drop bubble.</p><a href="#moods">The moods →</a></div>
+      <div class="box"><h3>"I can't see the demo duck"</h3><p>It's in the live demo (switch to Duckling), in the menu bar, and on its own page.</p><a href="duck.html">The duck page →</a></div>
+      <div class="box"><h3>Does buying a pack delay the finale?</h3><p>With the old rule, yes: bought pets joined "everything" and pushed the crown further away. Fixed. The finale now counts only what anyone can get without paying. Paid items sit on their own "Specials" shelf with a small moment of their own when a pack is fully grown.</p><a href="#finale">The finale →</a></div>
+      <div class="box"><h3>Leaves and Sparkles, simply?</h3><p><b>Leaves</b> are what your house earns by growing companions; spend them in the shop; they can't be bought. <b>Sparkles</b> are what you buy with real money, like gift-card credit inside the app; they're yours, and you spend them on special things for a house.</p><a href="#coins">Leaves and Sparkles →</a></div>
+      <div class="box"><h3>Bought things and two households?</h3><p>Agreed, like a real home. A thing bought for one house belongs to that house. Two homes: buy it twice, or move it and the first home loses it. Leave a house and your purchases leave with you. The server enforces all of it.</p><a href="#owning">Who owns what →</a></div>
+      <div class="box"><h3>What happens with animals?</h3><p>The same seven stages: a duckling hatches from an egg, a kitten arrives in a little basket. Each stage it gets bigger and learns something new (first wobbly steps, playing, a trick). It reacts when someone does something, naps when the house is quiet, and steps into the album when grown.</p><a href="#pets">See a duckling grow →</a></div>
+      <div class="box"><h3>What is a "Rive rig"?</h3><p>Rive is an animation tool with a player that runs inside apps. A rig is the character's skeleton and controls, like strings on a puppet, so the app can make it blink, hop or sleep live. One four-legged rig can wear a kitten's or a puppy's drawing.</p><a href="#team">Who can make it →</a></div>
+      <div class="box"><h3>Can an illustrator or design team handle it?</h3><p>Partly. Any good illustrator can draw the plants, pets and decorations. Rigging and animating in Rive is a different skill: you need a 2D animator who uses Rive, or a studio with both. A one-week paid trial tells you for sure, and there's a fallback that needs only an illustrator.</p><a href="#team">The team →</a></div>
+    </div></details>
+  </section>
+
+  <section class="wide">
+    <div class="facts">
+      <div class="fact"><b>~2 wk</b><span>for an active couple, flatshare or family to grow one (simulated, 1,500–2,000 runs each)</span></div>
+      <div class="fact"><b>6 days</b><span>the fastest possible, even doing everything every day</span></div>
+      <div class="fact"><b>39</b><span>companions at launch, plus 2–3 new each month; an active house grows about 26 a year</span></div>
+      <div class="fact"><b>$0</b><span>for art and tools: every drawing and every animation is code</span></div>
+    </div>
+  </section>
+
+  <section class="demo" id="demo">
+    <figure>
+      <div class="phone"><div class="screen">
+        <div class="island"></div>
+        <div class="sb"><span>18:42</span><span>●●●</span></div>
+        <div class="nav"><span class="av">E</span><span class="t">Today</span><span class="bell"></span></div>
+        <div class="body">
+          <div><div class="eb">Sunday evening · Hi Ece</div><div class="glance">All clear. Nothing needs anybody today.</div></div>
+          <div class="scene">
+            <iframe id="demoScene" title="Live household plant" src="plant.html?embed=1&amp;id=home_k7f3x9&amp;p=0.58&amp;m=0.9" style="height:250px"></iframe>
+            <div class="duckscene" id="demoDuckScene" hidden><svg viewBox="0 0 120 120" id="demoDuck" role="img"></svg></div>
+            <span class="pill care" id="demoPill">💧 Water</span>
+            <div class="cap"><span><b id="demoName">Manolya</b><br><span id="demoSub">Magnolia · sapling · bright</span></span><span class="drops" aria-label="Two of three cared today"><i></i><i></i><i class="off"></i></span></div>
+          </div>
+          <div class="lbl">Coming up</div>
+          <div style="display:flex;gap:6px"><span class="pill">🎂 Ece's birthday · Fri</span><span class="pill">🛒 3 to buy</span></div>
+          <div class="shelf"><span>All chores</span><span>Our album</span><span>Shop</span><span>Edit Today</span></div>
+        </div>
+        <div class="dock"><span>Add anything…</span><span class="plus">+</span></div>
+        <div class="tabbar"><span class="on">Today</span><span>Lists</span><span>Plans</span><span>House</span><span>Messages</span></div>
+      </div></div>
+      <figcaption><strong>Live: the companion on Today</strong>The real prototype, running. Tap the plant to pet it, or switch to the duckling.</figcaption>
+    </figure>
+    <div class="controls">
+      <span class="eyebrow">Try it</span>
+      <h2>It reacts when anyone does anything</h2>
+      <p class="muted">Drawn from nothing but code and seeded by the household's id, so no two households have the same tree. It sways, follows the real clock from sun to moon and fireflies, and shows how the house has been. Switch to the duckling to see a pet.</p>
+      <span class="ctl-label">Companion</span>
+      <div class="seg2" id="demoKind" role="group" aria-label="Companion"><button data-k="plant" aria-pressed="true">🌳 Plant</button><button data-k="duck" aria-pressed="false">🐤 Duckling</button></div>
+      <span class="ctl-label">How has the house been?</span>
+      <div class="seg2" id="demoMood" role="group" aria-label="Mood"><button data-m="bright" aria-pressed="true">Bright</button><button data-m="content" aria-pressed="false">Content</button><button data-m="thirsty" aria-pressed="false">Quiet days</button><button data-m="dozing" aria-pressed="false">A week away</button></div>
+      <div class="btns">
+        <button class="act primary" id="btnChore">Someone ticks a chore</button>
+        <button class="act" id="btnGrow">Grow it from the start</button>
+      </div>
+      <ul class="callouts">
+        <li data-n="1">A name tag says who did what, a drop flies to the plant, and it squashes and springs back.</li>
+        <li data-n="2">Each member gets one counted care a day. Today shows a drop per person who cared, never a name or a score.</li>
+        <li data-n="3">On a busy day it shrinks to a one-line strip so whatever is urgent stays on top.</li>
+      </ul>
+      <p class="muted" style="font-size:14px">The full prototype, with sliders for growth, clock, mood and wind: <a href="plant.html">plant.html</a></p>
+    </div>
+  </section>
+
+  <section class="wide" id="mvp">
+    <div class="col">
+      <span class="eyebrow">In the app · development builds</span>
+      <h2>A working MVP, at the top of Today</h2>
+      <p class="muted">Build and run from Xcode and Nestie is there, under the sentence. It's only in development builds while it's an MVP: TestFlight and App Store builds have the code but never show it. Nothing goes to the server. It grows from the chores your household finishes, which every phone already receives with who and when, and keeps everything else on the phone, one file per home.</p>
+    </div>
+    <div class="appshots">
+      <figure><img src="img/app_card.png" alt="The companion card on Today: a thirsty magnolia with fairy lights and bunting, a Water button, the house jar"><figcaption><strong>On Today</strong>The scene, its stage and mood, the house jar, and Decorate, Album, Holidays, Lab.</figcaption></figure>
+      <figure><img src="img/app_decorate.png" alt="Decorate: the scene with glowing spots and a tray of floor items"><figcaption><strong>Decorate</strong>Eight spots and a tray of what fits, with a preview before buying.</figcaption></figure>
+      <figure><img src="img/app_ceremony.png" alt="The graduation ceremony: a polaroid of the grown tree, All grown up, plus 100 Leaves"><figcaption><strong>Graduation</strong>A polaroid for the album and Leaves for the jar.</figcaption></figure>
+    </div>
+    <figure class="filmstrip"><img src="img/app_sheets.png" alt="Three sheets: choosing the next one, the album, and the house's holidays"><figcaption>Choosing the next one, the album, and the house's holidays.</figcaption></figure>
+    <div class="grid2">
+      <div class="box"><h3>What's in it</h3><ul>
+        <li>Six trees grown from the house's id, and the duckling, all drawn in code.</li>
+        <li>Growth from every chore anyone finishes, capped per day, about two weeks for a busy house; care once a day.</li>
+        <li>Four moods, the wake-up, stage pops, chores flying in as drops, hearts on a tap.</li>
+        <li>Graduation ceremony, the album, choosing the next one.</li>
+        <li>The house jar: Leaves for stages and graduations, spent on decorations.</li>
+        <li>Decorate with eight spots and 40 decorations; holiday things free while the day lasts.</li>
+        <li>49 holidays, chosen per house, with suggestions for its country.</li>
+        <li>A compact one-line version when something on Today needs someone.</li>
+        <li>Every string in English and Turkish.</li>
+      </ul></div>
+      <div class="box"><h3>Not yet</h3><ul>
+        <li><b>Shared state.</b> Growth from chores is the same on every phone; care, the jar, the scene and the album are this phone's until the server version.</li>
+        <li><b>Buying with money.</b> The jar only fills from growing for now.</li>
+        <li>Voting on the next one, notifications, more pets and plants.</li>
+      </ul>
+      <h3 style="margin-top:6px">Try it</h3><ul>
+        <li>Run from Xcode on a phone or the simulator; it's on Today.</li>
+        <li><b>Lab</b> (on the card): grow it, make it thirsty or doze, pretend it's any holiday, add Leaves, start over.</li>
+        <li>From the command line, for screenshots: <code>simctl launch … -companionDemo care</code> (or decorate, celebrate, dress, album, holidays).</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow">What the research says</span>
+      <h2>What works in SumOne and the others, and what hurts</h2>
+      <p class="muted">SumOne's EggMon grows when both partners answer the daily question; people love the shared ritual, and lose interest once it's fully grown with nothing after it. Fifteen products were studied: what they reward, what they punish, how they end, what they sell, and what reviews say.</p>
+    </div>
+    <ul class="lessons">
+      <li><b>Grow it on the household's total</b><span>Never one person's bar. Pikmin Bloom's Party Walk adds everyone's steps and ranks nobody. Chore-app research: people get defensive when told they're not equal partners.</span></li>
+      <li><b>Nobody can kill it</b><span>It can wilt, and one action from anyone wakes it. Plant Nanny² replaced death with wilting after complaints; Finch's bird never dies and reviewers single that out.</span></li>
+      <li><b>One person's lapse never hurts everyone</b><span>Forest's "if anyone gives up, the whole forest falls" and Habitica's party damage point at a culprit. In a home with an uneven load that's poison.</span></li>
+      <li><b>Nobody waits on anybody</b><span>SumOne locks you out until your partner answers; Widgetable's fix was "no more taking turns".</span></li>
+      <li><b>Count every kind of contribution</b><span>Planning dinner, restocking and reporting a leak are work too. Effort-weighted points moved one couple from 90–10 to 60–40.</span></li>
+      <li><b>Give it a finite life you can see</b><span>SumOne's motivation drops once the pet is grown ("takes forever to evolve", then nothing). Show the next stage and a rough "days to go".</span></li>
+      <li><b>Graduation starts the next one; the album keeps the story</b><span>Tamagotchi hands over to a new generation; Neko Atsume's album and Forest's timeline are what people come back for.</span></li>
+      <li><b>Pausing costs nothing</b><span>Apple added ring pauses after "even my rest days didn't feel restful". A holiday mode for the whole house.</span></li>
+      <li><b>Notifications celebrate, never guilt</b><span>Pengu users got "four alerts saying the penguin is dying". Milestones go in the feed; at most one gentle nudge.</span></li>
+      <li><b>Sell decoration, never care</b><span>SumOne's shop sells room décor and its top complaint is too few free pebbles; Widgetable's ads-for-food made it "a chore". Earn enough to feel generous, buy to go further.</span></li>
+    </ul>
+    <div class="tablewrap">
+      <table class="min860">
+        <thead><tr><th>Product</th><th>Grows from</th><th>Neglect</th><th>Together</th><th>The end</th><th>Sells</th><th>What people say</th></tr></thead>
+        <tbody>
+          <tr><td><b>SumOne</b> (4.9★, 7.5M+)</td><td>Both answer the daily question</td><td>A sad tear; you wait for your partner</td><td>One shared egg, memos, monthly recap</td><td>Adult at ~100 days, then nothing new</td><td>Gems $1.99–11.99, sub $5.99/mo, décor</td><td>Loved as a ritual · "3 pebbles a day isn't enough"</td></tr>
+          <tr><td><b>Widgetable</b> (4.9★)</td><td>Feeding and bathing a co-parented pet</td><td>Hunger returns</td><td>Care at the same time</td><td>Not found</td><td>Eggs $1.99, food $0.99, sub</td><td>"Feels like a chore", food behind ads</td></tr>
+          <tr><td><b>Finch</b> (4.9★, 765K)</td><td>Your own self-care goals</td><td>None, it never dies</td><td>Small gifts to friends</td><td>Micropets, wardrobe</td><td>Plus $9.99/mo or $69.99/yr</td><td>"Don't get made to feel bad" · friends drift away</td></tr>
+          <tr><td><b>Forest</b> (60M)</td><td>Focus sessions grow trees</td><td>Leave the app and it withers</td><td>Plant Together: one quits, all fall</td><td>The forest is your timeline</td><td>Plus subscription</td><td>"Can't let my trees die" · "one missed day ruins it"</td></tr>
+          <tr><td><b>Pikmin Bloom</b></td><td>Steps</td><td>None</td><td>Party Walk, combined steps</td><td>Weekly recap with a photo</td><td>Coins</td><td>$100M lifetime</td></tr>
+          <tr><td><b>Tamagotchi</b></td><td>Quality of care shapes the adult</td><td>Death</td><td>Marriage, docking</td><td>Next generation</td><td>Device + tickets</td><td>Uni criticised for losing family lines</td></tr>
+          <tr><td><b>Neko Atsume</b></td><td>Put food out; cats visit</td><td>None; gifts left while away</td><td>None</td><td>Photo album of 86 cats</td><td>Fish (IAP)</td><td>Design award · NA2 items wear out</td></tr>
+          <tr><td><b>Sweepy / OurHome</b></td><td>Points for chores</td><td>OurHome takes points away</td><td>Leaderboard</td><td>None</td><td>Sub $3.99/mo</td><td>"Nagging someone else or parenting your partner"</td></tr>
+          <tr><td><b>Duolingo</b></td><td>A lesson a day</td><td>Streak loss (freezes help)</td><td>Friend streaks, lost if either misses</td><td>Milestones</td><td>Gems, Super</td><td>Streak animation alone +1.7% retention</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow">The design · on Today</span>
+      <h2>It fills Today when Today is quiet, and steps back when something is wrong</h2>
+      <p class="muted">A new Today section, Automatic like the others. On a quiet day the full scene sits under the sentence. When something needs someone, it shrinks to a one-line strip so the urgent card stays on top. Set to Off, it lives under House → At a glance, so nothing is lost.</p>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="island"></div><div class="sb"><span>9:10</span><span>●●●</span></div>
+          <div class="nav"><span class="av b">M</span><span class="t">Today</span><span class="bell"></span></div>
+          <div class="body">
+            <div><div class="eb">Wednesday morning · Hi Mert</div><div class="glance"><span style="color:#FF8A8E">The boiler needs fixing</span> · 2 chores</div></div>
+            <div class="strip"><img src="img/stage5.png" alt=""><span class="t"><b>Manolya</b><small>Sapling · about 5 days to bloom</small></span><span class="drops"><i></i><i class="off"></i><i class="off"></i></span></div>
+            <div class="hero"><span class="k">Urgent · nobody's on it</span><b style="font-size:14px">Boiler is leaking</b><span class="pill" style="align-self:flex-start;background:#FF5A5F;border-color:#FF5A5F">I'll handle it</span></div>
+            <div class="lbl">Tasks</div>
+            <div class="row"><span class="tick"></span><span><b>Take the bins out</b><small>Due today</small></span></div>
+            <div class="row"><span class="tick"></span><span><b>Clean the bathroom</b></span></div>
+          </div>
+          <div class="dock"><span>Add anything…</span><span class="plus">+</span></div>
+          <div class="tabbar"><span class="on">Today</span><span>Lists</span><span>Plans</span><span>House</span><span>Messages</span></div>
+        </div></div>
+        <figcaption><strong>A busy morning: the strip</strong>One line, 56 pt. The urgent card and the chores keep the top of the screen.</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="island"></div><div class="sb"><span>20:05</span><span>●●●</span></div>
+          <div class="nav"><span class="av c">D</span><span class="t">Today</span><span class="bell"></span></div>
+          <div class="body">
+            <div><div class="eb">Friday evening · Hi Deniz</div><div class="glance">Pizza night at 20:30 · 1 chore</div></div>
+            <div class="scene glow">
+              <iframe title="Fully grown plant" src="plant.html?embed=1&amp;id=home_k7f3x9&amp;p=1&amp;m=1&amp;h=20" style="height:260px"></iframe>
+              <div class="ready"><span>Manolya is all grown up</span><i>See it</i></div>
+              <div class="cap"><span><b>Manolya</b><br><span>In bloom · 14 days</span></span><span class="drops"><i></i><i></i><i></i></span></div>
+            </div>
+            <div class="shelf"><span>All chores</span><span>Our album</span><span>Shop</span><span>Edit Today</span></div>
+          </div>
+          <div class="dock"><span>🍕 Pizza night · in 25 min</span><span class="plus">+</span></div>
+          <div class="tabbar"><span class="on">Today</span><span>Lists</span><span>Plans</span><span>House</span><span>Messages</span></div>
+        </div></div>
+        <figcaption><strong>Graduation is waiting</strong>The plant glows until each person has seen the ceremony, on their own time. Nobody has to be there at once.</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen" id="cerScreen">
+          <div class="island"></div><div class="sb"><span>20:06</span><span>●●●</span></div>
+          <div class="nav"><span class="av c">D</span><span class="t">Today</span><span class="bell"></span></div>
+          <div class="body">
+            <div><div class="eb">Friday evening · Hi Deniz</div><div class="glance">Pizza night at 20:30 · 1 chore</div></div>
+            <div class="scene"><img src="img/album1.png" alt="" style="width:100%;height:260px;object-fit:cover;object-position:50% 75%;display:block"></div>
+          </div>
+          <div class="tabbar"><span class="on">Today</span><span>Lists</span><span>Plans</span><span>House</span><span>Messages</span></div>
+          <div class="ceremony" id="cer" aria-live="polite">
+            <div class="cm" data-at="1000" data-off="6000" style="top:15%"><div class="cm-title">Manolya is all grown up</div><div class="cm-sub">14 days · 25 Sept – 9 Oct</div></div>
+            <div class="cm cm-row cm-lapse" data-at="2500" data-off="6000" id="lapse" style="top:33%"></div>
+            <div class="cm cm-row" data-at="6000" data-off="9000" style="top:30%"><span class="pill">31 chores</span><span class="pill">8 dinners</span><span class="pill">the boiler fixed</span><span class="pill">first together day: 27 Sept</span></div>
+            <div class="cm" data-at="9000" data-off="10600" style="top:30%"><div class="cm-ring"><span class="av">E</span><span class="av b">M</span><span class="av c">D</span><span class="av d">A</span></div><div class="cm-sub" style="margin-top:6px">Grown by all of you</div></div>
+            <div class="polaroid" id="pol"><img src="img/album1.png" alt=""><div style="margin-top:6px">Manolya · 2026</div></div>
+            <div class="cm" data-at="12300" style="top:30%"><div class="cm-title"><span class="coin">+100 Leaves</span></div><div class="cm-sub">and a keepsake for the scene: a blue pot</div></div>
+            <div class="cm cm-row cm-next" data-at="13300" style="top:62%"><span class="p">Vote for the next one</span><span>Later</span></div>
+          </div>
+        </div></div>
+        <figcaption><strong>The ceremony, about 14 seconds</strong><button class="act primary" id="btnCer" style="margin-top:8px">Play the ceremony</button></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow">The design · how it grows</span>
+      <h2>Fed by what the house already does</h2>
+      <p class="muted">Nothing new to remember: growth comes from the actions people already take in the app, counted on the server so phones on older versions feed it too. Daily caps and a soft curve make the first things done each day count most, so faking chores buys nothing at all.</p>
+    </div>
+    <div class="tablewrap">
+      <table class="min640">
+        <thead><tr><th>Counts</th><th>Worth</th><th>Daily limit</th><th>Guard against farming</th></tr></thead>
+        <tbody>
+          <tr><td>A chore done</td><td class="n">1 · upkeep 1.5</td><td class="n">soft</td><td>Once per chore, ever. Halved if its creator ticks it within 10 minutes. A person's 5th chore of the day counts half, and so on.</td></tr>
+          <tr><td>A shopping trip</td><td class="n">1.5 + 0.25 an item</td><td class="n">2 trips</td><td>Items bought within an hour are one trip. Items the buyer added minutes earlier don't count.</td></tr>
+          <tr><td>Dinner decided</td><td class="n">2</td><td class="n">1</td><td>Once per date, for today or tomorrow only.</td></tr>
+          <tr><td>An event that happened</td><td class="n">3 social · 1 admin</td><td class="n">2</td><td>Credited after it ends. Made at least an hour before it starts. A repeating event counts once a week.</td></tr>
+          <tr><td>A problem fixed</td><td class="n">2–6 by severity</td><td class="n">2</td><td>Once per problem. Reported and fixed by the same person within an hour counts 1.</td></tr>
+          <tr><td>A movie night</td><td class="n">3</td><td class="n">1</td><td>A round with at least two voters.</td></tr>
+          <tr><td>Daily care (water, pet, feed)</td><td class="n">0.8 first · 0.4 more · +0.5 together</td><td class="n">2</td><td>One counted care per person per day; tapping more just gets a reaction.</td></tr>
+          <tr><td><i>Never</i></td><td colspan="3" class="muted">Messages, notes, recipes, expenses, settling debts, and money. Nothing in the shop makes it grow faster.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stages" aria-label="Growth stages with the median day a couple reaches each">
+      <div class="stage"><img src="img/stage1.png" alt="Seed"><b>Seed</b><span>day 0</span></div>
+      <div class="stage"><img src="img/stage2.png" alt="Sprout"><b>Sprout</b><span>day 1</span></div>
+      <div class="stage"><img src="img/stage3.png" alt="Seedling"><b>Seedling</b><span>day 3</span></div>
+      <div class="stage"><img src="img/stage4.png" alt="Leafy"><b>Leafy</b><span>day 5</span></div>
+      <div class="stage"><img src="img/stage5.png" alt="Sapling"><b>Sapling</b><span>day 8</span></div>
+      <div class="stage"><img src="img/stage6.png" alt="Bud"><b>Bud</b><span>day 11</span></div>
+      <div class="stage"><img src="img/stage7.png" alt="In bloom"><b>In bloom</b><span>day 14</span></div>
+    </div>
+    <p class="muted" style="font-size:14px">Median day an active couple reaches each stage, so something visibly changes every two or three days. A pet follows the same seven steps: egg, wobbly egg, hatchling, baby, little one, young, grown.</p>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <h3>Every kind of household gets there in about two weeks</h3>
+      <p class="muted">Days to graduate, re-simulated at the new pace with realistic weekly activity, weekend peaks and random busy weeks. The line runs from the 10th to the 90th percentile; the dot is the median. A quiet couple takes about a month, which still feels alive.</p>
+    </div>
+    <div class="chart" id="chart">
+      <svg viewBox="0 0 900 420" role="img" aria-labelledby="chartTitle">
+        <title id="chartTitle">Days to graduate by household, median with 10th to 90th percentile</title>
+        <g class="grid" id="grid"></g>
+        <g id="rows"></g>
+      </svg>
+      <div class="tip" id="tip"></div>
+    </div>
+    <details><summary>Show the numbers as a table</summary>
+      <div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Household</th><th>People</th><th>p10</th><th>Median</th><th>p90</th><th>Share from care</th></tr></thead><tbody id="simTable"></tbody></table></div>
+    </details>
+    <div class="grid2">
+      <div class="box"><h3>Care, the daily ritual</h3><ul>
+        <li>Tap it: today's need shows up (water, mist, turn it to the light; for a pet: pet, feed, play). A soft haptic, leaves lift for a second.</li>
+        <li>Each person counts once a day; two or more on the same day earn a "together" bonus and a small moment for the first one next time they open the app.</li>
+        <li>Care is 12–31% of growth, so it matters but isn't a clicker: care alone would take 38 days.</li>
+      </ul></div>
+      <div class="box"><h3>Fair without keeping score</h3><ul>
+        <li>Growth is the household's total. No per-person bar, no ranking, and the companion never mentions the chore split.</li>
+        <li>A partner who never cares costs the couple two days, not the plant's life.</li>
+        <li>The recap names people only if everyone took part, and then only with a warm line ("Ece watered it most mornings"), never a count.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="wide" id="moods">
+    <div class="col">
+      <span class="eyebrow">Moods</span>
+      <h2>You can tell how the house has been from across the room</h2>
+      <p class="muted">Mood used to be a shade of green, and that's not enough at the size of a card. Now each mood changes six things at once, so it reads in a glance. Progress still only goes up and it never dies: quiet days make it thirsty, not sick, and one care from anyone brings it back in about a second and a half, with a stretch. Holiday mode lets anyone send it to stay "with the neighbours" for up to 30 days.</p>
+    </div>
+    <div class="moods">
+      <div class="mood"><img src="img/mood_bright.jpg" alt="A deep green plant, branches lifted, flowers wide open, a warm glow and butterflies"><div><b>Bright</b><span class="tr">Neşeli</span><span class="muted">A together day in the last two days, or a lot done today.</span><ul><li>Lifted, glossy, wide open</li><li>Warm glow, glints, butterflies</li></ul></div></div>
+      <div class="mood"><img src="img/mood_content.jpg" alt="A healthy green plant in bloom"><div><b>Content</b><span class="tr">Keyifli</span><span class="muted">Somebody cared or something happened in the last two days.</span><ul><li>Green and relaxed</li><li>Nothing to ask for</li></ul></div></div>
+      <div class="mood"><img src="img/mood_thirsty.jpg" alt="A wilting plant: leaves hanging and yellowing, flowers closed to buds, leaves on the soil, a water-drop bubble"><div><b>Thirsty</b><span class="tr">Susamış</span><span class="muted">Three to six quiet days.</span><ul><li>Leaves hang, fade and fall</li><li>Flowers close; soil cracks</li><li>A cloud over the sun, a drop bubble</li></ul></div></div>
+      <div class="mood"><img src="img/mood_dozing.jpg" alt="A pale plant asleep under a glass dome"><div><b>Dozing</b><span class="tr">Uykuda</span><span class="muted">A week or more of quiet.</span><ul><li>Under a glass dome, kept safe</li><li>Buds only; "z z" drifting up</li><li>Never dies, never goes back</li></ul></div></div>
+    </div>
+    <div class="tablewrap">
+      <table class="min860">
+        <thead><tr><th>What changes</th><th>Bright</th><th>Content</th><th>Thirsty</th><th>Dozing</th></tr></thead>
+        <tbody>
+          <tr><td><b>Branches</b></td><td>Lifted, reaching up</td><td>Relaxed</td><td>Hanging out and down</td><td>Slumped, leaning</td></tr>
+          <tr><td><b>Leaves</b></td><td>Deep, glossy green</td><td>Green</td><td>Olive to straw, pointing at the floor, brown tips</td><td>Pale straw, about half fallen</td></tr>
+          <tr><td><b>Flowers</b></td><td>Wide open, petals drifting</td><td>Open</td><td>Closing to buds</td><td>Buds only</td></tr>
+          <tr><td><b>Soil and floor</b></td><td>Dark, moist</td><td>Dark</td><td>Dry, cracked, fallen leaves</td><td>Dry, cracked, more leaves</td></tr>
+          <tr><td><b>Light</b></td><td>Warm halo, glints; butterflies by day</td><td>As the clock says</td><td>A cloud over the sun, a dimmer card</td><td>Grey, under a glass dome</td></tr>
+          <tr><td><b>Asks for</b></td><td>Nothing</td><td>Nothing</td><td>A water-drop bubble</td><td>Nothing; it waits</td></tr>
+          <tr><td><b>A pet</b></td><td>Bouncy, sparkly eyes</td><td>Blinks and bobs</td><td>Faded, head and wing droop, naps</td><td>Nightcap, slow breathing</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2">
+      <div class="box"><h3>The bubble is the only thing that asks</h3><ul>
+        <li>Tap it and it says what helps: "Tick any chore, or give it some water." One tap of water is a care.</li>
+        <li>It never counts days at anyone and never says who didn't help. No red badge, no notification beyond the one "a bit sleepy" push.</li>
+        <li>Dozing has no bubble on purpose: after a week away, the house comes back to something sleeping peacefully, not something in trouble.</li>
+        <li>Reduce Motion keeps every change except the movement: falling leaves lie on the soil, the bubble doesn't bob.</li>
+      </ul></div>
+      <div class="box"><h3>Pets show it the same way</h3>
+        <div class="moodpets" id="moodPets"></div>
+        <p class="muted" style="font-size:14px">Bright, content, sleepy, dozing. The face, the colour and the posture all change, and so does how it moves (see the <a href="duck.html">duck page</a>).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wide" id="waking">
+    <div class="col">
+      <span class="eyebrow">Waking up</span>
+      <h2>When somebody comes back, it wakes up, and you see it happen</h2>
+      <p class="muted">Every change of state gets its own short transition, so the companion never just switches from one picture to another. After quiet days, one chore or one care wakes it all the way, not a notch, because coming back should feel like a welcome. These frames are from the app.</p>
+    </div>
+    <figure class="filmstrip"><img src="img/app_wake_plant.jpg" alt="Four frames of a thirsty magnolia being watered: drops and a splash ring, sparkles bursting, green and upright, calm"><figcaption><b>A thirsty magnolia, watered.</b> Drops fall and a ring spreads in the soil; sparkles burst as it straightens; the leaves green and lift past where they rest, the buds open and the fallen leaves go; then calm. About two seconds.</figcaption></figure>
+    <figure class="filmstrip"><img src="img/app_wake_duck.jpg" alt="Four frames of the duckling waking: nightcap flying off, sparkles, bright yellow, standing"><figcaption><b>The duckling, after a week away.</b> Its eyes flutter open, the nightcap flies off, the yellow floods back, a long stretch and a shake.</figcaption></figure>
+    <div class="tablewrap">
+      <table class="min640">
+        <thead><tr><th>Change</th><th>Plant</th><th>Pet</th></tr></thead>
+        <tbody>
+          <tr><td><b>Thirsty → awake</b></td><td>Splash ring, sparkle burst, leaves spring up with a small overshoot, buds open, fallen leaves fade</td><td>Eyes flutter open, a stretch, a shake, the colour comes back</td></tr>
+          <tr><td><b>Dozing → awake</b></td><td>The glass dome lifts off and fades, then the same</td><td>The nightcap flies off, then the same</td></tr>
+          <tr><td><b>A chore lands</b></td><td>A drop arcs in from the corner, a squash and stretch from the soil, sparkles</td><td>A hop that catches the sparkle</td></tr>
+          <tr><td><b>Care</b></td><td>Water from above</td><td>Hearts rise off it</td></tr>
+          <tr><td><b>A new stage</b></td><td colspan="2">A ring of light opens around it, a pop, and +10 Leaves rise out of the jar</td></tr>
+          <tr><td><b>Ready to graduate</b></td><td colspan="2">A slow golden breath around it until somebody taps Celebrate</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:14px">With Reduce Motion on, every change still happens, as a short cross-fade with nothing flying. Try it in the live demo: pick "A week away", then "Someone ticks a chore".</p>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow">The design · after graduation</span>
+      <h2>The album keeps every one the house has grown</h2>
+      <p class="muted">Each graduate becomes a card: its portrait (redrawn from its seed, so nothing is stored but numbers), the dates, the days it took and three moments from its life. Graduation pays 100 Leaves into the household's wallet and leaves a keepsake for the scene.</p>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="island"></div><div class="sb"><span>21:10</span><span>●●●</span></div>
+          <div class="nav"><span>‹</span><span class="t">Our album</span><span></span></div>
+          <div class="body" style="gap:14px">
+            <div class="lbl">Grown together · 3</div>
+            <div class="albumgrid">
+              <div class="card"><img src="img/album1.png" alt=""><b>Manolya</b><small>Magnolia · 14 days · Oct 2026</small></div>
+              <div class="card"><img src="img/album2.png" alt=""><b>Kiraz çiçeği</b><small>Cherry blossom · 12 days · Apr 2026</small></div>
+              <div class="card"><img src="img/album3.png" alt=""><b>Nar ağacı</b><small>Pomegranate · 16 days · Mar 2026</small></div>
+              <div class="empty-slot">Growing now<br>Ördek yavrusu<br>(Duckling) · day 4</div>
+            </div>
+            <div class="lbl">Keepsakes</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill">🏺 Blue pot</span><span class="pill">🎀 Ribbon</span><span class="pill">🪺 Bird feeder</span></div>
+          </div>
+          <div class="tabbar"><span>Today</span><span>Lists</span><span>Plans</span><span class="on">House</span><span>Messages</span></div>
+        </div></div>
+        <figcaption><strong>Our album</strong>Reached from Today, from the ceremony, and from House → At a glance. Each one can be given a name; here they kept the species names.</figcaption>
+      </figure>
+      <div class="box" style="align-self:center;max-width:540px">
+        <h3>Choosing the next one</h3>
+        <ul>
+          <li><b>Only one person to ask?</b> No vote. A household of one, or a household where only one person is on the new version, gets the picker straight away.</li>
+          <li><b>Two or more:</b> "Who comes next?" offers three candidates (a plant, a pet, the newest arrival), swiped like movie night. It closes when everyone has voted or after 24 hours.</li>
+          <li>Most yeses wins; a tie goes to something the house hasn't grown yet; if nobody votes, the first person to open the picker chooses.</li>
+          <li>A new seed starts growing the moment the last one graduates, so nothing done while the house decides is lost; the species is applied when the vote closes.</li>
+          <li>Candidates come from what the household owns: free and earned species, plus anything someone bought for the house.</li>
+          <li>Built on the app's existing polls as a <code>generic</code> poll. A new poll type would show up as a movie round on every older version.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wide" id="pets">
+    <div class="col">
+      <span class="eyebrow">And pets?</span>
+      <h2>A pet hatches, grows, and learns something new at every stage</h2>
+      <p class="muted">Pets follow the same seven stages and the same growth as plants. Birds and turtles start as an egg; kittens, puppies and bunnies arrive in a little basket. Each stage the pet gets bigger and picks up something new, so there's always a reason to look. This duckling is drawn in code from five parts, and it's the one in the app now; more pets will be built the same way. It also has <a href="duck.html">its own page</a>.</p>
+    </div>
+    <div class="petdemo">
+      <div class="petstage" id="petStage">
+        <div class="lab" id="petLab">Ördek yavrusu<small>Young · content</small></div>
+        <div class="floor"></div>
+        <svg viewBox="0 0 120 120" class="pet s5" id="petSvg" role="img" aria-label="A young duckling"></svg>
+      </div>
+      <div class="controls">
+        <div class="btns">
+          <button class="act primary" id="petChore">Someone ticks a chore</button>
+          <button class="act" id="petPet">Pet it</button>
+        </div>
+        <div class="seg2" id="petMoods" role="group" aria-label="Mood"><button data-m="bright" aria-pressed="false">Bright</button><button data-m="content" aria-pressed="true">Content</button><button data-m="sleepy" aria-pressed="false">Sleepy</button><button data-m="dozing" aria-pressed="false">Dozing</button></div>
+        <label class="range">Stage <input type="range" id="petRange" min="0" max="6" value="5"> <span id="petStageName">Young</span></label>
+        <ul class="callouts">
+          <li data-n="1"><span><b>Chore ticked:</b> it looks up, hops and catches the sparkle.</span></li>
+          <li data-n="2"><span><b>Care:</b> pet, feed or play, once counted per person per day; hearts and a happy wiggle.</span></li>
+          <li data-n="3"><span><b>Quiet house:</b> it curls up and naps. One care from anyone wakes it.</span></li>
+          <li data-n="4"><span><b>Grown:</b> it waves and steps into the polaroid. Graduated pets come back to visit the scene now and then.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="petrow" id="petRow" aria-label="The duckling's seven stages"></div>
+    <div class="tablewrap">
+      <table class="min640">
+        <thead><tr><th>Stage</th><th>Duckling</th><th>Kitten</th><th>New at this stage</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Arrival</td><td>An egg</td><td>A basket with a blanket</td><td>It's there. Care is a gentle tap.</td></tr>
+          <tr><td>2 · Stirring</td><td>The egg wobbles</td><td>Ears peek out</td><td>Reacts to chores with a wobble.</td></tr>
+          <tr><td>3 · Hatchling</td><td>Head out of the shell</td><td>Tiny kitten in the basket</td><td>First look around; sleeps a lot.</td></tr>
+          <tr><td>4 · Baby</td><td>Fluffy, wobbly steps</td><td>Wobbly steps</td><td>Follows whoever cared last.</td></tr>
+          <tr><td>5 · Little one</td><td>Flaps its wings</td><td>Chases a toy</td><td>Plays when someone cares.</td></tr>
+          <tr><td>6 · Young</td><td>Hops and catches sparkles</td><td>Pounces on sparkles</td><td>A trick of its own.</td></tr>
+          <tr><td>7 · Grown</td><td>A proud duck</td><td>A grown cat</td><td>Full personality; ready for the album.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="wide" id="decorate">
+    <div class="col">
+      <span class="eyebrow">Decorating</span>
+      <h2>Eight spots, one tap each</h2>
+      <p class="muted">Decorations don't go wherever you drop them. The scene has eight spots, each made for one kind of thing, and decorating is tapping a spot and choosing what goes there. Try it below: it's the real prototype in Decorate mode. Tap a glowing spot, then something in the tray.</p>
+    </div>
+    <div class="decodemo">
+      <div class="decophone"><div class="screen">
+        <div class="island"></div><div class="sb"><span>20:31</span><span>●●●</span></div>
+        <div class="nav"><button id="decoUndo" type="button">Undo</button><span class="t">Decorate</span><button id="decoDone" type="button">Done</button></div>
+        <iframe id="decoScene" title="Decorate the household plant" src="plant.html?embed=1&amp;edit=1&amp;id=home_k7f3x9&amp;p=0.97&amp;m=0.9&amp;h=20&amp;deco=lights,bunting,glazed,can"></iframe>
+        <div class="tray" aria-live="polite">
+          <div class="th"><b id="trayTitle">Tap a glowing spot</b><span id="trayHint">or put out a whole set</span></div>
+          <div class="titems" id="trayItems"></div>
+          <div class="preview" id="trayPreview" hidden><span id="previewText"></span><i>Buy</i></div>
+        </div>
+      </div></div>
+      <div class="controls">
+        <span class="ctl-label">Put out a whole set</span>
+        <div class="btns">
+          <button class="act" data-set="halloween">🎃 Halloween</button>
+          <button class="act" data-set="newyear">🎄 New Year</button>
+          <button class="act" data-set="spring">🌸 Hıdırellez</button>
+          <button class="act" data-set="clear">Clear it all</button>
+        </div>
+        <ol class="callouts" style="margin-top:6px">
+          <li data-n="1"><span><b>Tap Decorate</b> in the scene's menu, or long-press the scene. It grows to fill the screen and the spots glow.</span></li>
+          <li data-n="2"><span><b>Tap a spot.</b> The tray shows what fits there: the house's own things first, then the shop.</span></li>
+          <li data-n="3"><span><b>Tap a thing</b> and it pops in, with a little haptic. Tap it again to put it back in the box. You can also drag from the tray; the spots that fit light up while you drag.</span></li>
+          <li data-n="4"><span><b>Not yours yet?</b> It goes in as a preview with its price. Buy it or take it back before Done, so nothing is bought by accident.</span></li>
+          <li data-n="5"><span><b>Done.</b> Everyone in the house sees it live. The feed says "Ece decorated" at most once an hour.</span></li>
+        </ol>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table class="min640">
+        <thead><tr><th>Spot</th><th>Holds</th><th>For example</th><th>For a pet</th></tr></thead>
+        <tbody>
+          <tr><td><b>Overhead</b></td><td class="n">1</td><td>Bunting, heart garland, bats</td><td>Same</td></tr>
+          <tr><td><b>Sky</b></td><td class="n">1</td><td>Full moon night, winter sky, dusk, a balcony or rooftop view</td><td>Same</td></tr>
+          <tr><td><b>Weather</b></td><td class="n">1</td><td>Snowfall, falling petals</td><td>Same</td></tr>
+          <tr><td><b>On the tree</b></td><td class="n">up to 4</td><td>Fairy lights, ornaments, a star, wish notes</td><td><b>Wearing:</b> a hat, a scarf, a bow</td></tr>
+          <tr><td><b>Pot</b></td><td class="n">1</td><td>Terracotta, blue glazed, golden</td><td><b>Bed:</b> a basket, a cushion</td></tr>
+          <tr><td><b>Floor, left and right</b></td><td class="n">1 each</td><td>Jack-o'-lantern, gift box, paper lantern, watering can, Bayram candy bowl</td><td>Same</td></tr>
+          <tr><td><b>Rug</b></td><td class="n">1</td><td>Kilim</td><td>Same</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2">
+      <div class="box"><h3>Why spots, not anywhere</h3><ul>
+        <li><b>The card is small.</b> Free placement on a phone-width card turns into clutter that covers the plant within a week.</li>
+        <li><b>Every phone draws the same scene.</b> A spot is a place in the scene, not a pixel, so the pumpkin sits in the same place on an SE and a Pro Max, and on everyone's phone in the house.</li>
+        <li><b>It's accessible.</b> Each spot is a button VoiceOver can read: "Floor, left: Jack-o'-lantern. Double-tap to change."</li>
+        <li><b>The server can check it.</b> Eight small fields: is this item the house's, and does it fit this spot?</li>
+        <li><b>It still feels like yours:</b> any spot item can be flipped, and the tree takes four things at once.</li>
+      </ul></div>
+      <div class="box"><h3>How it's built</h3><ul>
+        <li><b>App:</b> the spots are SwiftUI overlays on the scene at fixed fractions of its size; <code>draggable</code> and <code>dropDestination</code> for drag, taps for everything else; a haptic on snap.</li>
+        <li><b>Server:</b> one <code>companion_scene</code> row per home, and <code>companion:place</code> writes one spot at a time, so two people decorating different spots never overwrite each other.</li>
+        <li><b>Checks:</b> the item is the house's own (or free), it fits the spot, the tree has room. A purchase that leaves with its buyer empties its spot.</li>
+        <li><b>Items are data:</b> a picture plus effects the app already knows (glow at night, flicker, sway, twinkle, fall), so new seasonal things arrive without an app update.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="wide" id="seasons">
+    <div class="col">
+      <span class="eyebrow">Holidays, from every calendar</span>
+      <h2>A pumpkin for Halloween, lamps for Diwali, a crescent for Ramadan</h2>
+      <p class="muted">Each house picks the days it celebrates, from 49 across 11 traditions, starting from suggestions for its country. While a day lasts, it dresses the scene for free and the card offers to put its things out with one tap. They go back in the box by themselves when it's over and come out again next year.</p>
+    </div>
+    <figure class="filmstrip"><img src="img/app_holidays.jpg" alt="Three scenes from the app: Halloween with a jack-o'-lantern and full moon, New Year with ornaments, star, snow and fireworks, Diwali with oil lamps and fireworks"><figcaption>In the app: Halloween, New Year and Diwali, each put out with one tap.</figcaption></figure>
+    <div class="families">
+      <div class="family"><b>Around the world</b><span>New Year, Valentine's, Women's Day, St Patrick's, Carnival, Earth Day, Mother's and Father's Day (14 countries' own dates), Midsummer, Halloween, Day of the Dead, Bonfire Night, Thanksgiving (US and Canada), Kwanzaa</span><span class="how">fixed days · nth weekday · from Easter</span></div>
+      <div class="family"><b>Christian</b><span>Three Kings' Day, Orthodox Christmas, Easter, Orthodox Easter, Christmas</span><span class="how">Western and Julian computus</span></div>
+      <div class="family"><b>Muslim</b><span>Ramadan, Eid al-Fitr, Eid al-Adha, Islamic New Year, Mawlid</span><span class="how">Umm al-Qura calendar (iOS)</span></div>
+      <div class="family"><b>Jewish</b><span>Rosh Hashanah, Sukkot, Hanukkah, Purim, Passover</span><span class="how">Hebrew calendar (iOS)</span></div>
+      <div class="family"><b>Hindu, Sikh, Buddhist</b><span>Makar Sankranti, Holi, Diwali, Vaisakhi, Guru Nanak Jayanti, Vesak</span><span class="how">verified tables 2026–2030</span></div>
+      <div class="family"><b>East Asian</b><span>Lunar New Year, Dragon Boat, Tanabata, Mid-Autumn</span><span class="how">Chinese calendar (iOS)</span></div>
+      <div class="family"><b>Persian</b><span>Nowruz, Yalda Night</span><span class="how">Persian calendar (iOS)</span></div>
+      <div class="family"><b>Turkish</b><span>Hıdırellez, 23 Nisan Çocuk Bayramı, Cumhuriyet Bayramı</span><span class="how">fixed days</span></div>
+      <div class="family"><b>National days</b><span>Canada Day, Independence Day (US), Bastille Day, Mexican Independence Day</span><span class="how">fixed days</span></div>
+    </div>
+    <div class="grid2">
+      <div class="box"><h3>How the dates are worked out</h3><ul>
+        <li><b>Computed, not listed,</b> wherever possible: fixed days, "the second Sunday of May", offsets from Western or Orthodox Easter, and days in the Islamic (Umm al-Qura), Hebrew, Chinese and Persian calendars that iOS already knows.</li>
+        <li><b>Verified tables</b> for the almanac days iOS doesn't carry: India's official holiday list for 2026–27 and Drik Panchang (New Delhi) for 2028–30. A year missing from a table has no date, never a guessed one.</li>
+        <li><b>Regional rules:</b> Mothering Sunday in Britain, 10 May in Mexico, 21 March across the Arab world; Father's Day on St Joseph's in Italy and Spain; Singapore's Vesak from the Chinese calendar.</li>
+        <li><b>Checked:</b> every computed day for 2026–27 matched official sources, including Diyanet's Ramazan Bayramı (9 March 2027) and Kurban Bayramı (16 May 2027). Details in <code>Docs/Companion/HOLIDAYS.md</code>.</li>
+      </ul></div>
+      <div class="box"><h3>Rules for every holiday</h3><ul>
+        <li>Each house chooses its days in "Our holidays"; the suggestions come from its country and can all be changed.</li>
+        <li>No snow on a December tree south of the equator.</li>
+        <li>Religious days only ever get free things, never things to buy. Solemn days (Yom Kippur, Ashura, Good Friday alone) aren't dressed up at all.</li>
+        <li>For the shop later: one free thing per event earned together, a few to buy from the jar, all back every year, a plain end date and no ticking clock.</li>
+        <li>An Islamic date can be a day apart from a country's own announcement; the app says "about" for those.</li>
+      </ul></div>
+    </div>
+    <div class="note"><b>This year's dates</b>
+      <span>The MVP already dresses for New Year, so a New Year launch only needs the server version and App Review, with no art to wait for. Halloween 2026 has passed by then, so the first Halloween is 2027.</span></div>
+  </section>
+
+  <section class="wide" id="catalogSection">
+    <div class="col">
+      <span class="eyebrow">The catalog</span>
+      <h2>Wide enough for a house that grows one every two weeks</h2>
+      <p class="muted">An active household graduates about 26 companions a year, so the catalog starts at 39 and grows by two or three every month, with seasonal species that return each year. Every species also has three colour variants to grow again later. Some come free, some are earned with Leaves, some are bought.</p>
+    </div>
+    <div class="teaser" id="teaser"></div>
+    <div class="btns"><button class="act primary" id="openCatalog3" aria-haspopup="dialog">Open the full catalog</button><span class="muted" style="font-size:14px">Trees, the duckling and the decorations are drawn in code already; the other icons are stand-ins until they are.</span></div>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow" id="coins">The house jar · Kumbara</span>
+      <h2>One jar for the whole house</h2>
+      <p class="muted">Every house has a jar, like the one on the kitchen shelf. Growing companions puts Leaves in it, and anyone can drop more in with real money. Everyone in the house spends from it on decorations, species and pets for the house. It's one currency and one balance, and everybody can see it.</p>
+    </div>
+    <ol class="story">
+      <li>Ece and Mert grow Manolya in 14 days. The ceremony drops <b>100 Leaves</b> into the jar.</li>
+      <li>With 285 in the jar they put up fairy lights (🍃 150). Nobody paid anything.</li>
+      <li>Mert wants the Forest friends pets (🍃 900). He adds <b>1,000 Leaves</b> to the jar; the feed says "Mert added 1,000 Leaves to the jar".</li>
+      <li>Ece gets the pack from the jar that evening; the feed says "Ece got Forest friends for the house". The rest stays in the jar for anyone.</li>
+    </ol>
+    <div class="grid2">
+      <div class="box">
+        <h3>🍃 Leaves in</h3>
+        <ul>
+          <li>100 at every graduation, 10 at each new stage, 200 for the first graduation and bonuses at 5, 10 and 25 grown.</li>
+          <li>About 185 every two weeks for an active house: a new decoration every cycle, an earned species every two.</li>
+          <li>Top-ups from anyone in the house, with real money. They never expire, as Apple requires.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>🍃 Leaves out</h3>
+        <ul>
+          <li>Decorations, species, pets and seasonal things for the house.</li>
+          <li>Holiday things are free while the day lasts.</li>
+          <li>Everything can be tried in the scene before buying.</li>
+          <li>Never on growth, care, mood or graduation.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="island"></div><div class="sb"><span>21:14</span><span>●●●</span></div>
+          <div class="nav"><span>‹</span><span class="t">Shop</span><span class="wallet"><span class="pill">🫙 🍃 285</span></span></div>
+          <div class="body" style="gap:10px">
+            <div class="seg"><span class="on">Decor</span><span>Species</span><span>Pets</span><span>Scenes</span></div>
+            <div class="shopgrid">
+              <div class="sitem"><span class="g">✨</span><b>Fairy lights</b><small>Peri ışıkları</small><span class="price">🍃 150</span></div>
+              <div class="sitem"><span class="g">🧶</span><b>Kilim rug</b><small>Kilim</small><span class="price">🍃 250</span></div>
+              <div class="sitem prem"><span class="g">🎃</span><b>Jack-o'-lantern</b><small>Until 1 Nov · seasonal</small><span class="price">🍃 120</span></div>
+              <div class="sitem prem"><span class="g">🏮</span><b>Paper lantern</b><small>Kâğıt fener</small><span class="price">🍃 200</span></div>
+              <div class="sitem prem"><span class="g">🌌</span><b>Starry rooftop</b><small>Yıldızlı çatı · scene</small><span class="price">🍃 500</span></div>
+              <div class="sitem prem"><span class="g">🦊</span><b>Forest friends</b><small>Fox, owl, deer · pack</small><span class="price">🍃 900</span></div>
+            </div>
+            <div class="row"><span style="font-size:20px">🫙</span><span><b>Add to the jar</b><small>Anyone in the house · shows in the feed</small></span></div>
+          </div>
+          <div class="tabbar"><span>Today</span><span>Lists</span><span>Plans</span><span class="on">House</span><span>Messages</span></div>
+        </div></div>
+        <figcaption><strong>The shop</strong>One jar at the top. No pop-ups, no countdown timers, nothing offered during the ceremony.</figcaption>
+      </figure>
+      <div class="box" style="align-self:center;max-width:540px">
+        <h3>Keeping a shared jar friendly</h3>
+        <ul>
+          <li>Anyone in the house can spend; the feed says who added and who spent, so the jar is never a mystery.</li>
+          <li>Later, if wanted: "ask before spending over 300".</li>
+          <li>Children's top-ups go through Ask to Buy.</li>
+          <li>Prices in money are shown next to Leaves when topping up.</li>
+          <li>If Apple refunds a top-up, the jar goes down by that much and can dip below zero; the shop pauses until it's back. Nothing already bought is taken away.</li>
+        </ul>
+        <h3>Why this works with Apple</h3>
+        <ul>
+          <li>Top-ups are consumable purchases, which can be bought again and again.</li>
+          <li>Apple refunds only to the person who paid, and Leaves can't be cashed out or moved between houses, which is what Apple asks of gifts.</li>
+          <li>No random boxes: Apple would require published odds, and they're a trust problem in a family app.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wide" id="owning">
+    <div class="col">
+      <span class="eyebrow">Who owns what</span>
+      <h2>Like a real house</h2>
+      <p class="muted">What's in the jar and what it bought belong to the house, like furniture bought from a shared kitty. Two homes have two jars. Moving out, you leave the jar on the shelf.</p>
+    </div>
+    <div class="tablewrap">
+      <table class="min640">
+        <thead><tr><th>Situation</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td>Ece adds Leaves to Home A's jar</td><td>They're Home A's. Anyone there can spend them; the feed says she added them.</td></tr>
+          <tr><td>Ece is also in Home B</td><td>B has its own jar. Leaves don't move between houses; she tops up whichever she likes.</td></tr>
+          <tr><td>Something is bought from A's jar</td><td>It's A's, whoever pressed the button.</td></tr>
+          <tr><td>Ece leaves Home A</td><td>The jar and everything bought stay with the house. <i>A change from version 4, where purchases left with the buyer: a shared jar has no "mine" to take.</i></td></tr>
+          <tr><td>Album cards</td><td>Always stay. Memories belong to the house that made them.</td></tr>
+          <tr><td>A house is deleted</td><td>The delete warning says how many Leaves are in the jar, before anyone confirms.</td></tr>
+          <tr><td>Apple refunds a top-up</td><td>The jar goes down by that much, even below zero; the shop pauses until it's back.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box"><h3>The server checks</h3><ul>
+      <li><code>jar:topUp</code>: verifies Apple's signed transaction once, and credits the jar of a house the buyer is a member of.</li>
+      <li><code>shop:buy</code>: you must be a member of the house; the jar is debited in the same write the item lands in the house.</li>
+      <li>No moving boxes and no per-person wallets: the jar model removes both.</li>
+    </ul></div>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow" id="finale">When the catalog runs out</span>
+      <h2>"You've grown them all"</h2>
+      <p class="muted">A busy house can grow everything available before the next monthly drop arrives. That moment deserves its own celebration, not an empty picker. When the server has nothing new, the house gets a finale and a way to keep going.</p>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen" style="background:radial-gradient(90% 50% at 50% 20%, #5b3a10 0%, #2B1754 40%, #09080D 100%)">
+          <div class="island"></div><div class="sb"><span>19:30</span><span>●●●</span></div>
+          <div class="body" style="top:70px;align-items:center;text-align:center;gap:14px">
+            <div style="font-size:44px">👑</div>
+            <div class="cm-title" style="font-size:22px">You've grown them all</div>
+            <div class="cm-sub">Every companion available right now, 26 of them, since March.</div>
+            <div class="albumgrid" style="width:100%;grid-template-columns:repeat(3,1fr)">
+              <div class="card"><img src="img/cat_magnolia.jpg" alt=""></div><div class="card"><img src="img/cat_cherry.jpg" alt=""></div><div class="card"><img src="img/cat_pomegranate.jpg" alt=""></div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"><span class="pill">412 chores</span><span class="pill">96 dinners</span><span class="pill">14 things fixed</span></div>
+            <div class="pill" style="border-color:rgba(255,210,122,.5);color:var(--app-gold)">👑 Tiny crown · <span class="coin">+500 🍃</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;width:100%">
+              <span class="row" style="justify-content:space-between"><b>Grow a favourite again</b><small>in a new colour</small></span>
+              <span class="row" style="justify-content:space-between"><b>New seeds arrive</b><small>1 November · tell us</small></span>
+            </div>
+          </div>
+        </div></div>
+        <figcaption><strong>The finale</strong>Shown once, to everyone, like a graduation.</figcaption>
+      </figure>
+      <div class="box" style="align-self:center;max-width:540px">
+        <h3>What happens then</h3>
+        <ul>
+          <li><b>The finale:</b> the whole album pans past, the totals for everything the house has grown, a crown keepsake, and 500 Leaves for the jar.</li>
+          <li><b>Grow a favourite again:</b> any species can be grown a second and third time in a new colour (moonlight, golden), so collecting has depth beyond the list.</li>
+          <li><b>A wildflower meadow</b> keeps growing quietly in the meantime, with no graduation, so Today is never empty.</li>
+          <li><b>New seeds arrive:</b> the date of the next drop, and a one-time "they're here" notification when the server adds new species.</li>
+          <li><b>What "all" means:</b> everything anyone can get without paying: the free species, the ones bought with Leaves, rewards, and the seasonal ones currently in season. Paid items are never counted, so buying a pack can't push the crown further away.</li>
+          <li><b>Specials shelf:</b> paid species and packs have their own row in the album, with a small "all grown" moment when every pet in a pack has been raised.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wide" id="subs">
+    <div class="col">
+      <span class="eyebrow">With your subscription plans</span>
+      <h2>The companion stays free, and grows just as fast without a subscription</h2>
+      <p class="muted">You're planning to put things like House problems, Money, the calendar, custom movie collections and custom recipes behind a subscription. The companion should stay free: it's the reason to open the app every day, and the best way to show people what a subscription adds.</p>
+    </div>
+    <div class="grid2">
+      <div class="box"><h3>The same pace for everyone</h3><ul>
+        <li>Fixing problems and events that happen are growth sources. Without them, a free couple would take <b>16 days instead of 14</b> (simulated).</li>
+        <li>So when a house doesn't have those features, chores, dinners and movie nights count a little more. That brings it back to <b>14 days</b>, the same as a subscribed house.</li>
+        <li>That keeps the promise that money never buys growth, even indirectly.</li>
+      </ul></div>
+      <div class="box"><h3>What a subscriber could get here</h3><ul>
+        <li>A monthly 300 Leaves into the house jar.</li>
+        <li>One exclusive seasonal species or scene each month.</li>
+        <li>Never faster growth or an easier finale.</li>
+        <li>Worth deciding together with the rest of the subscription, including whether one person's subscription covers the whole house.</li>
+      </ul></div>
+    </div>
+    <p class="note muted" style="font-size:14px;border-left:3px solid var(--line);padding-left:14px">Putting existing features behind a subscription deserves its own plan. One server serves every app version, and older versions don't know about subscriptions, so the locking has to be done carefully to avoid breaking screens people already use.</p>
+  </section>
+
+  <section class="wide" id="names">
+    <div class="col">
+      <span class="eyebrow">Names</span>
+      <h2>What to call it</h2>
+      <p class="muted">It should work in English and Turkish, be friendly enough to say out loud ("did you water the Nestie?"), and be ownable for the App Store page. A quick search found no companion app using these; a trademark check is still needed.</p>
+    </div>
+    <div class="names">
+      <div class="name pick"><span class="tag violet" style="align-self:flex-start">Chosen, for now</span><b>Nestie</b><span class="tl">"Grow a Nestie together."</span><span class="tr">"Nestie'nizi birlikte büyütün."</span><span class="why">Short, cute, clearly part of NestZone, and works for a plant or a pet. Easy to say in Turkish.</span></div>
+      <div class="name"><b>Housemate</b><span class="tl">"Meet your newest housemate."</span><span class="tr">"Yeni ev arkadaşınızla tanışın."</span><span class="why">Instantly understood and a little funny. Too common a word to own, so best as the tagline.</span></div>
+      <div class="name"><b>Homegrown</b><span class="tl">"Grown by everyone in the house."</span><span class="tr">"Evdeki herkes büyüttü."</span><span class="why">A strong marketing line about doing it together. Already used by a lifestyle publication.</span></div>
+      <div class="name"><b>Nestling</b><span class="tl">"Raise a nestling together."</span><span class="tr">"Yuvanın yavrusu."</span><span class="why">On brand, but means a baby bird, and few Turkish speakers know the word.</span></div>
+      <div class="name"><b>Sprout</b><span class="tl">"Your house has a sprout."</span><span class="tr">"Evinizde bir filiz var."</span><span class="why">Friendly but plant-only and very crowded in the App Store.</span></div>
+      <div class="name"><b>Yuvacık</b><span class="tl">"The little nest."</span><span class="tr">"Yuvacığınız büyüyor."</span><span class="why">Lovely in Turkish, meaningless in English. Could be the Turkish name if the English one is Nestie.</span></div>
+    </div>
+    <div class="box">
+      <h3>The rest of the vocabulary</h3>
+      <ul>
+        <li><b>Leaves / Yaprak</b> for the earned coins. I checked "Acorns" first, but in Turkish "palamut" is mostly the fish, so it would read as "100 bonitos".</li>
+        <li><b>House jar / Ev kumbarası</b> for where they're kept: one jar per house, filled by growing and by anyone's top-ups.</li>
+        <li><b>Our album / Albümümüz</b> for the collection, which works for plants and pets alike.</li>
+        <li>Suggested launch line: <b>"Nestie: meet your newest housemate."</b> / <b>"Nestie: yeni ev arkadaşınız."</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="wide" id="art">
+    <div class="col">
+      <span class="eyebrow">Art and motion · all in code</span>
+      <h2>No illustrator, no Rive, no bill: everything is drawn in code</h2>
+      <p class="muted">You asked me to be the illustrator, the animator and the motion designer. That works because nothing here is a picture. The trees grow from a seed out of a handful of parts, the duckling is five shapes, every decoration is a few dozen lines of drawing, and every movement is a formula. It costs nothing to license, adds nothing to the download, and can change in a day.</p>
+    </div>
+    <div class="kitfig" id="kit">
+      <div class="eq"><img src="img/kit.jpg" alt="The parts of the plant laid out: a leaf, the same leaf thirsty, a fallen leaf, a flower, a bud, a branch and a pot"><span aria-hidden="true">→</span><img src="img/mood_bright.jpg" alt="The finished tree built from those parts"></div>
+      <div class="box"><h3>What a "parts kit" is</h3>
+        <p>Instead of finished paintings, a plant is built from pieces drawn once: a leaf, a flower, a bud, a branch, a pot. The app grows each plant from those pieces, like LEGO. The tree on the right is 490 leaves, 35 flowers and 136 branches made from the seven pieces on the left. The pieces are drawn in code too, so there's no illustrator in the loop.</p>
+        <ul>
+          <li><b>Far less to make.</b> 25 plants × 7 stages × 3 colours × 4 moods would be 2,100 paintings; this is a few hundred lines.</li>
+          <li><b>It can move.</b> Each leaf sways on its own, hangs when thirsty and falls; flowers close to buds and reopen.</li>
+          <li><b>Every house's plant is its own,</b> grown from the household's id.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table class="min640">
+        <thead><tr><th>Piece</th><th>How it's made</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Trees</b> (6 species, any number of seeds)</td><td>Grown by rules from a seed: branching, leaves, flowers, fruit</td><td>In the app</td></tr>
+          <tr><td><b>Duckling</b></td><td>Five shapes moved by code: 7 stages, 4 moods, hop, wiggle, wake-up</td><td>In the app</td></tr>
+          <tr><td><b>Decorations</b></td><td>40 drawings, with night glow, flicker, sway and falling weather</td><td>In the app</td></tr>
+          <tr><td><b>Moods and motion</b></td><td>Sway, droop, revive, stage pop, drops, hearts, petals, fireworks</td><td>In the app</td></tr>
+          <tr><td><b>More pets</b> (kitten, hedgehog, bunny…)</td><td>A few body plans (round, four-legged, bird, fish), each dressed per species</td><td>Next</td></tr>
+          <tr><td><b>More plants</b> (sunflower, cactus, basil…)</td><td>New growth rules on the same engine: a stalk and a head, pads, a rosette</td><td>Next</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2">
+      <div class="box" id="team"><h3>What drawing in code can and can't do</h3><ul>
+        <li><b>Can:</b> endless variety from a seed, moods as a smooth scale instead of four pictures, animation that reacts to what happened, a tiny download, changes in a day.</li>
+        <li><b>Can't:</b> painterly texture or hand-drawn charm. The style is flat, rounded vector, which suits the glass look.</li>
+        <li><b>Harder:</b> rich character acting (a cat curling up to sleep). Pets stay simple and expressive: eyes, posture, colour and a few moves each.</li>
+      </ul></div>
+      <div class="box"><h3>No paid tools</h3><ul>
+        <li>Everything is SwiftUI <code>Canvas</code> and <code>TimelineView</code>, which ship with iOS.</li>
+        <li>Rive's player is free, but making animations needs its editor and an animator; we need neither.</li>
+        <li>If there's ever a budget, the parts approach still works: an illustrator could redraw any piece and the code keeps moving it.</li>
+        <li>The prototypes in this folder are the same drawing, in a browser, for trying ideas before they go into the app.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow">Server and app</span>
+      <h2>Counted on the server, so every version feeds it</h2>
+      <p class="muted">The actions that grow it are ones every installed version already sends. Each gets a one-line hook that schedules a small "reconcile" job after the write, so the companion can never slow down or roll back a tick. Purchases are checked on the server too: the phone hands over Apple's signed receipt, the server verifies it and credits the house jar once.</p>
+    </div>
+    <div class="diagram">
+      <svg viewBox="0 0 960 360" role="img" aria-label="Data flow: existing mutations into reconcile, the ledger and the companion; graduation into the album and wallet; purchases verified into the wallet; one live read for the app">
+        <rect x="10" y="20" width="230" height="150" rx="12"/>
+        <text x="26" y="46" font-weight="600">What people already do</text>
+        <text class="s" x="26" y="70">tasks:update</text><text class="s" x="26" y="90">shopping:setPurchased</text><text class="s" x="26" y="110">meals:set · issues:setStatus</text><text class="s" x="26" y="130">polls:vote</text><text class="s" x="26" y="152">hourly sweep: events that ended</text>
+        <rect class="key" x="300" y="60" width="170" height="70" rx="12"/>
+        <text x="316" y="88" font-weight="600">companion:reconcile</text><text class="s" x="316" y="110">caps · keys · idempotent</text>
+        <rect x="530" y="20" width="200" height="60" rx="12"/><text x="546" y="46" font-weight="600">companion_growth</text><text class="s" x="546" y="66">one row per credited thing</text>
+        <rect x="530" y="110" width="200" height="60" rx="12"/><text x="546" y="136" font-weight="600">companions</text><text class="s" x="546" y="156">points · stage · species</text>
+        <rect x="530" y="200" width="200" height="60" rx="12"/><text x="546" y="226" font-weight="600">Graduation</text><text class="s" x="546" y="246">album · next seed · +100 Leaves</text>
+        <rect class="money" x="300" y="270" width="200" height="70" rx="12"/><text x="316" y="296" font-weight="600">store:redeem</text><text class="s" x="316" y="316">Apple-signed receipt, verified</text><text class="s" x="316" y="332">refunds via App Store notices</text>
+        <rect class="money" x="530" y="285" width="200" height="60" rx="12"/><text x="546" y="311" font-weight="600">house jar + owned items</text><text class="s" x="546" y="331">one currency, per house</text>
+        <rect class="app" x="790" y="40" width="160" height="230" rx="12"/>
+        <text x="806" y="66" font-weight="600">The app</text><text class="s" x="806" y="90">companion:forHome</text><text class="s" x="806" y="110">(one live read)</text><text class="s" x="806" y="140">Today scene</text><text class="s" x="806" y="160">care · ceremony</text><text class="s" x="806" y="180">album · shop</text><text class="s" x="806" y="210">StoreKit 2</text><text class="s" x="806" y="230">shop:buy · care</text>
+        <path d="M240 95 H300" marker-end="url(#arr)"/>
+        <path d="M470 85 C500 85 500 50 530 50" marker-end="url(#arr)"/>
+        <path d="M470 105 C500 105 500 140 530 140" marker-end="url(#arr)"/>
+        <path d="M630 170 V200" marker-end="url(#arr)"/>
+        <path d="M630 260 V285" marker-end="url(#arr)"/>
+        <path d="M730 140 H790" marker-end="url(#arr)"/>
+        <path d="M730 315 C770 315 770 270 790 260" marker-end="url(#arr)"/>
+        <path d="M790 230 C700 230 560 300 500 305" marker-end="url(#arr)"/>
+        <path d="M500 305 H530" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+    <div class="grid2">
+      <div class="box"><h3>New tables, nothing changed</h3>
+<pre>companions        home, species, variant, name,
+                  status, points, stage, threshold
+companion_growth  source, key (unique), actor,
+                  points, day, label
+companion_album   species, variant, dates, recap
+companion_views   who has seen which ceremony
+house_jars        one per home: Leaves
+jar_ledger        who added or spent, key (unique)
+store_receipts    Apple transaction id (unique)
+owned_items       what each house owns, from whom
+companion_scene   one per home: the eight spots
+seasons           events, dates, their items</pre>
+        <p class="muted" style="font-size:14px">Species live in code next to their art, with a release date so the server knows what's out. Decorations and seasons are data on the server, so a new seasonal item needs no app update. Everything joins the home's delete cascade.</p>
+      </div>
+      <div class="box"><h3>New functions</h3><ul>
+        <li><code>companion:forHome</code>: one live payload with stage, progress, mood clock, today's care, the last 8 growth events to animate, any ceremony or finale waiting.</li>
+        <li><code>companion:care</code>, <code>companion:choose</code> (direct pick for one), <code>companion:markCeremonySeen</code>, <code>companion:album</code>.</li>
+        <li><code>shop:catalog</code>, <code>shop:buy</code> (spends from the jar atomically), <code>companion:place</code> (one spot per call), <code>seasons:current</code>.</li>
+        <li><code>jar:topUp</code> verifies a StoreKit 2 signed transaction against Apple's certificate chain, records it once and credits the chosen house's jar; an HTTP endpoint takes App Store server notifications for refunds.</li>
+        <li>Internal: <code>reconcile</code>, an hourly <code>sweep</code> (which also puts seasonal things away at an event's end and back on its first day), <code>recount</code>, and a monthly "new seeds" notice.</li>
+      </ul></div>
+    </div>
+    <div class="grid2">
+      <div class="box"><h3>Safe for older versions</h3><ul>
+        <li>Only additions: new tables and functions, hooks inside existing writes, no argument changes.</li>
+        <li>Older phones keep growing it by ticking chores; they just don't see it. Pushes go only to people on the new version.</li>
+        <li>A kill switch on the server turns crediting off without a release; the shop has its own.</li>
+      </ul></div>
+      <div class="box"><h3>The first day</h3><ul>
+        <li>No companion until someone on the new version opens Today; old-version homes are left alone.</li>
+        <li>No backfill of years of chores. A small head start from the last week's chores, so the pot isn't bare.</li>
+        <li>Untick a chore and its growth goes back, like the chore split; tidying the shopping list never shrinks it.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="wide" id="roadmap">
+    <div class="col">
+      <span class="eyebrow">Roadmap</span>
+      <h2>From the MVP to the App Store</h2>
+      <p class="muted">With no art to wait for, the date is set by engineering alone. The steps below are estimates in working sessions, and each one can ship to testers on its own.</p>
+    </div>
+    <div class="phases">
+      <div class="phase"><span class="when">Done · development builds</span><h3>The MVP</h3><ul>
+        <li>Today card, six trees and the duckling, moods and the wake-up</li>
+        <li>Graduation, album, choosing the next one</li>
+        <li>House jar from growing, Decorate with 40 decorations</li>
+        <li>49 holidays, chosen per house</li>
+      </ul></div>
+      <div class="phase"><span class="when">Next · about 1–2 weeks</span><h3>Shared by the house</h3><ul>
+        <li>Backend first, additive only: companion, growth ledger from the writes the app already sends, care, jar, scene, holidays per house</li>
+        <li>The app swaps its local file for one live read</li>
+        <li>Vote for the next one (direct pick with one person)</li>
+        <li>At most three notifications</li>
+      </ul></div>
+      <div class="phase"><span class="when">Then · about 1 week</span><h3>The jar takes money</h3><ul>
+        <li>Top-ups as StoreKit 2 consumables, checked on the server; refunds</li>
+        <li>The shop, prices, premium species and packs</li>
+        <li>App Store Connect: products and review notes</li>
+      </ul></div>
+      <div class="phase"><span class="when">Alongside · ongoing</span><h3>More to grow</h3><ul>
+        <li>Kitten, hedgehog, bunny and friends from a few body plans</li>
+        <li>Sunflower, cactus, basil and other plants</li>
+        <li>Then: TestFlight, the changelog entry, App Review, release</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="wide">
+    <div class="col">
+      <span class="eyebrow">Decided</span>
+      <h2>What's settled</h2>
+    </div>
+    <ul class="decided">
+      <li class="yours">Nestie, for now: one string to change later.</li>
+      <li class="yours">Waking up and other transitions between states.</li>
+      <li class="yours">All art and motion in code; no paid tools, no Rive, no illustrator.</li>
+      <li class="yours">One house jar: whatever anyone buys goes into the house.</li>
+      <li class="yours">Holidays from every tradition, chosen per house.</li>
+      <li class="yours">An MVP in the app now, on development builds only.</li>
+      <li class="yours">Plants and pets together; about two weeks for an active house; a wide catalog.</li>
+      <li class="yours">No vote with only one person to ask.</li>
+      <li class="yours">A finale when everything free is grown; buying never delays it.</li>
+      <li class="yours">Moods shown big; seasonal things to buy.</li>
+      <li class="yours">The companion stays free alongside your subscription plans, at the same pace.</li>
+      <li>Unticking a chore takes its growth back; nothing for sale affects growth; no random boxes.</li>
+    </ul>
+    <p class="muted" style="font-size:14px">★ your calls · ✓ recommendations you accepted</p>
+  </section>
+
+  <section class="col" id="open">
+    <span class="eyebrow">Still open</span>
+    <h2>A few small calls</h2>
+    <div class="decide">
+      <div class="q"><h3>What leaves with a person</h3><p class="rec"><b>Recommended</b>Nothing: the jar and what it bought stay with the house, like a shared kitty.</p><p class="alt">Or: unspent Leaves someone added go with them (more bookkeeping, and the jar can suddenly shrink).</p></div>
+      <div class="q"><h3>Top-up prices</h3><p class="rec"><b>Recommended</b>Four packs, for example 300 / 1,000 / 2,200 / 5,000 Leaves, priced from Apple's tiers, Turkish prices from local tiers; adjust after a month.</p><p class="alt">Or start with two packs only.</p></div>
+      <div class="q"><h3>How decorating works</h3><p class="rec"><b>Recommended</b>Eight spots with Decorate mode and preview before buying, as in the app.</p><p class="alt">Or free placement anywhere in the scene.</p></div>
+      <div class="q"><h3>Subscriber perks</h3><p class="rec"><b>Recommended</b>A monthly 300 Leaves into the jar and one exclusive seasonal thing, decided with the rest of the subscription.</p><p class="alt">Or nothing companion-specific.</p></div>
+    </div>
+  </section>
+
+  <section class="col">
+    <details><summary>Sources for the research</summary>
+      <ul class="sources">
+        <li>https://www.sumone.co/en</li><li>https://apps.apple.com/us/app/sumone-for-relationships/id1469506430</li><li>https://mwm.ai/apps/sumone-for-relationships/1469506430</li><li>https://justuseapp.com/en/app/1469506430/sumone-for-relationships/reviews</li>
+        <li>https://apps.apple.com/us/app/widgetable-besties-couples/id1641107226</li><li>https://apps.apple.com/gb/app/pengu-raise-virtual-pets/id6462927800</li><li>https://apps.apple.com/us/app/finch-self-care-pet/id1528595748</li><li>https://chiltonm.bearblog.dev/everyone-i-know-is-addicted-to-the-bird-app/</li>
+        <li>https://forestapp.cc</li><li>https://en.wikipedia.org/wiki/Forest_(application)</li><li>https://pikminwiki.com/Party_Walk</li><li>https://respawn.outlookindia.com/gaming/gaming-news/pikmin-bloom-2025-revenue-hits-100m-milestone</li>
+        <li>https://siliconera.com/tamagotchi-uni-is-surprisingly-good-at-being-a-wearable-virtual-pet/</li><li>https://en.wikipedia.org/wiki/Neko_Atsume</li><li>https://habitica.fandom.com/wiki/Rest_in_the_Inn</li><li>https://blog.duolingo.com/how-duolingo-streak-builds-habit</li>
+        <li>https://blog.duolingo.com/product-lessons-friend-streak/</li><li>https://apps.apple.com/us/app/plant-nanny-cute-water-tracker/id1424178757</li><li>https://www.technologyreview.com/2022/05/10/1051954/chore-apps/</li><li>https://bgr.com/tech/with-watchos-11-pausing-my-activity-rings-wont-make-me-feel-bad-about-myself-anymore/</li>
+        <li>https://vulcanpost.com/825490/bondee-viral-social-media-app-fail-reasons/</li><li>https://techcrunch.com/2025/08/06/photo-sharing-app-locket-is-banking-on-a-new-celebrity-focused-feature-to-fuel-its-growth</li><li>https://apps.apple.com/app/blooom/id6754576604</li>
+        <li>https://developer.apple.com/app-store/review/guidelines/ (3.1.1 currencies, gifting, loot boxes)</li>
+        <li>https://github.com/rive-app/rive-ios/releases</li><li>https://rive.app/docs/runtimes/apple/data-binding</li><li>https://rive.app/docs/runtimes/runtime-sizes.md</li><li>https://rive.app/pricing</li><li>https://developer.apple.com/forums/thread/804973</li>
+        <li>https://developer.apple.com/documentation/swiftui/view/layereffect(_:maxsampleoffset:isenabled:)</li><li>https://developer.apple.com/documentation/widgetkit/animating-data-updates-in-widgets-and-live-activities</li><li>https://www.reedsmith.com/de/perspectives/2025/02/copyright-office-anticipated-part-two-report-ai-addressing-copyrightability</li><li>https://contra.com/hire/rive-app-experts</li><li>https://contra.com/p/seOAX3PZ-expressive-character-animation-for-finch-app</li><li>https://solohourly.com/rates/illustrator-rates-in-united-states</li>
+      </ul>
+    </details>
+  </section>
+
+</div>
+
+<dialog id="catalog" aria-labelledby="catTitle">
+  <div class="cat-head">
+    <div class="cat-top">
+      <div>
+        <span class="eyebrow">The catalog · launch</span>
+        <h2 id="catTitle" style="margin-top:4px">Everything a house can grow, place and collect</h2>
+        <p class="cat-sum" id="catSum"></p>
+      </div>
+      <button class="cat-close" id="closeCatalog" aria-label="Close the catalog">✕</button>
+    </div>
+    <div class="tabs" role="tablist" id="catTabs"></div>
+    <div class="chips" id="catChips" aria-label="Filter by how it's got"></div>
+  </div>
+  <div class="cat-body"><div class="catgrid" id="catGrid"></div><p class="cat-empty" id="catEmpty" hidden>Nothing here with that filter.</p></div>
+</dialog>
+
+<script src="duck.js"></script>
+<script>
+{ // A block, so nothing here collides with the window's own globals (top, screen).
+
+// ---------- the catalog: one list, used by the teaser and the dialog
+// get: starter | leaves | sparkles | pack | season | reward ; art: code | kit | rig | illus
+const CAT = [
+  // Flowering trees the prototype can draw today
+  { k:'plant', en:'Magnolia', tr:'Manolya', img:'cat_magnolia', get:'starter', per:'Graceful and early to bloom.', loves:'together days', art:'code' },
+  { k:'plant', en:'Cherry blossom', tr:'Kiraz çiçeği', img:'cat_cherry', get:'season', when:'Mar–May', per:'Shows off every spring.', loves:'events', art:'code' },
+  { k:'plant', en:'Pomegranate', tr:'Nar ağacı', img:'cat_pomegranate', get:'leaves', price:300, per:'Generous; loves a full table.', loves:'dinners', art:'code' },
+  { k:'plant', en:'Azalea', tr:'Açelya', img:'cat_azalea', get:'leaves', price:250, per:'Bright and a little dramatic.', loves:'movie nights', art:'code' },
+  { k:'plant', en:'Olive tree', tr:'Zeytin ağacı', img:'cat_olive', get:'reward', when:'3rd graduation', per:'Patient, an old soul.', loves:'quiet weeks', art:'code' },
+  { k:'plant', en:'Lemon tree', tr:'Limon ağacı', img:'cat_lemon', get:'sparkles', price:400, per:'Zesty; perks up at breakfast.', loves:'shopping trips', art:'code' },
+  // Plants still to draw: new growth rules on the same engine
+  { k:'plant', en:'Basil', tr:'Fesleğen', em:'🌿', get:'starter', per:'Kitchen chatterbox.', loves:'dinners', art:'kit' },
+  { k:'plant', en:'Sunflower', tr:'Ayçiçeği', em:'🌻', get:'starter', per:'Turns toward wherever the fun is.', loves:'events', art:'kit' },
+  { k:'plant', en:'Cactus', tr:'Kaktüs', em:'🌵', get:'starter', per:'Low-maintenance, secretly soft.', loves:'quiet weeks', art:'kit' },
+  { k:'plant', en:'Daisy', tr:'Papatya', em:'🌼', get:'leaves', price:120, per:'Cheerful about everything.', loves:'care', art:'kit' },
+  { k:'plant', en:'Mint', tr:'Nane', em:'🌱', get:'leaves', price:150, per:'Spreads good moods.', loves:'shopping trips', art:'kit' },
+  { k:'plant', en:'Rosemary', tr:'Biberiye', em:'🌿', get:'leaves', price:150, per:'Remembers every dinner.', loves:'dinners', art:'kit' },
+  { k:'plant', en:'Snake plant', tr:'Paşa kılıcı', em:'🪴', get:'leaves', price:150, per:'Stands tall, asks for little.', loves:'fixes', art:'kit' },
+  { k:'plant', en:'Fern', tr:'Eğrelti otu', em:'🌿', get:'leaves', price:180, per:'Shy; unfurls slowly.', loves:'care', art:'kit' },
+  { k:'plant', en:'Lavender', tr:'Lavanta', em:'🪻', get:'leaves', price:200, per:'Calms the whole house.', loves:'together days', art:'kit' },
+  { k:'plant', en:'Peony', tr:'Şakayık', em:'🌺', get:'leaves', price:250, per:'Big blooms, big feelings.', loves:'events', art:'kit' },
+  { k:'plant', en:'Monstera', tr:'Deve tabanı', em:'🪴', get:'reward', when:'1st graduation', per:'Unbothered, enormous leaves.', loves:'fixes', art:'kit' },
+  { k:'plant', en:'Rose', tr:'Gül', em:'🌹', get:'sparkles', price:350, per:'Romantic, a little thorny.', loves:'dinners', art:'kit' },
+  { k:'plant', en:'Orchid', tr:'Orkide', em:'🌸', get:'sparkles', price:450, per:'Elegant; likes things just so.', loves:'chores', art:'kit' },
+  { k:'plant', en:'Bonsai', tr:'Bonsai', em:'🌳', get:'sparkles', price:600, per:'Rare and wise.', loves:'care', art:'kit' },
+  { k:'plant', en:'Tulip', tr:'Lale', em:'🌷', get:'season', when:'Mar–Apr', per:'First colour of spring.', loves:'events', art:'kit' },
+  { k:'plant', en:'Maple', tr:'Akçaağaç', em:'🍁', get:'season', when:'Sep–Nov', per:'Turns red when it’s happy.', loves:'movie nights', art:'kit' },
+  { k:'plant', en:'Pumpkin', tr:'Balkabağı', em:'🎃', get:'season', when:'Oct–Nov', per:'Grows suspiciously fast.', loves:'dinners', art:'kit' },
+  { k:'plant', en:'Pine tree', tr:'Çam ağacı', em:'🌲', get:'season', when:'Dec–Jan', per:'Cosy in the cold.', loves:'together days', art:'kit' },
+  { k:'plant', en:'Snowdrop', tr:'Kardelen', em:'🤍', get:'season', when:'Jan–Feb', per:'Pushes through the snow.', loves:'care', art:'kit' },
+  // Pets: a few body plans in code, dressed per species
+  { k:'pet', en:'Duckling', tr:'Ördek yavrusu', em:'🐤', get:'starter', per:'Follows whoever cared last.', loves:'together days', art:'code' },
+  { k:'pet', en:'Kitten', tr:'Yavru kedi', em:'🐱', get:'starter', per:'Independent; naps happily.', loves:'quiet weeks', art:'rig' },
+  { k:'pet', en:'Hedgehog', tr:'Kirpi', em:'🦔', get:'reward', when:'2nd graduation', per:'Uncurls a little each care.', loves:'chores', art:'rig' },
+  { k:'pet', en:'Hamster', tr:'Hamster', em:'🐹', get:'leaves', price:350, per:'Always busy, always snacking.', loves:'shopping trips', art:'rig' },
+  { k:'pet', en:'Turtle', tr:'Kaplumbağa', em:'🐢', get:'leaves', price:400, per:'Slow, steady, unshakeable.', loves:'quiet weeks', art:'rig' },
+  { k:'pet', en:'Goldfish', tr:'Japon balığı', em:'🐠', get:'leaves', price:300, per:'Remembers more than you think.', loves:'care', art:'rig' },
+  { k:'pet', en:'Puppy', tr:'Yavru köpek', em:'🐶', get:'sparkles', price:600, per:'Thrilled when anyone comes home.', loves:'events', art:'rig' },
+  { k:'pet', en:'Bunny', tr:'Tavşan', em:'🐰', get:'season', when:'Mar–Apr', per:'Hops at good news.', loves:'together days', art:'rig' },
+  { k:'pet', en:'Fox', tr:'Tilki', em:'🦊', get:'pack', pack:'Forest friends', price:900, per:'Clever; finds every snack.', loves:'dinners', art:'rig' },
+  { k:'pet', en:'Owl', tr:'Baykuş', em:'🦉', get:'pack', pack:'Forest friends', price:900, per:'Awake for movie nights.', loves:'movie nights', art:'rig' },
+  { k:'pet', en:'Deer', tr:'Geyik', em:'🦌', get:'pack', pack:'Forest friends', price:900, per:'Gentle and a bit shy.', loves:'care', art:'rig' },
+  { k:'pet', en:'Penguin', tr:'Penguen', em:'🐧', get:'pack', pack:'Snow friends', price:900, per:'Waddles to every event.', loves:'events', art:'rig' },
+  { k:'pet', en:'Snow fox', tr:'Kar tilkisi', em:'🦊', get:'pack', pack:'Snow friends', price:900, per:'Fluffier every week.', loves:'quiet weeks', art:'rig' },
+  { k:'pet', en:'Polar bear cub', tr:'Kutup ayısı yavrusu', em:'🐻‍❄️', get:'pack', pack:'Snow friends', price:900, per:'Big hugs, small paws.', loves:'together days', art:'rig' },
+  // Decorations, by the spot they go in. art 'proto': drawn in code and in the app.
+  { k:'decor', zone:'Sky', en:'Windowsill', tr:'Pencere önü', em:'🪟', get:'starter', per:'Where everyone starts.', art:'illus' },
+  { k:'decor', zone:'Sky', en:'Balcony', tr:'Balkon', em:'🌇', get:'leaves', price:300, per:'City evenings.', art:'illus' },
+  { k:'decor', zone:'Sky', en:'Starry rooftop', tr:'Yıldızlı çatı', em:'🌌', get:'sparkles', price:500, per:'The best view in town.', art:'illus' },
+  { k:'decor', zone:'Sky', en:'Dusk', tr:'Alacakaranlık', em:'🌆', get:'season', when:'Jun–Aug', per:'Long summer evenings.', art:'proto' },
+  { k:'decor', zone:'Sky', en:'Full moon night', tr:'Dolunay gecesi', em:'🌕', get:'season', price:200, when:'Halloween', per:'A big orange moon.', art:'proto' },
+  { k:'decor', zone:'Sky', en:'Winter sky', tr:'Kış gökyüzü', em:'🌨️', get:'season', price:200, when:'New Year', per:'Cold, clear and blue.', art:'proto' },
+  { k:'decor', zone:'Weather', en:'Snowfall', tr:'Kar yağışı', em:'❄️', get:'season', when:'New Year', per:'Earned together; snow on the rim too.', art:'proto' },
+  { k:'decor', zone:'Weather', en:'Falling petals', tr:'Çiçek yağmuru', em:'🌸', get:'season', when:'Spring', per:'Earned together.', art:'proto' },
+  { k:'decor', zone:'Overhead', en:'Bunting', tr:'Flama', em:'🎏', get:'leaves', price:100, per:'Every day is a little party.', art:'proto' },
+  { k:'decor', zone:'Overhead', en:'Wind chime', tr:'Rüzgar çanı', em:'🎐', get:'leaves', price:120, per:'Rings when someone cares.', art:'illus' },
+  { k:'decor', zone:'Overhead', en:'Heart garland', tr:'Kalp süsü', em:'💕', get:'season', when:'Valentine’s', per:'Earned together.', art:'proto' },
+  { k:'decor', zone:'Overhead', en:'Bats', tr:'Yarasalar', em:'🦇', get:'season', price:120, when:'Halloween', per:'They flutter after dark.', art:'proto' },
+  { k:'decor', zone:'Overhead', en:'Halloween bunting', tr:'Cadılar Bayramı flaması', em:'🏴', get:'season', when:'Halloween', per:'Earned together.', art:'proto' },
+  { k:'decor', zone:'On the tree', en:'Fairy lights', tr:'Peri ışıkları', em:'✨', get:'leaves', price:150, per:'Glows after dark.', art:'proto' },
+  { k:'decor', zone:'On the tree', en:'Ornaments', tr:'Yılbaşı süsleri', em:'🔴', get:'season', price:150, when:'New Year', per:'Baubles on every tip.', art:'proto' },
+  { k:'decor', zone:'On the tree', en:'Tree-top star', tr:'Tepe yıldızı', em:'⭐', get:'season', price:120, when:'New Year', per:'Finds the highest branch.', art:'proto' },
+  { k:'decor', zone:'On the tree', en:'Wish notes', tr:'Dilek kâğıtları', em:'📜', get:'season', when:'Hıdırellez', per:'One wish per person.', art:'proto' },
+  { k:'decor', zone:'Wearing', en:'Bow', tr:'Fiyonk', em:'🎀', get:'leaves', price:60, per:'For pets and pots.', art:'illus' },
+  { k:'decor', zone:'Wearing', en:'Scarf', tr:'Atkı', em:'🧣', get:'leaves', price:100, per:'Winter-ready.', art:'illus' },
+  { k:'decor', zone:'Wearing', en:'Party hat', tr:'Parti şapkası', em:'🎉', get:'reward', when:'each birthday', per:'Free on the day.', art:'illus' },
+  { k:'decor', zone:'Wearing', en:'Tiny crown', tr:'Minik taç', em:'👑', get:'reward', when:'grow them all', per:'Keepsake for the finale.', art:'illus' },
+  { k:'decor', zone:'Pot', en:'Terracotta pot', tr:'Pişmiş toprak saksı', em:'🏺', get:'leaves', price:80, per:'The classic.', art:'proto' },
+  { k:'decor', zone:'Pot', en:'Blue glazed pot', tr:'Mavi sırlı saksı', em:'🫙', get:'leaves', price:120, per:'Hand-painted look.', art:'proto' },
+  { k:'decor', zone:'Pot', en:'Golden pot', tr:'Altın saksı', em:'🏆', get:'sparkles', price:300, per:'For the proud.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Watering can', tr:'Sulama kabı', em:'🪣', get:'reward', when:'first together day', per:'Keepsake.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Bird feeder', tr:'Kuş yemliği', em:'🪺', get:'leaves', price:200, per:'Visitors on busy days.', art:'illus' },
+  { k:'decor', zone:'Floor', en:'Paper lantern', tr:'Kâğıt fener', em:'🏮', get:'sparkles', price:200, per:'Warm light after dark.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Jack-o’-lantern', tr:'Bal kabağı feneri', em:'🎃', get:'season', price:120, when:'Halloween', per:'Flickers after dark.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Gift box', tr:'Hediye kutusu', em:'🎁', get:'season', price:100, when:'New Year', per:'Something for everyone.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Bayram candy bowl', tr:'Bayram şekeri', em:'🍬', get:'season', when:'Ramazan Bayramı', per:'Free only, never sold.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Watermelon', tr:'Karpuz', em:'🍉', get:'season', price:120, when:'Summer', per:'Cold slices on hot days.', art:'illus' },
+  { k:'decor', zone:'Rug', en:'Kilim', tr:'Kilim', em:'🧶', get:'leaves', price:250, per:'Makes the corner feel home.', art:'proto' },
+];
+const GET = { starter: ['Free', 'keep'], leaves: ['Leaves', 'keep'], sparkles: ['Premium', 'gold'], pack: ['Pack', 'gold'], season: ['Seasonal', 'violet'], reward: ['Reward', 'violet'] };
+const ART = { code: 'in the app', kit: 'next · in code', rig: 'next · in code', illus: 'next · in code', proto: 'in the app' };
+const TINT = { plant: 'radial-gradient(110% 80% at 30% 0%, #234a35, #10241a)', pet: 'radial-gradient(110% 80% at 30% 0%, #4a3416, #22170a)', decor: 'radial-gradient(110% 80% at 30% 0%, #3b2a5e, #1a1030)' };
+function priceText(c) {
+  if (c.get === 'starter') return 'Free';
+  if (c.get === 'leaves') return `🍃 ${c.price}`;
+  if (c.get === 'sparkles') return `🍃 ${c.price}`;
+  if (c.get === 'pack') return `${c.pack} · 🍃 ${c.price}`;
+  if (c.get === 'season') return c.price ? `🍃 ${c.price} · ${c.when}` : `Free in season · ${c.when}`;
+  return `Reward · ${c.when}`;
+}
+function card(c) {
+  const el = document.createElement('article'); el.className = 'ccard';
+  const art = c.img ? `<img src="img/${c.img}.jpg" alt="${c.en}">` : `<span class="em" role="img" aria-label="${c.en}">${c.em}</span>`;
+  el.innerHTML = `<div class="art" style="background:${TINT[c.k]}">${art}<span class="badge">${ART[c.art]}</span></div>
+    <div class="meta"><b>${c.en}</b><span class="trn">${c.tr}</span><span class="per">${c.per}</span>
+    ${c.loves ? `<span class="trn">Loves ${c.loves}</span>` : ''}${c.zone ? `<span class="trn">Goes: ${c.zone}</span>` : ''}
+    <div class="foot"><span class="tag ${GET[c.get][1]}">${GET[c.get][0]}</span><span class="trn" style="font-variant-numeric:tabular-nums">${priceText(c)}</span></div></div>`;
+  return el;
+}
+// Teaser on the page: a spread across kinds and ways to get them.
+const teaser = document.getElementById('teaser');
+['Magnolia', 'Sunflower', 'Basil', 'Cherry blossom', 'Duckling', 'Fox', 'Jack-o’-lantern', 'Ornaments'].forEach(n => teaser.appendChild(card(CAT.find(c => c.en === n))));
+// The dialog
+const dlg = document.getElementById('catalog'), cgrid = document.getElementById('catGrid'), tabs = document.getElementById('catTabs'), chips = document.getElementById('catChips');
+const KINDS = [['all', 'All'], ['plant', 'Plants'], ['pet', 'Pets'], ['decor', 'Decor']];
+const FILTERS = [['any', 'Any way'], ['starter', 'Free'], ['leaves', 'Leaves'], ['sparkles', 'Premium'], ['pack', 'Packs'], ['season', 'Seasonal'], ['reward', 'Rewards']];
+let kind = 'all', filt = 'any';
+const count = k => CAT.filter(c => k === 'all' || c.k === k).length;
+document.getElementById('catSum').textContent = `${count('plant')} plants, ${count('pet')} pets and ${count('decor')} decorations at launch. Two or three new each month; every species has three colour variants to grow again.`;
+KINDS.forEach(([v, l]) => { const b = document.createElement('button'); b.className = 'tabbtn'; b.setAttribute('role', 'tab'); b.textContent = `${l} · ${count(v)}`; b.dataset.v = v; b.onclick = () => { kind = v; render(); }; tabs.appendChild(b); });
+FILTERS.forEach(([v, l]) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = l; b.dataset.v = v; b.onclick = () => { filt = v; render(); }; chips.appendChild(b); });
+function render() {
+  tabs.querySelectorAll('.tabbtn').forEach(b => b.setAttribute('aria-selected', b.dataset.v === kind));
+  chips.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === filt));
+  cgrid.replaceChildren(...CAT.filter(c => (kind === 'all' || c.k === kind) && (filt === 'any' || c.get === filt)).map(card));
+  document.getElementById('catEmpty').hidden = cgrid.children.length > 0;
+}
+render();
+const openCat = () => { if (!dlg.open) dlg.showModal(); };
+['openCatalog', 'openCatalog2', 'openCatalog3'].forEach(id => document.getElementById(id).onclick = openCat);
+document.getElementById('closeCatalog').onclick = () => dlg.close();
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+if (location.hash === '#catalog') openCat();
+
+// ---------- shared helpers
+const pressed = (group, attr, val) => group.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset[attr] === val));
+function fx(host, ch, n, x0, y0) {
+  for (let i = 0; i < n; i++) { const f = document.createElement('span'); f.className = 'fx'; f.textContent = ch; f.style.left = (x0 + (i - (n - 1) / 2) * 22) + 'px'; f.style.bottom = (y0 + (i % 2) * 10) + 'px'; f.style.animationDelay = (i * .12) + 's'; host.appendChild(f); setTimeout(() => f.remove(), 1700); }
+}
+const quiet = m => m === 'sleepy' || m === 'dozing';
+
+// ---------- live demo: plant or duckling, and how the house has been
+const demo = document.getElementById('demoScene'), duckScene = document.getElementById('demoDuckScene');
+const demoDuck = Duck.mount(document.getElementById('demoDuck'), { stage: 4, mood: 'bright' });
+// mood: [the plant's mood value, the pet's mood, what Today calls it]
+const MOOD = { bright: [1, 'bright', 'bright'], content: [.62, 'content', 'content'], thirsty: [.3, 'sleepy', 'thirsty'], dozing: [.05, 'dozing', 'dozing'] };
+// After quiet days a chore wakes it all the way, as in the app; otherwise one step brighter.
+const UP = { dozing: 'content', thirsty: 'content', content: 'bright', bright: 'bright' };
+let demoKind = 'plant', demoMood = 'bright', growing = null;
+function syncDemo() {
+  const plant = demoKind === 'plant', m = MOOD[demoMood];
+  demo.hidden = !plant; duckScene.hidden = plant;
+  duckScene.classList.toggle('quiet', quiet(m[1]));
+  duckScene.querySelectorAll('.zz').forEach(z => z.remove());
+  if (!plant && quiet(m[1]) && demoDuck.stage > 1) for (let i = 0; i < 3; i++) { const z = document.createElement('span'); z.className = 'zz'; z.textContent = 'z'; z.style.left = (190 + i * 10) + 'px'; z.style.bottom = (130 + i * 8) + 'px'; z.style.animationDelay = (i * .7) + 's'; duckScene.appendChild(z); }
+  document.getElementById('demoName').textContent = plant ? 'Manolya' : 'Ördek yavrusu';
+  document.getElementById('demoSub').textContent = plant ? `Magnolia · sapling · ${m[2]}` : `Duckling · ${Duck.STAGES[demoDuck.stage].toLowerCase()} · ${m[1]}`;
+  document.getElementById('demoPill').textContent = plant ? '💧 Water' : '🍞 Feed';
+  pressed(document.getElementById('demoKind'), 'k', demoKind); pressed(document.getElementById('demoMood'), 'm', demoMood);
+}
+document.querySelectorAll('#demoKind button').forEach(b => b.onclick = () => { demoKind = b.dataset.k; syncDemo(); });
+document.querySelectorAll('#demoMood button').forEach(b => b.onclick = () => {
+  demoMood = b.dataset.m; demo.contentWindow.postMessage({ mood: MOOD[demoMood][0] }, '*'); demoDuck.set({ mood: MOOD[demoMood][1] }); syncDemo();
+});
+// A chore lifts the mood one step, for the plant (which does it itself) and the duck alike.
+document.getElementById('btnChore').onclick = () => {
+  const wasQuiet = demoMood === 'thirsty' || demoMood === 'dozing';
+  demoMood = UP[demoMood];
+  if (wasQuiet) demoDuck.wake(MOOD[demoMood][1]); else demoDuck.set({ mood: MOOD[demoMood][1] });
+  if (demoKind === 'plant') demo.contentWindow.postMessage('chore', '*');
+  else { fx(duckScene, '✨', 3, duckScene.clientWidth / 2, 130); if (!wasQuiet) setTimeout(() => demoDuck.hop(), 250); }
+  syncDemo();
+};
+document.getElementById('btnGrow').onclick = () => {
+  if (demoKind === 'plant') return demo.contentWindow.postMessage('grow', '*');
+  clearInterval(growing); demoDuck.set({ stage: 0 }); syncDemo();
+  growing = setInterval(() => { if (demoDuck.stage >= 6) return clearInterval(growing); demoDuck.set({ stage: demoDuck.stage + 1 }); demoDuck.hop(); syncDemo(); }, 1300);
+};
+syncDemo();
+
+// ---------- moods: the duck in each one
+const moodPets = document.getElementById('moodPets');
+['bright', 'content', 'sleepy', 'dozing'].forEach(m => { const d = document.createElement('div');
+  d.innerHTML = `<svg viewBox="0 0 120 120" class="pet s5 ${m}" aria-hidden="true">${Duck.svg(5, m)}</svg>${m[0].toUpperCase() + m.slice(1)}`; moodPets.appendChild(d); });
+
+// ---------- decorate: the scene in edit mode says which spot was tapped; the tray offers what fits
+const decoScene = document.getElementById('decoScene');
+const SPOT = { above: 'Overhead', sky: 'Sky', weather: 'Weather', tree: 'On the tree', pot: 'Pot', left: 'Floor, left', right: 'Floor, right', ground: 'Rug' };
+// z: the spot it fits ('floor' fits both floor spots). own: the house has it. price and leaves: Leaves from the jar; free: earned in its season.
+const DECO = [
+  { k: 'bunting', z: 'above', en: 'Bunting', em: '🎏', own: 1 }, { k: 'hearts', z: 'above', en: 'Heart garland', em: '💕', free: 'Free · Feb' },
+  { k: 'spookyflags', z: 'above', en: 'Halloween bunting', em: '🏴', free: 'Free · Oct' }, { k: 'bats', z: 'above', en: 'Bats', em: '🦇', price: 120 },
+  { k: 'spooky', z: 'sky', en: 'Full moon night', em: '🌕', price: 200 }, { k: 'winter', z: 'sky', en: 'Winter sky', em: '🌨️', price: 200 },
+  { k: 'dusk', z: 'sky', en: 'Dusk', em: '🌆', free: 'Free · summer' },
+  { k: 'snow', z: 'weather', en: 'Snowfall', em: '❄️', free: 'Free · winter' }, { k: 'petals', z: 'weather', en: 'Petals', em: '🌸', free: 'Free · spring' },
+  { k: 'lights', z: 'tree', en: 'Fairy lights', em: '✨', own: 1 }, { k: 'ornaments', z: 'tree', en: 'Ornaments', em: '🔴', price: 150 },
+  { k: 'star', z: 'tree', en: 'Tree-top star', em: '⭐', price: 120 }, { k: 'notes', z: 'tree', en: 'Wish notes', em: '📜', free: 'Free · May' },
+  { k: 'glazed', z: 'pot', en: 'Blue glazed', em: '🫙', own: 1 }, { k: 'terracotta', z: 'pot', en: 'Terracotta', em: '🏺', leaves: 80 },
+  { k: 'goldpot', z: 'pot', en: 'Golden pot', em: '🏆', price: 300 },
+  { k: 'can', z: 'floor', en: 'Watering can', em: '🪣', own: 1 }, { k: 'pumpkin', z: 'floor', en: 'Jack-o’-lantern', em: '🎃', price: 120 },
+  { k: 'gift', z: 'floor', en: 'Gift box', em: '🎁', price: 100 }, { k: 'lantern', z: 'floor', en: 'Paper lantern', em: '🏮', price: 200 },
+  { k: 'candy', z: 'floor', en: 'Candy bowl', em: '🍬', free: 'Free · Bayram' }, { k: 'rug', z: 'ground', en: 'Kilim', em: '🧶', own: 1 },
+];
+const SETS = {
+  halloween: { sky: 'spooky', above: 'bats', tree: [], pot: null, left: 'pumpkin', right: null, ground: null, weather: null },
+  newyear: { sky: 'winter', above: null, tree: ['lights', 'ornaments', 'star'], pot: null, left: 'gift', right: null, ground: 'rug', weather: 'snow' },
+  spring: { sky: null, above: 'bunting', tree: ['notes'], pot: 'terracotta', left: 'can', right: null, ground: null, weather: 'petals' },
+  clear: { sky: null, above: null, tree: [], pot: null, left: null, right: null, ground: null, weather: null },
+};
+const SET_PRICE = { halloween: ['Halloween', 350], newyear: ['New Year', 450] };
+const same = (a, b) => !!a && !!b && Object.keys(b).every(k => k === 'tree' ? [...a.tree].sort().join() === [...b.tree].sort().join() : a[k] === b[k]);
+let placed = null, spot = null, undo = [];
+const tellScene = m => decoScene.contentWindow.postMessage(m, '*');
+const fits = (d, sp) => d.z === sp || (d.z === 'floor' && (sp === 'left' || sp === 'right'));
+const isOn = d => !!placed && (d.z === 'tree' ? placed.tree.includes(d.k) : d.z === 'floor' ? placed[spot] === d.k : placed[d.z] === d.k);
+const tag = d => d.own ? 'Yours' : d.price ? `🍃 ${d.price}` : d.leaves ? `🍃 ${d.leaves}` : d.free;
+function renderTray() {
+  const list = document.getElementById('trayItems');
+  if (!spot) {
+    document.getElementById('trayTitle').textContent = 'Tap a glowing spot';
+    document.getElementById('trayHint').textContent = 'or put out a whole set';
+    list.innerHTML = '<p class="empty">Eight spots: overhead, sky, weather, on the tree, the pot, two on the floor, and the rug. In this demo everything can be tried.</p>';
+  } else {
+    document.getElementById('trayTitle').textContent = SPOT[spot];
+    document.getElementById('trayHint').textContent = spot === 'tree' ? 'Up to four things' : 'One thing here · tap again to remove';
+    list.replaceChildren(...DECO.filter(d => fits(d, spot)).sort((a, b) => (b.own || 0) - (a.own || 0)).map(d => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'titem' + (isOn(d) ? ' on' : '') + (d.price ? ' prem' : '');
+      b.innerHTML = `<span class="g" aria-hidden="true">${d.em}</span>${d.en}<small>${isOn(d) ? 'Placed ✓' : tag(d)}</small>`;
+      b.onclick = () => { undo.push(JSON.stringify(placed)); tellScene({ place: { zone: spot, item: d.k } }); };
+      return b;
+    }));
+  }
+  // Anything placed that the house doesn't own yet is a preview, with what it would cost.
+  const keys = placed ? [placed.sky, placed.above, ...placed.tree, placed.pot, placed.left, placed.right, placed.ground, placed.weather].filter(Boolean) : [];
+  const pre = DECO.filter(d => keys.includes(d.k) && (d.price || d.leaves));
+  const sp = pre.reduce((t, d) => t + (d.price || 0), 0), lv = pre.reduce((t, d) => t + (d.leaves || 0), 0);
+  document.getElementById('trayPreview').hidden = !pre.length;
+  // A whole seasonal set costs less than its pieces one by one.
+  const set = Object.keys(SET_PRICE).find(n => same(placed, SETS[n]));
+  document.getElementById('previewText').textContent = !pre.length ? '' : set
+    ? `Preview: the whole ${SET_PRICE[set][0]} set · 🍃 ${SET_PRICE[set][1]} (🍃 ${sp - SET_PRICE[set][1]} less than one by one)`
+    : `Preview: ${pre.map(d => d.en).join(', ')} · ${`🍃 ${sp + lv}`}`;
+}
+addEventListener('message', e => {
+  if (e.source !== decoScene.contentWindow || !e.data || typeof e.data !== 'object') return;
+  if ('zone' in e.data) spot = e.data.zone;
+  if (e.data.placed) placed = e.data.placed;
+  renderTray();
+});
+decoScene.addEventListener('load', () => tellScene({ edit: true }));
+document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { undo.push(JSON.stringify(placed)); tellScene({ set: SETS[b.dataset.set] }); });
+document.getElementById('decoUndo').onclick = () => { const last = undo.pop(); if (last && last !== 'null') tellScene({ set: JSON.parse(last) }); };
+document.getElementById('decoDone').onclick = () => { spot = null; tellScene({ select: null }); renderTray(); document.getElementById('trayHint').textContent = 'Saved · everyone sees it now'; };
+renderTray();
+
+// ---------- the simulation chart: one series, median dot with a 10th–90th percentile line
+const rows = [
+  ['Couple', 2, 13, 14, 17, 21], ['4 flatmates', 4, 13, 15, 18, 28], ['Family of 4 (2 kids)', 4, 11, 12, 14, 30],
+  ['6 flatmates', 6, 12, 13, 17, 31], ['Living alone', 1, 15, 18, 22, 13], ['Quiet couple', 2, 27, 33, 40, 15],
+  ['Couple, one never cares', 2, 14, 16, 19, 12, 1], ['Couple faking 30 chores a day', 2, 12, 14, 16, 20, 1],
+  ['Couple doing everything daily', 2, 7, 7, 7, 17, 1], ['Couple who only care', 2, 38, 38, 38, 100, 1]
+];
+const svgNS = 'http://www.w3.org/2000/svg', X0 = 250, X1 = 880, max = 45, x = d => X0 + (X1 - X0) * d / max, T0 = 26, step = 37;
+const gridG = document.getElementById('grid'), g = document.getElementById('rows'), tip = document.getElementById('tip'), chart = document.getElementById('chart');
+const el = (n, a, p) => { const e = document.createElementNS(svgNS, n); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+const bottom = T0 + step * rows.length + 2;
+for (let d = 0; d <= 40; d += 10) {
+  el('line', { x1: x(d), x2: x(d), y1: 14, y2: bottom }, gridG);
+  const t = el('text', { x: x(d), y: bottom + 18, 'text-anchor': 'middle' }, gridG); t.textContent = d === 0 ? '0 days' : d;
+}
+el('line', { class: 'floor', x1: x(6), x2: x(6), y1: 14, y2: bottom }, g);
+const ft = el('text', { x: x(6) + 6, y: 12, 'text-anchor': 'start' }, g); ft.textContent = 'fastest possible: 6 days';
+rows.forEach((r, i) => {
+  const y = T0 + i * step + (r[6] ? 10 : 0), grp = el('g', { class: r[6] ? 'stress' : '' }, g);
+  const lab = el('text', { class: 'lab', x: 0, y: y + 4 }, grp); lab.textContent = r[0];
+  if (r[6] && i === 6) { const s = el('text', { x: 0, y: y - 16 }, g); s.textContent = 'STRESS TESTS'; s.setAttribute('style', 'font-family:var(--mono);font-size:11px;letter-spacing:.06em'); }
+  if (r[2] !== r[4]) el('line', { class: 'rng', x1: x(r[2]), x2: x(r[4]), y1: y, y2: y }, grp);
+  el('circle', { class: 'med', cx: x(r[3]), cy: y, r: 6 }, grp);
+  const hit = el('rect', { class: 'hit', x: 0, y: y - step / 2, width: X1 + 10, height: step }, grp);
+  hit.addEventListener('mousemove', e => {
+    tip.textContent = `${r[0]}: median ${r[3]} days (${r[2]}–${r[4]}), ${r[5]}% from care`;
+    const b = chart.getBoundingClientRect(); tip.style.left = (e.clientX - b.left + 14) + 'px'; tip.style.top = (e.clientY - b.top - 30) + 'px'; tip.style.opacity = 1;
+  });
+  hit.addEventListener('mouseleave', () => tip.style.opacity = 0);
+  const tr = document.createElement('tr'); tr.innerHTML = `<td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td><td class="n">${r[3]}</td><td class="n">${r[4]}</td><td class="n">${r[5]}%</td>`;
+  document.getElementById('simTable').appendChild(tr);
+});
+
+// ---------- the ceremony: beats on a timeline, petals, the polaroid into the album, then the coins
+const cer = document.getElementById('cer'), pol = document.getElementById('pol'), lapse = document.getElementById('lapse'), scr = document.getElementById('cerScreen');
+const names = ['Seed', 'Sprout', 'Seedling', 'Leafy', 'Sapling', 'Bud', 'Bloom'], days = [0, 1, 3, 5, 8, 11, 14];
+names.forEach((n, i) => { const w = document.createElement('div'); w.innerHTML = `<img src="img/stage${i + 1}.png" alt="${n}"><small>${days[i]}d</small>`; lapse.appendChild(w); });
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let timers = [];
+function playCeremony() {
+  timers.forEach(clearTimeout); timers = [];
+  cer.classList.remove('on'); cer.querySelectorAll('.cm').forEach(c => c.classList.remove('show')); lapse.querySelectorAll('img').forEach(i => i.classList.remove('show'));
+  pol.classList.remove('show', 'away'); scr.querySelectorAll('.petal').forEach(p => p.remove());
+  const at = (ms, f) => timers.push(setTimeout(f, ms));
+  at(50, () => cer.classList.add('on'));
+  cer.querySelectorAll('.cm').forEach(c => { at(+c.dataset.at, () => c.classList.add('show')); if (c.dataset.off) at(+c.dataset.off, () => c.classList.remove('show')); });
+  lapse.querySelectorAll('img').forEach((im, i) => at(2600 + i * 420, () => im.classList.add('show')));
+  at(10600, () => pol.classList.add('show'));
+  at(11900, () => pol.classList.add('away'));
+  if (!reduce) for (let i = 0; i < 44; i++) at(1000 + i * 260, () => {
+    const p = document.createElement('span'); p.className = 'petal'; p.style.left = Math.random() * 300 + 'px';
+    p.style.animationDuration = (5 + Math.random() * 4) + 's'; p.style.background = ['#ff8fb8', '#ffd27a', '#c4a7ff'][i % 3]; scr.appendChild(p);
+  });
+}
+document.getElementById('btnCer').onclick = playCeremony;
+if (location.hash === '#ceremony') playCeremony();
+
+// ---------- the duckling (duck.js, shared with duck.html): seven stages, four moods, a few reactions
+const petStage = document.getElementById('petStage'), petRange = document.getElementById('petRange');
+const pet = Duck.mount(document.getElementById('petSvg'), { stage: 5, mood: 'content' });
+function syncPet() {
+  document.getElementById('petStageName').textContent = Duck.STAGES[pet.stage];
+  document.getElementById('petLab').innerHTML = `Ördek yavrusu<small>${Duck.STAGES[pet.stage]} · ${pet.mood}</small>`;
+  petStage.classList.toggle('quiet', quiet(pet.mood));
+  pressed(document.getElementById('petMoods'), 'm', pet.mood);
+  petStage.querySelectorAll('.zz').forEach(z => z.remove());
+  if (quiet(pet.mood) && pet.stage > 1) for (let i = 0; i < 3; i++) { const z = document.createElement('span'); z.className = 'zz'; z.textContent = 'z'; z.style.left = (185 + i * 10) + 'px'; z.style.bottom = (150 + i * 8) + 'px'; z.style.animationDelay = (i * .7) + 's'; petStage.appendChild(z); }
+}
+// Waking up: the eyes flutter open, a stretch, a shake, and the nightcap flies off.
+const wake = () => { const was = quiet(pet.mood); if (was) pet.wake(); syncPet(); return was; };
+document.getElementById('petChore').onclick = () => { const woke = wake(); fx(petStage, '✨', 3, 150, 200); if (!woke) setTimeout(() => pet.hop(), 250); };
+document.getElementById('petPet').onclick = () => { const woke = wake(); fx(petStage, '💛', 3, 150, 190); if (!woke) pet.wiggle(); };
+document.querySelectorAll('#petMoods button').forEach(b => b.onclick = () => { pet.set({ mood: b.dataset.m }); syncPet(); });
+petRange.oninput = () => { pet.set({ stage: +petRange.value }); syncPet(); };
+syncPet();
+const petRow = document.getElementById('petRow');
+Duck.STAGES.forEach((n, i) => { const d = document.createElement('div'); d.className = 'stage'; d.innerHTML = `<svg viewBox="0 0 120 120" class="pet s${i}" aria-hidden="true">${Duck.svg(i)}</svg><b>${n}</b><span>stage ${i + 1}</span>`; petRow.appendChild(d); });
+}
+</script>
+</body>
+</html>

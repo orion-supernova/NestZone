@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duckling Demo</title>
+<link rel="stylesheet" href="duck.css">
+<style>
+:root { --ink: #F3F0FA; --dim: rgba(235,232,245,.62); --edge: rgba(255,255,255,.12); --violet: #8B5CF6; color-scheme: dark; }
+* { box-sizing: border-box }
+body { margin: 0; min-height: 100vh; background: radial-gradient(120% 70% at 20% 0%, #2B1754 0%, #150D26 45%, #09080D 100%); color: var(--ink);
+  font: 15px/1.45 ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 28px 16px 60px; display: flex; flex-direction: column; gap: 22px; }
+a { color: #C4A7FF }
+h1 { margin: 0; font-size: clamp(28px, 5vw, 40px); line-height: 1.05; }
+p { margin: 0; color: var(--dim); max-width: 62ch; }
+.top { display: grid; grid-template-columns: minmax(0, 380px) 1fr; gap: 28px; align-items: center; }
+@media (max-width: 720px) { .top { grid-template-columns: 1fr } }
+.stage { position: relative; height: 360px; border-radius: 30px; overflow: hidden; border: 1px solid var(--edge);
+  background: radial-gradient(110% 80% at 30% 0%, #2B1754, #150D26 70%); display: grid; place-items: end center; padding-bottom: 30px; transition: filter .6s; }
+.stage.quiet { filter: saturate(.55) brightness(.82); }
+.stage svg { width: 250px; height: 250px; overflow: visible; }
+.stage .lab { position: absolute; left: 18px; top: 16px; font-weight: 600; } .stage .lab small { display: block; color: var(--dim); font-weight: 500; }
+.ctrl { display: flex; flex-direction: column; gap: 14px; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: 600 14px inherit; font-family: inherit; color: var(--ink); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 9px 15px; cursor: pointer; }
+button.primary { background: var(--violet); border-color: var(--violet); }
+button[aria-pressed="true"] { background: rgba(255,210,122,.22); border-color: rgba(255,210,122,.6); }
+button:focus-visible { outline: 3px solid #C4A7FF; outline-offset: 2px; }
+label.range { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; color: var(--dim); }
+input[type=range] { accent-color: var(--violet); width: 100%; }
+.row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.row.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 720px) { .row { grid-template-columns: repeat(4, minmax(0, 1fr)) } }
+.cell { background: rgba(255,255,255,.05); border: 1px solid var(--edge); border-radius: 18px; padding: 8px 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.cell svg { width: 100%; height: 110px; overflow: visible; }
+.cell b { font-size: 13px } .cell span { font-size: 12px; color: var(--dim) }
+h2 { margin: 8px 0 0; font-size: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <a href="index.html#pets">← Back to the plan</a>
+  <h1>The duckling</h1>
+  <p>A stand-in drawn in code from five parts (body, head, wing, eye, beak), the way the illustrator's pets would be built. It grows through seven stages, and its mood shows in its face, its colour, its posture and how it moves.</p>
+  <section class="top">
+    <div class="stage" id="stage">
+      <div class="lab" id="lab">Ördek yavrusu<small>Young · content</small></div>
+      <svg viewBox="0 0 120 120" id="duck" role="img"></svg>
+    </div>
+    <div class="ctrl">
+      <div class="btns">
+        <button class="primary" id="chore">Someone ticks a chore</button>
+        <button id="pet">Pet it</button>
+      </div>
+      <div class="btns" id="moods" role="group" aria-label="Mood">
+        <button data-m="bright">Bright</button><button data-m="content">Content</button><button data-m="sleepy">Sleepy</button><button data-m="dozing">Dozing</button>
+      </div>
+      <label class="range">Stage <input type="range" id="range" min="0" max="6" value="5"> <span id="stageName">Young</span></label>
+      <p>Bright bounces with sparkly eyes. Sleepy fades, droops its head and wing, and naps. Dozing puts on a nightcap. One chore or one pet from anyone wakes it.</p>
+    </div>
+  </section>
+  <h2>Four moods</h2>
+  <div class="row four" id="moodRow"></div>
+  <h2>Seven stages</h2>
+  <div class="row" id="stageRow"></div>
+</main>
+<script src="duck.js"></script>
+<script>
+{
+const $ = s => document.querySelector(s), stage = $('#stage'), duck = Duck.mount($('#duck'), { stage: 5, mood: 'content' });
+const LABEL = { bright: 'bright', content: 'content', sleepy: 'sleepy', dozing: 'dozing' };
+function fx(ch, n, x0, y0) {
+  for (let i = 0; i < n; i++) { const f = document.createElement('span'); f.className = 'fx'; f.textContent = ch; f.style.left = (x0 + (i - (n - 1) / 2) * 22) + 'px'; f.style.bottom = (y0 + (i % 2) * 10) + 'px'; f.style.animationDelay = (i * .12) + 's'; stage.appendChild(f); setTimeout(() => f.remove(), 1700); }
+}
+function sync() {
+  const quiet = duck.mood === 'sleepy' || duck.mood === 'dozing';
+  stage.classList.toggle('quiet', quiet);
+  $('#lab').innerHTML = `Ördek yavrusu<small>${Duck.STAGES[duck.stage]} · ${LABEL[duck.mood]}</small>`;
+  $('#stageName').textContent = Duck.STAGES[duck.stage];
+  document.querySelectorAll('#moods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === duck.mood));
+  stage.querySelectorAll('.zz, .glint').forEach(z => z.remove());
+  const cx = stage.clientWidth / 2;
+  if (quiet && duck.stage > 1) for (let i = 0; i < 3; i++) { const z = document.createElement('span'); z.className = 'zz'; z.textContent = 'z'; z.style.left = (cx + 50 + i * 10) + 'px'; z.style.bottom = (170 + i * 8) + 'px'; z.style.animationDelay = (i * .7) + 's'; stage.appendChild(z); }
+  if (duck.mood === 'bright') for (let i = 0; i < 4; i++) { const g = document.createElement('span'); g.className = 'glint'; g.textContent = '✦'; g.style.left = (cx - 110 + i * 70) + 'px'; g.style.bottom = (120 + (i % 2) * 90) + 'px'; g.style.animationDelay = (i * .45) + 's'; stage.appendChild(g); }
+}
+// Somebody came back: it wakes up (eyes flutter, a stretch, a shake, the nightcap off) instead of hopping.
+function wake() { const quiet = duck.mood === 'sleepy' || duck.mood === 'dozing'; if (quiet) duck.wake(); sync(); return quiet; }
+$('#chore').onclick = () => { const woke = wake(); fx('✨', 3, stage.clientWidth / 2 - 10, 200); if (!woke) setTimeout(() => duck.hop(), 250); };
+$('#pet').onclick = () => { const woke = wake(); fx('💛', 3, stage.clientWidth / 2 - 10, 190); if (!woke) duck.wiggle(); };
+document.querySelectorAll('#moods button').forEach(b => b.onclick = () => { duck.set({ mood: b.dataset.m }); sync(); });
+$('#range').oninput = e => { duck.set({ stage: +e.target.value }); sync(); };
+['bright', 'content', 'sleepy', 'dozing'].forEach(m => { const d = document.createElement('div'); d.className = 'cell';
+  d.innerHTML = `<svg viewBox="0 0 120 120" class="pet s5 ${m}" aria-hidden="true">${Duck.svg(5, m)}</svg><b>${m[0].toUpperCase() + m.slice(1)}</b>`; $('#moodRow').appendChild(d); });
+Duck.STAGES.forEach((n, i) => { const d = document.createElement('div'); d.className = 'cell';
+  d.innerHTML = `<svg viewBox="0 0 120 120" class="pet s${i}" aria-hidden="true">${Duck.svg(i)}</svg><b>${n}</b><span>stage ${i + 1}</span>`; $('#stageRow').appendChild(d); });
+sync();
+}
+</script>
+</body>
+</html>
