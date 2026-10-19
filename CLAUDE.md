@@ -21,10 +21,12 @@ NestZone/                 the app target — one module, four layers
     Customize/            Today's sections: Automatic, Always or Off, and their order
     Now/                  the dock over the tab bar, and tonight's dinner
     Capture/              Add anything: one field that files a line in the right module
+    Companion/            Nestie: the house's plant or pet on Today (Debug builds only, for now)
   Resources/              Localizable.xcstrings, bundled sample recipes
 backend/convex/           Convex functions (queries, mutations, actions)
 backend/changelog.json    the app's release notes — see "Shipping a change"
 backend/DEPRECATIONS.md   what may be removed from the backend, and when
+Docs/Companion/           Nestie's plan, prototypes, holiday sources — start at HANDOFF.md
 deploy.sh                 the release: backend, changelog, version, merge to stage
 XCODE_CLOUD.md            what builds the app once stage is pushed, and its setup
 ci_scripts/               Xcode Cloud's post-clone hook: trusts this app's macros
@@ -68,6 +70,23 @@ remembered per device (`TabSegments`).
   House → At a glance, the movie game at the top of Movies).
 - Segments and Today's layout are per-device `@Shared` app storage, not server
   state, so no backend or older app version is involved.
+
+## Nestie (the companion)
+
+A plant or pet the house grows from what it already does, on Today. The plan,
+the decisions and what's next are in `Docs/Companion/HANDOFF.md` — read it
+before changing anything here.
+
+- **An MVP on Debug builds only** (`CompanionFlag`). Release builds compile it and
+  never draw it; turning it on is part of shipping it, with its changelog entry.
+- Growth is read from the chores' `completed_at`, which every phone already
+  receives; everything else is on the device per home
+  (`SharedKey.companion`) until the server version replaces that storage.
+- All art and motion are code (SwiftUI `Canvas`), by decision: no paid tools.
+  `CompanionScene` draws from a `Snapshot` read in `body` — state read only
+  inside the canvas closure is not tracked, and the scene drew without its tree.
+- Holiday dates are computed or come from verified tables, never guessed; the
+  sources and disagreements are in `Docs/Companion/HOLIDAYS.md`.
 
 ## Shipping a change
 

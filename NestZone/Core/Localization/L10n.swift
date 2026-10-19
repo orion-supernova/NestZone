@@ -7684,4 +7684,1008 @@ public enum L10n {
     public static var captureAddedExpense: LocalizedStringResource {
         r("capture_added_expense", "Expense added")
     }
+
+    // MARK: - Companion (Nestie)
+
+    /// Nestie
+    public static var companionBrand: LocalizedStringResource {
+        r("companion_brand", "Nestie")
+    }
+
+    /// Meet %@
+    public static func companionMeetTitle(_ a0: String) -> LocalizedStringResource {
+        r("companion_meet_title", "Meet \(a0)")
+    }
+
+    /// A plant or a little pet you grow together, just by doing the chores you already do.
+    public static var companionMeetBody: LocalizedStringResource {
+        r("companion_meet_body", "A plant or a little pet you grow together, just by doing the chores you already do.")
+    }
+
+    /// Who's next?
+    public static var companionNextTitle: LocalizedStringResource {
+        r("companion_next_title", "Who's next?")
+    }
+
+    /// Pick the next one. Everything done from now on helps it grow.
+    public static var companionNextBody: LocalizedStringResource {
+        r("companion_next_body", "Pick the next one. Everything done from now on helps it grow.")
+    }
+
+    /// Choose one
+    public static var companionChoose: LocalizedStringResource {
+        r("companion_choose", "Choose one")
+    }
+
+    /// day %lld
+    public static func companionDay(_ a0: Int) -> LocalizedStringResource {
+        r("companion_day", "day \(a0)")
+    }
+
+    /// Next: %@
+    public static func companionNext(_ a0: String) -> LocalizedStringResource {
+        r("companion_next", "Next: \(a0)")
+    }
+
+    /// All grown up!
+    public static var companionReady: LocalizedStringResource {
+        r("companion_ready", "All grown up!")
+    }
+
+    /// Celebrate
+    public static var companionCelebrate: LocalizedStringResource {
+        r("companion_celebrate", "Celebrate")
+    }
+
+    /// Water
+    public static var companionWater: LocalizedStringResource {
+        r("companion_water", "Water")
+    }
+
+    /// Pet
+    public static var companionPet: LocalizedStringResource {
+        r("companion_pet", "Pet")
+    }
+
+    /// Counts once a day from each phone.
+    public static var companionCareHint: LocalizedStringResource {
+        r("companion_care_hint", "Counts once a day from each phone.")
+    }
+
+    /// Decorate
+    public static var companionDecorate: LocalizedStringResource {
+        r("companion_decorate", "Decorate")
+    }
+
+    /// Album
+    public static var companionAlbum: LocalizedStringResource {
+        r("companion_album", "Album")
+    }
+
+    /// Holidays
+    public static var companionHolidays: LocalizedStringResource {
+        r("companion_holidays", "Holidays")
+    }
+
+    /// Lab
+    public static var companionLab: LocalizedStringResource {
+        r("companion_lab", "Lab")
+    }
+
+    /// House jar
+    public static var companionJar: LocalizedStringResource {
+        r("companion_jar", "House jar")
+    }
+
+    /// %lld Leaves
+    public static func companionJarValue(_ a0: Int) -> LocalizedStringResource {
+        r("companion_jar_value", "\(a0) Leaves")
+    }
+
+    /// +%lld
+    public static func companionPay(_ a0: Int) -> LocalizedStringResource {
+        r("companion_pay", "+\(a0)")
+    }
+
+    /// %1$@ Put out the %2$@ things
+    public static func companionDress(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("companion_dress", "\(a0) Put out the \(a1) things")
+    }
+
+    /// %1$@, %2$@, %3$lld percent grown, %4$@
+    public static func companionSceneLabel(_ a0: String, _ a1: String, _ a2: Int, _ a3: String) -> LocalizedStringResource {
+        r("companion_scene_label", "\(a0), \(a1), \(a2) percent grown, \(a3)")
+    }
+
+    /// Tap to give it some love
+    public static var companionSceneHint: LocalizedStringResource {
+        r("companion_scene_hint", "Tap to give it some love")
+    }
+
+    /// It grows from finished chores and a little care — about two weeks for a busy house.
+    public static var chooseHint: LocalizedStringResource {
+        r("choose_hint", "It grows from finished chores and a little care — about two weeks for a busy house.")
+    }
+
+    /// Plants
+    public static var choosePlants: LocalizedStringResource {
+        r("choose_plants", "Plants")
+    }
+
+    /// Pets
+    public static var choosePets: LocalizedStringResource {
+        r("choose_pets", "Pets")
+    }
+
+    /// Decorate
+    public static var decorateTitle: LocalizedStringResource {
+        r("decorate_title", "Decorate")
+    }
+
+    /// Tap a glowing spot
+    public static var decoratePickSpot: LocalizedStringResource {
+        r("decorate_pick_spot", "Tap a glowing spot")
+    }
+
+    /// Overhead, sky, weather, on the tree, the pot, the floor and the rug.
+    public static var decorateSpotHint: LocalizedStringResource {
+        r("decorate_spot_hint", "Overhead, sky, weather, on the tree, the pot, the floor and the rug.")
+    }
+
+    /// Up to four things
+    public static var decorateTreeLimit: LocalizedStringResource {
+        r("decorate_tree_limit", "Up to four things")
+    }
+
+    /// One thing here · tap again to take it off
+    public static var decorateOneThing: LocalizedStringResource {
+        r("decorate_one_thing", "One thing here · tap again to take it off")
+    }
+
+    /// Placed
+    public static var decoratePlaced: LocalizedStringResource {
+        r("decorate_placed", "Placed")
+    }
+
+    /// Yours
+    public static var decorateYours: LocalizedStringResource {
+        r("decorate_yours", "Yours")
+    }
+
+    /// Free today
+    public static var decorateFree: LocalizedStringResource {
+        r("decorate_free", "Free today")
+    }
+
+    /// %lld Leaves
+    public static func decoratePrice(_ a0: Int) -> LocalizedStringResource {
+        r("decorate_price", "\(a0) Leaves")
+    }
+
+    /// Preview — buy it to keep it
+    public static var decoratePreview: LocalizedStringResource {
+        r("decorate_preview", "Preview — buy it to keep it")
+    }
+
+    /// Buy · %lld Leaves
+    public static func decorateBuy(_ a0: Int) -> LocalizedStringResource {
+        r("decorate_buy", "Buy · \(a0) Leaves")
+    }
+
+    /// The jar needs %lld more
+    public static func decorateNeedMore(_ a0: Int) -> LocalizedStringResource {
+        r("decorate_need_more", "The jar needs \(a0) more")
+    }
+
+    /// Put out a whole set
+    public static var decorateSets: LocalizedStringResource {
+        r("decorate_sets", "Put out a whole set")
+    }
+
+    /// Empty
+    public static var decorateEmpty: LocalizedStringResource {
+        r("decorate_empty", "Empty")
+    }
+
+    /// Our album
+    public static var albumTitle: LocalizedStringResource {
+        r("album_title", "Our album")
+    }
+
+    /// Every one you grow together ends up here.
+    public static var albumEmpty: LocalizedStringResource {
+        r("album_empty", "Every one you grow together ends up here.")
+    }
+
+    /// %lld days
+    public static func albumDays(_ a0: Int) -> LocalizedStringResource {
+        r("album_days", "\(a0) days")
+    }
+
+    /// %1$@ grew up in %2$lld days — together.
+    public static func ceremonyBody(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("ceremony_body", "\(a0) grew up in \(a1) days — together.")
+    }
+
+    /// +%lld Leaves for the house jar
+    public static func ceremonyJar(_ a0: Int) -> LocalizedStringResource {
+        r("ceremony_jar", "+\(a0) Leaves for the house jar")
+    }
+
+    /// Put it in the album
+    public static var ceremonyAlbum: LocalizedStringResource {
+        r("ceremony_album", "Put it in the album")
+    }
+
+    /// Our holidays
+    public static var holidaysTitle: LocalizedStringResource {
+        r("holidays_title", "Our holidays")
+    }
+
+    /// The days your house celebrates. Each one dresses up the scene while it lasts, for free.
+    public static var holidaysHint: LocalizedStringResource {
+        r("holidays_hint", "The days your house celebrates. Each one dresses up the scene while it lasts, for free.")
+    }
+
+    /// Use the suggestions for where you live
+    public static var holidaysSuggested: LocalizedStringResource {
+        r("holidays_suggested", "Use the suggestions for where you live")
+    }
+
+    /// Now
+    public static var holidayNow: LocalizedStringResource {
+        r("holiday_now", "Now")
+    }
+
+    /// Next: %@
+    public static func holidayNext(_ a0: String) -> LocalizedStringResource {
+        r("holiday_next", "Next: \(a0)")
+    }
+
+    /// Around the world
+    public static var holidayFamilyWorldwide: LocalizedStringResource {
+        r("holiday_family_worldwide", "Around the world")
+    }
+
+    /// Christian
+    public static var holidayFamilyChristian: LocalizedStringResource {
+        r("holiday_family_christian", "Christian")
+    }
+
+    /// Muslim
+    public static var holidayFamilyMuslim: LocalizedStringResource {
+        r("holiday_family_muslim", "Muslim")
+    }
+
+    /// Jewish
+    public static var holidayFamilyJewish: LocalizedStringResource {
+        r("holiday_family_jewish", "Jewish")
+    }
+
+    /// Hindu
+    public static var holidayFamilyHindu: LocalizedStringResource {
+        r("holiday_family_hindu", "Hindu")
+    }
+
+    /// Sikh
+    public static var holidayFamilySikh: LocalizedStringResource {
+        r("holiday_family_sikh", "Sikh")
+    }
+
+    /// Buddhist
+    public static var holidayFamilyBuddhist: LocalizedStringResource {
+        r("holiday_family_buddhist", "Buddhist")
+    }
+
+    /// East Asian
+    public static var holidayFamilyEastAsian: LocalizedStringResource {
+        r("holiday_family_east_asian", "East Asian")
+    }
+
+    /// Persian
+    public static var holidayFamilyPersian: LocalizedStringResource {
+        r("holiday_family_persian", "Persian")
+    }
+
+    /// Turkish
+    public static var holidayFamilyTurkish: LocalizedStringResource {
+        r("holiday_family_turkish", "Turkish")
+    }
+
+    /// National days
+    public static var holidayFamilyNational: LocalizedStringResource {
+        r("holiday_family_national", "National days")
+    }
+
+    /// New Year
+    public static var holidayNewYear: LocalizedStringResource {
+        r("holiday_new_year", "New Year")
+    }
+
+    /// Valentine's Day
+    public static var holidayValentines: LocalizedStringResource {
+        r("holiday_valentines", "Valentine's Day")
+    }
+
+    /// Women's Day
+    public static var holidayWomensDay: LocalizedStringResource {
+        r("holiday_womens_day", "Women's Day")
+    }
+
+    /// St Patrick's Day
+    public static var holidayStPatricks: LocalizedStringResource {
+        r("holiday_st_patricks", "St Patrick's Day")
+    }
+
+    /// Carnival
+    public static var holidayCarnival: LocalizedStringResource {
+        r("holiday_carnival", "Carnival")
+    }
+
+    /// Earth Day
+    public static var holidayEarthDay: LocalizedStringResource {
+        r("holiday_earth_day", "Earth Day")
+    }
+
+    /// Mother's Day
+    public static var holidayMothersDay: LocalizedStringResource {
+        r("holiday_mothers_day", "Mother's Day")
+    }
+
+    /// Father's Day
+    public static var holidayFathersDay: LocalizedStringResource {
+        r("holiday_fathers_day", "Father's Day")
+    }
+
+    /// Midsummer
+    public static var holidayMidsummer: LocalizedStringResource {
+        r("holiday_midsummer", "Midsummer")
+    }
+
+    /// Halloween
+    public static var holidayHalloween: LocalizedStringResource {
+        r("holiday_halloween", "Halloween")
+    }
+
+    /// Day of the Dead
+    public static var holidayDayOfTheDead: LocalizedStringResource {
+        r("holiday_day_of_the_dead", "Day of the Dead")
+    }
+
+    /// Bonfire Night
+    public static var holidayBonfireNight: LocalizedStringResource {
+        r("holiday_bonfire_night", "Bonfire Night")
+    }
+
+    /// Thanksgiving (US)
+    public static var holidayThanksgivingUS: LocalizedStringResource {
+        r("holiday_thanksgiving_u_s", "Thanksgiving (US)")
+    }
+
+    /// Thanksgiving (Canada)
+    public static var holidayThanksgivingCA: LocalizedStringResource {
+        r("holiday_thanksgiving_c_a", "Thanksgiving (Canada)")
+    }
+
+    /// Kwanzaa
+    public static var holidayKwanzaa: LocalizedStringResource {
+        r("holiday_kwanzaa", "Kwanzaa")
+    }
+
+    /// Three Kings' Day
+    public static var holidayEpiphany: LocalizedStringResource {
+        r("holiday_epiphany", "Three Kings' Day")
+    }
+
+    /// Orthodox Christmas
+    public static var holidayOrthodoxChristmas: LocalizedStringResource {
+        r("holiday_orthodox_christmas", "Orthodox Christmas")
+    }
+
+    /// Easter
+    public static var holidayEaster: LocalizedStringResource {
+        r("holiday_easter", "Easter")
+    }
+
+    /// Orthodox Easter
+    public static var holidayOrthodoxEaster: LocalizedStringResource {
+        r("holiday_orthodox_easter", "Orthodox Easter")
+    }
+
+    /// Christmas
+    public static var holidayChristmas: LocalizedStringResource {
+        r("holiday_christmas", "Christmas")
+    }
+
+    /// Ramadan
+    public static var holidayRamadan: LocalizedStringResource {
+        r("holiday_ramadan", "Ramadan")
+    }
+
+    /// Eid al-Fitr
+    public static var holidayEidAlFitr: LocalizedStringResource {
+        r("holiday_eid_al_fitr", "Eid al-Fitr")
+    }
+
+    /// Eid al-Adha
+    public static var holidayEidAlAdha: LocalizedStringResource {
+        r("holiday_eid_al_adha", "Eid al-Adha")
+    }
+
+    /// Islamic New Year
+    public static var holidayIslamicNewYear: LocalizedStringResource {
+        r("holiday_islamic_new_year", "Islamic New Year")
+    }
+
+    /// Mawlid
+    public static var holidayMawlid: LocalizedStringResource {
+        r("holiday_mawlid", "Mawlid")
+    }
+
+    /// Rosh Hashanah
+    public static var holidayRoshHashanah: LocalizedStringResource {
+        r("holiday_rosh_hashanah", "Rosh Hashanah")
+    }
+
+    /// Sukkot
+    public static var holidaySukkot: LocalizedStringResource {
+        r("holiday_sukkot", "Sukkot")
+    }
+
+    /// Hanukkah
+    public static var holidayHanukkah: LocalizedStringResource {
+        r("holiday_hanukkah", "Hanukkah")
+    }
+
+    /// Purim
+    public static var holidayPurim: LocalizedStringResource {
+        r("holiday_purim", "Purim")
+    }
+
+    /// Passover
+    public static var holidayPassover: LocalizedStringResource {
+        r("holiday_passover", "Passover")
+    }
+
+    /// Makar Sankranti
+    public static var holidayMakarSankranti: LocalizedStringResource {
+        r("holiday_makar_sankranti", "Makar Sankranti")
+    }
+
+    /// Holi
+    public static var holidayHoli: LocalizedStringResource {
+        r("holiday_holi", "Holi")
+    }
+
+    /// Diwali
+    public static var holidayDiwali: LocalizedStringResource {
+        r("holiday_diwali", "Diwali")
+    }
+
+    /// Vaisakhi
+    public static var holidayVaisakhi: LocalizedStringResource {
+        r("holiday_vaisakhi", "Vaisakhi")
+    }
+
+    /// Guru Nanak Jayanti
+    public static var holidayGuruNanakJayanti: LocalizedStringResource {
+        r("holiday_guru_nanak_jayanti", "Guru Nanak Jayanti")
+    }
+
+    /// Vesak
+    public static var holidayVesak: LocalizedStringResource {
+        r("holiday_vesak", "Vesak")
+    }
+
+    /// Lunar New Year
+    public static var holidayLunarNewYear: LocalizedStringResource {
+        r("holiday_lunar_new_year", "Lunar New Year")
+    }
+
+    /// Dragon Boat Festival
+    public static var holidayDragonBoat: LocalizedStringResource {
+        r("holiday_dragon_boat", "Dragon Boat Festival")
+    }
+
+    /// Tanabata
+    public static var holidayTanabata: LocalizedStringResource {
+        r("holiday_tanabata", "Tanabata")
+    }
+
+    /// Mid-Autumn Festival
+    public static var holidayMidAutumn: LocalizedStringResource {
+        r("holiday_mid_autumn", "Mid-Autumn Festival")
+    }
+
+    /// Nowruz
+    public static var holidayNowruz: LocalizedStringResource {
+        r("holiday_nowruz", "Nowruz")
+    }
+
+    /// Yalda Night
+    public static var holidayYalda: LocalizedStringResource {
+        r("holiday_yalda", "Yalda Night")
+    }
+
+    /// Hıdırellez
+    public static var holidayHidirellez: LocalizedStringResource {
+        r("holiday_hidirellez", "Hıdırellez")
+    }
+
+    /// Children's Day (23 April)
+    public static var holidayChildrensDayTR: LocalizedStringResource {
+        r("holiday_childrens_day_t_r", "Children's Day (23 April)")
+    }
+
+    /// Republic Day (Turkey)
+    public static var holidayRepublicDayTR: LocalizedStringResource {
+        r("holiday_republic_day_t_r", "Republic Day (Turkey)")
+    }
+
+    /// Canada Day
+    public static var holidayCanadaDay: LocalizedStringResource {
+        r("holiday_canada_day", "Canada Day")
+    }
+
+    /// Independence Day (US)
+    public static var holidayIndependenceUS: LocalizedStringResource {
+        r("holiday_independence_u_s", "Independence Day (US)")
+    }
+
+    /// Bastille Day
+    public static var holidayBastilleDay: LocalizedStringResource {
+        r("holiday_bastille_day", "Bastille Day")
+    }
+
+    /// Mexican Independence Day
+    public static var holidayIndependenceMX: LocalizedStringResource {
+        r("holiday_independence_m_x", "Mexican Independence Day")
+    }
+
+    /// Lab (development builds)
+    public static var labTitle: LocalizedStringResource {
+        r("lab_title", "Lab (development builds)")
+    }
+
+    /// Only on development builds. Nothing here reaches the server or anyone else's phone.
+    public static var labNote: LocalizedStringResource {
+        r("lab_note", "Only on development builds. Nothing here reaches the server or anyone else's phone.")
+    }
+
+    /// Grow
+    public static var labGrow: LocalizedStringResource {
+        r("lab_grow", "Grow")
+    }
+
+    /// +%lld points
+    public static func labPoints(_ a0: Int) -> LocalizedStringResource {
+        r("lab_points", "+\(a0) points")
+    }
+
+    /// Ready to graduate
+    public static var labReady: LocalizedStringResource {
+        r("lab_ready", "Ready to graduate")
+    }
+
+    /// Mood
+    public static var labMood: LocalizedStringResource {
+        r("lab_mood", "Mood")
+    }
+
+    /// From real chores
+    public static var labReal: LocalizedStringResource {
+        r("lab_real", "From real chores")
+    }
+
+    /// Three quiet days
+    public static var labThirsty: LocalizedStringResource {
+        r("lab_thirsty", "Three quiet days")
+    }
+
+    /// A week away
+    public static var labDozing: LocalizedStringResource {
+        r("lab_dozing", "A week away")
+    }
+
+    /// Pretend it's
+    public static var labDay: LocalizedStringResource {
+        r("lab_day", "Pretend it's")
+    }
+
+    /// Today
+    public static var labToday: LocalizedStringResource {
+        r("lab_today", "Today")
+    }
+
+    /// +%lld Leaves in the jar
+    public static func labLeaves(_ a0: Int) -> LocalizedStringResource {
+        r("lab_leaves", "+\(a0) Leaves in the jar")
+    }
+
+    /// Start over
+    public static var labReset: LocalizedStringResource {
+        r("lab_reset", "Start over")
+    }
+
+    /// bright
+    public static var moodBright: LocalizedStringResource {
+        r("mood_bright", "bright")
+    }
+
+    /// content
+    public static var moodContent: LocalizedStringResource {
+        r("mood_content", "content")
+    }
+
+    /// thirsty
+    public static var moodThirsty: LocalizedStringResource {
+        r("mood_thirsty", "thirsty")
+    }
+
+    /// sleepy
+    public static var moodSleepy: LocalizedStringResource {
+        r("mood_sleepy", "sleepy")
+    }
+
+    /// dozing
+    public static var moodDozing: LocalizedStringResource {
+        r("mood_dozing", "dozing")
+    }
+
+    /// Seed
+    public static var plantStageSeed: LocalizedStringResource {
+        r("plant_stage_seed", "Seed")
+    }
+
+    /// Sprout
+    public static var plantStageSprout: LocalizedStringResource {
+        r("plant_stage_sprout", "Sprout")
+    }
+
+    /// Sapling
+    public static var plantStageSapling: LocalizedStringResource {
+        r("plant_stage_sapling", "Sapling")
+    }
+
+    /// Young tree
+    public static var plantStageYoung: LocalizedStringResource {
+        r("plant_stage_young", "Young tree")
+    }
+
+    /// Tree
+    public static var plantStageTree: LocalizedStringResource {
+        r("plant_stage_tree", "Tree")
+    }
+
+    /// In bloom
+    public static var plantStageBloom: LocalizedStringResource {
+        r("plant_stage_bloom", "In bloom")
+    }
+
+    /// All grown
+    public static var plantStageGrown: LocalizedStringResource {
+        r("plant_stage_grown", "All grown")
+    }
+
+    /// Egg
+    public static var petStageEgg: LocalizedStringResource {
+        r("pet_stage_egg", "Egg")
+    }
+
+    /// Wobbly egg
+    public static var petStageWobbly: LocalizedStringResource {
+        r("pet_stage_wobbly", "Wobbly egg")
+    }
+
+    /// Hatchling
+    public static var petStageHatchling: LocalizedStringResource {
+        r("pet_stage_hatchling", "Hatchling")
+    }
+
+    /// Baby
+    public static var petStageBaby: LocalizedStringResource {
+        r("pet_stage_baby", "Baby")
+    }
+
+    /// Little one
+    public static var petStageLittle: LocalizedStringResource {
+        r("pet_stage_little", "Little one")
+    }
+
+    /// Young
+    public static var petStageYoung: LocalizedStringResource {
+        r("pet_stage_young", "Young")
+    }
+
+    /// All grown
+    public static var petStageGrown: LocalizedStringResource {
+        r("pet_stage_grown", "All grown")
+    }
+
+    /// Magnolia
+    public static var speciesMagnolia: LocalizedStringResource {
+        r("species_magnolia", "Magnolia")
+    }
+
+    /// Cherry blossom
+    public static var speciesCherry: LocalizedStringResource {
+        r("species_cherry", "Cherry blossom")
+    }
+
+    /// Pomegranate
+    public static var speciesPomegranate: LocalizedStringResource {
+        r("species_pomegranate", "Pomegranate")
+    }
+
+    /// Azalea
+    public static var speciesAzalea: LocalizedStringResource {
+        r("species_azalea", "Azalea")
+    }
+
+    /// Lemon tree
+    public static var speciesLemon: LocalizedStringResource {
+        r("species_lemon", "Lemon tree")
+    }
+
+    /// Olive tree
+    public static var speciesOlive: LocalizedStringResource {
+        r("species_olive", "Olive tree")
+    }
+
+    /// Duckling
+    public static var speciesDuckling: LocalizedStringResource {
+        r("species_duckling", "Duckling")
+    }
+
+    /// Overhead
+    public static var spotAbove: LocalizedStringResource {
+        r("spot_above", "Overhead")
+    }
+
+    /// Sky
+    public static var spotSky: LocalizedStringResource {
+        r("spot_sky", "Sky")
+    }
+
+    /// Weather
+    public static var spotWeather: LocalizedStringResource {
+        r("spot_weather", "Weather")
+    }
+
+    /// On the tree
+    public static var spotTree: LocalizedStringResource {
+        r("spot_tree", "On the tree")
+    }
+
+    /// Pot
+    public static var spotPot: LocalizedStringResource {
+        r("spot_pot", "Pot")
+    }
+
+    /// Floor, left
+    public static var spotLeft: LocalizedStringResource {
+        r("spot_left", "Floor, left")
+    }
+
+    /// Floor, right
+    public static var spotRight: LocalizedStringResource {
+        r("spot_right", "Floor, right")
+    }
+
+    /// Rug
+    public static var spotGround: LocalizedStringResource {
+        r("spot_ground", "Rug")
+    }
+
+    /// Bunting
+    public static var decorBunting: LocalizedStringResource {
+        r("decor_bunting", "Bunting")
+    }
+
+    /// Fairy lights
+    public static var decorFairyLights: LocalizedStringResource {
+        r("decor_fairy_lights", "Fairy lights")
+    }
+
+    /// Paper lantern
+    public static var decorPaperLantern: LocalizedStringResource {
+        r("decor_paper_lantern", "Paper lantern")
+    }
+
+    /// Watering can
+    public static var decorWateringCan: LocalizedStringResource {
+        r("decor_watering_can", "Watering can")
+    }
+
+    /// Kilim
+    public static var decorKilim: LocalizedStringResource {
+        r("decor_kilim", "Kilim")
+    }
+
+    /// Terracotta pot
+    public static var decorTerracotta: LocalizedStringResource {
+        r("decor_terracotta", "Terracotta pot")
+    }
+
+    /// Blue glazed pot
+    public static var decorGlazedPot: LocalizedStringResource {
+        r("decor_glazed_pot", "Blue glazed pot")
+    }
+
+    /// Golden pot
+    public static var decorGoldPot: LocalizedStringResource {
+        r("decor_gold_pot", "Golden pot")
+    }
+
+    /// Dusk
+    public static var decorDusk: LocalizedStringResource {
+        r("decor_dusk", "Dusk")
+    }
+
+    /// Ornaments
+    public static var decorOrnaments: LocalizedStringResource {
+        r("decor_ornaments", "Ornaments")
+    }
+
+    /// Tree-top star
+    public static var decorTreeStar: LocalizedStringResource {
+        r("decor_tree_star", "Tree-top star")
+    }
+
+    /// Gift box
+    public static var decorGiftBox: LocalizedStringResource {
+        r("decor_gift_box", "Gift box")
+    }
+
+    /// Snowfall
+    public static var decorSnowfall: LocalizedStringResource {
+        r("decor_snowfall", "Snowfall")
+    }
+
+    /// Heart garland
+    public static var decorHeartGarland: LocalizedStringResource {
+        r("decor_heart_garland", "Heart garland")
+    }
+
+    /// Flowers
+    public static var decorBouquet: LocalizedStringResource {
+        r("decor_bouquet", "Flowers")
+    }
+
+    /// Jack-o'-lantern
+    public static var decorPumpkin: LocalizedStringResource {
+        r("decor_pumpkin", "Jack-o'-lantern")
+    }
+
+    /// Bats
+    public static var decorBats: LocalizedStringResource {
+        r("decor_bats", "Bats")
+    }
+
+    /// Full moon night
+    public static var decorFullMoon: LocalizedStringResource {
+        r("decor_full_moon", "Full moon night")
+    }
+
+    /// Halloween bunting
+    public static var decorSpookyBunting: LocalizedStringResource {
+        r("decor_spooky_bunting", "Halloween bunting")
+    }
+
+    /// Papel picado
+    public static var decorPapelPicado: LocalizedStringResource {
+        r("decor_papel_picado", "Papel picado")
+    }
+
+    /// Marigolds
+    public static var decorMarigolds: LocalizedStringResource {
+        r("decor_marigolds", "Marigolds")
+    }
+
+    /// Kinara
+    public static var decorKinara: LocalizedStringResource {
+        r("decor_kinara", "Kinara")
+    }
+
+    /// Confetti
+    public static var decorConfetti: LocalizedStringResource {
+        r("decor_confetti", "Confetti")
+    }
+
+    /// Shamrocks
+    public static var decorShamrocks: LocalizedStringResource {
+        r("decor_shamrocks", "Shamrocks")
+    }
+
+    /// Fireworks
+    public static var decorFireworks: LocalizedStringResource {
+        r("decor_fireworks", "Fireworks")
+    }
+
+    /// Falling leaves
+    public static var decorAutumnLeaves: LocalizedStringResource {
+        r("decor_autumn_leaves", "Falling leaves")
+    }
+
+    /// Egg basket
+    public static var decorEggBasket: LocalizedStringResource {
+        r("decor_egg_basket", "Egg basket")
+    }
+
+    /// Falling petals
+    public static var decorPetals: LocalizedStringResource {
+        r("decor_petals", "Falling petals")
+    }
+
+    /// Ramadan lantern
+    public static var decorRamadanLantern: LocalizedStringResource {
+        r("decor_ramadan_lantern", "Ramadan lantern")
+    }
+
+    /// Crescent and stars
+    public static var decorCrescentGarland: LocalizedStringResource {
+        r("decor_crescent_garland", "Crescent and stars")
+    }
+
+    /// Candy bowl
+    public static var decorCandyBowl: LocalizedStringResource {
+        r("decor_candy_bowl", "Candy bowl")
+    }
+
+    /// Oil lamps
+    public static var decorOilLamps: LocalizedStringResource {
+        r("decor_oil_lamps", "Oil lamps")
+    }
+
+    /// Pomegranates
+    public static var decorPomegranates: LocalizedStringResource {
+        r("decor_pomegranates", "Pomegranates")
+    }
+
+    /// Menorah
+    public static var decorMenorah: LocalizedStringResource {
+        r("decor_menorah", "Menorah")
+    }
+
+    /// Colour powder
+    public static var decorColourPowder: LocalizedStringResource {
+        r("decor_colour_powder", "Colour powder")
+    }
+
+    /// Kites
+    public static var decorKites: LocalizedStringResource {
+        r("decor_kites", "Kites")
+    }
+
+    /// Red lanterns
+    public static var decorRedLanterns: LocalizedStringResource {
+        r("decor_red_lanterns", "Red lanterns")
+    }
+
+    /// Harvest moon
+    public static var decorHarvestMoon: LocalizedStringResource {
+        r("decor_harvest_moon", "Harvest moon")
+    }
+
+    /// Wish notes
+    public static var decorWishNotes: LocalizedStringResource {
+        r("decor_wish_notes", "Wish notes")
+    }
+
+    /// Sabzeh
+    public static var decorSabzeh: LocalizedStringResource {
+        r("decor_sabzeh", "Sabzeh")
+    }
+
+    /// %@ flags
+    public static func decorFlags(_ a0: String) -> LocalizedStringResource {
+        r("decor_flags", "\(a0) flags")
+    }
+
+    // MARK: - Companion (Nestie)
+
+    /// A busy day together
+    public static var labBright: LocalizedStringResource {
+        r("lab_bright", "A busy day together")
+    }
 }

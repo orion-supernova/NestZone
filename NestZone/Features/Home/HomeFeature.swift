@@ -94,6 +94,16 @@ public struct HomeFeature: Sendable {
 
         public var layout: TodayLayout { TodayLayout(raw: layoutRaw) }
 
+        /// Every finished chore on the Done list, when and by whom — what the
+        /// companion grows from. A chore ticked a moment ago has no time yet;
+        /// it counts when the server's copy arrives with one.
+        public var completions: [Completion] {
+            tasks.compactMap { task in
+                guard task.isCompleted, let at = task.completedAt?.date else { return nil }
+                return Completion(at: at, by: task.completedBy)
+            }
+        }
+
         /// Bills already late or due within `needsYouBillDays`, soonest first.
         public var billsDue: [Bill] {
             bills

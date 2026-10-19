@@ -8,14 +8,19 @@ import SwiftUI
 /// when it has something in it, unless it was set to Always — and a short row
 /// of ways into everything else. No section draws an empty state: "nothing
 /// here" is what the sentence is for.
-public struct HomeView: View {
+public struct HomeView<Companion: View>: View {
     @Bindable var store: StoreOf<HomeFeature>
+    /// The companion, drawn under the sentence — small on a day when something
+    /// is wrong, so the alarm stays the first thing on the screen. Handed in by
+    /// the tab container: Today does not own it.
+    private let companion: (_ compact: Bool) -> Companion
 
     @Environment(\.theme) private var theme
     @Namespace private var glass
 
-    public init(store: StoreOf<HomeFeature>) {
+    public init(store: StoreOf<HomeFeature>, @ViewBuilder companion: @escaping (_ compact: Bool) -> Companion) {
         self.store = store
+        self.companion = companion
     }
 
     public var body: some View {
@@ -28,6 +33,7 @@ public struct HomeView: View {
                 if let hero = store.hero {
                     heroCard(hero).appear(1)
                 }
+                companion(store.hero != nil).appear(1)
                 ForEach(Array(store.layout.shown.enumerated()), id: \.element) { index, section in
                     self.section(section).appear(index + 2)
                 }
@@ -809,5 +815,11 @@ private struct SuggestedDinnerCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
         .accessibilityElement(children: .contain)
+    }
+}
+
+extension HomeView where Companion == EmptyView {
+    public init(store: StoreOf<HomeFeature>) {
+        self.init(store: store) { _ in EmptyView() }
     }
 }

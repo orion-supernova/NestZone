@@ -117,8 +117,12 @@ struct MainView: View {
         )) {
             Tab(value: MainFeature.Tab.today) {
                 RouteStackView(store: store.scope(state: \.today, action: \.today)) {
-                    HomeView(store: store.scope(state: \.homeTab, action: \.home))
-                        .sessionToolbar(store)
+                    HomeView(store: store.scope(state: \.homeTab, action: \.home)) { compact in
+                        if CompanionFlag.isEnabled {
+                            CompanionCard(store: store.scope(state: \.companion, action: \.companion), compact: compact)
+                        }
+                    }
+                    .sessionToolbar(store)
                 }
             } label: {
                 Label { Text(L10n.tabBarHome) } icon: { Image(systemName: "sun.max.fill") }

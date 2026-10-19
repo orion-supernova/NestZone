@@ -109,6 +109,22 @@ extension SharedKey where Self == FileStorageKey<[Home]>.Default {
     }
 }
 
+extension SharedKey where Self == FileStorageKey<CompanionHouse>.Default {
+    /// One home's companion: the one growing, the album, the jar, what is out
+    /// in the scene and the days the house celebrates.
+    ///
+    /// On this device only, one file per home, while the companion is an MVP
+    /// being tried on development builds; the server version replaces the
+    /// storage and keeps the shape. Documents, like `cachedHomes`, so a
+    /// low-storage purge does not take somebody's album with it.
+    public static func companion(_ homeID: HomeID) -> Self {
+        Self[
+            .fileStorage(.documentsDirectory.appending(component: "companion-\(homeID.rawValue).json")),
+            default: .empty
+        ]
+    }
+}
+
 extension SharedKey where Self == AppStorageKey<Bool>.Default {
     /// Whether the movie catalogue may return adult titles.
     public static var includeAdultTitles: Self {

@@ -37,6 +37,12 @@ public struct MainFeature: Sendable {
         /// on Messages.
         public var now: NowFeature.State
 
+        /// The companion on Today. Here rather than inside Today because it
+        /// grows from things other screens do — a chore ticked on the Tasks
+        /// list counts as much as one ticked on Today — and this is where the
+        /// household's finished chores are handed to it.
+        public var companion: CompanionFeature.State
+
         /// Behind the avatar on every tab rather than a tab of its own: it is
         /// opened once a month, and it was holding a slot that a list used
         /// every day could have.
@@ -97,6 +103,9 @@ public struct MainFeature: Sendable {
             // before the members query answers does not match on one vote.
             now.memberCount = memberCount
             self.now = now
+            var companion = CompanionFeature.State(homeID: homeID)
+            companion.memberCount = memberCount
+            self.companion = companion
             self.settings = SettingsFeature.State(homeID: homeID, home: home, user: user)
             self.inbox = InboxFeature.State(homeID: homeID, currentUserID: user?.id)
         }
@@ -141,6 +150,7 @@ public struct MainFeature: Sendable {
         case house(RouteStack.Action)
         case messages(MessagesFeature.Action)
         case now(NowFeature.Action)
+        case companion(CompanionFeature.Action)
         case settings(SettingsFeature.Action)
         case settingsButtonTapped
         case settingsDismissed
@@ -172,6 +182,7 @@ public struct MainFeature: Sendable {
         Scope(state: \.house, action: \.house) { RouteStack() }
         Scope(state: \.messages, action: \.messages) { MessagesFeature() }
         Scope(state: \.now, action: \.now) { NowFeature() }
+        Scope(state: \.companion, action: \.companion) { CompanionFeature() }
         Scope(state: \.settings, action: \.settings) { SettingsFeature() }
         Scope(state: \.inbox, action: \.inbox) { InboxFeature() }
 
@@ -217,6 +228,15 @@ public struct MainFeature: Sendable {
                 case .notificationsEnabled:
                     return .none
                 }
+
+            // The companion grows from every finished chore in the house, and
+            // "together" needs to know how many people live here.
+            case .home(.tasksUpdated):
+                guard CompanionFlag.isEnabled else { return .none }
+                return .send(.companion(.completionsUpdated(state.homeTab.completions)))
+            case .home(.membersUpdated):
+                state.companion.memberCount = max(state.homeTab.members.count, 1)
+                return .none
 
             case let .today(.delegate(.open(target))):
                 return open(target, from: .today, &state)
@@ -300,7 +320,7 @@ public struct MainFeature: Sendable {
                 return route(&state, to: category)
 
             case .home, .today, .lists, .plans, .house, .messages,
-                 .settings, .inbox, .customize, .capture:
+                 .settings, .inbox, .customize, .capture, .companion:
                 return .none
             }
         }
@@ -517,6 +537,7 @@ extension MainFeature.State {
         let roundOpen = now.movieRounds.contains(where: \.isOpen)
         if homeTab.movieRoundIsOpen != roundOpen { homeTab.movieRoundIsOpen = roundOpen }
         if homeTab.now != now.now { homeTab.now = now.now }
+        if companion.now != now.now { companion.now = now.now }
         plans.segments[id: .recipes]?.screen.apply(tonight: tonight)
     }
 
