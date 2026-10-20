@@ -26,11 +26,15 @@ struct CompanionScene: View {
     let careTick: Int
     /// The small version for a busy day: just the companion, no decorations.
     var compact = false
+    /// Holds still while a sheet covers the card: nobody is watching it, and
+    /// its frames are the sheet's.
+    var paused = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isScrolling) private var isScrolling
 
-    @State private var plant: PlantModel?
+    @State private var canopy: Canopy?
     @State private var epoch = Date()
     @State private var moodFrom = Mood.content.level
     @State private var moodTo = Mood.content.level
@@ -53,6 +57,7 @@ struct CompanionScene: View {
     @State private var isVisible = true
     @State private var didSettle = false
     @State private var viewSize = CGSize(width: 360, height: 360)
+    @State private var crowns = CrownCache()
 
     /// A one-off spray: sparkles from a landing, hearts from a pet.
     struct Burst: Equatable {
@@ -66,8 +71,24 @@ struct CompanionScene: View {
     var body: some View {
         let snapshot = self.snapshot
         TimelineView(.animation(minimumInterval: frameInterval, paused: isPaused)) { timeline in
-            Canvas { context, size in
-                snapshot.draw(context, size: size, at: timeline.date)
+            let date = timeline.date
+            ZStack {
+                Canvas { context, size in snapshot.drawBack(context, size: size, at: date) }
+                if let canopy, !companion.species.isPet {
+                    let wind = snapshot.wind(viewSize, at: date)
+                    let state = snapshot.treeState(at: date)
+                    ZStack {
+                        TreeLayer(canopy: canopy, state: state)
+                            .equatable()
+                        if !state.decor.isEmpty {
+                            DecorLayer(state: state, anchors: snapshot.anchors(at: date), twinkle: snapshot.twinkle(state, at: date))
+                                .equatable()
+                        }
+                    }
+                    .transformEffect(wind.bend)
+                    .scaleEffect(x: 1 - wind.bounce * 0.35, y: 1 + wind.bounce, anchor: SceneSpace.root)
+                }
+                Canvas { context, size in snapshot.drawFront(context, size: size, at: date) }
             }
         }
         .contentShape(.rect)
@@ -75,7 +96,11 @@ struct CompanionScene: View {
         .onTapGesture(coordinateSpace: .local) { location in pet(at: location) }
         .onScrollVisibilityChange(threshold: 0.05) { isVisible = $0 }
         .onAppear(perform: settle)
-        .onChange(of: companion.seed) { _, _ in plant = nil; settle() }
+        // A new companion can keep the old one's seed (choosing again before
+        // anything graduated), so the tree is grown again for a new species
+        // too — keyed on the seed alone, a pomegranate kept the lemon's tree.
+        .onChange(of: companion.species) { _, _ in canopy = nil; settle() }
+        .onChange(of: companion.seed) { _, _ in canopy = nil; settle() }
         .onChange(of: mood) { old, new in moodChanged(from: old, to: new) }
         .onChange(of: progress) { _, new in
             progressFrom = shownProgress(at: Date())
@@ -100,14 +125,17 @@ struct CompanionScene: View {
     private var frameInterval: Double { compact ? 1.0 / 15 : 1.0 / 30 }
 
     /// Nothing is drawn while the card is scrolled away or the app is not in
-    /// front, so the scene costs nothing when nobody is looking at it.
-    private var isPaused: Bool { !isVisible || scenePhase != .active }
+    /// front, so the scene costs nothing when nobody is looking at it. It
+    /// holds still while the screen scrolls, too: a frame of the scene is
+    /// time the scroll needs, and a tree caught mid-sway for a moment is not
+    /// something anybody sees.
+    private var isPaused: Bool { paused || isScrolling || !isVisible || scenePhase != .active }
 
     // MARK: - Changes into motion
 
     private func settle() {
-        if plant == nil, !companion.species.isPet {
-            plant = PlantModel(seed: companion.seed, species: companion.species)
+        if canopy == nil, !companion.species.isPet {
+            canopy = Canopy(seed: companion.seed, species: companion.species)
         }
         guard !didSettle else { return }
         didSettle = true
@@ -135,14 +163,15 @@ struct CompanionScene: View {
     /// knows a change to any of it means drawing again. Read only inside the
     /// canvas's closure, a change made on appear (the tree being grown from
     /// its seed) could be missed until something else redrew the card.
-    private var snapshot: Snapshot {
-        Snapshot(
+    private var snapshot: SceneSnapshot {
+        SceneSnapshot(
             companion: companion, progress: progress, stage: stage, layout: layout, southern: southern, now: now,
-            compact: compact, reduceMotion: reduceMotion, plant: plant, epoch: epoch,
+            compact: compact, reduceMotion: reduceMotion, canopy: canopy, epoch: epoch,
             moodFrom: moodFrom, moodTo: moodTo, moodAt: moodAt, isWaking: isWaking,
             progressFrom: progressFrom, progressTo: progressTo, progressAt: progressAt,
             revivedAt: revivedAt, revivedFromDozing: revivedFromDozing, stageUpAt: stageUpAt,
-            dropAt: dropAt, careAt: careAt, landedAt: landedAt, pettedAt: pettedAt, petSide: petSide, bursts: bursts
+            dropAt: dropAt, careAt: careAt, landedAt: landedAt, pettedAt: pettedAt, petSide: petSide, bursts: bursts,
+            crowns: crowns
         )
     }
 
@@ -175,7 +204,7 @@ struct CompanionScene: View {
 
 /// One moment of the scene: what it is and how it is moving, and the drawing
 /// made from it.
-private struct Snapshot {
+struct SceneSnapshot {
     let companion: Companion
     let progress: Double
     let stage: Int
@@ -184,7 +213,7 @@ private struct Snapshot {
     let now: Date
     let compact: Bool
     let reduceMotion: Bool
-    let plant: PlantModel?
+    let canopy: Canopy?
     let epoch: Date
     let moodFrom: Double, moodTo: Double, moodAt: Date, isWaking: Bool
     let progressFrom: Double, progressTo: Double, progressAt: Date
@@ -192,6 +221,7 @@ private struct Snapshot {
     let stageUpAt: Date?, dropAt: Date?, careAt: Date?, landedAt: Date?, pettedAt: Date?
     let petSide: Double
     let bursts: [CompanionScene.Burst]
+    let crowns: CrownCache
 
     /// How long the mood takes to change on screen. Waking up is slower and
     /// overshoots — leaves lifting past where they rest, then settling.
@@ -211,65 +241,149 @@ private struct Snapshot {
     }
 
 
-    func draw(_ context: GraphicsContext, size: CGSize, at date: Date) {
+    /// What every layer of one frame agrees on.
+    struct Moment {
+        var frame: SceneFrame
+        var scale: Double, width: Double, seconds: Double
+        var revive: Double?
+        var center: Double { width / 2 }
+    }
+
+    func moment(_ size: CGSize, at date: Date) -> Moment {
         let scale = size.height / SceneSpace.height
-        let width = size.width / scale
-        let center = width / 2
         let seconds = date.timeIntervalSince(epoch)
         let hour = Double(Calendar.current.component(.hour, from: now)) + Double(Calendar.current.component(.minute, from: now)) / 60
-
         let revive = revivedAt.map { date.timeIntervalSince($0) }
         let domeLift: Double = {
             guard let revive, revivedFromDozing else { return 0 }
             return revive < 1.2 ? Ink.ease(revive / 0.9) : 0
         }()
-        var bounce = landedAt.map { Ink.settle(date.timeIntervalSince($0), amplitude: 0.18, frequency: 12.6, damping: 5.5) } ?? 0
-        if let stageUpAt { bounce += Ink.settle(date.timeIntervalSince(stageUpAt) - 0.2, amplitude: 0.12, frequency: 10, damping: 4) }
-        if let revive { bounce += Ink.settle(revive - 0.6, amplitude: 0.12, frequency: 11, damping: 5) }
-        if reduceMotion { bounce = 0 }
-        let wobble = pettedAt.map { petSide * Ink.settle(date.timeIntervalSince($0), amplitude: 0.22, frequency: 7.3, damping: 2.5) } ?? 0
-
+        let motion = treeMotion(at: date)
         let frame = SceneFrame(
             time: seconds, day: SceneFrame.dayness(hour), hour: hour,
             mood: shownMood(at: date), progress: shownProgress(at: date),
-            reduceMotion: reduceMotion, bounce: bounce, wobble: reduceMotion ? 0 : wobble,
+            reduceMotion: reduceMotion, bounce: motion.bounce, wobble: motion.wobble,
             layout: compact ? SceneLayout() : layout, southern: southern, domeLift: domeLift
         )
-        let painter = ScenePainter(frame: frame, width: width, seed: companion.seed)
+        return Moment(frame: frame, scale: scale, width: size.width / scale, seconds: seconds, revive: revive)
+    }
 
+    /// The squash and stretch after something lands, a new stage or a
+    /// waking-up, and the sway after a pet.
+    func treeMotion(at date: Date) -> (bounce: Double, wobble: Double) {
+        guard !reduceMotion else { return (0, 0) }
+        var bounce = landedAt.map { Ink.settle(date.timeIntervalSince($0), amplitude: 0.18, frequency: 12.6, damping: 5.5) } ?? 0
+        if let stageUpAt { bounce += Ink.settle(date.timeIntervalSince(stageUpAt) - 0.2, amplitude: 0.12, frequency: 10, damping: 4) }
+        if let revivedAt { bounce += Ink.settle(date.timeIntervalSince(revivedAt) - 0.6, amplitude: 0.12, frequency: 11, damping: 5) }
+        let wobble = pettedAt.map { petSide * Ink.settle(date.timeIntervalSince($0), amplitude: 0.22, frequency: 7.3, damping: 2.5) } ?? 0
+        return (bounce, wobble)
+    }
+
+    /// What the tree shows at this instant. It changes only while a mood or
+    /// a stage is easing in and when the light moves — the rest of the time it
+    /// is equal to the last frame's, and the tree is not drawn again.
+    func treeState(at date: Date) -> TreeState {
+        let hour = Double(Calendar.current.component(.hour, from: now)) + Double(Calendar.current.component(.minute, from: now)) / 60
+        return TreeState(
+            seed: companion.seed, species: companion.species, mood: shownMood(at: date), progress: shownProgress(at: date),
+            day: (SceneFrame.dayness(hour) * 50).rounded() / 50, decor: compact ? [] : layout.tree, reduceMotion: reduceMotion
+        )
+    }
+
+    /// Steps a few times a second while lights or a star are out after dark,
+    /// so they twinkle; otherwise 0, and they are drawn once.
+    func twinkle(_ state: TreeState, at date: Date) -> Int {
+        let glows = state.decor.contains { $0 == DecorItem.fairyLights.rawValue || $0 == DecorItem.treeStar.rawValue }
+        return !reduceMotion && state.day < 0.85 && glows ? Int(date.timeIntervalSince(epoch) * 4) : 0
+    }
+
+    /// The wind for this frame, in the tree layer's own points.
+    ///
+    /// It is a shear of the cached picture, not a shader. Two GPU passes over
+    /// the tree — a wind distortion and a painted finish — held Today to about
+    /// 25 frames a second on the simulator, waiting on the GPU every frame,
+    /// and scrolling past it stuttered; a transform is free, and Today stays
+    /// at 60. The shaders are kept in Docs/Companion/art/shaders.
+    struct Wind {
+        var root: CGPoint
+        /// How far the crown leans, as points sideways per point of height.
+        var lean: Double
+        /// The squash and stretch after something lands.
+        var bounce: Double
+
+        /// The wind as a shear about the root: the top moves, the base stays.
+        var bend: CGAffineTransform {
+            CGAffineTransform(translationX: -root.x, y: -root.y)
+                .concatenating(CGAffineTransform(a: 1, b: 0, c: -lean, d: 1, tx: 0, ty: 0))
+                .concatenating(CGAffineTransform(translationX: root.x, y: root.y))
+        }
+    }
+
+    /// A slow sway and gusts that only push one way, limper when the tree is
+    /// tired, plus the swing after a pet.
+    func wind(_ size: CGSize, at date: Date) -> Wind {
+        let moment = moment(size, at: date)
+        let motion = treeMotion(at: date)
+        let strength = reduceMotion ? 0 : moment.frame.wind
+        let t = moment.seconds, droop = Ink.smooth((0.66 - moment.frame.mood) / 0.56)
+        let gust = max(0, (sin(t * 0.7) + 0.5 * sin(t * 1.9 + 1) + 0.8 * sin(t * 0.23 + 2)) / 2.3)
+        let lean = strength * (sin(t * 1.25) * 0.025 + gust * 0.045) * (1 - 0.5 * droop) + motion.wobble * 0.4
+        return Wind(root: CGPoint(x: size.width / 2, y: SceneSpace.soil * moment.scale), lean: lean, bounce: motion.bounce)
+    }
+
+    /// Where decorations hang on the crown as it stands.
+    func anchors(at date: Date) -> CanopyAnchors {
+        guard let canopy else { return CrownCache.none }
+        return crowns.anchors(canopy, progress: shownProgress(at: date), mood: shownMood(at: date))
+    }
+
+    /// The crown as it stands, for whatever plays around it. The pose is
+    /// worked out once per mood and stage, not once a frame.
+    func crown(_ moment: Moment) -> CGRect {
+        let center = moment.center
+        guard !companion.species.isPet, let canopy else {
+            return companion.species.isPet
+                ? CGRect(x: center - 90, y: SceneSpace.floor - 190, width: 180, height: 150)
+                : CGRect(x: center - 80, y: SceneSpace.soil - 200, width: 160, height: 160)
+        }
+        let crown = crowns.anchors(canopy, progress: moment.frame.progress, mood: moment.frame.mood)
+        return CGRect(x: center + crown.left - 10, y: SceneSpace.soil + crown.top - 10,
+                      width: crown.right - crown.left + 20, height: max(crown.bottom - crown.top + 20, 40))
+    }
+
+    /// Behind the tree: the sky, what hangs above, the rug, the pot — or the
+    /// pet, which is drawn whole every frame.
+    func drawBack(_ context: GraphicsContext, size: CGSize, at date: Date) {
+        let moment = moment(size, at: date)
+        let frame = moment.frame, center = moment.center
+        let painter = ScenePainter(frame: frame, width: moment.width, seed: companion.seed)
         var c = context
-        c.scaleBy(x: scale, y: scale)
+        c.scaleBy(x: moment.scale, y: moment.scale)
         painter.sky(c)
         painter.above(c)
         painter.rug(c)
-
-        var crown = CGRect(x: center - 80, y: SceneSpace.soil - 200, width: 160, height: 160)
         if companion.species.isPet {
             let pet = PetPainter(
                 frame: frame, stage: stage,
                 hop: [landedAt, stageUpAt].compactMap { $0 }.map { date.timeIntervalSince($0) }.min(),
                 wiggle: pettedAt.map { date.timeIntervalSince($0) },
-                waking: revive.flatMap { $0 < 1.8 ? $0 : nil }
+                waking: moment.revive.flatMap { $0 < 1.8 ? $0 : nil }
             )
             pet.draw(c, x: center, floor: SceneSpace.floor - 4, size: 190)
-            crown = CGRect(x: center - 90, y: SceneSpace.floor - 190, width: 180, height: 150)
-        } else if let plant {
-            painter.pot(c, model: plant)
-            painter.fallenLeaves(c, model: plant)
-            if frame.mood > 0.82 {
-                let k = (frame.mood - 0.82) / 0.18
-                c.glow(center, SceneSpace.soil - 120, 150, Ink.color(0xFFDC82, 0.16 * k))
-            }
-            let pose = plant.layout(progress: frame.progress, mood: frame.mood, time: reduceMotion ? 0 : seconds,
-                                    wind: reduceMotion ? 0 : frame.wind, wobble: frame.wobble)
-            var tree = c
-            tree.translateBy(x: center, y: SceneSpace.soil)
-            tree.scaleBy(x: 1 - bounce * 0.35, y: 1 + bounce)
-            PlantPainter(model: plant, frame: frame, pose: pose).draw(tree)
-            painter.treeDecor(tree, model: plant, pose: pose)
-            crown = CGRect(x: center + pose.left - 10, y: SceneSpace.soil + pose.top - 10,
-                           width: pose.right - pose.left + 20, height: max(-pose.top * 0.75, 40))
+        } else {
+            painter.pot(c, style: PotStyle(seed: companion.seed))
         }
+    }
+
+    /// In front of the tree: what stands on the floor, what flies, the
+    /// weather, and every moment — drops, sparkles, rings and hearts.
+    func drawFront(_ context: GraphicsContext, size: CGSize, at date: Date) {
+        let moment = moment(size, at: date)
+        let frame = moment.frame, center = moment.center, seconds = moment.seconds
+        let painter = ScenePainter(frame: frame, width: moment.width, seed: companion.seed)
+        let crown = crown(moment)
+        var c = context
+        c.scaleBy(x: moment.scale, y: moment.scale)
         painter.floor(c)
         painter.fireflies(c)
         if !compact {
@@ -284,15 +398,16 @@ private struct Snapshot {
             c.glow(crown.midX, crown.midY, 170, Ink.color(0xFFD27A, 0.18 + 0.12 * pulse))
         }
         if companion.species.isPet {
-            if frame.mood < 0.42, revive == nil, stage > 1 { painter.zees(c, x: center + 46, y: SceneSpace.floor - 150) }
+            if frame.mood < 0.42, moment.revive == nil, stage > 1 { painter.zees(c, x: center + 46, y: SceneSpace.floor - 150) }
         } else {
+            painter.fallingLeaf(c, from: anchors(at: date).hangs)
             painter.thirstBubble(c, near: crown)
-            let domeAlpha = frame.mood < 0.15 ? 1 : domeLift > 0 ? 1 - domeLift : 0
+            let domeAlpha = frame.mood < 0.15 ? 1 : frame.domeLift > 0 ? 1 - frame.domeLift : 0
             painter.dome(c, top: crown.minY - 14, alpha: domeAlpha)
         }
 
-        flights(c, at: date, center: center, width: width)
-        waking(c, at: date, revive: revive, center: center)
+        flights(c, at: date, center: center, width: moment.width)
+        waking(c, at: date, revive: moment.revive, center: center)
         stageUp(c, at: date, crown: crown)
         drawBursts(c, at: date, center: center)
     }
@@ -411,3 +526,151 @@ private struct Snapshot {
         }
     }
 }
+
+extension EnvironmentValues {
+    /// Whether the screen around this view is scrolling, for drawings that
+    /// hold still so the scroll keeps its frames.
+    @Entry public var isScrolling = false
+}
+
+extension SceneSnapshot {
+    /// The scene at rest: nothing easing in, nothing in flight.
+    init(still companion: Companion, progress: Double, mood: Mood, stage: Int, now: Date, reduceMotion: Bool) {
+        let epoch = Date(timeIntervalSinceReferenceDate: 0)
+        self.init(
+            companion: companion, progress: progress, stage: stage, layout: SceneLayout(), southern: false, now: now,
+            compact: false, reduceMotion: reduceMotion,
+            canopy: companion.species.isPet ? nil : Canopy(seed: companion.seed, species: companion.species), epoch: epoch,
+            moodFrom: mood.level, moodTo: mood.level, moodAt: .distantPast, isWaking: false,
+            progressFrom: progress, progressTo: progress, progressAt: .distantPast,
+            revivedAt: nil, revivedFromDozing: false, stageUpAt: nil, dropAt: nil, careAt: nil, landedAt: nil, pettedAt: nil,
+            petSide: 1, bursts: [], crowns: CrownCache()
+        )
+    }
+}
+
+/// What the tree layer draws from: everything that changes how it looks,
+/// and nothing that only moves it.
+struct TreeState: Equatable, Sendable {
+    var seed: String
+    var species: Species
+    var mood: Double
+    var progress: Double
+    /// The light, in fiftieths, so the clock redraws it now and then rather
+    /// than every frame.
+    var day: Double
+    var decor: [String]
+    var reduceMotion: Bool
+}
+
+/// The tree on a layer of its own, drawn again only when what it shows
+/// changes: a mood easing in, a stage growing, the light moving with the
+/// clock. Between those the same picture is reused, and the wind and the
+/// painted finish are shaders over it. Drawn whole every frame, its few
+/// hundred shapes took the main thread's time, and Today stuttered while it
+/// scrolled.
+struct TreeLayer: View, Equatable {
+    let canopy: Canopy
+    let state: TreeState
+
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.state.seed == rhs.state.seed && lhs.state.species == rhs.state.species && lhs.state.mood == rhs.state.mood
+            && lhs.state.progress == rhs.state.progress && lhs.state.day == rhs.state.day
+    }
+
+    var body: some View {
+        Canvas { context, size in Self.paint(context, size: size, canopy: canopy, state: state) }
+            .drawingGroup()
+    }
+
+    /// The tree on the scene's soil, cut to it so the roots go into the earth.
+    static func paint(_ context: GraphicsContext, size: CGSize, canopy: Canopy, state: TreeState) {
+        let scale = size.height / SceneSpace.height
+        var tree = context
+        tree.scaleBy(x: scale, y: scale)
+        tree.translateBy(x: size.width / scale / 2, y: SceneSpace.soil)
+        var above = Path(CGRect(x: -size.width, y: -SceneSpace.soil, width: size.width * 2, height: SceneSpace.soil))
+        above.addEllipse(in: SceneSpace.soilSurface)
+        tree.clip(to: above)
+        CanopyPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day).draw(tree)
+    }
+}
+
+/// The scene as one still picture: sky, the pot or the pet, the tree and what
+/// stands in front, drawn once into a single canvas. Choose and the album show
+/// seven or more at a time, and built as full live scenes — a timeline, four
+/// layers and two shader passes each — opening Choose stuttered while it made
+/// them.
+struct ScenePortrait: View {
+    let companion: Companion
+    var progress = 0.97
+    var mood: Mood = .content
+    var stage = 5
+    let now: Date
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Canvas { context, size in
+            let snapshot = SceneSnapshot(still: companion, progress: progress, mood: mood, stage: stage, now: now, reduceMotion: reduceMotion)
+            let date = snapshot.epoch
+            snapshot.drawBack(context, size: size, at: date)
+            if let canopy = snapshot.canopy {
+                TreeLayer.paint(context, size: size, canopy: canopy, state: snapshot.treeState(at: date))
+            }
+            snapshot.drawFront(context, size: size, at: date)
+        }
+    }
+}
+
+/// What hangs on the tree, over it and under the same wind, but outside the
+/// painted finish — a lit bulb has to look lit, and the finish's shading
+/// dulled the ones against the sky. Its own layer also lets the lights
+/// twinkle at night by redrawing a few bulbs, not the whole tree.
+struct DecorLayer: View, Equatable {
+    let state: TreeState
+    let anchors: CanopyAnchors
+    let twinkle: Int
+
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.state == rhs.state && lhs.anchors == rhs.anchors && lhs.twinkle == rhs.twinkle
+    }
+
+    var body: some View {
+        Canvas { context, size in
+            let scale = size.height / SceneSpace.height
+            let width = size.width / scale
+            var tree = context
+            tree.scaleBy(x: scale, y: scale)
+            tree.translateBy(x: width / 2, y: SceneSpace.soil)
+            var layout = SceneLayout()
+            layout.tree = state.decor
+            let frame = SceneFrame(
+                time: Double(twinkle) * 0.25, day: state.day, hour: 12, mood: state.mood, progress: state.progress,
+                wind: 0, reduceMotion: state.reduceMotion, layout: layout, southern: false
+            )
+            ScenePainter(frame: frame, width: width, seed: state.seed).treeDecor(tree, anchors: anchors)
+        }
+    }
+}
+
+
+/// The crown's anchors by mood and growth. They change only while one of the
+/// two eases in, and then in small steps — a fortieth of a mood, a two
+/// hundredth of growth — rather than every frame: finding them costs a
+/// millisecond or two on a development build, which a wake-up would pay
+/// thirty times a second.
+final class CrownCache {
+    private var key: (canopy: Canopy, progress: Double, mood: Double)?
+    static let none = CanopyAnchors(left: 0, right: 0, top: 0, bottom: 0, crownTop: .zero, hangs: [], notes: [])
+    private var cached = CrownCache.none
+
+    func anchors(_ canopy: Canopy, progress: Double, mood: Double) -> CanopyAnchors {
+        let progress = (progress * 200).rounded() / 200, mood = (mood * 40).rounded() / 40
+        if let key, key.canopy == canopy, key.progress == progress, key.mood == mood { return cached }
+        cached = CanopyPainter(canopy: canopy, growth: progress, mood: mood, day: 1).anchors()
+        key = (canopy, progress, mood)
+        return cached
+    }
+}
+

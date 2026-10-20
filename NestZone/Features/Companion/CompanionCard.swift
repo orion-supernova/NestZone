@@ -13,6 +13,10 @@ struct CompanionCard: View {
     var compact = false
 
     @Environment(\.theme) private var theme
+    @State private var detent = PresentationDetent.medium
+    /// Icons differ in height, and the labels under them have to share a
+    /// line: "Holidays" sat higher than the rest under its shorter calendar.
+    @ScaledMetric(relativeTo: .body) private var actionIcon = 24.0
 
     var body: some View {
         Group {
@@ -23,16 +27,21 @@ struct CompanionCard: View {
             }
         }
         .sheet(item: Binding(
-            get: { store.sheet == .ceremony ? nil : store.sheet },
+            get: { store.sheet?.isMoment == true ? nil : store.sheet },
             set: { if $0 == nil { store.send(.sheetDismissed) } }
         )) { sheet in
-            CompanionSheet(store: store, sheet: sheet)
+            CompanionSheet(store: store, sheet: sheet, detent: $detent)
         }
+        .onChange(of: store.sheet == nil) { _, closed in if closed { detent = .medium } }
         .fullScreenCover(isPresented: Binding(
-            get: { store.sheet == .ceremony },
+            get: { store.sheet?.isMoment == true },
             set: { if !$0 { store.send(.sheetDismissed) } }
         )) {
-            CeremonyView(store: store)
+            if store.sheet == .welcome {
+                WelcomeGiftView(store: store)
+            } else {
+                CeremonyView(store: store)
+            }
         }
         #if DEBUG
         .task { await demo() }
@@ -43,7 +52,7 @@ struct CompanionCard: View {
     /// Development builds can be driven from the command line, for
     /// screenshots of states that otherwise need a finger:
     /// `simctl launch … -companionDemo care` (or decorate, album, holidays,
-    /// lab, choose, celebrate).
+    /// lab, choose, pick, celebrate, dress).
     private func demo() async {
         guard !compact, let demo = UserDefaults.standard.string(forKey: "companionDemo") else { return }
         try? await Task.sleep(for: .seconds(2.5))
@@ -57,7 +66,18 @@ struct CompanionCard: View {
         case "album": store.send(.albumTapped)
         case "holidays": store.send(.holidaysTapped)
         case "lab": store.send(.labTapped)
+        case "grow": store.send(.labPoints(12))
+        case "labgrow":
+            // With the lab open at half height, the card must still play it.
+            store.send(.labTapped)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.labPoints(12))
         case "choose": store.send(.chooseTapped)
+        case "pick":
+            // Choose again and grow it in the Lab: with the old seed kept, this
+            // once left the previous species' tree on screen.
+            store.send(.chose(.magnolia))
+            store.send(.labPoints(60))
         case "celebrate": store.send(.celebrateTapped)
         case "dress": if let holiday = store.holidayToDress { store.send(.dressTapped(holiday.id)) }
         default: break
@@ -78,6 +98,11 @@ struct CompanionCard: View {
                     careButton(current)
                 }
                 .padding(10)
+                #if DEBUG
+                pointsStepper
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .padding(10)
+                #endif
             }
             .clipShape(.rect(topLeadingRadius: Metrics.cardRadius, topTrailingRadius: Metrics.cardRadius, style: .continuous))
 
@@ -86,17 +111,19 @@ struct CompanionCard: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(current.species.title)
                             .font(.headline)
+                            .oneLine()
                         Text(subtitle(current))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .contentTransition(.numericText())
+                            .oneLine()
                     }
                     Spacer(minLength: 0)
                     jar
                 }
                 if store.isReady {
                     Button { store.send(.celebrateTapped) } label: {
-                        Label { Text(L10n.companionCelebrate) } icon: { Image(systemName: "party.popper.fill") }
+                        Label { Text(L10n.companionCelebrate).oneLine() } icon: { Image(systemName: "party.popper.fill") }
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
                     }
@@ -119,7 +146,7 @@ struct CompanionCard: View {
         CompanionScene(
             companion: current, progress: store.progress, mood: store.mood, stage: store.stage,
             layout: store.visibleLayout, southern: store.southern, now: store.clock,
-            choreTick: store.choreTick, careTick: store.careTick, compact: compact
+            choreTick: store.choreTick, careTick: store.careTick, compact: compact, paused: isCovered
         )
         .accessibilityElement()
         .accessibilityLabel(Text(L10n.companionSceneLabel(
@@ -129,6 +156,15 @@ struct CompanionCard: View {
             String(localized: store.mood.title(isPet: store.isPet))
         )))
         .accessibilityHint(Text(L10n.companionSceneHint))
+    }
+
+    /// Whether a sheet hides the card. Half up — the lab's usual height — it
+    /// does not, and the card has to keep playing what the sheet changes:
+    /// held still under every sheet, points added in the lab grew the tree
+    /// with nobody watching and it jumped when the sheet closed.
+    private var isCovered: Bool {
+        guard let sheet = store.sheet else { return false }
+        return sheet == .decorate || sheet.isMoment || detent == .large
     }
 
     private var stageTitle: LocalizedStringResource {
@@ -161,18 +197,18 @@ struct CompanionCard: View {
             ))))
             .font(.caption)
             .foregroundStyle(.secondary)
+            .oneLine()
         }
         .accessibilityElement(children: .combine)
     }
 
-    /// The house jar, with a "+10" that rises out of it when it is paid.
+    /// The house jar — Leaves and Sparkles side by side — with a "+10" that
+    /// rises out of it when it is paid.
     private var jar: some View {
         Button { store.send(.decorateTapped) } label: {
-            HStack(spacing: 4) {
-                Text(verbatim: "🍃")
-                Text(store.house.jar, format: .number)
-                    .font(.subheadline.weight(.semibold).monospacedDigit())
-                    .contentTransition(.numericText())
+            HStack(spacing: 8) {
+                coin("🍃", store.house.leaves)
+                coin("✨", store.house.sparkles)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -181,9 +217,11 @@ struct CompanionCard: View {
         .buttonStyle(.plain)
         .overlay(alignment: .top) {
             if let pay = store.lastPay {
-                Text(L10n.companionPay(pay.amount))
+                (Text(L10n.companionPay(pay.coins.leaves)) + Text(verbatim: " 🍃  ")
+                    + Text(L10n.companionPay(pay.coins.sparkles)) + Text(verbatim: " ✨"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Palette.success)
+                    .fixedSize()
                     .phaseAnimator([0, 1, 2], trigger: pay.id) { content, phase in
                         content
                             .offset(y: phase == 1 ? -22 : -6)
@@ -194,31 +232,48 @@ struct CompanionCard: View {
                     .allowsHitTesting(false)
             }
         }
-        .animation(Motion.spring, value: store.house.jar)
+        .animation(Motion.spring, value: store.house.leaves)
+        .animation(Motion.spring, value: store.house.sparkles)
         .accessibilityLabel(Text(L10n.companionJar))
-        .accessibilityValue(Text(L10n.companionJarValue(store.house.jar)))
+        .accessibilityValue(Text(L10n.companionJarBoth(store.house.leaves, store.house.sparkles)))
     }
 
+    private func coin(_ symbol: String, _ amount: Int) -> some View {
+        HStack(spacing: 3) {
+            Text(verbatim: symbol)
+            Text(amount, format: .number)
+                .font(.subheadline.weight(.semibold).monospacedDigit())
+                .contentTransition(.numericText())
+        }
+        .fixedSize()
+    }
+
+    /// Equal tiles, the icon over a one-line label, so a long word in one
+    /// language ("Özel günler") never wraps or pushes the others aside.
     private var actions: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: 4) {
             action(L10n.companionDecorate, "paintbrush.pointed.fill") { store.send(.decorateTapped) }
             action(L10n.companionAlbum, "book.closed.fill") { store.send(.albumTapped) }
             action(L10n.companionHolidays, "calendar") { store.send(.holidaysTapped) }
             if CompanionFlag.isEnabled {
-                Spacer(minLength: 0)
                 action(L10n.companionLab, "flask.fill") { store.send(.labTapped) }
             }
         }
-        .font(.footnote.weight(.semibold))
     }
 
     private func action(_ title: LocalizedStringResource, _ symbol: String, _ perform: @escaping () -> Void) -> some View {
         Button(action: perform) {
-            Label { Text(title) } icon: { Image(systemName: symbol) }
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(theme.accent)
-                .frame(minHeight: 28)
-                .contentShape(.rect)
+            VStack(spacing: 4) {
+                Image(systemName: symbol)
+                    .font(.body.weight(.semibold))
+                    .frame(height: actionIcon)
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .oneLine()
+            }
+            .foregroundStyle(theme.accent)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(.rect)
         }
         .buttonStyle(.pressable)
     }
@@ -229,16 +284,25 @@ struct CompanionCard: View {
     private var holidayChip: some View {
         if let holiday = store.holidayToDress {
             Button { store.send(.dressTapped(holiday.id), animation: Motion.celebrate) } label: {
-                Text(L10n.companionDress(holiday.symbol, String(localized: holiday.id.title)))
-                    .font(.caption.weight(.semibold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .glassControl()
+                HStack(spacing: 6) {
+                    Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Text(L10n.companionDecorate)
+                        .foregroundStyle(theme.accent)
+                        .fixedSize()
+                }
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .glassControl()
             }
             .buttonStyle(.plain)
         } else if let holiday = store.activeHolidays.first {
             Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
                 .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .truncationMode(.tail)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 7)
                 .glassControl()
@@ -251,6 +315,7 @@ struct CompanionCard: View {
         Button { store.send(.careTapped) } label: {
             Label {
                 Text(current.species.isPet ? L10n.companionPet : L10n.companionWater)
+                    .fixedSize()
             } icon: {
                 Image(systemName: store.caredToday ? "checkmark" : current.species.isPet ? "heart.fill" : "drop.fill")
                     .contentTransition(.symbolEffect(.replace))
@@ -266,6 +331,33 @@ struct CompanionCard: View {
         .accessibilityIdentifier("CompanionCare")
     }
 
+    #if DEBUG
+    /// Development builds: points off and on right under the tree, to watch it
+    /// shrink and grow through its stages without a sheet in the way. A stage
+    /// is about eleven points; this steps four at a time.
+    private var pointsStepper: some View {
+        HStack(spacing: 2) {
+            Button { store.send(.labPoints(-4)) } label: {
+                Image(systemName: "minus").frame(width: 30, height: 26)
+            }
+            .accessibilityLabel(Text(L10n.labPointsLess(4)))
+            Text(verbatim: "\(Int(store.points.rounded())) / \(Int(CompanionMath.graduateAt))")
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .animation(Motion.spring, value: Int(store.points.rounded()))
+            Button { store.send(.labPoints(4)) } label: {
+                Image(systemName: "plus").frame(width: 30, height: 26)
+            }
+            .accessibilityLabel(Text(L10n.labPoints(4)))
+        }
+        .font(.caption.weight(.semibold))
+        .buttonStyle(.plain)
+        .padding(.horizontal, 4)
+        .glassControl()
+        .accessibilityIdentifier("CompanionPoints")
+    }
+    #endif
+
     // MARK: - A busy day
 
     private func strip(_ current: Companion) -> some View {
@@ -276,10 +368,11 @@ struct CompanionCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(current.species.title)
                     .font(.subheadline.weight(.semibold))
+                    .oneLine()
                 Text(subtitle(current))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    .oneLine()
             }
             Spacer(minLength: 0)
             if store.isReady {
@@ -309,15 +402,17 @@ struct CompanionCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(first ? L10n.companionMeetTitle(String(localized: L10n.companionBrand)) : L10n.companionNextTitle)
                         .font(.headline)
+                        .oneLine()
                     Text(first ? L10n.companionMeetBody : L10n.companionNextBody)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .oneLine()
                 }
             }
             Button { store.send(.chooseTapped) } label: {
                 Text(L10n.companionChoose)
                     .font(.subheadline.weight(.semibold))
+                    .oneLine()
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.glassProminent)

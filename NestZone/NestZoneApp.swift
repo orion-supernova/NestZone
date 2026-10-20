@@ -46,7 +46,12 @@ struct NestZoneApp: App {
         AppView(store: Self.store)
             // The window exists by the time its content appears, which is the
             // earliest the recogniser has anything to attach to.
-            .onAppear { KeyboardDismisser.shared.install() }
+            .onAppear {
+                KeyboardDismisser.shared.install()
+                #if DEBUG
+                FrameMeter.shared.startIfAsked()
+                #endif
+            }
     }
 }
 

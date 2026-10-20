@@ -158,13 +158,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every one you grow together ends up here."
+            "value": "Everything you grow ends up here"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Birlikte büyüttüğünüz her biri burada kalır."
+            "value": "Büyüttüğün her şey buraya gelir"
           }
         }
       }
@@ -4652,47 +4652,47 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Put it in the album"
+            "value": "Stick it in the album"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Albüme koy"
+            "value": "Albüme yapıştır"
           }
         }
       }
     },
-    "ceremony_body": {
+    "ceremony_coins": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ grew up in %2$lld days — together."
+            "value": "+%1$lld Leaves · +%2$lld Sparkles"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ %2$lld günde büyüdü, hep birlikte."
+            "value": "+%1$lld Yaprak · +%2$lld Işıltı"
           }
         }
       }
     },
-    "ceremony_jar": {
+    "ceremony_grown_in": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "+%lld Leaves for the house jar"
+            "value": "%1$@ grew up in %2$lld days"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev kumbarasına +%lld Yaprak"
+            "value": "%1$@ %2$lld günde kocaman oldu"
           }
         }
       }
@@ -4703,13 +4703,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It grows from finished chores and a little care — about two weeks for a busy house."
+            "value": "Grows from chores and care · about two weeks"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biten işlerle ve biraz ilgiyle büyür; hareketli bir evde yaklaşık iki hafta sürer."
+            "value": "İş yaptıkça büyür · iki haftaya kocaman olur"
           }
         }
       }
@@ -5168,7 +5168,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her telefondan günde bir kez sayılır."
+            "value": "Her telefondan günde bir kere sayılıyor"
           }
         }
       }
@@ -5185,7 +5185,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kutlayalım"
+            "value": "Kutlayalım!"
           }
         }
       }
@@ -5196,13 +5196,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose one"
+            "value": "Pick one"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Birini seçin"
+            "value": "Seç bakalım"
           }
         }
       }
@@ -5241,23 +5241,6 @@
         }
       }
     },
-    "companion_dress": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ Put out the %2$@ things"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ %2$@ süslerini çıkar"
-          }
-        }
-      }
-    },
     "companion_holidays": {
       "extractionState": "manual",
       "localizations": {
@@ -5287,24 +5270,24 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev kumbarası"
+            "value": "Kumbara"
           }
         }
       }
     },
-    "companion_jar_value": {
+    "companion_jar_both": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld Leaves"
+            "value": "%1$lld Leaves, %2$lld Sparkles"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld Yaprak"
+            "value": "%1$lld Yaprak, %2$lld Işıltı"
           }
         }
       }
@@ -5332,13 +5315,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A plant or a little pet you grow together, just by doing the chores you already do."
+            "value": "The house's very own plant or pet"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Birlikte büyüttüğünüz bir bitki ya da minik bir dost. Zaten yaptığınız işlerle büyüyor."
+            "value": "Evin ortak fidanı ya da minik dostu"
           }
         }
       }
@@ -5355,7 +5338,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ ile tanışın"
+            "value": "%@ ile tanış!"
           }
         }
       }
@@ -5372,7 +5355,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sıradaki: %@"
+            "value": "Sırada: %@"
           }
         }
       }
@@ -5383,13 +5366,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pick the next one. Everything done from now on helps it grow."
+            "value": "Let's pick the next one"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sıradakini seçin. Bundan sonra yapılan her şey onu büyütür."
+            "value": "Hadi yenisini seçelim"
           }
         }
       }
@@ -5406,7 +5389,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sırada kim var?"
+            "value": "Sıradaki kim olsun?"
           }
         }
       }
@@ -5474,7 +5457,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biraz sevgi için dokunun"
+            "value": "Dokun, biraz sev onu"
           }
         }
       }
@@ -6862,7 +6845,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dökülen yapraklar"
+            "value": "Sonbahar yaprakları"
           }
         }
       }
@@ -6896,7 +6879,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çiçekler"
+            "value": "Çiçek demeti"
           }
         }
       }
@@ -6913,7 +6896,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Flama"
+            "value": "Flama süsü"
           }
         }
       }
@@ -6930,7 +6913,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şeker kâsesi"
+            "value": "Bayram şekeri"
           }
         }
       }
@@ -6947,7 +6930,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renkli toz"
+            "value": "Holi boyaları"
           }
         }
       }
@@ -7049,7 +7032,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Havai fişekler"
+            "value": "Havai fişek"
           }
         }
       }
@@ -7151,7 +7134,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hasat dolunayı"
+            "value": "Hasat ayı"
           }
         }
       }
@@ -7168,7 +7151,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kalp süsü"
+            "value": "Kalpli süs"
           }
         }
       }
@@ -7287,7 +7270,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Süs topları"
+            "value": "Yılbaşı topları"
           }
         }
       }
@@ -7304,7 +7287,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Papel picado"
+            "value": "Kâğıt oyma süs"
           }
         }
       }
@@ -7440,7 +7423,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yoncalar"
+            "value": "Yonca süsü"
           }
         }
       }
@@ -7457,7 +7440,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kar"
+            "value": "Kar yağışı"
           }
         }
       }
@@ -7474,7 +7457,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadılar Bayramı flaması"
+            "value": "Cadı flamaları"
           }
         }
       }
@@ -7564,6 +7547,23 @@
         }
       }
     },
+    "decorate_buy_sparkles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buy · %lld Sparkles"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al · %lld Işıltı"
+          }
+        }
+      }
+    },
     "decorate_empty": {
       "extractionState": "manual",
       "localizations": {
@@ -7593,7 +7593,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün ücretsiz"
+            "value": "Bugün bedava"
           }
         }
       }
@@ -7604,13 +7604,30 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The jar needs %lld more"
+            "value": "Needs %lld more Leaves"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kumbarada %lld eksik"
+            "value": "%lld Yaprak daha lazım"
+          }
+        }
+      }
+    },
+    "decorate_need_more_sparkles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs %lld more Sparkles"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Işıltı daha lazım"
           }
         }
       }
@@ -7621,13 +7638,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One thing here · tap again to take it off"
+            "value": "One per spot"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buraya bir şey · çıkarmak için tekrar dokunun"
+            "value": "Buraya bir tane"
           }
         }
       }
@@ -7644,7 +7661,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parlayan bir yere dokunun"
+            "value": "Parlayan bir yere dokun"
           }
         }
       }
@@ -7672,13 +7689,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preview — buy it to keep it"
+            "value": "Trying it on"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Önizleme — kalsın isterseniz alın"
+            "value": "Prova"
           }
         }
       }
@@ -7700,6 +7717,23 @@
         }
       }
     },
+    "decorate_price_sparkles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Sparkles"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Işıltı"
+          }
+        }
+      }
+    },
     "decorate_sets": {
       "extractionState": "manual",
       "localizations": {
@@ -7712,24 +7746,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hepsini birden çıkar"
-          }
-        }
-      }
-    },
-    "decorate_spot_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Overhead, sky, weather, on the tree, the pot, the floor and the rug."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tepe, gökyüzü, hava, ağaç, saksı, zemin ve halı."
+            "value": "Takımı komple kur"
           }
         }
       }
@@ -7757,13 +7774,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to four things"
+            "value": "Up to four"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En fazla dört şey"
+            "value": "En fazla dört"
           }
         }
       }
@@ -7774,13 +7791,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yours"
+            "value": "Got it"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sizin"
+            "value": "Evde var"
           }
         }
       }
@@ -13198,7 +13215,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sıradaki: %@"
+            "value": "Sırada: %@"
           }
         }
       }
@@ -13532,13 +13549,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The days your house celebrates. Each one dresses up the scene while it lasts, for free."
+            "value": "When the day comes, the scene dresses up by itself"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evinizin kutladığı günler. Her biri sürdüğü sürece sahneyi ücretsiz süsler."
+            "value": "O gün gelince sahne kendiliğinden süslenir"
           }
         }
       }
@@ -13549,13 +13566,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use the suggestions for where you live"
+            "value": "Use the suggestions for here"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yaşadığınız yere göre önerileri kullan"
+            "value": "Bulunduğun yere göre seç"
           }
         }
       }
@@ -13572,7 +13589,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kutladığımız günler"
+            "value": "Bizim günler"
           }
         }
       }
@@ -20318,7 +20335,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hareketli, birlikte bir gün"
+            "value": "Keyfi yerinde"
           }
         }
       }
@@ -20335,7 +20352,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün şu günmüş gibi"
+            "value": "Bugün şu günmüş gibi yap"
           }
         }
       }
@@ -20352,7 +20369,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir hafta uzakta"
+            "value": "Bir haftadır kimse yok"
           }
         }
       }
@@ -20403,7 +20420,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ruh hali"
+            "value": "Keyfi"
           }
         }
       }
@@ -20414,13 +20431,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only on development builds. Nothing here reaches the server or anyone else's phone."
+            "value": "Development builds only · stays on this phone"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yalnızca geliştirme sürümünde. Buradakiler sunucuya ya da başkasının telefonuna gitmez."
+            "value": "Sadece geliştirme sürümü · bu telefonda kalır"
           }
         }
       }
@@ -20442,6 +20459,23 @@
         }
       }
     },
+    "lab_points_less": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−%lld points"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−%lld puan"
+          }
+        }
+      }
+    },
     "lab_ready": {
       "extractionState": "manual",
       "localizations": {
@@ -20454,7 +20488,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mezuniyete hazır"
+            "value": "Kocaman olsun"
           }
         }
       }
@@ -20471,7 +20505,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerçek işlere göre"
+            "value": "Gerçek işlere bak"
           }
         }
       }
@@ -20493,6 +20527,23 @@
         }
       }
     },
+    "lab_sparkles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld Sparkles in the jar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kumbaraya +%lld Işıltı"
+          }
+        }
+      }
+    },
     "lab_thirsty": {
       "extractionState": "manual",
       "localizations": {
@@ -20505,7 +20556,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Üç sessiz gün"
+            "value": "Üç gündür ses yok"
           }
         }
       }
@@ -20516,13 +20567,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lab (development builds)"
+            "value": "Lab"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lab (geliştirme sürümü)"
+            "value": "Lab"
           }
         }
       }
@@ -21753,7 +21804,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "neşeli"
+            "value": "cıvıl cıvıl"
           }
         }
       }
@@ -21770,7 +21821,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "keyifli"
+            "value": "keyfi yerinde"
           }
         }
       }
@@ -21787,7 +21838,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "uyuyor"
+            "value": "mışıl mışıl"
           }
         }
       }
@@ -23759,7 +23810,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Büyüdü"
+            "value": "Yetişti"
           }
         }
       }
@@ -23776,7 +23827,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni doğmuş"
+            "value": "Yeni çıktı"
           }
         }
       }
@@ -23844,7 +23895,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çiçekte"
+            "value": "Çiçek açtı"
           }
         }
       }
@@ -23861,7 +23912,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Büyüdü"
+            "value": "Yetişti"
           }
         }
       }
@@ -28836,7 +28887,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gökyüzü"
+            "value": "Gök"
           }
         }
       }
@@ -30254,6 +30305,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Göreve bir başlık ver."
+          }
+        }
+      }
+    },
+    "welcome_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enough to grab something, with change to spare"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir şey kapmaya yeter, üstü de kalır"
+          }
+        }
+      }
+    },
+    "welcome_decorate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let's decorate"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hadi süsleyelim"
+          }
+        }
+      }
+    },
+    "welcome_later": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe later"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonra bakarız"
+          }
+        }
+      }
+    },
+    "welcome_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A housewarming gift!"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eve hediye geldi!"
           }
         }
       }

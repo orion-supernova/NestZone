@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 // What everything in the companion is called, in one place. The feature's own
 // name ("Nestie") is `L10n.companionBrand`, so changing it is one string.
@@ -250,5 +250,17 @@ extension Holiday.ID {
         case .bastilleDay: L10n.holidayBastilleDay
         case .independenceMX: L10n.holidayIndependenceMX
         }
+    }
+}
+
+extension View {
+    /// Every label in the companion is one line, in every language: it shrinks
+    /// a little before it would wrap, and only then truncates. "Özel günler"
+    /// broke onto two lines under its icon, and a two-line label in a row of
+    /// one-line ones is a layout that has stopped holding.
+    func oneLine(shrinking minimum: CGFloat = 0.75) -> some View {
+        lineLimit(1)
+            .minimumScaleFactor(minimum)
+            .allowsTightening(true)
     }
 }

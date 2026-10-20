@@ -17,6 +17,8 @@ public struct HomeView<Companion: View>: View {
 
     @Environment(\.theme) private var theme
     @Namespace private var glass
+    @State private var isScrolling = false
+    @State private var position = ScrollPosition(edge: .top)
 
     public init(store: StoreOf<HomeFeature>, @ViewBuilder companion: @escaping (_ compact: Bool) -> Companion) {
         self.store = store
@@ -33,7 +35,9 @@ public struct HomeView<Companion: View>: View {
                 if let hero = store.hero {
                     heroCard(hero).appear(1)
                 }
-                companion(store.hero != nil).appear(1)
+                companion(store.hero != nil)
+                    .environment(\.isScrolling, isScrolling)
+                    .appear(1)
                 ForEach(Array(store.layout.shown.enumerated()), id: \.element) { index, section in
                     self.section(section).appear(index + 2)
                 }
@@ -44,6 +48,11 @@ public struct HomeView<Companion: View>: View {
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, Metrics.scrollBottomInset)
         }
+        .onScrollPhaseChange { _, phase in isScrolling = phase.isScrolling }
+        .scrollPosition($position)
+        #if DEBUG
+        .task { await flickForever() }
+        #endif
         .background(Backdrop(tint: theme.accent))
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.tabBarHome))
@@ -51,6 +60,20 @@ public struct HomeView<Companion: View>: View {
         .task { await store.send(.task).finish() }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
+
+    #if DEBUG
+    /// `-todayScroll 1` flicks Today to the bottom and back, quickly and over
+    /// and over, so its scroll can be profiled on a simulator nobody touches.
+    private func flickForever() async {
+        guard UserDefaults.standard.bool(forKey: "todayScroll") else { return }
+        var down = true
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(0.9))
+            withAnimation(.easeOut(duration: 0.45)) { position.scrollTo(edge: down ? .bottom : .top) }
+            down.toggle()
+        }
+    }
+    #endif
 
     // MARK: - The sentence
 

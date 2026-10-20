@@ -150,11 +150,47 @@ struct CompanionTests {
         #expect(again == layout)
     }
 
+    @Test("A house keeps its pot: the same seed, the same colour and band as before the tree was redrawn")
+    func pot() {
+        let first = PotStyle(seed: "x-0"), second = PotStyle(seed: "k17cheh68tdhjdh90n37jnakn18dp9gt-0")
+        #expect([first.h, first.s, first.l] == [152, 22, 48] && first.band == 1)
+        #expect([second.h, second.s, second.l] == [262, 28, 58] && second.band == 2)
+    }
+
+    @Test("Choosing another species with the same seed grows that species' tree")
+    func sameSeedNewSpecies() {
+        // A new companion keeps the old seed until something graduates; the
+        // pomegranate chosen after a lemon once kept drawing the lemon.
+        #expect(Canopy(seed: "h-0", species: .lemon) != Canopy(seed: "h-0", species: .pomegranate))
+        let crowns = CrownCache()
+        let lemon = crowns.anchors(Canopy(seed: "h-0", species: .lemon), progress: 0.97, mood: 0.9)
+        let pomegranate = crowns.anchors(Canopy(seed: "h-0", species: .pomegranate), progress: 0.97, mood: 0.9)
+        #expect(lemon != pomegranate)
+    }
+
+    @Test("The welcome gift buys a first thing in each currency, with some left over")
+    func welcomeGift() {
+        let prices = DecorItem.allCases.compactMap(\.price)
+        let cheapestLeaves = prices.compactMap { if case let .leaves(amount) = $0 { amount } else { nil } }.min() ?? 0
+        let cheapestSparkles = prices.compactMap { if case let .sparkles(amount) = $0 { amount } else { nil } }.min() ?? 0
+        #expect(cheapestLeaves > 0 && cheapestSparkles > 0)
+        #expect(Rewards.welcome.leaves > cheapestLeaves)
+        #expect(Rewards.welcome.sparkles > cheapestSparkles)
+        var house = CompanionHouse()
+        house.add(Rewards.welcome)
+        house.pay(.sparkles(cheapestSparkles))
+        #expect(house.sparkles > 0)
+        #expect(!house.canAfford(.sparkles(Rewards.welcome.sparkles)))
+    }
+
     @Test("A saved house with fields missing still opens")
     func lenientDecoding() throws {
         let json = #"{"jar": 40, "album": [], "current": {"species": "magnolia", "seed": "h-0", "startedAt": 0}}"#
         let house = try JSONDecoder().decode(CompanionHouse.self, from: Data(json.utf8))
-        #expect(house.jar == 40)
+        // The file's "jar" was the Leaves balance before Sparkles joined it.
+        #expect(house.leaves == 40)
+        #expect(house.sparkles == 0)
+        #expect(!house.welcomed)
         #expect(house.current?.species == .magnolia)
         #expect(house.owned.contains("wateringCan"))
         #expect(house.layout.tree.isEmpty)

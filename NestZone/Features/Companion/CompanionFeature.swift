@@ -44,12 +44,14 @@ public struct CompanionFeature: Sendable {
         public var lastPay: Payment?
 
         public enum Sheet: String, Equatable, Identifiable, Sendable {
-            case choose, decorate, album, holidays, lab, ceremony
+            case choose, decorate, album, holidays, lab, ceremony, welcome
             public var id: String { rawValue }
+            /// Shown over everything rather than as a sheet: the moments.
+            var isMoment: Bool { self == .ceremony || self == .welcome }
         }
 
         public struct Payment: Equatable, Sendable {
-            public var amount: Int
+            public var coins: Coins
             public var id: Int
         }
 
@@ -164,12 +166,12 @@ public struct CompanionFeature: Sendable {
             guard current != nil else { return }
             let reached = stage
             guard reached > house.paidStage else { return }
-            let amount = (reached - house.paidStage) * Jar.stagePay
+            let coins = Rewards.stage * (reached - house.paidStage)
             $house.withLock {
-                $0.jar += amount
+                $0.add(coins)
                 $0.paidStage = reached
             }
-            lastPay = Payment(amount: amount, id: (lastPay?.id ?? 0) + 1)
+            lastPay = Payment(coins: coins, id: (lastPay?.id ?? 0) + 1)
         }
     }
 
@@ -179,6 +181,8 @@ public struct CompanionFeature: Sendable {
         case careTapped
         case chooseTapped
         case chose(Species)
+        /// The welcome gift's "Decorate now".
+        case welcomeDecorateTapped
         case celebrateTapped
         case ceremonyFinished
         case albumTapped
@@ -200,11 +204,13 @@ public struct CompanionFeature: Sendable {
         case labPoints(Double)
         case labMood(Mood?)
         case labDate(Date?)
-        case labLeaves(Int)
+        case labCoins(Coins)
         case labReset
 
         case sheetDismissed
     }
+
+    @Dependency(\.continuousClock) var clock
 
     public init() {}
 
@@ -248,12 +254,28 @@ public struct CompanionFeature: Sendable {
             case let .chose(species):
                 let seed = "\(state.homeID.rawValue)-\(state.house.album.count)"
                 let now = state.clock
+                let firstTime = !state.house.welcomed
                 state.$house.withLock {
                     $0.current = Companion(species: species, seed: seed, startedAt: now)
                     $0.paidStage = 0
+                    // The house's first companion comes with a gift for the jar.
+                    if firstTime {
+                        $0.add(Rewards.welcome)
+                        $0.welcomed = true
+                    }
                 }
-                state.sheet = nil
+                state.sheet = firstTime ? .welcome : nil
+                if firstTime { state.lastPay = State.Payment(coins: Rewards.welcome, id: (state.lastPay?.id ?? 0) + 1) }
                 return .none
+
+            case .welcomeDecorateTapped:
+                // The gift closes first; Decorate opens once it has gone, so
+                // the two presentations never fight over the screen.
+                state.sheet = nil
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(450))
+                    await send(.decorateTapped)
+                }
 
             case .celebrateTapped:
                 guard state.isReady else { return .none }
@@ -269,11 +291,11 @@ public struct CompanionFeature: Sendable {
                                         startedAt: current.startedAt, graduatedAt: state.clock)
                 state.$house.withLock {
                     $0.album.append(graduate)
-                    $0.jar += Jar.graduationPay
+                    $0.add(Rewards.graduation)
                     $0.current = nil
                     $0.paidStage = 0
                 }
-                state.lastPay = State.Payment(amount: Jar.graduationPay, id: (state.lastPay?.id ?? 0) + 1)
+                state.lastPay = State.Payment(coins: Rewards.graduation, id: (state.lastPay?.id ?? 0) + 1)
                 // Straight on to the next one: nothing done while the house
                 // decides is lost, because growth counts from when it arrives.
                 state.sheet = .choose
@@ -321,10 +343,10 @@ public struct CompanionFeature: Sendable {
 
             case let .buyTapped(raw):
                 guard let item = DecorItem(rawValue: raw), let price = item.price,
-                      !state.house.owned.contains(raw), state.house.jar >= price
+                      !state.house.owned.contains(raw), state.house.canAfford(price)
                 else { return .none }
                 state.$house.withLock {
-                    $0.jar -= price
+                    $0.pay(price)
                     $0.owned.insert(raw)
                 }
                 return .none
@@ -358,7 +380,12 @@ public struct CompanionFeature: Sendable {
                 return .none
 
             case let .labPoints(points):
-                state.$house.withLock { $0.current?.bonus += points }
+                // Taking points away stops at a seed, never below nothing grown.
+                let earned = state.points - (state.current?.bonus ?? 0)
+                state.$house.withLock {
+                    guard let bonus = $0.current?.bonus else { return }
+                    $0.current?.bonus = max(bonus + points, -earned)
+                }
                 state.payStages()
                 return .none
 
@@ -370,8 +397,8 @@ public struct CompanionFeature: Sendable {
                 state.$house.withLock { $0.lab.date = date }
                 return .none
 
-            case let .labLeaves(amount):
-                state.$house.withLock { $0.jar = max(0, $0.jar + amount) }
+            case let .labCoins(coins):
+                state.$house.withLock { $0.add(coins) }
                 return .none
 
             case .labReset:

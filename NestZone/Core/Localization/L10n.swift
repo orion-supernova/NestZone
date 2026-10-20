@@ -7697,9 +7697,9 @@ public enum L10n {
         r("companion_meet_title", "Meet \(a0)")
     }
 
-    /// A plant or a little pet you grow together, just by doing the chores you already do.
+    /// The house's very own plant or pet
     public static var companionMeetBody: LocalizedStringResource {
-        r("companion_meet_body", "A plant or a little pet you grow together, just by doing the chores you already do.")
+        r("companion_meet_body", "The house's very own plant or pet")
     }
 
     /// Who's next?
@@ -7707,14 +7707,14 @@ public enum L10n {
         r("companion_next_title", "Who's next?")
     }
 
-    /// Pick the next one. Everything done from now on helps it grow.
+    /// Let's pick the next one
     public static var companionNextBody: LocalizedStringResource {
-        r("companion_next_body", "Pick the next one. Everything done from now on helps it grow.")
+        r("companion_next_body", "Let's pick the next one")
     }
 
-    /// Choose one
+    /// Pick one
     public static var companionChoose: LocalizedStringResource {
-        r("companion_choose", "Choose one")
+        r("companion_choose", "Pick one")
     }
 
     /// day %lld
@@ -7777,20 +7777,12 @@ public enum L10n {
         r("companion_jar", "House jar")
     }
 
-    /// %lld Leaves
-    public static func companionJarValue(_ a0: Int) -> LocalizedStringResource {
-        r("companion_jar_value", "\(a0) Leaves")
-    }
 
     /// +%lld
     public static func companionPay(_ a0: Int) -> LocalizedStringResource {
         r("companion_pay", "+\(a0)")
     }
 
-    /// %1$@ Put out the %2$@ things
-    public static func companionDress(_ a0: String, _ a1: String) -> LocalizedStringResource {
-        r("companion_dress", "\(a0) Put out the \(a1) things")
-    }
 
     /// %1$@, %2$@, %3$lld percent grown, %4$@
     public static func companionSceneLabel(_ a0: String, _ a1: String, _ a2: Int, _ a3: String) -> LocalizedStringResource {
@@ -7802,9 +7794,9 @@ public enum L10n {
         r("companion_scene_hint", "Tap to give it some love")
     }
 
-    /// It grows from finished chores and a little care — about two weeks for a busy house.
+    /// Grows from chores and care · about two weeks
     public static var chooseHint: LocalizedStringResource {
-        r("choose_hint", "It grows from finished chores and a little care — about two weeks for a busy house.")
+        r("choose_hint", "Grows from chores and care · about two weeks")
     }
 
     /// Plants
@@ -7827,19 +7819,15 @@ public enum L10n {
         r("decorate_pick_spot", "Tap a glowing spot")
     }
 
-    /// Overhead, sky, weather, on the tree, the pot, the floor and the rug.
-    public static var decorateSpotHint: LocalizedStringResource {
-        r("decorate_spot_hint", "Overhead, sky, weather, on the tree, the pot, the floor and the rug.")
-    }
 
-    /// Up to four things
+    /// Up to four
     public static var decorateTreeLimit: LocalizedStringResource {
-        r("decorate_tree_limit", "Up to four things")
+        r("decorate_tree_limit", "Up to four")
     }
 
-    /// One thing here · tap again to take it off
+    /// One per spot
     public static var decorateOneThing: LocalizedStringResource {
-        r("decorate_one_thing", "One thing here · tap again to take it off")
+        r("decorate_one_thing", "One per spot")
     }
 
     /// Placed
@@ -7847,9 +7835,9 @@ public enum L10n {
         r("decorate_placed", "Placed")
     }
 
-    /// Yours
+    /// Got it
     public static var decorateYours: LocalizedStringResource {
-        r("decorate_yours", "Yours")
+        r("decorate_yours", "Got it")
     }
 
     /// Free today
@@ -7862,9 +7850,9 @@ public enum L10n {
         r("decorate_price", "\(a0) Leaves")
     }
 
-    /// Preview — buy it to keep it
+    /// Trying it on
     public static var decoratePreview: LocalizedStringResource {
-        r("decorate_preview", "Preview — buy it to keep it")
+        r("decorate_preview", "Trying it on")
     }
 
     /// Buy · %lld Leaves
@@ -7872,9 +7860,9 @@ public enum L10n {
         r("decorate_buy", "Buy · \(a0) Leaves")
     }
 
-    /// The jar needs %lld more
+    /// Needs %lld more Leaves
     public static func decorateNeedMore(_ a0: Int) -> LocalizedStringResource {
-        r("decorate_need_more", "The jar needs \(a0) more")
+        r("decorate_need_more", "Needs \(a0) more Leaves")
     }
 
     /// Put out a whole set
@@ -7892,9 +7880,9 @@ public enum L10n {
         r("album_title", "Our album")
     }
 
-    /// Every one you grow together ends up here.
+    /// Everything you grow ends up here
     public static var albumEmpty: LocalizedStringResource {
-        r("album_empty", "Every one you grow together ends up here.")
+        r("album_empty", "Everything you grow ends up here")
     }
 
     /// %lld days
@@ -7902,19 +7890,11 @@ public enum L10n {
         r("album_days", "\(a0) days")
     }
 
-    /// %1$@ grew up in %2$lld days — together.
-    public static func ceremonyBody(_ a0: String, _ a1: Int) -> LocalizedStringResource {
-        r("ceremony_body", "\(a0) grew up in \(a1) days — together.")
-    }
 
-    /// +%lld Leaves for the house jar
-    public static func ceremonyJar(_ a0: Int) -> LocalizedStringResource {
-        r("ceremony_jar", "+\(a0) Leaves for the house jar")
-    }
 
-    /// Put it in the album
+    /// Stick it in the album
     public static var ceremonyAlbum: LocalizedStringResource {
-        r("ceremony_album", "Put it in the album")
+        r("ceremony_album", "Stick it in the album")
     }
 
     /// Our holidays
@@ -7922,14 +7902,14 @@ public enum L10n {
         r("holidays_title", "Our holidays")
     }
 
-    /// The days your house celebrates. Each one dresses up the scene while it lasts, for free.
+    /// When the day comes, the scene dresses up by itself
     public static var holidaysHint: LocalizedStringResource {
-        r("holidays_hint", "The days your house celebrates. Each one dresses up the scene while it lasts, for free.")
+        r("holidays_hint", "When the day comes, the scene dresses up by itself")
     }
 
-    /// Use the suggestions for where you live
+    /// Use the suggestions for here
     public static var holidaysSuggested: LocalizedStringResource {
-        r("holidays_suggested", "Use the suggestions for where you live")
+        r("holidays_suggested", "Use the suggestions for here")
     }
 
     /// Now
@@ -8242,14 +8222,14 @@ public enum L10n {
         r("holiday_independence_m_x", "Mexican Independence Day")
     }
 
-    /// Lab (development builds)
+    /// Lab
     public static var labTitle: LocalizedStringResource {
-        r("lab_title", "Lab (development builds)")
+        r("lab_title", "Lab")
     }
 
-    /// Only on development builds. Nothing here reaches the server or anyone else's phone.
+    /// Development builds only · stays on this phone
     public static var labNote: LocalizedStringResource {
-        r("lab_note", "Only on development builds. Nothing here reaches the server or anyone else's phone.")
+        r("lab_note", "Development builds only · stays on this phone")
     }
 
     /// Grow
@@ -8687,5 +8667,71 @@ public enum L10n {
     /// A busy day together
     public static var labBright: LocalizedStringResource {
         r("lab_bright", "A busy day together")
+    }
+
+    // MARK: - Companion (Nestie)
+
+    /// %1$@ grew up in %2$lld days
+    public static func ceremonyGrownIn(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("ceremony_grown_in", "\(a0) grew up in \(a1) days")
+    }
+
+    // MARK: - Companion (Nestie)
+
+    /// %1$lld Leaves, %2$lld Sparkles
+    public static func companionJarBoth(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("companion_jar_both", "\(a0) Leaves, \(a1) Sparkles")
+    }
+
+    /// %lld Sparkles
+    public static func decoratePriceSparkles(_ a0: Int) -> LocalizedStringResource {
+        r("decorate_price_sparkles", "\(a0) Sparkles")
+    }
+
+    /// Buy · %lld Sparkles
+    public static func decorateBuySparkles(_ a0: Int) -> LocalizedStringResource {
+        r("decorate_buy_sparkles", "Buy · \(a0) Sparkles")
+    }
+
+    /// Needs %lld more Sparkles
+    public static func decorateNeedMoreSparkles(_ a0: Int) -> LocalizedStringResource {
+        r("decorate_need_more_sparkles", "Needs \(a0) more Sparkles")
+    }
+
+    /// +%lld Sparkles in the jar
+    public static func labSparkles(_ a0: Int) -> LocalizedStringResource {
+        r("lab_sparkles", "+\(a0) Sparkles in the jar")
+    }
+
+    /// +%1$lld Leaves · +%2$lld Sparkles
+    public static func ceremonyCoins(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("ceremony_coins", "+\(a0) Leaves · +\(a1) Sparkles")
+    }
+
+    /// A housewarming gift!
+    public static var welcomeTitle: LocalizedStringResource {
+        r("welcome_title", "A housewarming gift!")
+    }
+
+    /// Enough to grab something, with change to spare
+    public static var welcomeBody: LocalizedStringResource {
+        r("welcome_body", "Enough to grab something, with change to spare")
+    }
+
+    /// Let's decorate
+    public static var welcomeDecorate: LocalizedStringResource {
+        r("welcome_decorate", "Let's decorate")
+    }
+
+    /// Maybe later
+    public static var welcomeLater: LocalizedStringResource {
+        r("welcome_later", "Maybe later")
+    }
+
+    // MARK: - Companion (Nestie)
+
+    /// −%lld points
+    public static func labPointsLess(_ a0: Int) -> LocalizedStringResource {
+        r("lab_points_less", "−\(a0) points")
     }
 }

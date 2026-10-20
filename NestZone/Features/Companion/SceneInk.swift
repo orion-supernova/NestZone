@@ -121,6 +121,12 @@ enum SceneInk {
     static let bat = Color(hex: "1E1226")
     static let batRim = Color(hex: "FFB070").opacity(0.55)
     static let glow = Color(hex: "FFB45A")
+    static let lightWire = Color(hex: "3C3228").opacity(0.55)
+    static let thread = Color(hex: "E6DCC8").opacity(0.75)
+    static let wishThread = Color(hex: "C8283C").opacity(0.85)
+    static let ink = Color(hex: "5A463C").opacity(0.45)
+    static let fallingLeaf = Color(hex: "B8863C")
+    static let fallingLeafRib = Color(hex: "7A5524").opacity(0.7)
 }
 
 extension GraphicsContext {

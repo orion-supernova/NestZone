@@ -39,6 +39,28 @@ enum SceneSpace {
     static let soil = 282.0
     static let floor = 346.0
     static let floorOffset = 94.0
+    /// The base of the trunk, as a unit point of the scene: what the tree
+    /// bends and bounces about.
+    static let root = UnitPoint(x: 0.5, y: soil / height)
+    /// The soil's surface inside the pot's rim, about the trunk's base. The
+    /// tree is cut to it, so its roots go into the earth rather than over the
+    /// pot's lip.
+    static let soilSurface = CGRect(x: -46, y: -5.5, width: 92, height: 9.5)
+}
+
+/// The house's own pot: a glaze colour and a band, from its seed. The draws
+/// are the ones the first tree made on its way to choosing a pot, so a house
+/// keeps the pot it already had now that the tree is drawn another way.
+struct PotStyle: Equatable, Sendable {
+    var h: Double, s: Double, l: Double
+    var band: Int
+
+    init(seed: String) {
+        var r = Ink.Random(seed)
+        for _ in 0..<10 { _ = r.next() }
+        (h, s, l) = r.pick([(16.0, 52.0, 52.0), (205, 30, 56), (152, 22, 48), (36, 42, 60), (262, 28, 58)])
+        band = Int(r.next() * 3)
+    }
 }
 
 struct ScenePainter {
@@ -167,57 +189,104 @@ struct ScenePainter {
         c.stroke(Path(ellipseIn: CGRect(x: center - 84, y: y - 10, width: 168, height: 20)), with: .color(SceneInk.rugBlue), lineWidth: 3)
     }
 
-    /// The pot, its band and the soil. The soil is dark and moist when cared
-    /// for, pale and cracked when it has not been.
-    func pot(_ context: GraphicsContext, model: PlantModel) {
-        let bx = center, by = SceneSpace.soil, mood = frame.mood
-        let skin: PlantModel.HSL = switch frame.layout.pot {
-        case DecorItem.terracotta.rawValue?: .init(18, 58, 50)
-        case DecorItem.glazedPot.rawValue?: .init(212, 58, 46)
-        case DecorItem.goldPot.rawValue?: .init(44, 78, 54)
-        default: model.params.pot
+    /// The clock tints everything dimmer and cooler after dark — the same
+    /// rule the plant follows, so pot and plant sit in one light.
+    func tint(_ h: Double, _ s: Double, _ l: Double, _ a: Double = 1) -> Color {
+        let dh = ((240 - h + 540).truncatingRemainder(dividingBy: 360)) - 180
+        return Ink.hsl(h + dh * 0.1 * (1 - day), s * (0.6 + 0.4 * day), l * (0.56 + 0.44 * day), a)
+    }
+
+    /// The pot: a glazed body lit from the upper left, a lip with a top face
+    /// and a front, the dark inside of the rim, soil with a few pebbles, and
+    /// a soft contact shadow — about a dozen fills. The soil is dark and moist
+    /// when the plant is cared for, pale and cracked when it has not been.
+    func pot(_ context: GraphicsContext, style: PotStyle) {
+        let bx = center, by = SceneSpace.soil, mood = frame.mood, band = style.band
+        let (h, sat, l): (Double, Double, Double) = switch frame.layout.pot {
+        case DecorItem.terracotta.rawValue?: (18, 58, 50)
+        case DecorItem.glazedPot.rawValue?: (212, 58, 46)
+        case DecorItem.goldPot.rawValue?: (44, 78, 54)
+        default: (style.h, style.s, style.l)
         }
-        func tint(_ h: Double, _ s: Double, _ l: Double, _ a: Double = 1) -> Color {
-            PlantPainter(model: model, frame: frame, pose: .init(segments: [])).tint(h, s, l, a)
-        }
-        context.ellipse(bx, by + 66, 62, 9, .color(SceneInk.shadow))
+        // Contact shadow, soft-edged.
+        var shadow = context
+        shadow.translateBy(x: bx, y: by + 67)
+        shadow.scaleBy(x: 1, y: 0.16)
+        shadow.fill(Path(ellipseIn: CGRect(x: -66, y: -66, width: 132, height: 132)), with: .radialGradient(
+            Gradient(colors: [SceneInk.shadow.opacity(0.9), SceneInk.shadow.opacity(0)]),
+            center: .zero, startRadius: 20, endRadius: 66))
+        // Body: tapered, a little belly, lit from the left.
         var body = Path()
-        body.move(to: CGPoint(x: bx - 48, y: by + 6))
-        body.addLine(to: CGPoint(x: bx + 48, y: by + 6))
-        body.addQuadCurve(to: CGPoint(x: bx + 34, y: by + 64), control: CGPoint(x: bx + 44, y: by + 50))
-        body.addLine(to: CGPoint(x: bx - 34, y: by + 64))
-        body.addQuadCurve(to: CGPoint(x: bx - 48, y: by + 6), control: CGPoint(x: bx - 44, y: by + 50))
+        body.move(to: CGPoint(x: bx - 50, y: by + 8))
+        body.addLine(to: CGPoint(x: bx + 50, y: by + 8))
+        body.addCurve(to: CGPoint(x: bx + 36, y: by + 64), control1: CGPoint(x: bx + 50, y: by + 34), control2: CGPoint(x: bx + 44, y: by + 54))
+        body.addQuadCurve(to: CGPoint(x: bx - 36, y: by + 64), control: CGPoint(x: bx, y: by + 69))
+        body.addCurve(to: CGPoint(x: bx - 50, y: by + 8), control1: CGPoint(x: bx - 44, y: by + 54), control2: CGPoint(x: bx - 50, y: by + 34))
+        body.closeSubpath()
         context.fill(body, with: .linearGradient(
-            Gradient(colors: [tint(skin.h, skin.s, skin.l + 8), tint(skin.h, skin.s, skin.l), tint(skin.h, skin.s, skin.l - 15)]),
-            startPoint: CGPoint(x: bx - 48, y: 0), endPoint: CGPoint(x: bx + 48, y: 0)))
-        // The band that makes the pot this house's own.
-        let band = tint(skin.h, skin.s * 0.7, skin.l + 22, 0.55)
-        switch model.params.band {
+            Gradient(stops: [
+                .init(color: tint(h, sat, l + 14), location: 0),
+                .init(color: tint(h, sat, l + 4), location: 0.35),
+                .init(color: tint(h, sat * 0.95, l - 10), location: 0.8),
+                .init(color: tint(h, sat * 0.9, l - 18), location: 1),
+            ]),
+            startPoint: CGPoint(x: bx - 50, y: 0), endPoint: CGPoint(x: bx + 50, y: 0)))
+        // Depth: the lower body falls into shade.
+        context.fill(body, with: .linearGradient(
+            Gradient(colors: [Color.black.opacity(0), Color.black.opacity(0.22)]),
+            startPoint: CGPoint(x: 0, y: by + 30), endPoint: CGPoint(x: 0, y: by + 66)))
+        // Glaze: a long soft highlight on the lit side.
+        var glaze = context
+        glaze.translateBy(x: bx - 31, y: by + 32)
+        glaze.rotate(by: .radians(-0.12))
+        glaze.fill(Path(ellipseIn: CGRect(x: -4.5, y: -19, width: 9, height: 38)), with: .linearGradient(
+            Gradient(colors: [Color.white.opacity(0.32), Color.white.opacity(0)]),
+            startPoint: CGPoint(x: 0, y: -19), endPoint: CGPoint(x: 0, y: 19)))
+        // The house's band, embossed: a light line over a shadow line.
+        var bandPath = Path()
+        switch band {
         case 0:
-            for i in -3...3 { context.circle(bx + Double(i) * 12, by + 32, 2.4, .color(band)) }
+            for i in -3...3 { bandPath.addEllipse(in: CGRect(x: bx + Double(i) * 12 - 2.2, y: by + 34 - 2.2, width: 4.4, height: 4.4)) }
         case 1:
-            var wave = Path()
-            for x in stride(from: -42.0, through: 42, by: 2) {
-                let point = CGPoint(x: bx + x, y: by + 32 + sin(x / 5) * 3)
-                x == -42 ? wave.move(to: point) : wave.addLine(to: point)
+            for x in stride(from: -43.0, through: 43, by: 2) {
+                let point = CGPoint(x: bx + x, y: by + 34 + sin(x / 5) * 3)
+                x == -43 ? bandPath.move(to: point) : bandPath.addLine(to: point)
             }
-            context.stroke(wave, with: .color(band), lineWidth: 2.5)
         default:
-            var lines = Path()
-            lines.move(to: CGPoint(x: bx - 43, y: by + 28)); lines.addLine(to: CGPoint(x: bx + 43, y: by + 28))
-            lines.move(to: CGPoint(x: bx - 42, y: by + 36)); lines.addLine(to: CGPoint(x: bx + 42, y: by + 36))
-            context.stroke(lines, with: .color(band), lineWidth: 2.5)
+            bandPath.move(to: CGPoint(x: bx - 46, y: by + 30)); bandPath.addLine(to: CGPoint(x: bx + 46, y: by + 30))
+            bandPath.move(to: CGPoint(x: bx - 45, y: by + 38)); bandPath.addLine(to: CGPoint(x: bx + 45, y: by + 38))
         }
-        context.fill(Path(roundedRect: CGRect(x: bx - 54, y: by - 6, width: 108, height: 15), cornerRadius: 7),
-                     with: .color(tint(skin.h, skin.s, skin.l + 5)))
-        context.fill(Path(CGRect(x: bx - 46, y: by - 4, width: 44, height: 2.5)), with: .color(tint(skin.h, skin.s, skin.l + 20, 0.5)))
-        if frame.layout.pot == DecorItem.goldPot.rawValue {
-            var shine = context
-            shine.translateBy(x: bx - 30, y: by + 24)
-            shine.rotate(by: .radians(-0.15))
-            shine.ellipse(0, 0, 4, 16, .color(Ink.color(0xFFFADC, 0.55)))
+        if band == 0 {
+            context.fill(bandPath.offsetBy(dx: 0, dy: 1), with: .color(tint(h, sat, l - 22, 0.5)))
+            context.fill(bandPath, with: .color(tint(h, sat * 0.6, l + 24, 0.7)))
+        } else {
+            context.stroke(bandPath.offsetBy(dx: 0, dy: 1.2), with: .color(tint(h, sat, l - 22, 0.45)), lineWidth: 2.2)
+            context.stroke(bandPath, with: .color(tint(h, sat * 0.6, l + 24, 0.65)), lineWidth: 2.2)
         }
-        context.ellipse(bx, by - 1, 46, 5.5, .color(tint(Ink.lerp(32, 24, mood), Ink.lerp(30, 32, mood), Ink.lerp(34, 17, mood))))
+        // Lip: a front face, and a lit top face around the opening.
+        let lip = Path(roundedRect: CGRect(x: bx - 56, y: by - 3, width: 112, height: 15), cornerRadius: 7.5)
+        context.fill(lip, with: .linearGradient(
+            Gradient(colors: [tint(h, sat, l + 10), tint(h, sat, l - 6)]),
+            startPoint: CGPoint(x: 0, y: by - 3), endPoint: CGPoint(x: 0, y: by + 12)))
+        context.fill(Path(ellipseIn: CGRect(x: bx - 55, y: by - 9, width: 110, height: 14)), with: .color(tint(h, sat * 0.9, l + 16)))
+        // The inside of the rim, in shadow, with the soil sunk into it.
+        context.fill(Path(ellipseIn: CGRect(x: bx - 48, y: by - 7.5, width: 96, height: 11)), with: .color(tint(h, sat * 0.6, l - 30)))
+        let wet = Ink.clamp((mood - 0.3) / 0.5)
+        context.fill(Path(ellipseIn: SceneSpace.soilSurface.offsetBy(dx: bx, dy: by)), with: .linearGradient(
+            Gradient(colors: [tint(Ink.lerp(34, 24, wet), Ink.lerp(30, 35, wet), Ink.lerp(30, 14, wet)),
+                              tint(Ink.lerp(32, 22, wet), Ink.lerp(28, 32, wet), Ink.lerp(40, 22, wet))]),
+            startPoint: CGPoint(x: 0, y: by - 5.5), endPoint: CGPoint(x: 0, y: by + 4)))
+        // A few pebbles.
+        var pebbles = Path()
+        for (x, y, r) in [(-30.0, 0.0, 1.8), (-12, 1.6, 1.3), (6, 0.4, 1.6), (24, 1.4, 1.2), (36, 0.2, 1.4)] {
+            pebbles.addEllipse(in: CGRect(x: bx + x - r * 1.3, y: by + y - r * 0.8, width: r * 2.6, height: r * 1.6))
+        }
+        context.fill(pebbles, with: .color(tint(30, 12, Ink.lerp(58, 44, wet), 0.8)))
+        // A highlight running along the front of the lip.
+        var rimLight = Path()
+        rimLight.move(to: CGPoint(x: bx - 50, y: by + 2))
+        rimLight.addQuadCurve(to: CGPoint(x: bx - 6, y: by + 5), control: CGPoint(x: bx - 32, y: by + 6))
+        context.stroke(rimLight, with: .color(Color.white.opacity(0.28)), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
         if mood < 0.45 {
             var cracks = Path()
             for (x0, dir) in [(-30.0, 1.0), (-6, -1), (18, 1)] {
@@ -228,26 +297,9 @@ struct ScenePainter {
             context.stroke(cracks, with: .color(tint(26, 30, 20, Ink.clamp((0.45 - mood) * 3))), lineWidth: 1)
         }
         if frame.layout.weather == DecorItem.snowfall.rawValue {
-            context.fill(Path(roundedRect: CGRect(x: bx - 55, y: by - 9, width: 110, height: 7), cornerRadius: 4), with: .color(SceneInk.snow))
-            for i in -4...4 { context.circle(bx + Double(i) * 12, by - 6, 3.5 + (i.isMultiple(of: 2) ? 0 : 1), .color(SceneInk.snow)) }
-        }
-    }
-
-    /// Leaves the plant let go, on the soil and the floor, more the longer the
-    /// house is quiet. They go as the plant wakes.
-    func fallenLeaves(_ context: GraphicsContext, model: PlantModel) {
-        let wilt = PlantModel.wilt(frame.mood)
-        let count = Int((Ink.clamp((wilt - 0.15) / 0.85) * Double(model.ground.count)).rounded())
-        for leaf in model.ground.prefix(count) {
-            var c = context
-            c.translateBy(x: center + leaf.x, y: SceneSpace.soil + leaf.y)
-            c.rotate(by: .radians(leaf.rotation))
-            c.scaleBy(x: 1.4, y: 0.75)
-            var shape = Path()
-            shape.move(to: CGPoint(x: -5, y: 0))
-            shape.addQuadCurve(to: CGPoint(x: 6, y: 0), control: CGPoint(x: 0, y: -4))
-            shape.addQuadCurve(to: CGPoint(x: -5, y: 0), control: CGPoint(x: 0, y: 4))
-            c.fill(shape, with: .color(Ink.hsl(leaf.hue, 48, leaf.light)))
+            var snow = Path(roundedRect: CGRect(x: bx - 56, y: by - 10, width: 112, height: 7), cornerRadius: 4)
+            for i in -4...4 { snow.addEllipse(in: CGRect(x: bx + Double(i) * 12 - 3.5, y: by - 9.5, width: 7, height: 7)) }
+            context.fill(snow, with: .color(SceneInk.snow))
         }
     }
 
@@ -384,81 +436,110 @@ struct ScenePainter {
 
     // MARK: On the tree
 
-    /// Lights, baubles, a star and wish notes, hung on the tree's own tips —
-    /// drawn in the tree's coordinates, after it.
-    func treeDecor(_ context: GraphicsContext, model: PlantModel, pose: PlantModel.Pose) {
+    /// Lights, baubles, a star and wish notes, hung where the canopy says its
+    /// clumps are — drawn in the tree's own space, after it, so they sway
+    /// with it.
+    func treeDecor(_ context: GraphicsContext, anchors: CanopyAnchors) {
         guard frame.progress > 0.25 else { return }
-        let tips = model.tips(pose)
         for raw in frame.layout.tree {
             switch DecorItem(rawValue: raw) {
-            case .fairyLights?: fairyLights(context, model: model, pose: pose, tips: tips)
-            case .ornaments?: ornaments(context, model: model, pose: pose, tips: tips)
-            case .treeStar?: topStar(context, pose: pose)
-            case .wishNotes?: wishNotes(context, model: model, pose: pose)
+            case .fairyLights?: fairyLights(context, anchors)
+            case .ornaments?: ornaments(context, at: anchors.hangs)
+            case .treeStar?: topStar(context, at: anchors.crownTop)
+            // Tied up among the branches, not at the foot of the trunk.
+            case .wishNotes?: wishNotes(context, at: anchors.notes.filter { $0.y < -30 })
             default: break
             }
         }
     }
 
-    private func fairyLights(_ context: GraphicsContext, model: PlantModel, pose: PlantModel.Pose, tips: [Int]) {
-        let points = tips.compactMap { pose.segments[$0] }.map { CGPoint(x: $0.x1, y: $0.y1) }.sorted { $0.x < $1.x }
-            .enumerated().filter { $0.offset.isMultiple(of: 2) }.map(\.element)
-        guard points.count >= 3 else { return }
-        var wire = Path()
-        wire.move(to: CGPoint(x: points[0].x, y: points[0].y + 4))
-        for i in 1..<points.count {
-            let a = points[i - 1], b = points[i]
-            wire.addQuadCurve(to: CGPoint(x: b.x, y: b.y + 4), control: CGPoint(x: (a.x + b.x) / 2, y: max(a.y, b.y) + 10))
+    /// Two strings of lights swagged across the crown, the way they are
+    /// wound round a real tree: a long low one and a shorter high one, each a
+    /// sagging curve with bulbs spaced along it. They follow the crown's box,
+    /// not single points on it — threaded point to point, a wire hung in long
+    /// vertical streaks wherever two neighbours sat at different heights.
+    private func fairyLights(_ context: GraphicsContext, _ crown: CanopyAnchors) {
+        let width = crown.right - crown.left, height = crown.bottom - crown.top
+        guard width > 30, height > 24 else { return }
+        let mid = (crown.left + crown.right) / 2
+        var wire = Path(), bulbs: [(point: CGPoint, index: Int)] = []
+        for (row, (level, span, sag)) in [(0.68, 0.44, 12.0), (0.36, 0.3, 8.0)].enumerated() {
+            let y = crown.top + height * level
+            let a = CGPoint(x: mid - width * span, y: y - 5), b = CGPoint(x: mid + width * span, y: y + 3)
+            let control = CGPoint(x: mid, y: y + sag * 2)
+            wire.move(to: a)
+            wire.addQuadCurve(to: b, control: control)
+            let count = max(4, Int(width * span * 2 / 14))
+            for i in 0...count {
+                let t = Double(i) / Double(count), u = 1 - t
+                let point = CGPoint(x: u * u * a.x + 2 * u * t * control.x + t * t * b.x,
+                                    y: u * u * a.y + 2 * u * t * control.y + t * t * b.y + 2.5)
+                bulbs.append((point, i + row * 3))
+            }
         }
-        context.stroke(wire, with: .color(Ink.color(0x3C3228, 0.7)), lineWidth: 0.8)
+        context.stroke(wire, with: .color(SceneInk.lightWire), lineWidth: 0.7)
         let night = 1 - day
         let hues = [45.0, 20, 320, 190]
-        for (i, point) in points.enumerated() {
+        var lit = [Path(), Path(), Path(), Path()], shine = Path()
+        for (point, i) in bulbs {
             let twinkle = frame.reduceMotion ? 1 : 0.6 + 0.4 * abs(sin(time * 2.2 + Double(i) * 1.3))
-            let hue = hues[i % hues.count]
-            if night > 0.15 { context.glow(point.x, point.y + 5, 9, Ink.hsl(hue, 100, 70, 0.55 * night * twinkle)) }
-            context.ellipse(point.x, point.y + 5, 1.8, 2.6, .color(Ink.hsl(hue, 100, 62 + 20 * twinkle * night)))
+            if night > 0.15 { context.glow(point.x, point.y, 8, Ink.hsl(hues[i % 4], 100, 70, 0.5 * night * twinkle)) }
+            lit[i % 4].addEllipse(in: CGRect(x: point.x - 1.7, y: point.y - 2.4, width: 3.4, height: 4.8))
+            shine.addEllipse(in: CGRect(x: point.x - 1, y: point.y - 1.8, width: 0.9, height: 1.6))
         }
+        for (i, path) in lit.enumerated() {
+            context.fill(path, with: .color(Ink.hsl(hues[i], 100, 60 + 22 * night)))
+        }
+        context.fill(shine, with: .color(Color.white.opacity(0.75)))
     }
 
-    private func ornaments(_ context: GraphicsContext, model: PlantModel, pose: PlantModel.Pose, tips: [Int]) {
+    /// Glass baubles under the clumps: a body per colour, one shadow side for
+    /// them all, a highlight and a cap — eight fills however many hang.
+    private func ornaments(_ context: GraphicsContext, at points: [CGPoint]) {
         let colors = [SceneInk.red, SceneInk.gold, SceneInk.blue, SceneInk.silver]
-        for i in tips where model.branches[i].ornament <= 0.55 {
-            guard let s = pose.segments[i] else { continue }
-            var thread = Path()
-            thread.move(to: CGPoint(x: s.x1, y: s.y1)); thread.addLine(to: CGPoint(x: s.x1, y: s.y1 + 4))
-            context.stroke(thread, with: .color(Ink.color(0xE6DCC8, 0.7)), lineWidth: 0.6)
-            context.circle(s.x1, s.y1 + 7, 3.6, .color(colors[model.branches[i].ornamentColor % colors.count]))
-            context.circle(s.x1 - 1.2, s.y1 + 5.8, 1, .color(Color.white.opacity(0.7)))
+        var bodies = [Path(), Path(), Path(), Path()], shade = Path(), shine = Path(), caps = Path(), threads = Path()
+        for (i, point) in points.enumerated() {
+            let x = point.x, y = point.y + 7, r = 3.8
+            threads.move(to: point)
+            threads.addLine(to: CGPoint(x: x, y: y - r - 1))
+            bodies[i % 4].addEllipse(in: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2))
+            shade.move(to: CGPoint(x: x + r * 0.2, y: y - r * 0.98))
+            shade.addArc(center: CGPoint(x: x, y: y), radius: r, startAngle: .radians(-1.37), endAngle: .radians(1.95), clockwise: false)
+            shade.addQuadCurve(to: CGPoint(x: x + r * 0.2, y: y - r * 0.98), control: CGPoint(x: x + r * 0.5, y: y))
+            shine.addEllipse(in: CGRect(x: x - r * 0.62, y: y - r * 0.68, width: r * 0.6, height: r * 0.5))
+            caps.addRoundedRect(in: CGRect(x: x - 1.3, y: y - r - 1.6, width: 2.6, height: 2), cornerSize: CGSize(width: 0.6, height: 0.6))
         }
+        context.stroke(threads, with: .color(SceneInk.thread), lineWidth: 0.6)
+        for (i, path) in bodies.enumerated() { context.fill(path, with: .color(colors[i])) }
+        context.fill(shade, with: .color(Color.black.opacity(0.2)))
+        context.fill(shine, with: .color(Color.white.opacity(0.8)))
+        context.fill(caps, with: .color(SceneInk.brass))
     }
 
-    private func topStar(_ context: GraphicsContext, pose: PlantModel.Pose) {
-        guard let top = pose.segments.compactMap({ $0 }).min(by: { $0.y1 < $1.y1 }) else { return }
-        let x = top.x1, y = top.y1 - 9
+    /// A star on the crown's highest clump, lit from inside.
+    private func topStar(_ context: GraphicsContext, at top: CGPoint) {
+        let x = top.x, y = top.y - 7
         let twinkle = frame.reduceMotion ? 1 : 0.85 + 0.15 * sin(time * 3)
-        context.glow(x, y, 22, Ink.color(0xFFDC78, 0.5 * twinkle))
-        context.star(x, y, 8, SceneInk.candle)
+        context.glow(x, y, 24, Ink.color(0xFFDC78, 0.5 * twinkle))
+        context.star(x, y, 9, SceneInk.brass)
+        context.star(x - 0.5, y - 0.6, 7, SceneInk.candle)
     }
 
-    private func wishNotes(_ context: GraphicsContext, model: PlantModel, pose: PlantModel.Pose) {
+    /// Paper wishes tied to the wood under the clumps, each at its own tilt.
+    private func wishNotes(_ context: GraphicsContext, at points: [CGPoint]) {
         let papers: [UInt32] = [0xFFF6E0, 0xFFE0EC, 0xE0F0FF, 0xE8FFE0]
-        var n = 0
-        for (i, branch) in model.branches.enumerated() where branch.depth >= 2 && branch.depth <= 4 && branch.ornament <= 0.42 {
-            guard let s = pose.segments[i] else { continue }
-            let at = PlantModel.point(s, 0.7)
+        for (n, point) in points.enumerated() {
             var c = context
-            c.translateBy(x: at.x, y: at.y)
-            c.rotate(by: .radians(frame.reduceMotion ? 0 : sin(time * 1.8 + branch.phase) * 0.18))
+            c.translateBy(x: point.x, y: point.y)
+            c.rotate(by: .radians(Double((n * 7) % 5 - 2) * 0.07))
             var thread = Path()
             thread.move(to: .zero); thread.addLine(to: CGPoint(x: 0, y: 5))
-            c.stroke(thread, with: .color(Ink.color(0xC8283C, 0.85)), lineWidth: 1)
+            c.stroke(thread, with: .color(SceneInk.wishThread), lineWidth: 1)
             c.fill(Path(CGRect(x: -4, y: 5, width: 8, height: 11)), with: .color(Ink.color(papers[n % papers.count])))
             var lines = Path()
             lines.move(to: CGPoint(x: -2.4, y: 8.5)); lines.addLine(to: CGPoint(x: 2.4, y: 8.5))
             lines.move(to: CGPoint(x: -2.4, y: 11)); lines.addLine(to: CGPoint(x: 2, y: 11))
-            c.stroke(lines, with: .color(Ink.color(0x5A463C, 0.45)), lineWidth: 0.6)
-            n += 1
+            c.stroke(lines, with: .color(SceneInk.ink), lineWidth: 0.6)
         }
     }
 
@@ -737,6 +818,32 @@ struct ScenePainter {
 
     /// Thirsty: a little bubble with a drop in it — the one thing on the card
     /// that asks for something.
+    /// A thirsty tree lets a leaf go now and then. It drifts down from under
+    /// a clump, rocking, lands on the soil and fades — one every seven
+    /// seconds, from a different clump each time.
+    func fallingLeaf(_ context: GraphicsContext, from hangs: [CGPoint]) {
+        let thirst = Ink.smooth((0.6 - frame.mood) / 0.3)
+        guard thirst > 0.3, frame.progress > 0.4, !frame.reduceMotion, !hangs.isEmpty else { return }
+        let cycle = (time / 7).rounded(.down), u = (time - cycle * 7) / 3.4
+        guard u < 1 else { return }
+        let start = hangs[Int(cycle) % hangs.count]
+        let x0 = center + start.x, y0 = SceneSpace.soil + start.y
+        let x = x0 + sin(u * 9) * 10 * (1 - u) + u * 14, y = Ink.lerp(y0, SceneSpace.soil - 1, u * u)
+        let angle = u * 7 + cycle
+        var leaf = context
+        leaf.translateBy(x: x, y: y)
+        leaf.rotate(by: .radians(angle))
+        leaf.opacity = thirst * (1 - Ink.smooth((u - 0.85) / 0.15))
+        var shape = Path(), rib = Path()
+        shape.move(to: CGPoint(x: -6, y: 0))
+        shape.addQuadCurve(to: CGPoint(x: 6, y: 0), control: CGPoint(x: 0, y: -4))
+        shape.addQuadCurve(to: CGPoint(x: -6, y: 0), control: CGPoint(x: 0, y: 4))
+        rib.move(to: CGPoint(x: -6, y: 0))
+        rib.addLine(to: CGPoint(x: 4.5, y: 0))
+        leaf.fill(shape, with: .color(SceneInk.fallingLeaf))
+        leaf.stroke(rib, with: .color(SceneInk.fallingLeafRib), lineWidth: 0.7)
+    }
+
     func thirstBubble(_ context: GraphicsContext, near box: CGRect) {
         let a = Ink.smooth((0.56 - frame.mood) / 0.12) * (1 - Ink.smooth((0.2 - frame.mood) / 0.06))
         guard a > 0.02 else { return }

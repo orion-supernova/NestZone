@@ -6,6 +6,8 @@ import SwiftUI
 struct CompanionSheet: View {
     @Bindable var store: StoreOf<CompanionFeature>
     let sheet: CompanionFeature.State.Sheet
+    /// How far it is pulled up, so the card knows whether it is covered.
+    @Binding var detent: PresentationDetent
 
     var body: some View {
         NavigationStack {
@@ -15,10 +17,11 @@ struct CompanionSheet: View {
             case .album: AlbumView(store: store)
             case .holidays: HolidaysView(store: store)
             case .lab: LabView(store: store)
-            case .ceremony: EmptyView()
+            case .ceremony, .welcome: EmptyView()
             }
         }
-        .presentationDetents(sheet == .decorate ? [.large] : [.medium, .large])
+        .presentationDetents(sheet == .decorate ? [.large] : [.medium, .large],
+                             selection: sheet == .decorate ? .constant(.large) : $detent)
     }
 }
 
@@ -40,11 +43,9 @@ private struct Portrait: View {
     var mood: Mood = .content
 
     var body: some View {
-        CompanionScene(
-            companion: Companion(species: species, seed: seed, startedAt: .distantPast),
-            progress: 0.97, mood: mood, stage: species.isPet ? 5 : 5, layout: SceneLayout(),
-            southern: false, now: Calendar.current.date(bySettingHour: 13, minute: 0, second: 0, of: Date()) ?? Date(),
-            choreTick: 0, careTick: 0
+        ScenePortrait(
+            companion: Companion(species: species, seed: seed, startedAt: .distantPast), mood: mood,
+            now: Calendar.current.date(bySettingHour: 13, minute: 0, second: 0, of: Date()) ?? Date()
         )
         .allowsHitTesting(false)
     }
@@ -56,6 +57,7 @@ private struct ChooseView: View {
     let store: StoreOf<CompanionFeature>
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
+    @State private var position = ScrollPosition(edge: .top)
 
     var body: some View {
         ScrollView {
@@ -63,11 +65,16 @@ private struct ChooseView: View {
                 Text(L10n.chooseHint)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .oneLine()
                 group(L10n.choosePlants, Species.allCases.filter { !$0.isPet })
                 group(L10n.choosePets, Species.allCases.filter(\.isPet))
             }
             .padding(Metrics.screenPadding)
         }
+        .scrollPosition($position)
+        #if DEBUG
+        .task { await scrollForever() }
+        #endif
         .navigationTitle(Text(store.house.album.isEmpty ? L10n.companionMeetTitle(String(localized: L10n.companionBrand)) : L10n.companionNextTitle))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -77,12 +84,27 @@ private struct ChooseView: View {
         }
     }
 
+    #if DEBUG
+    /// `-companionScroll 1` scrolls the sheet down and up on its own, so the
+    /// scroll can be profiled on a simulator nobody can touch.
+    private func scrollForever() async {
+        guard UserDefaults.standard.bool(forKey: "companionScroll") else { return }
+        var down = true
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(1.6))
+            withAnimation(.easeInOut(duration: 1.2)) { position.scrollTo(edge: down ? .bottom : .top) }
+            down.toggle()
+        }
+    }
+    #endif
+
     private func group(_ title: LocalizedStringResource, _ species: [Species]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
+                .oneLine()
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(species) { kind in
                     Button { store.send(.chose(kind), animation: Motion.arrive) } label: {
@@ -92,6 +114,7 @@ private struct ChooseView: View {
                             Text(kind.title)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.primary)
+                                .oneLine()
                                 .padding(10)
                         }
                         .clipShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))
@@ -222,11 +245,12 @@ private struct DecorateView: View {
         VStack(alignment: .leading, spacing: 10) {
             if let spot = store.decorateSpot {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(spot.title).font(.headline)
+                    Text(spot.title).font(.headline).oneLine()
                     Spacer()
                     Text(spot == .tree ? L10n.decorateTreeLimit : L10n.decorateOneThing)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .oneLine()
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -237,22 +261,21 @@ private struct DecorateView: View {
                 }
                 preview
             } else {
-                Text(L10n.decoratePickSpot).font(.headline)
-                Text(L10n.decorateSpotHint)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(L10n.decoratePickSpot).font(.headline).oneLine()
             }
             if !store.activeHolidays.isEmpty {
                 Text(L10n.decorateSets)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
+                    .oneLine()
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(store.activeHolidays) { holiday in
                             Button { store.send(.setPicked(holiday.id), animation: Motion.celebrate) } label: {
                                 Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
                                     .font(.subheadline.weight(.semibold))
+                                    .fixedSize()
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
                                     .glassControl()
@@ -288,20 +311,22 @@ private struct DecorateView: View {
         let label: LocalizedStringResource = isOn ? L10n.decoratePlaced
             : store.house.owned.contains(decor.rawValue) ? L10n.decorateYours
             : owned ? L10n.decorateFree
-            : L10n.decoratePrice(priceOf(decor))
+            : priceLabel(decor)
         return Button { store.send(.decorToggled(decor.rawValue), animation: Motion.celebrate) } label: {
+            // As wide as its one-line name needs, never narrower than a tile:
+            // "Cadılar Bayramı flaması" gets the room, "Kar" doesn't look lost.
             VStack(spacing: 4) {
                 Text(verbatim: decor.symbol).font(.title2)
                 Text(decor.title)
                     .font(.caption.weight(.semibold))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.8)
+                    .fixedSize()
                 Text(label)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(isOn ? Palette.amber : .secondary)
+                    .fixedSize()
             }
-            .frame(width: 88, height: 96)
+            .padding(.horizontal, 10)
+            .frame(minWidth: 88, minHeight: 96)
             .background(RoundedRectangle(cornerRadius: Metrics.tightRadius, style: .continuous)
                 .strokeBorder(isOn ? Palette.amber : Color.clear, lineWidth: 1.5))
             .glassCard(cornerRadius: Metrics.tightRadius)
@@ -310,9 +335,13 @@ private struct DecorateView: View {
         .sensoryFeedback(.selection, trigger: isOn)
     }
 
-    private func priceOf(_ decor: Decor) -> Int {
-        if case let .item(item) = decor { return item.price ?? 0 }
-        return 0
+    /// One price, in the one currency the thing is sold for.
+    private func priceLabel(_ decor: Decor) -> LocalizedStringResource {
+        guard case let .item(item) = decor, let price = item.price else { return L10n.decorateFree }
+        return switch price {
+        case let .leaves(amount): L10n.decoratePrice(amount)
+        case let .sparkles(amount): L10n.decoratePriceSparkles(amount)
+        }
     }
 
     /// A preview the house would have to buy, with the jar's answer.
@@ -321,16 +350,22 @@ private struct DecorateView: View {
         let unowned = store.draft.all.compactMap(DecorItem.init(rawValue:))
             .filter { $0.price != nil && !store.available.contains($0.rawValue) }
         if let item = unowned.first, let price = item.price {
-            let short = price - store.house.jar
+            let (short, buy, needs): (Int, LocalizedStringResource, LocalizedStringResource) = switch price {
+            case let .leaves(amount):
+                (amount - store.house.leaves, L10n.decorateBuy(amount), L10n.decorateNeedMore(amount - store.house.leaves))
+            case let .sparkles(amount):
+                (amount - store.house.sparkles, L10n.decorateBuySparkles(amount), L10n.decorateNeedMoreSparkles(amount - store.house.sparkles))
+            }
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.decoratePreview).font(.caption.weight(.semibold))
-                    Text(item.title).font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.decoratePreview).font(.caption.weight(.semibold)).oneLine()
+                    Text(item.title).font(.caption).foregroundStyle(.secondary).oneLine()
                 }
-                Spacer()
+                Spacer(minLength: 6)
                 Button { store.send(.buyTapped(item.rawValue), animation: Motion.celebrate) } label: {
-                    Text(short > 0 ? L10n.decorateNeedMore(short) : L10n.decorateBuy(price))
+                    Text(short > 0 ? needs : buy)
                         .font(.footnote.weight(.semibold))
+                        .fixedSize()
                 }
                 .buttonStyle(.glassProminent)
                 .tint(theme.accent)
@@ -354,6 +389,7 @@ private struct AlbumView: View {
                 Text(L10n.albumEmpty)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .oneLine()
                     .frame(maxWidth: .infinity)
                     .padding(.top, 40)
             } else {
@@ -365,9 +401,11 @@ private struct AlbumView: View {
                                 .clipShape(.rect(cornerRadius: 6))
                             Text(graduate.species.title)
                                 .font(.subheadline.weight(.semibold))
+                                .oneLine()
                             Text(verbatim: "\(String(localized: L10n.albumDays(graduate.days))) · \(graduate.graduatedAt.formatted(Date.FormatStyle().month(.abbreviated).year().locale(L10n.locale)))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                                .oneLine()
                         }
                         .padding(8)
                         .background(RoundedRectangle(cornerRadius: 10).fill(Palette.inset))
@@ -399,7 +437,8 @@ private struct HolidaysView: View {
                 Text(L10n.holidaysHint)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-                Button { store.send(.holidaysReset) } label: { Text(L10n.holidaysSuggested) }
+                    .oneLine()
+                Button { store.send(.holidaysReset) } label: { Text(L10n.holidaysSuggested).oneLine() }
             }
             ForEach(Holiday.Family.allCases) { family in
                 Section {
@@ -407,7 +446,7 @@ private struct HolidaysView: View {
                         row(holiday)
                     }
                 } header: {
-                    Text(family.title)
+                    Text(family.title).oneLine()
                 }
             }
         }
@@ -429,9 +468,11 @@ private struct HolidaysView: View {
                 Text(verbatim: holiday.symbol).font(.title3)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(holiday.id.title)
+                        .oneLine()
                     Text(when(holiday))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .oneLine()
                 }
             }
         }
@@ -454,32 +495,33 @@ private struct LabView: View {
     var body: some View {
         Form {
             Section {
-                Text(L10n.labNote).font(.footnote).foregroundStyle(.secondary)
+                Text(L10n.labNote).font(.footnote).foregroundStyle(.secondary).oneLine()
             }
             Section(header: Text(L10n.labGrow)) {
-                Button { store.send(.labPoints(5)) } label: { Text(L10n.labPoints(5)) }
-                Button { store.send(.labPoints(20)) } label: { Text(L10n.labPoints(20)) }
-                Button { store.send(.labPoints(CompanionMath.graduateAt)) } label: { Text(L10n.labReady) }
+                Button { store.send(.labPoints(5)) } label: { Text(L10n.labPoints(5)).oneLine() }
+                Button { store.send(.labPoints(20)) } label: { Text(L10n.labPoints(20)).oneLine() }
+                Button { store.send(.labPoints(CompanionMath.graduateAt)) } label: { Text(L10n.labReady).oneLine() }
             }
             Section(header: Text(L10n.labMood)) {
-                Button { store.send(.labMood(nil)) } label: { Text(L10n.labReal) }
-                Button { store.send(.labMood(.bright)) } label: { Text(L10n.labBright) }
-                Button { store.send(.labMood(.thirsty)) } label: { Text(L10n.labThirsty) }
-                Button { store.send(.labMood(.dozing)) } label: { Text(L10n.labDozing) }
+                Button { store.send(.labMood(nil)) } label: { Text(L10n.labReal).oneLine() }
+                Button { store.send(.labMood(.bright)) } label: { Text(L10n.labBright).oneLine() }
+                Button { store.send(.labMood(.thirsty)) } label: { Text(L10n.labThirsty).oneLine() }
+                Button { store.send(.labMood(.dozing)) } label: { Text(L10n.labDozing).oneLine() }
             }
             Section(header: Text(L10n.labDay)) {
-                Button { store.send(.labDate(nil)) } label: { Text(L10n.labToday) }
+                Button { store.send(.labDate(nil)) } label: { Text(L10n.labToday).oneLine() }
                 ForEach(Holiday.all) { holiday in
                     if let start = holiday.next(after: Date(), region: store.region) {
                         Button { store.send(.labDate(Calendar.current.date(bySettingHour: 20, minute: 0, second: 0, of: start))) } label: {
-                            Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
+                            Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))").oneLine()
                         }
                     }
                 }
             }
             Section {
-                Button { store.send(.labLeaves(200)) } label: { Text(L10n.labLeaves(200)) }
-                Button(role: .destructive) { store.send(.labReset) } label: { Text(L10n.labReset) }
+                Button { store.send(.labCoins(Coins(leaves: 200, sparkles: 0))) } label: { Text(L10n.labLeaves(200)).oneLine() }
+                Button { store.send(.labCoins(Coins(leaves: 0, sparkles: 200))) } label: { Text(L10n.labSparkles(200)).oneLine() }
+                Button(role: .destructive) { store.send(.labReset) } label: { Text(L10n.labReset).oneLine() }
             }
         }
         .navigationTitle(Text(L10n.labTitle))
@@ -523,15 +565,17 @@ struct CeremonyView: View {
                     Text(L10n.companionReady)
                         .font(.system(.largeTitle, design: .rounded, weight: .bold))
                         .foregroundStyle(.white)
+                        .oneLine()
                         .opacity(beat >= 2 ? 1 : 0)
-                    Text(L10n.ceremonyBody(String(localized: current.species.title), store.day))
+                    Text(L10n.ceremonyGrownIn(String(localized: current.species.title), store.day))
                         .font(.body)
                         .foregroundStyle(SheetInk.caption)
-                        .multilineTextAlignment(.center)
+                        .oneLine()
                         .opacity(beat >= 2 ? 1 : 0)
-                    Text(L10n.ceremonyJar(Jar.graduationPay))
+                    Text(L10n.ceremonyCoins(Rewards.graduation.leaves, Rewards.graduation.sparkles))
                         .font(.headline)
                         .foregroundStyle(Palette.lemon)
+                        .oneLine()
                         .opacity(beat >= 3 ? 1 : 0)
                         .scaleEffect(beat >= 3 ? 1 : 0.6)
                 }
@@ -553,6 +597,69 @@ struct CeremonyView: View {
                 withAnimation(reduceMotion ? Motion.fade : Motion.celebrate) { beat = step }
             }
         }
+    }
+}
+
+/// The house's welcome gift: Leaves and Sparkles counting up into the jar,
+/// enough for a first decoration with a little over, and a way straight into
+/// Decorate to spend it.
+struct WelcomeGiftView: View {
+    let store: StoreOf<CompanionFeature>
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.theme) private var theme
+    @State private var shown = 0.0
+
+    var body: some View {
+        ZStack {
+            SheetInk.backdrop.ignoresSafeArea()
+            if !reduceMotion { Petals().ignoresSafeArea().allowsHitTesting(false) }
+            VStack(spacing: 22) {
+                Spacer()
+                Text(verbatim: "🎁")
+                    .font(.system(size: 72))
+                    .scaleEffect(0.6 + 0.4 * shown)
+                Text(L10n.welcomeTitle)
+                    .font(.system(.title, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white)
+                    .oneLine()
+                HStack(spacing: 28) {
+                    amount("🍃", Rewards.welcome.leaves)
+                    amount("✨", Rewards.welcome.sparkles)
+                }
+                Text(L10n.welcomeBody)
+                    .font(.body)
+                    .foregroundStyle(SheetInk.caption)
+                    .oneLine()
+                Spacer()
+                PrimaryButton(L10n.welcomeDecorate, symbol: "paintbrush.pointed.fill") {
+                    store.send(.welcomeDecorateTapped, animation: Motion.arrive)
+                }
+                .accessibilityIdentifier("WelcomeDecorate")
+                Button { store.send(.sheetDismissed) } label: {
+                    Text(L10n.welcomeLater).font(.body.weight(.semibold)).oneLine()
+                }
+                .foregroundStyle(SheetInk.caption)
+                .padding(.bottom, 20)
+            }
+            .padding(.horizontal, Metrics.screenPadding)
+        }
+        .sensoryFeedback(.success, trigger: shown) { _, now in now == 1 }
+        .task {
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 350))
+            withAnimation(reduceMotion ? Motion.fade : .easeOut(duration: 1.1)) { shown = 1 }
+        }
+    }
+
+    /// A number that counts up from nothing as the gift lands.
+    private func amount(_ symbol: String, _ value: Int) -> some View {
+        HStack(spacing: 6) {
+            Text(verbatim: symbol).font(.title)
+            Text(Int((Double(value) * shown).rounded()), format: .number)
+                .font(.system(.largeTitle, design: .rounded, weight: .heavy).monospacedDigit())
+                .foregroundStyle(Palette.lemon)
+                .contentTransition(.numericText(value: Double(value) * shown))
+        }
+        .fixedSize()
     }
 }
 

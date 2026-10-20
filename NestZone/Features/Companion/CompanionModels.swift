@@ -144,10 +144,14 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
     public var current: Companion?
     /// Every one the house has grown, oldest first.
     public var album: [Graduate] = []
-    /// The house jar: one purse for the whole house, like the jar on the
-    /// kitchen shelf. Graduations and new stages put Leaves in; everybody
-    /// spends from it.
-    public var jar = 0
+    /// The house jar, like the one on the kitchen shelf: one purse for the
+    /// whole house, holding two currencies. Leaves are progress — earned by
+    /// growing, never sold. Sparkles are what people buy, with a few earned
+    /// along the way. Everybody spends from the jar.
+    public var leaves = 0
+    public var sparkles = 0
+    /// Whether the house has had its welcome gift.
+    public var welcomed = false
     /// Everyday decorations bought from the jar.
     public var owned: Set<String> = [DecorItem.wateringCan.rawValue]
     /// What sits where.
@@ -172,7 +176,8 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case current, album, jar, owned, layout, holidays, paidStage, lab
+        // Leaves were the jar's only coin when the file first held it.
+        case current, album, leaves = "jar", sparkles, welcomed, owned, layout, holidays, paidStage, lab
     }
 
     /// Lenient: a field a later build adds must not make an older file
@@ -182,7 +187,9 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         current = try? c.decodeIfPresent(Companion.self, forKey: .current)
         album = (try? c.decodeIfPresent([Graduate].self, forKey: .album)) ?? []
-        jar = (try? c.decodeIfPresent(Int.self, forKey: .jar)) ?? 0
+        leaves = (try? c.decodeIfPresent(Int.self, forKey: .leaves)) ?? 0
+        sparkles = (try? c.decodeIfPresent(Int.self, forKey: .sparkles)) ?? 0
+        welcomed = (try? c.decodeIfPresent(Bool.self, forKey: .welcomed)) ?? false
         owned = (try? c.decodeIfPresent(Set<String>.self, forKey: .owned)) ?? [DecorItem.wateringCan.rawValue]
         layout = (try? c.decodeIfPresent(SceneLayout.self, forKey: .layout)) ?? SceneLayout()
         holidays = try? c.decodeIfPresent([String].self, forKey: .holidays)
@@ -236,12 +243,57 @@ public struct Graduate: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-/// What the jar pays.
-public enum Jar {
-    /// Every new stage.
-    public static let stagePay = 10
+extension CompanionHouse {
+    public func canAfford(_ price: Price) -> Bool {
+        switch price {
+        case let .leaves(amount): leaves >= amount
+        case let .sparkles(amount): sparkles >= amount
+        }
+    }
+
+    public mutating func pay(_ price: Price) {
+        switch price {
+        case let .leaves(amount): leaves -= amount
+        case let .sparkles(amount): sparkles -= amount
+        }
+    }
+
+    public mutating func add(_ coins: Coins) {
+        leaves += coins.leaves
+        sparkles += coins.sparkles
+    }
+}
+
+/// Some of each currency, as the jar is paid.
+public struct Coins: Equatable, Sendable {
+    public var leaves: Int
+    public var sparkles: Int
+
+    public static func * (coins: Coins, times: Int) -> Coins {
+        Coins(leaves: coins.leaves * times, sparkles: coins.sparkles * times)
+    }
+}
+
+/// What a thing costs: one price, in one currency. Never "100 Leaves or 5
+/// Sparkles" for the same thing — a second way to pay for an item that
+/// progress already earns is paying to skip the progress.
+public enum Price: Equatable, Sendable {
+    case leaves(Int)
+    case sparkles(Int)
+}
+
+/// What the jar is paid, and when.
+public enum Rewards {
+    /// Every new stage: Leaves for progress, a pinch of Sparkles like a
+    /// merge game's level-up.
+    public static let stage = Coins(leaves: 10, sparkles: 5)
     /// Growing one all the way.
-    public static let graduationPay = 100
+    public static let graduation = Coins(leaves: 100, sparkles: 25)
+    /// The welcome gift: about one and a half of a starter item in each
+    /// currency, so the first visit to the shop buys something real and
+    /// still leaves a little over (bunting at 100 Leaves leaves 50; a paper
+    /// lantern at 120 Sparkles leaves 60).
+    public static let welcome = Coins(leaves: 150, sparkles: 180)
 }
 
 // MARK: - Decorations
@@ -333,19 +385,19 @@ public enum DecorItem: String, CaseIterable, Codable, Sendable {
         }
     }
 
-    /// Leaves from the jar, for the everyday things. Holiday things have no
-    /// price: they come with the day.
-    public var price: Int? {
+    /// What it costs from the jar, in exactly one currency. Holiday things
+    /// have no price: they come with the day. The watering can is every
+    /// house's from the start.
+    public var price: Price? {
         switch self {
-        case .bunting: 100
-        case .fairyLights: 150
-        case .paperLantern: 200
-        case .kilim: 250
-        case .terracotta: 80
-        case .glazedPot: 120
-        case .goldPot: 300
-        case .dusk: 200
-        case .wateringCan: 0
+        case .terracotta: .leaves(80)
+        case .bunting: .leaves(100)
+        case .glazedPot: .leaves(120)
+        case .fairyLights: .leaves(150)
+        case .kilim: .leaves(250)
+        case .paperLantern: .sparkles(120)
+        case .dusk: .sparkles(160)
+        case .goldPot: .sparkles(240)
         default: nil
         }
     }
