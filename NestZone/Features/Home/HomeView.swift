@@ -172,7 +172,7 @@ public struct HomeView<Companion: View>: View {
                 block(section) { quietLine(L10n.homeUpNextClear) }
             }
         case .movieNight:
-            if visibility == .always || store.movieNightIsTimely {
+            if store.showsMovieNight {
                 movieNightRow
             }
         case .stats:

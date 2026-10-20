@@ -537,6 +537,8 @@ extension MainFeature.State {
         let roundOpen = now.movieRounds.contains(where: \.isOpen)
         if homeTab.movieRoundIsOpen != roundOpen { homeTab.movieRoundIsOpen = roundOpen }
         if homeTab.now != now.now { homeTab.now = now.now }
+        let dock = now.dockItem
+        if homeTab.dock != dock { homeTab.dock = dock }
         if companion.now != now.now { companion.now = now.now }
         plans.segments[id: .recipes]?.screen.apply(tonight: tonight)
     }

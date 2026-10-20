@@ -63,6 +63,12 @@ public struct HomeFeature: Sendable {
         public var dinnerSuggestion: EventOccurrence?
         /// Whether the household has a movie round open, also handed down.
         public var movieRoundIsOpen = false
+        /// What the dock over the tab bar is showing right now, handed down so
+        /// Today never says the same thing twice: the dock is on screen here
+        /// too, so a movie round, tonight's dinner or an event about to start
+        /// that it already shows is left out of Today's sections. Nothing is
+        /// lost — the dock is the way in.
+        public var dock: DockItem = .add
         /// The container's clock, which moves on every half minute. Today reads
         /// the time of day off it — "Tuesday evening" — and so does the
         /// decision about which chores are due.
@@ -208,7 +214,31 @@ public struct HomeFeature: Sendable {
         /// What is coming, not what is under way — the dock above the tab bar
         /// already says what is happening now.
         public var comingUp: [EventOccurrence] {
-            Array(upcoming.filter { !$0.isInProgress && $0.start > now }.prefix(4))
+            Array(upcoming.filter { !$0.isInProgress && $0.start > now && $0 != dockEvent }.prefix(4))
+        }
+
+        /// The event the dock is showing, if it is showing one.
+        var dockEvent: EventOccurrence? {
+            switch dock {
+            case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence): occurrence
+            default: nil
+            }
+        }
+
+        /// Whether the dock is already showing tonight's dinner.
+        var dockShowsDinner: Bool {
+            switch dock {
+            case .dinner, .dinnerSuggestion, .dinnerUndecided: true
+            default: false
+            }
+        }
+
+        /// Whether Today draws the movie-night row: not while the dock is
+        /// showing the open round — that was the same row twice, one above the
+        /// other.
+        public var showsMovieNight: Bool {
+            if case .movieRound = dock { return false }
+            return layout.visibility(of: .movieNight) == .always || movieNightIsTimely
         }
 
         /// Events in the next seven days, the way the counters count them.
@@ -348,7 +378,10 @@ public struct HomeFeature: Sendable {
         /// Undecided, it stays off Today — the dock asks in the evening, and
         /// asking every morning is the nag the old card was.
         public var showsTonight: Bool {
-            switch layout.visibility(of: .tonight) {
+            // In the evening the dock carries tonight's dinner, and opens the
+            // same sheet this card does.
+            if dockShowsDinner { return false }
+            return switch layout.visibility(of: .tonight) {
             case .off: false
             case .always: true
             case .automatic: tonight != nil || dinnerSuggestion != nil
