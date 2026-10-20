@@ -25,8 +25,8 @@
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "NestZone/NestZoneApp.swift": {
-    "mtime": 1789894070.920814,
-    "ast_hash": "506a34980f0b6090ad5243daee36639f",
+    "mtime": 1792511673.9670863,
+    "ast_hash": "bd034ee7c22c9d4523f358e94b143983",
     "semantic_hash": ""
   },
   "Docs/PocketBase/README.md": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792447478.4529014,
-    "ast_hash": "59a81d8b21ed98507bb930bc2664e806",
+    "mtime": 1792512818.1781561,
+    "ast_hash": "d3daa91d132b65fbf1d29d9afac2e5ff",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1792446975.9346364,
-    "ast_hash": "6784ea49ce0278b301727303b7807335",
+    "mtime": 1792500949.205526,
+    "ast_hash": "cd4708a4bd7b55562de2a54e9d094517",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1792445741.8163564,
-    "ast_hash": "4846aae4b4d4270db1eebef2fd583950",
+    "mtime": 1792512709.5563176,
+    "ast_hash": "f2e404d252dcdafbef9fd5a1cd5b5381",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -475,13 +475,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeFeature.swift": {
-    "mtime": 1792445310.0487342,
-    "ast_hash": "23901ccf992e36a30c95d8f16126ebb5",
+    "mtime": 1792501156.855969,
+    "ast_hash": "9a4416e9cb9d1528522e786d6ed0e8ae",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeView.swift": {
-    "mtime": 1792445310.0489154,
-    "ast_hash": "79e80b1a8788e4dcdd6c313b11fb16fe",
+    "mtime": 1792511951.0013285,
+    "ast_hash": "b7203143d44e880369f52d500f4b821f",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/CreateHomeFeature.swift": {
@@ -1275,38 +1275,38 @@
     "semantic_hash": ""
   },
   "Docs/Companion/tools/scenario.sh": {
-    "mtime": 1792447365.6587856,
-    "ast_hash": "1a76af7b98436a745d3d9cb6dc2623e4",
+    "mtime": 1792512750.2876234,
+    "ast_hash": "a5675b09c507311a2f8dc42071ee6006",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCard.swift": {
-    "mtime": 1792445928.44003,
-    "ast_hash": "a272a7f73e3a4fa80c63826818c73e82",
+    "mtime": 1792513074.9102232,
+    "ast_hash": "fcf645f16c65591b3cfe1476449922a9",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionFeature.swift": {
-    "mtime": 1792446012.3434355,
-    "ast_hash": "eab6b454833913982ba60ea23964dc22",
+    "mtime": 1792512709.5892286,
+    "ast_hash": "fe144c0a9096f86eadefc0464c8a53a0",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionModels.swift": {
-    "mtime": 1792446012.3433027,
-    "ast_hash": "b2bc8f08c914cf5f1f73212ec709d72c",
+    "mtime": 1792501523.4515238,
+    "ast_hash": "77350c5bc75fa5a364505f0fe871b0b2",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionNames.swift": {
-    "mtime": 1792445044.6756403,
-    "ast_hash": "8c6841ac507d5db21f6100c713a3f885",
+    "mtime": 1792501057.637625,
+    "ast_hash": "ce80eefb2ec99c1163e3050e1ceb325a",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionScene.swift": {
-    "mtime": 1792445928.4398923,
-    "ast_hash": "45f78761f3180dddcca5a64d1a3192a4",
+    "mtime": 1792512666.383911,
+    "ast_hash": "e2d798f180d9c6b329b062166ccf2dfe",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionSheets.swift": {
-    "mtime": 1792446091.6467125,
-    "ast_hash": "67a2dd2ea25c58f12c0cc51b46c7d314",
+    "mtime": 1792512666.3835654,
+    "ast_hash": "9b03a00bad35bebf84ca67dc13c5f282",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/Holidays.swift": {
@@ -1319,29 +1319,24 @@
     "ast_hash": "69f4cec76add6fcdf8bceafbc899d321",
     "semantic_hash": ""
   },
-  "NestZone/Features/Companion/PlantPainter.swift": {
-    "mtime": 1792444532.312042,
-    "ast_hash": "888d7abcf6748df5823f7c05ed100c55",
-    "semantic_hash": ""
-  },
   "NestZone/Features/Companion/SceneInk.swift": {
-    "mtime": 1792446012.3441923,
-    "ast_hash": "9e32ae47afdf204b86e4a62ea1f6a16e",
+    "mtime": 1792509612.8893743,
+    "ast_hash": "bd6b456045942eb52705bb690eaf9397",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ScenePainter.swift": {
-    "mtime": 1792446012.3435915,
-    "ast_hash": "0b3ea1acc35799a9da954e19c02969d5",
+    "mtime": 1792509612.8891165,
+    "ast_hash": "7a46acfcf151d9304eb7e7983416d77c",
     "semantic_hash": ""
   },
   "NestZoneTests/CompanionTests.swift": {
-    "mtime": 1792446970.2523122,
-    "ast_hash": "81b01d64fee9258d7e5e27da62526fe1",
+    "mtime": 1792510792.3920286,
+    "ast_hash": "a25e31abf3c1ad65eba2638dfe249d74",
     "semantic_hash": ""
   },
   "Docs/Companion/HANDOFF.md": {
-    "mtime": 1792447467.797904,
-    "ast_hash": "66f5e5affc260f283f45b195f8949a34",
+    "mtime": 1792512818.1778588,
+    "ast_hash": "0bce082503d5b9504f85152eaf237fda",
     "semantic_hash": ""
   },
   "Docs/Companion/HOLIDAYS.md": {
@@ -1350,8 +1345,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/README.md": {
-    "mtime": 1792447427.9210382,
-    "ast_hash": "f6af951644f76a6f9e1dc8f199287c28",
+    "mtime": 1792512818.177675,
+    "ast_hash": "dcfde4601bd717af48184975e248d9d7",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/duck.html": {
@@ -1360,8 +1355,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/plan/index.html": {
-    "mtime": 1792447335.516359,
-    "ast_hash": "3b7415d28755eedee1adda9d2fc9386c",
+    "mtime": 1792501736.9865618,
+    "ast_hash": "37c9b4506643f5345bcc30219fe02789",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/plant.html": {
@@ -1537,6 +1532,131 @@
   "Docs/Companion/plan/img/stage7.png": {
     "mtime": 1792447315.7095313,
     "ast_hash": "a29cfebe33e7847f68cde8c39bf1f28f",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/tools/shot.sh": {
+    "mtime": 1792505787.3237731,
+    "ast_hash": "baf5723f7bc272f9ea508a7c5d3f74b5",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/render.sh": {
+    "mtime": 1792505787.3188813,
+    "ast_hash": "08a828d780fcde9050c6dd0eb1ebfdd3",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CanopyPainter.swift": {
+    "mtime": 1792509364.7704601,
+    "ast_hash": "81c16c1395ad28a50d2243362f6ba806",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/SHADERS.md": {
+    "mtime": 1792512123.4235191,
+    "ast_hash": "e5236e94f9dd13421bfb15120b814fe2",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/compare.html": {
+    "mtime": 1792512123.4229329,
+    "ast_hash": "4ffb7b795bdc35164a84ec4d721e7f47",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/SPEC.md": {
+    "mtime": 1792512123.4232278,
+    "ast_hash": "152bd1bf97f0d30d3e056f6be0c15a97",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/tree.html": {
+    "mtime": 1792509706.2821198,
+    "ast_hash": "9f92b6976022bc5e97804b42b4fbcebf",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/SPEC.md": {
+    "mtime": 1792509749.1968546,
+    "ast_hash": "181e9c31c81c814a0893001717721169",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/tree.html": {
+    "mtime": 1792505751.7608716,
+    "ast_hash": "52250706c60c0f32df82c8a06a0ecd33",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/renders/01-species-day.jpg": {
+    "mtime": 1792509706.360633,
+    "ast_hash": "63d83195536fbe51e508c4f1c2a851bd",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/renders/02-moods-magnolia.jpg": {
+    "mtime": 1792509706.4169369,
+    "ast_hash": "e01d3fb9e25046424a16b79881a15359",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/renders/03-growth-magnolia.jpg": {
+    "mtime": 1792509706.4728453,
+    "ast_hash": "2f95be84ddea56a22ed34eeb3fbcae1a",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/renders/05-night-species.jpg": {
+    "mtime": 1792509706.5346515,
+    "ast_hash": "f12ad034c0a562da366c06b8142a0a78",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/renders/07-seeds-magnolia.jpg": {
+    "mtime": 1792509706.6435063,
+    "ast_hash": "22b86e555a8e30aa55d5fa1509a16a98",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/shaders-contact-sheet.jpg": {
+    "mtime": 1792505752.4252489,
+    "ast_hash": "b74fef24f1101e7bb3931a2b1328448f",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/renders/1_species_day.jpg": {
+    "mtime": 1792505751.8276973,
+    "ast_hash": "9bef702550129208494f91f2994f3312",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/renders/2_moods_magnolia.jpg": {
+    "mtime": 1792505751.8845162,
+    "ast_hash": "63485fa0d024c70491b69ecd6ba89220",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/renders/3_growth_lemon.jpg": {
+    "mtime": 1792505751.9414563,
+    "ast_hash": "69f067ad6cfafed9e68c943452fa9b2d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/renders/5_species_night.jpg": {
+    "mtime": 1792505752.0031798,
+    "ast_hash": "0a5d3e544300c4645c563621fcbe38d2",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/renders/7_seeds_olive.jpg": {
+    "mtime": 1792505752.0636613,
+    "ast_hash": "914933dba6c3d54d43d2076373e28bf0",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/soft-canopy/CanopyPainter.swift": {
+    "mtime": 1792506873.4751258,
+    "ast_hash": "3164f5d1bbee717579d6020370beddd5",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/renders/06-moods-all-species.jpg": {
+    "mtime": 1792509706.6090798,
+    "ast_hash": "471c75ab93057f45526fa9d48e018e69",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/gouache/renders/09-moods-before-after.jpg": {
+    "mtime": 1792509706.704089,
+    "ast_hash": "b439c3dfb52445fa6b6c15e32826305d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/shaders/CompanionShaders.metal": {
+    "mtime": 1792511950.981128,
+    "ast_hash": "32843b789f8f3273f1a5a6512077d8fb",
+    "semantic_hash": ""
+  },
+  "NestZone/App/FrameMeter.swift": {
+    "mtime": 1792511673.745715,
+    "ast_hash": "97a8211d4a69c569e938f42f8ffa22a6",
     "semantic_hash": ""
   }
 }
