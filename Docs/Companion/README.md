@@ -15,6 +15,10 @@ things stand, every decision and why, what's next, and what's still open.
 | `plan/index.html` | The full plan: research, design, decisions, roadmap, with live demos. Open it in a browser. |
 | `plan/plant.html` | The procedural plant in a browser: growth, moods, wake-up, clock, decorations, Decorate mode. URL options are listed in the file. |
 | `plan/duck.html`, `duck.js`, `duck.css` | The duckling: seven stages, four moods, the wake-up. |
+| `art/compare.html` | The two tree directions side by side. |
+| `art/gouache/` | The tree in the app, layered gouache: its prototype (`tree.html`), the guide (`SPEC.md`, with what the app does differently in §15) and renders. |
+| `art/soft-canopy/` | The direction not taken, soft canopy: prototype, guide, renders and its finished Swift port, kept for reference (not compiled). |
+| `art/SHADERS.md`, `art/shaders/` | Wind and painted-finish Metal shaders, tried and removed: they cost Today two thirds of its frames. Kept for reference. |
 | `HANDOFF.md` | The session that produced this, as a handoff. |
 | `HOLIDAYS.md` | How every holiday date is worked out, what it was checked against, and where almanacs disagree. |
 | `tools/growth_sim.py` | Monte Carlo of growth per household type; the agreed settings are in `growth_results.txt`. |
@@ -31,8 +35,8 @@ things stand, every decision and why, what's next, and what's still open.
 | `CompanionFeature.swift` | The reducer: growth, care, the jar, choosing, graduation, decorating, holidays, the lab. `CompanionFlag` keeps it to Debug builds. |
 | `CompanionModels.swift` | Species, growth maths and moods, the house file (`CompanionHouse`), decorations and spots. |
 | `Holidays.swift` | 49 holidays, their rules, the defaults per country, and the hemisphere. |
-| `CompanionScene.swift` | The live scene: timeline, eased mood and growth, wake-up, drops, hearts, stage pops. |
-| `PlantPainter.swift` | The procedural tree, grown from a seed. |
+| `CompanionScene.swift` | The live scene in three layers — behind, the tree, in front — with eased mood and growth, wake-up, drops, hearts and stage pops. The tree is drawn only when it changes. |
+| `CanopyPainter.swift` | The tree, grown from a seed: layered gouache, ported call for call from `art/gouache/tree.html`. |
 | `PetPainter.swift` | The duckling. |
 | `ScenePainter.swift` | Sky and clock, pot and soil, 40 decorations, weather, fireflies, the thirst bubble, the dome. |
 | `SceneInk.swift` | Seeded randomness, easing and colour helpers shared by the painters. |
@@ -50,6 +54,12 @@ State is saved per home in `Documents/companion-<homeID>.json`
 
 1. Run a Debug build from Xcode (phone or simulator). Nestie is at the top of Today.
 2. **Lab** on the card: grow it, set a mood, pretend it's any holiday, add Leaves, start over.
+   Under the tree, **− / +** takes points off and adds them four at a time, to watch it shrink and
+   grow through its stages (development builds only).
 3. For screenshots without tapping, use `tools/scenario.sh`. Or launch with
-   `-companionDemo care|decorate|celebrate|dress|album|holidays|lab|choose`
+   `-companionDemo care|decorate|celebrate|dress|album|holidays|lab|choose|pick`
    (and `-companionSpot left`, for Decorate).
+4. For smoothness, launch with `-frameMeter 1` and read the late frames from
+   the log (`log stream --predicate 'category == "Frames"'`).
+   `-todayScroll 1` and `-companionScroll 1` make Today or Choose scroll by
+   themselves, for a simulator nobody can touch.

@@ -1,6 +1,6 @@
 # Handoff: Nestie, the household companion
 
-Written at the end of the working session of 19–20 October 2026 so the work can
+Written at the end of the working sessions of 19–20 October 2026 so the work can
 continue on another machine. The full plan is `plan/index.html`. This file is
 the short version, plus everything a new session needs to keep going without
 the old conversation.
@@ -41,6 +41,20 @@ The plan went through five versions, each driven by your answers:
    - every tradition's holidays, not just Turkish ones;
    - a simple MVP to try on local builds;
    - all of it saved in the repo, to continue elsewhere.
+5. **v6 (the MVP's bugs)** — trying the MVP, you found:
+   - "Holidays" wrapping onto two lines. Every label is now one line in both
+     languages.
+   - The movie night row on Today repeating what the dock showed. Today now
+     never repeats the dock.
+   - Every tree laggy and basic-looking. This led to the new art and the
+     rendering below; you suggested Metal, which was tried and measured (see
+     "Things learned"). Two illustration directions were
+     drawn. You chose layered gouache ("more detailed, more premium, more
+     realistic, more artsy"), which then had a second pass.
+   - The question of whether an item could cost Leaves or Sparkles. It was
+     settled as two currencies, one price per item, with a welcome gift.
+   - The Turkish. It is now written in Turkish, casual and street-level, never
+     translated off the English.
 
 ## Decided
 
@@ -58,10 +72,27 @@ The plan went through five versions, each driven by your answers:
   plan). After quiet days, one chore or care wakes it all the way.
 - **Art and motion are all code,** at $0. No Rive, no illustrator, no paid tools.
   Flat, rounded vector style.
-- **One house jar** (Kumbara), one currency (Leaves). It's filled by growing and,
-  later, by anyone's top-ups (consumable in-app purchases); everyone spends from
-  it; the feed shows who added and spent. This replaced v3's per-person Sparkles
-  and moving boxes.
+- **The tree is "layered gouache"** (`art/gouache/`), your choice: leaf-shaped
+  lobes in three depth tiers with per-clump light, cast shadows inside the
+  canopy, the canopy's shade on the wood, a night rim light, and petals with
+  gradients and stamens. Thirsty and dozing read as one tired, drooping tree.
+  "Soft canopy" (`art/soft-canopy/`) is kept for reference with its finished
+  Swift port. The two are compared in `art/compare.html`.
+- **How it is drawn:**
+  - The tree is drawn only when what it shows changes.
+  - The wind is a shear of that picture about the root, so the pot never
+    moves.
+  - The scene holds still while Today scrolls and under any sheet.
+  - Choose and the album draw portraits as single still canvases.
+- **One house jar** (Kumbara) with **two currencies**, and every item priced in
+  exactly one of them — never "100 Leaves or 5 Sparkles" for the same thing
+  (that's pay-to-skip-progress). **Leaves** are progress only, never sold
+  (welcome 150, +10 per stage, +100 per graduation). **Sparkles** are the
+  purchase currency, with a few earned like a merge game's level-up (welcome
+  180, +5 per stage, +25 per graduation). Everything bought goes into the
+  house's jar and everyone spends from it; the feed shows who added and
+  spent. The **welcome gift** is about 1.5× a starter item in each currency,
+  celebrated, so a new house buys something at once and keeps a little.
 - **The finale** counts only what can be had without paying, so buying never
   delays it.
 - **Decorating:** eight spots, Decorate mode, preview before buying. Holiday
@@ -101,6 +132,21 @@ those until the server version.
 
 **Verified:**
 - Debug build, Release build (arm64), test target compiles.
+- v6, on the simulator:
+  - the new tree for all six species, by day and at night;
+  - the moods, including the dome when dozing and the bubble when thirsty;
+  - the decorations hung on the canopy, the wind, and the pot staying still;
+  - the welcome gift and the prices in Turkish;
+  - labels on one line.
+- v6, the gouache tree: all six species by day and at night, the cherry's
+  bloom, fruit, the four moods, a wake-up from dozing, the falling leaf of a
+  thirsty tree, decorations by day and night, and the Choose portraits.
+- v6 frames (`-frameMeter`, simulator, Debug): Today at rest with a grown,
+  decorated tree, 120 of 120 frames in every two seconds. Today flicking up
+  and down, 118–120 with at most 2 late. Choose scrolling, 120, after one
+  late frame as the sheet opens. With the Metal shaders it had been about 50
+  of 120, and that was the stutter you saw. Not measured on a phone yet.
+- A wake-up costs about 1.5 ms a frame to redraw the tree in a Debug build.
 - In the simulator, on a real household:
   - the card, the thirsty and dozing wake-ups, the duckling;
   - Halloween, New Year and Diwali scenes;
@@ -110,6 +156,8 @@ Per the working agreement, the tests were not run (build and typecheck only).
 
 ## Next steps
 
+0. **Measure on a phone.** Run a Debug build on a device with `-frameMeter 1`
+   and scroll Today and Choose. Opening Choose still drops one frame.
 1. **The server version** — backend first, additive only:
    - Tables: `companions`, `companion_growth` (a ledger keyed per credited
      thing), `companion_scene`, house jar plus `jar_ledger`, `owned_items`,
@@ -138,6 +186,42 @@ Per the working agreement, the tests were not run (build and typecheck only).
 
 ## Things learned the hard way
 
+- **Measure before fixing a "lag".** Instruments' Time Profiler can attach to
+  the simulator (`xctrace record --device <sim UDID> --attach <pid>`), and its
+  export summed per function shows where a frame goes. It showed:
+  - The old tree was ~1,900 fills a frame; batching took it to ~20. That was
+    not enough on its own.
+  - The real cost was SwiftUI building and rasterising those paths 30 times a
+    second on the main thread.
+  - A layer drawn only on change removed it.
+- **A CPU profile does not show stutter caused by waiting.** With the wind and
+  a painted finish as SwiftUI shader effects, the main thread looked only ~12%
+  busy, yet Today ran at ~25 fps: every frame it waited on the GPU for the two
+  passes, and a wait is not a CPU sample. A frame counter (`-frameMeter`) is
+  what showed it. The fixes that were tried:
+  - Baking the tree into an image didn't help.
+  - Hosting the scene in its own UIKit layer stopped the re-rendering, but the
+    layout it added each frame cost more than it saved.
+  - Replacing the distortion with a transform and dropping the finish took
+    Today back to 60 fps.
+  The shaders are kept in `art/shaders/` with their notes.
+- **An `Equatable` view is what keeps a canvas from redrawing.** A canvas
+  inside a `TimelineView` redraws every tick even when its inputs are the same;
+  wrapped in its own `Equatable` view with `.equatable()`, it draws once.
+- **A companion's seed is not its identity.** It is the home and the album
+  count, so choosing again before anything graduates keeps it. Anything cached
+  per tree is keyed on seed and species, or the new choice wears the old tree.
+- **Hold the card still only when it is covered.** It pauses under Decorate,
+  the moments, and any sheet pulled up to full height — not at half height,
+  where it is still on screen: paused under the lab, points added there grew
+  the tree unseen and it jumped when the sheet closed. Choose and the album
+  draw their portraits as single still canvases (`ScenePortrait`).
+- **A cached still freezes anything that was moving.** The prototype's falling
+  leaf hung in mid-air in the picture; it moved to the scene's front layer,
+  which animates. Check a port for every term of `t` before caching it.
+- **A type name can clash across the module.** The port's private `Segment`
+  collided with the tab bar's `Segment` and broke the build with misleading
+  type-check timeouts. Give private helper types specific names.
 - **Read SwiftUI state in `body`, not only in a `Canvas` closure.** The scene
   first drew without its tree about half the time. The tree is built `onAppear`,
   but `body` never read it, so SwiftUI didn't know to hand the timeline a fresh

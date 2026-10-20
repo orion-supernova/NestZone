@@ -82,11 +82,31 @@ before changing anything here.
 - Growth is read from the chores' `completed_at`, which every phone already
   receives; everything else is on the device per home
   (`SharedKey.companion`) until the server version replaces that storage.
-- All art and motion are code (SwiftUI `Canvas`), by decision: no paid tools.
-  `CompanionScene` draws from a `Snapshot` read in `body` — state read only
-  inside the canvas closure is not tracked, and the scene drew without its tree.
+- All art and motion are code (SwiftUI `Canvas`), by decision: no paid tools. `CompanionScene` draws from a `Snapshot` read in
+  `body` — state read only inside the canvas closure is not tracked, and the
+  scene drew without its tree.
+- **The tree is drawn only when what it shows changes; the wind is a
+  transform.** `TreeLayer` is its own `Equatable` view, redrawn when the mood or
+  growth eases or the light moves, and the wind shears that picture about the
+  root (`SceneSnapshot.Wind.bend`). Do not put the tree back into the per-frame
+  canvas: at 30 fps its shapes took the main thread's whole budget and Today
+  stuttered while it scrolled. Do not put SwiftUI shader effects
+  (`layerEffect`, `distortionEffect`) over the scene either: two of them held
+  Today to ~25 fps on the simulator, the main thread waiting on the GPU every
+  frame — a wait no CPU profile shows. The scene also holds still while Today scrolls
+  (`isScrolling`) and when a sheet covers it (`paused`; not at half height), and a grid of portraits uses
+  `ScenePortrait` — one still canvas each, never a live `CompanionScene`. The
+  tree is keyed on seed *and* species: a new companion keeps the old seed until
+  something graduates. Measure before and after any change to the scene:
+  `-frameMeter 1` logs late frames (what a person sees as stutter), and
+  `-todayScroll 1` / `-companionScroll 1` scroll Today or Choose by themselves.
 - Holiday dates are computed or come from verified tables, never guessed; the
   sources and disagreements are in `Docs/Companion/HOLIDAYS.md`.
+- **Two currencies, one price per item.** Leaves are progress — earned, never
+  sold. Sparkles are what people buy, plus a few earned at stages and
+  graduations. A thing is priced in exactly one of them (`DecorItem.price` is a
+  `Price`, not two numbers): "100 Leaves or 5 Sparkles" for the same item is
+  paying to skip progress. Both live in the house's jar.
 
 ## Shipping a change
 
@@ -256,7 +276,11 @@ makes fixing a typo in an old note free.
   value and quietly undo the wrong one. `ConvexConnection.subscribe` now drops
   duplicate payloads, so that accident is gone and the rollback has to be real.
 - **Strings** live in `Resources/Localizable.xcstrings`, reached through `L10n`.
-  Nothing user-visible is a literal. The catalog is **hand-maintained**: add a
+  Nothing user-visible is a literal. **Turkish is written in Turkish**, not
+  translated off the English: friendly, casual, everyday street language, the
+  `sen` form ("Eve hediye geldi!", "Bugün bedava", "Seç bakalım"). A literal
+  rendering that is grammatical but nobody would say ("Güzel bir şeye yeter,
+  biraz da artar") is wrong. Labels fit on one line in both languages. The catalog is **hand-maintained**: add a
   case to `L10n.swift` and the matching entry in Xcode's String Catalog editor.
   Automatic extraction is off (`SWIFT_EMIT_LOC_STRINGS = NO`) on purpose —
   `L10n.r(_:_:)` hides the key behind a parameter, so the extractor cannot see it

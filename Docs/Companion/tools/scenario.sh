@@ -7,12 +7,15 @@
 # The dict is written as the home's companion file (dates as seconds since
 # 2001, which is how JSONEncoder writes a Date — `ref` is now, `day` is a day,
 # `at(y, m, d, h)` is a local time). `demo` is passed as -companionDemo
-# (care, decorate, celebrate, dress, album, holidays, lab, choose) and `spot`
+# (care, decorate, celebrate, dress, album, holidays, lab, choose, pick, grow,
+# labgrow) and `spot`
 # as -companionSpot; `-` skips either. Screenshots are taken at each number of
 # seconds after launch, as <name>_0.png, <name>_1.png… in the current folder.
 #
 # Example — a thirsty magnolia, watered five seconds in:
 #   scenario.sh revive '{"current":{"species":"magnolia","seed":"x-0","startedAt":ref-6*day,"bonus":34},"lab":{"mood":"thirsty"}}' care - 5 6.5 8
+#
+# Set EXTRA_ARGS for more launch arguments, e.g. EXTRA_ARGS="-appLanguage tr".
 #
 # Development builds only (the companion and the demo hook are #if DEBUG).
 # Build and install first:
@@ -32,7 +35,7 @@ def at(y, m, d, h=20): return datetime.datetime(y, m, d, h).timestamp() - 978307
 json.dump($JSONEXPR, open('$FILE', 'w'))
 "
 xcrun simctl terminate "$SIM" $APPID 2>/dev/null
-ARGS=()
+ARGS=(${=EXTRA_ARGS})   # e.g. EXTRA_ARGS="-appLanguage tr"
 [[ "$DEMO" != "-" ]] && ARGS+=(-companionDemo $DEMO)
 [[ "$SPOT" != "-" ]] && ARGS+=(-companionSpot $SPOT)
 xcrun simctl launch "$SIM" $APPID $ARGS >/dev/null
