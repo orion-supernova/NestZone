@@ -60,7 +60,7 @@ public struct IssuesView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.managementModuleMaintenanceTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { store.send(.addTapped) } label: {
                     Image(systemName: "plus")
@@ -450,6 +450,7 @@ public struct IssuesView: View {
                 Text(L10n.issuesSearchPlaceholder)
             }
             .focused($isSearchFocused)
+            .segmentFocus($isSearchFocused)
             .submitLabel(.search)
             .textInputAutocapitalization(.never)
             if !store.search.isEmpty {

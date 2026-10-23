@@ -8,6 +8,7 @@ public struct LoadingView: View {
     private let message: LocalizedStringResource?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
     /// Where the highlight is across the words: -1 before them, 1 past them.
     @State private var sweep: CGFloat = -1
 
@@ -46,15 +47,21 @@ public struct LoadingView: View {
                                 .accessibilityHidden(true)
                         }
                     }
-                    .onAppear {
-                        // For as long as this view is up, which is exactly as
-                        // long as the wait — the same terms the image
-                        // placeholder's shimmer runs on. Never under Reduce
-                        // Motion, where a sweep that does not end is the very
-                        // thing the setting is for.
-                        guard !reduceMotion else { return }
-                        withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
-                            sweep = 1
+                    // For as long as this view is up, which is exactly as
+                    // long as the wait — the same terms the image
+                    // placeholder's shimmer runs on. Never under Reduce
+                    // Motion, where a sweep that does not end is the very
+                    // thing the setting is for, and not for a segment
+                    // switched away from.
+                    .onChange(of: !reduceMotion && phase == .onScreen, initial: true) { _, sweeping in
+                        if sweeping {
+                            withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
+                                sweep = 1
+                            }
+                        } else {
+                            var transaction = Transaction()
+                            transaction.disablesAnimations = true
+                            withTransaction(transaction) { sweep = -1 }
                         }
                     }
             }

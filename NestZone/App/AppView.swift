@@ -245,24 +245,65 @@ private struct SegmentedRoot: View {
     @Bindable var store: StoreOf<RouteStack>
 
     @Environment(\.theme) private var theme
+    /// The modules whose screens have been shown, and so are built and kept.
+    /// A module nobody opens is never built.
+    @State private var visited: Set<HubModule> = []
+    /// The visited modules that have faded out since they were left.
+    @State private var rested: Set<HubModule> = []
+    /// The module whose bar items, search and entrances are live. It follows
+    /// `store.selected` a few frames late, on purpose: a switch used to do
+    /// everything in one frame (the fade, the underline, the bar being
+    /// rebuilt, the search field coming and going, and every row of two
+    /// screens re-reading the phase), and that one frame was 100 ms and more.
+    /// Split in two, neither half is.
+    @State private var onStage: HubModule?
+
+    /// How long a screen takes to fade out, and a little over.
+    private static let fadeOut: Duration = .milliseconds(260)
+    /// How long the bar and the entrances wait behind the fade and the underline.
+    private static let stageLag: Duration = .milliseconds(50)
 
     var body: some View {
         ZStack {
-            if let selected = store.selected,
-               let segment = store.scope(state: \.segments[id: selected], action: \.segments[id: selected]) {
-                RouteView(store: segment.scope(state: \.screen, action: \.screen))
-                    .id(selected)
-                    .transition(.opacity)
+            ForEach(group.modules.filter { visited.contains($0) || $0 == store.selected }) { module in
+                if let segment = store.scope(state: \.segments[id: module], action: \.segments[id: module]) {
+                    SegmentPage(
+                        store: segment.scope(state: \.screen, action: \.screen),
+                        phase: phase(of: module),
+                        isSelected: module == store.selected
+                    )
+                }
             }
         }
-        .animation(Motion.fade, value: store.selected)
+        .onChange(of: store.selected, initial: true) { _, selected in
+            guard let selected else { return }
+            visited.insert(selected)
+            rested.remove(selected)
+        }
+        // A screen that has been left is told so twice: at once, to take its
+        // bar items and search away, and when it has finished fading, to put
+        // its entrances back to their start where nobody can see it. Switching
+        // again before then leaves it as it was, and the next switch sweeps up.
+        .task(id: store.selected) {
+            if onStage != nil {
+                guard (try? await Task.sleep(for: Self.stageLag)) != nil else { return }
+            }
+            onStage = store.selected
+            guard (try? await Task.sleep(for: Self.fadeOut)) != nil else { return }
+            rested = visited.filter { $0 != store.selected }
+        }
         #if DEBUG
         .task {
             // `-segmentCycle 1` walks the tab's segments on its own, to watch
             // a switch frame by frame.
-            guard UserDefaults.standard.bool(forKey: "segmentCycle") else { return }
+            let asked = UserDefaults.standard.double(forKey: "segmentCycle")
+            guard asked > 0 else { return }
+            // `-segmentCycle 4` waits four seconds between switches instead,
+            // after the launch has settled, so a switch's late frames are not
+            // lost in the launch's.
+            if asked > 1 { try? await Task.sleep(for: .seconds(5)) }
             for module in group.modules.dropFirst() + group.modules {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(asked > 1 ? asked : 1.5))
                 store.send(.segmentPicked(module))
             }
         }
@@ -302,6 +343,52 @@ private struct SegmentedRoot: View {
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, 4)
         }
+    }
+
+    /// The phase follows the stage, not the tap, and that is safe because
+    /// the stage only ever holds the module chosen at the moment it moves
+    /// (`task` above reads `store.selected` when it assigns). A page becomes
+    /// `onScreen` only by being the one chosen, so no entrance, shimmer or
+    /// bounce can start on a page that was left or has not arrived yet — a
+    /// page built for the first time at the tap included, whose entrances
+    /// wait for the stage instead of joining the tap's frame. In the lag the
+    /// page being left is still `onScreen` and the page arriving is
+    /// `leaving`; the things that must not run on the first of them in that
+    /// window (`segmentTask`) also ask whether the segment is still chosen,
+    /// which is not staged (`SegmentPage`).
+    private func phase(of module: HubModule) -> SegmentPhase {
+        if module == (onStage ?? store.selected) { .onScreen }
+        else if rested.contains(module) { .away }
+        else { .leaving }
+    }
+}
+
+/// A module's screen in a grouped tab: shown, or kept alive out of sight.
+///
+/// Hidden rather than removed so that switching back costs nothing — no
+/// rebuilt screen, no new subscription, scroll position where it was left.
+/// Hidden means invisible, untouchable and unspoken, and told so
+/// (`SegmentPhase`) so that nothing runs for nobody.
+private struct SegmentPage: View {
+    let store: StoreOf<Route>
+    let phase: SegmentPhase
+    /// Whether this is the segment chosen, which is ahead of `phase` by a few
+    /// frames: what a person sees and can touch follows the tap at once.
+    let isSelected: Bool
+    /// False for the frame a page is first built in, so it fades in.
+    @State private var appeared = false
+
+    var body: some View {
+        RouteView(store: store)
+            .environment(\.segmentPhase, phase)
+            .environment(\.segmentChosen, isSelected)
+            // The fade is scoped to the opacity. `animation(_:value:)` on the
+            // container animated everything the switch touched underneath it,
+            // every row's entrance rewinding and the bar, as well.
+            .animation(Motion.fade) { $0.opacity(isSelected && appeared ? 1 : 0) }
+            .allowsHitTesting(isSelected)
+            .accessibilityHidden(!isSelected)
+            .onAppear { appeared = true }
     }
 }
 

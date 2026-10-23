@@ -66,7 +66,7 @@ public struct MoviesView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.movieListsTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { store.send(.createListTapped) } label: {
                     Image(systemName: "plus")

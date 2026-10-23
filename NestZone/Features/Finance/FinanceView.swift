@@ -71,7 +71,7 @@ public struct FinanceView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.managementModuleFinanceTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .primaryAction) { addMenu }
         }
         .safeAreaInset(edge: .bottom) {
@@ -103,7 +103,7 @@ public struct FinanceView: View {
         // Held while a sheet covers the card — usually the settle-up sheet
         // whose save caused it — and while another face is showing, so the
         // moment is seen rather than merely felt.
-        .task(id: isSquareUpDue) {
+        .segmentTask(id: isSquareUpDue) {
             guard isSquareUpDue else { return }
             // A sheet that has just been put away is still sliding off.
             guard await Self.pause(0.45) else { return }
@@ -111,8 +111,11 @@ public struct FinanceView: View {
         }
         // The beats the keyframes land on. Every wait checks it was not cut
         // short: a cancelled sleep returns at once, and four haptics in a row
-        // is worse than none.
-        .task(id: squareUp.stamps) {
+        // is worse than none. Switching the segment away is such a cut: the
+        // task is cancelled the moment the segment stops being the one chosen,
+        // and the stamp lands at once (`abandonSquareUp`) instead of slamming
+        // and buzzing behind another screen.
+        .segmentTask(id: squareUp.stamps) {
             guard squareUp.isStamping else { return }
             guard await Self.pause(0.72) else { return abandonSquareUp() }
             squareUp.gulps += 1
@@ -137,41 +140,7 @@ public struct FinanceView: View {
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
         .alert($store.scope(state: \.alert, action: \.alert))
-        .sheet(item: $store.scope(
-            state: \.destination?.composeExpense,
-            action: \.destination.composeExpense
-        )) { store in
-            ExpenseComposerSheet(store: store)
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.composeBill,
-            action: \.destination.composeBill
-        )) { store in
-            BillComposerSheet(store: store)
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.payBill,
-            action: \.destination.payBill
-        )) { store in
-            PayBillSheet(store: store)
-                .presentationDetents([.medium, .large])
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.settleUp,
-            action: \.destination.settleUp
-        )) { store in
-            SettleUpSheet(store: store)
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.editBudget,
-            action: \.destination.editBudget
-        )) { store in
-            // Full height, like the expense and bill composers. A medium detent
-            // had to hold a header, a wrapping grid of ten category chips and
-            // an amount field, which left the field itself scrolled half out of
-            // sight the moment the keyboard came up.
-            BudgetEditorSheet(store: store)
-        }
+        .modifier(FinanceDestinations(store: store))
     }
 
     private var addMenu: some View {
@@ -515,7 +484,8 @@ public struct FinanceView: View {
     private var isTellingSquareUp: Bool { isSquareUpHeld || squareUp.isStamping }
 
     /// Whether the held moment can be told now: nothing over the card, and the
-    /// card on screen.
+    /// card on screen. (The segment being on screen is `segmentTask`'s to
+    /// check, so that this view's body never reads the phase.)
     private var isSquareUpDue: Bool {
         isSquareUpHeld && store.destination == nil && store.section == .overview
     }
@@ -878,6 +848,7 @@ public struct FinanceView: View {
                 Text(L10n.financeSearchPlaceholder)
             }
             .focused($isSearchFocused)
+            .segmentFocus($isSearchFocused)
             .submitLabel(.search)
             if !store.search.isEmpty {
                 Button { store.send(.binding(.set(\.search, ""))) } label: {

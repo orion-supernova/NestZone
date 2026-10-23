@@ -122,7 +122,7 @@ public struct ShoppingView: View {
         }
         .navigationTitle(Text(L10n.managementModuleShoppingTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             if !store.purchased.isEmpty || store.state.isClearing(.purchased) {
                 ToolbarItem(placement: .primaryAction) {
                     Button(role: .destructive) {
@@ -472,6 +472,7 @@ public struct ShoppingView: View {
                 Text(L10n.shoppingAddPlaceholder)
             }
             .focused($isComposerFocused)
+            .segmentFocus($isComposerFocused)
             .submitLabel(.done)
             .onSubmit(add)
 

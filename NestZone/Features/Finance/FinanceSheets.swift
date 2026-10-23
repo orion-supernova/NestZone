@@ -1391,3 +1391,42 @@ struct SettleUpSheet: View {
         User.initials(from: store.state.name(for: id))
     }
 }
+
+/// The sheets Finance presents, apart from its body: one chain of this length
+/// is more than the compiler will type-check in one go.
+struct FinanceDestinations: ViewModifier {
+    @Bindable var store: StoreOf<FinanceFeature>
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: $store.scope(
+                state: \.destination?.composeExpense,
+                action: \.destination.composeExpense
+            ), content: ExpenseComposerSheet.init)
+            .sheet(item: $store.scope(
+                state: \.destination?.composeBill,
+                action: \.destination.composeBill
+            ), content: BillComposerSheet.init)
+            .sheet(item: $store.scope(
+                state: \.destination?.payBill,
+                action: \.destination.payBill
+            )) { store in
+                PayBillSheet(store: store)
+                    .presentationDetents([.medium, .large])
+            }
+            .sheet(item: $store.scope(
+                state: \.destination?.settleUp,
+                action: \.destination.settleUp
+            ), content: SettleUpSheet.init)
+            .sheet(item: $store.scope(
+                state: \.destination?.editBudget,
+                action: \.destination.editBudget
+            )) { store in
+                // Full height, like the expense and bill composers. A medium
+                // detent had to hold a header, a wrapping grid of ten category
+                // chips and an amount field, which left the field itself
+                // scrolled half out of sight the moment the keyboard came up.
+                BudgetEditorSheet(store: store)
+            }
+    }
+}

@@ -55,7 +55,7 @@ public struct TasksView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.tasksScreenTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { store.send(.composeTapped) } label: {
                     Image(systemName: "plus")

@@ -1,62 +1,62 @@
 {
   ".claude/settings.local.json": {
-    "mtime": 1788698179.1670313,
+    "mtime": 1788444638.9281576,
     "ast_hash": "54b4c0d36b23ec77e00be55a5571c07e",
     "semantic_hash": "54b4c0d36b23ec77e00be55a5571c07e"
   },
   "Docs/PocketBase/polls_schema.json": {
-    "mtime": 1788698179.1700597,
+    "mtime": 1788444638.9297447,
     "ast_hash": "cea778c5486f89c8fd229b6587abf218",
     "semantic_hash": "cea778c5486f89c8fd229b6587abf218"
   },
   "NestZone/Assets.xcassets/AccentColor.colorset/Contents.json": {
-    "mtime": 1788698179.1782644,
+    "mtime": 1764756044.6274047,
     "ast_hash": "55019f7265dde0a78318b0807f98e847",
     "semantic_hash": "55019f7265dde0a78318b0807f98e847"
   },
   "NestZone/Assets.xcassets/AppIcon.appiconset/Contents.json": {
-    "mtime": 1788698179.1843674,
+    "mtime": 1788444638.9375784,
     "ast_hash": "a58f93291d6b9c75c464bf3f31b885ec",
     "semantic_hash": "a58f93291d6b9c75c464bf3f31b885ec"
   },
   "NestZone/Assets.xcassets/Contents.json": {
-    "mtime": 1788698179.1844258,
+    "mtime": 1764756044.6277344,
     "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "NestZone/NestZoneApp.swift": {
-    "mtime": 1792511673.9670863,
+    "mtime": 1792790880.6742253,
     "ast_hash": "bd034ee7c22c9d4523f358e94b143983",
     "semantic_hash": ""
   },
   "Docs/PocketBase/README.md": {
-    "mtime": 1788890336.1829956,
+    "mtime": 1789046922.9875286,
     "ast_hash": "bf04ec30d55c6097db69eec8feae48a2",
     "semantic_hash": ""
   },
   "NestZone/Assets.xcassets/AppIcon.appiconset/ChatGPT Image Aug 11, 2025 at 02_05_45 PM 1.png": {
-    "mtime": 1788698179.1794448,
+    "mtime": 1788444638.9340756,
     "ast_hash": "51cd70ed88b8db9d532b315ca279476f",
     "semantic_hash": "51cd70ed88b8db9d532b315ca279476f"
   },
   "NestZone/Assets.xcassets/AppIcon.appiconset/ChatGPT Image Aug 11, 2025 at 02_05_45 PM 2.png": {
-    "mtime": 1788698179.1813202,
+    "mtime": 1788444638.9353297,
     "ast_hash": "51cd70ed88b8db9d532b315ca279476f",
     "semantic_hash": "51cd70ed88b8db9d532b315ca279476f"
   },
   "NestZone/Assets.xcassets/AppIcon.appiconset/ChatGPT Image Aug 11, 2025 at 02_05_45 PM.png": {
-    "mtime": 1788698179.1842701,
+    "mtime": 1788444638.9364743,
     "ast_hash": "51cd70ed88b8db9d532b315ca279476f",
     "semantic_hash": "51cd70ed88b8db9d532b315ca279476f"
   },
   ".claude/settings.json": {
-    "mtime": 1788890336.1824312,
+    "mtime": 1789046922.9855673,
     "ast_hash": "e1073342e958ac9f00716938c8f165e3",
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.d.ts": {
-    "mtime": 1789048045.75701,
-    "ast_hash": "1169174e2963aa986184df10889dc7eb",
+    "mtime": 1792184107.2571266,
+    "ast_hash": "0700b3d3030202bbf08fe3a86fa966c2",
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.js": {
@@ -80,1572 +80,1572 @@
     "semantic_hash": ""
   },
   "backend/convex/auth.config.ts": {
-    "mtime": 1788890336.1963131,
+    "mtime": 1789046923.0269465,
     "ast_hash": "ee5048361a8983ee7e198796dd840766",
     "semantic_hash": ""
   },
   "backend/convex/auth.ts": {
-    "mtime": 1788890336.1963694,
+    "mtime": 1789046923.0272632,
     "ast_hash": "572951ccadcd538a5d2d6010813c722c",
     "semantic_hash": ""
   },
   "backend/convex/conversations.ts": {
-    "mtime": 1788890336.1965392,
+    "mtime": 1789046923.0274665,
     "ast_hash": "d11d11fc7eefc945708bb4f75cf32003",
     "semantic_hash": ""
   },
   "backend/convex/homes.ts": {
-    "mtime": 1789660539.8429055,
+    "mtime": 1789648694.683369,
     "ast_hash": "e3e30896ca8a07af76a07a48f4ead8ed",
     "semantic_hash": ""
   },
   "backend/convex/http.ts": {
-    "mtime": 1788890336.1972647,
+    "mtime": 1789046923.0287228,
     "ast_hash": "9096bef06ca8413bd4b49bfde9914632",
     "semantic_hash": ""
   },
   "backend/convex/lib/auth.ts": {
-    "mtime": 1788890336.1974509,
+    "mtime": 1789046923.0297697,
     "ast_hash": "fd3c4b7c6ad2814989684c13b9399279",
     "semantic_hash": ""
   },
   "backend/convex/messages.ts": {
-    "mtime": 1789730208.788353,
+    "mtime": 1789926205.2728863,
     "ast_hash": "c6051512ec357d1efe872a628279f554",
     "semantic_hash": ""
   },
   "backend/convex/movies.ts": {
-    "mtime": 1788890336.197924,
+    "mtime": 1789046923.0308547,
     "ast_hash": "8c8f14d83081c91587a938973f0c320b",
     "semantic_hash": ""
   },
   "backend/convex/notes.ts": {
-    "mtime": 1788890336.197985,
+    "mtime": 1789046923.0311365,
     "ast_hash": "eddd2ba818ea3bf4749e8ab8a221a06b",
     "semantic_hash": ""
   },
   "backend/convex/polls.ts": {
-    "mtime": 1788890336.1980815,
+    "mtime": 1789046923.0313709,
     "ast_hash": "f2b58048a0d7e0c413709ddd66ae3878",
     "semantic_hash": ""
   },
   "backend/convex/recipes.ts": {
-    "mtime": 1788890336.1982796,
+    "mtime": 1789046923.0317235,
     "ast_hash": "3e62f5ab02ee3f17bf8e4f239668f867",
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1789735708.5243075,
+    "mtime": 1789926205.27361,
     "ast_hash": "4d6b2d5d13a8d38726132087e878043a",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
-    "mtime": 1792344632.2511098,
+    "mtime": 1792570522.603586,
     "ast_hash": "634edf8d2e4cda8fee1f36ea47ad0cdc",
     "semantic_hash": ""
   },
   "backend/convex/tasks.ts": {
-    "mtime": 1789730208.7891169,
+    "mtime": 1789926205.273959,
     "ast_hash": "2b1bf8498adcf5fbe0ed7b255bae15ad",
     "semantic_hash": ""
   },
   "backend/convex/users.ts": {
-    "mtime": 1789660539.8455274,
+    "mtime": 1789648677.7365613,
     "ast_hash": "1b679d43043ec19e68b20ef54fd9abda",
     "semantic_hash": ""
   },
   "backend/package.json": {
-    "mtime": 1788890336.1988208,
+    "mtime": 1789046923.0337932,
     "ast_hash": "7c0958db528b4c7c4537975205e3bc61",
     "semantic_hash": ""
   },
   "backend/scripts/run-migration.mjs": {
-    "mtime": 1788890336.1988971,
+    "mtime": 1789046923.0341184,
     "ast_hash": "4c564691f4cdde36ca72cda8487f5130",
     "semantic_hash": ""
   },
   "backend/scripts/setup-auth-keys.mjs": {
-    "mtime": 1788890336.1989465,
+    "mtime": 1789046923.0343773,
     "ast_hash": "1d0d09e82ca65c14f0bcba797923f2dd",
     "semantic_hash": ""
   },
   "backend/scripts/ws-auth-test.mjs": {
-    "mtime": 1788890336.1989942,
+    "mtime": 1789046923.0346498,
     "ast_hash": "4caa611e5c3ddb32f6019db33d0bf21e",
     "semantic_hash": ""
   },
   "backend/scripts/ws-test.mjs": {
-    "mtime": 1788890336.1990418,
+    "mtime": 1789046923.0349612,
     "ast_hash": "57ad11d5a6c6b1fd69e5c456e9736f27",
     "semantic_hash": ""
   },
   "backend/tsconfig.json": {
-    "mtime": 1788890336.199089,
+    "mtime": 1789046923.035223,
     "ast_hash": "e7a1fe2eaff680bc4e5338921f485386",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792781775.7019742,
-    "ast_hash": "5ed5dc5b61d8c2df607919109b159b47",
+    "mtime": 1792793079.547136,
+    "ast_hash": "8703ba1143e93d0fef45f557f0bb9310",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
-    "mtime": 1789034615.0055332,
+    "mtime": 1789046922.9866073,
     "ast_hash": "d62e55b4659f36133240f716a96a6433",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/iOS-Migration-Guide.md": {
-    "mtime": 1788890336.182895,
+    "mtime": 1789046922.9872003,
     "ast_hash": "c59034508286609fbe9cc5834880991f",
     "semantic_hash": ""
   },
   "backend/README.md": {
-    "mtime": 1788890336.1961775,
+    "mtime": 1789046923.0263734,
     "ast_hash": "1b0ee6c84ffdae64e0e02bb6b2c80cbb",
     "semantic_hash": ""
   },
   "backend/convex/lib/relations.ts": {
-    "mtime": 1789730224.8442736,
+    "mtime": 1789926205.2726114,
     "ast_hash": "b409d3dae5a751ddebb14fcbca72101c",
     "semantic_hash": ""
   },
   "backend/convex/lib/apple.ts": {
-    "mtime": 1788890336.1973915,
+    "mtime": 1789046923.0295372,
     "ast_hash": "7f95acc81c637e57844cd22e13614524",
     "semantic_hash": ""
   },
   "NestZone/App/AppFeature.swift": {
-    "mtime": 1789660539.8207421,
+    "mtime": 1789649867.8045332,
     "ast_hash": "3ca71c3a854e87e20acb5a8ed50cec64",
     "semantic_hash": ""
   },
   "NestZone/App/AppView.swift": {
-    "mtime": 1792536987.1947498,
-    "ast_hash": "0c99d24413475bdd173ca5eca55207a3",
+    "mtime": 1792793287.969371,
+    "ast_hash": "c702f092750d6195a2ffe307b8c33cc0",
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1792536449.9795165,
+    "mtime": 1792783674.3153334,
     "ast_hash": "804c0d3c6419f7313cc84855a542d20e",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
-    "mtime": 1789735708.5222666,
+    "mtime": 1789926205.258683,
     "ast_hash": "d5f016c79965b0bc5cd16e7024c6814f",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1792536248.4350152,
+    "mtime": 1792783674.3163352,
     "ast_hash": "9c4a12ccb49ef3880ef4b7d94f554fcb",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
-    "mtime": 1788890336.1841998,
+    "mtime": 1789046922.9906082,
     "ast_hash": "6eb30930cc49a53138f457011dcaaa32",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Home.swift": {
-    "mtime": 1788890336.1847732,
+    "mtime": 1789046922.9915679,
     "ast_hash": "a898efa84777ad1528f4094400910030",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/HomeStats.swift": {
-    "mtime": 1788987683.6954045,
+    "mtime": 1789046922.9917326,
     "ast_hash": "8c71f7cdbdb4edd46652a022d14cce0f",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/HouseTask.swift": {
-    "mtime": 1792444895.4426746,
+    "mtime": 1792783674.318667,
     "ast_hash": "03f63d9b6ee2262a0cbe1acec81a2fb1",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Identifiers.swift": {
-    "mtime": 1789730233.150744,
+    "mtime": 1789926205.2603478,
     "ast_hash": "dded8dfa8ee864f5c70228c6ce995e94",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Messaging.swift": {
-    "mtime": 1788890336.185228,
+    "mtime": 1789046922.9928057,
     "ast_hash": "f0926c8ab6a2833f2564278356d21aa9",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Movie.swift": {
-    "mtime": 1788890336.185278,
+    "mtime": 1789046922.993187,
     "ast_hash": "46308ef1684b655621a456e9d7d0aeeb",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Note.swift": {
-    "mtime": 1788890336.1853285,
+    "mtime": 1789046922.9934103,
     "ast_hash": "68210cd6a45906b84c2ce82befd10381",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Poll.swift": {
-    "mtime": 1788890336.1854422,
+    "mtime": 1789046922.9936376,
     "ast_hash": "bce467f96c00a31ecfa27f2764c0aba2",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Recipe.swift": {
-    "mtime": 1788890336.1854992,
+    "mtime": 1789046922.994155,
     "ast_hash": "5dfbffbdf4720eb1cbc090e4e4ee5532",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/ShoppingItem.swift": {
-    "mtime": 1788987632.0987005,
+    "mtime": 1789046922.994328,
     "ast_hash": "ad8215db61315cf5e3a416b1f3b21722",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Timestamps.swift": {
-    "mtime": 1788890336.1856296,
+    "mtime": 1789046922.99466,
     "ast_hash": "8c6ca96cc33393c524104c371f567e15",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/User.swift": {
-    "mtime": 1789660539.823234,
+    "mtime": 1789648726.0344086,
     "ast_hash": "5d8dfe574a07f9f39da0c02d38b6027f",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/AuthClient.swift": {
-    "mtime": 1789660539.8240414,
+    "mtime": 1789649425.2123501,
     "ast_hash": "5df9b965578d8af74f83d958c0a5dabe",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/CatalogClient.swift": {
-    "mtime": 1788890336.1858735,
+    "mtime": 1789046922.9957726,
     "ast_hash": "17914e6c45bcdb29a11cec4927bc8d3e",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/HomesClient.swift": {
-    "mtime": 1789660539.8243375,
+    "mtime": 1789649425.2087512,
     "ast_hash": "040b35efe7e9c07dc93eff655c6d2d5d",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/MessagesClient.swift": {
-    "mtime": 1788890336.1864102,
+    "mtime": 1789046922.9970276,
     "ast_hash": "9b36bcede4ec8ac0e8d6df2f045dd0f3",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/MoviesClient.swift": {
-    "mtime": 1788890336.1864822,
+    "mtime": 1789046922.9973378,
     "ast_hash": "a673fd2188d3cce25e9f91e696b29ca2",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/NotesClient.swift": {
-    "mtime": 1788890336.186547,
+    "mtime": 1789046922.9975588,
     "ast_hash": "0a09e8e454bd710cd1e95d9f40a20f59",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/PollsClient.swift": {
-    "mtime": 1788890336.1866465,
+    "mtime": 1789046922.9976406,
     "ast_hash": "1210378ff42c544da2edec2b571be35b",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/RecipesClient.swift": {
-    "mtime": 1788890336.1867137,
+    "mtime": 1789046922.997906,
     "ast_hash": "a049927c78a51e414c5aa445d008bc79",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/ShoppingClient.swift": {
-    "mtime": 1792344632.2458994,
+    "mtime": 1792570522.5861802,
     "ast_hash": "8a4a2424716b8259cd0626bade9a04e0",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/StatsClient.swift": {
-    "mtime": 1788890336.1868615,
+    "mtime": 1789046922.9982357,
     "ast_hash": "46c3fb53f37e4a898e06e958efe101ce",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/TasksClient.swift": {
-    "mtime": 1789127097.326831,
+    "mtime": 1789122008.7526705,
     "ast_hash": "bc866ecdc774391d28abbcb08f2ff669",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/UsersClient.swift": {
-    "mtime": 1789660539.8249445,
+    "mtime": 1789657156.3081975,
     "ast_hash": "3f75182754c07680bf397d77aec178e0",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/ConvexAppleAuthProvider.swift": {
-    "mtime": 1788890336.187032,
+    "mtime": 1789046922.999023,
     "ast_hash": "703b2c77fc1cbc0bd86d2248c50f9338",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/ConvexConnection.swift": {
-    "mtime": 1789660539.825439,
+    "mtime": 1789649378.8971684,
     "ast_hash": "3af3fd9c79306d2974205a469a63c116",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/KeychainTokenStore.swift": {
-    "mtime": 1788890336.1871967,
+    "mtime": 1789046922.999552,
     "ast_hash": "0e6a8eb0c8d9e98256caffd7fbcde3a6",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/SampleRecipeLoader.swift": {
-    "mtime": 1788890336.1873066,
+    "mtime": 1789046923.000132,
     "ast_hash": "a1e3fe61fd57280baa68d77d48074fea",
     "semantic_hash": ""
   },
   "NestZone/Design/AlertState+Failure.swift": {
-    "mtime": 1788890336.1873882,
+    "mtime": 1789046923.0004127,
     "ast_hash": "3b841d3c3158f4d11a9cd3ec50db26ec",
     "semantic_hash": ""
   },
   "NestZone/Design/AppSettings.swift": {
-    "mtime": 1792444895.4429588,
+    "mtime": 1792783674.3190215,
     "ast_hash": "51342e803ef3146613b283ede6a7fe22",
     "semantic_hash": ""
   },
   "NestZone/Design/Color+Hex.swift": {
-    "mtime": 1788890336.187506,
+    "mtime": 1789046923.0006652,
     "ast_hash": "017cb10284fd97075a820db255078c28",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/Backdrop.swift": {
-    "mtime": 1788890336.1876717,
+    "mtime": 1789046923.0009458,
     "ast_hash": "509583d4c5419a8ff629f4c2c0a5b1b3",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/Buttons.swift": {
-    "mtime": 1792533706.5639412,
+    "mtime": 1792783674.3194897,
     "ast_hash": "1372039a5b2ee16daa272413959434fa",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/Chip.swift": {
-    "mtime": 1792534995.8387718,
+    "mtime": 1792783674.3199275,
     "ast_hash": "6eacc11a7d5f44b7fee5d692cc156f95",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/EmptyStateView.swift": {
-    "mtime": 1788890336.1880915,
+    "mtime": 1789046923.0017986,
     "ast_hash": "2c0a3ab0b52c9f61b338f6591f502952",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/FlowLayout.swift": {
-    "mtime": 1788890336.1884308,
+    "mtime": 1789046923.0020864,
     "ast_hash": "1c69d44f123c31135957cfb41061f532",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/GlassTextField.swift": {
-    "mtime": 1792535573.1449323,
+    "mtime": 1792783674.320662,
     "ast_hash": "d6c544358888f8ac4737cd45e93d2996",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/LoadingView.swift": {
-    "mtime": 1792535016.1149883,
-    "ast_hash": "6c406370a28d5281b04de3df62e22f22",
+    "mtime": 1792791495.604895,
+    "ast_hash": "407cf2ef37b1a2ac577cde9ee17ab83e",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/RemoteImage.swift": {
-    "mtime": 1789660539.8329887,
-    "ast_hash": "b051363e2c36de6d850d8b0ac659df1e",
+    "mtime": 1792791495.6047213,
+    "ast_hash": "b3d06d6f93911dd014d205c8ad25f8d9",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/SectionHeader.swift": {
-    "mtime": 1788890336.1887004,
+    "mtime": 1789046923.003201,
     "ast_hash": "77d7d8e82572a427738939915cad54f9",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/StatTile.swift": {
-    "mtime": 1792534906.799478,
+    "mtime": 1792783674.3213596,
     "ast_hash": "9ca618c980176494f2fda16ad77d9750",
     "semantic_hash": ""
   },
   "NestZone/Design/Glass.swift": {
-    "mtime": 1788890336.1890092,
+    "mtime": 1789046923.0049653,
     "ast_hash": "bfc6e345f34cfdc0254cb45a9f66f2bc",
     "semantic_hash": ""
   },
   "NestZone/Design/Motion.swift": {
-    "mtime": 1792534983.1255822,
-    "ast_hash": "d048f98ce80b82e01ce4fe20a2332d28",
+    "mtime": 1792793287.9690254,
+    "ast_hash": "5fedd6fcc791cee069c06f568f43cfb8",
     "semantic_hash": ""
   },
   "NestZone/Design/Theme.swift": {
-    "mtime": 1792534280.1673548,
+    "mtime": 1792783674.3230934,
     "ast_hash": "d5938519853088f721031655a4e3a38e",
     "semantic_hash": ""
   },
   "NestZone/Features/Auth/AuthFeature.swift": {
-    "mtime": 1788890336.1897252,
+    "mtime": 1789046923.0058053,
     "ast_hash": "2dad147423f6722abaf0d6d65a1a6015",
     "semantic_hash": ""
   },
   "NestZone/Features/Auth/AuthView.swift": {
-    "mtime": 1789127097.330101,
+    "mtime": 1789069152.6171782,
     "ast_hash": "1fe878e02248c209d6e192703cc6d028",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeFeature.swift": {
-    "mtime": 1792501156.855969,
+    "mtime": 1792783674.3278465,
     "ast_hash": "9a4416e9cb9d1528522e786d6ed0e8ae",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeView.swift": {
-    "mtime": 1792534606.1325548,
+    "mtime": 1792783674.328184,
     "ast_hash": "ef6d4c7a346525d88a929ff7ec3932a2",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/CreateHomeFeature.swift": {
-    "mtime": 1792535585.3185363,
+    "mtime": 1792783674.328627,
     "ast_hash": "66f05332158493578e4e203aa3872684",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/CreateJoinSheets.swift": {
-    "mtime": 1792535585.3186767,
+    "mtime": 1792783674.3287868,
     "ast_hash": "3a15cc917eb1c95ef8cef7fc80401ca9",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/HomeManagementFeature.swift": {
-    "mtime": 1788890336.1923935,
+    "mtime": 1789046923.0108714,
     "ast_hash": "ed924a2b360a2d040c4f2f856eacf65f",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/HomeManagementView.swift": {
-    "mtime": 1789127097.3353763,
+    "mtime": 1789073698.6478379,
     "ast_hash": "23c1bcdf8e6e5c7bbef3d23174d8f04c",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/ShoppingFeature.swift": {
-    "mtime": 1788988782.0704975,
+    "mtime": 1789046923.0122898,
     "ast_hash": "2730791cf27550e9d64b59a524f96a8a",
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/ShoppingView.swift": {
-    "mtime": 1792536831.6505687,
-    "ast_hash": "67ba0f5ae5c02d1bbab644f5cfc4be30",
+    "mtime": 1792785126.2750278,
+    "ast_hash": "207e5564f1188b9c3eb215771ded725f",
     "semantic_hash": ""
   },
   "NestZone/Features/Messages/MessagesFeature.swift": {
-    "mtime": 1788890336.193125,
+    "mtime": 1789046923.014978,
     "ast_hash": "2825e4735a1fd912c3768dbdc6b1a859",
     "semantic_hash": ""
   },
   "NestZone/Features/Messages/MessagesView.swift": {
-    "mtime": 1792535000.7017322,
+    "mtime": 1792783674.3305357,
     "ast_hash": "af21cdaec255b7625a2aa724f0eefdc4",
     "semantic_hash": ""
   },
   "NestZone/Features/MovieNight/MovieNightFeature.swift": {
-    "mtime": 1788890336.19336,
+    "mtime": 1789046923.0155575,
     "ast_hash": "15053b9bd4a7edc7378e6049414abdfb",
     "semantic_hash": ""
   },
   "NestZone/Features/MovieNight/MovieNightView.swift": {
-    "mtime": 1792534641.746888,
+    "mtime": 1792783674.330847,
     "ast_hash": "5386ffcef057ce70a1cf3d5fbda737fc",
     "semantic_hash": ""
   },
   "NestZone/Features/Movies/MoviesFeature.swift": {
-    "mtime": 1792344632.2475405,
+    "mtime": 1792570522.5941505,
     "ast_hash": "25b542304466eeff751aca7318b11664",
     "semantic_hash": ""
   },
   "NestZone/Features/Movies/MoviesView.swift": {
-    "mtime": 1792535000.7019138,
-    "ast_hash": "703540bc95104d4888bd5cb3528a4ffb",
+    "mtime": 1792785126.275545,
+    "ast_hash": "731986df3c66a415d9f347adf3edd42c",
     "semantic_hash": ""
   },
   "NestZone/Features/Notes/NotesFeature.swift": {
-    "mtime": 1788890336.1937852,
+    "mtime": 1789046923.0168114,
     "ast_hash": "0ee713e123d99828baf61b3ea719c51d",
     "semantic_hash": ""
   },
   "NestZone/Features/Notes/NotesView.swift": {
-    "mtime": 1792536831.654585,
-    "ast_hash": "a4f341cee87ded92f3e81ffb100e1a7c",
+    "mtime": 1792785126.2756634,
+    "ast_hash": "9fbec9a53ad3468bbee5eba5a51632f1",
     "semantic_hash": ""
   },
   "NestZone/Features/Recipes/RecipesFeature.swift": {
-    "mtime": 1792344632.2480483,
+    "mtime": 1792570522.5957546,
     "ast_hash": "6a345eddfcf11693c87751b309240769",
     "semantic_hash": ""
   },
   "NestZone/Features/Recipes/RecipesView.swift": {
-    "mtime": 1792344632.2481859,
-    "ast_hash": "20c5b4f415873ba4ce06691278a1e4f1",
+    "mtime": 1792785126.2759404,
+    "ast_hash": "da4622a6aaba159842b39d5a7477f9ba",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/Pasteboard.swift": {
-    "mtime": 1788890336.1944144,
+    "mtime": 1789046923.0186212,
     "ast_hash": "0ab2c8eebdeb7a763bf9fe646aa53c24",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/SettingsFeature.swift": {
-    "mtime": 1792344632.2483952,
+    "mtime": 1792570522.5970054,
     "ast_hash": "069ce907fff5f7af035eabe576b8fcb3",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/SettingsView.swift": {
-    "mtime": 1792344632.2484968,
+    "mtime": 1792570522.5974839,
     "ast_hash": "f0beb9735c16e3477f6ec63a0f81d853",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TasksFeature.swift": {
-    "mtime": 1792344632.2486284,
+    "mtime": 1792570522.5979803,
     "ast_hash": "e5329ec412a75ce2f44810348357bbcb",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TasksView.swift": {
-    "mtime": 1792536831.6526682,
-    "ast_hash": "c633efbd098ef16cae86e8bd9f672e7c",
+    "mtime": 1792785126.2760406,
+    "ast_hash": "88db082c044d421e3b21d04ee017d8d6",
     "semantic_hash": ""
   },
   "NestZone/Resources/sample_recipes_en.json": {
-    "mtime": 1788890336.1953914,
+    "mtime": 1789046923.02159,
     "ast_hash": "a284361bab8387eacceb3164a99b46ba",
     "semantic_hash": ""
   },
   "NestZone/Resources/sample_recipes_tr.json": {
-    "mtime": 1788890336.1954708,
+    "mtime": 1789046923.0217307,
     "ast_hash": "174866853bbeccdeb160ecbc26357b59",
     "semantic_hash": ""
   },
   "NestZoneTests/CoreLogicTests.swift": {
-    "mtime": 1789660539.8407197,
+    "mtime": 1789657327.9410868,
     "ast_hash": "a55c8736c2e646c2e6a15960d1ec7fd7",
     "semantic_hash": ""
   },
   "NestZoneTests/FeatureTests.swift": {
-    "mtime": 1792344632.2498033,
+    "mtime": 1792570522.6019459,
     "ast_hash": "646967c19e50df68a8a3aa412971f5b6",
     "semantic_hash": ""
   },
   "NestZoneUITests/LaunchUITests.swift": {
-    "mtime": 1788890336.1959548,
+    "mtime": 1789046923.0253954,
     "ast_hash": "042c3dfeaca6c4a5fcd866c5e8f504e5",
     "semantic_hash": ""
   },
   "NestZoneUITests/TabNavigationUITests.swift": {
-    "mtime": 1792344632.2505631,
+    "mtime": 1792570522.6027923,
     "ast_hash": "e9a0d13fdffc31ea76ada5cbf0690ef2",
     "semantic_hash": ""
   },
   "backend/convex/catalog.ts": {
-    "mtime": 1788890336.1964614,
+    "mtime": 1789046923.0273807,
     "ast_hash": "500f98bc3cf184fe4c0dff9a4cc33ef3",
     "semantic_hash": ""
   },
   "backend/convex/stats.ts": {
-    "mtime": 1789127097.347007,
+    "mtime": 1789115097.506228,
     "ast_hash": "968ab0d5f153de2a5ca86a23eaf858a8",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/LenientDecoding.swift": {
-    "mtime": 1788890336.1850784,
+    "mtime": 1789046922.9924464,
     "ast_hash": "6d05584e0ae67134449fa2755dee13bc",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/DevicesClient.swift": {
-    "mtime": 1789731808.9126673,
+    "mtime": 1789926205.2608125,
     "ast_hash": "4e099ef72c1803fee188a3ad85664a1d",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/PushClient.swift": {
-    "mtime": 1788890336.187253,
+    "mtime": 1789046922.9998882,
     "ast_hash": "4aedb80169b431b2329f8241963f4372",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/StickyNote.swift": {
-    "mtime": 1792536831.656684,
+    "mtime": 1792783674.321768,
     "ast_hash": "abac301a0191e2515a43498c0acbb068",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/ManageHomesFeature.swift": {
-    "mtime": 1788890336.1925151,
+    "mtime": 1789046923.0111973,
     "ast_hash": "5864b93c3278744ed44d520f1f278a66",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/ManageHomesSheet.swift": {
-    "mtime": 1788890336.1925633,
+    "mtime": 1789046923.0115523,
     "ast_hash": "b62d1a329da6ee443612909a03d6cbc5",
     "semantic_hash": ""
   },
   "NestZoneUITests/SmokeFlowUITests.swift": {
-    "mtime": 1792344632.25044,
+    "mtime": 1792570522.6024966,
     "ast_hash": "a7b401b818731a546561d8275a9d7910",
     "semantic_hash": ""
   },
   "backend/convex/push.ts": {
-    "mtime": 1789731746.330225,
+    "mtime": 1789926205.2732775,
     "ast_hash": "06f8b08d1517fb30f50fff2c25cbe5b9",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/MealPlan.swift": {
-    "mtime": 1788890336.1851654,
+    "mtime": 1789046922.9925523,
     "ast_hash": "1e4bb9997a5ce3ebbfe385bd4eb0c6fe",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/MealsClient.swift": {
-    "mtime": 1788890336.1863198,
+    "mtime": 1789046922.9969487,
     "ast_hash": "a80e0a14d946a856c5dcc0f569fd3739",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/SwipeToDelete.swift": {
-    "mtime": 1792534839.7327864,
+    "mtime": 1792783674.3219728,
     "ast_hash": "bfa039e8589e4e529d7546a879d708e9",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/UndoToast.swift": {
-    "mtime": 1792534918.1550038,
+    "mtime": 1792783674.3223696,
     "ast_hash": "3e01b9aceb541af39ed40221261947cb",
     "semantic_hash": ""
   },
   "NestZone/Features/Dinner/DinnerFeature.swift": {
-    "mtime": 1788890336.1908996,
+    "mtime": 1789046923.0076735,
     "ast_hash": "8eea0eec497ec58495ebd88444a5fd01",
     "semantic_hash": ""
   },
   "NestZone/Features/Dinner/DinnerView.swift": {
-    "mtime": 1792535532.554736,
+    "mtime": 1792783674.32686,
     "ast_hash": "508baa289cff5d518ffbd3c9dafd65d4",
     "semantic_hash": ""
   },
   "backend/convex/meals.ts": {
-    "mtime": 1788890336.1976998,
+    "mtime": 1789046923.0304182,
     "ast_hash": "9ca7eeb92dbf99854927b940fe0cb855",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/RelativeTime.swift": {
-    "mtime": 1788890336.1885822,
+    "mtime": 1789046923.0029154,
     "ast_hash": "a61fa50d0fa147ff6fcccc0e1011cc62",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Contributions.swift": {
-    "mtime": 1788890336.184524,
+    "mtime": 1789046922.9909992,
     "ast_hash": "edf8e2925f5b40c8bc7e139a9eb7e5c5",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/ContributionCharts.swift": {
-    "mtime": 1792534639.7486036,
+    "mtime": 1792783674.3202658,
     "ast_hash": "9d35fac6e8a7d5a149ce85b15ccd349b",
     "semantic_hash": ""
   },
   "NestZone/Design/MemberTint.swift": {
-    "mtime": 1788890336.1892645,
+    "mtime": 1789046923.005133,
     "ast_hash": "0bf181071620cde1fbe860b637e78438",
     "semantic_hash": ""
   },
   "NestZone/Features/Contributions/ContributionsFeature.swift": {
-    "mtime": 1788890336.1906657,
+    "mtime": 1789046923.0073733,
     "ast_hash": "35e41ab5fa81254811665d6f738732e4",
     "semantic_hash": ""
   },
   "NestZone/Features/Contributions/ContributionsView.swift": {
-    "mtime": 1789127097.3315778,
+    "mtime": 1789072447.9570632,
     "ast_hash": "0e7fbb279178bfd16f8d080212704eb1",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Finance.swift": {
-    "mtime": 1789127097.3258615,
+    "mtime": 1789049371.454012,
     "ast_hash": "6a78e3d9db4cee29bd1ac4e1e22880c0",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/FinanceClient.swift": {
-    "mtime": 1788987674.496955,
+    "mtime": 1789046922.9963424,
     "ast_hash": "715f5c88bfc76a9e4da0f4ec1e54caf5",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/FinanceCharts.swift": {
-    "mtime": 1792534635.7761774,
+    "mtime": 1792783674.320487,
     "ast_hash": "b51449a6596e2cdbb86e29db8716094f",
     "semantic_hash": ""
   },
   "NestZone/Features/Finance/FinanceComposers.swift": {
-    "mtime": 1789127097.3323593,
+    "mtime": 1789049424.5995448,
     "ast_hash": "2b16d35ad65e113340dd0eea2e94e2c3",
     "semantic_hash": ""
   },
   "NestZone/Features/Finance/FinanceFeature.swift": {
-    "mtime": 1792535592.7705958,
+    "mtime": 1792783674.3273127,
     "ast_hash": "c23c8a9135af26b398b98c7e0ec99f05",
     "semantic_hash": ""
   },
   "NestZone/Features/Finance/FinanceSheets.swift": {
-    "mtime": 1789660539.834602,
-    "ast_hash": "2f13a33943676c7f4672a1bf27fe1cb0",
+    "mtime": 1792785126.2746265,
+    "ast_hash": "5317d78b59355433b2120fc0814b2718",
     "semantic_hash": ""
   },
   "NestZone/Features/Finance/FinanceView.swift": {
-    "mtime": 1792534543.6290138,
-    "ast_hash": "05dcf1e827af002eaa8b24191c38a9dd",
+    "mtime": 1792791495.605809,
+    "ast_hash": "3191bd87872d6a52392cd9593bf0fdca",
     "semantic_hash": ""
   },
   "backend/convex/finance.ts": {
-    "mtime": 1789127097.3459964,
+    "mtime": 1789048609.1546085,
     "ast_hash": "36fcc9699bf53618bd5e419b8e3f892e",
     "semantic_hash": ""
   },
   "backend/convex/crons.ts": {
-    "mtime": 1789730224.8439999,
+    "mtime": 1789926205.2700086,
     "ast_hash": "6d412c226516abb7c363ba31f7c304a4",
     "semantic_hash": ""
   },
   "NestZone/Design/KeyboardDismiss.swift": {
-    "mtime": 1788890336.189178,
+    "mtime": 1789046923.0050516,
     "ast_hash": "f93bd9b49574f062e82a9837d517015a",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/CalendarEvent.swift": {
-    "mtime": 1790178446.1523783,
+    "mtime": 1792184254.7517302,
     "ast_hash": "55ca0a0099d1ffc22ed213edce3db2ef",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/EventsClient.swift": {
-    "mtime": 1790178439.3591444,
+    "mtime": 1792184254.7522182,
     "ast_hash": "07e26e683fa1ae359b60effcb9c48c9a",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/CalendarGrid.swift": {
-    "mtime": 1792534399.530026,
+    "mtime": 1792783674.3197384,
     "ast_hash": "68346a849caea770a699cde69bcffc19",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarFeature.swift": {
-    "mtime": 1790178671.9930944,
+    "mtime": 1792184254.752545,
     "ast_hash": "472274085ccf58599b08800faa38ea75",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarView.swift": {
-    "mtime": 1792535532.554299,
-    "ast_hash": "9a32aad46f37b9c5a550d45ebb345c64",
+    "mtime": 1792785126.2742443,
+    "ast_hash": "ac0262951ecf67770418dd915dabcc70",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventComposerFeature.swift": {
-    "mtime": 1790178735.0022867,
+    "mtime": 1792184254.753183,
     "ast_hash": "3af4852ce93ae9573c9a3e50eeea91a1",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventDetailFeature.swift": {
-    "mtime": 1790178631.5226254,
+    "mtime": 1792184254.7534661,
     "ast_hash": "176ee0f6dd7e7b38305db9f42103f391",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventSheets.swift": {
-    "mtime": 1792535532.5544693,
+    "mtime": 1792783674.3236883,
     "ast_hash": "1fb57cae50d3bf88162dc374ac37d694",
     "semantic_hash": ""
   },
   "backend/convex/events.ts": {
-    "mtime": 1790178402.8766873,
+    "mtime": 1792184254.757563,
     "ast_hash": "684aeca4c35c72e63daf53d60daec3e0",
     "semantic_hash": ""
   },
   "backend/convex/lib/pending.ts": {
-    "mtime": 1788890336.1975305,
+    "mtime": 1789046923.0298607,
     "ast_hash": "8f4140f23a7c01b25f3c3ad69650d8e4",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/PushRegistration.swift": {
-    "mtime": 1788891800.661151,
+    "mtime": 1789046922.9939296,
     "ast_hash": "9a6db54ec0531e8f273c57c9650295a0",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/HouseIssue.swift": {
-    "mtime": 1792344632.2457962,
+    "mtime": 1792570522.584956,
     "ast_hash": "cfed7cd8c6cdfd2ff61a3d62ec5fc04a",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/IssuesClient.swift": {
-    "mtime": 1789660539.8246725,
+    "mtime": 1789657097.7778952,
     "ast_hash": "4ad0b5b03d62df7be7dc80707e0a3b36",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/IssueVisuals.swift": {
-    "mtime": 1792534999.5670557,
+    "mtime": 1792783674.321019,
     "ast_hash": "15e870c6c8000f99607c02c1e446181c",
     "semantic_hash": ""
   },
   "NestZone/Features/Issues/IssueComposerFeature.swift": {
-    "mtime": 1789660539.835016,
+    "mtime": 1789657114.9190106,
     "ast_hash": "52e4fd679ef013aa5bda3e2684763708",
     "semantic_hash": ""
   },
   "NestZone/Features/Issues/IssueDetailFeature.swift": {
-    "mtime": 1789660539.8354938,
+    "mtime": 1789657107.7434592,
     "ast_hash": "5f0e9b7da1fffe2fbee4c51561562a82",
     "semantic_hash": ""
   },
   "NestZone/Features/Issues/IssueDetailView.swift": {
-    "mtime": 1792534673.9790618,
+    "mtime": 1792783674.329639,
     "ast_hash": "6b2752f5d35f3419024d393ab7448324",
     "semantic_hash": ""
   },
   "NestZone/Features/Issues/IssueSheets.swift": {
-    "mtime": 1792535057.6729143,
+    "mtime": 1792783674.3299518,
     "ast_hash": "b0beb4318982b6bfe4ad1f37521fdb34",
     "semantic_hash": ""
   },
   "NestZone/Features/Issues/IssuesFeature.swift": {
-    "mtime": 1789127097.3382013,
+    "mtime": 1789048771.6443064,
     "ast_hash": "484b67110f5183af0bf6043452c737e9",
     "semantic_hash": ""
   },
   "NestZone/Features/Issues/IssuesView.swift": {
-    "mtime": 1792534712.6973822,
-    "ast_hash": "115504e608336c0a9c75d6cf9eb14705",
+    "mtime": 1792785126.2754073,
+    "ast_hash": "58b2ca481ba4132d542c88ba40c1e87f",
     "semantic_hash": ""
   },
   "backend/convex/issues.ts": {
-    "mtime": 1789730208.7887774,
+    "mtime": 1789926205.2718368,
     "ast_hash": "58ba509cf06e084164f52bc9c16ce1fb",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/CurrencyPicker.swift": {
-    "mtime": 1789127097.3275425,
+    "mtime": 1789049380.4940822,
     "ast_hash": "ba9ed6587e72f53ed4814aab5f2caf86",
     "semantic_hash": ""
   },
   "NestZone/Design/GlassListLab.swift": {
-    "mtime": 1789127097.3293169,
+    "mtime": 1789112751.7485392,
     "ast_hash": "6fca49ac2f1800b340c938c8380d8fab",
     "semantic_hash": ""
   },
   "Docs/premium-audit.md": {
-    "mtime": 1789127097.3235636,
+    "mtime": 1789049660.0066984,
     "ast_hash": "a8a02d4acbeabf96a6fc0ec336970f22",
     "semantic_hash": ""
   },
   "NestZone/Design/GlassList.swift": {
-    "mtime": 1789127097.3290176,
+    "mtime": 1789112751.776665,
     "ast_hash": "89bd8a0c69e7779276969efb6628cbaf",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/TaskArchive.swift": {
-    "mtime": 1789127097.3265164,
+    "mtime": 1789122207.8483713,
     "ast_hash": "853f0077b2920229ac60cc11cf0bb3f0",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TaskArchiveFeature.swift": {
-    "mtime": 1789127097.3410544,
+    "mtime": 1789122064.8907306,
     "ast_hash": "745fb5aa25140a0e853f490ab863398e",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TaskArchiveView.swift": {
-    "mtime": 1789127097.3411674,
+    "mtime": 1789122064.9557974,
     "ast_hash": "d8def88d2ea14a6d9ce4df75ac86b118",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TaskDeleteWarning.swift": {
-    "mtime": 1789127097.3412383,
+    "mtime": 1789120681.3944514,
     "ast_hash": "4b4618591f7d88587de9ff2a536547cd",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/AvatarRecording.swift": {
-    "mtime": 1789660539.823582,
+    "mtime": 1789649415.266351,
     "ast_hash": "4ef3407f018be379c10d1389ccf983bd",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/Avatar.swift": {
-    "mtime": 1789661072.521087,
+    "mtime": 1789926205.2619107,
     "ast_hash": "38237f86189a876cddc5c6195ecdbf52",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarCrop.swift": {
-    "mtime": 1789660539.8258407,
+    "mtime": 1789649826.6555321,
     "ast_hash": "336b63f6d19563e6e243805072ba37d7",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarCropSheet.swift": {
-    "mtime": 1789660539.8260384,
+    "mtime": 1789657156.300184,
     "ast_hash": "38463606e31a33996a56093326c3b808",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarDirectory.swift": {
-    "mtime": 1789660539.8261874,
+    "mtime": 1789654279.418155,
     "ast_hash": "30702b50d7ea926150468b1aa12971b1",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarInitials.swift": {
-    "mtime": 1789660539.8264654,
+    "mtime": 1789649091.7334006,
     "ast_hash": "b2abd88f8ea9c3a04ca2b3839c5787fd",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarPhoto.swift": {
-    "mtime": 1789660539.8266323,
+    "mtime": 1789657012.7908442,
     "ast_hash": "4ba5587e11db11a5cf86b13c38f5b60a",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarPickerButton.swift": {
-    "mtime": 1789661063.7088242,
+    "mtime": 1789926205.2624705,
     "ast_hash": "bebc4ba7f35f7a829de44969ca48f8a8",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarPickerFace.swift": {
-    "mtime": 1789661044.262901,
+    "mtime": 1789926205.2630744,
     "ast_hash": "6c513a72f77e9256808cb8669e43f47a",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarStack.swift": {
-    "mtime": 1789660539.8283129,
+    "mtime": 1789654512.2607582,
     "ast_hash": "75bde8c1e630fbb47914d945ab450c19",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/CropCircleMask.swift": {
-    "mtime": 1789660539.8293104,
+    "mtime": 1789649642.2322981,
     "ast_hash": "c2719bb79c3dd345a7dab67124562b9b",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/ImageDiskCache.swift": {
-    "mtime": 1789660539.8300605,
+    "mtime": 1789657248.7301593,
     "ast_hash": "6273a4b2cec6842e5951db6f2744dd90",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/ImageLoader.swift": {
-    "mtime": 1789660539.8302314,
+    "mtime": 1789649642.2330527,
     "ast_hash": "a501fd972497bb07b973d6b263ac235d",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/ImagePersistence.swift": {
-    "mtime": 1789660539.8303685,
+    "mtime": 1789649649.388764,
     "ast_hash": "48194d8e992f41d0726457540ca53cf1",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/AvatarRollback.swift": {
-    "mtime": 1789660539.8372355,
+    "mtime": 1789649545.4210496,
     "ast_hash": "3290ce90842466cc64fe4f0086b0d4b5",
     "semantic_hash": ""
   },
   "backend/convex/lib/users.ts": {
-    "mtime": 1789660539.844385,
+    "mtime": 1789648661.6555507,
     "ast_hash": "ee96d3e16b3817d4c411425c94369091",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarEntry.swift": {
-    "mtime": 1789660539.8263447,
+    "mtime": 1789654264.3220108,
     "ast_hash": "0945dedaca9e086eaeec2ff7038ba3d5",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarSource.swift": {
-    "mtime": 1789660539.8271458,
+    "mtime": 1789654399.0497792,
     "ast_hash": "20747b432d923619efb5ccc1e6a3220e",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarSourceRow.swift": {
-    "mtime": 1789660539.827996,
+    "mtime": 1789654407.5028331,
     "ast_hash": "70c245578ba045e627930952e36b55bb",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarSourceSheet.swift": {
-    "mtime": 1789660539.828184,
+    "mtime": 1789654661.1258993,
     "ast_hash": "37082aac287acafb74f1f7a12e1dd51e",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarSubject.swift": {
-    "mtime": 1789660539.828437,
+    "mtime": 1789654309.0045707,
     "ast_hash": "a8ba69160ceea301605b79b644bf6fd2",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarViewer.swift": {
-    "mtime": 1789660539.8285873,
+    "mtime": 1789654800.498849,
     "ast_hash": "733974ec1358a884baff0322f47ec7b6",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/AvatarViewerBar.swift": {
-    "mtime": 1789660539.8290677,
+    "mtime": 1789654366.6038234,
     "ast_hash": "3262e245ffc9e1b6881d1b7bba9a6045",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/CameraPicker.swift": {
-    "mtime": 1789660539.8291914,
+    "mtime": 1789654379.3967764,
     "ast_hash": "733ba253668f1b9dc873b5b629e6742a",
     "semantic_hash": ""
   },
   "NestZone/Design/Avatar/PhotoZoom.swift": {
-    "mtime": 1789660539.8294303,
+    "mtime": 1789654303.6658757,
     "ast_hash": "7ab1b15dd71b551bab66e7f8bb276984",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/CompressedPhoto.swift": {
-    "mtime": 1789660539.8295517,
+    "mtime": 1789656946.0035193,
     "ast_hash": "e69c39313367a3bdd54ac71bf56cfa67",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/IssuePhotoUpload.swift": {
-    "mtime": 1789660539.8317273,
+    "mtime": 1789657043.7955797,
     "ast_hash": "a1c76c6306d7f31567a68f7bdc8cbfa2",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/PhotoCompressionPlan.swift": {
-    "mtime": 1789660539.832375,
+    "mtime": 1789656963.5331683,
     "ast_hash": "01937573429b541052b0c4b32dec710f",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/PhotoCompressor.swift": {
-    "mtime": 1789660539.8325198,
+    "mtime": 1789656986.8729217,
     "ast_hash": "318a53968555f67e548a15302019f885",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/PhotoUpload.swift": {
-    "mtime": 1789660539.832681,
+    "mtime": 1789657149.4009528,
     "ast_hash": "95c5e5381f0930cf7b6d9b21e3acf2c1",
     "semantic_hash": ""
   },
   "NestZone.xcodeproj/xcshareddata/xcodecloud/manifest.json": {
-    "mtime": 1789724919.1367352,
+    "mtime": 1789926205.2573006,
     "ast_hash": "f0b6fecce02e01933caece56265b3567",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppVersion.swift": {
-    "mtime": 1789730432.2206311,
+    "mtime": 1789926205.2601333,
     "ast_hash": "be8b4b0cb8d255637e3975f074445d24",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/Inbox.swift": {
-    "mtime": 1789735708.522752,
+    "mtime": 1789926205.2605455,
     "ast_hash": "99aa9e265eb9dcd3f7a5f42e4776d662",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/InboxClient.swift": {
-    "mtime": 1789735708.5228977,
+    "mtime": 1789926205.2610838,
     "ast_hash": "485efce0f937ef91caca5c6cc966ee20",
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxAdminFeature.swift": {
-    "mtime": 1789731199.905884,
+    "mtime": 1789926205.2647684,
     "ast_hash": "c1532a0bba7f074f07362aae32839c37",
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxAdminView.swift": {
-    "mtime": 1789735708.523021,
+    "mtime": 1789926205.2650049,
     "ast_hash": "441ef1128f8bca81d3192c30974fb680",
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxFeature.swift": {
-    "mtime": 1789731199.9056385,
+    "mtime": 1789926205.26519,
     "ast_hash": "fcb938c8460b6eb1ffac041ed4fd3f49",
     "semantic_hash": ""
   },
   "NestZone/Features/Inbox/InboxView.swift": {
-    "mtime": 1792535532.5541801,
+    "mtime": 1792783674.329413,
     "ast_hash": "832c3ca211aeb38536f912d9615657a3",
     "semantic_hash": ""
   },
   "backend/changelog.json": {
-    "mtime": 1792344632.250831,
+    "mtime": 1792570522.6032367,
     "ast_hash": "5e8b4d8ed972851aec05f60056763455",
     "semantic_hash": ""
   },
   "backend/convex/inbox.ts": {
-    "mtime": 1792344632.2509837,
+    "mtime": 1792184711.9591718,
     "ast_hash": "235e3a5d10396274e9f42be2f44b41a8",
     "semantic_hash": ""
   },
   "backend/convex/lib/admin.ts": {
-    "mtime": 1789730022.9706898,
+    "mtime": 1789926205.271999,
     "ast_hash": "c4f682b61889fe8b0579fca15f1bdb25",
     "semantic_hash": ""
   },
   "deploy.sh": {
-    "mtime": 1792332773.034759,
+    "mtime": 1792184254.7579093,
     "ast_hash": "5b0f22fd5045bafaaf2f8e2c5770d0c1",
     "semantic_hash": ""
   },
   "backend/DEPRECATIONS.md": {
-    "mtime": 1789735708.523836,
+    "mtime": 1789926205.2680883,
     "ast_hash": "d220c4ad70b35c63280c148249ca7d76",
     "semantic_hash": ""
   },
   "XCODE_CLOUD.md": {
-    "mtime": 1789734353.729283,
+    "mtime": 1789926205.2678623,
     "ast_hash": "0c6159535c7a07eb07dcf359b908ec98",
     "semantic_hash": ""
   },
   "ci_scripts/ci_post_clone.sh": {
-    "mtime": 1789734353.7294247,
+    "mtime": 1789926205.2741833,
     "ast_hash": "3905ec946db9ae17cc7f236da340bc6d",
     "semantic_hash": ""
   },
   "ci_scripts/macros.json": {
-    "mtime": 1789734353.7295148,
+    "mtime": 1789926205.2742882,
     "ast_hash": "e313635dfda857dc8ca91fd74ad73f21",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventHistoryFeature.swift": {
-    "mtime": 1790178562.7270837,
+    "mtime": 1792184254.7536588,
     "ast_hash": "d304de527f057629ec97ee351997103e",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventHistoryView.swift": {
-    "mtime": 1790178583.4580867,
+    "mtime": 1792184254.7538145,
     "ast_hash": "25253ad9a7e33195c31d135ed67c129a",
     "semantic_hash": ""
   },
   "NestZone/App/Route.swift": {
-    "mtime": 1792344632.2453,
+    "mtime": 1792570522.5824995,
     "ast_hash": "80a37593845a84f2d8d6282ac2412b57",
     "semantic_hash": ""
   },
   "NestZone/Features/Customize/CustomizeFeature.swift": {
-    "mtime": 1792344632.2465398,
+    "mtime": 1792570522.5889864,
     "ast_hash": "3f02d1be4c4644ff696c49f42f7a52bb",
     "semantic_hash": ""
   },
   "NestZone/Features/Customize/CustomizeView.swift": {
-    "mtime": 1792535031.7281845,
+    "mtime": 1792783674.3264132,
     "ast_hash": "900d2247e318fd747bcfcd8ea63d8f0f",
     "semantic_hash": ""
   },
   "NestZone/Features/Customize/TodayLayout.swift": {
-    "mtime": 1792344632.246696,
+    "mtime": 1792570522.5894313,
     "ast_hash": "af0c9b7f55fd2175c519498bbbc755ba",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HouseStatsFeature.swift": {
-    "mtime": 1792344632.2470243,
+    "mtime": 1792570522.591125,
     "ast_hash": "89a0c862ba1a1e08b3206808047f7687",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HouseStatsGrid.swift": {
-    "mtime": 1792344632.247093,
+    "mtime": 1792570522.5914357,
     "ast_hash": "78e4dbc3b0c555205b036cf00f24fb01",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HouseStatsView.swift": {
-    "mtime": 1792344632.2471516,
+    "mtime": 1792570522.5920038,
     "ast_hash": "d53c0e65c8420473031ee71e023a6ef9",
     "semantic_hash": ""
   },
   ".codex/hooks.json": {
-    "mtime": 1792344632.2444742,
+    "mtime": 1792570522.577941,
     "ast_hash": "64d1ded9263ec58e53f941a5a8cbb70c",
     "semantic_hash": ""
   },
   "NestZone/App/Modules.swift": {
-    "mtime": 1792344632.2452173,
+    "mtime": 1792570522.582153,
     "ast_hash": "ccd7e6e29b74842478ce628909487d85",
     "semantic_hash": ""
   },
   "NestZone/Features/Capture/CaptureClassifier.swift": {
-    "mtime": 1792344632.2461226,
+    "mtime": 1792570522.5871377,
     "ast_hash": "42e2f77fe6cb42ed05961c4c81108242",
     "semantic_hash": ""
   },
   "NestZone/Features/Capture/CaptureFeature.swift": {
-    "mtime": 1792344632.2462018,
+    "mtime": 1792570522.5874457,
     "ast_hash": "2627b68970b234c49c148019fc12baa3",
     "semantic_hash": ""
   },
   "NestZone/Features/Capture/CaptureParser.swift": {
-    "mtime": 1792344632.246342,
+    "mtime": 1792570522.5880554,
     "ast_hash": "c0f7b9697515e14aff78efbd3f076f3b",
     "semantic_hash": ""
   },
   "NestZone/Features/Capture/CaptureView.swift": {
-    "mtime": 1792535175.486367,
+    "mtime": 1792783674.3239803,
     "ast_hash": "d5127564b95ac2ea461e22193705d955",
     "semantic_hash": ""
   },
   "NestZone/Features/Now/NowDock.swift": {
-    "mtime": 1792535114.870642,
+    "mtime": 1792783674.3316123,
     "ast_hash": "b35cfe56606a42dbefcff0fa0cbc3e35",
     "semantic_hash": ""
   },
   "NestZone/Features/Now/NowFeature.swift": {
-    "mtime": 1792344632.247881,
+    "mtime": 1792570522.595194,
     "ast_hash": "5ebf861428edb646bffc96a9dc777958",
     "semantic_hash": ""
   },
   "NestZoneTests/CaptureTests.swift": {
-    "mtime": 1792344632.2494216,
+    "mtime": 1792570522.6012013,
     "ast_hash": "103ef3d6b0841a0b7c71461694d6c5f8",
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1792344632.2445931,
+    "mtime": 1792570522.5783901,
     "ast_hash": "86c148a95d764a637def2bfde3c6bb33",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/duck.js": {
-    "mtime": 1792447314.458528,
+    "mtime": 1792783674.2893739,
     "ast_hash": "07af7510e836b6dc478a9479c3d56081",
     "semantic_hash": ""
   },
   "Docs/Companion/tools/free_tier_sim.py": {
-    "mtime": 1792447372.7878478,
+    "mtime": 1792783674.3143544,
     "ast_hash": "a6c2f80d4f3d22d0bbfdfa268a574822",
     "semantic_hash": ""
   },
   "Docs/Companion/tools/growth_sim.py": {
-    "mtime": 1792447378.9440055,
+    "mtime": 1792783674.3145897,
     "ast_hash": "183e6e42267aaba6da07c2c2b84bc54b",
     "semantic_hash": ""
   },
   "Docs/Companion/tools/l10n_tool.py": {
-    "mtime": 1792447365.6475372,
+    "mtime": 1792783674.3146892,
     "ast_hash": "39067b7d7c0e8469cd212518e8652782",
     "semantic_hash": ""
   },
   "Docs/Companion/tools/scenario.sh": {
-    "mtime": 1792527633.8116946,
+    "mtime": 1792783674.3147862,
     "ast_hash": "05ac895814007b4fc37edb9739f0cf44",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCard.swift": {
-    "mtime": 1792536260.8376715,
+    "mtime": 1792783674.324483,
     "ast_hash": "6c7d34b90e6979056edf70b64a8c1d2a",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionFeature.swift": {
-    "mtime": 1792533998.0880802,
+    "mtime": 1792783674.324749,
     "ast_hash": "ae3362fee75c867dabf3179116b22754",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionModels.swift": {
-    "mtime": 1792530039.0522282,
+    "mtime": 1792783674.3248758,
     "ast_hash": "309c3737ae470e3a39a2639b3259d434",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionNames.swift": {
-    "mtime": 1792530206.4164941,
+    "mtime": 1792783674.3250046,
     "ast_hash": "261e65c9434c6153a378647b66b3ec5b",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionScene.swift": {
-    "mtime": 1792532865.8290195,
+    "mtime": 1792783674.3251498,
     "ast_hash": "8ec30a2b76609433958bdf8519035d63",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionSheets.swift": {
-    "mtime": 1792533964.2103236,
+    "mtime": 1792783674.3253088,
     "ast_hash": "d300965c8a0b8aeaf4f4216dd9d28192",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/Holidays.swift": {
-    "mtime": 1792526840.8286304,
+    "mtime": 1792783674.325605,
     "ast_hash": "ff02930884a5f521a5a97a50210fd854",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PetPainter.swift": {
-    "mtime": 1792444626.1242235,
+    "mtime": 1792783674.3257482,
     "ast_hash": "69f4cec76add6fcdf8bceafbc899d321",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/SceneInk.swift": {
-    "mtime": 1792526795.129624,
+    "mtime": 1792783674.3258686,
     "ast_hash": "7e2e2850127114a926acfda44f8b6ee8",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ScenePainter.swift": {
-    "mtime": 1792527299.326895,
+    "mtime": 1792783674.3260336,
     "ast_hash": "6afc639307a43245ee320ed49c37fd14",
     "semantic_hash": ""
   },
   "NestZoneTests/CompanionTests.swift": {
-    "mtime": 1792526903.644322,
+    "mtime": 1792783674.3335423,
     "ast_hash": "ab01c30610fc71d9479204c9235b3566",
     "semantic_hash": ""
   },
   "Docs/Companion/HANDOFF.md": {
-    "mtime": 1792781775.5510573,
-    "ast_hash": "6760fe4f857fe4779fad904f3c86b325",
+    "mtime": 1792793287.969574,
+    "ast_hash": "9f032c351e211f6d571aeb195c566e15",
     "semantic_hash": ""
   },
   "Docs/Companion/HOLIDAYS.md": {
-    "mtime": 1792447434.8398442,
+    "mtime": 1792783674.2752547,
     "ast_hash": "fa57fb4b2a435e13448aac9a4081e5c0",
     "semantic_hash": ""
   },
   "Docs/Companion/README.md": {
-    "mtime": 1792781783.4184647,
+    "mtime": 1792783674.2753644,
     "ast_hash": "1392179fc7d21e9ebb6faac0a669480a",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/duck.html": {
-    "mtime": 1792447314.4582534,
+    "mtime": 1792783674.289271,
     "ast_hash": "53319134fa66c77528c089bbde3de9d6",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/index.html": {
-    "mtime": 1792781944.7940984,
+    "mtime": 1792783674.312782,
     "ast_hash": "675d9cf8869465066f1118df39c5e6cd",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/plant.html": {
-    "mtime": 1792447314.4578564,
+    "mtime": 1792783674.3136148,
     "ast_hash": "48a6814c5d412d1276486abcbf4cdd0f",
     "semantic_hash": ""
   },
   "Docs/Companion/tools/growth_results.txt": {
-    "mtime": 1792447365.6283448,
+    "mtime": 1792783674.3144438,
     "ast_hash": "aa342ec1ef55cf4bd1ae9240e639677d",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/album1.png": {
-    "mtime": 1792514749.7744699,
+    "mtime": 1792783674.2896929,
     "ast_hash": "550d729e7fe5729b6458d239a2562d5a",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/album2.png": {
-    "mtime": 1792514749.777061,
+    "mtime": 1792783674.2899654,
     "ast_hash": "4e29d41a697aff5962b4ea6aa21d823d",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/album3.png": {
-    "mtime": 1792514749.7794058,
+    "mtime": 1792783674.29025,
     "ast_hash": "56090ddd35388ef99878cea4f7c5a948",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/album4.png": {
-    "mtime": 1792447314.669891,
+    "mtime": 1792783674.291966,
     "ast_hash": "2488fc9c0eeb1244f7a2e776b1ad8cd9",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_card.png": {
-    "mtime": 1792514749.783279,
+    "mtime": 1792783674.2927713,
     "ast_hash": "1af50fb2c3b1fa4c66afc19477b54c42",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_ceremony.png": {
-    "mtime": 1792447314.4665637,
+    "mtime": 1792783674.2933302,
     "ast_hash": "72a271bdbaf7dd1bef96f6f810ec1fe6",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_decorate.png": {
-    "mtime": 1792447314.4675784,
+    "mtime": 1792783674.293786,
     "ast_hash": "77cc70e0d7fd2b2564f39def36fdb668",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_holidays.jpg": {
-    "mtime": 1792447342.0587976,
+    "mtime": 1792783674.294051,
     "ast_hash": "c3a9785fec34ad9a3c01a4bad2df4818",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_sheets.png": {
-    "mtime": 1792514749.7864244,
+    "mtime": 1792783674.294743,
     "ast_hash": "55900cfded5cc09dfe4e72c8e35a56a6",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_wake_duck.jpg": {
-    "mtime": 1792447342.0752752,
+    "mtime": 1792783674.299969,
     "ast_hash": "e575f93ae3ab9d095407ac7c584f2293",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_wake_plant.jpg": {
-    "mtime": 1792514749.8057647,
+    "mtime": 1792783674.30037,
     "ast_hash": "03a402dbf7541f7df780151d20597beb",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/cat_azalea.jpg": {
-    "mtime": 1792514749.654207,
+    "mtime": 1792783674.3005877,
     "ast_hash": "d49a81f86eda471abf3851f72ee9ff32",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/cat_cherry.jpg": {
-    "mtime": 1792514749.6206822,
+    "mtime": 1792783674.3007717,
     "ast_hash": "a8b054d8698afa0ac10e12c2ddec6dc2",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/cat_lemon.jpg": {
-    "mtime": 1792514749.6709669,
+    "mtime": 1792783674.3009667,
     "ast_hash": "d294272c94876dccd80c4cb2e1c6ab8e",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/cat_magnolia.jpg": {
-    "mtime": 1792514749.6030612,
+    "mtime": 1792783674.3012624,
     "ast_hash": "9fec1a697b8fd10f304df54d14892d11",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/cat_olive.jpg": {
-    "mtime": 1792514749.6880376,
+    "mtime": 1792783674.301662,
     "ast_hash": "eabd147f5632fa56c614f896bab8faac",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/cat_pomegranate.jpg": {
-    "mtime": 1792514749.6382337,
+    "mtime": 1792783674.3018997,
     "ast_hash": "4545ef290ca276835c76c1e9808da272",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/kit.jpg": {
-    "mtime": 1792447342.210523,
+    "mtime": 1792783674.3022442,
     "ast_hash": "360dd37176144aeb4a07af5a7126ac5b",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/mood_bright.jpg": {
-    "mtime": 1792514749.704909,
+    "mtime": 1792783674.3024917,
     "ast_hash": "df9c97e4458b9ab4a74b6533726b7e75",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/mood_content.jpg": {
-    "mtime": 1792514749.7210171,
+    "mtime": 1792783674.3027222,
     "ast_hash": "a9147e8a1c1a00d46cc16d3e2fd78bf7",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/mood_dozing.jpg": {
-    "mtime": 1792514749.7529695,
+    "mtime": 1792783674.3029943,
     "ast_hash": "a3dd02882e975251b7185cfaffeb5659",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/mood_night.png": {
-    "mtime": 1792447315.2910094,
+    "mtime": 1792783674.3033905,
     "ast_hash": "73d28877c81af7adcfc7e096c7800b81",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/mood_thirsty.jpg": {
-    "mtime": 1792514749.737153,
+    "mtime": 1792783674.30443,
     "ast_hash": "7d8bb98a48ec3f59122870c45eb7363a",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/season_halloween.jpg": {
-    "mtime": 1792447342.2947414,
+    "mtime": 1792783674.3046265,
     "ast_hash": "7cb7137ff35e9242445c7bdcbd27f2f5",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/season_newyear.jpg": {
-    "mtime": 1792447342.3121507,
+    "mtime": 1792783674.3048215,
     "ast_hash": "9210f3f256ea5bbf4a97f2f4fb6ab478",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/season_spring.jpg": {
-    "mtime": 1792447342.3295357,
+    "mtime": 1792783674.3051002,
     "ast_hash": "182ce13b297ffffad49b8a9788215640",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/stage1.png": {
-    "mtime": 1792514749.7568622,
+    "mtime": 1792783674.306932,
     "ast_hash": "7368187657bc0bf580b737125b76dab2",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/stage2.png": {
-    "mtime": 1792514749.7591236,
+    "mtime": 1792783674.307101,
     "ast_hash": "b816ff9e288fddbf71be27c0659cd38f",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/stage3.png": {
-    "mtime": 1792514749.761275,
+    "mtime": 1792783674.3090062,
     "ast_hash": "6373fbba1d064d61a2905b61e060317c",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/stage4.png": {
-    "mtime": 1792514749.7634602,
+    "mtime": 1792783674.3092525,
     "ast_hash": "fef2e67b234ca578661d688552f0f978",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/stage5.png": {
-    "mtime": 1792514749.7660315,
+    "mtime": 1792783674.3094983,
     "ast_hash": "8e9fef48653c56a03926d0f862533df1",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/stage6.png": {
-    "mtime": 1792514749.7685895,
+    "mtime": 1792783674.3097777,
     "ast_hash": "7618c63bd21116431eb910409d121a68",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/stage7.png": {
-    "mtime": 1792514749.7717288,
+    "mtime": 1792783674.310051,
     "ast_hash": "f9944652827137358d1216a8252851aa",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/tools/shot.sh": {
-    "mtime": 1792505787.3237731,
+    "mtime": 1792783674.283823,
     "ast_hash": "baf5723f7bc272f9ea508a7c5d3f74b5",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/render.sh": {
-    "mtime": 1792505787.3188813,
+    "mtime": 1792783674.285979,
     "ast_hash": "08a828d780fcde9050c6dd0eb1ebfdd3",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CanopyPainter.swift": {
-    "mtime": 1792516022.846826,
+    "mtime": 1792783674.3243148,
     "ast_hash": "3c308a43cad48c50d2f1596b3195aa1d",
     "semantic_hash": ""
   },
   "Docs/Companion/art/SHADERS.md": {
-    "mtime": 1792512123.4235191,
+    "mtime": 1792783674.275543,
     "ast_hash": "e5236e94f9dd13421bfb15120b814fe2",
     "semantic_hash": ""
   },
   "Docs/Companion/art/compare.html": {
-    "mtime": 1792512123.4229329,
+    "mtime": 1792783674.275647,
     "ast_hash": "4ffb7b795bdc35164a84ec4d721e7f47",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/SPEC.md": {
-    "mtime": 1792512123.4232278,
+    "mtime": 1792783674.275877,
     "ast_hash": "152bd1bf97f0d30d3e056f6be0c15a97",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/tree.html": {
-    "mtime": 1792509706.2821198,
+    "mtime": 1792783674.284029,
     "ast_hash": "9f92b6976022bc5e97804b42b4fbcebf",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/SPEC.md": {
-    "mtime": 1792509749.1968546,
+    "mtime": 1792783674.2858145,
     "ast_hash": "181e9c31c81c814a0893001717721169",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/tree.html": {
-    "mtime": 1792505751.7608716,
+    "mtime": 1792783674.2890072,
     "ast_hash": "52250706c60c0f32df82c8a06a0ecd33",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/renders/01-species-day.jpg": {
-    "mtime": 1792509706.360633,
+    "mtime": 1792783674.2765403,
     "ast_hash": "63d83195536fbe51e508c4f1c2a851bd",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/renders/02-moods-magnolia.jpg": {
-    "mtime": 1792509706.4169369,
+    "mtime": 1792783674.2771997,
     "ast_hash": "e01d3fb9e25046424a16b79881a15359",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/renders/03-growth-magnolia.jpg": {
-    "mtime": 1792509706.4728453,
+    "mtime": 1792783674.277638,
     "ast_hash": "2f95be84ddea56a22ed34eeb3fbcae1a",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/renders/05-night-species.jpg": {
-    "mtime": 1792509706.5346515,
+    "mtime": 1792783674.2782183,
     "ast_hash": "f12ad034c0a562da366c06b8142a0a78",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/renders/07-seeds-magnolia.jpg": {
-    "mtime": 1792509706.6435063,
+    "mtime": 1792783674.2826266,
     "ast_hash": "22b86e555a8e30aa55d5fa1509a16a98",
     "semantic_hash": ""
   },
   "Docs/Companion/art/shaders-contact-sheet.jpg": {
-    "mtime": 1792505752.4252489,
+    "mtime": 1792783674.2850616,
     "ast_hash": "b74fef24f1101e7bb3931a2b1328448f",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/renders/1_species_day.jpg": {
-    "mtime": 1792505751.8276973,
+    "mtime": 1792783674.286643,
     "ast_hash": "9bef702550129208494f91f2994f3312",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/renders/2_moods_magnolia.jpg": {
-    "mtime": 1792505751.8845162,
+    "mtime": 1792783674.2872467,
     "ast_hash": "63485fa0d024c70491b69ecd6ba89220",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/renders/3_growth_lemon.jpg": {
-    "mtime": 1792505751.9414563,
+    "mtime": 1792783674.287685,
     "ast_hash": "69f067ad6cfafed9e68c943452fa9b2d",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/renders/5_species_night.jpg": {
-    "mtime": 1792505752.0031798,
+    "mtime": 1792783674.288253,
     "ast_hash": "0a5d3e544300c4645c563621fcbe38d2",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/renders/7_seeds_olive.jpg": {
-    "mtime": 1792505752.0636613,
+    "mtime": 1792783674.2888227,
     "ast_hash": "914933dba6c3d54d43d2076373e28bf0",
     "semantic_hash": ""
   },
   "Docs/Companion/art/soft-canopy/CanopyPainter.swift": {
-    "mtime": 1792506873.4751258,
+    "mtime": 1792783674.2855172,
     "ast_hash": "3164f5d1bbee717579d6020370beddd5",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/renders/06-moods-all-species.jpg": {
-    "mtime": 1792509706.6090798,
+    "mtime": 1792783674.282019,
     "ast_hash": "471c75ab93057f45526fa9d48e018e69",
     "semantic_hash": ""
   },
   "Docs/Companion/art/gouache/renders/09-moods-before-after.jpg": {
-    "mtime": 1792509706.704089,
+    "mtime": 1792783674.2835264,
     "ast_hash": "b439c3dfb52445fa6b6c15e32826305d",
     "semantic_hash": ""
   },
@@ -1655,128 +1655,148 @@
     "semantic_hash": ""
   },
   "NestZone/App/FrameMeter.swift": {
-    "mtime": 1792511673.745715,
+    "mtime": 1792783674.3151238,
     "ast_hash": "97a8211d4a69c569e938f42f8ffa22a6",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCatalog.swift": {
-    "mtime": 1792533012.2891145,
+    "mtime": 1792783674.3246171,
     "ast_hash": "23e29b875718a67ebdfe6032ba4434cc",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/SparkleStore.swift": {
-    "mtime": 1792529860.2130754,
+    "mtime": 1792783674.3262472,
     "ast_hash": "97ad258d7f93733a851bdb89dc96e64d",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionShop.swift": {
-    "mtime": 1792536248.4603848,
+    "mtime": 1792783674.3254664,
     "ast_hash": "cdfd2a2d3f6ef511c92999eae82614c3",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ShopDesign.swift": {
-    "mtime": 1792533801.8449645,
+    "mtime": 1792783674.3261561,
     "ast_hash": "4cc09800abb76359fba2d14f50b67c0a",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/shop.html": {
-    "mtime": 1792781916.676901,
+    "mtime": 1792783674.3139288,
     "ast_hash": "66ca7fb82421c61eb747334df99163e3",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_shop_dusk_decor.png": {
-    "mtime": 1792530853.4671454,
+    "mtime": 1792783674.2952173,
     "ast_hash": "5dba1ba26c1909456cf8fbdac918f918",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_shop_dusk_pets.png": {
-    "mtime": 1792530853.6238086,
+    "mtime": 1792783674.2955823,
     "ast_hash": "435f7a22ed1af3328e77ab83249ea9e4",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_shop_dusk_plants.png": {
-    "mtime": 1792530853.5497177,
+    "mtime": 1792783674.295962,
     "ast_hash": "1dcf11b890f10acd34b57fe91fa4874e",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_shop_lit_decor.png": {
-    "mtime": 1792530853.425077,
+    "mtime": 1792783674.2973697,
     "ast_hash": "eb131407eebe59cfaf8867d9ff4fb7a8",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_shop_lit_pets.png": {
-    "mtime": 1792530853.5874777,
+    "mtime": 1792783674.2989092,
     "ast_hash": "2685aac2558bb8abcf2b72821b929981",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_shop_lit_plants.png": {
-    "mtime": 1792530853.5094376,
+    "mtime": 1792783674.2993052,
     "ast_hash": "45a2d29f9edc22a6bd77e77815529fce",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/app_shop_store.png": {
-    "mtime": 1792530853.65648,
+    "mtime": 1792783674.2997804,
     "ast_hash": "c41ec857c40375bd8138f56e290e71c8",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/shop_dusk_decor.png": {
-    "mtime": 1792529555.5923235,
+    "mtime": 1792783674.3055475,
     "ast_hash": "06d779997f87cc30a73352896ba85f81",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/shop_dusk_plants.png": {
-    "mtime": 1792529556.8182316,
+    "mtime": 1792783674.3058758,
     "ast_hash": "74a403a4422e099dc0b39f267de86ae3",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/shop_lit_decor.png": {
-    "mtime": 1792529552.802144,
+    "mtime": 1792783674.306403,
     "ast_hash": "bb807f1a6f4dbde1911d56ec1134e011",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/shop_lit_plants.png": {
-    "mtime": 1792529554.131605,
+    "mtime": 1792783674.3066802,
     "ast_hash": "ce2582c80761e968f1f52a92f1117459",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/Amount.swift": {
-    "mtime": 1792534280.1676183,
+    "mtime": 1792783674.3191535,
     "ast_hash": "728d9cc6a27837b8c2f1cf13884468b2",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/v9_card_light.jpg": {
-    "mtime": 1792781653.8081276,
+    "mtime": 1792783674.310325,
     "ast_hash": "92faceb5f1e1502c61ba7b261fd1fdd6",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/v9_card_makeup.jpg": {
-    "mtime": 1792781653.7128394,
+    "mtime": 1792783674.3105757,
     "ast_hash": "4ca4a0223356a0274a9588a970312cff",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/v9_card_short.jpg": {
-    "mtime": 1792781653.7640252,
+    "mtime": 1792783674.3108416,
     "ast_hash": "9d601da4a612139b7ff6f20bd8ca761d",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/v9_segment_switch.jpg": {
-    "mtime": 1792781653.9676118,
+    "mtime": 1792783674.3113902,
     "ast_hash": "265de6fabb5e61035ef989724ef06cd7",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/v9_shop.jpg": {
-    "mtime": 1792781653.5914564,
+    "mtime": 1792783674.3118303,
     "ast_hash": "a3063314492704b782a32ae84b209b44",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/v9_shop_tr.jpg": {
-    "mtime": 1792781653.6326616,
+    "mtime": 1792783674.3121097,
     "ast_hash": "698e3606c2bfbc4a92b7ea69ffd6292b",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/img/v9_store.jpg": {
-    "mtime": 1792781653.6700523,
+    "mtime": 1792783674.3123486,
     "ast_hash": "2cda1f377e020bd38168c17d99e3fb85",
+    "semantic_hash": ""
+  },
+  "NestZone/Design/SegmentChrome.swift": {
+    "mtime": 1792792437.0275476,
+    "ast_hash": "9172a8e5e3f46e80f5501033d3e56b87",
+    "semantic_hash": ""
+  },
+  "NestZone/Design/SegmentPhase.swift": {
+    "mtime": 1792792437.027321,
+    "ast_hash": "438e33979b6328f5e965ca3cb7a49755",
+    "semantic_hash": ""
+  },
+  ".claude/agents/ios-swiftui-engineer.md": {
+    "mtime": 1792784329.3832624,
+    "ast_hash": "9c108c3c8f13c7f664b8cddbe927cb7d",
+    "semantic_hash": ""
+  },
+  ".claude/agents/swiftui-performance-reviewer.md": {
+    "mtime": 1792784329.3836849,
+    "ast_hash": "85f9f7cbf19eb771e666cbf4a06038f2",
     "semantic_hash": ""
   }
 }

@@ -52,9 +52,9 @@ public struct NotesView: View {
         }
         .background(Backdrop(tint: theme.accent))
         .scrollEdgeEffectStyle(.soft, for: .top)
-        .searchable(text: $store.searchText, prompt: Text(L10n.notesSearchPlaceholder))
+        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.notesSearchPlaceholder))
         .navigationTitle(Text(L10n.notesScreenTitle))
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { store.send(.composeTapped) } label: {
                     Image(systemName: "square.and.pencil")

@@ -50,6 +50,7 @@ private struct AppearModifier: ViewModifier {
     let distance: CGFloat
     @State private var shown = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     func body(content: Content) -> some View {
         content
@@ -59,14 +60,36 @@ private struct AppearModifier: ViewModifier {
             // with it — a delay only reads as choreography when there is
             // movement to choreograph.
             .offset(y: shown || reduceMotion ? 0 : distance)
-            .onAppear {
-                guard !shown else { return }
-                withAnimation(
-                    reduceMotion ? Motion.fade : Motion.arrive.delay(Motion.stagger(index))
-                ) {
-                    shown = true
+            .onAppear(perform: play)
+            // A segment that is kept alive never appears again, so its
+            // entrance is put back once it has faded out (behind the opacity,
+            // where nobody sees it) and played when it returns. A row that is
+            // built before its segment is on screen waits for it — that
+            // includes a segment's first build, which happens in the tap's
+            // frame while the stage still holds the module being left, so the
+            // entrances start a few frames later rather than adding to it.
+            .onChange(of: phase) { _, phase in
+                switch phase {
+                case .onScreen: play()
+                case .away: rewind()
+                case .leaving: break
                 }
             }
+    }
+
+    private func play() {
+        guard !shown, phase == .onScreen else { return }
+        withAnimation(
+            reduceMotion ? Motion.fade : Motion.arrive.delay(Motion.stagger(index))
+        ) {
+            shown = true
+        }
+    }
+
+    private func rewind() {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { shown = false }
     }
 }
 
@@ -186,11 +209,28 @@ private struct DrawInModifier: ViewModifier {
     @Binding var drawn: Bool
     let animation: Animation
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     func body(content: Content) -> some View {
-        content.onAppear {
-            if reduceMotion { drawn = true } else { withAnimation(animation) { drawn = true } }
-        }
+        content
+            .onAppear(perform: draw)
+            // Drawn again each time its segment comes back, the way entrances
+            // are (see `AppearModifier`).
+            .onChange(of: phase) { _, phase in
+                switch phase {
+                case .onScreen: draw()
+                case .away:
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) { drawn = false }
+                case .leaving: break
+                }
+            }
+    }
+
+    private func draw() {
+        guard !drawn, phase == .onScreen else { return }
+        if reduceMotion { drawn = true } else { withAnimation(animation) { drawn = true } }
     }
 }
 
@@ -264,16 +304,22 @@ private struct SymbolBounceModifier: ViewModifier {
     let active: Bool
     @State private var trigger = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     func body(content: Content) -> some View {
         content
             .symbolEffect(.bounce, options: .nonRepeating, value: trigger)
             .onAppear { fire(if: active) }
             .onChange(of: active) { _, now in fire(if: now) }
+            // A kept segment bounces again when it comes back, and not while
+            // it is away: nobody is there to see it.
+            .onChange(of: phase) { _, phase in
+                if phase == .onScreen { fire(if: active) }
+            }
     }
 
     private func fire(if shouldFire: Bool) {
-        guard shouldFire, !reduceMotion else { return }
+        guard shouldFire, !reduceMotion, phase == .onScreen else { return }
         trigger += 1
     }
 }
@@ -302,12 +348,15 @@ private struct PulseModifier: ViewModifier {
     let active: Bool
     @State private var on = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     /// The only animation in the app that never ends, so it is also the only
     /// one that keeps a display link alive for as long as it is on screen.
     /// Switched off entirely under Reduce Motion rather than softened: a slow
-    /// endless throb is the exact thing that setting exists to stop.
-    private var isBreathing: Bool { active && !reduceMotion }
+    /// endless throb is the exact thing that setting exists to stop. It stops
+    /// as well when its screen is a kept segment that has been switched away
+    /// from, where a link would be kept alive for something nobody can see.
+    private var isBreathing: Bool { active && !reduceMotion && phase == .onScreen }
 
     func body(content: Content) -> some View {
         content

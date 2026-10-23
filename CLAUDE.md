@@ -45,16 +45,36 @@ single-module tabs and no Household list any more — testers called a tab for
 the shopping list alone overkill. The segment each tab was left on is
 remembered per device (`TabSegments`).
 
-A segment switch rebuilds the module's whole screen (`.id(selected)` in
-`SegmentedRoot`), and that costs one 100–200 ms frame on the simulator,
-measured before any of the switch's motion existed. The first switch to a
-module is the worst, and its underline lands rather than travels because
-the spring is nearly spent by the time the main thread is back. Keeping the
-segments' screens alive is the fix, and the owner said yes (23 October
-2026): it is step 0 of the next steps in `Docs/Companion/HANDOFF.md`, with
-its catches (toolbars, replayed entrances). Measure a switch with
-`-frameMeter 1 -openTab lists -segmentCycle 1` (Debug): it opens on that tab
-and walks its segments every 1.5 s.
+A segment is built the first time it is shown and kept after that
+(`SegmentedRoot`): the screens that are not on show stay in the `ZStack` at no
+opacity, untouchable and hidden from VoiceOver, so going back costs nothing and
+each keeps its scroll position and its live reads. A switch is staged: the
+fade (scoped to the opacity alone, `.animation(Motion.fade) { $0.opacity }`,
+because an `animation(value:)` on the container animated every row and the
+bar too) and the underline land in the tap's frame, and the bar items, search
+and entrances follow 50 ms later (`onStage`). Warm switches went from about
+55–98 ms to about 55–80 ms; the first switch to a module is still 220–300 ms
+and is view construction, which keeping alive cannot remove (see
+`Docs/Companion/HANDOFF.md`, step 0, for the numbers and what is open).
+`SegmentedRoot` tells each screen where it stands through
+`\.segmentPhase` (`onScreen`, `leaving`, `away`; `segmentChosen` is the same
+without the 50 ms lag), and what only makes sense in front of a person waits
+for it: a module's bar items and search go through `segmentToolbar` and
+`segmentSearchable`, never a bare `.toolbar` or `.searchable` at a module's
+root (the bar is the stack's, so every kept segment's items would stand in it
+at once); `appear`, `drawIn` and `bounces` rewind once the screen has faded out
+and play again when it returns; `pulse` and the loading shimmers stop; and work
+a live push could start, a haptic or a celebration, goes through `segmentTask`
+(Finance's square-up does), which is cancelled the moment the segment is left.
+**Never read `\.segmentPhase` in a screen's own `body`**: it changes three times
+in a switch. Read it through `LivePhase` in a modifier of a few lines, which
+also answers `onScreen` for anything presented, because a sheet declared
+inside a segment inherits the environment. A new module screen, or a new
+continuous animation, follows the same rules. Measure a switch with
+`-frameMeter 1 -openTab lists -segmentCycle 4` (Debug): it opens on that tab
+and, after five seconds, walks its segments every four, so each switch lands in
+a log window of its own (`-segmentCycle 1` walks every 1.5 s, straight from
+launch).
 
 - **A tap switches tab or opens a screen in place — never both.** A whole
   module goes to its tab, switched to its segment and popped to root. A

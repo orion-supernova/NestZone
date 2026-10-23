@@ -12,9 +12,11 @@ the old conversation.
   Nestie is still Debug-only (`CompanionFlag`). The motion pass and the
   tap and shake fixes are app-wide, though, so they ship with whatever
   version comes next (see "Before the next release").
-- **The next job:** keep the segments' screens alive, so a segment switch
-  stops hitching. That was your call on 23 October. The plan is step 0 under
-  "Next steps" below.
+- **The next job:** the segments' screens are kept alive now (step 0 under
+  "Next steps" says what was done and measured). What is left of the hitch is
+  the first switch to each module, which has to build it, and a warm switch
+  that is now about 55–80 ms after staging; the open items are in step 0's
+  "Still open".
 - **To look at on a phone:** the new micro-animations (they build, but the
   simulator here can't be tapped, so they weren't watched one by one);
   whether the check in the "All square" seal draws itself in; the stamp with
@@ -23,10 +25,10 @@ the old conversation.
   here", the v9 shop in screenshots and the roadmap. `plan/shop.html` has
   v8's prototype and how each of its decisions was answered.
 - **A prompt for a fresh session:** "Read Docs/Companion/HANDOFF.md first,
-  then CLAUDE.md. Do step 0 of Next steps: keep the segments' screens alive
-  so a switch stops hitching, keeping the entrances that replay on every
-  switch. Measure with `-frameMeter 1 -openTab lists -segmentCycle 1` before
-  and after, on Lists, Plans and House. Build and typecheck only, no tests."
+  then CLAUDE.md. Step 0 of Next steps is done; read its "Still open" and
+  find why the first return to Calendar or Tasks is slow. Measure with
+  `-frameMeter 1 -openTab plans -segmentCycle 4`. Build and typecheck only,
+  no tests."
 
 ## How we got here
 
@@ -319,59 +321,100 @@ asking first. What keeps it from shipping:
 
 In order — each step can go to testers on its own:
 
-0. **Keep the segments' screens alive** (your call, 23 October). Not
-   Nestie's, but next.
-   - *The problem.* A segment switch (Tasks → Shopping, Money → Problems)
-     costs one 100–200 ms frame on the simulator, worst the first time, so
-     the first switch's underline lands instead of travelling. It predates
-     the v9 motion: a worktree at the last commit, measured alternately with
-     the new build, hitched the same, and Time Profiler showed the same
-     main-thread time. Warm switches were within noise.
-   - *What's there.* `SegmentedRoot` (`App/AppView.swift`) draws only the
-     chosen module, `RouteView(...).id(selected).transition(.opacity)` in a
-     `ZStack` animated with `Motion.fade`, so a switch throws the old screen
-     away and builds the new one. The *state* is already kept:
-     `RouteStack.State.segments` (`App/Route.swift`) holds every module's
-     screen state, built once in `init(group:selected:screen:)`. So this is a
-     view change only, with no reducer or backend change.
-   - *Live reads.* Every module screen subscribes in
-     `.task { await store.send(.task).finish() }`, so today a switch also
-     cancels the old screen's subscriptions and opens the new one's. Part of
-     the hitch may be that first payload decoded on the main thread. Profile
-     which half it is, before and after (see "Measure before fixing a lag").
-   - *The change.* Build a segment the first time it's shown and keep it: a
-     `@State` set of visited modules in `SegmentedRoot` and a `ForEach` over
-     them in the `ZStack`, with no `.id(selected)`. Hidden ones get
-     `opacity(0)`, `allowsHitTesting(false)` and `accessibilityHidden(true)`;
-     the `Motion.fade` crossfade stays.
-   - *Toolbars and search — the catch.* All eight module screens add
-     `.toolbar` items, and Notes, Movies and Recipes are `.searchable`. Kept
-     in one `ZStack`, a hidden screen's items and search will most likely
-     still reach the shared navigation bar. Gate them on an environment value
-     `SegmentedRoot` sets for the segment on screen (or lift them out), and
-     check every tab's bar afterwards.
-   - *Keep the entrances replaying* (your call in v9). `.appear` and
-     `.appearInPlace` (`AppearModifier` in `Design/Motion.swift`) animate only
-     in `onAppear`, guarded by `shown`; `.drawIn` and `.bounces` also start on
-     appear. A kept screen never appears again, so they need a replay trigger:
-     an environment counter that `SegmentedRoot` bumps for the segment coming
-     on screen, which those modifiers watch to reset and play again. Most
-     entrances: Finance (10), Movies (9), Issues (6), Calendar (3).
-   - *Already checked.* None of the eight module screens uses `onDisappear`,
-     so nothing relies on being torn down. Haptics key on local tap counters
-     (CLAUDE.md, Motion), so a hidden screen's live data shouldn't buzz; a
-     visited segment keeps its reads open while hidden, at most three a tab.
-   - *Still has to work.* The remembered segment (`TabSegments`),
-     `MainFeature.open` switching to a module's segment and popping to root,
-     the dock stepping aside over Shopping (`showsDock`), each screen's own
-     scroll position (a bonus: it's kept now).
-   - *Measure.* `-frameMeter 1 -openTab lists -segmentCycle 1` (then `plans`,
-     `house`) opens on the tab and walks its segments every 1.5 s; read
-     `log stream --predicate 'category == "Frames"'`. Record the first switch
-     with `simctl io recordVideo` and step through the frames: the underline
-     should travel.
-   - *Then* update CLAUDE.md's Navigation paragraph about the hitch, and this
-     file.
+0. **Keep the segments' screens alive** — done (23 October), view-only.
+   - *What changed.* `SegmentedRoot` (`App/AppView.swift`) keeps a `@State`
+     set of visited modules and draws a `ForEach` of them in the `ZStack`,
+     with no `.id`. A hidden one is `opacity(0)`, `allowsHitTesting(false)`
+     and `accessibilityHidden(true)` (`SegmentPage`); the `Motion.fade`
+     crossfade stays. No reducer or backend change.
+   - *Telling a screen where it stands.* `\.segmentPhase`
+     (`Design/SegmentPhase.swift`) is set per segment: `onScreen`, `leaving`
+     (while it fades out, 260 ms) and `away` (after). It is one value per
+     segment, so a switch changes it for the two screens it concerns and
+     invalidates only the views that read it there. Elsewhere it stays
+     `onScreen`, so pushed screens and sheets are untouched.
+   - *Toolbars and search.* `segmentToolbar`, `segmentSearchable` and
+     `segmentFocus` (`Design/SegmentChrome.swift`) replace `.toolbar` and
+     `.searchable` at the root of Tasks, Shopping, Notes, Calendar, Recipes,
+     Movies, Finance and Issues, and release a field's focus on a switch so no
+     keyboard is left over a hidden screen. The search sits in a `.background`
+     rather than wrapping the screen in an `if`, which would rebuild it.
+     Checked in the simulator on Lists and Plans: each segment's bar shows its
+     own items, and the search button only on Notes and Meals. House was not
+     looked at by eye (one button each).
+   - *Entrances.* `appear`, `appearInPlace`, `drawIn` and `bounces` rewind when
+     the phase reaches `away` (behind the opacity) and play when it is
+     `onScreen` again, with the same Reduce Motion fallbacks; a row built
+     while its segment is away waits for that return. A first build waits
+     for the stage too, so its entrances play once, a few frames after the
+     tap rather than in its frame.
+   - *Nothing runs while hidden.* `pulse` and the two loading shimmers
+     (`ImagePlaceholder`, `LoadingView`) stop off screen. Finance's square-up
+     moment waits until its segment is on screen, so the stamp and its haptics
+     are not spent unseen. Every other haptic in the eight screens is keyed on
+     a local tap counter. `ConfettiBurst` is idle until triggered and lasts
+     1.1 s, so it was left.
+   - *Measured* (iPhone 17 simulator, iOS 26.5, `-frameMeter 1 -openTab <tab>
+     -segmentCycle 4`; the worst frame in the 2-second window holding each
+     switch, same machine, before then after):
+     Lists: tasks→shopping (first) 286→224 ms, →notes (first) 115→110,
+     →tasks 143→134, →shopping 133→75, →notes 77→98.
+     Plans: calendar→meals (first) 294→292, →movies (first) 107→116,
+     →calendar 234→232, →meals 159→86, →movies 117→93.
+     House: finance→problems (first) 285→291, →finance 49→77.
+     The simulator was loaded (load average ~8), so differences under about
+     50 ms are noise.
+   - *Staging a switch, and the scoped fade* (24 October, from a profile).
+     A switch used to do everything in one frame: the fade, the underline, the
+     bar rebuilt, the search coming and going, and every row of two screens
+     re-reading the phase. `SegmentedRoot` now holds `onStage`, which follows
+     `store.selected` by 50 ms: the fade and the underline land in the tap's
+     frame, the phase (bar items, search, entrances) a few frames later. The
+     fade is `.animation(Motion.fade) { $0.opacity(...) }` in `SegmentPage`,
+     not an `animation(value:)` and `.transition` on the container, which
+     animated everything the switch touched underneath. Warm switches, the
+     worst frame per window, three runs of each tab on the loaded iPhone 17
+     simulator (iOS 26.5): Plans 60–74 ms (was 64–99), Lists 56–81 (was 62–86),
+     House 33–54 (was 46–50, noise). First switches did not move: 225–275 ms.
+   - *Why the 50 ms is safe.* `onStage` is only ever assigned the module chosen
+     at that moment, so a page becomes `onScreen` only by being chosen, and
+     entrances play on the way into `onScreen`, so none can play on the page
+     being left. In the lag, the page being left is still `onScreen` (its bar
+     items stand for 50 ms, but it is untouchable and hidden from VoiceOver, so
+     VoiceOver never points at nothing) and the page arriving is `leaving`.
+     What must not outlast the tap uses `segmentChosen`, which moves with it:
+     `segmentTask`, so Finance's square-up is cancelled when the segment stops
+     being chosen, and its `abandonSquareUp` lands the stamp at once instead of
+     slamming and buzzing behind another screen. (Making nobody `onScreen`
+     for the 50 ms was tried: it costs about 15 ms back, since the old
+     screen's phase change is the expensive half.) Finance no longer reads the
+     phase in its `body`; no other module screen does.
+   - *Sheets.* A sheet or a `navigationDestination(item:)` inside a segment
+     inherits the segment's environment. Every reader goes through `LivePhase`,
+     which answers `onScreen` when `isPresented`, so a sheet keeps its own bar
+     and entrances whatever the segment behind it is doing. Not seen in the
+     simulator (a sheet opened over a segment that is then switched away from
+     is hard to arrange); check it on a phone.
+   - *Alerts.* A failed write that lands after a switch away presents its alert
+     over the segment now showing. Left on purpose: the copy names what did not
+     stick.
+   - *Looked at.* Lists, Plans and House in the simulator, mid-fade and at
+     rest: each segment's bar shows only its own items, search only on Notes
+     and Meals. Notes' search keeping its text across a switch was not driven
+     (nothing here can type into the simulator). The same Plans run on an
+     iOS 27.0 simulator was not possible: it needs a signed-in account.
+   - *Still open.* The first switch (about 220–260 ms) is view construction.
+     Building the other segments at idle would move it to an arbitrary moment,
+     so it is your call. The first return to Calendar or Tasks (200–230 ms) is
+     slow and its trigger has not been found; the other returns are warm.
+     Ruled out earlier: the entrance replays, the crossfade, the bar items and
+     search. `-segmentCycle 4` exists for this.
+   - *iOS 27.* The 27.1 SDK was checked for anything that keeps a view
+     hidden, shows or hides a toolbar item or search, or reports visibility.
+     Nothing does; what it adds nearby (`visibilityPriority`,
+     `toolbarOverflowMenu`, `CrossFadeNavigationTransition`,
+     `TabsPickerStyle`) does a different job, so nothing is behind
+     `#available(iOS 27, *)`.
 1. **Measure on a phone.** A Debug build on a device with `-frameMeter 1`;
    scroll Today, Choose and the shop. Opening Choose still drops one frame on
    the simulator.

@@ -88,7 +88,7 @@ public struct CalendarView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.managementModuleCalendarTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .topBarLeading) { searchToggle }
             ToolbarItem(placement: .primaryAction) { historyButton }
             ToolbarItem(placement: .primaryAction) { addButton }
@@ -170,6 +170,7 @@ public struct CalendarView: View {
                 Text(L10n.calendarSearchPlaceholder)
             }
             .focused($isSearchFocused)
+            .segmentFocus($isSearchFocused)
             .font(.subheadline)
             .submitLabel(.search)
             // Always in the hierarchy, faded rather than inserted.
