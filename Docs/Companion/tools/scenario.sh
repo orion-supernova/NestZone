@@ -8,7 +8,7 @@
 # 2001, which is how JSONEncoder writes a Date — `ref` is now, `day` is a day,
 # `at(y, m, d, h)` is a local time). `demo` is passed as -companionDemo
 # (care, decorate, celebrate, dress, album, holidays, lab, choose, pick, grow,
-# labgrow) and `spot`
+# labgrow, shop, store, buy, makeup, short, topup) and `spot`
 # as -companionSpot; `-` skips either. Screenshots are taken at each number of
 # seconds after launch, as <name>_0.png, <name>_1.png… in the current folder.
 #

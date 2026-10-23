@@ -340,6 +340,18 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
 .family b { font-family: var(--display); font-size: 16px; }
 .family .how { font-family: var(--mono); font-size: 11px; color: var(--accent); }
 .teaser { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+
+/* Start here */
+.nextgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.box.nextup, .phase.now { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.nexttag { align-self: flex-start; font: 600 13px var(--body); color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 4px 11px; }
+#next .box p { font-size: 15px; }
+#next .box ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.prompt { margin: 0; font: 13.5px/1.6 var(--mono); white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.phoneshots { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 16px 14px; align-items: start; }
+.phoneshots figure { width: auto; gap: 8px; }
+.phoneshots img { width: 100%; display: block; border-radius: 20px; border: 1px solid var(--line); }
+.phoneshots figcaption strong { font-size: 15px; }
 </style>
 </head>
 <body>
@@ -350,28 +362,91 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
 <button class="catbtn" id="openCatalog2" aria-haspopup="dialog"><span aria-hidden="true">🌱</span>Catalog</button>
 
 <nav class="topnav" aria-label="Sections"><div>
-  <a href="#answers">Answers</a><a href="#mvp" class="hot">In the app</a><a href="#demo">Live demo</a><a href="#moods">Moods</a><a href="#waking">Waking up</a><a href="#pets">🐤 The duck</a><a href="#decorate">Decorate</a><a href="#seasons">Seasons</a><a href="#coins">House jar</a><a href="#owning">Who owns what</a><a href="#art">Art in code</a><a href="#roadmap">Roadmap</a><a href="#open">Still open</a><a href="duck.html">Duck page ↗</a>
+  <a href="#next" class="hot">Start here</a><a href="#answers">Answers</a><a href="#mvp">In the app</a><a href="#shop">The shop</a><a href="#demo">Live demo</a><a href="#moods">Moods</a><a href="#waking">Waking up</a><a href="#pets">🐤 The duck</a><a href="#decorate">Decorate</a><a href="#seasons">Seasons</a><a href="#coins">House jar</a><a href="#owning">Who owns what</a><a href="#art">Art in code</a><a href="#roadmap">Roadmap</a><a href="#open">Still open</a><a href="duck.html">Duck page ↗</a>
 </div></nav>
 
 <div class="wrap">
 
   <header class="col">
-    <span class="eyebrow">Nestie · companion plan · version 5 · 20 October 2026</span>
+    <span class="eyebrow">Nestie · companion plan · version 9 · 23 October 2026</span>
     <h1>A companion that grows with the house</h1>
     <p class="lead">Your household picks a plant or a pet. It lives at the top of Today and grows from what the house already does: chores ticked, the shopping bought, dinner decided, a leak fixed, a movie night that happened. In about two weeks it's fully grown: a short ceremony, a card in the album, Leaves for the shop, and the next one chosen together. Everything ships in one release.</p>
-    <div class="btns"><button class="act primary" id="openCatalog" aria-haspopup="dialog">Open the catalog</button><span class="muted" style="font-size:14px">39 companions and 32 decorations at launch</span></div>
+    <div class="btns"><button class="act primary" id="openCatalog" aria-haspopup="dialog">Open the catalog</button><span class="muted" style="font-size:14px">The plan's first catalog. The app now has 39 companions and 51 decorations.</span></div>
   </header>
 
+  <section class="wide" id="next">
+    <div class="col">
+      <span class="eyebrow">Start here · 23 October 2026</span>
+      <h2>Where we left off, and what's next</h2>
+      <p class="lead">Round four is built and pushed to <code>dev</code> as work in progress. Nothing is released: <code>stage</code> hasn't moved, and Nestie is still on development builds only. You said yes to keeping the segments' screens alive, so that's the next job.</p>
+    </div>
+    <div class="nextgrid">
+      <div class="box nextup">
+        <span class="nexttag">Next · your call</span>
+        <h3>Keep the segments' screens alive</h3>
+        <p>Switching Tasks → Shopping, Calendar → Meals or Money → Problems throws the old screen away and builds the new one from scratch. That costs one 100–200 ms frame on the simulator, worst the first time, which is why the very first switch's underline jumps instead of sliding. It was there before the motion work: measured against the last commit, alternating the two builds.</p>
+        <p>The fix: build each segment once, the first time it's opened, and keep it, hiding the others instead of throwing them away. What to watch:</p>
+        <ul>
+          <li><b>The entrances still replay.</b> You like them playing on every switch, so a kept screen needs a nudge to play them again when it comes back.</li>
+          <li><b>Only the shown screen's buttons.</b> Every module puts buttons in the bar, and Notes, Movies and Meals a search. Hidden screens mustn't add theirs.</li>
+          <li><b>Live data stays on</b> for a hidden screen, three modules a tab at most. That's what makes the switch instant.</li>
+          <li><b>Measured before and after</b> on Lists, Plans and House, with the tab switching segments by itself.</li>
+        </ul>
+        <p class="muted" style="font-size:14px">The code-level plan is in HANDOFF.md, "Next steps", step 0.</p>
+      </div>
+      <div class="box">
+        <h3>After that, in order</h3>
+        <ol>
+          <li><b>Measure on a phone.</b> Every number so far is from the simulator.</li>
+          <li><b>Shared by the house:</b> the server version, so two phones see one jar, album and scene.</li>
+          <li><b>The vote</b> for the next one, and at most three notifications.</li>
+          <li><b>The jar takes money:</b> StoreKit 2 or RevenueCat, chosen then.</li>
+          <li><b>The art pass:</b> the 32 sketched species and 10 decorations, drawn.</li>
+          <li><b>The finale</b> and its crown.</li>
+          <li><b>Release:</b> Nestie on for everyone, its changelog entry, the version bumped.</li>
+        </ol>
+        <h3>Look at on your phone</h3>
+        <ul>
+          <li>The new micro-animations in Lists, Plans, House and Messages. They build, but the simulator here can't be tapped, so they weren't watched one by one.</li>
+          <li>"All square": does the check draw itself in, and how does it look with Reduce Motion on?</li>
+          <li>The budget ring past 100%: the short pause between its two sweeps.</li>
+        </ul>
+        <h3>Before the next release</h3>
+        <p>The motion pass isn't behind Nestie's switch, so it ships with the next version. It needs a "Fixes and improvements" entry once that version number is picked; the draft is in HANDOFF.md.</p>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Picking it up in a new session</h3>
+      <p class="muted">A new session remembers nothing of this one. Paste this to start it:</p>
+      <pre class="prompt" id="resumePrompt">Read Docs/Companion/HANDOFF.md first, then CLAUDE.md. Round four of Nestie is committed and pushed to dev as work in progress. Do step 0 of "Next steps": keep the segments' screens alive so a segment switch stops hitching, keeping the entrances that replay on every switch. Measure with -frameMeter 1 -openTab lists -segmentCycle 1 before and after, on Lists, Plans and House. Build and typecheck only, no tests.</pre>
+      <div class="btns"><button class="act" id="copyPrompt" type="button">Copy</button></div>
+    </div>
+  </section>
+
   <section class="changes" aria-labelledby="chg">
-    <h3 id="chg">What changed in this version</h3>
+    <h3 id="chg">What changed in versions 7 to 9</h3>
     <ul>
-      <li><b>It's in the app.</b> A working MVP on development builds, at the top of Today. <a href="#mvp">See it</a>.</li>
-      <li><b>Waking up.</b> A thirsty plant revives and a dozing duck wakes, with its own little animation, in the app and in the prototypes.</li>
-      <li><b>Nestie, for now.</b> One string to change if the name (or the app's) changes.</li>
-      <li><b>$0 art.</b> I'm the illustrator, animator and motion designer: everything is drawn and moved in code. No Rive, no paid tools.</li>
-      <li><b>One house jar.</b> Whatever anyone buys goes into the house's jar, and everyone spends from it.</li>
-      <li><b>Every calendar.</b> 49 days from 11 traditions, each house choosing its own, with dates checked against official sources.</li>
+      <li><b>Nothing is bought without asking.</b> Every purchase opens a card snapped to the bottom edge: the thing, its price, the jar before and after. No system alerts.</li>
+      <li><b>Short of Leaves? Make up the rest with Sparkles,</b> one for one, the same price. Not enough even so: the Sparkles store, full screen, then back to the card.</li>
+      <li><b>The whole catalog:</b> 39 species and 51 decorations, each had one way. What isn't drawn yet is its emoji until the art pass.</li>
+      <li><b>The shop is a NestZone screen.</b> v8's plum game-shop look is gone: the app's glass, accent and type, the system's leaf and sparkle, one pressed-in button for spending. <a href="#shop">See it</a>.</li>
+      <li><b>The window follows the hour,</b> lit by day and dusk at night; one "Best value"; the refill plays every time.</li>
+      <li><b>Motion across the app,</b> like Telegram and Duolingo, none removed: entrances replay, money settles without bouncing, settling up gets an "All square" stamp, every tap is felt once.</li>
+      <li><b>Bugs fixed:</b> shelves switching at the bottom, the flicker on switch, the shop swiped away by accident, Water's drops restarting, the gap under the sheets.</li>
     </ul>
+    <details class="earlier"><summary>What changed in version 6</summary>
+    <ul style="margin-top:8px">
+      <li><b>The tree is painted gouache.</b> You chose the illustrative direction: leafy clumps in three depth tiers, light from one side, shadows cast inside the canopy, petals with gradients. All six species, every mood, in the app. <a href="#art">See it</a>.</li>
+      <li><b>Smooth.</b> Today holds 60 frames a second with a grown, decorated tree, at rest or scrolling fast. The tree is drawn only when it changes; the wind bends that picture.</li>
+      <li><b>Two currencies, one price.</b> Leaves are progress, Sparkles are bought, never both on one thing. A new house gets a welcome gift of both.</li>
+      <li><b>Today never says it twice.</b> What the dock shows (a movie round, dinner, an event about to start) is left off Today. This one reaches every household on 1.11.</li>
+      <li><b>One line, real Turkish.</b> Every label fits one line in both languages, and the Turkish is written the way people talk.</li>
+      <li><b>Faster to test.</b> − / + points under the tree on development builds, to watch it grow and shrink through its stages.</li>
+    </ul></details>
+    <details class="earlier"><summary>What changed in version 5</summary>
+    <ul style="margin-top:8px">
+      <li>The MVP in the app, on development builds; waking up; Nestie as the name for now; $0 art, all in code; one house jar; 49 days from 11 traditions.</li>
+    </ul></details>
     <details class="earlier"><summary>What changed in version 4</summary>
     <ul style="margin-top:8px">
       <li>Moods you can see from across the room; the duck in the top demo and on its own page; the parts kit explained; decorating in eight spots; seasons.</li>
@@ -385,16 +460,22 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
       <h2>Short answers first</h2>
     </div>
     <div class="faq">
+      <div class="box"><h3>"Laggy, buggy, basic-looking trees"</h3><p>Both fixed. Two illustration directions were drawn side by side and you chose layered gouache. It's in the app for all six species, and Today now holds 60 frames a second with a grown, decorated tree, measured frame by frame.</p><a href="#art">The art →</a></div>
+      <div class="box"><h3>Use Metal, the GPU?</h3><p>Tried and measured. A wind shader and a painted-grain finish ran on the GPU, and Today fell to about 25 frames a second: every frame waited for the two passes. The GPU still draws everything, but nothing custom runs per frame. The tree is drawn when it changes and the wind is a simple transform, so it's back to 60.</p><a href="#art">How it's drawn →</a></div>
+      <div class="box"><h3>Two currencies, but never two prices</h3><p>Leaves for progress, never sold; Sparkles for purchases, with a few earned at every stage and graduation. Each thing has one price in one currency — no "100 Leaves or 5 Sparkles". A new house gets a celebrated welcome gift of both (🍃 150, ✨ 180), enough to buy something right away with a little left over.</p><a href="#coins">The jar →</a></div>
+      <div class="box"><h3>"Holidays" on two lines?</h3><p>Every label is one line now, in both languages. A label shrinks a little before it would wrap, and the action buttons line up whatever their icons.</p><a href="#mvp">In the app →</a></div>
+      <div class="box"><h3>Turkish that sounds translated?</h3><p>Rewritten in Turkish, not off the English: casual, everyday, the "sen" form. "Eve hediye geldi!", "Seç bakalım", "Bugün bedava", "cıvıl cıvıl", "mışıl mışıl".</p><a href="#names">Names →</a></div>
+      <div class="box"><h3>Movie night twice on Today?</h3><p>Fixed, for everyone on 1.11. Today leaves out whatever the dock above the tab bar is showing: an open movie round, tonight's dinner, an event about to start.</p></div>
+      <div class="box"><h3>Watch it grow without waiting?</h3><p>On development builds, − / + under the tree takes points off or adds four at a time, and the card plays every stage change. The Lab's buttons do too, with the sheet half up.</p><a href="#mvp">Try it →</a></div>
+    </div>
+    <details class="earlier"><summary>Answers from earlier rounds (some since replaced: one currency, the flat style, code instead of an illustrator and Rive)</summary>
+    <div class="faq">
       <div class="box"><h3>Can it revive or wake up when someone helps?</h3><p>Yes, and it's in the app already. A thirsty plant gets a splash in its soil, its leaves lift a little past where they rest and settle, its buds open and the fallen leaves go. A dozing one has its glass dome lifted off first. A sleepy duck flutters its eyes open, stretches, shakes, and its nightcap flies off. New stages pop with a ring of light.</p><a href="#waking">The wake-up, frame by frame →</a></div>
       <div class="box"><h3>Nestie for now?</h3><p>Done. The name lives in one string, and nothing else in the code says it (inside, the feature is called "companion"). Renaming it, or the app, later is a one-line change in both languages.</p><a href="#names">Names →</a></div>
-      <div class="box"><h3>You'll be the illustrator and the motion team?</h3><p>Yes, and nothing needs buying. Every tree, the duckling, 40 decorations, every mood and every movement are drawn in code. That costs nothing to license, adds nothing to the download, and can change in a day. The trade-off is a flat, rounded style rather than painted illustration, which suits the glass look anyway.</p><a href="#art">How →</a></div>
-      <div class="box"><h3>Two currencies, but never two prices</h3><p>Leaves for progress, never sold; Sparkles for purchases, with a few earned at every stage and graduation. Each thing has one price in one currency — no "100 Leaves or 5 Sparkles". A new house gets a celebrated welcome gift of both (🍃 150, ✨ 180), enough to buy something right away with a little left over.</p><a href="#coins">The jar →</a></div>
+      <div class="box"><h3>You'll be the illustrator and the motion team?</h3><p>Yes, and nothing needs buying. Every tree, the duckling, 40 decorations, every mood and every movement are drawn in code. That costs nothing to license, adds nothing to the download, and can change in a day. Since version 6 the trees are a layered gouache illustration, still drawn in code.</p><a href="#art">How →</a></div>
       <div class="box"><h3>One house jar, or separate banks?</h3><p>One jar, your way. Whatever anyone buys goes into the house's jar (Kumbara), everyone spends from it, and the feed says who put in and who spent. It's simpler and it's what a real house does. It changes one earlier rule: nothing leaves with a person any more, because a shared jar has no "mine". I recommend that; it's in Still open for you to confirm.</p><a href="#coins">The jar →</a></div>
       <div class="box"><h3>All the world's holidays?</h3><p>49 days from 11 traditions: worldwide, Christian (Western and Orthodox), Muslim, Jewish, Hindu, Sikh, Buddhist, East Asian, Persian, Turkish and national days. Most are worked out with the calendars built into iOS. The rest come from India's official holiday list and Drik Panchang, checked one by one. Each house picks its own days, starting from suggestions for its country, and seasons flip south of the equator.</p><a href="#seasons">Every calendar →</a></div>
       <div class="box"><h3>An MVP to try on the phone?</h3><p>Build and run from Xcode and it's at the top of Today. It only shows on development builds, so TestFlight and App Store builds don't see it. Nothing is sent to the server yet. A Lab lets you grow it, make it thirsty and pretend it's Halloween.</p><a href="#mvp">What's in it →</a></div>
-    </div>
-    <details class="earlier"><summary>Answers from earlier rounds (some since replaced: one house jar and one currency, code instead of an illustrator and Rive)</summary>
-    <div class="faq">
       <div class="box"><h3>"Thirsty and happy are barely different"</h3><p>Fixed in version 4: six things change at once, from posture to the soil, plus a water-drop bubble.</p><a href="#moods">The moods →</a></div>
       <div class="box"><h3>"I can't see the demo duck"</h3><p>It's in the live demo (switch to Duckling), in the menu bar, and on its own page.</p><a href="duck.html">The duck page →</a></div>
       <div class="box"><h3>Does buying a pack delay the finale?</h3><p>With the old rule, yes: bought pets joined "everything" and pushed the crown further away. Fixed. The finale now counts only what anyone can get without paying. Paid items sit on their own "Specials" shelf with a small moment of their own when a pack is fully grown.</p><a href="#finale">The finale →</a></div>
@@ -440,7 +521,7 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
     <div class="controls">
       <span class="eyebrow">Try it</span>
       <h2>It reacts when anyone does anything</h2>
-      <p class="muted">Drawn from nothing but code and seeded by the household's id, so no two households have the same tree. It sways, follows the real clock from sun to moon and fireflies, and shows how the house has been. Switch to the duckling to see a pet.</p>
+      <p class="muted">Drawn from nothing but code and seeded by the household's id, so no two households have the same tree. (This demo still draws the earlier tree. The app now draws the gouache one: see <a href="#art">the art</a>.) It sways, follows the real clock from sun to moon and fireflies, and shows how the house has been. Switch to the duckling to see a pet.</p>
       <span class="ctl-label">Companion</span>
       <div class="seg2" id="demoKind" role="group" aria-label="Companion"><button data-k="plant" aria-pressed="true">🌳 Plant</button><button data-k="duck" aria-pressed="false">🐤 Duckling</button></div>
       <span class="ctl-label">How has the house been?</span>
@@ -465,34 +546,73 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
       <p class="muted">Build and run from Xcode and Nestie is there, under the sentence. It's only in development builds while it's an MVP: TestFlight and App Store builds have the code but never show it. Nothing goes to the server. It grows from the chores your household finishes, which every phone already receives with who and when, and keeps everything else on the phone, one file per home.</p>
     </div>
     <div class="appshots">
-      <figure><img src="img/app_card.png" alt="The companion card on Today: a thirsty magnolia with fairy lights and bunting, a Water button, the house jar"><figcaption><strong>On Today</strong>The scene, its stage and mood, the house jar, and Decorate, Album, Holidays, Lab.</figcaption></figure>
-      <figure><img src="img/app_decorate.png" alt="Decorate: the scene with glowing spots and a tray of floor items"><figcaption><strong>Decorate</strong>Eight spots and a tray of what fits, with a preview before buying.</figcaption></figure>
-      <figure><img src="img/app_ceremony.png" alt="The graduation ceremony: a polaroid of the grown tree, All grown up, plus 100 Leaves"><figcaption><strong>Graduation</strong>A polaroid for the album and Leaves for the jar.</figcaption></figure>
+      <figure><img src="img/app_card.png" alt="The companion card on Today: an azalea in bloom hung with fairy lights, baubles and a star, bunting overhead, a Water button"><figcaption><strong>On Today</strong>The scene, its stage and mood, the house jar, and Decorate, Album, Holidays, Lab.</figcaption></figure>
+      <figure><img src="img/app_decorate.png" alt="Decorate: the scene with glowing spots and a tray of floor items"><figcaption><strong>Decorate</strong>Eight spots and a tray of what fits, with a preview before buying. (Shown with the earlier tree.)</figcaption></figure>
+      <figure><img src="img/app_ceremony.png" alt="The graduation ceremony: a polaroid of the grown tree, All grown up, plus 100 Leaves"><figcaption><strong>Graduation</strong>A polaroid for the album, and Leaves and Sparkles for the jar. (Shown with the earlier tree.)</figcaption></figure>
     </div>
-    <figure class="filmstrip"><img src="img/app_sheets.png" alt="Three sheets: choosing the next one, the album, and the house's holidays"><figcaption>Choosing the next one, the album, and the house's holidays.</figcaption></figure>
+    <figure class="filmstrip"><img src="img/app_sheets.png" alt="Two sheets: choosing the next one, with a gouache portrait of each tree, and the house's holidays"><figcaption>Choosing the next one, and the house's holidays.</figcaption></figure>
     <div class="grid2">
       <div class="box"><h3>What's in it</h3><ul>
-        <li>Six trees grown from the house's id, and the duckling, all drawn in code.</li>
+        <li>Six gouache trees grown from the house's id, and the duckling, all drawn in code.</li>
         <li>Growth from every chore anyone finishes, capped per day, about two weeks for a busy house; care once a day.</li>
-        <li>Four moods, the wake-up, stage pops, chores flying in as drops, hearts on a tap.</li>
+        <li>Four moods, the wake-up, stage pops, chores flying in as drops, hearts on a tap, a leaf letting go when it's thirsty.</li>
         <li>Graduation ceremony, the album, choosing the next one.</li>
-        <li>The house jar: Leaves for stages and graduations, spent on decorations.</li>
+        <li>The house jar with two currencies, one price per thing, and a welcome gift of both.</li>
         <li>Decorate with eight spots and 40 decorations; holiday things free while the day lasts.</li>
         <li>49 holidays, chosen per house, with suggestions for its country.</li>
         <li>A compact one-line version when something on Today needs someone.</li>
-        <li>Every string in English and Turkish.</li>
+        <li>Every string in English and Turkish, every label on one line.</li>
+        <li>Smooth: 60 frames a second on Today, still or scrolling, measured.</li>
       </ul></div>
       <div class="box"><h3>Not yet</h3><ul>
         <li><b>Shared state.</b> Growth from chores is the same on every phone; care, the jar, the scene and the album are this phone's until the server version.</li>
-        <li><b>Buying with money.</b> The jar only fills from growing for now.</li>
+        <li><b>Buying with money.</b> Sparkles only come from the welcome gift, stages and graduations for now.</li>
+        <li><b>Measured on a phone.</b> The smoothness numbers are from the simulator.</li>
         <li>Voting on the next one, notifications, more pets and plants.</li>
       </ul>
       <h3 style="margin-top:6px">Try it</h3><ul>
         <li>Run from Xcode on a phone or the simulator; it's on Today.</li>
-        <li><b>Lab</b> (on the card): grow it, make it thirsty or doze, pretend it's any holiday, add Leaves, start over.</li>
-        <li>From the command line, for screenshots: <code>simctl launch … -companionDemo care</code> (or decorate, celebrate, dress, album, holidays).</li>
+        <li><b>− / +</b> under the tree: points off and on, four at a time, to watch the stages change.</li>
+        <li><b>Lab</b> (on the card): grow it, make it thirsty or doze, pretend it's any holiday, add Leaves and Sparkles, start over.</li>
+        <li>From the command line, for screenshots: <code>simctl launch … -companionDemo care</code> (or decorate, celebrate, dress, album, holidays, pick, grow).</li>
+        <li>For smoothness: <code>-frameMeter 1</code> logs every late frame; <code>-todayScroll 1</code> scrolls Today on its own.</li>
       </ul></div>
     </div>
+  </section>
+
+  <section class="wide" id="shop">
+    <div class="col">
+      <span class="eyebrow">In the app · version 9</span>
+      <h2>The shop, on the app's own design</h2>
+      <p class="muted">v8's shop was a solid plum room with drawn coins and lipped buttons, and you said it looked like it came out of a game. Now it's an ordinary NestZone screen that happens to sell things, and the pressed-in feel you liked stays on the one button that spends. These are from the simulator at night, so the windows are at dusk; by day they're lit.</p>
+    </div>
+    <div class="phoneshots">
+      <figure><img src="img/v9_shop.jpg" alt="The shop: a close button, Shop, For the whole house, the jar with 150 Leaves and 180 Sparkles, a Decor Plants Pets switch, and decorations in glass cards"><figcaption><strong>The shop</strong>Three shelves as pages, each with its own scroll. It can't be swiped away by accident.</figcaption></figure>
+      <figure><img src="img/v9_shop_tr.jpg" alt="The same shop in Turkish"><figcaption><strong>In Turkish</strong>Every label on one line.</figcaption></figure>
+      <figure><img src="img/v9_card_makeup.jpg" alt="The purchase card: 190 Leaves short for the kilim, 60 from the jar and 190 Sparkles making up the rest, Pay and Save up instead"><figcaption><strong>Making up Leaves</strong>All the Leaves in the jar, the rest in Sparkles, one for one.</figcaption></figure>
+      <figure><img src="img/v9_card_short.jpg" alt="The purchase card: not enough in the jar, 190 Sparkles short, See Sparkle packs"><figcaption><strong>Not enough</strong>The sum done for you, and a way to the store.</figcaption></figure>
+      <figure><img src="img/v9_card_light.jpg" alt="The make-up card in light mode"><figcaption><strong>Light mode</strong>The card is glass, snapped to the bottom edge.</figcaption></figure>
+      <figure><img src="img/v9_store.jpg" alt="Add Sparkles: 180 in the house jar, four packs with Free test buttons, Best value on 5,000"><figcaption><strong>Add Sparkles</strong>Full screen, the counter pinned so every refill is seen. One "Best value".</figcaption></figure>
+    </div>
+    <div class="grid2">
+      <div class="box"><h3>How it's built</h3><ul>
+        <li>Glass cards on the app's backdrop, the theme's accent and the app's type. Money is <code>leaf.fill</code> and <code>sparkle</code>, coloured on the glyph only (<code>Amount</code>).</li>
+        <li>The only button that spends Leaves, Sparkles or real money is pressed in (<code>.depth</code>); everything else is the app's usual buttons.</li>
+        <li>The window each thing stands in is the companion's sky at that hour (<code>ShopStage</code>).</li>
+        <li>The purchase card runs on past the home indicator: no strip of screen under it.</li>
+        <li>Shelves are pages, so switching never flashes empty or lands past a short shelf's end.</li>
+      </ul></div>
+      <div class="box"><h3>Motion, everywhere</h3><ul>
+        <li>One tap, one reaction: Water's drops stack like the sparkles do, instead of restarting.</li>
+        <li>Coins fly from the jar to the thing; a pack's sparkles land in the pinned counter, every time.</li>
+        <li>Segment switches replay their entrances, and the underline stretches as it slides.</li>
+        <li>Money and charts settle without bouncing; the budget ring counts up with its sweep.</li>
+        <li>Settling up: the balance shrinks away, a seal stamps in and draws its check, the haptics build to a success.</li>
+        <li>Every tap is felt once, and every motion has a Reduce Motion version. The rules are in CLAUDE.md.</li>
+      </ul></div>
+    </div>
+    <figure class="filmstrip"><img src="img/v9_segment_switch.jpg" alt="Twenty frames of a switch from Shopping to Notes: the underline stretches and slides, the list fades out and a sticky note rises in"><figcaption>A segment switch, frame by frame (Lists, Shopping → Notes): the underline draws out and travels, the old screen fades, the note rises in. This switch was warm; the first one to a module hitches, which is the <a href="#next">next job</a>.</figcaption></figure>
+    <p class="muted" style="font-size:14px">The v8 prototype, and how each of its six decisions was answered: <a href="shop.html#decisions">shop.html</a>.</p>
   </section>
 
   <section class="wide">
@@ -667,10 +787,10 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
       <p class="muted">Mood used to be a shade of green, and that's not enough at the size of a card. Now each mood changes six things at once, so it reads in a glance. Progress still only goes up and it never dies: quiet days make it thirsty, not sick, and one care from anyone brings it back in about a second and a half, with a stretch. Holiday mode lets anyone send it to stay "with the neighbours" for up to 30 days.</p>
     </div>
     <div class="moods">
-      <div class="mood"><img src="img/mood_bright.jpg" alt="A deep green plant, branches lifted, flowers wide open, a warm glow and butterflies"><div><b>Bright</b><span class="tr">Neşeli</span><span class="muted">A together day in the last two days, or a lot done today.</span><ul><li>Lifted, glossy, wide open</li><li>Warm glow, glints, butterflies</li></ul></div></div>
-      <div class="mood"><img src="img/mood_content.jpg" alt="A healthy green plant in bloom"><div><b>Content</b><span class="tr">Keyifli</span><span class="muted">Somebody cared or something happened in the last two days.</span><ul><li>Green and relaxed</li><li>Nothing to ask for</li></ul></div></div>
-      <div class="mood"><img src="img/mood_thirsty.jpg" alt="A wilting plant: leaves hanging and yellowing, flowers closed to buds, leaves on the soil, a water-drop bubble"><div><b>Thirsty</b><span class="tr">Susamış</span><span class="muted">Three to six quiet days.</span><ul><li>Leaves hang, fade and fall</li><li>Flowers close; soil cracks</li><li>A cloud over the sun, a drop bubble</li></ul></div></div>
-      <div class="mood"><img src="img/mood_dozing.jpg" alt="A pale plant asleep under a glass dome"><div><b>Dozing</b><span class="tr">Uykuda</span><span class="muted">A week or more of quiet.</span><ul><li>Under a glass dome, kept safe</li><li>Buds only; "z z" drifting up</li><li>Never dies, never goes back</li></ul></div></div>
+      <div class="mood"><img src="img/mood_bright.jpg" alt="A gouache magnolia, deep green, lifted, cups wide open, a warm glow behind the crown"><div><b>Bright</b><span class="tr">Neşeli</span><span class="muted">A together day in the last two days, or a lot done today.</span><ul><li>Lifted, glossy, wide open</li><li>Warm glow, glints, butterflies</li></ul></div></div>
+      <div class="mood"><img src="img/mood_content.jpg" alt="The same magnolia, calmer and cooler, in bloom"><div><b>Content</b><span class="tr">Keyifli</span><span class="muted">Somebody cared or something happened in the last two days.</span><ul><li>Green and relaxed</li><li>Nothing to ask for</li></ul></div></div>
+      <div class="mood"><img src="img/mood_thirsty.jpg" alt="The magnolia thirsty: olive, its clumps hanging and smaller, flowers closed to buds, leaves on the soil"><div><b>Thirsty</b><span class="tr">Susamış</span><span class="muted">Three to six quiet days.</span><ul><li>Leaves hang, fade and fall</li><li>Flowers close; soil cracks</li><li>A cloud over the sun, a drop bubble, a leaf falling now and then (in the app)</li></ul></div></div>
+      <div class="mood"><img src="img/mood_dozing.jpg" alt="The magnolia dozing: pale straw, drooping, sparse but still one tree"><div><b>Dozing</b><span class="tr">Uykuda</span><span class="muted">A week or more of quiet.</span><ul><li>Pale straw, drooping, still one tree</li><li>Under a glass dome with "z z" drifting up (in the app)</li><li>Never dies, never goes back</li></ul></div></div>
     </div>
     <div class="tablewrap">
       <table class="min860">
@@ -706,7 +826,7 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
       <h2>When somebody comes back, it wakes up, and you see it happen</h2>
       <p class="muted">Every change of state gets its own short transition, so the companion never just switches from one picture to another. After quiet days, one chore or one care wakes it all the way, not a notch, because coming back should feel like a welcome. These frames are from the app.</p>
     </div>
-    <figure class="filmstrip"><img src="img/app_wake_plant.jpg" alt="Four frames of a thirsty magnolia being watered: drops and a splash ring, sparkles bursting, green and upright, calm"><figcaption><b>A thirsty magnolia, watered.</b> Drops fall and a ring spreads in the soil; sparkles burst as it straightens; the leaves green and lift past where they rest, the buds open and the fallen leaves go; then calm. About two seconds.</figcaption></figure>
+    <figure class="filmstrip"><img src="img/app_wake_plant.jpg" alt="Four frames of a dozing azalea being cared for: straw-pale under a glass dome, then the dome gone and a splash ring in the soil, sparkles, green and in bloom"><figcaption><b>A dozing azalea, cared for.</b> The glass dome lifts off and a ring spreads in the soil; sparkles burst as it straightens; the canopy greens and fills out past where it rests and the flowers open; then calm. About two seconds.</figcaption></figure>
     <figure class="filmstrip"><img src="img/app_wake_duck.jpg" alt="Four frames of the duckling waking: nightcap flying off, sparkles, bright yellow, standing"><figcaption><b>The duckling, after a week away.</b> Its eyes flutter open, the nightcap flies off, the yellow floods back, a long stretch and a shake.</figcaption></figure>
     <div class="tablewrap">
       <table class="min640">
@@ -924,7 +1044,7 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
     <div class="col">
       <span class="eyebrow" id="coins">The house jar · Kumbara</span>
       <h2>One jar, two currencies, one price per thing</h2>
-      <p class="muted">Every house has a jar, like the one on the kitchen shelf. It holds <b>Leaves</b>, which only progress gives — growing, new stages, graduations — and are never sold, and <b>Sparkles</b>, which are what people buy, with a few earned along the way like a merge game's level-up. Everybody in the house spends from it. Every thing in the shop has <b>one price in one currency</b>: never "100 Leaves or 5 Sparkles" for the same thing, because a second way to pay for what progress already earns is paying to skip the progress.</p>
+      <p class="muted">Every house has a jar, like the one on the kitchen shelf. It holds <b>Leaves</b>, which only progress gives — growing, new stages, graduations — and are never sold, and <b>Sparkles</b>, which are what people buy, with a few earned along the way like a merge game's level-up. Everybody in the house spends from it. Every thing in the shop has <b>one price in one currency</b>: never "100 Leaves or 5 Sparkles" for the same thing, because a second way to pay for what progress already earns is paying to skip the progress. A house <b>short of Leaves</b> can make up the rest with its own Sparkles, <b>one for one</b>: the same price, paid partly in the other coin, never a cheaper one. Sparkles are never made up with Leaves. Nothing is bought without a last look at what it costs and what's left; not enough even so, and the question offers the Sparkles store, then comes back to the thing once there's enough.</p>
     </div>
     <ol class="story">
       <li>Ece and Mert choose their first companion. A <b>welcome gift</b> lands in the jar with a little celebration: 🍃 150 and ✨ 180.</li>
@@ -1109,43 +1229,46 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
     <div class="col">
       <span class="eyebrow">Art and motion · all in code</span>
       <h2>No illustrator, no Rive, no bill: everything is drawn in code</h2>
-      <p class="muted">You asked me to be the illustrator, the animator and the motion designer. That works because nothing here is a picture. The trees grow from a seed out of a handful of parts, the duckling is five shapes, every decoration is a few dozen lines of drawing, and every movement is a formula. It costs nothing to license, adds nothing to the download, and can change in a day.</p>
+      <p class="muted">You asked me to be the illustrator, the animator and the motion designer, and to make the trees premium. Two directions were drawn in code and put side by side; you chose <b>layered gouache</b>: more detailed, more realistic, more painterly. Nothing is a picture. The trees grow from the household's id, the duckling is a handful of shapes, every decoration is a few dozen lines of drawing, and every movement is a formula. It costs nothing to license, adds nothing to the download, and can change in a day.</p>
     </div>
     <div class="kitfig" id="kit">
-      <div class="eq"><img src="img/kit.jpg" alt="The parts of the plant laid out: a leaf, the same leaf thirsty, a fallen leaf, a flower, a bud, a branch and a pot"><span aria-hidden="true">→</span><img src="img/mood_bright.jpg" alt="The finished tree built from those parts"></div>
-      <div class="box"><h3>What a "parts kit" is</h3>
-        <p>Instead of finished paintings, a plant is built from pieces drawn once: a leaf, a flower, a bud, a branch, a pot. The app grows each plant from those pieces, like LEGO. The tree on the right is 490 leaves, 35 flowers and 136 branches made from the seven pieces on the left. The pieces are drawn in code too, so there's no illustrator in the loop.</p>
+      <img src="../art/gouache/renders/01-species-day.jpg" alt="The six gouache trees in bloom: magnolia with pink cups, a cherry in blossom, a pomegranate with fruit, an azalea dome, a lemon tree with lemons, and a silvery olive">
+      <div class="box"><h3>How a gouache tree is built</h3>
+        <p>Leaf-shaped lobes are laid in clumps, like cut paper, on three depth tiers: cool and dark at the back, warm and lit in front, with the light always from the upper left. Each clump has a shadow shape, a lit copy with a sun gradient, a sunny patch and a few leaf cut-outs. The front clumps cast shadows on the ones behind and on the branches, a rim light picks out the back at night, and every flower has its own gradient and stamens.</p>
         <ul>
-          <li><b>Far less to make.</b> 25 plants × 7 stages × 3 colours × 4 moods would be 2,100 paintings; this is a few hundred lines.</li>
-          <li><b>It can move.</b> Each leaf sways on its own, hangs when thirsty and falls; flowers close to buds and reopen.</li>
-          <li><b>Every house's plant is its own,</b> grown from the household's id.</li>
+          <li><b>Every house's tree is its own,</b> grown from the household's id. The app's tree matches its prototype number for number.</li>
+          <li><b>Moods are a smooth scale, not four pictures.</b> Bright lifts and warms it; thirsty turns it olive and hangs its clumps; dozing goes pale straw but stays one tree.</li>
+          <li><b>Far less to make.</b> 25 plants × 7 stages × 3 colours × 4 moods would be 2,100 paintings; this is a few hundred lines per species.</li>
         </ul>
+        <p class="muted" style="margin:6px 0 0">Both directions side by side: <a href="../art/compare.html">compare.html</a>. The gouache tree live, with sliders: <a href="../art/gouache/tree.html">tree.html</a>.</p>
       </div>
     </div>
     <div class="tablewrap">
       <table class="min640">
         <thead><tr><th>Piece</th><th>How it's made</th><th>Status</th></tr></thead>
         <tbody>
-          <tr><td><b>Trees</b> (6 species, any number of seeds)</td><td>Grown by rules from a seed: branching, leaves, flowers, fruit</td><td>In the app</td></tr>
+          <tr><td><b>Trees</b> (6 species, any number of seeds)</td><td>Layered gouache grown from a seed: branching, clumps on three tiers, flowers, fruit</td><td>In the app</td></tr>
           <tr><td><b>Duckling</b></td><td>Five shapes moved by code: 7 stages, 4 moods, hop, wiggle, wake-up</td><td>In the app</td></tr>
-          <tr><td><b>Decorations</b></td><td>40 drawings, with night glow, flicker, sway and falling weather</td><td>In the app</td></tr>
-          <tr><td><b>Moods and motion</b></td><td>Sway, droop, revive, stage pop, drops, hearts, petals, fireworks</td><td>In the app</td></tr>
+          <tr><td><b>Decorations</b></td><td>40 drawings, with night glow, twinkle, sway and falling weather, hung where the canopy's clumps are</td><td>In the app</td></tr>
+          <tr><td><b>Moods and motion</b></td><td>Wind, droop, revive, stage pop, drops, hearts, a leaf falling, petals, fireworks</td><td>In the app</td></tr>
           <tr><td><b>More pets</b> (kitten, hedgehog, bunny…)</td><td>A few body plans (round, four-legged, bird, fish), each dressed per species</td><td>Next</td></tr>
-          <tr><td><b>More plants</b> (sunflower, cactus, basil…)</td><td>New growth rules on the same engine: a stalk and a head, pads, a rosette</td><td>Next</td></tr>
+          <tr><td><b>More plants</b> (sunflower, cactus, basil…)</td><td>New growth rules in the same gouache: a stalk and a head, pads, a rosette</td><td>Next</td></tr>
         </tbody>
       </table>
     </div>
     <div class="grid2">
-      <div class="box" id="team"><h3>What drawing in code can and can't do</h3><ul>
-        <li><b>Can:</b> endless variety from a seed, moods as a smooth scale instead of four pictures, animation that reacts to what happened, a tiny download, changes in a day.</li>
-        <li><b>Can't:</b> painterly texture or hand-drawn charm. The style is flat, rounded vector, which suits the glass look.</li>
-        <li><b>Harder:</b> rich character acting (a cat curling up to sleep). Pets stay simple and expressive: eyes, posture, colour and a few moves each.</li>
+      <div class="box" id="team"><h3>Smooth, and how it stays that way</h3><ul>
+        <li><b>The tree is drawn only when it changes:</b> a mood easing in, a stage growing, the light moving with the clock. Between those, the same picture is reused.</li>
+        <li><b>The wind bends that picture</b> about the root, so the pot never moves and nothing is redrawn.</li>
+        <li><b>It holds still</b> while Today scrolls and when a sheet covers it; at half height, like the Lab, it keeps playing.</li>
+        <li><b>Measured, not guessed:</b> Today holds 60 frames a second with a grown, decorated tree, at rest and while scrolling fast.</li>
+        <li><b>Tried and dropped:</b> Metal shaders for the wind and a painted grain. Every frame waited for them and Today fell to about 25 frames a second. They're kept, with notes, in <code>art/shaders</code>.</li>
       </ul></div>
       <div class="box"><h3>No paid tools</h3><ul>
-        <li>Everything is SwiftUI <code>Canvas</code> and <code>TimelineView</code>, which ship with iOS.</li>
+        <li>Everything is SwiftUI <code>Canvas</code> and <code>TimelineView</code>, which ship with iOS. No custom shaders.</li>
         <li>Rive's player is free, but making animations needs its editor and an animator; we need neither.</li>
-        <li>If there's ever a budget, the parts approach still works: an illustrator could redraw any piece and the code keeps moving it.</li>
-        <li>The prototypes in this folder are the same drawing, in a browser, for trying ideas before they go into the app.</li>
+        <li><b>What code still can't do:</b> real brush texture, and rich character acting (a cat curling up to sleep). Pets stay simple and expressive: eyes, posture, colour and a few moves each.</li>
+        <li>The prototypes in <code>plan/</code> and <code>art/</code> are the same drawing in a browser, for trying ideas before they go into the app. The live demo above still uses the earlier tree; the gouache one is <a href="../art/gouache/tree.html">tree.html</a>.</li>
       </ul></div>
     </div>
   </section>
@@ -1227,26 +1350,55 @@ seasons           events, dates, their items</pre>
     </div>
     <div class="phases">
       <div class="phase"><span class="when">Done · development builds</span><h3>The MVP</h3><ul>
-        <li>Today card, six trees and the duckling, moods and the wake-up</li>
+        <li>Today card, six gouache trees and the duckling, moods and the wake-up</li>
         <li>Graduation, album, choosing the next one</li>
-        <li>House jar from growing, Decorate with 40 decorations</li>
+        <li>House jar with Leaves and Sparkles and a welcome gift; Decorate with 40 decorations</li>
         <li>49 holidays, chosen per house</li>
+        <li>Smooth: 60 frames a second on Today, measured; every label on one line; Turkish written in Turkish</li>
       </ul></div>
-      <div class="phase"><span class="when">Next · about 1–2 weeks</span><h3>Shared by the house</h3><ul>
-        <li>Backend first, additive only: companion, growth ledger from the writes the app already sends, care, jar, scene, holidays per house</li>
+      <div class="phase"><span class="when">Done · development builds</span><h3>The shop and the whole catalog</h3><ul>
+        <li>All 39 species and 51 decorations, each had one way: free, Leaves, Sparkles, a pack, in season, with a holiday, or earned</li>
+        <li>The shop behind the jar; Choose shows what each costs or when it comes back</li>
+        <li>Every purchase asks first; Leaves made up with Sparkles; not enough goes to the store and back</li>
+        <li>The Sparkles store on a test store that charges nothing</li>
+        <li>What isn't drawn yet is sketched as its emoji, growing through the stages</li>
+      </ul></div>
+      <div class="phase"><span class="when">Done · development builds</span><h3>The shop on the app's own design, and motion across the app</h3><ul>
+        <li>The shop rebuilt as a NestZone screen; the purchase card snapped to the bottom; the store full screen</li>
+        <li>The window follows the hour; one "Best value"; the refill every time</li>
+        <li>Micro-animations across Lists, Plans, House and Messages; money settles; "All square"</li>
+        <li>Fixed: shelves, the flicker, swiping away, Water, the gap under sheets</li>
+      </ul></div>
+      <div class="phase now"><span class="when">Next · your call, 23 October</span><h3>Segments stay alive</h3><ul>
+        <li>A segment switch shows a screen that's already built, so the 100–200 ms hitch goes</li>
+        <li>The entrances still replay on every switch</li>
+        <li>Only the shown screen's buttons and search in the bar</li>
+        <li>Measured before and after, on Lists, Plans and House</li>
+      </ul></div>
+      <div class="phase"><span class="when">Then</span><h3>Measured on a phone</h3><ul>
+        <li>Today, Choose, the shop and a segment switch, with the frame meter</li>
+        <li>The new micro-animations looked at one by one</li>
+      </ul></div>
+      <div class="phase"><span class="when">Then · about 1–2 weeks</span><h3>Shared by the house</h3><ul>
+        <li>Backend first, additive only: companion, growth ledger from the writes the app already sends, care, jar and its ledger, what the house owns, scene, holidays per house</li>
+        <li><code>shop:buy</code> on the server, the same checkout (make-up included) in one write</li>
         <li>The app swaps its local file for one live read</li>
-        <li>Vote for the next one (direct pick with one person)</li>
-        <li>At most three notifications</li>
+        <li>Vote for the next one (direct pick with one person); at most three notifications</li>
       </ul></div>
       <div class="phase"><span class="when">Then · about 1 week</span><h3>The jar takes money</h3><ul>
-        <li>Top-ups as StoreKit 2 consumables, checked on the server; refunds</li>
-        <li>The shop, prices, premium species and packs</li>
-        <li>App Store Connect: products and review notes</li>
+        <li>StoreKit 2 or RevenueCat, decided then: it replaces the test store and nothing else</li>
+        <li>Top-ups verified on the server (<code>jar:topUp</code>), once per transaction; refunds from App Store notifications</li>
+        <li>App Store Connect: four consumables, prices, review notes</li>
       </ul></div>
-      <div class="phase"><span class="when">Alongside · ongoing</span><h3>More to grow</h3><ul>
-        <li>Kitten, hedgehog, bunny and friends from a few body plans</li>
-        <li>Sunflower, cactus, basil and other plants</li>
-        <li>Then: TestFlight, the changelog entry, App Review, release</li>
+      <div class="phase"><span class="when">A dedicated pass</span><h3>The art</h3><ul>
+        <li>The 32 sketched species and 10 sketched decorations drawn, plants and pets alike</li>
+        <li>Scenes as backdrops; things to wear drawn on</li>
+        <li>Measured on a phone, Today and Choose</li>
+      </ul></div>
+      <div class="phase"><span class="when">Last</span><h3>Release</h3><ul>
+        <li>The finale and its crown</li>
+        <li>Accessibility and the Turkish read through once more</li>
+        <li><code>CompanionFlag</code> on, a feature changelog entry, the version bumped, backend first; TestFlight, App Review</li>
       </ul></div>
     </div>
   </section>
@@ -1257,11 +1409,25 @@ seasons           events, dates, their items</pre>
       <h2>What's settled</h2>
     </div>
     <ul class="decided">
+      <li class="yours">Segment screens stay alive, so switching doesn't hitch, and the entrances still replay. Next.</li>
+      <li class="yours">The shop is an ordinary NestZone screen: the app's glass, accent and type, the system's symbols for money, one pressed-in button for spending. No game-shop look.</li>
+      <li class="yours">The window behind each thing follows the hour: lit by day, dusk at night.</li>
+      <li class="yours">Exactly one "Best value". The refill plays every time a pack lands, on a full-screen store.</li>
+      <li class="yours">Segment switches replay their entrances every time.</li>
+      <li class="yours">Money and charts settle without bouncing; settling up gets an "All square" stamp, not confetti.</li>
+      <li class="yours">No motion is removed, only fixed or added to: playful, like Telegram and Duolingo.</li>
+      <li class="yours">Sheets run to the bottom edge, with no strip of screen under them.</li>
       <li class="yours">Nestie, for now: one string to change later.</li>
       <li class="yours">Waking up and other transitions between states.</li>
       <li class="yours">All art and motion in code; no paid tools, no Rive, no illustrator.</li>
+      <li class="yours">The trees are layered gouache: detailed, painterly, realistic. Soft canopy is kept for reference.</li>
+      <li class="yours">Smooth before pretty: the tree is drawn only when it changes, the wind is a transform, no custom shaders.</li>
+      <li class="yours">Today never repeats what the dock above the tab bar shows.</li>
+      <li class="yours">Every label on one line, in both languages; the Turkish written the way people talk.</li>
       <li class="yours">One house jar: whatever anyone buys goes into the house.</li>
       <li class="yours">Two currencies in the jar: Leaves for progress (never sold), Sparkles for purchases (and a few earned). Every item has one price, in one currency — never "100 Leaves or 5 Sparkles".</li>
+      <li class="yours">Short of Leaves, the rest can be made up with Sparkles, one for one. Every purchase asks first. Not enough even so: off to the Sparkles store, and back to the thing.</li>
+      <li class="yours">The whole catalog in the app now, with stand-ins for what isn't drawn; the art is its own pass later.</li>
       <li class="yours">A celebrated welcome gift of both, about one and a half starter items, so the first visit to the shop buys something and leaves a little over.</li>
       <li class="yours">Holidays from every tradition, chosen per house.</li>
       <li class="yours">An MVP in the app now, on development builds only.</li>
@@ -1279,10 +1445,13 @@ seasons           events, dates, their items</pre>
     <span class="eyebrow">Still open</span>
     <h2>A few small calls</h2>
     <div class="decide">
-      <div class="q"><h3>What leaves with a person</h3><p class="rec"><b>Recommended</b>Nothing: the jar and what it bought stay with the house, like a shared kitty.</p><p class="alt">Or: unspent Leaves someone added go with them (more bookkeeping, and the jar can suddenly shrink).</p></div>
-      <div class="q"><h3>Top-up prices</h3><p class="rec"><b>Recommended</b>Four packs, for example 300 / 1,000 / 2,200 / 5,000 Leaves, priced from Apple's tiers, Turkish prices from local tiers; adjust after a month.</p><p class="alt">Or start with two packs only.</p></div>
+      <div class="q"><h3>What leaves with a person</h3><p class="rec"><b>Recommended</b>Nothing: the jar and what it bought stay with the house, like a shared kitty.</p><p class="alt">Or: unspent Sparkles someone bought go with them (more bookkeeping, and the jar can suddenly shrink).</p></div>
+      <div class="q"><h3>Top-up prices</h3><p class="rec"><b>Recommended</b>Four packs of Sparkles, for example 300 / 1,000 / 2,200 / 5,000, priced from Apple's tiers, Turkish prices from local tiers; adjust after a month.</p><p class="alt">Or start with two packs only.</p></div>
       <div class="q"><h3>How decorating works</h3><p class="rec"><b>Recommended</b>Eight spots with Decorate mode and preview before buying, as in the app.</p><p class="alt">Or free placement anywhere in the scene.</p></div>
-      <div class="q"><h3>Subscriber perks</h3><p class="rec"><b>Recommended</b>A monthly 300 Leaves into the jar and one exclusive seasonal thing, decided with the rest of the subscription.</p><p class="alt">Or nothing companion-specific.</p></div>
+      <div class="q"><h3>StoreKit 2 or RevenueCat</h3><p class="rec"><b>Decide at that step</b>The app talks to one small store client either way, and the server verifies every top-up.</p><p class="alt">StoreKit 2 alone costs nothing and needs our own verification; RevenueCat does receipts, refunds and analytics for a share of revenue past its free tier.</p></div>
+      <div class="q"><h3>Making up Leaves</h3><p class="rec"><b>Built</b>One Sparkle for one Leaf: easy to say and check, and saving is never the worse deal (earned, a Sparkle comes three times slower).</p><p class="alt">Or two Leaves per Sparkle, which makes topping up cheaper. One number in the code.</p></div>
+      <div class="q"><h3>Deleting a house with a jar that isn't empty</h3><p class="rec"><b>Recommended</b>The warning names both balances, so nobody throws away Sparkles without seeing it.</p><p class="alt">Or nothing special: the jar goes with the house like everything else.</p></div>
+      <div class="q"><h3>Subscriber perks</h3><p class="rec"><b>Recommended</b>A monthly 300 Sparkles into the jar and one exclusive seasonal thing, decided with the rest of the subscription.</p><p class="alt">Or nothing companion-specific.</p></div>
     </div>
   </section>
 
@@ -1374,7 +1543,7 @@ const CAT = [
   { k:'decor', zone:'Sky', en:'Windowsill', tr:'Pencere önü', em:'🪟', get:'starter', per:'Where everyone starts.', art:'illus' },
   { k:'decor', zone:'Sky', en:'Balcony', tr:'Balkon', em:'🌇', get:'leaves', price:300, per:'City evenings.', art:'illus' },
   { k:'decor', zone:'Sky', en:'Starry rooftop', tr:'Yıldızlı çatı', em:'🌌', get:'premium', price:500, per:'The best view in town.', art:'illus' },
-  { k:'decor', zone:'Sky', en:'Dusk', tr:'Alacakaranlık', em:'🌆', get:'season', when:'Jun–Aug', per:'Long summer evenings.', art:'proto' },
+  { k:'decor', zone:'Sky', en:'Dusk', tr:'Gün batımı', em:'🌆', get:'premium', price:160, per:'Long summer evenings.', art:'proto' },
   { k:'decor', zone:'Sky', en:'Full moon night', tr:'Dolunay gecesi', em:'🌕', get:'season', price:200, when:'Halloween', per:'A big orange moon.', art:'proto' },
   { k:'decor', zone:'Sky', en:'Winter sky', tr:'Kış gökyüzü', em:'🌨️', get:'season', price:200, when:'New Year', per:'Cold, clear and blue.', art:'proto' },
   { k:'decor', zone:'Weather', en:'Snowfall', tr:'Kar yağışı', em:'❄️', get:'season', when:'New Year', per:'Earned together; snow on the rim too.', art:'proto' },
@@ -1394,10 +1563,10 @@ const CAT = [
   { k:'decor', zone:'Wearing', en:'Tiny crown', tr:'Minik taç', em:'👑', get:'reward', when:'grow them all', per:'Keepsake for the finale.', art:'illus' },
   { k:'decor', zone:'Pot', en:'Terracotta pot', tr:'Pişmiş toprak saksı', em:'🏺', get:'leaves', price:80, per:'The classic.', art:'proto' },
   { k:'decor', zone:'Pot', en:'Blue glazed pot', tr:'Mavi sırlı saksı', em:'🫙', get:'leaves', price:120, per:'Hand-painted look.', art:'proto' },
-  { k:'decor', zone:'Pot', en:'Golden pot', tr:'Altın saksı', em:'🏆', get:'premium', price:300, per:'For the proud.', art:'proto' },
-  { k:'decor', zone:'Floor', en:'Watering can', tr:'Sulama kabı', em:'🪣', get:'reward', when:'first together day', per:'Keepsake.', art:'proto' },
+  { k:'decor', zone:'Pot', en:'Golden pot', tr:'Altın saksı', em:'🏆', get:'premium', price:240, per:'For the proud.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Watering can', tr:'Sulama kabı', em:'🪣', get:'starter', per:'Every house has one.', art:'proto' },
   { k:'decor', zone:'Floor', en:'Bird feeder', tr:'Kuş yemliği', em:'🪺', get:'leaves', price:200, per:'Visitors on busy days.', art:'illus' },
-  { k:'decor', zone:'Floor', en:'Paper lantern', tr:'Kâğıt fener', em:'🏮', get:'premium', price:200, per:'Warm light after dark.', art:'proto' },
+  { k:'decor', zone:'Floor', en:'Paper lantern', tr:'Kâğıt fener', em:'🏮', get:'premium', price:120, per:'Warm light after dark.', art:'proto' },
   { k:'decor', zone:'Floor', en:'Jack-o’-lantern', tr:'Bal kabağı feneri', em:'🎃', get:'season', price:120, when:'Halloween', per:'Flickers after dark.', art:'proto' },
   { k:'decor', zone:'Floor', en:'Gift box', tr:'Hediye kutusu', em:'🎁', get:'season', price:100, when:'New Year', per:'Something for everyone.', art:'proto' },
   { k:'decor', zone:'Floor', en:'Bayram candy bowl', tr:'Bayram şekeri', em:'🍬', get:'season', when:'Ramazan Bayramı', per:'Free only, never sold.', art:'proto' },
@@ -1405,7 +1574,7 @@ const CAT = [
   { k:'decor', zone:'Rug', en:'Kilim', tr:'Kilim', em:'🧶', get:'leaves', price:250, per:'Makes the corner feel home.', art:'proto' },
 ];
 const GET = { starter: ['Free', 'keep'], leaves: ['Leaves', 'keep'], premium: ['Premium', 'gold'], pack: ['Pack', 'gold'], season: ['Seasonal', 'violet'], reward: ['Reward', 'violet'] };
-const ART = { code: 'in the app', kit: 'next · in code', rig: 'next · in code', illus: 'next · in code', proto: 'in the app' };
+const ART = { code: 'in the app', kit: 'in the app · sketch', rig: 'in the app · sketch', illus: 'in the app · sketch', proto: 'in the app' };
 const TINT = { plant: 'radial-gradient(110% 80% at 30% 0%, #234a35, #10241a)', pet: 'radial-gradient(110% 80% at 30% 0%, #4a3416, #22170a)', decor: 'radial-gradient(110% 80% at 30% 0%, #3b2a5e, #1a1030)' };
 function priceText(c) {
   if (c.get === 'starter') return 'Free';
@@ -1513,9 +1682,9 @@ const DECO = [
   { k: 'lights', z: 'tree', en: 'Fairy lights', em: '✨', own: 1 }, { k: 'ornaments', z: 'tree', en: 'Ornaments', em: '🔴', price: 150 },
   { k: 'star', z: 'tree', en: 'Tree-top star', em: '⭐', price: 120 }, { k: 'notes', z: 'tree', en: 'Wish notes', em: '📜', free: 'Free · May' },
   { k: 'glazed', z: 'pot', en: 'Blue glazed', em: '🫙', own: 1 }, { k: 'terracotta', z: 'pot', en: 'Terracotta', em: '🏺', leaves: 80 },
-  { k: 'goldpot', z: 'pot', en: 'Golden pot', em: '🏆', price: 300 },
+  { k: 'goldpot', z: 'pot', en: 'Golden pot', em: '🏆', price: 240 },
   { k: 'can', z: 'floor', en: 'Watering can', em: '🪣', own: 1 }, { k: 'pumpkin', z: 'floor', en: 'Jack-o’-lantern', em: '🎃', price: 120 },
-  { k: 'gift', z: 'floor', en: 'Gift box', em: '🎁', price: 100 }, { k: 'lantern', z: 'floor', en: 'Paper lantern', em: '🏮', price: 200 },
+  { k: 'gift', z: 'floor', en: 'Gift box', em: '🎁', price: 100 }, { k: 'lantern', z: 'floor', en: 'Paper lantern', em: '🏮', price: 120 },
   { k: 'candy', z: 'floor', en: 'Candy bowl', em: '🍬', free: 'Free · Bayram' }, { k: 'rug', z: 'ground', en: 'Kilim', em: '🧶', own: 1 },
 ];
 const SETS = {
@@ -1648,6 +1817,14 @@ syncPet();
 const petRow = document.getElementById('petRow');
 Duck.STAGES.forEach((n, i) => { const d = document.createElement('div'); d.className = 'stage'; d.innerHTML = `<svg viewBox="0 0 120 120" class="pet s${i}" aria-hidden="true">${Duck.svg(i)}</svg><b>${n}</b><span>stage ${i + 1}</span>`; petRow.appendChild(d); });
 }
+</script>
+<script>
+document.getElementById('copyPrompt').addEventListener('click', e => {
+  const button = e.currentTarget;
+  navigator.clipboard.writeText(document.getElementById('resumePrompt').textContent)
+    .then(() => { button.textContent = 'Copied'; setTimeout(() => { button.textContent = 'Copy'; }, 1600); })
+    .catch(() => {});
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,1325 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-stage="lit">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nestie shop prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Tokens — the same names and values the SwiftUI port uses (Palette).
+   ------------------------------------------------------------------ */
+:root {
+  --font: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --violet: #7C3AED; --violetDeep: #6A2BD6; --violetLip: #4C1D95;
+  --goldTop: #FFD15C; --goldBottom: #FFB21E; --goldLip: #C27803; --goldLabel: #3A2300;
+  --mint: #34D399; --mintInk: #053B24;
+  --rose: #E11D74;
+}
+:root[data-theme="dark"] {
+  --ground: #140F24; --card: #221A3A; --stroke: rgba(255,255,255,.08);
+  --ink: #FFFFFF; --inkSoft: #C4BADF; --inset: #38314F; --accentInk: #B99CFF;
+  --leafChip: #163A2A; --leafInk: #6EE7A0; --sparkleChip: #3A2E12; --sparkleInk: #FFD15C;
+  --glass: rgba(58, 48, 92, .62); --glassStroke: rgba(255,255,255,.14);
+  --scrim: rgba(6, 3, 16, .45); --page: #0B0815; --pageInk: #E9E3FA; --pageSoft: #A79FC2;
+  --duskTop: #33285A; --duskBottom: #241C3E;
+}
+:root[data-theme="light"] {
+  --ground: #F7F3FF; --card: #FFFFFF; --stroke: #E6DDF8;
+  --ink: #1B1530; --inkSoft: #5A5174; --inset: #EDE8F7; --accentInk: #6D28D9;
+  --leafChip: #E3F7EA; --leafInk: #13773D; --sparkleChip: #FFF3D1; --sparkleInk: #8A5800;
+  --glass: rgba(255,255,255,.7); --glassStroke: rgba(27,21,48,.08);
+  --scrim: rgba(27, 21, 48, .28); --page: #EEE9F8; --pageInk: #1B1530; --pageSoft: #5A5174;
+  --duskTop: #EEE6FF; --duskBottom: #FAF7FF;
+}
+/* The stage an item stands on: a lit shop window, or a dusk one. */
+:root[data-stage="lit"] { --stageTop: #F3ECFF; --stageBottom: #FFF6EC; --stageShadow: rgba(60, 30, 110, .28); }
+:root[data-stage="dusk"] { --stageTop: var(--duskTop); --stageBottom: var(--duskBottom); --stageShadow: rgba(0,0,0,.35); }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--pageInk); font-family: var(--font); }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 3px solid var(--accentInk); outline-offset: 2px; }
+
+/* ------------------------------------------------------------------
+   The bench: the phone, and the notes beside it.
+   ------------------------------------------------------------------ */
+.bench { display: flex; gap: 48px; align-items: flex-start; justify-content: center; padding: 40px 24px 80px; flex-wrap: wrap; }
+.notes { max-width: 460px; flex: 1 1 340px; }
+.notes h1 { font-size: 34px; line-height: 1.1; font-weight: 900; margin: 6px 0 10px; letter-spacing: -.01em; }
+.notes p { color: var(--pageSoft); line-height: 1.55; margin: 0 0 14px; font-size: 16px; }
+.notes h2 { font-size: 18px; font-weight: 800; margin: 28px 0 8px; }
+.notes ul { margin: 0 0 8px; padding-left: 18px; color: var(--pageSoft); line-height: 1.55; font-size: 15px; }
+.notes li { margin: 3px 0; }
+.notes b { color: var(--pageInk); }
+.controls { display: grid; gap: 12px; margin: 18px 0 6px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.row > span { font-size: 14px; color: var(--pageSoft); min-width: 92px; font-weight: 700; }
+.seg { display: inline-flex; background: color-mix(in srgb, var(--pageInk) 8%, transparent); border-radius: 999px; padding: 3px; }
+.seg button { padding: 7px 12px; border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--pageSoft); }
+.seg button[aria-pressed="true"] { background: var(--violet); color: #fff; }
+.teams { display: grid; gap: 10px; margin-top: 8px; }
+.team { border-radius: 16px; padding: 12px 14px; background: color-mix(in srgb, var(--pageInk) 5%, transparent); }
+.team b { display: block; font-size: 15px; margin-bottom: 2px; }
+.team span { font-size: 14px; color: var(--pageSoft); line-height: 1.45; }
+
+/* ------------------------------------------------------------------
+   The phone
+   ------------------------------------------------------------------ */
+.phone {
+  position: relative; width: 402px; height: 874px; border-radius: 58px; overflow: hidden; flex: none;
+  background: #120C22; box-shadow: 0 0 0 12px #1c1830, 0 0 0 13px #2c2744, 0 40px 80px rgba(0,0,0,.45);
+  color: var(--ink); font-family: var(--font);
+}
+.island { position: absolute; top: 11px; left: 50%; width: 124px; height: 36px; margin-left: -62px; background: #000; border-radius: 20px; z-index: 50; }
+.status { position: absolute; top: 18px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 36px 0 44px; font-weight: 800; font-size: 16px; z-index: 49; color: #fff; pointer-events: none; }
+
+/* Today, behind everything */
+.today { position: absolute; inset: 0; padding: 62px 20px 0; background: radial-gradient(120% 60% at 50% 0%, #2a1d52 0%, #120C22 60%); color: #fff; }
+.today .title { text-align: center; font-weight: 800; font-size: 17px; margin: 6px 0 18px; }
+.today .hello { color: #b9b0d6; font-weight: 700; font-size: 15px; }
+.today .big { font-size: 24px; font-weight: 900; line-height: 1.15; margin: 4px 0 16px; }
+.ccard { border-radius: 32px; overflow: hidden; background: #1d1733; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.ccard .scene { height: 228px; background: url(img/season_halloween.jpg) center 62% / cover; position: relative; }
+.ccard .meta { padding: 14px 16px 16px; display: flex; align-items: center; gap: 10px; }
+.ccard .meta .who { flex: 1; }
+.ccard .meta b { display: block; font-size: 18px; }
+.ccard .meta small { color: #b9b0d6; font-size: 14px; font-weight: 700; }
+.jar-button { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); font-weight: 900; font-size: 17px; color: #fff; }
+.jar-button .pair { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+
+/* Sheets */
+.sheet { position: absolute; left: 0; right: 0; top: 54px; bottom: 0; background: var(--ground); border-radius: 38px 38px 0 0; overflow: hidden; z-index: 10; }
+.sheet[hidden], .store[hidden], .card-layer[hidden] { display: none; }
+.grabber { position: absolute; top: 7px; left: 50%; width: 38px; height: 5px; margin-left: -19px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 25%, transparent); z-index: 5; }
+.scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 40px; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* The bar: a close button, and the jar as one capsule — the only glass up here. */
+.bar { position: sticky; top: 0; z-index: 4; display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 6px; }
+.round { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--glass); box-shadow: inset 0 0 0 1px var(--glassStroke); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.round svg { width: 18px; height: 18px; }
+.jar { display: inline-flex; align-items: center; gap: 12px; height: 44px; padding: 0 6px 0 14px; border-radius: 999px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--glassStroke); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); font-weight: 900; font-size: 17px; }
+.jar .pair { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.plus { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(var(--goldTop), var(--goldBottom)); display: grid; place-items: center; color: var(--goldLabel); }
+.plus svg { width: 14px; height: 14px; }
+
+.head { padding: 6px 20px 14px; }
+.head h2 { font-size: 30px; font-weight: 900; margin: 0; letter-spacing: -.01em; }
+.head p { margin: 4px 0 0; color: var(--inkSoft); font-size: 15px; font-weight: 600; }
+
+/* Shelf switcher: a solid thumb that slides; the content swaps at once. */
+.switch { position: sticky; top: 68px; z-index: 3; margin: 0 16px 18px; height: 48px; border-radius: 999px; padding: 4px; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glassStroke); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.switch button { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 15px; color: var(--inkSoft); border-radius: 999px; }
+.switch button[aria-selected="true"] { color: #fff; }
+.switch button svg { width: 16px; height: 16px; }
+.thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); border-radius: 999px; background: linear-gradient(var(--violet), var(--violetDeep)); }
+
+/* Shelves */
+.shelf { margin: 0 0 22px; }
+.shelf h3 { margin: 0 20px 10px; font-size: 18px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
+.shelf h3 small { font-size: 15px; color: var(--inkSoft); font-weight: 700; }
+.lane { display: flex; gap: 12px; overflow-x: auto; padding: 0 20px 4px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.lane::-webkit-scrollbar { display: none; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; }
+
+.item { position: relative; text-align: left; border-radius: 24px; background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); padding: 6px 6px 12px; scroll-snap-align: start; display: flex; flex-direction: column; }
+.lane .item { flex: none; width: 140px; }
+.stage { position: relative; border-radius: 18px; height: 112px; background: linear-gradient(var(--stageTop), var(--stageBottom)); overflow: hidden; display: grid; place-items: center; }
+.grid .stage { height: 150px; }
+.stage::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 14px; height: 10px; border-radius: 50%; background: var(--stageShadow); filter: blur(5px); }
+.art { position: relative; z-index: 1; font-size: 52px; line-height: 1; transform-origin: 50% 100%; margin-bottom: 8px; }
+.grid .art { font-size: 64px; }
+.art.img { width: 100%; height: 100%; margin: 0; }
+.art.img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%; display: block; }
+.item .name { margin: 10px 8px 6px; font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .foot { margin: 0 8px; display: flex; align-items: center; gap: 6px; min-height: 28px; }
+.stat { color: var(--inkSoft); font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.stat svg { width: 15px; height: 15px; flex: none; }
+.stat span { overflow: hidden; text-overflow: ellipsis; }
+.locked .stage > .art { filter: saturate(0); opacity: .45; }
+.badge { position: absolute; top: 8px; right: 8px; z-index: 2; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; }
+.badge.have { background: var(--mint); color: var(--mintInk); }
+.badge.lock { background: rgba(20,15,36,.7); color: #fff; }
+.badge svg { width: 14px; height: 14px; }
+.ribbon { position: absolute; top: 8px; left: 8px; z-index: 2; background: var(--rose); color: #fff; font-size: 13px; font-weight: 900; padding: 3px 9px; border-radius: 999px; }
+.item.have { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--mint) 45%, transparent); }
+
+/* Price chip: one currency, its own colours, a drawn token. */
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 28px; white-space: nowrap; padding: 0 10px 0 6px; border-radius: 999px; font-weight: 900; font-size: 15px; font-variant-numeric: tabular-nums; }
+.chip.L { background: var(--leafChip); color: var(--leafInk); }
+.chip.S { background: var(--sparkleChip); color: var(--sparkleInk); }
+.chip.free { background: var(--inset); color: var(--ink); padding: 0 11px; }
+.chip.gift { background: color-mix(in srgb, var(--mint) 20%, transparent); color: var(--mint); padding: 0 11px; }
+.chip.gift svg { flex: none; }
+:root[data-theme="light"] .chip.gift { color: #0A7A50; }
+.pack-head { display: flex; justify-content: space-between; align-items: center; margin: 0 20px 10px; }
+.pack-head h3 { margin: 0; }
+
+/* Tokens */
+.tok { display: inline-block; flex: none; }
+
+/* ------------------------------------------------------------------
+   Buttons: a face on a lip you press into.
+   ------------------------------------------------------------------ */
+.btn { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 56px; border-radius: 999px; font-weight: 900; font-size: 18px; color: #fff; background: linear-gradient(var(--violet), var(--violetDeep)); box-shadow: 0 4px 0 var(--violetLip); transform: translateY(0); transition: transform .12s cubic-bezier(.2,.8,.2,1), box-shadow .12s cubic-bezier(.2,.8,.2,1); font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+.btn:active, .btn.pressed { transform: translateY(4px); box-shadow: 0 0 0 var(--violetLip); }
+.btn.gold { background: linear-gradient(var(--goldTop), var(--goldBottom)); box-shadow: 0 4px 0 var(--goldLip); color: var(--goldLabel); }
+.btn.gold:active, .btn.gold.pressed { box-shadow: 0 0 0 var(--goldLip); }
+.btn.quiet { background: none; box-shadow: none; color: var(--accentInk); height: 48px; font-size: 17px; font-weight: 800; margin: 0; }
+.btn.quiet:active { opacity: .6; transform: none; }
+.btn .tok { filter: drop-shadow(0 0 0 #fff); }
+.btn .ring { border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,.9); display: inline-flex; }
+
+/* ------------------------------------------------------------------
+   The purchase card: floats over the shop, never a system alert.
+   ------------------------------------------------------------------ */
+.card-layer { position: absolute; inset: 0; z-index: 20; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.pcard { position: absolute; left: 8px; right: 8px; bottom: 8px; border-radius: 44px; background: var(--ground); box-shadow: 0 -1px 0 var(--glassStroke), 0 24px 60px rgba(0,0,0,.45); padding: 26px 22px 18px; }
+.pcard .pstage { width: 120px; height: 120px; margin: 0 auto 14px; border-radius: 30px; }
+.pcard .pstage .art { font-size: 66px; }
+.pcard h4 { margin: 0; text-align: center; font-size: 24px; font-weight: 900; letter-spacing: -.01em; }
+.pcard .sub { margin: 4px 0 16px; text-align: center; color: var(--inkSoft); font-size: 16px; font-weight: 700; }
+.receipt { background: var(--card); border-radius: 22px; padding: 4px 16px; margin-bottom: 18px; box-shadow: inset 0 0 0 1px var(--stroke); }
+.rrow { display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: 16px; font-weight: 700; color: var(--inkSoft); }
+.rrow + .rrow { border-top: 1px solid var(--stroke); }
+.rrow .val { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font-weight: 900; font-size: 18px; font-variant-numeric: tabular-nums; }
+.rrow .val .after { color: var(--inkSoft); font-weight: 800; }
+.split { height: 14px; border-radius: 7px; overflow: hidden; display: flex; background: var(--inset); margin: 14px 0 6px; }
+.split .l { background: linear-gradient(90deg, #6BE59A, #1E9E57); }
+.split .s { background: repeating-linear-gradient(135deg, #FFD15C 0 8px, #FFB21E 8px 16px); }
+.meter { height: 14px; border-radius: 7px; overflow: hidden; background: repeating-linear-gradient(135deg, var(--inset) 0 8px, color-mix(in srgb, var(--inset) 70%, var(--ground)) 8px 16px); margin: 14px 0 6px; }
+.meter > i { display: block; height: 100%; width: 0; border-radius: 7px; background: linear-gradient(90deg, #FFD15C, #FFB21E); }
+.caption { font-size: 14px; font-weight: 700; color: var(--inkSoft); text-align: center; margin: 2px 0 14px; }
+.note { font-size: 14px; font-weight: 700; color: var(--inkSoft); text-align: center; margin: 4px 0 0; }
+
+/* ------------------------------------------------------------------
+   The Sparkles store, pushed over the shop.
+   ------------------------------------------------------------------ */
+.store { position: absolute; inset: 0; background: var(--ground); z-index: 30; }
+.hero { text-align: center; padding: 6px 20px 16px; }
+.hero .glow { width: 150px; height: 150px; margin: 0 auto -18px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(closest-side, rgba(255, 209, 92, .32), transparent); }
+.hero .num { font-size: 52px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.hero .lbl { font-size: 16px; font-weight: 700; color: var(--inkSoft); }
+.hero .plusline { height: 22px; margin-top: 6px; font-size: 16px; font-weight: 800; color: var(--sparkleInk); opacity: 0; }
+.goal { margin: 4px 16px 16px; border-radius: 22px; background: var(--sparkleChip); color: var(--sparkleInk); padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+.goal .gart { width: 52px; height: 52px; flex: none; border-radius: 14px; display: grid; place-items: center; font-size: 30px; }
+.goal .gtxt { flex: 1; font-weight: 800; font-size: 16px; }
+.goal .meter { margin: 8px 0 0; height: 8px; }
+.packs { display: grid; gap: 12px; padding: 0 16px; }
+.pack { position: relative; display: flex; align-items: center; gap: 14px; min-height: 96px; padding: 12px 14px 12px 12px; border-radius: 26px; background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); text-align: left; transition: opacity .2s; }
+.pack .pa { width: 72px; height: 72px; border-radius: 18px; flex: none; position: relative; background: linear-gradient(#3A2A12, #241C3E); overflow: hidden; }
+:root[data-theme="light"] .pack .pa { background: linear-gradient(#FFF5D6, #FFFFFF); }
+.pack .pa .tok { position: absolute; }
+.pack .amt { flex: 1; }
+.pack .amt b { display: block; font-size: 28px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.pack .amt span { font-size: 15px; font-weight: 700; color: var(--inkSoft); }
+.pack .enough { display: inline-block; margin-top: 4px; font-size: 13px; font-weight: 900; color: var(--sparkleInk); background: var(--sparkleChip); padding: 3px 8px; border-radius: 999px; }
+.pack .price { width: auto; min-width: 96px; height: 46px; padding: 0 16px; font-size: 17px; margin: 0 0 4px; }
+.pack .err { position: absolute; left: 98px; bottom: 6px; font-size: 13px; font-weight: 800; color: #FF8FB0; }
+.storefoot { margin: 18px 24px 0; text-align: center; color: var(--inkSoft); font-size: 15px; font-weight: 600; line-height: 1.45; }
+.testpill { display: table; margin: 12px auto 0; background: var(--inset); color: var(--ink); font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 999px; }
+.spinner { width: 20px; height: 20px; border-radius: 50%; border: 3px solid rgba(58, 35, 0, .25); border-top-color: var(--goldLabel); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.fx { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
+.fx .tok { position: absolute; left: 0; top: 0; }
+
+.phone.dusk .stage { background: linear-gradient(#33285A, #241C3E); }
+:root[data-theme="light"] .phone.dusk .stage { background: linear-gradient(#E4DAFA, #F1ECFB); }
+.phone.dusk .stage::after { background: rgba(0,0,0,.35); }
+
+/* ------------------------------------------------------------------
+   Decisions
+   ------------------------------------------------------------------ */
+.decisions { max-width: 1060px; margin: 0 auto; padding: 8px 24px 96px; color: var(--pageInk); }
+.decisions > h2 { font-size: 34px; font-weight: 900; margin: 24px 0 6px; letter-spacing: -.01em; }
+.decisions > p.lead { color: var(--pageSoft); font-size: 17px; line-height: 1.55; max-width: 720px; margin: 0 0 22px; }
+.dcard { border-radius: 28px; background: color-mix(in srgb, var(--pageInk) 5%, transparent); padding: 22px 24px; margin: 0 0 18px; }
+.dcard h3 { margin: 0 0 6px; font-size: 22px; font-weight: 900; }
+.dcard > p { color: var(--pageSoft); line-height: 1.55; margin: 0 0 12px; font-size: 16px; max-width: 760px; }
+.dcard b { color: var(--pageInk); }
+.where { display: inline-block; font-size: 15px; font-weight: 800; color: var(--pageInk); background: color-mix(in srgb, var(--pageInk) 8%, transparent); border-radius: 12px; padding: 6px 12px; margin: 0 0 12px; }
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin: 6px 0 16px; }
+.shots figure { margin: 0; }
+.shots img { width: 100%; border-radius: 22px; display: block; box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
+.shots figcaption { font-size: 14px; font-weight: 800; color: var(--pageSoft); margin-top: 6px; text-align: center; }
+.sides { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 0 0 12px; }
+.side { border-radius: 16px; padding: 12px 14px; background: color-mix(in srgb, var(--pageInk) 5%, transparent); }
+.side b { display: block; font-size: 15px; margin-bottom: 3px; }
+.side span { font-size: 15px; color: var(--pageSoft); line-height: 1.45; }
+.side.mine { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--violet) 70%, transparent); }
+.rec { font-size: 16px; line-height: 1.5; margin: 0; }
+.rec::before { content: "My call: "; font-weight: 900; color: var(--accentInk); }
+.answer { margin: 14px 0 0; padding: 14px 16px; border-radius: 16px; font-size: 16px; line-height: 1.55; color: var(--pageSoft);
+  background: color-mix(in srgb, #34D399 12%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, #34D399 45%, transparent); }
+.answer + .answer { margin-top: 8px; }
+.answer strong { color: var(--pageInk); font-weight: 900; }
+.replaced { margin: 4px 0 0; padding: 12px 14px; border-radius: 16px; font-size: 15px; line-height: 1.5;
+  background: color-mix(in srgb, var(--pageInk) 7%, transparent); }
+.replaced a { color: var(--accentInk); font-weight: 800; }
+.strip { width: 100%; border-radius: 18px; display: block; margin: 6px 0 14px; }
+.demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 4px 0 14px; }
+.panel { border-radius: 20px; background: #140F24; color: #fff; padding: 14px; }
+.panel h4 { margin: 0 0 10px; font-size: 15px; font-weight: 900; color: #fff; }
+.panel .tabs2 { display: flex; gap: 6px; margin-bottom: 10px; }
+.panel .tabs2 button { flex: 1; height: 36px; border-radius: 999px; font-weight: 800; font-size: 14px; color: #C4BADF; background: #221A3A; }
+.panel .tabs2 button[aria-pressed="true"] { background: var(--violet); color: #fff; }
+.panel .rows { display: grid; gap: 8px; min-height: 236px; }
+.panel .rows i { display: block; height: 40px; border-radius: 12px; background: #221A3A; }
+.panel .rows i:nth-child(odd) { background: #2A2147; }
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.ring-wrap svg { width: 140px; height: 140px; }
+.ring-wrap .val { font-size: 15px; font-weight: 800; color: #C4BADF; font-variant-numeric: tabular-nums; }
+.replay { margin-top: 4px; height: 36px; padding: 0 16px; border-radius: 999px; font-weight: 800; font-size: 14px; background: #221A3A; color: #fff; }
+.calm { height: 120px; display: grid; place-items: center; position: relative; overflow: hidden; border-radius: 14px; background: #221A3A; }
+.calm .msg { font-size: 18px; font-weight: 900; display: inline-flex; gap: 8px; align-items: center; }
+.calm .bit { position: absolute; width: 7px; height: 11px; border-radius: 2px; top: -12px; }
+.small-list { margin: 0 0 12px; padding-left: 18px; color: var(--pageSoft); line-height: 1.55; font-size: 15px; }
+.teamgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.teamgrid .dcard { margin: 0; }
+.teamgrid ul { margin: 6px 0 0; padding-left: 18px; color: var(--pageSoft); line-height: 1.5; font-size: 15px; }
+.teamgrid li { margin: 5px 0; }
+.teamgrid li b { color: var(--pageInk); }
+
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<main class="bench">
+  <div class="phone" id="phone" aria-label="NestZone prototype">
+    <div class="island"></div>
+    <div class="status"><span>21:14</span><span>●●●</span></div>
+
+    <section class="today" aria-label="Today">
+      <div class="title" data-t="today">Today</div>
+      <div class="hello" data-t="hello">Saturday night · Hi Ece</div>
+      <div class="big" data-t="allclear">All clear. Nothing needs anybody today.</div>
+      <div class="ccard">
+        <div class="scene"></div>
+        <div class="meta">
+          <div class="who"><b data-t="azalea">Azalea</b><small data-t="azaleaSub">Tree · bright · day 9</small></div>
+          <button class="jar-button" id="cardJar" aria-label="House jar"></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet" id="shop" hidden aria-label="Shop">
+      <div class="grabber"></div>
+      <div class="scroll" id="shopScroll">
+        <div class="bar">
+          <button class="round" id="closeShop" aria-label="Close"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg></button>
+          <button class="jar" id="shopJar" aria-label="House jar — add Sparkles"></button>
+        </div>
+        <div class="head"><h2 data-t="shop">Shop</h2><p data-t="shopSub">For the whole house, from the house jar</p></div>
+        <div class="switch" role="tablist" id="switch">
+          <div class="thumb" id="thumb"></div>
+          <button role="tab" data-shelf="decor" aria-selected="true"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.6 1.2c.5-.4 1.2.2.8.8L9.3 8.6 7.4 6.7zM6.6 7.5l1.9 1.9-.6.8c-.7 1-1.6 1.6-2.7 1.8-.3 1.6-1.6 2.8-3.5 2.8-.4 0-.6-.4-.4-.7.5-.8.5-1.6.6-2.3.2-1.7 1.6-3 3.3-3.1z"/></svg><span data-t="decor">Decor</span></button>
+          <button role="tab" data-shelf="plants" aria-selected="false"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 15c-.4 0-.7-.3-.7-.7V9.6C4.4 9.4 2.2 7.2 2 4.3c0-.3.3-.6.6-.6 2.3.1 4.2 1.5 5 3.5.7-2.7 3.1-4.7 6-4.8.3 0 .6.3.5.6-.1 3.3-2.6 6-5.8 6.3v4.9c0 .4-.3.7-.7.7z"/></svg><span data-t="plants">Plants</span></button>
+          <button role="tab" data-shelf="pets" aria-selected="false"><svg viewBox="0 0 16 16" fill="currentColor"><ellipse cx="4" cy="6.2" rx="1.6" ry="2.1"/><ellipse cx="12" cy="6.2" rx="1.6" ry="2.1"/><ellipse cx="6.4" cy="3.4" rx="1.5" ry="2"/><ellipse cx="9.6" cy="3.4" rx="1.5" ry="2"/><path d="M8 7.6c2.1 0 4.3 2.6 4.3 4.6 0 1.6-1.3 2.2-2.4 2.2-.8 0-1.2-.4-1.9-.4s-1.1.4-1.9.4c-1.1 0-2.4-.6-2.4-2.2 0-2 2.2-4.6 4.3-4.6z"/></svg><span data-t="pets">Pets</span></button>
+        </div>
+        <div id="shelves"></div>
+      </div>
+
+      <section class="store" id="store" hidden aria-label="Add Sparkles">
+        <div class="scroll">
+          <div class="bar">
+            <button class="round" id="backStore" aria-label="Back"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3L5 9l6 6"/></svg></button>
+            <span></span>
+          </div>
+          <div class="hero">
+            <div class="glow" id="heroTok"></div>
+            <div class="num" id="heroNum">0</div>
+            <div class="lbl" data-t="inJar">Sparkles in the house jar</div>
+            <div class="plusline" id="plusLine"></div>
+          </div>
+          <div id="goal"></div>
+          <div class="packs" id="packs"></div>
+          <p class="storefoot" data-t="storeNote">Sparkles go in the house jar, for anyone in the house to spend. They never expire.</p>
+          <span class="testpill" data-t="testStore">Test store · nothing is charged</span>
+        </div>
+      </section>
+
+      <div class="card-layer" id="cardLayer" hidden>
+        <div class="scrim" id="scrim"></div>
+        <div class="pcard" id="pcard" role="dialog" aria-modal="true" aria-labelledby="pTitle"></div>
+      </div>
+    </section>
+
+    <div class="fx" id="fx"></div>
+  </div>
+
+  <aside class="notes">
+    <h1>The shop, from the ground up</h1>
+    <p>A prototype to try before it goes into the app: tap the jar on Nestie's card, browse, buy. Everything moves with the springs the app will use, so what you feel here is what you'll get. It's now in the app too.</p>
+    <p class="replaced"><b>Replaced in version 9.</b> This is v8, the plum game-shop look you turned down. The app's shop now uses the app's own glass, accent, type and symbols: see <a href="index.html#shop">The shop</a> in the plan. Kept for the record and for its decisions.</p>
+    <p><a href="#decisions" style="color:var(--accentInk);font-weight:800">Decisions, answered ↓</a> — what you chose on each call, and what was built.</p>
+    <div class="controls">
+      <div class="row"><span>The jar</span><div class="seg" id="presets">
+        <button data-l="150" data-s="180" aria-pressed="true">Welcome gift</button>
+        <button data-l="400" data-s="600">Plenty</button>
+        <button data-l="60" data-s="300">Short on Leaves</button>
+        <button data-l="60" data-s="0">Empty</button>
+      </div></div>
+      <div class="row"><span>Next pack</span><div class="seg" id="outcome">
+        <button data-o="ok" aria-pressed="true">Goes through</button>
+        <button data-o="ask">Ask to Buy</button>
+        <button data-o="fail">Fails</button>
+      </div></div>
+      <div class="row"><span>Stage</span><div class="seg" id="stageSeg">
+        <button data-v="lit" aria-pressed="true">Lit window</button>
+        <button data-v="dusk">Dusk</button>
+      </div></div>
+      <div class="row"><span>Language</span><div class="seg" id="langSeg">
+        <button data-v="en" aria-pressed="true">English</button>
+        <button data-v="tr">Türkçe</button>
+      </div></div>
+      <div class="row"><span>Look</span><div class="seg" id="themeSeg">
+        <button data-v="dark" aria-pressed="true">Dark</button>
+        <button data-v="light">Light</button>
+      </div></div>
+      <div class="row"><span>Motion</span><div class="seg" id="motionSeg">
+        <button data-v="full" aria-pressed="true">Full</button>
+        <button data-v="reduce">Reduce Motion</button>
+      </div></div>
+    </div>
+
+    <h2>What to try</h2>
+    <ul>
+      <li><b>The kilim</b> (Rug, 250 Leaves) with each jar: it asks first, makes up missing Leaves with Sparkles, or sends you for Sparkles and brings you back.</li>
+      <li><b>A locked thing</b> (the hedgehog, the tulip): it tells you when it comes, instead of doing nothing.</li>
+      <li><b>A pack of Sparkles</b>: watch them land in the jar. That second is on purpose: it's how you know it worked.</li>
+    </ul>
+
+  </aside>
+</main>
+
+<section class="decisions" id="decisions">
+  <h2>Decisions, answered</h2>
+  <p class="lead">Six calls from v8, all answered on 21 October, and a seventh on 23 October. Your answer and what was built are in green under each one; the teams' views stay above it for the reasoning. The screenshots on this page are v8's; the shop as built is in the plan, under <a href="index.html#shop" style="color:var(--accentInk)">The shop</a>.</p>
+
+  <article class="dcard">
+    <h3>1. The stages: lit window or dusk</h3>
+    <p>Every thing in the shop stands on a little stage. <b>Lit</b> is a shop window glowing in the evening: light stages in the plum room, and the trees drawn by day. <b>Dusk</b> is the same room with the lights down: dark stages, and the trees drawn at night. Both are built into the app; these are screenshots from the simulator.</p>
+    <span class="where">See it in the app: the Lab on Nestie's card → "Dusk stage in the shop"</span>
+    <div class="shots">
+      <figure><img src="img/app_shop_lit_decor.png" alt="Decorations on lit stages"><figcaption>Lit · decor</figcaption></figure>
+      <figure><img src="img/app_shop_dusk_decor.png" alt="Decorations on dusk stages"><figcaption>Dusk · decor</figcaption></figure>
+      <figure><img src="img/app_shop_lit_plants.png" alt="Plants drawn by day"><figcaption>Lit · plants</figcaption></figure>
+      <figure><img src="img/app_shop_dusk_plants.png" alt="Plants drawn at night"><figcaption>Dusk · plants</figcaption></figure>
+      <figure><img src="img/app_shop_lit_pets.png" alt="Pets by day"><figcaption>Lit · pets</figcaption></figure>
+      <figure><img src="img/app_shop_dusk_pets.png" alt="Pets at night"><figcaption>Dusk · pets</figcaption></figure>
+    </div>
+    <div class="sides">
+      <div class="side"><b>Art and design: dusk</b><span>One room, one light: a bright tile in a dark sheet is what makes a store look like stock art. Night trees under a moon fit the plum.</span></div>
+      <div class="side mine"><b>Lit (mine)</b><span>Things pop like a lit window at night, emoji placeholders read clearly, and the daylight trees already exist. The dark cards around them keep it calm.</span></div>
+      <div class="side"><b>Readability</b><span>Either passes: all the words sit on the dark card, not on the stage.</span></div>
+    </div>
+    <p class="answer"><strong>Your answer:</strong> follow the hour of the day, if that's cheap.</p>
+    <p class="answer"><strong>Built:</strong> it is cheap, because the scene already knows its sky. Each window is lit by day and at dusk at night (<code>ShopStage</code>), and the Lab can still hold it at dusk.</p>
+  </article>
+
+  <article class="dcard">
+    <h3>2. A "Best value" tag on a Sparkle pack</h3>
+    <p>Today no pack carries a value tag. The only tag is a fact: when you came to the store for something, the smallest pack that covers it says "Enough for Kilim".</p>
+    <div class="sides">
+      <div class="side"><b>Art and design: one tag</b><span>One "Best value" ribbon, only on the pack that is really cheapest per Sparkle, worked out from the store's prices. Honest, and it helps people choose.</span></div>
+      <div class="side mine"><b>Readability and UX: none</b><span>In a family app a value badge reads as pressure to spend more. The EU's 2025 guidance on game currencies pushes the same way.</span></div>
+      <div class="side"><b>Research: at most one, only a true number</b><span>Say "+10% vs the 300 pack", never "Most popular". Pokémon Sleep shows no badges at all.</span></div>
+    </div>
+    <p class="answer"><strong>Your answer:</strong> just one "Best value", since two of the three teams said so. And play the refill every time Sparkles are bought, on a full-screen store, so it's seen however far down you've scrolled.</p>
+    <p class="answer"><strong>Built:</strong> exactly one tag, worked out from the prices, on the pack with the lowest price per Sparkle (5,000 today). The store is full screen with its counter pinned, and every pack's sparkles land in it.</p>
+  </article>
+
+  <article class="dcard">
+    <h3>3. Switching segments replays every entrance</h3>
+    <p>Each time you switch a segment, the whole screen is rebuilt and every card fades and slides in again. On Money that's about 0.9 seconds of motion, every time. The video's second rule: what you do all day shouldn't make you wait.</p>
+    <span class="where">See it: House tab → switch Money and Problems back and forth. Also Plans → Calendar's Month / Week / Agenda.</span>
+    <div class="demo">
+      <div class="panel" data-seg="replay"><h4>Today: replays every time</h4><div class="tabs2"><button aria-pressed="true">Money</button><button>Problems</button></div><div class="rows"></div></div>
+      <div class="panel" data-seg="instant"><h4>Proposed: once, then instant</h4><div class="tabs2"><button aria-pressed="true">Money</button><button>Problems</button></div><div class="rows"></div></div>
+    </div>
+    <div class="sides">
+      <div class="side mine"><b>Motion: instant after the first time</b><span>Entrances play the first time a screen appears; after that, switching shows the content at once. Only the segment's underline moves.</span></div>
+      <div class="side"><b>Or: a quick fade</b><span>Keep a 0.15-second cross-fade, but never replay the entrances.</span></div>
+      <div class="side"><b>Or: as it is</b><span>Some people like the life it gives. It costs about a second per switch.</span></div>
+    </div>
+    <p class="answer"><strong>Your answer:</strong> play it every time; it's beautiful. "Don't animate what repeats" is for Mac-style tools and things tapped all day, not this.</p>
+    <p class="answer"><strong>Built:</strong> kept, and the underline now stretches as it slides while the chosen name gives a small bounce. A switch also hitches for 100–200 ms because the screen is rebuilt; that was there before any of this (call 7).</p>
+  </article>
+
+  <article class="dcard">
+    <h3>4. The budget ring bounces past where it should stop</h3>
+    <p>The ring is drawn with the app's celebration spring, which overshoots by about 12%. A budget at 90% sweeps to about 101% before settling back. For a moment it looks full or over, and it's money.</p>
+    <span class="where">See it: House tab → Money → a budget around 90% spent. Watch the ring as the screen opens.</span>
+    <div class="demo">
+      <div class="panel ring-wrap" data-ring="bounce"><h4>Today: overshoots</h4><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="46" fill="none" stroke="#2A2147" stroke-width="12"/><circle class="arc" cx="60" cy="60" r="46" fill="none" stroke="#FB7185" stroke-width="12" stroke-linecap="round" transform="rotate(-90 60 60)"/><line x1="60" y1="6" x2="60" y2="20" stroke="#fff" stroke-width="2"/></svg><span class="val">90% spent</span><button class="replay">Replay</button></div>
+      <div class="panel ring-wrap" data-ring="settle"><h4>Proposed: settles, no bounce</h4><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="46" fill="none" stroke="#2A2147" stroke-width="12"/><circle class="arc" cx="60" cy="60" r="46" fill="none" stroke="#FB7185" stroke-width="12" stroke-linecap="round" transform="rotate(-90 60 60)"/><line x1="60" y1="6" x2="60" y2="20" stroke="#fff" stroke-width="2"/></svg><span class="val">90% spent</span><button class="replay">Replay</button></div>
+    </div>
+    <p class="rec">No bounce on money or data: the ring settles, draws once per visit, and appears at once under Reduce Motion. The donut and the spending sparkline get the same (FinanceCharts.swift).</p>
+    <p class="answer"><strong>Your answer:</strong> settles, no bounce.</p>
+    <p class="answer"><strong>Built:</strong> the ring, the donut and the bars draw with no bounce (<code>Motion.dataDraw</code>), and the percentage counts up with the sweep.</p>
+  </article>
+
+  <article class="dcard">
+    <h3>5. Confetti when the house settles up</h3>
+    <p>When everyone becomes square, Money fires confetti, once, on that change. Is that a win worth confetti, or money moving between people?</p>
+    <span class="where">See it: House tab → Money → settle up until nobody owes anybody.</span>
+    <div class="demo">
+      <div class="panel"><h4>Today: confetti</h4><div class="calm" id="confettiDemo"><span class="msg">Everyone's square</span></div><button class="replay" id="confettiReplay">Replay</button></div>
+      <div class="panel"><h4>Proposed: calm, with a haptic</h4><div class="calm" id="calmDemo"><span class="msg"><span style="color:#34D399">✓</span> All square</span></div><button class="replay" id="calmReplay">Replay</button></div>
+    </div>
+    <div class="sides">
+      <div class="side mine"><b>Motion and UX: calm</b><span>Robinhood's confetti after a trade became a legal settlement. Confetti stays for things a house achieves: a problem fixed, a graduation.</span></div>
+      <div class="side"><b>Keep the confetti</b><span>Getting square is the house finishing something together, and it only happens once.</span></div>
+    </div>
+    <p class="rec">The calm version, but this one is genuinely yours. Both are fair.</p>
+    <p class="answer"><strong>Your answer:</strong> calm, with a haptic, but something bigger and nicer, with more micro-animation.</p>
+    <p class="answer"><strong>Built:</strong> an "All square" stamp. The balance shrinks away, a seal slams in and draws its check, a ring spreads, and the haptics build to a success. With Reduce Motion it crossfades. Confetti stays for what a house achieves.</p>
+  </article>
+
+  <article class="dcard">
+    <h3>6. The smaller motion fixes</h3>
+    <p>Not taste calls, so I'll fold these in with 3–5 unless you say otherwise:</p>
+    <ul class="small-list">
+      <li>The calendar's view switch slides up 10 points for no reason; make it a short fade.</li>
+      <li>Money's donut and sparkline draw on every visit and ignore Reduce Motion; draw once, and skip under Reduce Motion.</li>
+      <li>Confetti and the shake ignore Reduce Motion; add both.</li>
+      <li>Problem and Money screens stagger up to eight cards in (0.75 s); cap at 0.18 s.</li>
+    </ul>
+    <p>Already done in the shop: the "+10" now drops into the jar instead of floating away from it. Decorate's tray uses a calm spring with one haptic per tap, and only the spot being dressed has moving dashes.</p>
+    <p class="answer"><strong>Your answer:</strong> don't remove any motion. Fix it or improve it, and add as much playful micro-animation as possible, like Telegram or Duolingo.</p>
+    <p class="answer"><strong>Built:</strong> all four fixes, plus micro-animations across Lists, Plans, House and Messages, and every tap felt once. The rules are in CLAUDE.md under "Motion".</p>
+  </article>
+
+  <article class="dcard">
+    <h3>7. Segment switches hitch</h3>
+    <p>Each switch throws the old screen away and builds the new one: one 100–200 ms frame on the simulator, worst the first time, so the very first switch's underline jumps instead of sliding. Measured against the last commit, alternating the two builds, it was there before any of the new motion.</p>
+    <span class="where">See it: Lists, right after launch → switch to a segment you haven't opened yet.</span>
+    <img class="strip" src="img/v9_segment_switch.jpg" alt="Twenty frames of a warm switch from Shopping to Notes: the underline stretches and slides, the list fades and a sticky note rises in">
+    <div class="sides">
+      <div class="side mine"><b>Keep the screens alive</b><span>Build each segment once and hide it instead of throwing it away. The switch is instant, and the entrances get a nudge to replay.</span></div>
+      <div class="side"><b>Leave it</b><span>About a tenth of a second, mostly the first time a module is opened after launch.</span></div>
+    </div>
+    <p class="answer"><strong>Your answer:</strong> yes, keep them alive and fix the hitch.</p>
+    <p class="answer"><strong>Next:</strong> it's the next job, step 0 of "Next steps" in HANDOFF.md, with its catches written down (the bar's buttons and search, the replayed entrances).</p>
+  </article>
+
+  <h2>What each team decided in v8, and why</h2>
+  <p class="lead">The reasoning behind v8. Version 9 kept the card, the make-up picture, "See Sparkle packs", the readability rules and the research. It replaced the plum room, the drawn coins and the lipped buttons with the app's own glass, SF Symbols and one pressed-in button.</p>
+  <div class="teamgrid">
+    <div class="dcard"><h3>Art and design</h3><ul>
+      <li><b>A solid plum room, glass only on what floats</b> (the bar, the shelf switch). Text-heavy surfaces stay legible; glass on everything looked cheap.</li>
+      <li><b>Every thing on a lit stage.</b> Emoji placeholders and drawn trees get the same "on display" look, like a shop window.</li>
+      <li><b>Drawn coins: a round Leaf coin and a four-pointed Sparkle gem.</b> Emoji can't be tinted and differ between iOS versions, and ✨ turns to mush at small sizes. Two shapes never look alike, even in grey.</li>
+      <li><b>Buttons you press into.</b> Violet spends from the jar; gold is real money, so the colour says which money is at stake.</li>
+      <li><b>One violet button per screen.</b> Premium is restraint.</li>
+    </ul></div>
+    <div class="dcard"><h3>Motion</h3><ul>
+      <li><b>The shop grows out of the jar</b>, so you learn where the shop lives (the video's first rule).</li>
+      <li><b>Switching shelves is instant</b>; only the thumb slides. You do it all the time.</li>
+      <li><b>Paying sends coins from the jar into the thing</b>, which squashes as they land: money visibly goes where it's spent.</li>
+      <li><b>Sparkles take a deliberate second to land</b>, then you're taken back. Like Wise's "money arrived" moment, time added on purpose so people trust it worked.</li>
+      <li><b>No bounce on money</b>, and no shake when something's too expensive: nobody did anything wrong.</li>
+    </ul></div>
+    <div class="dcard"><h3>Readability and UX</h3><ul>
+      <li><b>Nothing under 13pt, nothing shrunk below 90%, every colour pair at 4.5:1 or better.</b> The app's violet is 2:1 on a dark sheet, so words use a lighter violet.</li>
+      <li><b>A card instead of system alerts.</b> It shows the thing, its price in its own currency, and the jar before and after, with one clear button.</li>
+      <li><b>Making up Leaves is a picture</b> (a split bar, "1 Sparkle covers 1 Leaf"), and "not enough" does the sum for you.</li>
+      <li><b>"See Sparkle packs", not "Get Sparkles"</b>, which sounded free.</li>
+      <li><b>Everything is tappable.</b> Locked things say when they come; owned ones offer "Put it out".</li>
+      <li><b>Ask to Buy has its own words:</b> "Waiting for approval".</li>
+    </ul></div>
+    <div class="dcard"><h3>Research</h3><ul>
+      <li><b>Real money goes through Apple's own sheet</b>, with nothing of ours in front of it (Apple's guidelines).</li>
+      <li><b>Earned money never gets a "+"</b>: only Sparkles can be added, as in Finch.</li>
+      <li><b>Bigger packs get bigger art</b>, not bigger promises (Supercell's pattern, minus the pressure).</li>
+      <li><b>No countdowns, decoy offers or "MEGA SALE" ribbons.</b> Holiday things show their plain last day.</li>
+      <li><b>Later:</b> EU guidance wants the real-money price near Sparkle prices. That's for the money step.</li>
+    </ul></div>
+  </div>
+</section>
+
+<script>
+{
+/* ------------------------------------------------------------------
+   Springs, the SwiftUI way: .spring(duration:bounce:) turned into a CSS
+   linear() easing and its settling time, so the prototype moves exactly
+   like the app will.
+   ------------------------------------------------------------------ */
+const springs = new Map();
+function spring(duration, bounce = 0) {
+  const key = duration + ':' + bounce;
+  if (springs.has(key)) return springs.get(key);
+  const omega = 2 * Math.PI / duration, zeta = 1 - bounce;
+  const k = omega * omega, c = 2 * zeta * omega;
+  let x = 0, v = 0, t = 0; const dt = 1 / 600, samples = [[0, 0]];
+  while (t < 3) {
+    const a = -k * (x - 1) - c * v; v += a * dt; x += v * dt; t += dt;
+    samples.push([t, x]);
+    if (t > duration * 0.6 && Math.abs(x - 1) < 0.0015 && Math.abs(v) < 0.02) break;
+  }
+  const n = 60, pts = [];
+  for (let i = 0; i <= n; i++) {
+    const tt = t * i / n;
+    const s = samples[Math.min(samples.length - 1, Math.round(tt / dt))];
+    pts.push((i === n ? 1 : s[1]).toFixed(4));
+  }
+  const out = { easing: `linear(${pts.join(', ')})`, ms: Math.round(t * 1000) };
+  springs.set(key, out);
+  return out;
+}
+let reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const Motion = {
+  press: [0.12, 0], release: [0.32, 0.4], spring: [0.34, 0.18], arrive: [0.4, 0.15],
+  card: [0.32, 0.18], travel: [0.45, 0], settle: [0.6, 0], squash: [0.3, 0.5], squashMoney: [0.3, 0.3], badge: [0.35, 0.45],
+};
+function play(el, frames, m, opts = {}) {
+  if (!el) return Promise.resolve();
+  let anim;
+  if (Array.isArray(m)) {
+    const s = spring(m[0], m[1]);
+    anim = el.animate(frames, { duration: s.ms, easing: s.easing, fill: 'both', delay: opts.delay || 0 });
+  } else {
+    anim = el.animate(frames, { duration: m.ms, easing: m.easing || 'ease-out', fill: 'both', delay: opts.delay || 0 });
+  }
+  return anim.finished.catch(() => {});
+}
+const fade = (el, from, to, ms = 180) => play(el, [{ opacity: from }, { opacity: to }], { ms, easing: 'ease-out' });
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function haptic() { /* On a phone: .sensoryFeedback. Here, nothing. */ }
+
+/* ------------------------------------------------------------------
+   Words, in both languages. Turkish is written in Turkish.
+   ------------------------------------------------------------------ */
+let lang = 'en';
+const T = {
+  en: {
+    today: 'Today', hello: 'Saturday night · Hi Ece', allclear: 'All clear. Nothing needs anybody today.', azalea: 'Azalea', azaleaSub: 'Tree · bright · day 9',
+    shop: 'Shop', shopSub: 'For the whole house, from the house jar', decor: 'Decor', plants: 'Plants', pets: 'Pets',
+    sky: 'Sky and scenes', above: 'Overhead', tree: 'On the tree', wearing: 'Wearing', pot: 'Pot', floor: 'Floor', ground: 'Rug', holidays: 'From the holidays',
+    free: 'Free', have: 'In the house', freeToday: 'Free today', freeSeason: 'Free now',
+    back: m => `Back in ${m}`, comes: h => h, album: n => `${n} in the album`, birthdays: 'On birthdays', growAll: 'Grow them all', till: d => `Till ${d}`,
+    buyQ: n => `Buy ${n}?`, price: 'Price', jarAfter: 'Jar after', buy: 'Buy', notNow: 'Not now', fromJar: 'From the house jar. Everyone here shares it.',
+    short: n => `${n} Leaves short`, fromJarAll: n => `from the jar, all of them`, makeUp: 'makes up the rest', rate: '1 Sparkle covers 1 Leaf', pay: 'Pay', saveUp: 'Save up instead',
+    notEnough: 'Not enough in the jar', of: (a, b) => `${a} of ${b}`, seePacks: 'See Sparkle packs',
+    sumL: (n, p, l, s, m) => `${n} is ${p} Leaves. The jar has ${l} Leaves and ${s} Sparkles: ${m} Sparkles short.`,
+    sumS: (n, p, s, m) => `${n} is ${p} Sparkles. The jar has ${s}: ${m} short.`,
+    hooray: "It's in the house!", nowYours: n => `${n} is yours now.`, putOut: 'Put it out', keepShopping: 'Keep shopping', growNext: 'Grow it next', done: 'Done',
+    lockedSeason: m => `Back in ${m}, free to grow while it lasts.`, lockedHoliday: h => `Comes with ${h}, free while it lasts.`,
+    lockedAlbum: n => `Unlocks when ${n} have grown up in your album.`, lockedBirthday: 'Free on any day with a birthday in the house calendar.', lockedAll: 'For growing every free plant and pet.',
+    ok: 'OK', haveIt: 'In the house — put it out in Decorate.', freeIt: 'Every house has one. Put it out in Decorate.', seasonIt: 'Free to grow while its season lasts. Pick it next time you choose.',
+    inJar: 'Sparkles in the house jar', storeNote: 'Sparkles go in the house jar, for anyone in the house to spend. They never expire.', testStore: 'Test store · nothing is charged',
+    sparkles: 'Sparkles', needs: n => [`${n} needs `, ' more'], enoughFor: n => `Enough for ${n}`, landed: n => `+${n} in the jar`, enoughNow: n => `Enough for ${n} now`,
+    waiting: 'Waiting for approval', didnt: "Didn't go through. Try again.", testPrice: ['$2.99', '$8.99', '$17.99', '$34.99'],
+    forKind: { sky: 'Changes the sky', above: 'Hangs overhead', tree: 'Goes on the tree', wearing: 'Something to wear', pot: 'A new pot', floor: 'For a corner of the floor', ground: 'Goes under the pot', plant: 'A plant to grow next', pet: 'A pet to raise next' },
+    packOf: list => list.join(', ').replace(/, ([^,]*)$/, ' and $1'),
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  },
+  tr: {
+    today: 'Bugün', hello: 'Cumartesi akşamı · Selam Ece', allclear: 'Her şey yolunda. Bugün kimseye iş yok.', azalea: 'Açelya', azaleaSub: 'Ağaç · cıvıl cıvıl · 9. gün',
+    shop: 'Dükkan', shopSub: 'Bütün ev için, evin kumbarasından', decor: 'Süsler', plants: 'Bitkiler', pets: 'Minik dostlar',
+    sky: 'Gök ve manzara', above: 'Tepe', tree: 'Ağaçta', wearing: 'Aksesuar', pot: 'Saksı', floor: 'Köşeler', ground: 'Halı', holidays: 'Özel günlerden',
+    free: 'Bedava', have: 'Evde var', freeToday: 'Bugün bedava', freeSeason: 'Şimdi bedava',
+    back: m => `${m} ayında döner`, comes: h => h, album: n => `Albümde ${n} olunca`, birthdays: 'Doğum günlerinde', growAll: 'Hepsini büyüt', till: d => `Son gün ${d}`,
+    buyQ: n => `${n} alalım mı?`, price: 'Fiyatı', jarAfter: 'Sonra kumbarada', buy: 'Al', notNow: 'Şimdi değil', fromJar: 'Evin ortak kumbarasından çıkar.',
+    short: n => `${n} Yaprak eksik`, fromJarAll: n => `kumbaradan, hepsi`, makeUp: 'kalanı tamamlar', rate: '1 Işıltı = 1 Yaprak', pay: 'Öde', saveUp: 'Biriktirelim',
+    notEnough: 'Kumbara yetmiyor', of: (a, b) => `${a} / ${b}`, seePacks: 'Işıltı paketlerine bak',
+    sumL: (n, p, l, s, m) => `${n} ${p} Yaprak. Kumbarada ${l} Yaprak ve ${s} Işıltı var: ${m} Işıltı eksik.`,
+    sumS: (n, p, s, m) => `${n} ${p} Işıltı. Kumbarada ${s} var: ${m} eksik.`,
+    hooray: 'Hayırlı olsun!', nowYours: n => `${n} artık evde.`, putOut: 'Hemen koy', keepShopping: 'Bakınmaya devam', growNext: 'Sıradaki bu olsun', done: 'Tamam',
+    lockedSeason: m => `${m} ayında döner, mevsimi boyunca bedava.`, lockedHoliday: h => `${h} gelince gelir, o günlerde bedava.`,
+    lockedAlbum: n => `Albümde ${n} tane kocaman olunca açılır.`, lockedBirthday: 'Takvimde doğum günü olan her gün bedava.', lockedAll: 'Bedava bitki ve hayvanların hepsini büyütünce.',
+    ok: 'Tamam', haveIt: 'Evde var, Süsle’den koyabilirsin.', freeIt: 'Her evde bir tane var. Süsle’den koyabilirsin.', seasonIt: 'Mevsimi boyunca bedava büyütülür. Sıradakini seçerken bunu seç.',
+    inJar: 'Kumbaradaki Işıltı', storeNote: 'Işıltılar evin kumbarasına girer, evdeki herkes harcayabilir. Süreleri de dolmaz.', testStore: 'Test dükkanı · para çekilmez',
+    sparkles: 'Işıltı', needs: n => [`${n} için `, ' daha lazım'], enoughFor: n => `${n} için yeter`, landed: n => `Kumbaraya +${n}`, enoughNow: n => `Artık ${n} için yeter`,
+    waiting: 'Onay bekleniyor', didnt: 'Olmadı, bir daha dene.', testPrice: ['₺99,99', '₺299,99', '₺599,99', '₺1.199,99'],
+    forKind: { sky: 'Gökyüzünü değiştirir', above: 'Tepeye asılır', tree: 'Ağaca takılır', wearing: 'Üstüne takılır', pot: 'Yeni bir saksı', floor: 'Bir köşeye konur', ground: 'Saksının altına serilir', plant: 'Sıradaki fidan için', pet: 'Sıradaki minik dost için' },
+    packOf: list => list.join(', ').replace(/, ([^,]*)$/, ' ve $1'),
+    months: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+  },
+};
+const t = (k, ...a) => { const v = T[lang][k]; return typeof v === 'function' ? v(...a) : v; };
+const fmt = n => n.toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US');
+
+/* ------------------------------------------------------------------
+   The catalog as it stands for a house on 25 October: Halloween is on,
+   one companion is in the album. (The app works this out; here it's set.)
+   ------------------------------------------------------------------ */
+const H = { en: { halloween: 'Halloween', newYear: 'New Year', valentines: "Valentine's", stpat: "St Patrick's", carnival: 'Carnival', earth: 'Earth Day', dotd: 'Day of the Dead', thanks: 'Thanksgiving', kwanzaa: 'Kwanzaa', easter: 'Easter', ramadan: 'Ramadan', eid: 'Ramazan Bayramı', mawlid: 'Mawlid', rosh: 'Rosh Hashanah', hanukkah: 'Hanukkah', holi: 'Holi', makar: 'Makar Sankranti', lunar: 'Lunar New Year', midautumn: 'Mid-Autumn', tanabata: 'Tanabata', nowruz: 'Nowruz' },
+            tr: { halloween: 'Cadılar Bayramı', newYear: 'Yılbaşı', valentines: 'Sevgililer Günü', stpat: 'St. Patrick', carnival: 'Karnaval', earth: 'Dünya Günü', dotd: 'Ölüler Günü', thanks: 'Şükran Günü', kwanzaa: 'Kwanzaa', easter: 'Paskalya', ramadan: 'Ramazan', eid: 'Ramazan Bayramı', mawlid: 'Mevlit Kandili', rosh: 'Roş Aşana', hanukkah: 'Hanuka', holi: 'Holi', makar: 'Makar Sankranti', lunar: 'Çin Yeni Yılı', midautumn: 'Ay Festivali', tanabata: 'Tanabata', nowruz: 'Nevruz' } };
+// s: free | have | today | buy | sale | locked ; lock: [kind, value]
+const D = [
+  // kind, id, emoji, en, tr, standing, currency, price, extra
+  ['sky', 'windowsill', '🪟', 'Windowsill', 'Pencere önü', 'free'],
+  ['sky', 'dusk', '🌆', 'Dusk', 'Gün batımı', 'buy', 'S', 160],
+  ['sky', 'balcony', '🌇', 'Balcony', 'Balkon', 'buy', 'L', 300],
+  ['sky', 'starryRooftop', '🌌', 'Starry rooftop', 'Yıldızlı çatı', 'buy', 'S', 500],
+  ['sky', 'fullMoon', '🌕', 'Full moon night', 'Dolunay gecesi', 'sale', 'S', 200],
+  ['sky', 'winterSky', '🌨️', 'Winter sky', 'Kış göğü', 'locked', null, null, ['holiday', 'newYear']],
+  ['above', 'bunting', '🎏', 'Bunting', 'Flama süsü', 'have'],
+  ['above', 'windChime', '🎐', 'Wind chime', 'Rüzgâr çanı', 'buy', 'L', 120],
+  ['above', 'bats', '🦇', 'Bats', 'Yarasalar', 'sale', 'S', 120],
+  ['tree', 'fairyLights', '✨', 'Fairy lights', 'Peri ışıkları', 'buy', 'L', 150],
+  ['tree', 'ornaments', '🔴', 'Ornaments', 'Yılbaşı topları', 'locked', null, null, ['holiday', 'newYear']],
+  ['tree', 'treeStar', '⭐️', 'Tree-top star', 'Tepe yıldızı', 'locked', null, null, ['holiday', 'newYear']],
+  ['wearing', 'bow', '🎀', 'Bow', 'Fiyonk', 'buy', 'L', 60],
+  ['wearing', 'scarf', '🧣', 'Scarf', 'Atkı', 'buy', 'L', 100],
+  ['wearing', 'partyHat', '🥳', 'Party hat', 'Parti şapkası', 'locked', null, null, ['birthday']],
+  ['wearing', 'tinyCrown', '👑', 'Tiny crown', 'Minik taç', 'locked', null, null, ['all']],
+  ['pot', 'terracotta', '🏺', 'Terracotta pot', 'Toprak saksı', 'buy', 'L', 80],
+  ['pot', 'glazedPot', '🫙', 'Blue glazed pot', 'Mavi sırlı saksı', 'buy', 'L', 120],
+  ['pot', 'goldPot', '🏆', 'Golden pot', 'Altın saksı', 'buy', 'S', 240],
+  ['floor', 'wateringCan', '🪣', 'Watering can', 'Sulama kabı', 'free'],
+  ['floor', 'pumpkin', '🎃', "Jack-o'-lantern", 'Bal kabağı feneri', 'sale', 'S', 120],
+  ['floor', 'paperLantern', '🏮', 'Paper lantern', 'Kâğıt fener', 'buy', 'S', 120],
+  ['floor', 'birdFeeder', '🪺', 'Bird feeder', 'Kuş yemliği', 'buy', 'L', 200],
+  ['floor', 'giftBox', '🎁', 'Gift box', 'Hediye kutusu', 'locked', null, null, ['holiday', 'newYear']],
+  ['floor', 'watermelon', '🍉', 'Watermelon', 'Karpuz', 'locked', null, null, ['season', 5]],
+  ['ground', 'kilim', '🧶', 'Kilim', 'Kilim', 'buy', 'L', 250],
+  ['holidays', 'spookyBunting', '🏴', 'Halloween bunting', 'Cadı flamaları', 'today'],
+  ['holidays', 'snowfall', '❄️', 'Snowfall', 'Kar yağışı', 'locked', null, null, ['holiday', 'newYear']],
+  ['holidays', 'heartGarland', '💕', 'Heart garland', 'Kalpli süs', 'locked', null, null, ['holiday', 'valentines']],
+  ['holidays', 'papelPicado', '🎊', 'Papel picado', 'Kâğıt oyma süs', 'locked', null, null, ['holiday', 'dotd']],
+  ['holidays', 'autumnLeaves', '🍂', 'Falling leaves', 'Sonbahar yaprakları', 'locked', null, null, ['holiday', 'thanks']],
+  ['holidays', 'ramadanLantern', '🏮', 'Ramadan lantern', 'Ramazan feneri', 'locked', null, null, ['holiday', 'ramadan']],
+  ['holidays', 'crescentGarland', '🌙', 'Crescent and stars', 'Hilal ve yıldızlar', 'locked', null, null, ['holiday', 'ramadan']],
+  ['holidays', 'candyBowl', '🍬', 'Candy bowl', 'Bayram şekeri', 'locked', null, null, ['holiday', 'eid']],
+  ['holidays', 'oilLamps', '🪔', 'Oil lamps', 'Kandiller', 'locked', null, null, ['holiday', 'mawlid']],
+  ['holidays', 'menorah', '🕎', 'Menorah', 'Menora', 'locked', null, null, ['holiday', 'hanukkah']],
+  ['holidays', 'colourPowder', '🎨', 'Colour powder', 'Holi boyaları', 'locked', null, null, ['holiday', 'holi']],
+  ['holidays', 'redLanterns', '🏮', 'Red lanterns', 'Kırmızı fenerler', 'locked', null, null, ['holiday', 'lunar']],
+  ['holidays', 'wishNotes', '📜', 'Wish notes', 'Dilek kâğıtları', 'locked', null, null, ['holiday', 'tanabata']],
+  ['holidays', 'sabzeh', '🌱', 'Sabzeh', 'Buğday filizi', 'locked', null, null, ['holiday', 'nowruz']],
+];
+const P = [
+  ['plants', 'magnolia', 'img:cat_magnolia', 'Magnolia', 'Manolya', 'free'],
+  ['plants', 'maple', '🍁', 'Maple', 'Akçaağaç', 'today'],
+  ['plants', 'pumpkinPlant', '🎃', 'Pumpkin', 'Balkabağı', 'today'],
+  ['plants', 'monstera', '🪴', 'Monstera', 'Deve tabanı', 'have'],
+  ['plants', 'basil', '🌿', 'Basil', 'Fesleğen', 'free'],
+  ['plants', 'sunflower', '🌻', 'Sunflower', 'Ayçiçeği', 'free'],
+  ['plants', 'cactus', '🌵', 'Cactus', 'Kaktüs', 'free'],
+  ['plants', 'daisy', '🌼', 'Daisy', 'Papatya', 'buy', 'L', 120],
+  ['plants', 'mint', '🌱', 'Mint', 'Nane', 'buy', 'L', 150],
+  ['plants', 'lavender', '🪻', 'Lavender', 'Lavanta', 'buy', 'L', 200],
+  ['plants', 'azalea', 'img:cat_azalea', 'Azalea', 'Açelya', 'have'],
+  ['plants', 'pomegranate', 'img:cat_pomegranate', 'Pomegranate', 'Nar ağacı', 'buy', 'L', 300],
+  ['plants', 'rose', '🌹', 'Rose', 'Gül', 'buy', 'S', 350],
+  ['plants', 'lemon', 'img:cat_lemon', 'Lemon tree', 'Limon ağacı', 'buy', 'S', 400],
+  ['plants', 'bonsai', '🌳', 'Bonsai', 'Bonsai', 'buy', 'S', 600],
+  ['plants', 'cherry', 'img:cat_cherry', 'Cherry blossom', 'Kiraz çiçeği', 'locked', null, null, ['season', 2]],
+  ['plants', 'tulip', '🌷', 'Tulip', 'Lale', 'locked', null, null, ['season', 2]],
+  ['plants', 'pine', '🌲', 'Pine tree', 'Çam ağacı', 'locked', null, null, ['season', 11]],
+  ['plants', 'olive', 'img:cat_olive', 'Olive tree', 'Zeytin ağacı', 'locked', null, null, ['album', 3]],
+  ['pets', 'duckling', '🐤', 'Duckling', 'Ördek yavrusu', 'free'],
+  ['pets', 'kitten', '🐱', 'Kitten', 'Yavru kedi', 'free'],
+  ['pets', 'goldfish', '🐠', 'Goldfish', 'Japon balığı', 'buy', 'L', 300],
+  ['pets', 'hamster', '🐹', 'Hamster', 'Hamster', 'buy', 'L', 350],
+  ['pets', 'turtle', '🐢', 'Turtle', 'Kaplumbağa', 'buy', 'L', 400],
+  ['pets', 'puppy', '🐶', 'Puppy', 'Yavru köpek', 'buy', 'S', 600],
+  ['pets', 'hedgehog', '🦔', 'Hedgehog', 'Kirpi', 'locked', null, null, ['album', 2]],
+  ['pets', 'bunny', '🐰', 'Bunny', 'Tavşan', 'locked', null, null, ['season', 2]],
+  ['forest', 'fox', '🦊', 'Fox', 'Tilki', 'buy', 'S', 900, 'forest'],
+  ['forest', 'owl', '🦉', 'Owl', 'Baykuş', 'buy', 'S', 900, 'forest'],
+  ['forest', 'deer', '🦌', 'Deer', 'Geyik', 'buy', 'S', 900, 'forest'],
+  ['snow', 'penguin', '🐧', 'Penguin', 'Penguen', 'buy', 'S', 900, 'snow'],
+  ['snow', 'snowFox', '🦊', 'Snow fox', 'Kar tilkisi', 'buy', 'S', 900, 'snow'],
+  ['snow', 'polarCub', '🐻‍❄️', 'Polar bear cub', 'Kutup ayısı yavrusu', 'buy', 'S', 900, 'snow'],
+];
+const PACKS = { forest: { en: 'Forest friends', tr: 'Orman dostları', price: 900 }, snow: { en: 'Snow friends', tr: 'Kar dostları', price: 900 } };
+const items = new Map();
+for (const r of [...D, ...P]) {
+  const [kind, id, art, en, tr, s, cur, price, extra] = r;
+  items.set(id, { kind, id, art, en, tr, s, cur, price, lock: s === 'locked' ? extra : null, pack: typeof extra === 'string' ? extra : null });
+}
+const name = it => it[lang];
+
+/* ------------------------------------------------------------------
+   The jar
+   ------------------------------------------------------------------ */
+const jar = { L: 150, S: 180 };
+let outcome = 'ok';
+
+/* ------------------------------------------------------------------
+   Drawn currency: the Leaf coin and the Sparkle gem.
+   ------------------------------------------------------------------ */
+let uid = 0;
+function token(kind, size, ring = false) {
+  const id = 'g' + (++uid), small = size < 16;
+  const wrap = document.createElement('span');
+  wrap.className = 'tok' + (ring ? ' ring' : '');
+  wrap.setAttribute('aria-hidden', 'true');
+  wrap.style.width = wrap.style.height = size + 'px';
+  if (kind === 'L') {
+    wrap.innerHTML = `<svg viewBox="0 0 40 40" width="${size}" height="${size}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6BE59A"/><stop offset="1" stop-color="#1E9E57"/></linearGradient></defs>
+      <circle cx="20" cy="20" r="18.6" fill="url(#${id})" stroke="#137A40" stroke-width="2.2"/>
+      <g transform="rotate(-35 20 20)"><path d="M20 5.5 C30 12 30 26 20 34 C10 26 10 12 20 5.5 Z" fill="#F6FFF9"/><path d="M20 10 V31" stroke="#1E9E57" stroke-width="${small ? 2.6 : 2}" stroke-linecap="round"/></g>
+      ${small ? '' : '<ellipse cx="13" cy="11.5" rx="6" ry="3.4" fill="#fff" fill-opacity=".4" transform="rotate(-30 13 11.5)"/>'}</svg>`;
+  } else {
+    const star = (cx, cy, r) => {
+      const k = r * 0.32;
+      return `M${cx} ${cy - r} Q${cx + k} ${cy - k} ${cx + r} ${cy} Q${cx + k} ${cy + k} ${cx} ${cy + r} Q${cx - k} ${cy + k} ${cx - r} ${cy} Q${cx - k} ${cy - k} ${cx} ${cy - r}Z`;
+    };
+    wrap.innerHTML = `<svg viewBox="0 0 40 40" width="${size}" height="${size}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE98A"/><stop offset="1" stop-color="#FFA81F"/></linearGradient></defs>
+      <path d="${star(19, 21, 17.5)}" fill="url(#${id})" stroke="#C47200" stroke-width="1.6" stroke-linejoin="round"/>
+      ${small ? '' : `<path d="${star(32, 8, 6)}" fill="#FFF6CF" stroke="#C47200" stroke-width="1"/><ellipse cx="15.5" cy="15" rx="2.6" ry="5" fill="#fff" fill-opacity=".55" transform="rotate(45 15.5 15)"/>`}</svg>`;
+  }
+  return wrap;
+}
+const icon = {
+  check: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.4l2.6 2.6L11 4.4"/></svg>',
+  lock: '<svg viewBox="0 0 14 14" fill="currentColor"><path d="M4.2 6V4.6a2.8 2.8 0 015.6 0V6h.4c.6 0 1 .4 1 1v4.6c0 .6-.4 1-1 1H3.8c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1zm1.4 0h2.8V4.6a1.4 1.4 0 00-2.8 0z"/></svg>',
+  cal: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="3" width="12" height="11" rx="2.5"/><path d="M2 7h12M5.5 1.5v3M10.5 1.5v3"/></svg>',
+  book: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5C3 1.7 3.7 1 4.5 1H13v11H4.5a1.5 1.5 0 000 3H13v-1H4.5a.5.5 0 010-1H14V0H4.5A2.5 2.5 0 002 2.5v11A2.5 2.5 0 004.5 16H14v-1"/></svg>',
+  gift: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 6h12v3H2zM3 9.5h4.2V15H4a1 1 0 01-1-1zM8.8 9.5H13V14a1 1 0 01-1 1H8.8zM7.2 6h1.6v9H7.2zM8 5.2C6.6 2.4 4 2.6 4.2 4c.1 1 1.7 1.2 3.8 1.2zm0 0c1.4-2.8 4-2.6 3.8-1.2-.1 1-1.7 1.2-3.8 1.2z"/></svg>',
+  cake: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1c.9 1 1 1.8.4 2.4-.4.4-1.2.4-1.6-.1C6.4 2.8 7 2 8 1zM7.4 4.6h1.2v2H7.4zM2.5 7h11c.8 0 1.5.7 1.5 1.5V10c-1 0-1.3.8-2.2.8S11.5 10 10.6 10s-1.3.8-2.2.8S7.1 10 6.2 10s-1.3.8-2.2.8S2.9 10 1 10V8.5C1 7.7 1.7 7 2.5 7zM1 11.3c1.6 0 2-.8 2.9-.8s1.3.8 2.3.8 1.3-.8 2.2-.8 1.3.8 2.2.8 1.3-.8 2.2-.8 1.3.8 2.2.8V15H1z"/></svg>',
+  plus: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>',
+};
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+function pair(kind, n, size = 18) { const p = el('span', 'pair'); p.append(token(kind, size)); const v = el('span', 'n'); v.textContent = fmt(n); p.append(v); return p; }
+function chip(kind, n) { const c = el('span', 'chip ' + kind); c.append(token(kind, 18)); c.append(document.createTextNode(fmt(n))); return c; }
+function artFor(it, big) {
+  if (it.art.startsWith('img:')) { const a = el('div', 'art img'); a.innerHTML = `<img alt="" src="img/${it.art.slice(4)}.jpg">`; return a; }
+  const a = el('div', 'art'); a.textContent = it.art; if (big) a.style.fontSize = big + 'px'; return a;
+}
+
+/* ------------------------------------------------------------------
+   The jar, wherever it shows: the card, the shop's bar.
+   ------------------------------------------------------------------ */
+function renderJars() {
+  for (const host of [document.getElementById('cardJar'), document.getElementById('shopJar')]) {
+    host.innerHTML = '';
+    host.append(pair('L', jar.L), pair('S', jar.S));
+    if (host.id === 'shopJar') { const p = el('span', 'plus', icon.plus); host.append(p); }
+    host.setAttribute('aria-label', lang === 'tr' ? `Kumbara: ${jar.L} Yaprak, ${jar.S} Işıltı. Işıltı ekle.` : `House jar: ${jar.L} Leaves, ${jar.S} Sparkles. Add Sparkles.`);
+  }
+}
+/* A number that rolls to its new value, the way .numericText does. */
+function roll(span, to, m = Motion.settle) {
+  if (!span) return;
+  const from = parseInt(span.dataset.v ?? span.textContent.replace(/\D/g, '')) || 0;
+  span.dataset.v = to;
+  if (reduced) { span.textContent = fmt(to); return fade(span, .4, 1, 200); }
+  const s = spring(m[0], m[1]); const start = performance.now();
+  const ease = x => { const pts = s.easing.slice(7, -1).split(', ').map(Number); const i = x * (pts.length - 1), a = Math.floor(i); return a >= pts.length - 1 ? 1 : pts[a] + (pts[a + 1] - pts[a]) * (i - a); };
+  return new Promise(res => {
+    const step = now => { const x = Math.min(1, (now - start) / s.ms); span.textContent = fmt(Math.round(from + (to - from) * ease(x))); if (x < 1) requestAnimationFrame(step); else res(); };
+    requestAnimationFrame(step);
+  });
+}
+
+/* ------------------------------------------------------------------
+   The shop's shelves
+   ------------------------------------------------------------------ */
+let shelf = 'decor';
+function statusFor(it) {
+  const f = el('div', 'foot');
+  if (it.s === 'buy') f.append(chip(it.cur, it.price));
+  else if (it.s === 'sale') f.append(chip(it.cur, it.price));
+  else if (it.s === 'free') f.append(el('span', 'chip free', t('free')));
+  else if (it.s === 'today') { const c = el('span', 'chip gift', icon.gift.replace('<svg', '<svg width="14" height="14"') + ' ' + (it.kind === 'plants' ? t('freeSeason') : t('freeToday'))); f.append(c); }
+  else if (it.s === 'have') f.append(el('span', 'stat', t('have')));
+  else if (it.s === 'locked') {
+    const [k, v] = it.lock;
+    const txt = k === 'season' ? t('back', T[lang].months[v]) : k === 'holiday' ? H[lang][v] : k === 'album' ? t('album', v) : k === 'birthday' ? t('birthdays') : t('growAll');
+    const ic = k === 'holiday' || k === 'season' ? icon.cal : k === 'album' ? icon.book : k === 'birthday' ? icon.cake : icon.lock;
+    f.append(el('span', 'stat', ic + `<span>${txt}</span>`));
+  }
+  return f;
+}
+function itemCard(it, inGrid) {
+  const b = el('button', 'item' + (it.s === 'locked' ? ' locked' : '') + (it.s === 'have' ? ' have' : ''));
+  b.dataset.id = it.id;
+  const st = el('div', 'stage'); st.append(artFor(it));
+  if (it.s === 'have') st.append(el('span', 'badge have', icon.check));
+  if (it.s === 'locked') st.append(el('span', 'badge lock', icon.lock));
+  if (it.s === 'sale') st.append(el('span', 'ribbon', t('till', lang === 'tr' ? '31 Ekim' : 'Oct 31')));
+  b.append(st);
+  const n = el('div', 'name'); n.textContent = name(it); b.append(n);
+  b.append(statusFor(it));
+  const price = it.s === 'buy' || it.s === 'sale' ? `, ${it.price} ${it.cur === 'L' ? (lang === 'tr' ? 'Yaprak' : 'Leaves') : (lang === 'tr' ? 'Işıltı' : 'Sparkles')}` : '';
+  b.setAttribute('aria-label', name(it) + price);
+  b.addEventListener('pointerdown', () => { if (!reduced) play(b, [{ transform: 'scale(1)' }, { transform: 'scale(.95)' }], Motion.press); });
+  const up = () => { play(b, [{ transform: 'scale(.95)' }, { transform: 'scale(1)' }], reduced ? [0.2, 0] : Motion.release); };
+  b.addEventListener('pointerup', up); b.addEventListener('pointerleave', up);
+  b.addEventListener('click', () => openCard(it, b));
+  return b;
+}
+function renderShelves() {
+  const host = document.getElementById('shelves'); host.innerHTML = '';
+  if (shelf === 'decor') {
+    for (const k of ['sky', 'above', 'tree', 'wearing', 'pot', 'floor', 'ground', 'holidays']) {
+      const list = D.filter(r => r[0] === k).map(r => items.get(r[1]));
+      const s = el('section', 'shelf'); const h = el('h3'); h.textContent = t(k);
+      const c = el('small'); c.textContent = list.length; h.append(c); s.append(h);
+      const lane = el('div', 'lane'); list.forEach(it => lane.append(itemCard(it, false))); s.append(lane); host.append(s);
+    }
+  } else if (shelf === 'plants') {
+    const g = el('div', 'grid'); P.filter(r => r[0] === 'plants').forEach(r => g.append(itemCard(items.get(r[1]), true)));
+    const s = el('section', 'shelf'); s.append(g); host.append(s);
+  } else {
+    const g = el('div', 'grid'); P.filter(r => r[0] === 'pets').forEach(r => g.append(itemCard(items.get(r[1]), true)));
+    const s = el('section', 'shelf'); s.append(g); host.append(s);
+    for (const pk of ['forest', 'snow']) {
+      const ps = el('section', 'shelf'); const head = el('div', 'pack-head'); const h = el('h3'); h.textContent = PACKS[pk][lang];
+      head.append(h, chip('S', PACKS[pk].price)); ps.append(head);
+      const pg = el('div', 'grid'); P.filter(r => r[0] === pk).forEach(r => pg.append(itemCard(items.get(r[1]), true))); ps.append(pg); host.append(ps);
+    }
+  }
+}
+function setShelf(next) {
+  if (next === shelf) return;
+  shelf = next;
+  const idx = ['decor', 'plants', 'pets'].indexOf(next);
+  document.querySelectorAll('#switch [role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.shelf === next));
+  const thumb = document.getElementById('thumb');
+  // Only the thumb moves; the shelf swaps at once — it's switched all the time.
+  play(thumb, [{ transform: thumb.style.transform || 'translateX(0)' }, { transform: `translateX(${idx * 100}%)` }], reduced ? { ms: 1 } : Motion.spring);
+  thumb.style.transform = `translateX(${idx * 100}%)`;
+  renderShelves();
+  const sc = document.getElementById('shopScroll'); if (sc.scrollTop > 150) sc.scrollTop = 150;
+  haptic('selection');
+}
+
+/* ------------------------------------------------------------------
+   Opening the shop: it grows out of the jar on the card.
+   ------------------------------------------------------------------ */
+function rectIn(node) {
+  const p = document.getElementById('phone').getBoundingClientRect(), r = node.getBoundingClientRect();
+  return { x: r.left - p.left, y: r.top - p.top, w: r.width, h: r.height };
+}
+async function openShop() {
+  const shop = document.getElementById('shop'); shop.hidden = false;
+  const from = rectIn(document.getElementById('cardJar')), to = rectIn(shop);
+  if (reduced) return fade(shop, 0, 1, 200);
+  const inset = `inset(${from.y - to.y}px ${to.x + to.w - from.x - from.w}px ${to.y + to.h - from.y - from.h}px ${from.x - to.x}px round 22px)`;
+  play(shop, [{ clipPath: inset }, { clipPath: 'inset(0 0 0 0 round 38px 38px 0 0)' }], [0.42, 0.12]);
+  play(shop.querySelector('.scroll'), [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'scale(1)' }], [0.42, 0.12]);
+}
+async function closeShop() {
+  const shop = document.getElementById('shop');
+  const from = rectIn(document.getElementById('cardJar')), to = rectIn(shop);
+  if (!reduced) {
+    const inset = `inset(${from.y - to.y}px ${to.x + to.w - from.x - from.w}px ${to.y + to.h - from.y - from.h}px ${from.x - to.x}px round 22px)`;
+    play(shop.querySelector('.scroll'), [{ opacity: 1 }, { opacity: 0 }], { ms: 160 });
+    await play(shop, [{ clipPath: 'inset(0 0 0 0 round 38px 38px 0 0)' }, { clipPath: inset }], [0.34, 0]);
+  } else await fade(shop, 1, 0, 180);
+  shop.hidden = true; shop.getAnimations().forEach(a => a.cancel()); shop.querySelector('.scroll').getAnimations().forEach(a => a.cancel());
+}
+
+/* ------------------------------------------------------------------
+   The purchase card
+   ------------------------------------------------------------------ */
+let current = null, currentTile = null;
+function checkout(it) {
+  const price = it.pack ? PACKS[it.pack].price : it.price;
+  if (it.cur === 'S') return jar.S >= price ? { kind: 'pay', L: 0, S: price } : { kind: 'short', more: price - jar.S, price };
+  if (jar.L >= price) return { kind: 'pay', L: price, S: 0 };
+  const short = price - jar.L;
+  if (jar.S >= short) return { kind: 'makeUp', L: jar.L, S: short, short, price };
+  return { kind: 'short', more: short - jar.S, price, short };
+}
+function coinsText(L, S) {
+  const s = el('span', 'val');
+  if (L) s.append(token('L', 22), document.createTextNode(fmt(L)));
+  if (L && S) s.append(document.createTextNode(' + '));
+  if (S) s.append(token('S', 22), document.createTextNode(fmt(S)));
+  return s;
+}
+function pstage(it, size = 120) {
+  const st = el('div', 'stage pstage'); st.style.width = st.style.height = size + 'px';
+  const a = artFor(it, Math.round(size * 0.55)); st.append(a);
+  if (it.s === 'locked') st.classList.add('lockedArt');
+  return st;
+}
+function button(cls, html, onClick) {
+  const b = el('button', 'btn ' + cls); if (typeof html === 'string') b.innerHTML = html; else b.append(...html);
+  b.addEventListener('click', onClick); return b;
+}
+function subtitleFor(it) {
+  if (it.pack) return T[lang].packOf(P.filter(r => r[0] === it.pack).map(r => lang === 'tr' ? r[4] : r[3]));
+  if (it.kind === 'plants') return T[lang].forKind.plant;
+  if (it.kind === 'pets') return T[lang].forKind.pet;
+  return T[lang].forKind[it.kind === 'holidays' ? 'floor' : it.kind];
+}
+function buildCard(it, mode, lag = 0) {
+  const c = document.getElementById('pcard'); c.innerHTML = '';
+  const st = pstage(it); c.append(st);
+  const h = el('h4'); h.id = 'pTitle'; const sub = el('p', 'sub'); c.append(h, sub);
+  const displayName = it.pack ? PACKS[it.pack][lang] : name(it);
+  if (mode === 'info') {
+    h.textContent = name(it);
+    const [k, v] = it.lock || [];
+    sub.textContent = it.s === 'have' ? t('haveIt') : it.s === 'today' && it.kind === 'plants' ? t('seasonIt') : it.s === 'free' || it.s === 'today' ? t('freeIt')
+      : k === 'season' ? t('lockedSeason', T[lang].months[v]) : k === 'holiday' ? t('lockedHoliday', H[lang][v]) : k === 'album' ? t('lockedAlbum', v) : k === 'birthday' ? t('lockedBirthday') : t('lockedAll');
+    if (it.s === 'locked') st.querySelector('.art').style.cssText += ';filter:saturate(0);opacity:.5';
+    c.append(button(it.s === 'locked' ? 'quiet' : '', it.s === 'locked' ? t('ok') : t('putOut'), closeCard));
+    if (it.s !== 'locked') c.append(button('quiet', t('notNow'), closeCard));
+    return;
+  }
+  const co = checkout(it);
+  if (co.kind === 'pay') {
+    h.textContent = t('buyQ', displayName); sub.textContent = subtitleFor(it);
+    const r = el('div', 'receipt');
+    const r1 = el('div', 'rrow'); r1.append(document.createTextNode(t('price')), coinsText(co.L, co.S));
+    const r2 = el('div', 'rrow'); r2.append(document.createTextNode(t('jarAfter')));
+    const after = el('span', 'val'); after.append(token('L', 22), document.createTextNode(fmt(jar.L - co.L) + '   '), token('S', 22), document.createTextNode(fmt(jar.S - co.S)));
+    after.querySelectorAll('.tok').forEach(x => x.style.marginLeft = '2px'); r2.append(after);
+    r.append(r1, r2); c.append(r);
+    const label = [document.createTextNode(t('buy') + ' · ')]; if (co.L) label.push(withRing(token('L', 22)), document.createTextNode(fmt(co.L))); if (co.S) label.push(withRing(token('S', 22)), document.createTextNode(fmt(co.S)));
+    c.append(button('', label, () => pay(it, co)));
+    c.append(button('quiet', t('notNow'), closeCard));
+    c.append(el('p', 'note', t('fromJar')));
+  } else if (co.kind === 'makeUp') {
+    h.textContent = t('short', fmt(co.short)); sub.textContent = displayName;
+    const split = el('div', 'split'); const l = el('i', 'l'); l.style.width = (co.L / co.price * 100) + '%'; const s = el('i', 's'); s.style.width = (co.S / co.price * 100) + '%'; split.append(l, s);
+    const r = el('div', 'receipt');
+    const r1 = el('div', 'rrow'); const v1 = coinsText(co.L, 0); r1.append(v1, document.createTextNode(t('fromJarAll')));
+    const r2 = el('div', 'rrow'); const v2 = coinsText(0, co.S); r2.append(v2, document.createTextNode(t('makeUp')));
+    r.append(r1, r2);
+    c.append(split, el('p', 'caption', t('rate')), r);
+    const label = [document.createTextNode(t('pay') + ' · '), withRing(token('L', 22)), document.createTextNode(fmt(co.L) + ' + '), withRing(token('S', 22)), document.createTextNode(fmt(co.S))];
+    if (lang === 'tr') { label.push(document.createTextNode('')); }
+    c.append(button('', label, () => pay(it, co)));
+    c.append(button('quiet', t('saveUp'), closeCard));
+    play(l, [{ width: '0%' }, { width: l.style.width }], reduced ? { ms: 1 } : Motion.settle, { delay: lag + 120 });
+    play(s, [{ width: '0%' }, { width: s.style.width }], reduced ? { ms: 1 } : Motion.settle, { delay: lag + 260 });
+  } else {
+    h.textContent = t('notEnough');
+    sub.textContent = it.cur === 'L' ? t('sumL', displayName, fmt(co.price), fmt(jar.L), fmt(jar.S), fmt(co.more)) : t('sumS', displayName, fmt(co.price), fmt(jar.S), fmt(co.more));
+    const have = it.cur === 'L' ? jar.L + jar.S : jar.S;
+    const m = el('div', 'meter'); const i = el('i'); m.append(i); c.append(m);
+    const cap = el('p', 'caption'); cap.append(document.createTextNode(t('of', fmt(have), fmt(co.price)))); c.append(cap);
+    const w = Math.max(4, have / co.price * 100) + '%'; i.style.width = w;
+    play(i, [{ width: '0%' }, { width: w }], reduced ? { ms: 1 } : [0.5, 0], { delay: lag + 100 });
+    const go = button('gold', [token('S', 22), document.createTextNode(t('seePacks'))], e => openStore(it, e.currentTarget));
+    go.id = 'goStore'; c.append(go);
+    c.append(button('quiet', t('notNow'), closeCard));
+  }
+}
+function withRing(tok) { tok.classList.add('ring'); return tok; }
+async function openCard(it, tile) {
+  current = it; currentTile = tile;
+  const layer = document.getElementById('cardLayer'); layer.hidden = false;
+  const mode = it.s === 'buy' || it.s === 'sale' ? 'buy' : 'info';
+  buildCard(it, mode);
+  const card = document.getElementById('pcard');
+  fade(document.getElementById('scrim'), 0, 1, 200);
+  if (reduced) return fade(card, 0, 1, 200);
+  play(card, [{ transform: 'translateY(105%)' }, { transform: 'translateY(0)' }], Motion.card);
+  // The thing travels from its tile into the card.
+  const art = card.querySelector('.pstage .art'), from = tile.querySelector('.art');
+  if (art && from) {
+    const a = from.getBoundingClientRect(), b0 = art.getBoundingClientRect();
+    const dy = a.top - b0.top - (card.getBoundingClientRect().height), dx = a.left - b0.left;
+    play(art, [{ transform: `translate(${dx}px, ${a.top - b0.top}px) scale(${a.width / b0.width})`, offset: 0 }, { transform: 'none' }], [0.4, 0.2]);
+  }
+}
+async function closeCard() {
+  const layer = document.getElementById('cardLayer'), card = document.getElementById('pcard');
+  fade(document.getElementById('scrim'), 1, 0, 180);
+  await play(card, reduced ? [{ opacity: 1 }, { opacity: 0 }] : [{ transform: 'translateY(0)' }, { transform: 'translateY(105%)' }], { ms: 180, easing: 'ease-out' });
+  layer.hidden = true; card.getAnimations().forEach(a => a.cancel());
+}
+
+/* ------------------------------------------------------------------
+   Paying: coins leave the jar for the thing; it squashes as they land.
+   ------------------------------------------------------------------ */
+async function fly(kind, from, to, delay, size = 26) {
+  const fx = document.getElementById('fx'); const tok = token(kind, size); fx.append(tok);
+  const p0 = [from.x + from.w / 2 - size / 2, from.y + from.h / 2 - size / 2], p2 = [to.x + to.w / 2 - size / 2, to.y + to.h / 2 - size / 2];
+  const p1 = [(p0[0] + p2[0]) / 2, Math.min(p0[1], p2[1]) - 60];
+  const frames = [];
+  for (let i = 0; i <= 16; i++) {
+    const u = i / 16, v = 1 - u;
+    const x = v * v * p0[0] + 2 * v * u * p1[0] + u * u * p2[0], y = v * v * p0[1] + 2 * v * u * p1[1] + u * u * p2[1];
+    frames.push({ transform: `translate(${x}px, ${y}px) scale(${1 - .3 * u})`, opacity: u > .92 ? 0 : 1 });
+  }
+  await play(tok, frames, Motion.travel, { delay });
+  tok.remove();
+}
+async function pay(it, co) {
+  const card = document.getElementById('pcard'), btn = card.querySelector('.btn:not(.quiet)');
+  btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 120);
+  haptic('medium');
+  jar.L -= co.L; jar.S -= co.S;
+  const shopJar = document.getElementById('shopJar');
+  const [ln, sn] = shopJar.querySelectorAll('.n');
+  roll(ln, jar.L, [0.35, 0]); roll(sn, jar.S, [0.35, 0]);
+  const art = card.querySelector('.pstage');
+  if (!reduced) {
+    play(shopJar, [{ transform: 'scale(1)' }, { transform: 'scale(.94)' }, { transform: 'scale(1)' }], { ms: 250, easing: 'ease-in-out' });
+    const from = rectIn(shopJar), to = rectIn(art);
+    const kinds = co.L && co.S ? ['L', 'L', 'S'] : co.L ? ['L', 'L', 'L'] : ['S', 'S', 'S'];
+    kinds.forEach((k, i) => fly(k, from, to, i * 50));
+    await wait(450);
+    play(art.querySelector('.art'), [{ transform: 'scale(1)' }, { transform: 'scale(1.12, .88)' }, { transform: 'scale(.94, 1.08)' }, { transform: 'scale(1)' }], co.S ? Motion.squashMoney : Motion.squash);
+  } else {
+    await fade(art, 1, .6, 100); await fade(art, .6, 1, 100);
+  }
+  haptic('success');
+  // It's in the house: the card becomes the moment, with what to do next.
+  it.s = 'have';
+  if (it.pack) P.filter(r => r[0] === it.pack).forEach(r => items.get(r[1]).s = 'have');
+  await wait(reduced ? 0 : 150);
+  const h = card.querySelector('h4'), sub = card.querySelector('.sub');
+  const rest = [...card.children].filter(n => !n.classList.contains('pstage') && n !== h && n !== sub);
+  rest.forEach(n => n.remove());
+  h.textContent = t('hooray'); sub.textContent = t('nowYours', it.pack ? PACKS[it.pack][lang] : name(it));
+  play(h, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], reduced ? { ms: 200 } : Motion.arrive);
+  play(sub, [{ opacity: 0 }, { opacity: 1 }], { ms: 220, easing: 'ease-out' }, { delay: 60 });
+  const badge = el('span', 'badge have', icon.check); art.append(badge);
+  play(badge, [{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], reduced ? { ms: 200 } : Motion.badge);
+  const primary = it.kind === 'plants' || it.kind === 'pets' || it.pack ? t('done') : t('putOut');
+  const b1 = button('', primary, () => finish()), b2 = button('quiet', t('keepShopping'), () => finish());
+  card.append(b1, b2);
+  if (it.kind === 'plants' || it.kind === 'pets' || it.pack) b2.remove();
+  play(b1, [{ opacity: 0 }, { opacity: 1 }], { ms: 200 }, { delay: 120 });
+}
+async function finish() {
+  await closeCard();
+  renderShelves();
+  const tile = document.querySelector(`.item[data-id="${current.id}"]`);
+  const badge = tile && tile.querySelector('.badge.have');
+  if (badge) play(badge, [{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], reduced ? { ms: 200 } : Motion.badge);
+  renderJars();
+}
+
+/* ------------------------------------------------------------------
+   The Sparkles store, and coming back
+   ------------------------------------------------------------------ */
+const packList = [300, 1000, 2200, 5000];
+let goalItem = null;
+function packArt(i) {
+  const a = el('div', 'pa');
+  const spots = [[[22, 22, 30]], [[10, 26, 22], [36, 14, 22], [30, 40, 20]], [[8, 30, 20], [26, 10, 22], [40, 32, 20], [20, 44, 16], [44, 8, 14]],
+                 [[6, 34, 18], [22, 14, 22], [40, 30, 20], [16, 48, 14], [44, 6, 16], [32, 48, 14], [4, 10, 12], [48, 50, 12]]][i];
+  spots.forEach(([x, y, s]) => { const k = token('S', s); k.style.left = x + 'px'; k.style.top = y + 'px'; a.append(k); });
+  if (i === 3) a.style.boxShadow = 'inset 0 0 24px rgba(255,209,92,.35)';
+  return a;
+}
+function renderStore() {
+  document.getElementById('heroTok').innerHTML = ''; document.getElementById('heroTok').append(token('S', 72));
+  const num = document.getElementById('heroNum'); num.textContent = fmt(jar.S); num.dataset.v = jar.S;
+  const goal = document.getElementById('goal'); goal.innerHTML = '';
+  let need = 0;
+  if (goalItem) {
+    const co = checkout(goalItem);
+    if (co.kind === 'short') {
+      need = co.more;
+      const g = el('div', 'goal'); const ga = el('div', 'stage gart'); ga.append(artFor(goalItem, 30)); ga.querySelector('.art').style.marginBottom = '0';
+      const tx = el('div', 'gtxt'); const line = el('div'); const [before, after] = t('needs', goalItem.pack ? PACKS[goalItem.pack][lang] : name(goalItem));
+      line.append(document.createTextNode(before), token('S', 18), document.createTextNode(' ' + fmt(co.more) + after));
+      line.querySelector('.tok').style.verticalAlign = '-3px';
+      const m = el('div', 'meter'); const i = el('i'); const have = goalItem.cur === 'L' ? jar.L + jar.S : jar.S; i.style.width = Math.max(4, have / co.price * 100) + '%'; m.append(i);
+      tx.append(line, m); g.append(ga, tx); goal.append(g);
+    }
+  }
+  const host = document.getElementById('packs'); host.innerHTML = '';
+  const enoughIndex = need ? packList.findIndex(p => p >= need) : -1;
+  packList.forEach((n, i) => {
+    const b = el('div', 'pack'); b.dataset.n = n;
+    b.append(packArt(i));
+    const amt = el('div', 'amt'); amt.innerHTML = `<b>${fmt(n)}</b><span>${t('sparkles')}</span>`;
+    if (i === enoughIndex) { const e = el('span', 'enough'); e.textContent = t('enoughFor', goalItem.pack ? PACKS[goalItem.pack][lang] : name(goalItem)); amt.append(document.createElement('br'), e); }
+    b.append(amt);
+    const price = button('gold price', T[lang].testPrice[i], () => buyPack(n, b, price));
+    price.setAttribute('aria-label', `${n} ${t('sparkles')}, ${T[lang].testPrice[i]}`);
+    b.append(price); host.append(b);
+  });
+}
+async function openStore(it, source) {
+  goalItem = it;
+  const store = document.getElementById('store'); store.hidden = false; renderStore();
+  if (reduced) return fade(store, 0, 1, 200);
+  const from = source ? rectIn(source) : rectIn(document.getElementById('shopJar')), to = rectIn(store);
+  const inset = `inset(${from.y - to.y}px ${to.x + to.w - from.x - from.w}px ${to.y + to.h - from.y - from.h}px ${from.x - to.x}px round 28px)`;
+  play(store, [{ clipPath: inset }, { clipPath: 'inset(0 0 0 0 round 0px)' }], [0.42, 0.1]);
+  play(store.querySelector('.scroll'), [{ opacity: 0 }, { opacity: 1 }], { ms: 220 }, { delay: 60 });
+}
+async function closeStore() {
+  const store = document.getElementById('store');
+  renderJars();
+  // Back with enough: the question is still there under the store, and it
+  // answers itself — rebuilt now, so its bar fills as the store slides away.
+  if (goalItem && current === goalItem && !document.getElementById('cardLayer').hidden && checkout(goalItem).kind !== 'short') {
+    buildCard(goalItem, 'buy', reduced ? 0 : 220);
+  }
+  await (reduced ? fade(store, 1, 0, 180) : play(store, [{ transform: 'translateX(0)' }, { transform: 'translateX(100%)' }], [0.34, 0]));
+  store.hidden = true; store.getAnimations().forEach(a => a.cancel()); store.querySelector('.scroll').getAnimations().forEach(a => a.cancel());
+}
+async function buyPack(n, row, priceBtn) {
+  if (row.dataset.busy) return;
+  row.dataset.busy = 1;
+  const others = [...document.querySelectorAll('.pack')].filter(p => p !== row);
+  others.forEach(p => p.style.opacity = .5);
+  priceBtn.innerHTML = '<span class="spinner"></span>';
+  row.querySelector('.err')?.remove();
+  await wait(900); // StoreKit's own sheet would be here
+  others.forEach(p => p.style.opacity = 1); delete row.dataset.busy;
+  priceBtn.textContent = T[lang].testPrice[packList.indexOf(n)];
+  if (outcome === 'fail') {
+    const e = el('span', 'err'); e.textContent = t('didnt'); row.append(e);
+    play(priceBtn, [0, -4, 4, -4, 4, 0].map(x => ({ transform: `translateX(${x}px)` })), { ms: 350, easing: 'ease-out' });
+    return;
+  }
+  if (outcome === 'ask') { const e = el('span', 'err'); e.style.color = 'var(--sparkleInk)'; e.textContent = t('waiting'); row.append(e); return; }
+  // The trust moment: the Sparkles fly into the jar, the number counts up.
+  const hero = document.getElementById('heroTok'), num = document.getElementById('heroNum');
+  jar.S += n;
+  if (!reduced) {
+    const from = rectIn(row.querySelector('.pa')), to = rectIn(hero);
+    for (let i = 0; i < 6; i++) fly('S', from, to, i * 60, 24);
+    await wait(350);
+    play(hero.querySelector('.tok'), [{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], [0.4, 0.3]);
+  }
+  haptic('success');
+  roll(num, jar.S, Motion.settle);
+  const line = document.getElementById('plusLine'); line.textContent = t('landed', fmt(n));
+  play(line, [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], reduced ? { ms: 200 } : Motion.arrive, { delay: reduced ? 0 : 100 });
+  if (goalItem && checkout(goalItem).kind !== 'short') {
+    await wait(reduced ? 600 : 700);
+    line.textContent = t('enoughNow', goalItem.pack ? PACKS[goalItem.pack][lang] : name(goalItem));
+    await wait(1000);
+    closeStore();
+  } else {
+    renderStoreGoalOnly();
+  }
+}
+function renderStoreGoalOnly() { const keep = document.getElementById('plusLine').textContent; renderStore(); const l = document.getElementById('plusLine'); l.textContent = keep; l.style.opacity = 1; }
+
+/* ------------------------------------------------------------------
+   Wiring
+   ------------------------------------------------------------------ */
+function translate() {
+  document.querySelectorAll('[data-t]').forEach(n => { const v = T[lang][n.dataset.t]; if (typeof v === 'string') n.textContent = v; });
+  document.documentElement.lang = lang;
+  renderJars(); renderShelves();
+  if (!document.getElementById('store').hidden) renderStore();
+  if (!document.getElementById('cardLayer').hidden && current) buildCard(current, current.s === 'buy' || current.s === 'sale' ? 'buy' : 'info');
+}
+function segment(id, fn) {
+  const host = document.getElementById(id);
+  host.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    host.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    fn(b);
+  });
+}
+segment('presets', b => { jar.L = +b.dataset.l; jar.S = +b.dataset.s; translate(); });
+segment('outcome', b => { outcome = b.dataset.o; });
+segment('stageSeg', b => {
+  document.documentElement.dataset.stage = b.dataset.v;
+  document.getElementById('phone').classList.toggle('dusk', b.dataset.v === 'dusk');
+});
+segment('langSeg', b => { lang = b.dataset.v; translate(); });
+segment('themeSeg', b => { document.documentElement.dataset.theme = b.dataset.v; });
+segment('motionSeg', b => { reduced = b.dataset.v === 'reduce'; });
+document.getElementById('cardJar').addEventListener('click', openShop);
+document.getElementById('closeShop').addEventListener('click', closeShop);
+document.getElementById('shopJar').addEventListener('click', e => openStore(null, e.currentTarget));
+document.getElementById('backStore').addEventListener('click', closeStore);
+document.getElementById('scrim').addEventListener('click', closeCard);
+document.getElementById('switch').addEventListener('click', e => { const b = e.target.closest('[role=tab]'); if (b) setShelf(b.dataset.shelf); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!document.getElementById('cardLayer').hidden) closeCard(); else if (!document.getElementById('store').hidden) closeStore(); else if (!document.getElementById('shop').hidden) closeShop(); } });
+translate();
+
+/* ------------------------------------------------------------------
+   Decision demos
+   ------------------------------------------------------------------ */
+document.querySelectorAll('.panel[data-seg]').forEach(panel => {
+  const rows = panel.querySelector('.rows'), seen = new Set();
+  const fill = (tab, first) => {
+    rows.innerHTML = '';
+    const n = tab === 'Money' ? 5 : 4;
+    for (let i = 0; i < n; i++) {
+      const r = document.createElement('i'); rows.append(r);
+      const replay = panel.dataset.seg === 'replay';
+      if ((replay || first) && !reduced) {
+        const s = spring(0.45, 0.15);
+        r.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+          { duration: s.ms, easing: s.easing, delay: Math.min(i * 45, 300), fill: 'both' });
+      }
+    }
+    if (panel.dataset.seg === 'replay' && !reduced) rows.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+  };
+  panel.querySelectorAll('.tabs2 button').forEach(b => b.addEventListener('click', () => {
+    panel.querySelectorAll('.tabs2 button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    const first = !seen.has(b.textContent); seen.add(b.textContent);
+    fill(b.textContent, first);
+  }));
+  seen.add('Money'); fill('Money', true);
+});
+document.querySelectorAll('.panel[data-ring]').forEach(panel => {
+  const arc = panel.querySelector('.arc'), val = panel.querySelector('.val'), C = 2 * Math.PI * 46;
+  arc.style.strokeDasharray = C;
+  const run = () => {
+    const s = panel.dataset.ring === 'bounce' ? spring(0.5, 0.45) : spring(0.5, 0);
+    const pts = s.easing.slice(7, -1).split(', ').map(Number);
+    const start = performance.now();
+    const step = now => {
+      const x = Math.min(1, (now - start) / s.ms), i = x * (pts.length - 1), a = Math.floor(i);
+      const e = a >= pts.length - 1 ? 1 : pts[a] + (pts[a + 1] - pts[a]) * (i - a);
+      const shown = 0.9 * e;
+      arc.style.strokeDashoffset = C * (1 - Math.min(shown, 1.2));
+      val.textContent = Math.round(shown * 100) + '% shown';
+      if (x < 1) requestAnimationFrame(step); else val.textContent = '90% spent';
+    };
+    requestAnimationFrame(step);
+  };
+  panel.querySelector('.replay').addEventListener('click', run);
+  setTimeout(run, 600);
+});
+function confetti() {
+  const host = document.getElementById('confettiDemo');
+  const colors = ['#F15BB5', '#FEE440', '#00BBF9', '#00F5D4', '#9B5DE5'];
+  for (let i = 0; i < 36; i++) {
+    const b = document.createElement('span'); b.className = 'bit'; b.style.left = (Math.random() * 100) + '%'; b.style.background = colors[i % 5];
+    host.append(b);
+    b.animate([{ transform: 'translateY(0) rotate(0)' }, { transform: `translateY(${140 + Math.random() * 40}px) rotate(${Math.random() * 720}deg)` }],
+      { duration: 1200 + Math.random() * 600, delay: Math.random() * 300, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' }).finished.then(() => b.remove());
+  }
+}
+function calm() {
+  const m = document.querySelector('#calmDemo .msg');
+  m.animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: spring(0.4, 0.15).ms, easing: spring(0.4, 0.15).easing });
+}
+document.getElementById('confettiReplay').addEventListener('click', confetti);
+document.getElementById('calmReplay').addEventListener('click', calm);
+
+// ?open=shop|kilim|store opens straight to a state, for screenshots.
+const open = new URLSearchParams(location.search).get('open');
+const q = new URLSearchParams(location.search);
+if (q.get('lang')) { lang = q.get('lang'); translate(); }
+if (q.get('theme')) document.documentElement.dataset.theme = q.get('theme');
+if (q.get('stage')) { document.documentElement.dataset.stage = q.get('stage'); document.getElementById('phone').classList.toggle('dusk', q.get('stage') === 'dusk'); }
+if (q.get('press')) setTimeout(() => [...document.querySelectorAll('.controls button')].find(b => b.textContent.trim() === q.get('press'))?.click(), 300);
+if (q.get('jar')) { const [l, s] = q.get('jar').split(',').map(Number); jar.L = l; jar.S = s; translate(); }
+if (q.get('shelf')) { document.getElementById('shop').hidden = false; setShelf(q.get('shelf')); }
+if (open) {
+  reduced = q.get('motion') !== 'full'; document.getElementById('shop').hidden = false;
+  if (open !== 'shop') {
+    if (open === 'store') openStore(items.get('kilim'), null);
+    else { const it = items.get(open); openCard(it, document.querySelector(`.item[data-id="${open}"]`) || document.body); }
+  }
+  reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+// ?demo=pay|topup|today plays a path through on its own, for checking it end to end.
+const demo = q.get('demo');
+const click = sel => document.querySelector(sel)?.click();
+if (demo === 'pay' || demo === 'topup') (async () => {
+  if (demo === 'pay') { jar.L = 400; jar.S = 180; } else { jar.L = 60; jar.S = 120; }
+  translate(); await openShop(); await wait(600);
+  click('.item[data-id="kilim"]'); await wait(700);
+  if (demo === 'pay') { click('#pcard .btn:not(.quiet)'); return; }
+  click('#goStore'); await wait(900);
+  document.querySelector('.pack .price').click();
+})();
+}
+</script>
+</body>
+</html>
