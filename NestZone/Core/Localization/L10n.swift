@@ -7835,9 +7835,9 @@ public enum L10n {
         r("decorate_placed", "Placed")
     }
 
-    /// Got it
+    /// In the house
     public static var decorateYours: LocalizedStringResource {
-        r("decorate_yours", "Got it")
+        r("decorate_yours", "In the house")
     }
 
     /// Free today
@@ -7845,25 +7845,13 @@ public enum L10n {
         r("decorate_free", "Free today")
     }
 
-    /// %lld Leaves
-    public static func decoratePrice(_ a0: Int) -> LocalizedStringResource {
-        r("decorate_price", "\(a0) Leaves")
-    }
 
     /// Trying it on
     public static var decoratePreview: LocalizedStringResource {
         r("decorate_preview", "Trying it on")
     }
 
-    /// Buy · %lld Leaves
-    public static func decorateBuy(_ a0: Int) -> LocalizedStringResource {
-        r("decorate_buy", "Buy · \(a0) Leaves")
-    }
 
-    /// Needs %lld more Leaves
-    public static func decorateNeedMore(_ a0: Int) -> LocalizedStringResource {
-        r("decorate_need_more", "Needs \(a0) more Leaves")
-    }
 
     /// Put out a whole set
     public static var decorateSets: LocalizedStringResource {
@@ -8688,15 +8676,7 @@ public enum L10n {
         r("decorate_price_sparkles", "\(a0) Sparkles")
     }
 
-    /// Buy · %lld Sparkles
-    public static func decorateBuySparkles(_ a0: Int) -> LocalizedStringResource {
-        r("decorate_buy_sparkles", "Buy · \(a0) Sparkles")
-    }
 
-    /// Needs %lld more Sparkles
-    public static func decorateNeedMoreSparkles(_ a0: Int) -> LocalizedStringResource {
-        r("decorate_need_more_sparkles", "Needs \(a0) more Sparkles")
-    }
 
     /// +%lld Sparkles in the jar
     public static func labSparkles(_ a0: Int) -> LocalizedStringResource {
@@ -8733,5 +8713,626 @@ public enum L10n {
     /// −%lld points
     public static func labPointsLess(_ a0: Int) -> LocalizedStringResource {
         r("lab_points_less", "−\(a0) points")
+    }
+
+    // MARK: - Companion · the catalog, the shop and Sparkles
+
+    /// Basil
+    public static var speciesBasil: LocalizedStringResource {
+        r("species_basil", "Basil")
+    }
+
+    /// Sunflower
+    public static var speciesSunflower: LocalizedStringResource {
+        r("species_sunflower", "Sunflower")
+    }
+
+    /// Cactus
+    public static var speciesCactus: LocalizedStringResource {
+        r("species_cactus", "Cactus")
+    }
+
+    /// Daisy
+    public static var speciesDaisy: LocalizedStringResource {
+        r("species_daisy", "Daisy")
+    }
+
+    /// Mint
+    public static var speciesMint: LocalizedStringResource {
+        r("species_mint", "Mint")
+    }
+
+    /// Rosemary
+    public static var speciesRosemary: LocalizedStringResource {
+        r("species_rosemary", "Rosemary")
+    }
+
+    /// Snake plant
+    public static var speciesSnakePlant: LocalizedStringResource {
+        r("species_snake_plant", "Snake plant")
+    }
+
+    /// Fern
+    public static var speciesFern: LocalizedStringResource {
+        r("species_fern", "Fern")
+    }
+
+    /// Lavender
+    public static var speciesLavender: LocalizedStringResource {
+        r("species_lavender", "Lavender")
+    }
+
+    /// Peony
+    public static var speciesPeony: LocalizedStringResource {
+        r("species_peony", "Peony")
+    }
+
+    /// Monstera
+    public static var speciesMonstera: LocalizedStringResource {
+        r("species_monstera", "Monstera")
+    }
+
+    /// Rose
+    public static var speciesRose: LocalizedStringResource {
+        r("species_rose", "Rose")
+    }
+
+    /// Orchid
+    public static var speciesOrchid: LocalizedStringResource {
+        r("species_orchid", "Orchid")
+    }
+
+    /// Bonsai
+    public static var speciesBonsai: LocalizedStringResource {
+        r("species_bonsai", "Bonsai")
+    }
+
+    /// Tulip
+    public static var speciesTulip: LocalizedStringResource {
+        r("species_tulip", "Tulip")
+    }
+
+    /// Maple
+    public static var speciesMaple: LocalizedStringResource {
+        r("species_maple", "Maple")
+    }
+
+    /// Pumpkin
+    public static var speciesPumpkin: LocalizedStringResource {
+        r("species_pumpkin", "Pumpkin")
+    }
+
+    /// Pine tree
+    public static var speciesPine: LocalizedStringResource {
+        r("species_pine", "Pine tree")
+    }
+
+    /// Snowdrop
+    public static var speciesSnowdrop: LocalizedStringResource {
+        r("species_snowdrop", "Snowdrop")
+    }
+
+    /// Kitten
+    public static var speciesKitten: LocalizedStringResource {
+        r("species_kitten", "Kitten")
+    }
+
+    /// Hedgehog
+    public static var speciesHedgehog: LocalizedStringResource {
+        r("species_hedgehog", "Hedgehog")
+    }
+
+    /// Hamster
+    public static var speciesHamster: LocalizedStringResource {
+        r("species_hamster", "Hamster")
+    }
+
+    /// Turtle
+    public static var speciesTurtle: LocalizedStringResource {
+        r("species_turtle", "Turtle")
+    }
+
+    /// Goldfish
+    public static var speciesGoldfish: LocalizedStringResource {
+        r("species_goldfish", "Goldfish")
+    }
+
+    /// Puppy
+    public static var speciesPuppy: LocalizedStringResource {
+        r("species_puppy", "Puppy")
+    }
+
+    /// Bunny
+    public static var speciesBunny: LocalizedStringResource {
+        r("species_bunny", "Bunny")
+    }
+
+    /// Fox
+    public static var speciesFox: LocalizedStringResource {
+        r("species_fox", "Fox")
+    }
+
+    /// Owl
+    public static var speciesOwl: LocalizedStringResource {
+        r("species_owl", "Owl")
+    }
+
+    /// Deer
+    public static var speciesDeer: LocalizedStringResource {
+        r("species_deer", "Deer")
+    }
+
+    /// Penguin
+    public static var speciesPenguin: LocalizedStringResource {
+        r("species_penguin", "Penguin")
+    }
+
+    /// Snow fox
+    public static var speciesSnowFox: LocalizedStringResource {
+        r("species_snow_fox", "Snow fox")
+    }
+
+    /// Polar bear cub
+    public static var speciesPolarCub: LocalizedStringResource {
+        r("species_polar_cub", "Polar bear cub")
+    }
+
+    /// Forest friends
+    public static var packForestFriends: LocalizedStringResource {
+        r("pack_forest_friends", "Forest friends")
+    }
+
+    /// Snow friends
+    public static var packSnowFriends: LocalizedStringResource {
+        r("pack_snow_friends", "Snow friends")
+    }
+
+    /// Windowsill
+    public static var decorWindowsill: LocalizedStringResource {
+        r("decor_windowsill", "Windowsill")
+    }
+
+    /// Balcony
+    public static var decorBalcony: LocalizedStringResource {
+        r("decor_balcony", "Balcony")
+    }
+
+    /// Starry rooftop
+    public static var decorStarryRooftop: LocalizedStringResource {
+        r("decor_starry_rooftop", "Starry rooftop")
+    }
+
+    /// Winter sky
+    public static var decorWinterSky: LocalizedStringResource {
+        r("decor_winter_sky", "Winter sky")
+    }
+
+    /// Wind chime
+    public static var decorWindChime: LocalizedStringResource {
+        r("decor_wind_chime", "Wind chime")
+    }
+
+    /// Bow
+    public static var decorBow: LocalizedStringResource {
+        r("decor_bow", "Bow")
+    }
+
+    /// Scarf
+    public static var decorScarf: LocalizedStringResource {
+        r("decor_scarf", "Scarf")
+    }
+
+    /// Party hat
+    public static var decorPartyHat: LocalizedStringResource {
+        r("decor_party_hat", "Party hat")
+    }
+
+    /// Tiny crown
+    public static var decorTinyCrown: LocalizedStringResource {
+        r("decor_tiny_crown", "Tiny crown")
+    }
+
+    /// Bird feeder
+    public static var decorBirdFeeder: LocalizedStringResource {
+        r("decor_bird_feeder", "Bird feeder")
+    }
+
+    /// Watermelon
+    public static var decorWatermelon: LocalizedStringResource {
+        r("decor_watermelon", "Watermelon")
+    }
+
+    /// Wearing
+    public static var spotWearing: LocalizedStringResource {
+        r("spot_wearing", "Wearing")
+    }
+
+    /// Shop
+    public static var shopTitle: LocalizedStringResource {
+        r("shop_title", "Shop")
+    }
+
+    /// Decor
+    public static var shopDecor: LocalizedStringResource {
+        r("shop_decor", "Decor")
+    }
+
+    /// Add Sparkles
+    public static var shopAddSparkles: LocalizedStringResource {
+        r("shop_add_sparkles", "Add Sparkles")
+    }
+
+    /// Sky and scenes
+    public static var shopShelfScenes: LocalizedStringResource {
+        r("shop_shelf_scenes", "Sky and scenes")
+    }
+
+    /// Floor
+    public static var shopShelfFloor: LocalizedStringResource {
+        r("shop_shelf_floor", "Floor")
+    }
+
+    /// From the holidays
+    public static var shopShelfHolidays: LocalizedStringResource {
+        r("shop_shelf_holidays", "From the holidays")
+    }
+
+    /// Free
+    public static var standingFree: LocalizedStringResource {
+        r("standing_free", "Free")
+    }
+
+    /// Free now
+    public static var standingSeasonFree: LocalizedStringResource {
+        r("standing_season_free", "Free now")
+    }
+
+
+    /// Back in %@
+    public static func standingBack(_ a0: String) -> LocalizedStringResource {
+        r("standing_back", "Back in \(a0)")
+    }
+
+
+    /// Comes with holidays
+    public static var standingHolidays: LocalizedStringResource {
+        r("standing_holidays", "Comes with holidays")
+    }
+
+    /// %lld in the album
+    public static func standingAlbum(_ a0: Int) -> LocalizedStringResource {
+        r("standing_album", "\(a0) in the album")
+    }
+
+    /// On birthdays
+    public static var standingBirthdays: LocalizedStringResource {
+        r("standing_birthdays", "On birthdays")
+    }
+
+    /// Grow them all
+    public static var standingGrowAll: LocalizedStringResource {
+        r("standing_grow_all", "Grow them all")
+    }
+
+    /// Buy %@?
+    public static func buyConfirmTitle(_ a0: String) -> LocalizedStringResource {
+        r("buy_confirm_title", "Buy \(a0)?")
+    }
+
+
+
+
+    /// %lld Leaves short
+    public static func buyShortLeavesTitle(_ a0: Int) -> LocalizedStringResource {
+        r("buy_short_leaves_title", "\(a0) Leaves short")
+    }
+
+
+
+    /// Not enough in the jar
+    public static var buyShortTitle: LocalizedStringResource {
+        r("buy_short_title", "Not enough in the jar")
+    }
+
+
+
+
+
+
+    /// Sparkles go in the house jar, for anyone in the house to spend. They never expire.
+    public static var storeNote: LocalizedStringResource {
+        r("store_note", "Sparkles go in the house jar, for anyone in the house to spend. They never expire.")
+    }
+
+    /// Test store · nothing is charged
+    public static var storeTest: LocalizedStringResource {
+        r("store_test", "Test store · nothing is charged")
+    }
+
+    /// Free test
+    public static var storeTestPrice: LocalizedStringResource {
+        r("store_test_price", "Free test")
+    }
+
+
+    /// A birthday today
+    public static var labBirthday: LocalizedStringResource {
+        r("lab_birthday", "A birthday today")
+    }
+
+    // MARK: - Companion · not enough Leaves
+
+    // MARK: - Companion · the purchase card and the store
+
+    /// For the whole house
+    public static var shopSubtitle: LocalizedStringResource {
+        r("shop_subtitle", "For the whole house")
+    }
+
+    /// Till %@
+    public static func saleUntil(_ a0: String) -> LocalizedStringResource {
+        r("sale_until", "Till \(a0)")
+    }
+
+    /// %lld Leaves
+    public static func shopLeavesCount(_ a0: Int) -> LocalizedStringResource {
+        r("shop_leaves_count", "\(a0) Leaves")
+    }
+
+    /// %lld Sparkles
+    public static func shopSparklesCount(_ a0: Int) -> LocalizedStringResource {
+        r("shop_sparkles_count", "\(a0) Sparkles")
+    }
+
+    /// Price
+    public static var cardPrice: LocalizedStringResource {
+        r("card_price", "Price")
+    }
+
+    /// Jar after
+    public static var cardJarAfter: LocalizedStringResource {
+        r("card_jar_after", "Jar after")
+    }
+
+    /// Buy
+    public static var cardBuy: LocalizedStringResource {
+        r("card_buy", "Buy")
+    }
+
+    /// Pay
+    public static var cardPay: LocalizedStringResource {
+        r("card_pay", "Pay")
+    }
+
+    /// Not now
+    public static var cardNotNow: LocalizedStringResource {
+        r("card_not_now", "Not now")
+    }
+
+    /// From the house jar. Everyone here shares it.
+    public static var cardFromJar: LocalizedStringResource {
+        r("card_from_jar", "From the house jar. Everyone here shares it.")
+    }
+
+    /// from the jar, all of them
+    public static var cardFromJarAll: LocalizedStringResource {
+        r("card_from_jar_all", "from the jar, all of them")
+    }
+
+    /// makes up the rest
+    public static var cardMakesUp: LocalizedStringResource {
+        r("card_makes_up", "makes up the rest")
+    }
+
+    /// 1 Sparkle covers 1 Leaf
+    public static var cardRate: LocalizedStringResource {
+        r("card_rate", "1 Sparkle covers 1 Leaf")
+    }
+
+    /// Save up instead
+    public static var cardSaveUp: LocalizedStringResource {
+        r("card_save_up", "Save up instead")
+    }
+
+    /// %1$@ is %2$lld Leaves. The jar has %3$lld Leaves and %4$lld Sparkles: %5$lld Sparkles short.
+    public static func cardShortSumLeaves(_ a0: String, _ a1: Int, _ a2: Int, _ a3: Int, _ a4: Int) -> LocalizedStringResource {
+        r("card_short_sum_leaves", "\(a0) is \(a1) Leaves. The jar has \(a2) Leaves and \(a3) Sparkles: \(a4) Sparkles short.")
+    }
+
+    /// %1$@ is %2$lld Sparkles. The jar has %3$lld: %4$lld short.
+    public static func cardShortSumSparkles(_ a0: String, _ a1: Int, _ a2: Int, _ a3: Int) -> LocalizedStringResource {
+        r("card_short_sum_sparkles", "\(a0) is \(a1) Sparkles. The jar has \(a2): \(a3) short.")
+    }
+
+    /// %1$lld of %2$lld
+    public static func cardOf(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("card_of", "\(a0) of \(a1)")
+    }
+
+    /// See Sparkle packs
+    public static var cardSeePacks: LocalizedStringResource {
+        r("card_see_packs", "See Sparkle packs")
+    }
+
+    /// It's in the house!
+    public static var cardHooray: LocalizedStringResource {
+        r("card_hooray", "It's in the house!")
+    }
+
+    /// %@ is yours now.
+    public static func cardNowYours(_ a0: String) -> LocalizedStringResource {
+        r("card_now_yours", "\(a0) is yours now.")
+    }
+
+    /// Put it out
+    public static var cardPutOut: LocalizedStringResource {
+        r("card_put_out", "Put it out")
+    }
+
+    /// Keep shopping
+    public static var cardKeepShopping: LocalizedStringResource {
+        r("card_keep_shopping", "Keep shopping")
+    }
+
+    /// Starts growing right away
+    public static var cardStartsGrowing: LocalizedStringResource {
+        r("card_starts_growing", "Starts growing right away")
+    }
+
+    /// Changes the sky
+    public static var forSky: LocalizedStringResource {
+        r("for_sky", "Changes the sky")
+    }
+
+    /// Hangs overhead
+    public static var forAbove: LocalizedStringResource {
+        r("for_above", "Hangs overhead")
+    }
+
+    /// Goes on the tree
+    public static var forTree: LocalizedStringResource {
+        r("for_tree", "Goes on the tree")
+    }
+
+    /// Something to wear
+    public static var forWearing: LocalizedStringResource {
+        r("for_wearing", "Something to wear")
+    }
+
+    /// A new pot
+    public static var forPot: LocalizedStringResource {
+        r("for_pot", "A new pot")
+    }
+
+    /// For a corner of the floor
+    public static var forFloor: LocalizedStringResource {
+        r("for_floor", "For a corner of the floor")
+    }
+
+    /// Goes under the pot
+    public static var forGround: LocalizedStringResource {
+        r("for_ground", "Goes under the pot")
+    }
+
+    /// Changes the weather
+    public static var forWeather: LocalizedStringResource {
+        r("for_weather", "Changes the weather")
+    }
+
+    /// A plant to grow next
+    public static var forPlant: LocalizedStringResource {
+        r("for_plant", "A plant to grow next")
+    }
+
+    /// A pet to raise next
+    public static var forPet: LocalizedStringResource {
+        r("for_pet", "A pet to raise next")
+    }
+
+    /// Every house has one. Put it out in Decorate.
+    public static var infoFree: LocalizedStringResource {
+        r("info_free", "Every house has one. Put it out in Decorate.")
+    }
+
+    /// It's in the house. Put it out in Decorate.
+    public static var infoHave: LocalizedStringResource {
+        r("info_have", "It's in the house. Put it out in Decorate.")
+    }
+
+    /// Yours to grow. Pick it next time you choose.
+    public static var infoYoursToGrow: LocalizedStringResource {
+        r("info_yours_to_grow", "Yours to grow. Pick it next time you choose.")
+    }
+
+    /// Free to grow while its season lasts. Pick it next time you choose.
+    public static var infoSeasonFree: LocalizedStringResource {
+        r("info_season_free", "Free to grow while its season lasts. Pick it next time you choose.")
+    }
+
+    /// Free while the day lasts. Put it out in Decorate.
+    public static var infoFreeToday: LocalizedStringResource {
+        r("info_free_today", "Free while the day lasts. Put it out in Decorate.")
+    }
+
+    /// Back in %@, free to grow while it lasts.
+    public static func infoSeason(_ a0: String) -> LocalizedStringResource {
+        r("info_season", "Back in \(a0), free to grow while it lasts.")
+    }
+
+    /// Comes with %@, free while it lasts.
+    public static func infoHoliday(_ a0: String) -> LocalizedStringResource {
+        r("info_holiday", "Comes with \(a0), free while it lasts.")
+    }
+
+    /// Comes with the holidays this house celebrates, free while they last.
+    public static var infoHolidays: LocalizedStringResource {
+        r("info_holidays", "Comes with the holidays this house celebrates, free while they last.")
+    }
+
+    /// Unlocks when %lld have grown up in your album.
+    public static func infoAlbum(_ a0: Int) -> LocalizedStringResource {
+        r("info_album", "Unlocks when \(a0) have grown up in your album.")
+    }
+
+    /// Free on any day with a birthday in the house calendar.
+    public static var infoBirthday: LocalizedStringResource {
+        r("info_birthday", "Free on any day with a birthday in the house calendar.")
+    }
+
+    /// For growing every plant and pet that's free.
+    public static var infoGrowAll: LocalizedStringResource {
+        r("info_grow_all", "For growing every plant and pet that's free.")
+    }
+
+    /// Sparkles in the house jar
+    public static var storeHero: LocalizedStringResource {
+        r("store_hero", "Sparkles in the house jar")
+    }
+
+    /// %1$@ needs %2$lld more Sparkles
+    public static func storeGoal(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("store_goal", "\(a0) needs \(a1) more Sparkles")
+    }
+
+    /// Enough for %@
+    public static func storeEnoughFor(_ a0: String) -> LocalizedStringResource {
+        r("store_enough_for", "Enough for \(a0)")
+    }
+
+    /// +%lld in the jar
+    public static func storeLanded(_ a0: Int) -> LocalizedStringResource {
+        r("store_landed", "+\(a0) in the jar")
+    }
+
+    /// Enough for %@ now
+    public static func storeEnoughNow(_ a0: String) -> LocalizedStringResource {
+        r("store_enough_now", "Enough for \(a0) now")
+    }
+
+    /// Waiting for approval
+    public static var storeWaiting: LocalizedStringResource {
+        r("store_waiting", "Waiting for approval")
+    }
+
+    /// Didn't go through. Try again.
+    public static var storeDidnt: LocalizedStringResource {
+        r("store_didnt", "Didn't go through. Try again.")
+    }
+
+    /// Sparkles
+    public static var storePackUnit: LocalizedStringResource {
+        r("store_pack_unit", "Sparkles")
+    }
+
+    /// Dusk stage in the shop
+    public static var labDusk: LocalizedStringResource {
+        r("lab_dusk", "Dusk stage in the shop")
+    }
+
+    // MARK: - Companion · best value
+
+    /// Best value
+    public static var storeBestValue: LocalizedStringResource {
+        r("store_best_value", "Best value")
     }
 }

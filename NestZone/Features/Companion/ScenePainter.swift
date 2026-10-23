@@ -104,6 +104,15 @@ struct ScenePainter {
                 Gradient(colors: [Ink.color(0xFF7828, 0.22), Ink.color(0x782AA0, 0.18), .clear]),
                 startPoint: .zero, endPoint: CGPoint(x: 0, y: SceneSpace.height)))
         }
+        if layout.sky == DecorItem.winterSky.rawValue {
+            context.fill(Path(rect), with: .linearGradient(
+                Gradient(colors: [Ink.color(0x8EC5FF, 0.3), Ink.color(0xDCEBFF, 0.14), .clear]),
+                startPoint: .zero, endPoint: CGPoint(x: 0, y: SceneSpace.height)))
+        }
+        // A scene not drawn yet, in the sky's own spot.
+        if let raw = layout.sky, let item = DecorItem(rawValue: raw), !item.isDrawn {
+            context.sketch(item.symbol, 44, 80, size: 28)
+        }
         // Stars, after dark.
         var r = seed
         for _ in 0..<22 {
@@ -328,6 +337,8 @@ struct ScenePainter {
             kites(context)
         case .item(.bats):
             bats(context)
+        case let .item(item) where !item.isDrawn:
+            context.sketch(item.symbol, center, 54, size: 30)
         default:
             break
         }
@@ -543,6 +554,18 @@ struct ScenePainter {
         }
     }
 
+    // MARK: Wearing
+
+    /// What it wears: a hat or a crown on `top`, a bow or a scarf at `neck` —
+    /// a pet's chin, a plant's pot. Sketched until drawn.
+    func wearing(_ context: GraphicsContext, top: CGPoint, neck: CGPoint) {
+        guard let raw = frame.layout.wearing, let item = DecorItem(rawValue: raw) else { return }
+        switch item {
+        case .partyHat, .tinyCrown: context.sketch(item.symbol, top.x, top.y, size: 30)
+        default: context.sketch(item.symbol, neck.x, neck.y, size: 26)
+        }
+    }
+
     // MARK: Floor
 
     func floor(_ context: GraphicsContext) {
@@ -728,7 +751,7 @@ struct ScenePainter {
             dish.closeSubpath()
             context.fill(dish, with: .color(Ink.color(0x60A5FA)))
         default:
-            break
+            if !item.isDrawn { context.sketch(item.symbol, x, y + 2, size: 34) }
         }
     }
 

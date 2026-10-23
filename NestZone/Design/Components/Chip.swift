@@ -11,6 +11,9 @@ public struct Chip: View {
     private let action: () -> Void
 
     @Environment(\.theme) private var theme
+    /// Taps on this chip. The tick is keyed on them rather than on
+    /// `isSelected`, so a selection somebody else's change moved stays silent.
+    @State private var taps = 0
 
     public init(
         _ title: String,
@@ -25,10 +28,17 @@ public struct Chip: View {
     }
 
     public var body: some View {
-        Button(action: action) {
+        Button {
+            taps += 1
+            action()
+        } label: {
             HStack(spacing: 6) {
                 if let symbol {
-                    Image(systemName: symbol).font(.caption.weight(.semibold))
+                    Image(systemName: symbol)
+                        .font(.caption.weight(.semibold))
+                        // The chip you just chose hops; the one you left goes
+                        // quiet. Silent under Reduce Motion.
+                        .bounces(when: isSelected)
                 }
                 Text(title).font(.subheadline.weight(.medium))
             }
@@ -48,8 +58,10 @@ public struct Chip: View {
             // shape only the label glyphs are tappable.
             .contentShape(.capsule)
         }
-        .buttonStyle(.pressable)
+        // Quiet: the tap's tick below is this chip's one haptic.
+        .buttonStyle(.pressableQuiet)
         .animation(Motion.spring, value: isSelected)
+        .sensoryFeedback(.selection, trigger: taps)
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 }

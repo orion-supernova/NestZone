@@ -130,6 +130,17 @@ enum SceneInk {
 }
 
 extension GraphicsContext {
+    /// An emoji standing in for a drawing not made yet, standing on a point:
+    /// tilted about its foot, squashed and stretched like the drawn ones.
+    func sketch(_ symbol: String, _ x: Double, _ y: Double, size: Double, angle: Double = 0, stretch: Double = 0, opacity: Double = 1) {
+        var c = self
+        c.opacity *= opacity
+        c.translateBy(x: x, y: y)
+        c.rotate(by: .radians(angle))
+        if stretch != 0 { c.scaleBy(x: 1 - stretch * 0.35, y: 1 + stretch) }
+        c.draw(Text(verbatim: symbol).font(.system(size: size)), at: .zero, anchor: .bottom)
+    }
+
     /// Fills an ellipse centred on a point.
     func ellipse(_ x: Double, _ y: Double, _ rx: Double, _ ry: Double, _ shading: GraphicsContext.Shading) {
         fill(Path(ellipseIn: CGRect(x: x - rx, y: y - ry, width: rx * 2, height: ry * 2)), with: shading)

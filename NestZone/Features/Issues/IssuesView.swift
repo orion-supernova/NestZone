@@ -17,6 +17,10 @@ public struct IssuesView: View {
     /// each row so opening one closes the last, as the system list does.
     @State private var revealedID: IssueID?
     @FocusState private var isSearchFocused: Bool
+    /// A row's "move it along" from its menu, and whether that move was to
+    /// Fixed — for the haptic.
+    @State private var advances = 0
+    @State private var advancedToFixed = false
 
     public init(store: StoreOf<IssuesFeature>) {
         self.store = store
@@ -77,6 +81,9 @@ public struct IssuesView: View {
         // The house is entirely in order. The one thing on this screen worth
         // being smug about.
         .overlay { ConfettiBurst(trigger: store.allClearCelebration) }
+        // A tick for moving a problem along from its row; something firmer
+        // when the move is to Fixed.
+        .sensoryFeedback(trigger: advances) { advancedToFixed ? .success : .selection }
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -291,7 +298,12 @@ public struct IssuesView: View {
                 subtitle: L10n.issuesQuietSubtitle,
                 symbol: "zzz"
             )
-            rowStack(Array(store.goneQuiet.prefix(3)))
+            // Under the attention list on the same board, so only one of the
+            // two may hold the breathing row.
+            rowStack(
+                Array(store.goneQuiet.prefix(3)),
+                leads: Self.leadUrgent(in: store.needsAttention) == nil
+            )
         }
     }
 
@@ -630,7 +642,11 @@ public struct IssuesView: View {
                             peak: store.busiestRoomCount,
                             isSelected: store.areaFilter == area
                         ) { store.send(.areaFilterTapped(area)) }
-                        .appear(index)
+                        // Staggered for the first screenful only. A lazy grid
+                        // builds the rest as they scroll in, and a tile that
+                        // waits its place in a queue that has long since
+                        // finished arrives late rather than in order.
+                        .appear(index < 8 ? index : 0)
                     }
                 }
             }
@@ -765,22 +781,39 @@ public struct IssuesView: View {
 
     // MARK: - Rows
 
-    private func rowStack(_ issues: [HouseIssue]) -> some View {
-        GlassList {
+    /// - Parameter leads: whether this stack may hold the one urgent row on
+    ///   screen that keeps breathing. The board passes `false` to every stack
+    ///   after one that already has it.
+    private func rowStack(_ issues: [HouseIssue], leads: Bool = true) -> some View {
+        let lead = leads ? Self.leadUrgent(in: issues) : nil
+        return GlassList {
             ForEach(issues) { issue in
                 IssueRow(
                     issue: issue,
                     assigneeName: issue.assignedTo.map { store.state.name(for: $0) },
                     isAffected: issue.isAffected(store.currentUserID),
+                    isLead: issue.id == lead,
                     revealedID: $revealedID,
                     glass: glass,
                     onTap: { store.send(.issueTapped(issue.id)) },
                     onMeToo: { store.send(.meTooTapped(issue.id)) },
-                    onAdvance: { store.send(.advanceTapped(issue.id)) },
+                    onAdvance: {
+                        // Counted here, so the haptic answers this person's
+                        // tap and not a push that moved the same problem.
+                        advancedToFixed = issue.status.next == .fixed
+                        advances += 1
+                        store.send(.advanceTapped(issue.id))
+                    },
                     onDelete: { store.send(.deleteTapped(issue.id)) }
                 )
             }
         }
+    }
+
+    /// The one urgent, open problem in a list allowed to keep breathing: the
+    /// first one listed. Every urgent row pulsing at once is a screen shouting.
+    private static func leadUrgent(in issues: [HouseIssue]) -> IssueID? {
+        issues.first { $0.severity.demandsAttention && $0.isOpen }?.id
     }
 }
 
@@ -797,12 +830,18 @@ private struct IssueRow: View {
     /// `nil` when nobody has taken it on, which is itself worth showing.
     let assigneeName: String?
     let isAffected: Bool
+    /// Whether this is the one urgent row on screen that keeps breathing.
+    let isLead: Bool
     @Binding var revealedID: IssueID?
     let glass: Namespace.ID
     let onTap: () -> Void
     let onMeToo: () -> Void
     let onAdvance: () -> Void
     let onDelete: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var isUrgent: Bool { issue.severity.demandsAttention && issue.isOpen }
 
     var body: some View {
         SwipeToDelete(
@@ -938,6 +977,13 @@ private struct IssueRow: View {
                 Image(systemName: issue.category.symbol)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(issue.severity.tint)
+                    // Every other urgent row takes one breath as it arrives
+                    // and then keeps still.
+                    .symbolEffect(
+                        .breathe,
+                        options: .nonRepeating,
+                        isActive: isUrgent && !isLead && !reduceMotion
+                    )
                     .frame(width: 44, height: 44)
                     .background(
                         issue.severity.tint.opacity(0.16),
@@ -946,8 +992,8 @@ private struct IssueRow: View {
             }
         }
         // Only a problem that has already gone wrong is allowed to move, and
-        // the list shows at most a handful of them.
-        .pulse(issue.severity.demandsAttention && issue.isOpen)
+        // only the first of them keeps moving.
+        .pulse(isUrgent && isLead)
         .overlay(alignment: .topTrailing) {
             if issue.photoCount > 1 {
                 Text(issue.photoCount, format: .number)

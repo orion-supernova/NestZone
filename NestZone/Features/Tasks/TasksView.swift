@@ -6,6 +6,14 @@ public struct TasksView: View {
 
     @Environment(\.theme) private var theme
 
+    /// Chores this person ticked on this screen, for the haptic. Counted at the
+    /// tap rather than read off the chore, because the chore also changes when
+    /// somebody else ticks it on their phone, and that is not this phone's to
+    /// buzz for. Kept on the list rather than the row: in To do a ticked row
+    /// leaves the list in the same frame as the tap, and a row that is already
+    /// on its way out cannot be relied on to play anything.
+    @State private var ticks = 0
+
     public init(store: StoreOf<TasksFeature>) {
         self.store = store
     }
@@ -88,6 +96,7 @@ public struct TasksView: View {
         }
         .animation(Motion.spring, value: store.visible)
         .animation(Motion.spring, value: store.pendingRemoval)
+        .sensoryFeedback(.success, trigger: ticks)
     }
 
     /// What happens to a chore after it is ticked, said above the list it
@@ -172,7 +181,10 @@ public struct TasksView: View {
                 TaskListRow(
                     task: task,
                     assignee: store.state.assigneeName(for: task),
-                    onToggle: { store.send(.toggled(task.id)) }
+                    onToggle: {
+                        if !task.isCompleted { ticks += 1 }
+                        store.send(.toggled(task.id))
+                    }
                 )
                 // Only the first screenful is choreographed: List realises rows
                 // as they scroll in, so staggering all of them would fade every
@@ -218,30 +230,60 @@ private struct TaskListRow: View {
     let assignee: String?
     let onToggle: () -> Void
 
+    /// Ticks from this row's own checkbox, for the pop. Local for the same
+    /// reason the haptic is: a chore somebody else finished arrives as a plain
+    /// change of glyph, not as a celebration of a tap nobody here made.
+    @State private var pops = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     /// Just the card. The swipe is the List's, and it reaches VoiceOver as an
     /// action without being asked to.
     var body: some View { card }
 
     private var card: some View {
         HStack(spacing: 12) {
-            Button(action: onToggle) {
+            Button(action: toggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(task.isCompleted ? Palette.success : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
+                    // The tick grows out of the ring rather than swapping in.
+                    .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
+                    // Squash, overshoot, settle: the box answers the thumb.
+                    .keyframeAnimator(initialValue: CGFloat(1), trigger: pops) { content, scale in
+                        content.scaleEffect(scale)
+                    } keyframes: { _ in
+                        CubicKeyframe(0.8, duration: 0.08)
+                        SpringKeyframe(1.18, duration: 0.12)
+                        SpringKeyframe(1, duration: 0.15, spring: .init(duration: 0.15, bounce: 0.5))
+                    }
                     .frame(width: 34, height: 34)
                     .contentShape(.circle)
             }
             .buttonStyle(.pressable)
-            .sensoryFeedback(.success, trigger: task.isCompleted) { _, done in done }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(task.title)
                     .font(.subheadline.weight(.medium))
-                    .strikethrough(task.isCompleted, color: .secondary)
                     .foregroundStyle(task.isCompleted ? .secondary : .primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    // The strikethrough is drawn by a second copy of the title
+                    // whose letters are clear, so the line alone can be swept
+                    // across — left to right as the chore is ticked, back the
+                    // other way when it is reopened. It exists only while the
+                    // chore is done, so an open row carries nothing extra.
+                    .overlay(alignment: .leading) {
+                        if task.isCompleted {
+                            Text(task.title)
+                                .font(.subheadline.weight(.medium))
+                                .strikethrough(color: .secondary)
+                                .foregroundStyle(.clear)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
+                                .transition(strikeTransition)
+                                .accessibilityHidden(true)
+                        }
+                    }
 
                 HStack(spacing: 8) {
                     Label {
@@ -274,7 +316,28 @@ private struct TaskListRow: View {
         .animation(Motion.spring, value: task.isCompleted)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(task.isCompleted ? [.isButton, .isSelected] : .isButton)
-        .accessibilityAction(named: Text(L10n.tasksToggleAction), onToggle)
+        .accessibilityAction(named: Text(L10n.tasksToggleAction), toggle)
+    }
+
+    /// Only ticking pops; reopening a chore is a correction, not an event.
+    /// Under Reduce Motion the glyph still changes and the phone still taps —
+    /// it is the squash and the overshoot that go.
+    private func toggle() {
+        if !task.isCompleted, !reduceMotion { pops += 1 }
+        onToggle()
+    }
+
+    private var strikeTransition: AnyTransition {
+        reduceMotion ? .opacity : AnyTransition(Strike()).animation(.easeOut(duration: 0.25))
+    }
+
+    /// The strikethrough drawing itself across the title. A horizontal scale
+    /// rather than a mask, because the letters on this layer are clear — all
+    /// there is to stretch is the line, and a stretched line is a growing one.
+    private struct Strike: Transition {
+        func body(content: Content, phase: TransitionPhase) -> some View {
+            content.scaleEffect(x: phase.isIdentity ? 1 : 0.01, anchor: .leading)
+        }
     }
 }
 

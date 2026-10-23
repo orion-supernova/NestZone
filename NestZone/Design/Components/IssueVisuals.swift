@@ -290,6 +290,9 @@ public struct StatusTrack: View {
 
     @Namespace private var pill
     @Environment(\.theme) private var theme
+    /// Taps on a rung that move the problem. Counted here, so the tick belongs
+    /// to this person's tap and never to a status somebody else changed.
+    @State private var moves = 0
 
     public init(status: IssueStatus, onSelect: @escaping (IssueStatus) -> Void) {
         self.status = status
@@ -313,7 +316,10 @@ public struct StatusTrack: View {
                 let isReached = effective.rank >= rung.rank
                 let isHere = effective == rung
 
-                Button { onSelect(rung) } label: {
+                Button {
+                    if rung != status { moves += 1 }
+                    onSelect(rung)
+                } label: {
                     VStack(spacing: 5) {
                         ZStack {
                             if isHere {
@@ -328,6 +334,10 @@ public struct StatusTrack: View {
                                     isHere ? Color.white
                                         : (isReached ? rung.tint : Palette.accessory)
                                 )
+                                // A rung that changes glyph — stuck becoming
+                                // under way again, won't-fix becoming fixed —
+                                // swaps it rather than cutting.
+                                .contentTransition(.symbolEffect(.replace))
                                 // Only the rung the problem is standing on
                                 // reacts, and only when it arrives there.
                                 .bounces(when: isHere)
@@ -343,7 +353,8 @@ public struct StatusTrack: View {
                     .frame(maxWidth: .infinity)
                     .contentShape(.rect)
                 }
-                .buttonStyle(.pressable)
+                // Quiet: the move's tick is the track's one haptic.
+                .buttonStyle(.pressableQuiet)
                 .accessibilityLabel(Text(rung.title))
                 .accessibilityAddTraits(isHere ? [.isButton, .isSelected] : .isButton)
 
@@ -363,6 +374,10 @@ public struct StatusTrack: View {
             }
         }
         .animation(Motion.spring, value: status)
+        // A tick for the move. Landing on Fixed gets its own, firmer haptic
+        // from the screen once the move is saved — this tap may only have
+        // opened the sheet that asks what fixed it.
+        .sensoryFeedback(.selection, trigger: moves)
         .accessibilityElement(children: .contain)
     }
 }
@@ -458,7 +473,7 @@ public struct SeveritySplitBar: View {
         }
         .animation(Motion.spring, value: counts)
         .animation(Motion.fade, value: selection)
-        .onAppear { withAnimation(Motion.arrive.delay(0.15)) { grown = true } }
+        .drawIn($grown, animation: Motion.arrive.delay(0.15))
     }
 }
 

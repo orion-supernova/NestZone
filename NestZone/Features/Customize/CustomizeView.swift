@@ -9,6 +9,11 @@ import SwiftUI
 public struct CustomizeView: View {
     @Bindable var store: StoreOf<CustomizeFeature>
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Automatic, Always or Off picked from a row's menu — counted here so the
+    /// tick answers the pick and nothing else (Reset moves them all, silently).
+    @State private var picks = 0
+
     public init(store: StoreOf<CustomizeFeature>) {
         self.store = store
     }
@@ -25,6 +30,7 @@ public struct CustomizeView: View {
         // Always reorderable: the handles are the point of the list, and an
         // Edit button to reveal them is one more thing to find.
         .environment(\.editMode, .constant(.active))
+        .sensoryFeedback(.selection, trigger: picks)
         .navigationTitle(Text(L10n.customizeTitle))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -44,7 +50,10 @@ public struct CustomizeView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Picker(selection: Binding(
                         get: { store.layout.visibility(of: section) },
-                        set: { store.send(.visibilityPicked(section, $0)) }
+                        set: {
+                            picks += 1
+                            store.send(.visibilityPicked(section, $0), animation: Motion.spring)
+                        }
                     )) {
                         ForEach(SectionVisibility.allCases) { visibility in
                             Text(visibility.title).tag(visibility)
@@ -61,6 +70,9 @@ public struct CustomizeView: View {
                         Text(section.automaticMeaning)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
+                            // Comes and goes with the setting, blurring in
+                            // and out rather than popping.
+                            .transition(reduceMotion ? AnyTransition.opacity : AnyTransition(.blurReplace))
                     }
                 }
                 .accessibilityIdentifier("Customize.\(section.rawValue)")

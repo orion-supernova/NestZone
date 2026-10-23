@@ -14,6 +14,9 @@ struct CompanionCard: View {
 
     @Environment(\.theme) private var theme
     @State private var detent = PresentationDetent.medium
+    /// Taps on Water in a row, for a reaction that grows with them.
+    @State private var careCombo = 0
+    @State private var lastCare = Date.distantPast
     /// Icons differ in height, and the labels under them have to share a
     /// line: "Holidays" sat higher than the rest under its shorter calendar.
     @ScaledMetric(relativeTo: .body) private var actionIcon = 24.0
@@ -30,6 +33,8 @@ struct CompanionCard: View {
             get: { store.sheet?.isMoment == true ? nil : store.sheet },
             set: { if $0 == nil { store.send(.sheetDismissed) } }
         )) { sheet in
+            // A plain sheet: a zoom out of the jar could be pulled closed from
+            // anywhere, and a shop full of scrolling closed under the finger.
             CompanionSheet(store: store, sheet: sheet, detent: $detent)
         }
         .onChange(of: store.sheet == nil) { _, closed in if closed { detent = .medium } }
@@ -52,12 +57,19 @@ struct CompanionCard: View {
     /// Development builds can be driven from the command line, for
     /// screenshots of states that otherwise need a finger:
     /// `simctl launch … -companionDemo care` (or decorate, album, holidays,
-    /// lab, choose, pick, celebrate, dress).
+    /// lab, choose, pick, celebrate, dress, shop, store, buy, makeup, short,
+    /// topup, pay, info).
     private func demo() async {
         guard !compact, let demo = UserDefaults.standard.string(forKey: "companionDemo") else { return }
         try? await Task.sleep(for: .seconds(2.5))
         switch demo {
         case "care": store.send(.careTapped)
+        case "waterspam":
+            // Water tapped over and over, the way a person does when it's fun.
+            for _ in 0..<12 {
+                store.send(.careTapped)
+                try? await Task.sleep(for: .milliseconds(120))
+            }
         case "decorate":
             store.send(.decorateTapped)
             if let spot = UserDefaults.standard.string(forKey: "companionSpot").flatMap(Spot.init(rawValue:)) {
@@ -79,7 +91,39 @@ struct CompanionCard: View {
             store.send(.chose(.magnolia))
             store.send(.labPoints(60))
         case "celebrate": store.send(.celebrateTapped)
-        case "dress": if let holiday = store.holidayToDress { store.send(.dressTapped(holiday.id)) }
+        case "shop": store.send(.shopTapped)
+        case "store":
+            store.send(.shopTapped)
+            try? await Task.sleep(for: .seconds(1))
+            store.send(.storeTapped)
+        case "buy", "makeup", "short", "topup":
+            // The card before buying the kilim (250 Leaves): with the jar as
+            // it is, with 60 Leaves and Sparkles to make up the rest, or with
+            // 60 Leaves and none — and then off to the store and back.
+            store.send(.decorateTapped)
+            store.send(.spotPicked(.ground))
+            if demo != "buy" {
+                let sparkles = demo == "makeup" ? 300 : 0
+                store.send(.labCoins(Coins(leaves: 60 - store.house.leaves, sparkles: sparkles - store.house.sparkles)))
+            }
+            try? await Task.sleep(for: .seconds(1))
+            store.send(.itemTapped(.decor(.kilim)), animation: ShopMotion.cardIn)
+            guard demo == "topup" else { return }
+            try? await Task.sleep(for: .seconds(2.5))
+            store.send(.cardStoreTapped)
+            try? await Task.sleep(for: .seconds(2.5))
+            if let pack = store.packs.first { store.send(.packTapped(pack)) }
+        case "pay":
+            // Bought: the coins fly from the jar, the card says it's in.
+            store.send(.shopTapped)
+            try? await Task.sleep(for: .seconds(1.2))
+            store.send(.itemTapped(.decor(.bow)), animation: ShopMotion.cardIn)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.cardBuyTapped, animation: Motion.spring)
+        case "info":
+            store.send(.shopTapped)
+            try? await Task.sleep(for: .seconds(1.2))
+            store.send(.itemTapped(.species(.hedgehog)), animation: ShopMotion.cardIn)
         default: break
         }
     }
@@ -164,7 +208,7 @@ struct CompanionCard: View {
     /// with nobody watching and it jumped when the sheet closed.
     private var isCovered: Bool {
         guard let sheet = store.sheet else { return false }
-        return sheet == .decorate || sheet.isMoment || detent == .large
+        return sheet == .decorate || sheet == .shop || sheet.isMoment || detent == .large
     }
 
     private var stageTitle: LocalizedStringResource {
@@ -203,31 +247,34 @@ struct CompanionCard: View {
     }
 
     /// The house jar — Leaves and Sparkles side by side — with a "+10" that
-    /// rises out of it when it is paid.
+    /// drops into it when it is paid. It opens the shop.
     private var jar: some View {
-        Button { store.send(.decorateTapped) } label: {
-            HStack(spacing: 8) {
-                coin("🍃", store.house.leaves)
-                coin("✨", store.house.sparkles)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .glassControl()
+        Button { store.send(.shopTapped) } label: {
+            JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles, opensStore: false)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 40)
+                .glassControl()
         }
         .buttonStyle(.plain)
         .overlay(alignment: .top) {
-            if let pay = store.lastPay {
-                (Text(L10n.companionPay(pay.coins.leaves)) + Text(verbatim: " 🍃  ")
-                    + Text(L10n.companionPay(pay.coins.sparkles)) + Text(verbatim: " ✨"))
-                    .font(.caption.weight(.bold))
+            // Under a sheet nobody would see it land; it waits for nothing.
+            if let pay = store.lastPay, !isCovered {
+                payment(pay.coins)
+                    .font(.caption.weight(.heavy))
                     .foregroundStyle(Palette.success)
                     .fixedSize()
                     .phaseAnimator([0, 1, 2], trigger: pay.id) { content, phase in
+                        // Earnings drop into the jar: they show above it, then
+                        // fall in. Rising away from it read as money leaving.
                         content
-                            .offset(y: phase == 1 ? -22 : -6)
+                            .offset(y: phase == 2 ? 0 : -24)
                             .opacity(phase == 1 ? 1 : 0)
                     } animation: { phase in
-                        phase == 1 ? .easeOut(duration: 0.35) : .easeIn(duration: 0.8).delay(0.6)
+                        switch phase {
+                        case 1: .easeOut(duration: 0.2)
+                        case 2: .spring(duration: 0.35, bounce: 0).delay(0.4)
+                        default: nil
+                        }
                     }
                     .allowsHitTesting(false)
             }
@@ -236,16 +283,20 @@ struct CompanionCard: View {
         .animation(Motion.spring, value: store.house.sparkles)
         .accessibilityLabel(Text(L10n.companionJar))
         .accessibilityValue(Text(L10n.companionJarBoth(store.house.leaves, store.house.sparkles)))
+        .accessibilityIdentifier("CardJar")
     }
 
-    private func coin(_ symbol: String, _ amount: Int) -> some View {
-        HStack(spacing: 3) {
-            Text(verbatim: symbol)
-            Text(amount, format: .number)
-                .font(.subheadline.weight(.semibold).monospacedDigit())
-                .contentTransition(.numericText())
+    /// "+10 [leaf]  +5 [sparkle]", leaving out a currency that wasn't paid: a
+    /// top-up of Sparkles is not "+0" Leaves.
+    private func payment(_ coins: Coins) -> some View {
+        HStack(spacing: 8) {
+            if coins.leaves != 0 {
+                HStack(spacing: 2) { Text(L10n.companionPay(coins.leaves)); Image(systemName: Amount.Currency.leaves.symbol).foregroundStyle(Palette.leaf) }
+            }
+            if coins.sparkles != 0 {
+                HStack(spacing: 2) { Text(L10n.companionPay(coins.sparkles)); Image(systemName: Amount.Currency.sparkles.symbol).foregroundStyle(Palette.sparkle) }
+            }
         }
-        .fixedSize()
     }
 
     /// Equal tiles, the icon over a one-line label, so a long word in one
@@ -311,22 +362,44 @@ struct CompanionCard: View {
 
     /// Water for a plant, a pet for a pet. Counts once a day per phone; every
     /// tap still gets a reaction.
+    /// Every tap answers: the drop (or heart) bounces, a little one rises out
+    /// of the button, and the tap is felt a touch harder the more of them come
+    /// in a row. Today's care, once given, is a small check drawn on the
+    /// glyph — the glyph itself stays, so the button keeps answering.
     private func careButton(_ current: Companion, small: Bool = false) -> some View {
-        Button { store.send(.careTapped) } label: {
+        let symbol = current.species.isPet ? "heart.fill" : "drop.fill"
+        return Button {
+            let now = Date()
+            careCombo = now.timeIntervalSince(lastCare) < 1.2 ? careCombo + 1 : 1
+            lastCare = now
+            store.send(.careTapped)
+        } label: {
             Label {
                 Text(current.species.isPet ? L10n.companionPet : L10n.companionWater)
                     .fixedSize()
             } icon: {
-                Image(systemName: store.caredToday ? "checkmark" : current.species.isPet ? "heart.fill" : "drop.fill")
-                    .contentTransition(.symbolEffect(.replace))
+                Image(systemName: symbol)
+                    .symbolEffect(.bounce.down.byLayer, value: store.careTick)
+                    .overlay(alignment: .bottomTrailing) {
+                        if store.caredToday {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: small ? 8 : 10, weight: .bold))
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.white, Palette.success)
+                                .offset(x: 4, y: 3)
+                                .transition(.symbolEffect(.drawOn))
+                        }
+                    }
             }
             .font((small ? Font.caption : .subheadline).weight(.semibold))
             .padding(.horizontal, small ? 10 : 12)
             .padding(.vertical, small ? 6 : 8)
             .glassControl(tinted: store.caredToday ? nil : theme.accent.opacity(0.35))
+            .overlay(alignment: .top) { CareRise(symbol: symbol, tick: store.careTick) }
+            .animation(Motion.pop, value: store.caredToday)
         }
-        .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: store.careTick)
+        .buttonStyle(PressableButtonStyle(scale: 0.92))
+        .sensoryFeedback(.impact(weight: .light, intensity: min(0.5 + 0.12 * Double(careCombo), 1)), trigger: store.careTick)
         .accessibilityHint(Text(L10n.companionCareHint))
         .accessibilityIdentifier("CompanionCare")
     }
@@ -422,5 +495,31 @@ struct CompanionCard: View {
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
+    }
+}
+
+/// A little drop (or heart) rising out of the Water button with each tap and
+/// fading as it goes. One per tap; never under Reduce Motion.
+private struct CareRise: View {
+    let symbol: String
+    let tick: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if !reduceMotion, tick > 0 {
+            Image(systemName: symbol)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(symbol == "drop.fill" ? SceneInk.water : SceneInk.heart)
+                .phaseAnimator([0.0, 1.0], trigger: tick) { content, phase in
+                    content
+                        .offset(y: -18 * phase)
+                        .opacity(phase == 0 ? 0 : 1 - phase * 0.9)
+                        .scaleEffect(1 - 0.3 * phase)
+                } animation: { phase in
+                    phase == 1 ? .easeOut(duration: 0.6) : nil
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
     }
 }

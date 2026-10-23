@@ -525,6 +525,9 @@ struct StatusNoteSheet: View {
                     Image(systemName: note.status.symbol)
                         .font(.title3)
                         .foregroundStyle(note.status.tint)
+                        // The seal, or the raised hand, greets the sheet: the
+                        // move is the point, the sentence is the extra.
+                        .bounces()
                         .frame(width: 42, height: 42)
                         .background(note.status.tint.opacity(0.16), in: .circle)
                     VStack(alignment: .leading, spacing: 2) {

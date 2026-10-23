@@ -22,6 +22,11 @@ struct CaptureView: View {
                     preview
                 }
                 .padding(Metrics.screenPadding)
+                // Typing can move the guess from one kind to another, and the
+                // chip and the preview move with it rather than cutting. Keyed
+                // on the kind alone, so a keystroke that leaves the kind where
+                // it was is not animated.
+                .animation(Motion.spring, value: store.kind)
             }
             .scrollBounceBehavior(.basedOnSize)
             .safeAreaInset(edge: .bottom) { addButton }
@@ -90,7 +95,9 @@ struct CaptureView: View {
                 }
             }
         }
-        .sensoryFeedback(.selection, trigger: store.kind)
+        // No tick of its own: a chip gives one when it is tapped, and the
+        // guess moving while somebody types — sometimes on the model's late
+        // answer, well after the keystroke — is not a tap.
     }
 
     // MARK: Preview
@@ -234,6 +241,7 @@ struct CaptureView: View {
         .padding(.horizontal, Metrics.screenPadding)
         .padding(.top, 8)
         .padding(.bottom, 12)
+        .animation(Motion.spring, value: store.kind)
     }
 
     /// Says what the tap will do, not just "Add".

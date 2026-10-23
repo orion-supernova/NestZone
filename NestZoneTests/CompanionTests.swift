@@ -183,6 +183,64 @@ struct CompanionTests {
         #expect(!house.canAfford(.sparkles(Rewards.welcome.sparkles)))
     }
 
+    // MARK: Buying
+
+    @Test("A Leaves price the jar can't meet is made up with Sparkles, one for one, and never the other way")
+    func checkout() {
+        var house = CompanionHouse()
+        house.leaves = 60
+        house.sparkles = 50
+        #expect(house.checkout(.leaves(50)) == .pay(Coins(leaves: 50, sparkles: 0)))
+        #expect(house.checkout(.leaves(100)) == .makeUp(Coins(leaves: 60, sparkles: 40), short: 40))
+        #expect(house.checkout(.leaves(200)) == .short(sparkles: 90))
+        #expect(house.checkout(.sparkles(80)) == .short(sparkles: 30))
+        house.leaves = 1_000
+        #expect(house.checkout(.sparkles(80)) == .short(sparkles: 30))
+        // A refund below zero pays for nothing.
+        house.sparkles = -20
+        #expect(house.checkout(.sparkles(10)) == .short(sparkles: 10))
+    }
+
+    @Test("Buying a pet from a pack buys the pack")
+    func packs() {
+        #expect(SpeciesPack.allCases.allSatisfy { $0.species.count == 3 })
+        #expect(ShopItem.species(.fox).bought == .pack(.forestFriends))
+        var house = CompanionHouse()
+        house.receive(.pack(.snowFriends))
+        #expect(house.ownedSpecies == Set([Species.penguin, .snowFox, .polarCub].map(\.rawValue)))
+    }
+
+    @Test("The finale counts only what can be grown without Sparkles")
+    func finale() {
+        #expect(Species.freeToHave.contains(.pomegranate) && Species.freeToHave.contains(.cherry) && Species.freeToHave.contains(.olive))
+        #expect(!Species.freeToHave.contains(.lemon) && !Species.freeToHave.contains(.fox))
+    }
+
+    @Test("Seasons that follow nature turn round south of the equator; a date's season doesn't")
+    func seasons() {
+        #expect(Season.spring.months(southern: true) == [9, 10, 11])
+        #expect(Season(months: [10, 11], followsNature: false).months(southern: true) == [10, 11])
+        #expect(Season.spring.contains(date(2026, 4, 1), southern: false, calendar: Self.calendar))
+        #expect(!Season.spring.contains(date(2026, 4, 1), southern: true, calendar: Self.calendar))
+    }
+
+    @Test("What a holiday brings is free while it lasts; only a holiday that isn't a faith's sells it")
+    func holidayShelf() throws {
+        let diwali = try #require(Holiday.with(.diwali))
+        let halloween = try #require(Holiday.with(.halloween))
+        let christmas = try #require(Holiday.with(.christmas))
+        func shelf(_ holidays: [Holiday]) -> ShopContext {
+            ShopContext(clock: date(2026, 10, 25), southern: false, owned: [], ownedSpecies: [], album: [],
+                        holidays: holidays, isBirthday: false)
+        }
+        #expect(shelf([diwali]).standing(of: DecorItem.fairyLights) == .sale(.leaves(150), freeToday: true))
+        #expect(shelf([]).standing(of: DecorItem.fairyLights) == .buy(.leaves(150)))
+        #expect(shelf([halloween]).standing(of: DecorItem.pumpkin) == .sale(.sparkles(120), freeToday: true))
+        #expect(shelf([christmas]).standing(of: DecorItem.ornaments) == .freeToday)
+        #expect(shelf([]).standing(of: DecorItem.candyBowl) == .locked(.holiday(.eidAlFitr)))
+        #expect(!christmas.sells && halloween.sells)
+    }
+
     @Test("A saved house with fields missing still opens")
     func lenientDecoding() throws {
         let json = #"{"jar": 40, "album": [], "current": {"species": "magnolia", "seed": "h-0", "startedAt": 0}}"#

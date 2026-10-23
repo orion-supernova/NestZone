@@ -66,6 +66,9 @@ public struct IssueDetailView: View {
         .safeAreaInset(edge: .bottom) { composer }
         // The problem is fixed. The one thing on this screen worth celebrating.
         .overlay { ConfettiBurst(trigger: store.fixedCelebration) }
+        // Bumped only when this person's own move lands on Fixed (see
+        // `commitStatus`), never by a push — so the haptic is theirs too.
+        .sensoryFeedback(.success, trigger: store.fixedCelebration)
         .task { await store.send(.task).finish() }
         .onChange(of: picked) { _, items in
             guard !items.isEmpty else { return }
@@ -291,7 +294,9 @@ public struct IssueDetailView: View {
                 if issue.status == .fixed,
                    let resolution = issue.resolution, !resolution.isEmpty {
                     Label { Text(resolution) } icon: {
+                        // What fixed it arrives with a small pop of the seal.
                         Image(systemName: "checkmark.seal.fill")
+                            .bounces()
                     }
                     .font(.footnote)
                     .foregroundStyle(Palette.success)

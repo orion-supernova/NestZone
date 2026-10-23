@@ -729,7 +729,10 @@ struct EventDetailSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isItemFocused: Bool
+    /// Your own answers here — see `RSVPTaps`.
+    @State private var rsvpTaps = RSVPTaps()
 
     var body: some View {
         NavigationStack {
@@ -906,17 +909,35 @@ struct EventDetailSheet: View {
                         }
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Palette.success)
+                        .transition(reduceMotion ? .opacity : .scale(scale: 0.6).combined(with: .opacity))
                     }
                 }
+                // Without a transaction of its own the count snapped: nothing
+                // else animates when an answer lands, so `AnimatedNumber` had
+                // nothing to roll with.
+                .animation(Motion.spring, value: store.goingCount)
 
                 HStack(spacing: 6) {
                     ForEach(RSVPStatus.allCases) { status in
                         let isMine = store.myRSVP == status
-                        Button { store.send(.rsvpTapped(status)) } label: {
+                        Button {
+                            let before = store.myRSVP
+                            store.send(.rsvpTapped(status))
+                            // Only a tap that took. One sent while the last
+                            // answer is still in flight is refused, and that is
+                            // nothing to acknowledge.
+                            if store.myRSVP != before { rsvpTaps.record(store.myRSVP) }
+                        } label: {
                             HStack(spacing: 5) {
                                 Image(systemName: status.symbol)
                                     .font(.caption.weight(.bold))
-                                    .bounces(when: isMine)
+                                    // On your tap, not when the sheet opens on
+                                    // an answer you gave last week.
+                                    .symbolEffect(
+                                        .bounce,
+                                        options: .nonRepeating,
+                                        value: reduceMotion ? 0 : rsvpTaps.bounces(of: status)
+                                    )
                                 Text(status.title)
                                     .font(.caption.weight(.semibold))
                             }
@@ -931,12 +952,13 @@ struct EventDetailSheet: View {
                             )
                             .contentShape(.capsule)
                         }
-                        .buttonStyle(.pressable)
+                        .buttonStyle(.pressableQuiet)
                         .accessibilityAddTraits(isMine ? [.isButton, .isSelected] : .isButton)
                     }
                 }
                 .animation(Motion.spring, value: store.myRSVP)
-                .sensoryFeedback(.selection, trigger: store.myRSVP)
+                // A tick for maybe and can't, a little more for coming.
+                .sensoryFeedback(trigger: rsvpTaps, RSVPTaps.feedback)
             }
         }
     }
@@ -1728,7 +1750,11 @@ struct RecipePickerSheet: View {
                                 sectionHeading(L10n.calendarYourRecipes, symbol: "books.vertical.fill")
                             }
                             ForEach(Array(store.state.filtered.enumerated()), id: \.element.id) { index, recipe in
-                                row(recipe).appear(index)
+                                // Only the first screenful staggers. A lazy row
+                                // appears when it is scrolled to, and the fortieth
+                                // waiting its capped delay read as the list lagging
+                                // behind the finger.
+                                row(recipe).appear(index < 8 ? index : 0)
                             }
                         }
 
@@ -1742,7 +1768,7 @@ struct RecipePickerSheet: View {
                             sectionHeading(L10n.calendarExploreRecipes, symbol: "sparkles")
                                 .padding(.top, store.state.filtered.isEmpty ? 0 : 10)
                             ForEach(Array(store.state.filteredSamples.enumerated()), id: \.element.id) { index, recipe in
-                                row(recipe).appear(index)
+                                row(recipe).appear(index < 8 ? index : 0)
                             }
                         }
                     }

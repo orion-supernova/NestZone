@@ -1798,6 +1798,10 @@ extension Canopy {
                           flower: Flower(kind: .tiny, per: (0, 1), size: 4, a: 0xF4F0D6, b: 0xFFFBE8, c: 0xD4C77C, glow: 0xFFFBE8),
                           crop: Crop(kind: .olive, share: 0.75, size: 5.6, a: 0x3E2C45, shade: 0x20162A, hi: 0xA796BB, crown: 0x4D5A2A),
                           H: 214, HW: 210)
+            default:
+                // Species not drawn as trees yet are sketched instead
+                // (`Species.art`); a canopy for one is never shown.
+                self.init(.magnolia)
             }
         }
         // swiftlint:enable line_length

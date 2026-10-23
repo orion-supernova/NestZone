@@ -1,27 +1,56 @@
 import ComposableArchitecture
 import SwiftUI
 
-/// The sheets behind the companion card: choosing one, decorating, the album,
-/// the house's holidays, and the lab on development builds.
+/// The sheets behind the companion card: choosing one, decorating, the shop,
+/// the album, the house's holidays, and the lab on development builds. Any of
+/// them can push the Sparkles store. The purchase card floats over the sheet's
+/// first screen, so a pushed store covers it and going back finds it there.
 struct CompanionSheet: View {
     @Bindable var store: StoreOf<CompanionFeature>
     let sheet: CompanionFeature.State.Sheet
     /// How far it is pulled up, so the card knows whether it is covered.
     @Binding var detent: PresentationDetent
+    @State private var geometry = ShopGeometry()
 
     var body: some View {
         NavigationStack {
-            switch sheet {
-            case .choose: ChooseView(store: store)
-            case .decorate: DecorateView(store: store)
-            case .album: AlbumView(store: store)
-            case .holidays: HolidaysView(store: store)
-            case .lab: LabView(store: store)
-            case .ceremony, .welcome: EmptyView()
+            Group {
+                switch sheet {
+                case .choose: ChooseView(store: store)
+                case .decorate: DecorateView(store: store)
+                case .shop: ShopView(store: store)
+                case .album: AlbumView(store: store)
+                case .holidays: HolidaysView(store: store)
+                case .lab: LabView(store: store)
+                case .ceremony, .welcome: EmptyView()
+                }
             }
+            .overlay { PurchaseCardLayer(store: store) }
         }
-        .presentationDetents(sheet == .decorate ? [.large] : [.medium, .large],
-                             selection: sheet == .decorate ? .constant(.large) : $detent)
+        .overlay { CoinFlightLayer(geometry: geometry) }
+        // The store covers the whole screen, so the Sparkles landing in the
+        // jar are in view however far down the packs it was scrolled.
+        .fullScreenCover(isPresented: Binding(
+            get: { store.storeOpen },
+            set: { if !$0 { store.send(.storeDismissed) } }
+        )) {
+            SparkleStoreScreen(store: store, stage: stage)
+        }
+        // Full of lanes and grids that scroll: a swipe meant for them closed
+        // the shop. It closes with its button.
+        .interactiveDismissDisabled(sheet == .shop)
+        .environment(\.shopGeometry, geometry)
+        .environment(\.shopStage, stage)
+        .presentationDetents(isTall ? [.large] : [.medium, .large],
+                             selection: isTall ? .constant(.large) : $detent)
+    }
+
+    /// Decorating and shopping need the whole screen.
+    private var isTall: Bool { sheet == .decorate || sheet == .shop }
+
+    /// The shop in the light of the house's hour, or held at dusk by the Lab.
+    private var stage: ShopStage {
+        store.house.lab.dusk ? .night : ShopStage(hour: Calendar.current.component(.hour, from: store.clock))
     }
 }
 
@@ -36,42 +65,28 @@ private enum SheetInk {
     static let caption = Color.white.opacity(0.75)
 }
 
-/// A companion drawn still, for a card that is not the live one.
-private struct Portrait: View {
-    let species: Species
-    let seed: String
-    var mood: Mood = .content
-
-    var body: some View {
-        ScenePortrait(
-            companion: Companion(species: species, seed: seed, startedAt: .distantPast), mood: mood,
-            now: Calendar.current.date(bySettingHour: 13, minute: 0, second: 0, of: Date()) ?? Date()
-        )
-        .allowsHitTesting(false)
-    }
-}
-
 // MARK: - Choose
 
 private struct ChooseView: View {
     let store: StoreOf<CompanionFeature>
 
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
     @State private var position = ScrollPosition(edge: .top)
 
     var body: some View {
+        let shop = store.shop
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 Text(L10n.chooseHint)
-                    .font(.subheadline)
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .oneLine()
-                group(L10n.choosePlants, Species.allCases.filter { !$0.isPet })
-                group(L10n.choosePets, Species.allCases.filter(\.isPet))
+                    .padding(.horizontal, 20)
+                group(L10n.choosePlants, Species.allCases.filter { !$0.isPet }, shop, jar: true)
+                group(L10n.choosePets, Species.allCases.filter(\.isPet), shop)
             }
-            .padding(Metrics.screenPadding)
+            .padding(.vertical, 12)
         }
         .scrollPosition($position)
+        .scrollIndicators(.hidden)
         #if DEBUG
         .task { await scrollForever() }
         #endif
@@ -98,32 +113,41 @@ private struct ChooseView: View {
     }
     #endif
 
-    private func group(_ title: LocalizedStringResource, _ species: [Species]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-                .oneLine()
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(species) { kind in
-                    Button { store.send(.chose(kind), animation: Motion.arrive) } label: {
-                        VStack(spacing: 0) {
-                            Portrait(species: kind, seed: "\(store.homeID.rawValue)-\(store.house.album.count)", mood: .bright)
-                                .frame(height: 150)
-                            Text(kind.title)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.primary)
-                                .oneLine()
-                                .padding(10)
-                        }
-                        .clipShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))
-                        .glassCard(cornerRadius: Metrics.tightRadius)
+    /// The house's own and today's free ones first, then the ones to buy —
+    /// tapping one asks before it spends — then the ones that can't be had
+    /// today, which say when they can. The jar sits beside the first heading:
+    /// over the title it squeezed "Meet Nestie" to "Meet Ne…".
+    private func group(_ title: LocalizedStringResource, _ species: [Species], _ shop: ShopContext, jar: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(title)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.primary)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 8)
+                if jar {
+                    Button { store.send(.storeTapped) } label: {
+                        JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 44)
+                            .glassControl()
                     }
                     .buttonStyle(.pressable)
+                }
+            }
+            .padding(.horizontal, 20)
+            ShopGrid(columns: 2) {
+                ForEach(shelved(species, shop)) { kind in
+                    SpeciesTile(
+                        species: kind, seed: "\(store.homeID.rawValue)-\(store.house.album.count)",
+                        standing: shop.standing(of: kind), southern: store.southern, now: store.clock
+                    ) {
+                        store.send(.growTapped(kind), animation: ShopMotion.cardIn)
+                    }
                     .accessibilityIdentifier("Choose.\(kind.rawValue)")
                 }
             }
+            .padding(.horizontal, 20)
         }
     }
 }
@@ -190,6 +214,11 @@ private struct DecorateView: View {
         case .sky: return CGRect(x: 12, y: 50, width: 64, height: 26)
         case .weather: return CGRect(x: width - 90, y: 50, width: 78, height: 26)
         case .tree: return CGRect(x: center - 96, y: SceneSpace.soil - 226, width: 192, height: 198)
+        // Beside the crown, clear of the tree's own spot; on a pet's head.
+        case .wearing:
+            return store.isPet
+                ? CGRect(x: center - 32, y: SceneSpace.floor - 222, width: 64, height: 40)
+                : CGRect(x: center + 100, y: SceneSpace.soil - 150, width: 58, height: 40)
         case .pot: return CGRect(x: center - 58, y: SceneSpace.soil - 12, width: 116, height: 80)
         case .left: return CGRect(x: center - SceneSpace.floorOffset - 28, y: SceneSpace.floor - 48, width: 56, height: 56)
         case .right: return CGRect(x: center + SceneSpace.floorOffset - 28, y: SceneSpace.floor - 48, width: 56, height: 56)
@@ -202,7 +231,8 @@ private struct DecorateView: View {
         let width = size.width / scale
         let rect = frame(of: spot, width: width)
         let isOn = store.decorateSpot == spot
-        let stroke = StrokeStyle(lineWidth: isOn ? 2.4 : 1.6, dash: [5, 4], dashPhase: dash)
+        // Only the spot being dressed moves; the rest hold still.
+        let stroke = StrokeStyle(lineWidth: isOn ? 2.4 : 1.6, dash: [5, 4], dashPhase: isOn ? dash : 0)
         let color = isOn ? Palette.lemon : SheetInk.spot
         return Button { store.send(.spotPicked(spot), animation: Motion.spring) } label: {
             ZStack(alignment: .top) {
@@ -221,7 +251,7 @@ private struct DecorateView: View {
                     }
                 }
                 Text(spot.title)
-                    .font(.caption2.weight(.semibold))
+                    .font(.footnote.weight(.bold))
                     .fixedSize()
                     .foregroundStyle(isOn ? Palette.lemon : .white)
                     .padding(.horizontal, 6)
@@ -242,48 +272,66 @@ private struct DecorateView: View {
     // MARK: The tray
 
     private var tray: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let spot = store.decorateSpot {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(spot.title).font(.headline).oneLine()
-                    Spacer()
+        let shop = store.shop
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 8) {
+                if let spot = store.decorateSpot {
+                    Text(spot.title)
+                        .font(.headline)
+                        .lineLimit(1)
                     Text(spot == .tree ? L10n.decorateTreeLimit : L10n.decorateOneThing)
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .oneLine()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.9)
+                } else {
+                    Text(L10n.decoratePickSpot)
+                        .font(.headline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.9)
                 }
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(choices(for: spot), id: \.rawValue) { decor in
-                            item(decor, in: spot)
+                Spacer(minLength: 8)
+                Button { store.send(.storeTapped) } label: {
+                    JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .glassControl()
+                }
+                .buttonStyle(.pressable)
+            }
+            if let spot = store.decorateSpot {
+                ScrollView(.horizontal) {
+                    GlassGroup(spacing: 0) {
+                        HStack(spacing: 10) {
+                            ForEach(choices(for: spot, shop), id: \.rawValue) { decor in
+                                item(decor, in: spot, shop)
+                            }
                         }
                     }
                 }
-                preview
-            } else {
-                Text(L10n.decoratePickSpot).font(.headline).oneLine()
+                .scrollIndicators(.hidden)
+                preview(shop)
             }
             if !store.activeHolidays.isEmpty {
                 Text(L10n.decorateSets)
-                    .font(.caption.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .oneLine()
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal) {
                     HStack(spacing: 8) {
                         ForEach(store.activeHolidays) { holiday in
-                            Button { store.send(.setPicked(holiday.id), animation: Motion.celebrate) } label: {
+                            Button { store.send(.setPicked(holiday.id), animation: Motion.spring) } label: {
                                 Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
                                     .font(.subheadline.weight(.semibold))
                                     .fixedSize()
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 14)
+                                    .frame(minHeight: 44)
                                     .glassControl()
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.pressable)
                         }
                     }
                 }
+                .scrollIndicators(.hidden)
             }
             Spacer(minLength: 0)
         }
@@ -292,87 +340,88 @@ private struct DecorateView: View {
     }
 
     /// What fits a spot: the house's own and today's free things first, then
-    /// the shop.
-    private func choices(for spot: Spot) -> [Decor] {
+    /// whatever is on sale today.
+    private func choices(for spot: Spot, _ shop: ShopContext) -> [Decor] {
         var seen = Set<String>()
         var list: [Decor] = []
         for raw in store.available.sorted() {
             if let decor = Decor(rawValue: raw), decor.kind == spot.kind, seen.insert(raw).inserted { list.append(decor) }
         }
-        for item in DecorItem.allCases where item.price != nil && item.kind == spot.kind && !seen.contains(item.rawValue) {
+        for item in DecorItem.allCases
+        where item.kind == spot.kind && !seen.contains(item.rawValue) && shop.standing(of: item).price != nil {
             list.append(.item(item))
         }
         return list
     }
 
-    private func item(_ decor: Decor, in spot: Spot) -> some View {
+    /// A thing in the tray: tapping puts it in the scene to try, or takes it
+    /// out. One haptic, from the press.
+    private func item(_ decor: Decor, in spot: Spot, _ shop: ShopContext) -> some View {
         let isOn = store.draft.holds(decor.rawValue, in: spot)
-        let owned = store.available.contains(decor.rawValue)
-        let label: LocalizedStringResource = isOn ? L10n.decoratePlaced
-            : store.house.owned.contains(decor.rawValue) ? L10n.decorateYours
-            : owned ? L10n.decorateFree
-            : priceLabel(decor)
-        return Button { store.send(.decorToggled(decor.rawValue), animation: Motion.celebrate) } label: {
-            // As wide as its one-line name needs, never narrower than a tile:
-            // "Cadılar Bayramı flaması" gets the room, "Kar" doesn't look lost.
-            VStack(spacing: 4) {
-                Text(verbatim: decor.symbol).font(.title2)
+        let standing: Standing = if case let .item(item) = decor { shop.standing(of: item) } else { .freeToday }
+        return Button { store.send(.decorToggled(decor.rawValue), animation: Motion.spring) } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                StageWell(cornerRadius: 12, shadow: false) {
+                    Text(verbatim: decor.symbol).font(.system(size: 32))
+                }
+                .frame(width: 92, height: 60)
+                .overlay(alignment: .topTrailing) {
+                    if isOn { HaveBadge().padding(4).transition(.scale.combined(with: .opacity)) }
+                }
                 Text(decor.title)
-                    .font(.caption.weight(.semibold))
-                    .fixedSize()
-                Text(label)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(isOn ? Palette.amber : .secondary)
-                    .fixedSize()
+                    .font(.footnote.weight(.semibold))
+                    .lineLimit(1)
+                    .frame(maxWidth: 92, alignment: .leading)
+                if let price = standing.price, !standing.isUsable, !isOn {
+                    PriceTag(price: price)
+                } else {
+                    Text(isOn ? L10n.decoratePlaced : standing == .have || standing == .free ? L10n.decorateYours : L10n.decorateFree)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .frame(height: 28)
+                }
             }
-            .padding(.horizontal, 10)
-            .frame(minWidth: 88, minHeight: 96)
-            .background(RoundedRectangle(cornerRadius: Metrics.tightRadius, style: .continuous)
-                .strokeBorder(isOn ? Palette.amber : Color.clear, lineWidth: 1.5))
-            .glassCard(cornerRadius: Metrics.tightRadius)
+            .padding(6)
+            .glassCard(cornerRadius: 16, tinted: isOn ? theme.accent.opacity(0.3) : nil)
+            .animation(Motion.pop, value: isOn)
         }
         .buttonStyle(.pressable)
-        .sensoryFeedback(.selection, trigger: isOn)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(decor.title))
+        .accessibilityValue(isOn ? Text(L10n.decoratePlaced) : standing.price.map { Text(verbatim: $0.spoken) } ?? Text(L10n.decorateYours))
+        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
     }
 
-    /// One price, in the one currency the thing is sold for.
-    private func priceLabel(_ decor: Decor) -> LocalizedStringResource {
-        guard case let .item(item) = decor, let price = item.price else { return L10n.decorateFree }
-        return switch price {
-        case let .leaves(amount): L10n.decoratePrice(amount)
-        case let .sparkles(amount): L10n.decoratePriceSparkles(amount)
-        }
-    }
-
-    /// A preview the house would have to buy, with the jar's answer.
+    /// A preview the house would have to buy. Buying asks first, on the card.
     @ViewBuilder
-    private var preview: some View {
+    private func preview(_ shop: ShopContext) -> some View {
+        let available = store.available
         let unowned = store.draft.all.compactMap(DecorItem.init(rawValue:))
-            .filter { $0.price != nil && !store.available.contains($0.rawValue) }
-        if let item = unowned.first, let price = item.price {
-            let (short, buy, needs): (Int, LocalizedStringResource, LocalizedStringResource) = switch price {
-            case let .leaves(amount):
-                (amount - store.house.leaves, L10n.decorateBuy(amount), L10n.decorateNeedMore(amount - store.house.leaves))
-            case let .sparkles(amount):
-                (amount - store.house.sparkles, L10n.decorateBuySparkles(amount), L10n.decorateNeedMoreSparkles(amount - store.house.sparkles))
-            }
+            .filter { !available.contains($0.rawValue) && shop.standing(of: $0).price != nil }
+        if let item = unowned.first, let price = shop.standing(of: item).price {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.decoratePreview).font(.caption.weight(.semibold)).oneLine()
-                    Text(item.title).font(.caption).foregroundStyle(.secondary).oneLine()
+                    Text(L10n.decoratePreview)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    Text(item.title)
+                        .font(.headline)
+                        .lineLimit(1)
                 }
                 Spacer(minLength: 6)
-                Button { store.send(.buyTapped(item.rawValue), animation: Motion.celebrate) } label: {
-                    Text(short > 0 ? needs : buy)
-                        .font(.footnote.weight(.semibold))
-                        .fixedSize()
+                Button { store.send(.itemTapped(.decor(item)), animation: ShopMotion.cardIn) } label: {
+                    HStack(spacing: 6) {
+                        Text(L10n.cardBuy)
+                        Amount(price.currency, price.amount, plain: true)
+                    }
                 }
-                .buttonStyle(.glassProminent)
-                .tint(theme.accent)
-                .disabled(short > 0)
+                .buttonStyle(.depthCompact)
+                .accessibilityLabel(Text(verbatim: "\(String(localized: L10n.cardBuy)), \(price.spoken)"))
+                .accessibilityIdentifier("DecorateBuy")
             }
-            .padding(10)
-            .glassCard(cornerRadius: Metrics.tightRadius)
+            .padding(12)
+            .glassCard(cornerRadius: Metrics.cardRadius)
         }
     }
 }
@@ -396,7 +445,7 @@ private struct AlbumView: View {
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(store.house.album.reversed()) { graduate in
                         VStack(alignment: .leading, spacing: 4) {
-                            Portrait(species: graduate.species, seed: graduate.seed)
+                            SpeciesPortrait(species: graduate.species, seed: graduate.seed, mood: .content)
                                 .frame(height: 150)
                                 .clipShape(.rect(cornerRadius: 6))
                             Text(graduate.species.title)
@@ -521,6 +570,12 @@ private struct LabView: View {
             Section {
                 Button { store.send(.labCoins(Coins(leaves: 200, sparkles: 0))) } label: { Text(L10n.labLeaves(200)).oneLine() }
                 Button { store.send(.labCoins(Coins(leaves: 0, sparkles: 200))) } label: { Text(L10n.labSparkles(200)).oneLine() }
+                Toggle(isOn: Binding(get: { store.house.lab.birthday }, set: { store.send(.labBirthday($0)) })) {
+                    Text(L10n.labBirthday).oneLine()
+                }
+                Toggle(isOn: Binding(get: { store.house.lab.dusk }, set: { store.send(.labDusk($0)) })) {
+                    Text(L10n.labDusk).oneLine()
+                }
                 Button(role: .destructive) { store.send(.labReset) } label: { Text(L10n.labReset).oneLine() }
             }
         }

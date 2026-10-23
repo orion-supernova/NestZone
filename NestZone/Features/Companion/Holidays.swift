@@ -253,7 +253,8 @@ extension Holiday {
 
     static let worldwide: [Holiday] = [
         Holiday(id: .newYear, family: .worldwide, rule: .fixed(month: 1, day: 1), days: 1, lead: 24, symbol: "🎆",
-                decor: [.item(.fireworks), .item(.fairyLights), .item(.ornaments), .item(.treeStar), .item(.giftBox), .item(.snowfall)], colors: []),
+                decor: [.item(.fireworks), .item(.fairyLights), .item(.ornaments), .item(.treeStar), .item(.giftBox), .item(.snowfall),
+                        .item(.winterSky)], colors: []),
         Holiday(id: .valentines, family: .worldwide, rule: .fixed(month: 2, day: 14), days: 1, lead: 6, symbol: "💕",
                 decor: [.item(.heartGarland), .item(.bouquet)], colors: []),
         Holiday(id: .womensDay, family: .worldwide, rule: .fixed(month: 3, day: 8), days: 1, lead: 0, symbol: "💐",

@@ -9,6 +9,10 @@ public struct StatTile: View {
     private let tint: Color
     private let action: (() -> Void)?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Bumped to bounce the trend arrow. See `trend(_:)`.
+    @State private var trendHops = 0
+
     public init(
         title: LocalizedStringResource,
         value: Int,
@@ -69,12 +73,32 @@ public struct StatTile: View {
 
     private func trend(_ change: Int) -> some View {
         HStack(spacing: 2) {
-            Image(systemName: change > 0 ? "arrow.up.right" : "arrow.down.right")
-                .font(.caption2.weight(.bold))
+            trendArrow(up: change > 0)
             Text(abs(change), format: .number)
                 .font(.caption2.weight(.semibold))
         }
         .foregroundStyle(change > 0 ? Palette.success : .secondary)
         .contentTransition(.numericText(value: Double(change)))
+        .onAppear { trendHops += 1 }
+        .onChange(of: change) { _, _ in trendHops += 1 }
+    }
+
+    /// The arrow hops the way the week went — up for more, down for fewer — as
+    /// the tile arrives and whenever the figure moves. Still under Reduce
+    /// Motion, where the counter it watches stops moving.
+    ///
+    /// Two branches rather than one stored effect, as `DinnerView` does it:
+    /// naming the effect's type would mean importing `Symbols` for the sake of
+    /// one parameter.
+    @ViewBuilder
+    private func trendArrow(up: Bool) -> some View {
+        let arrow = Image(systemName: up ? "arrow.up.right" : "arrow.down.right")
+            .font(.caption2.weight(.bold))
+        let hops = reduceMotion ? 0 : trendHops
+        if up {
+            arrow.symbolEffect(.bounce.up, options: .nonRepeating, value: hops)
+        } else {
+            arrow.symbolEffect(.bounce.down, options: .nonRepeating, value: hops)
+        }
     }
 }

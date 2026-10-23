@@ -167,7 +167,7 @@ public struct DayCell: View {
             .padding(.vertical, 4)
             .contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(DayPressStyle())
         .opacity(isInMonth ? 1 : 0.5)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(day.date().formatted(
@@ -177,6 +177,26 @@ public struct DayCell: View {
             ? Text(L10n.calendarNothingOn)
             : Text(L10n.calendarEventCount(kinds.count + extra)))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+/// A day squashes under the finger and springs back as it is let go.
+///
+/// Not `.pressable`: that one taps the hand on the way down, and picking a day
+/// already gets a selection tick from the grid — two taps for one choice. Under
+/// Reduce Motion the day dims instead of shrinking.
+struct DayPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.92 : 1)
+            .opacity(configuration.isPressed && reduceMotion ? 0.6 : 1)
+            // Down fast, back up with a little spring past where it rests.
+            .animation(
+                configuration.isPressed ? Motion.press : Motion.release,
+                value: configuration.isPressed
+            )
     }
 }
 

@@ -114,3 +114,65 @@ public struct IconButton: View {
         .accessibilityLabel(Text(label))
     }
 }
+
+/// The button that spends — Leaves, Sparkles, or real money — and only that.
+///
+/// Glass lifts under the finger; this one is pressed in. A solid accent face
+/// with a sheen across its top and a hairline rim sits on a soft shadow; held,
+/// it sinks two points, the shadow tightens to almost nothing and an inner
+/// shadow appears, so it reads as a real button going down. Let go, it comes
+/// back up with a little spring. One per screen at most.
+public struct DepthButtonStyle: ButtonStyle {
+    var compact = false
+
+    public init(compact: Bool = false) { self.compact = compact }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        DepthButton(configuration: configuration, compact: compact)
+    }
+
+    private struct DepthButton: View {
+        let configuration: Configuration
+        let compact: Bool
+        @Environment(\.theme) private var theme
+        @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+        var body: some View {
+            let pressed = configuration.isPressed && isEnabled
+            configuration.label
+                .font(.body.weight(.semibold))
+                .foregroundStyle(isEnabled ? Color.white : Color.secondary)
+                .padding(.horizontal, compact ? 16 : 20)
+                .frame(minWidth: compact ? 88 : nil, maxWidth: compact ? nil : .infinity, minHeight: compact ? 44 : 52)
+                .background { face(pressed: pressed) }
+                .contentShape(.capsule)
+                .scaleEffect(pressed && !reduceMotion ? 0.98 : 1)
+                .offset(y: pressed && !reduceMotion ? 2 : 0)
+                .animation(reduceMotion ? Motion.fade : pressed ? Motion.press : Motion.release, value: pressed)
+                .sensoryFeedback(.impact(weight: .light), trigger: pressed) { _, now in now }
+        }
+
+        @ViewBuilder
+        private func face(pressed: Bool) -> some View {
+            if isEnabled {
+                ZStack {
+                    Capsule().fill(pressed ? AnyShapeStyle(theme.accent.shadow(.inner(color: Palette.depthInner, radius: 3, y: 2)))
+                                           : AnyShapeStyle(theme.accent))
+                    Capsule().fill(Palette.depthSheen).opacity(pressed ? 0.33 : 1)
+                    Capsule().strokeBorder(Palette.depthRim, lineWidth: 0.5)
+                }
+                .shadow(color: Palette.depthShadow, radius: pressed ? 2 : 8, y: pressed ? 1 : 4)
+            } else {
+                Capsule().fill(Palette.inset)
+            }
+        }
+    }
+}
+
+extension ButtonStyle where Self == DepthButtonStyle {
+    /// The button that spends, full width.
+    public static var depth: DepthButtonStyle { DepthButtonStyle() }
+    /// The button that spends, as wide as its price.
+    public static var depthCompact: DepthButtonStyle { DepthButtonStyle(compact: true) }
+}

@@ -161,7 +161,9 @@ public struct ContributionDonut: View {
         }
         .frame(width: diameter, height: diameter)
         .animation(Motion.spring, value: slices)
-        .onAppear { withAnimation(Motion.celebrate) { drawn = true } }
+        // Chores, not money, so the ring may overshoot a little on its way
+        // in. Drawn at once under Reduce Motion.
+        .drawIn($drawn, animation: Motion.celebrate)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(caption))
         .accessibilityValue(Text(total, format: .number))

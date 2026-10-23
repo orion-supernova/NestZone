@@ -22,7 +22,14 @@ public struct MainFeature: Sendable {
         public var homeID: HomeID
         public var home: Home?
         public var user: User?
+        #if DEBUG
+        /// `-openTab lists` (or plans, house, messages) opens on that tab, to
+        /// watch a tab on a simulator nobody touches.
+        public var selectedTab: Tab = UserDefaults.standard.string(forKey: "openTab")
+            .flatMap(Tab.init(rawValue:)) ?? .today
+        #else
         public var selectedTab: Tab = .today
+        #endif
 
         /// Today's summary, drawn as the root of `today`.
         public var homeTab: HomeFeature.State
@@ -237,6 +244,11 @@ public struct MainFeature: Sendable {
             case .home(.membersUpdated):
                 state.companion.memberCount = max(state.homeTab.members.count, 1)
                 return .none
+            // A birthday in the calendar puts the party hat out for the day.
+            case let .home(.upcomingEventsUpdated(events)):
+                guard CompanionFlag.isEnabled else { return .none }
+                let birthdays = events.filter { $0.kind == .birthday }.flatMap { $0.days() }
+                return .send(.companion(.birthdaysUpdated(Set(birthdays))))
 
             case let .today(.delegate(.open(target))):
                 return open(target, from: .today, &state)

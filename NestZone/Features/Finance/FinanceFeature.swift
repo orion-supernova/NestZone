@@ -67,8 +67,8 @@ public struct FinanceFeature: Sendable {
         /// Bills whose payment is still in flight, so the button can say so
         /// rather than looking like it did nothing.
         public var paying: Set<BillID> = []
-        /// Bumped when the household reaches square. Drives the one burst of
-        /// confetti this app allows itself.
+        /// Bumped when the household reaches square. Drives the "All square"
+        /// stamp — not confetti, which is for achievements, not money moving.
         public var settledCelebration = 0
 
         @Presents public var destination: Destination.State?
@@ -555,9 +555,9 @@ public struct FinanceFeature: Sendable {
                 }
                 if summary != state.summary {
                     // Everyone square, having not been a moment ago. The one
-                    // thing on this screen worth celebrating, and only on the
+                    // thing on this screen worth marking, and only on the
                     // transition — a household that is already settled gets no
-                    // confetti every time the subscription pushes.
+                    // stamp every time the subscription pushes.
                     if !state.summary.isSquare, summary.isSquare, !state.summary.members.isEmpty {
                         state.settledCelebration += 1
                     }

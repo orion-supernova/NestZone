@@ -334,7 +334,10 @@ struct MovieListView: View {
                             }
                         }
                     }
-                    .appear(index)
+                    // Only the first screenful staggers: a lazy poster appears
+                    // when it is scrolled to, and the fortieth waiting out its
+                    // capped delay read as the grid lagging behind the finger.
+                    .appear(index < 8 ? index : 0)
                 }
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -411,8 +414,15 @@ private struct ListChip: View {
     let isBusy: Bool
     let action: () -> Void
 
+    /// Your own taps. The tick keys on these rather than on `isSaved`, which
+    /// also flips when somebody else files the film from their phone.
+    @State private var taps = 0
+
     var body: some View {
-        Button(action: action) {
+        Button {
+            taps += 1
+            action()
+        } label: {
             HStack(spacing: 6) {
                 if isBusy {
                     ProgressView().controlSize(.small)
@@ -434,9 +444,10 @@ private struct ListChip: View {
             // shape only the label glyphs are tappable.
             .contentShape(.capsule)
         }
-        .buttonStyle(.pressable)
+        .buttonStyle(.pressableQuiet)
         .disabled(isBusy)
         .animation(Motion.spring, value: isSaved)
+        .sensoryFeedback(.selection, trigger: taps)
         .accessibilityAddTraits(isSaved ? [.isSelected, .isButton] : .isButton)
     }
 }

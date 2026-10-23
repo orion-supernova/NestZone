@@ -42,9 +42,35 @@ public struct CompanionFeature: Sendable {
         public var decorateSpot: Spot?
         /// Just paid into the jar, for the little "+10" over it.
         public var lastPay: Payment?
+        /// Days with a birthday in the house's calendar: the party hat's.
+        public var birthdays: Set<CalendarDay> = []
+
+        /// The card that asks before anything is bought — what it costs and
+        /// what is left, the Leaves made up with Sparkles, or how many more it
+        /// takes — and that says how a thing is had when it isn't for sale.
+        public var card: Card?
+        /// The Sparkles store, pushed over whichever sheet sent the house
+        /// there. The card stays underneath it.
+        public var storeOpen = false
+        /// What the house was buying when it went for Sparkles: once there
+        /// are enough, the store closes onto the same card.
+        public var pending: Purchase?
+        /// The packs on the store's shelf, and the one being bought.
+        public var packs = SparklePack.shelf
+        public var buyingPack: SparklePack.ID?
+        /// A pack that didn't simply go through: waiting for a parent's OK, or
+        /// failed.
+        public var packNote: PackNote?
+        /// Sparkles that just landed in the jar, for the store to say so, and
+        /// a count of arrivals: the same pack bought twice lands twice.
+        public var landed: Int?
+        public var landedTick = 0
+        /// A decoration to put out as soon as Decorate opens: just bought in
+        /// the shop, with "Put it out".
+        var placeOnOpen: String?
 
         public enum Sheet: String, Equatable, Identifiable, Sendable {
-            case choose, decorate, album, holidays, lab, ceremony, welcome
+            case choose, decorate, album, holidays, lab, ceremony, welcome, shop
             public var id: String { rawValue }
             /// Shown over everything rather than as a sheet: the moments.
             var isMoment: Bool { self == .ceremony || self == .welcome }
@@ -53,6 +79,50 @@ public struct CompanionFeature: Sendable {
         public struct Payment: Equatable, Sendable {
             public var coins: Coins
             public var id: Int
+        }
+
+        /// Something about to be bought.
+        public struct Purchase: Equatable, Sendable {
+            public var item: ShopItem
+            /// Grown as soon as it is bought: bought from Choose.
+            public var grow: Species?
+        }
+
+        public struct Card: Equatable, Sendable {
+            /// What the card shows: a fox, even when what is bought is its pack.
+            public var item: ShopItem
+            /// What buying it would be; `nil` when it isn't for sale today.
+            public var purchase: Purchase?
+            /// What was paid, once it is: the card has become the moment it
+            /// lands in the house, and the coins that fly are these.
+            public var paid: Coins?
+            public var isBought: Bool { paid != nil }
+        }
+
+        /// Where a card stands, worked out from the jar as it is now — so when
+        /// the house comes back from the store with enough, the same card
+        /// already says so.
+        public enum CardStep: Equatable, Sendable {
+            case pay(Coins)
+            case makeUp(Coins, short: Int)
+            case short(sparkles: Int)
+            case bought
+            case about
+        }
+
+        public struct PackNote: Equatable, Sendable {
+            public var id: SparklePack.ID
+            public var isWaiting: Bool
+        }
+
+        public func step(of card: Card) -> CardStep {
+            if card.isBought { return .bought }
+            guard let price = card.purchase?.item.price else { return .about }
+            return switch house.checkout(price) {
+            case let .pay(coins): .pay(coins)
+            case let .makeUp(coins, short): .makeUp(coins, short: short)
+            case let .short(sparkles): .short(sparkles: sparkles)
+            }
         }
 
         public init(homeID: HomeID, now: Date = Date(), region: String? = Locale.current.region?.identifier) {
@@ -79,14 +149,28 @@ public struct CompanionFeature: Sendable {
             Holiday.active(on: clock, among: celebrated, region: region)
         }
 
-        /// What can be in the scene today: everything the jar has bought, and
-        /// whatever today's holidays bring, free while they last.
+        /// Everything that decides what the house can have today, worked out
+        /// once for a whole shelf.
+        public var shop: ShopContext {
+            ShopContext(
+                clock: clock, southern: southern, owned: house.owned, ownedSpecies: house.ownedSpecies,
+                album: house.album, holidays: activeHolidays,
+                isBirthday: house.lab.birthday || birthdays.contains(CalendarDay(clock)), region: region
+            )
+        }
+
+        /// What can be in the scene today: everything the jar has bought or
+        /// the house has earned, what every house has, and whatever today's
+        /// holidays bring, free while they last.
         public var available: Set<String> {
+            let shop = self.shop
             var ids = house.owned
-            for holiday in activeHolidays {
+            for item in DecorItem.allCases where shop.standing(of: item).isUsable {
+                ids.insert(item.rawValue)
+            }
+            for holiday in shop.holidays {
                 for decor in holiday.decor {
-                    if case let .item(item) = decor, item.isWintry, southern { continue }
-                    ids.insert(decor.rawValue)
+                    if case .flags = decor { ids.insert(decor.rawValue) }
                 }
             }
             return ids
@@ -161,6 +245,31 @@ public struct CompanionFeature: Sendable {
             return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
         }
 
+        /// Starts growing a new companion: the house's first comes with the
+        /// welcome gift.
+        mutating func grow(_ species: Species) {
+            let seed = "\(homeID.rawValue)-\(house.album.count)"
+            let now = clock
+            let firstTime = !house.welcomed
+            $house.withLock {
+                $0.current = Companion(species: species, seed: seed, startedAt: now)
+                $0.paidStage = 0
+                if firstTime {
+                    $0.add(Rewards.welcome)
+                    $0.welcomed = true
+                }
+            }
+            sheet = firstTime ? .welcome : nil
+            if firstTime { lastPay = Payment(coins: Rewards.welcome, id: (lastPay?.id ?? 0) + 1) }
+        }
+
+        /// Opens the card for a thing: to buy it if it is on sale today, or to
+        /// say how it is had if it isn't.
+        mutating func show(_ item: ShopItem, grow: Species? = nil) {
+            let forSale = shop.standing(of: item).price != nil
+            card = Card(item: item, purchase: forSale ? Purchase(item: item.bought, grow: grow) : nil)
+        }
+
         /// Pays the jar for any stage reached since the last payment.
         mutating func payStages() {
             guard current != nil else { return }
@@ -195,22 +304,49 @@ public struct CompanionFeature: Sendable {
         case decorateTapped
         case spotPicked(Spot?)
         case decorToggled(String)
-        case buyTapped(String)
         case setPicked(Holiday.ID)
         case decorateDone
         case decorateCancelled
+
+        /// The jar on the card: the whole catalog.
+        case shopTapped
+        /// A thing in the shop or Decorate: its card — to buy it, or to say
+        /// how it comes.
+        case itemTapped(ShopItem)
+        /// A species on Choose: grown straight away if the house has it, its
+        /// card otherwise.
+        case growTapped(Species)
+        case cardBuyTapped
+        case cardStoreTapped
+        case cardPutOutTapped
+        case cardDismissed
+        /// A companion bought on Choose, once the moment has played.
+        case cardGrow(Species)
+        case storeTapped
+        case storeDismissed
+        case storeAppeared
+        case packsLoaded([SparklePack])
+        case packTapped(SparklePack)
+        case packBought(SparklePack.ID, PurchaseOutcome)
+        case packFailed(SparklePack.ID)
+        /// Back from the store with enough, after the Sparkles were seen to land.
+        case storeReturned
+        case birthdaysUpdated(Set<CalendarDay>)
 
         case labTapped
         case labPoints(Double)
         case labMood(Mood?)
         case labDate(Date?)
         case labCoins(Coins)
+        case labBirthday(Bool)
+        case labDusk(Bool)
         case labReset
 
         case sheetDismissed
     }
 
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.sparkleStore) var sparkleStore
 
     public init() {}
 
@@ -234,16 +370,23 @@ public struct CompanionFeature: Sendable {
                 guard state.current != nil else { return .none }
                 let key = State.dayKey(state.clock)
                 let at = state.clock
+                state.careTick += 1
+                // Once a day counts; every tap still gets a reaction. The file
+                // is written when something changes — the first care of the
+                // day, a minute on, or a lab mood to wake — not on every tap
+                // of a happy burst.
+                let wakes = state.house.lab.mood?.isQuiet == true
+                let isNew = state.current.map { !$0.careDays.contains(key) } ?? false
+                let isStale = state.current?.lastCareAt.map { at.timeIntervalSince($0) > 60 } ?? true
+                guard isNew || isStale || wakes else { return .none }
                 state.$house.withLock {
                     guard var current = $0.current else { return }
-                    // Once a day counts; every tap still gets a reaction.
                     if !current.careDays.contains(key) { current.careDays.append(key) }
                     current.lastCareAt = at
                     $0.current = current
                     // Caring is coming back: it wakes up whatever the lab said.
                     if $0.lab.mood?.isQuiet == true { $0.lab.mood = nil }
                 }
-                state.careTick += 1
                 state.payStages()
                 return .none
 
@@ -252,20 +395,154 @@ public struct CompanionFeature: Sendable {
                 return .none
 
             case let .chose(species):
-                let seed = "\(state.homeID.rawValue)-\(state.house.album.count)"
-                let now = state.clock
-                let firstTime = !state.house.welcomed
+                guard state.shop.standing(of: species).isUsable else { return .none }
+                state.grow(species)
+                return .none
+
+            case let .growTapped(species):
+                let standing = state.shop.standing(of: species)
+                if standing.isUsable {
+                    state.grow(species)
+                } else {
+                    state.show(.species(species), grow: standing.price != nil ? species : nil)
+                }
+                return .none
+
+            case .shopTapped:
+                state.sheet = .shop
+                return .none
+
+            case let .itemTapped(item):
+                state.show(item)
+                return .none
+
+            case .cardBuyTapped:
+                guard var card = state.card, !card.isBought, let purchase = card.purchase,
+                      let price = purchase.item.price, state.shop.standing(of: purchase.item).price != nil
+                else { return .none }
+                let coins: Coins
+                switch state.house.checkout(price) {
+                case let .pay(paying), let .makeUp(paying, _): coins = paying
+                // The card offers the store instead of a Buy button; nothing to do.
+                case .short: return .none
+                }
                 state.$house.withLock {
-                    $0.current = Companion(species: species, seed: seed, startedAt: now)
-                    $0.paidStage = 0
-                    // The house's first companion comes with a gift for the jar.
-                    if firstTime {
-                        $0.add(Rewards.welcome)
-                        $0.welcomed = true
+                    $0.pay(coins)
+                    $0.receive(purchase.item)
+                }
+                card.paid = coins
+                state.card = card
+                // A companion bought on Choose starts growing once the moment
+                // has played: the coins land, it says it's in the house.
+                guard let species = purchase.grow else { return .none }
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(1400))
+                    await send(.cardGrow(species))
+                }
+
+            case let .cardGrow(species):
+                state.card = nil
+                state.grow(species)
+                return .none
+
+            case .cardStoreTapped:
+                state.pending = state.card?.purchase
+                state.landed = nil
+                state.packNote = nil
+                state.storeOpen = true
+                return .none
+
+            case .cardPutOutTapped:
+                guard let card = state.card else { return .none }
+                state.card = nil
+                // In Decorate it is out already: it was bought as the preview.
+                guard state.sheet != .decorate, case let .decor(item) = card.item else { return .none }
+                state.placeOnOpen = item.rawValue
+                state.sheet = nil
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(450))
+                    await send(.decorateTapped)
+                }
+
+            case .cardDismissed:
+                state.card = nil
+                return .none
+
+            case .storeTapped:
+                state.pending = nil
+                state.landed = nil
+                state.packNote = nil
+                state.storeOpen = true
+                return .none
+
+            case .storeDismissed:
+                state.storeOpen = false
+                state.pending = nil
+                state.landed = nil
+                state.packNote = nil
+                return .none
+
+            case .storeAppeared:
+                return .run { send in
+                    if let packs = try? await sparkleStore.packs(), !packs.isEmpty {
+                        await send(.packsLoaded(packs))
                     }
                 }
-                state.sheet = firstTime ? .welcome : nil
-                if firstTime { state.lastPay = State.Payment(coins: Rewards.welcome, id: (state.lastPay?.id ?? 0) + 1) }
+
+            case let .packsLoaded(packs):
+                state.packs = packs
+                return .none
+
+            case let .packTapped(pack):
+                guard state.buyingPack == nil else { return .none }
+                state.buyingPack = pack.id
+                state.packNote = nil
+                return .run { send in
+                    do {
+                        await send(.packBought(pack.id, try await sparkleStore.purchase(pack.id)))
+                    } catch {
+                        await send(.packFailed(pack.id))
+                    }
+                }
+
+            case let .packBought(id, outcome):
+                state.buyingPack = nil
+                let sparkles: Int
+                switch outcome {
+                case .cancelled: return .none
+                case .pending:
+                    state.packNote = State.PackNote(id: id, isWaiting: true)
+                    return .none
+                case let .added(added): sparkles = added
+                }
+                state.$house.withLock { $0.sparkles += sparkles }
+                state.landed = sparkles
+                state.landedTick += 1
+                // Enough now for what sent them here: a moment to see the
+                // Sparkles land — that second is how anyone knows it worked —
+                // then back to the card, which already says so. Not enough
+                // yet, and the store stays.
+                guard let price = state.pending?.item.price else { return .none }
+                if case .short = state.house.checkout(price) { return .none }
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(1300))
+                    await send(.storeReturned)
+                }
+
+            case let .packFailed(id):
+                state.buyingPack = nil
+                state.packNote = State.PackNote(id: id, isWaiting: false)
+                return .none
+
+            case .storeReturned:
+                guard state.storeOpen else { return .none }
+                state.storeOpen = false
+                state.pending = nil
+                state.landed = nil
+                return .none
+
+            case let .birthdaysUpdated(days):
+                state.birthdays = days
                 return .none
 
             case .welcomeDecorateTapped:
@@ -329,6 +606,13 @@ public struct CompanionFeature: Sendable {
             case .decorateTapped:
                 state.draft = state.visibleLayout
                 state.decorateSpot = nil
+                // Bought in the shop with "Put it out": out it goes, its spot
+                // picked, so the tray shows it placed.
+                if let raw = state.placeOnOpen, let decor = Decor(rawValue: raw) {
+                    state.draft.place(decor)
+                    state.decorateSpot = (state.isPet ? Spot.forPets : Spot.allCases).first { $0.kind == decor.kind }
+                    state.placeOnOpen = nil
+                }
                 state.sheet = .decorate
                 return .none
 
@@ -339,16 +623,6 @@ public struct CompanionFeature: Sendable {
             case let .decorToggled(raw):
                 guard let spot = state.decorateSpot else { return .none }
                 state.draft.toggle(raw, in: spot)
-                return .none
-
-            case let .buyTapped(raw):
-                guard let item = DecorItem(rawValue: raw), let price = item.price,
-                      !state.house.owned.contains(raw), state.house.canAfford(price)
-                else { return .none }
-                state.$house.withLock {
-                    $0.pay(price)
-                    $0.owned.insert(raw)
-                }
                 return .none
 
             case let .setPicked(id):
@@ -401,6 +675,14 @@ public struct CompanionFeature: Sendable {
                 state.$house.withLock { $0.add(coins) }
                 return .none
 
+            case let .labBirthday(on):
+                state.$house.withLock { $0.lab.birthday = on }
+                return .none
+
+            case let .labDusk(on):
+                state.$house.withLock { $0.lab.dusk = on }
+                return .none
+
             case .labReset:
                 state.$house.withLock { $0 = .empty }
                 state.sheet = nil
@@ -409,6 +691,11 @@ public struct CompanionFeature: Sendable {
             case .sheetDismissed:
                 state.sheet = nil
                 state.decorateSpot = nil
+                state.card = nil
+                state.storeOpen = false
+                state.pending = nil
+                state.landed = nil
+                state.packNote = nil
                 return .none
             }
         }

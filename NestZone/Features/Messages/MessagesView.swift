@@ -58,7 +58,10 @@ public struct MessagesView: View {
                             timestamp: conversation.lastMessageAt,
                             members: store.state.avatarMembers(for: conversation)
                         ) { store.send(.conversationTapped(conversation)) }
-                            .appearInPlace(index)
+                            // Only the first screenful staggers; a row further
+                            // down waiting out its capped delay read as the list
+                            // lagging behind the finger.
+                            .appearInPlace(index < 8 ? index : 0)
                     }
                 }
                 .padding(.horizontal, Metrics.screenPadding)
@@ -112,14 +115,25 @@ struct ChatView: View {
     @Bindable var store: StoreOf<ChatFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isComposerFocused: Bool
     /// Measured, so the bar can be aligned to a bubble edge and kept on screen.
     @State private var barSize: CGSize = .zero
+    /// Off until the thread's first delivery has been drawn, so opening a chat
+    /// does not slide its whole history in one bubble at a time.
+    @State private var isSettled = false
+    /// Your own sends, counted — what the send button's bounce and tap key on.
+    @State private var sends = 0
 
     var body: some View {
         // Sorted once per render. `startsGroup` used to reach for `ordered`
         // itself, which re-sorted the whole thread for every bubble on screen.
         let thread = store.state.ordered
+        // The newest bubble, when it is somebody else's. Arrivals animate on
+        // this rather than on the count: a send is animated where it is made,
+        // and your bubble's echo replacing its stand-in has to stay a silent
+        // swap — animated, the stand-in would slide away as its twin rose in.
+        let arrival = thread.last.flatMap { store.state.isMine($0) ? nil : $0.id }
 
         ScrollViewReader { proxy in
             ScrollView {
@@ -156,6 +170,10 @@ struct ChatView: View {
                     }
                     .padding(.horizontal, Metrics.screenPadding)
                     .padding(.vertical, Metrics.stackSpacing)
+                    // Bubbles had a transition and nothing that ran it: every
+                    // push landed outside an animation, so new messages just
+                    // appeared.
+                    .animation(isSettled ? Motion.spring : nil, value: arrival)
                     // Catches the taps that land beside a bubble rather than on
                     // one. Behind the thread, not around it: a gesture on the
                     // scroll view is simultaneous with the bubbles' own, so the
@@ -176,6 +194,9 @@ struct ChatView: View {
             .defaultScrollAnchor(.bottom)
             .onChange(of: store.state.ordered.last?.id) { _, _ in
                 scrollToNewest(proxy, animated: true)
+            }
+            .onChange(of: store.isLoading, initial: true) { _, loading in
+                if !loading { isSettled = true }
             }
         }
         // Drawn over the scroll view, not inside it: an overlay on the bubble
@@ -308,17 +329,37 @@ struct ChatView: View {
                 .focused($isComposerFocused)
                 .lineLimit(1...5)
 
-                Button { store.send(.sendTapped) } label: {
+                Button {
+                    sends += 1
+                    // Animated where it is made, so your bubble rises out of
+                    // the composer rather than appearing in the thread.
+                    store.send(.sendTapped, animation: Motion.spring)
+                } label: {
                     Image(systemName: store.isEditing
                         ? "checkmark.circle.fill"
                         : "arrow.up.circle.fill")
                         .font(.title2)
                         .symbolRenderingMode(.hierarchical)
+                        // Arrow and tick turn into each other, which is what
+                        // says the same button now saves instead of sends.
+                        .contentTransition(.symbolEffect(.replace))
+                        .symbolEffect(
+                            .bounce.up,
+                            options: .nonRepeating,
+                            value: reduceMotion ? 0 : sends
+                        )
                 }
-                .buttonStyle(.pressable)
+                // The send gives its own tap; the press doesn't add a second.
+                .buttonStyle(.pressableQuiet)
                 .disabled(!store.canSend)
+                // Grows in when there is something to send, rather than only
+                // brightening — the button arriving is the cue that the line
+                // can go. Quick and plain on the way back down.
+                .scaleEffect(store.canSend || reduceMotion ? 1 : 0.6)
+                .animation(store.canSend ? Motion.release : Motion.exit, value: store.canSend)
                 .opacity(store.canSend ? 1 : 0.4)
                 .animation(Motion.fade, value: store.canSend)
+                .sensoryFeedback(.impact(weight: .light), trigger: sends)
                 .accessibilityLabel(Text(store.isEditing
                     ? L10n.commonSave
                     : L10n.messagesComposePlaceholder))
@@ -357,6 +398,7 @@ private struct MessageBubble: View {
     let delete: () -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How long a press has to be held. `.contextMenu` waits about half a
     /// second; a quarter reads as deliberate without feeling like a stall.
@@ -460,7 +502,7 @@ private struct MessageBubble: View {
                     .padding(4)
             }
         }
-        .transition(.move(edge: isMine ? .trailing : .leading).combined(with: .opacity))
+        .transition(arrival)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("\(senderName): \(message.content)"))
         .accessibilityValue(hasFailed ? Text(L10n.messagesChatMessageFailed) : Text(""))
@@ -475,6 +517,21 @@ private struct MessageBubble: View {
         }
     }
 
+    /// Theirs slide in from their side of the thread. Yours rise out of the
+    /// composer, the place they were just typed, growing from its corner —
+    /// and leave the way theirs do. A fade under Reduce Motion.
+    private var arrival: AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        let sideways = AnyTransition.move(edge: isMine ? .trailing : .leading)
+            .combined(with: .opacity)
+        guard isMine else { return sideways }
+        return .asymmetric(
+            insertion: AnyTransition.offset(y: 40)
+                .combined(with: .scale(scale: 0.9, anchor: .bottomTrailing))
+                .combined(with: .opacity),
+            removal: sideways
+        )
+    }
 }
 
 /// Which bubble is open, where it is, and which way it faces.

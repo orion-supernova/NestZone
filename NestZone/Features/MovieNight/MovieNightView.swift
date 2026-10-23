@@ -6,6 +6,15 @@ public struct MovieNightView: View {
 
     @Environment(\.theme) private var theme
 
+    /// Bumped when the round's end screen has something agreed to show off.
+    @State private var celebration = 0
+    /// Bumped only when the match is yours to feel — see `swiped(_:isYes:)`
+    /// and `matchesChanged`.
+    @State private var matchFeel = 0
+    /// When you last answered a card, so a match landing a moment later can be
+    /// told apart from one somebody else's vote made.
+    @State private var lastSwipeAt: Date?
+
     public init(store: StoreOf<MovieNightFeature>) {
         self.store = store
     }
@@ -27,6 +36,13 @@ public struct MovieNightView: View {
     public var body: some View {
         content
             .background(Backdrop(tint: theme.accent))
+            // Over the whole screen rather than the end-of-round grid, which
+            // arrives in the same breath as the burst it would have to catch.
+            .overlay { ConfettiBurst(trigger: celebration) }
+            .sensoryFeedback(.success, trigger: matchFeel)
+            .onChange(of: RoundEnd(isFinished: store.isDeckFinished, matches: store.matches.count)) {
+                matchesChanged(from: $0, to: $1)
+            }
             .navigationTitle(Text(L10n.movienightTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(isImmersive ? .hidden : .automatic, for: .tabBar)
@@ -104,10 +120,36 @@ public struct MovieNightView: View {
                 position: store.position,
                 total: store.roundSize,
                 canUndo: store.canUndo,
-                onSwipe: { item, isYes in store.send(.swiped(item, isYes: isYes)) },
+                onSwipe: { item, isYes in swiped(item, isYes: isYes) },
                 onOpen: { store.send(.movieTapped($0)) },
                 onUndo: { store.send(.undoTapped) }
             )
+        }
+    }
+
+    /// Your answer to a card, and — when it was the last one and the household
+    /// already agrees on something — the moment that goes with finishing.
+    private func swiped(_ item: PollItem, isYes: Bool) {
+        store.send(.swiped(item, isYes: isYes))
+        lastSwipeAt = .now
+        if store.isDeckFinished, !store.matches.isEmpty {
+            celebration += 1
+            matchFeel += 1
+        }
+    }
+
+    /// A match landing on the end screen after it was already up.
+    ///
+    /// Opening the screen on a finished round is not the moment, and neither
+    /// is the round's first delivery, so both sides have to be finished. The
+    /// burst is for whoever is looking; the haptic only when your own last
+    /// answer, echoed back a moment later, is what made the match — a phone
+    /// should not tap its owner's hand for somebody else's vote.
+    private func matchesChanged(from old: RoundEnd, to new: RoundEnd) {
+        guard old.isFinished, new.isFinished, new.matches > old.matches else { return }
+        celebration += 1
+        if let lastSwipeAt, Date.now.timeIntervalSince(lastSwipeAt) < 2 {
+            matchFeel += 1
         }
     }
 
@@ -232,6 +274,13 @@ public struct MovieNightView: View {
         .padding(.horizontal, Metrics.screenPadding)
         .padding(.bottom, 8)
     }
+}
+
+/// What `MovieNightView` watches for the match moment: whether your deck is
+/// done, and how many films the household has agreed on.
+private struct RoundEnd: Equatable {
+    let isFinished: Bool
+    let matches: Int
 }
 
 /// The card stack, and the controls that hover over it.
@@ -480,11 +529,23 @@ private struct SwipeCard: View {
 
     @State private var offset: CGSize = .zero
     @State private var isGone = false
+    /// Dragged past the threshold, so letting go now would answer. Set by the
+    /// finger alone, which is what lets the haptic key on it.
+    @State private var isArmed = false
+    /// Bumped each time a drag arms a side, so that side's stamp pops.
+    @State private var yesPops = 0
+    @State private var noPops = 0
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the card must travel before the swipe counts.
     private let threshold: CGFloat = 110
 
-    private var rotation: Angle { .degrees(Double(offset.width / 18)) }
+    /// None under Reduce Motion: the card still follows the finger, which is
+    /// the person moving it, but it does not spin on its own.
+    private var rotation: Angle {
+        reduceMotion ? .zero : .degrees(Double(offset.width / 18))
+    }
     private var yesOpacity: Double { Double(max(0, offset.width) / threshold) }
     private var noOpacity: Double { Double(max(0, -offset.width) / threshold) }
 
@@ -506,9 +567,15 @@ private struct SwipeCard: View {
         .overlay(alignment: .topTrailing) { stamp(yes: false).opacity(noOpacity) }
         .offset(offset)
         .rotationEffect(rotation)
+        // Under Reduce Motion the card does not fly off; it fades where it was
+        // let go.
+        .opacity(reduceMotion && isGone ? 0 : 1)
         .gesture(
             DragGesture()
-                .onChanged { offset = $0.translation }
+                .onChanged { value in
+                    offset = value.translation
+                    arm(value.translation.width)
+                }
                 .onEnded { value in
                     if abs(value.translation.width) > threshold {
                         depart(
@@ -516,6 +583,7 @@ private struct SwipeCard: View {
                             lift: value.translation.height
                         )
                     } else {
+                        isArmed = false
                         withAnimation(Motion.spring) { offset = .zero }
                     }
                 }
@@ -534,7 +602,14 @@ private struct SwipeCard: View {
             command = nil
             depart(isYes: new.isYes, lift: -40)
         }
-        .sensoryFeedback(.impact(weight: .medium), trigger: isGone)
+        // The moment letting go would answer, once per crossing — the hand
+        // learns where the line is without looking for it.
+        .sensoryFeedback(.impact(weight: .medium), trigger: isArmed) { _, armed in armed }
+        // A card leaving taps once. A drag that already felt the line skips
+        // it: two of the same tap half a second apart read as one stutter.
+        .sensoryFeedback(.impact(weight: .medium), trigger: isGone) { [isArmed] _, gone in
+            gone && !isArmed
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(item.label ?? ""))
         .accessibilityAddTraits(.isButton)
@@ -575,11 +650,25 @@ private struct SwipeCard: View {
     /// Flings the card off in the direction of travel, then reports — so it
     /// never snaps back before leaving.
     private func depart(isYes: Bool, lift: CGFloat) {
-        withAnimation(.easeOut(duration: 0.24)) {
-            offset = CGSize(width: isYes ? 700 : -700, height: lift)
-            isGone = true
+        if reduceMotion {
+            withAnimation(Motion.exit) { isGone = true }
+        } else {
+            withAnimation(.easeOut(duration: 0.24)) {
+                offset = CGSize(width: isYes ? 700 : -700, height: lift)
+                isGone = true
+            }
         }
         onSwipe(isYes)
+    }
+
+    /// Notes when a drag crosses the line in either direction. Arming pops
+    /// that side's stamp; drawing back under it disarms quietly.
+    private func arm(_ width: CGFloat) {
+        let armed = abs(width) > threshold
+        guard armed != isArmed else { return }
+        isArmed = armed
+        guard armed, !reduceMotion else { return }
+        if width > 0 { yesPops += 1 } else { noPops += 1 }
     }
 
     private func stamp(yes: Bool) -> some View {
@@ -589,6 +678,15 @@ private struct SwipeCard: View {
             .foregroundStyle(.white)
             .padding(14)
             .background(yes ? Palette.success : Palette.danger, in: .circle)
+            // Stamped on as the line is crossed: in a size too big, then
+            // settling — `Motion.pop`'s spring, which keyframes need spelled
+            // as a `Spring`.
+            .keyframeAnimator(initialValue: CGFloat(1), trigger: yes ? yesPops : noPops) { mark, scale in
+                mark.scaleEffect(scale)
+            } keyframes: { _ in
+                MoveKeyframe(1.2)
+                SpringKeyframe(1, duration: 0.35, spring: .init(duration: 0.35, bounce: 0.5))
+            }
             .padding(20)
     }
 }

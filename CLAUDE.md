@@ -45,6 +45,17 @@ single-module tabs and no Household list any more — testers called a tab for
 the shopping list alone overkill. The segment each tab was left on is
 remembered per device (`TabSegments`).
 
+A segment switch rebuilds the module's whole screen (`.id(selected)` in
+`SegmentedRoot`), and that costs one 100–200 ms frame on the simulator,
+measured before any of the switch's motion existed. The first switch to a
+module is the worst, and its underline lands rather than travels because
+the spring is nearly spent by the time the main thread is back. Keeping the
+segments' screens alive is the fix, and the owner said yes (23 October
+2026): it is step 0 of the next steps in `Docs/Companion/HANDOFF.md`, with
+its catches (toolbars, replayed entrances). Measure a switch with
+`-frameMeter 1 -openTab lists -segmentCycle 1` (Debug): it opens on that tab
+and walks its segments every 1.5 s.
+
 - **A tap switches tab or opens a screen in place — never both.** A whole
   module goes to its tab, switched to its segment and popped to root. A
   specific thing (an event, a problem, the chore split) is opened on the stack
@@ -104,9 +115,43 @@ before changing anything here.
   sources and disagreements are in `Docs/Companion/HOLIDAYS.md`.
 - **Two currencies, one price per item.** Leaves are progress — earned, never
   sold. Sparkles are what people buy, plus a few earned at stages and
-  graduations. A thing is priced in exactly one of them (`DecorItem.price` is a
+  graduations. A thing is priced in exactly one of them (its `Access` holds a
   `Price`, not two numbers): "100 Leaves or 5 Sparkles" for the same item is
-  paying to skip progress. Both live in the house's jar.
+  paying to skip progress. A house short of Leaves can make up the rest with
+  its own Sparkles, one for one (`Exchange`) — the same price, paid partly in
+  the other coin, never a cheaper one — and Sparkles are never made up with
+  Leaves. Both live in the house's jar.
+- **Nothing is bought without asking, and never with a system alert.** Every
+  purchase opens the purchase card (`State.card`, `PurchaseCardLayer`): the
+  thing, what it costs, the jar before and after; the Leaves made up with
+  Sparkles; or "not enough" with the sum done and a way to the Sparkles store,
+  a full-screen cover that returns to the card once there is enough. The card
+  is glass snapped to the bottom edge, running on past the home indicator —
+  not a native half-sheet, whose float leaves a strip of screen under it,
+  which the owner rejected. Real money goes through the store's own sheet with
+  nothing of ours in front of it. The store is a test store
+  (`SparkleStoreClient`) until StoreKit or RevenueCat replaces its
+  `liveValue`, and nothing else.
+- **The shop is an ordinary NestZone screen that happens to sell things.**
+  Glass cards on the Backdrop, the theme's accent, the app's type, SF Symbols.
+  Money is `Amount` (`leaf.fill` and `sparkle`, colour on the glyph only via
+  `Palette.leaf` / `.sparkle`, the number in the text's colour); the one button
+  that spends Leaves, Sparkles or real money is `.depth` (pressed in, not
+  lifted), everything else `PrimaryButton` / `SecondaryButton`. The only colour
+  of its own is the window each thing stands in, which is the companion's sky
+  at the hour (`ShopStage`, `StageWell`). No shop palette, no drawn coins, no
+  heavy weights, no glass control inside a toolbar item (iOS already wraps it),
+  no countdowns, exactly one computed "Best value". The first redesign — a
+  solid plum room with a gold-and-violet game-shop look — was rejected as not
+  this app.
+- **Shelves are pages.** Decor, Plants and Pets are a paging `TabView`, each
+  with its own scroll, under a switch in a `safeAreaBar`. One list with its
+  content swapped flashed empty and opened short shelves past their end.
+- **The catalog is one list** (`CompanionCatalog.swift`): every species and
+  decoration, each had exactly one way (`Access`: free, bought, a pack, in
+  season, with a holiday, or earned). A holiday of a faith brings free things
+  only and never sells. What isn't drawn yet is sketched as its emoji
+  (`Species.art`, `DecorItem.isDrawn`) until the art pass.
 
 ## Shipping a change
 
@@ -342,6 +387,25 @@ makes fixing a typo in an old note free.
   URL. Anything drawn on every screen, or on every row of one, gets `.disk`; a
   browsing surface with thousands of images (posters) stays on `.session`, which
   is what `URLCache` and its byte budget are for.
+- **Motion: playful everywhere, like Telegram and Duolingo, and never
+  removed.** The owner's rules, decided on the shop's redesign:
+  - One tap, one reaction — reactions stack, they never restart (key each to
+    its own id, not a shared timestamp; the Water button's drops once
+    restarted on every tap while every tap queued its own sparkle).
+  - Haptics only for the person's own action: key them on a local tap
+    counter, never on a model value a live subscription can also change.
+  - No bounce on money or data (`Motion.dataDraw`); bounce is for
+    characters, badges and presses (`Motion.pop`, `.release`). Confetti is for
+    what a house achieves, never for money moving (settling up gets a stamp).
+  - Segment switches replay their entrances — the owner likes it; "don't
+    animate what's repeated" is for desktop-style tools, not this app.
+  - Every motion has a Reduce Motion fallback (no travel, scale or spin; the
+    glyph change and the haptic stay). Nothing new runs continuously on a
+    screen at rest — a loading shimmer runs only while it is loading, and
+    `pulse` stays at one per screen.
+  - A tap is felt once. A control that gives its own haptic when the tap
+    lands uses `.pressableQuiet`, not `.pressable`, and `Chip` already ticks
+    on its own taps, so a screen never adds a tick around one.
 - **Colours** are `static let` constants in `Palette`. Never build a `Color` or
   gradient inside a `body`.
 - **Glass goes on things that float** — cards, controls, bars. Never on a

@@ -183,7 +183,7 @@ struct DinnerSheet: View {
             .padding(.vertical, 12)
             .contentShape(.rect)
         }
-        .buttonStyle(.pressable)
+        .buttonStyle(.pressableQuiet)
         .glassCard(
             cornerRadius: Metrics.tightRadius,
             tinted: store.makeItAnOccasion ? Palette.eventParty.opacity(0.16) : nil
@@ -957,6 +957,13 @@ private struct RoundView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Bumped when the household agrees on something while you watch.
+    @State private var celebration = 0
+    /// Bumped only when it was your own yes that made the match — see
+    /// `matchLanded`.
+    @State private var matchFeel = 0
+    @State private var lastYes: YesVote?
+
     var body: some View {
         VStack(spacing: Metrics.sectionSpacing) {
             if let match = store.matches.first {
@@ -978,6 +985,30 @@ private struct RoundView: View {
         .frame(maxHeight: .infinity)
         .animation(Motion.spring, value: store.deck.first?.id)
         .animation(Motion.celebrate, value: store.matches.first?.id)
+        // On the round rather than the card, which arrives in the same breath
+        // as the burst and would otherwise have to catch it on its way in.
+        .overlay { ConfettiBurst(trigger: celebration) }
+        .sensoryFeedback(.success, trigger: matchFeel)
+        .onChange(of: MatchWatch(isLoaded: store.detail != nil, match: store.matches.first?.id)) {
+            matchLanded(from: $0, to: $1)
+        }
+    }
+
+    /// The moment the household agrees.
+    ///
+    /// Only a match that lands while the round is on screen: opening the sheet
+    /// on one somebody else settled an hour ago is not the moment, and the
+    /// round's first delivery is not either. The burst is for everyone
+    /// watching; the haptic is only for the person whose yes did it — a match
+    /// is always someone's vote arriving over the wire, and a phone that buzzes
+    /// for somebody else's tap is a phone that buzzes in a pocket.
+    private func matchLanded(from old: MatchWatch, to new: MatchWatch) {
+        guard old.isLoaded, old.match == nil, let match = new.match else { return }
+        celebration += 1
+        // Your yes, echoed back within a breath, completed it.
+        if let lastYes, lastYes.candidate == match, Date.now.timeIntervalSince(lastYes.at) < 2 {
+            matchFeel += 1
+        }
     }
 
     private func ballotCard(_ candidate: DinnerCandidate) -> some View {
@@ -998,10 +1029,11 @@ private struct RoundView: View {
 
     private func voteButtons(_ candidate: DinnerCandidate) -> some View {
         HStack(spacing: 16) {
-            VoteButton(symbol: "hand.thumbsdown.fill", tint: .secondary) {
+            VoteButton(symbol: "hand.thumbsdown.fill", tint: .secondary, nodsUp: false) {
                 store.send(.voted(candidate, isYes: false))
             }
-            VoteButton(symbol: "hand.thumbsup.fill", tint: Palette.success) {
+            VoteButton(symbol: "hand.thumbsup.fill", tint: Palette.success, nodsUp: true) {
+                lastYes = YesVote(candidate: candidate.id, at: .now)
                 store.send(.voted(candidate, isYes: true))
             }
         }
@@ -1053,18 +1085,56 @@ private struct RoundView: View {
 private struct VoteButton: View {
     let symbol: String
     let tint: Color
+    /// Which way the thumb nods when it is pressed: up for yes, down for no.
+    let nodsUp: Bool
     let action: () -> Void
 
+    /// Your own taps. The haptic used to key on `symbol`, which never changes,
+    /// so it never fired.
+    @State private var taps = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.title2)
-                .foregroundStyle(tint)
+        Button {
+            taps += 1
+            action()
+        } label: {
+            glyph
                 .frame(width: 76, height: 56)
                 .contentShape(.rect)
         }
-        .buttonStyle(.pressable)
+        .buttonStyle(.pressableQuiet)
         .glassCard(cornerRadius: Metrics.tightRadius)
-        .sensoryFeedback(.impact(weight: .light), trigger: symbol)
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
+
+    /// Two branches rather than a stored effect: naming the effect's type would
+    /// mean importing `Symbols` for the sake of one parameter.
+    @ViewBuilder
+    private var glyph: some View {
+        let thumb = Image(systemName: symbol)
+            .font(.title2)
+            .foregroundStyle(tint)
+        // Silent under Reduce Motion: the counter it watches stops moving.
+        let nods = reduceMotion ? 0 : taps
+        if nodsUp {
+            thumb.symbolEffect(.bounce.up, options: .nonRepeating, value: nods)
+        } else {
+            thumb.symbolEffect(.bounce.down, options: .nonRepeating, value: nods)
+        }
+    }
+}
+
+/// Your most recent yes, and when — what tells your own match from somebody
+/// else's.
+private struct YesVote {
+    let candidate: DinnerCandidate.ID
+    let at: Date
+}
+
+/// What `RoundView` watches for the match moment: whether the round had arrived
+/// yet, and what it had agreed on.
+private struct MatchWatch: Equatable {
+    let isLoaded: Bool
+    let match: DinnerCandidate.ID?
 }

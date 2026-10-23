@@ -14,6 +14,11 @@ public struct GlassTextField: View {
 
     @FocusState private var isFocused: Bool
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Bumped for every new message — one appearing, or one replacing another.
+    /// Drives the shake and the haptic, so a re-render that hands the same
+    /// message back does neither.
+    @State private var refusals = 0
 
     public init(
         _ title: LocalizedStringResource,
@@ -30,6 +35,10 @@ public struct GlassTextField: View {
     }
 
     private var isFloating: Bool { isFocused || !text.isEmpty }
+
+    /// The message as it reads. `LocalizedStringResource` is only `Equatable`,
+    /// and swapping one message for another needs something to key on.
+    private var message: String? { error.map { String(localized: $0) } }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -64,16 +73,31 @@ public struct GlassTextField: View {
             }
             .animation(Motion.fade, value: isFocused)
 
-            if let error {
-                Label { Text(error) } icon: {
-                    Image(systemName: "exclamationmark.circle.fill")
+            if let error, let message {
+                // Stacked, so one message replacing another blurs across in
+                // place rather than the two standing one above the other.
+                ZStack(alignment: .leading) {
+                    Label { Text(error) } icon: {
+                        Image(systemName: "exclamationmark.circle.fill")
+                    }
+                    .id(message)
+                    .transition(reduceMotion ? .opacity : AnyTransition(.blurReplace))
                 }
                 .font(.caption)
                 .foregroundStyle(Palette.danger)
-                .transition(.move(edge: .top).combined(with: .opacity))
+                .transition(reduceMotion ? AnyTransition.opacity : .move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(Motion.spring, value: error == nil)
+        // The field refuses, message and all — so a caller never shakes it
+        // again on top: a failed submit that clears the message and sets it
+        // back is already a new one.
+        .shake(on: refusals)
+        .animation(Motion.spring, value: message)
+        .onChange(of: message) { old, new in
+            if new != nil, new != old { refusals += 1 }
+        }
+        // Raised by whatever the person just typed or submitted.
+        .sensoryFeedback(.error, trigger: refusals)
     }
 
     @ViewBuilder

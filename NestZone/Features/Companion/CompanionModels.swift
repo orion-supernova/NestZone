@@ -11,13 +11,42 @@ import Foundation
 
 // MARK: - Species
 
-/// What a household can grow. The trees are drawn by `PlantRenderer` from a
-/// seed and a handful of numbers; the duckling by `PetRenderer`.
+/// What a household can grow. Six trees are drawn by `CanopyPainter` from a
+/// seed and a handful of numbers, the duckling by `PetPainter`; the rest stand
+/// in as their emoji until the art pass (`art`). How each is had is in the
+/// catalog (`access`).
 public enum Species: String, CaseIterable, Codable, Identifiable, Sendable {
-    case magnolia, cherry, pomegranate, azalea, lemon, olive, duckling
+    // Trees, drawn
+    case magnolia, cherry, pomegranate, azalea, lemon, olive
+    // Plants still to draw
+    case basil, sunflower, cactus, daisy, mint, rosemary, snakePlant, fern, lavender, peony, monstera
+    case rose, orchid, bonsai, tulip, maple, pumpkin, pine, snowdrop
+    // Pets
+    case duckling, kitten, hedgehog, hamster, turtle, goldfish, puppy, bunny
+    case fox, owl, deer, penguin, snowFox, polarCub
 
     public var id: String { rawValue }
-    public var isPet: Bool { self == .duckling }
+
+    public var isPet: Bool {
+        switch self {
+        case .duckling, .kitten, .hedgehog, .hamster, .turtle, .goldfish, .puppy, .bunny,
+             .fox, .owl, .deer, .penguin, .snowFox, .polarCub: true
+        default: false
+        }
+    }
+
+    /// How it is drawn: a gouache tree, the duckling, or — until its drawing
+    /// is made — a sketch of its emoji, sprouting or hatching and growing.
+    public enum Art: Sendable { case tree, duckling, sketch }
+
+    public var art: Art {
+        switch self {
+        case .magnolia, .cherry, .pomegranate, .azalea, .lemon, .olive: .tree
+        case .duckling: .duckling
+        default: .sketch
+        }
+    }
+
     public var symbol: String {
         switch self {
         case .magnolia: "🌸"
@@ -26,7 +55,39 @@ public enum Species: String, CaseIterable, Codable, Identifiable, Sendable {
         case .azalea: "🌺"
         case .lemon: "🍋"
         case .olive: "🫒"
+        case .basil: "🌿"
+        case .sunflower: "🌻"
+        case .cactus: "🌵"
+        case .daisy: "🌼"
+        case .mint: "🌱"
+        case .rosemary: "🌾"
+        case .snakePlant: "🎍"
+        case .fern: "☘️"
+        case .lavender: "🪻"
+        case .peony: "🏵️"
+        case .monstera: "🪴"
+        case .rose: "🌹"
+        case .orchid: "🪷"
+        case .bonsai: "🌳"
+        case .tulip: "🌷"
+        case .maple: "🍁"
+        case .pumpkin: "🎃"
+        case .pine: "🌲"
+        case .snowdrop: "🤍"
         case .duckling: "🐤"
+        case .kitten: "🐱"
+        case .hedgehog: "🦔"
+        case .hamster: "🐹"
+        case .turtle: "🐢"
+        case .goldfish: "🐠"
+        case .puppy: "🐶"
+        case .bunny: "🐰"
+        case .fox: "🦊"
+        case .owl: "🦉"
+        case .deer: "🦌"
+        case .penguin: "🐧"
+        case .snowFox: "🦊"
+        case .polarCub: "🐻‍❄️"
         }
     }
 }
@@ -154,6 +215,9 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
     public var welcomed = false
     /// Everyday decorations bought from the jar.
     public var owned: Set<String> = [DecorItem.wateringCan.rawValue]
+    /// Species bought from the jar, alone or in a pack, to grow whenever the
+    /// house likes.
+    public var ownedSpecies: Set<String> = []
     /// What sits where.
     public var layout = SceneLayout()
     /// The days this house celebrates, or `nil` for the region's defaults.
@@ -172,12 +236,26 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
         public var mood: Mood?
         /// Pretend it is this day — to see a holiday arrive.
         public var date: Date?
+        /// Pretend somebody's birthday is today — to see the party hat.
+        public var birthday = false
+        /// The shop's stages at dusk rather than lit, to compare the two.
+        public var dusk = false
         public init() {}
+
+        enum CodingKeys: String, CodingKey { case mood, date, birthday, dusk }
+
+        public init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            mood = try? c.decodeIfPresent(Mood.self, forKey: .mood)
+            date = try? c.decodeIfPresent(Date.self, forKey: .date)
+            birthday = (try? c.decodeIfPresent(Bool.self, forKey: .birthday)) ?? false
+            dusk = (try? c.decodeIfPresent(Bool.self, forKey: .dusk)) ?? false
+        }
     }
 
     enum CodingKeys: String, CodingKey {
         // Leaves were the jar's only coin when the file first held it.
-        case current, album, leaves = "jar", sparkles, welcomed, owned, layout, holidays, paidStage, lab
+        case current, album, leaves = "jar", sparkles, welcomed, owned, ownedSpecies, layout, holidays, paidStage, lab
     }
 
     /// Lenient: a field a later build adds must not make an older file
@@ -191,6 +269,7 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
         sparkles = (try? c.decodeIfPresent(Int.self, forKey: .sparkles)) ?? 0
         welcomed = (try? c.decodeIfPresent(Bool.self, forKey: .welcomed)) ?? false
         owned = (try? c.decodeIfPresent(Set<String>.self, forKey: .owned)) ?? [DecorItem.wateringCan.rawValue]
+        ownedSpecies = (try? c.decodeIfPresent(Set<String>.self, forKey: .ownedSpecies)) ?? []
         layout = (try? c.decodeIfPresent(SceneLayout.self, forKey: .layout)) ?? SceneLayout()
         holidays = try? c.decodeIfPresent([String].self, forKey: .holidays)
         paidStage = (try? c.decodeIfPresent(Int.self, forKey: .paidStage)) ?? 0
@@ -275,9 +354,11 @@ public struct Coins: Equatable, Sendable {
 }
 
 /// What a thing costs: one price, in one currency. Never "100 Leaves or 5
-/// Sparkles" for the same thing — a second way to pay for an item that
-/// progress already earns is paying to skip the progress.
-public enum Price: Equatable, Sendable {
+/// Sparkles" for the same thing — a cheap second price for what progress
+/// earns is paying to skip the progress. A house short of Leaves can make up
+/// the difference with Sparkles it has, one for one (`Exchange`), which is
+/// the same price paid, not a second one.
+public enum Price: Hashable, Sendable {
     case leaves(Int)
     case sparkles(Int)
 }
@@ -302,7 +383,7 @@ public enum Rewards {
 /// dropped: a phone-wide card covered in freely placed things is clutter
 /// within a week, and a spot is the same place on every phone in the house.
 public enum Spot: String, CaseIterable, Codable, Identifiable, Sendable {
-    case above, sky, weather, tree, pot, left, right, ground
+    case above, sky, weather, tree, wearing, pot, left, right, ground
     public var id: String { rawValue }
 
     /// The kind of thing that fits; both floor spots take floor things.
@@ -312,6 +393,7 @@ public enum Spot: String, CaseIterable, Codable, Identifiable, Sendable {
         case .sky: .sky
         case .weather: .weather
         case .tree: .tree
+        case .wearing: .wearing
         case .pot: .pot
         case .left, .right: .floor
         case .ground: .ground
@@ -319,7 +401,7 @@ public enum Spot: String, CaseIterable, Codable, Identifiable, Sendable {
     }
 
     /// Spots a pet's scene has: no tree to hang things on and no pot.
-    static let forPets: [Spot] = [.above, .sky, .weather, .left, .right, .ground]
+    static let forPets: [Spot] = [.above, .sky, .weather, .wearing, .left, .right, .ground]
 }
 
 /// A decoration: a drawing, or a string of flags in a holiday's colours.
@@ -357,59 +439,56 @@ public enum Decor: Hashable, Sendable, Identifiable {
 public enum DecorItem: String, CaseIterable, Codable, Sendable {
     // Everyday, bought from the jar
     case bunting, fairyLights, paperLantern, wateringCan, kilim, terracotta, glazedPot, goldPot, dusk
+    // Everyday, still to draw: scenes, overhead, wearing, floor
+    case windowsill, balcony, starryRooftop, winterSky, windChime, bow, scarf, partyHat, tinyCrown, birdFeeder, watermelon
     // Brought by a holiday, free while it lasts
     case ornaments, treeStar, giftBox, snowfall, heartGarland, bouquet, pumpkin, bats, fullMoon, spookyBunting
     case papelPicado, marigolds, kinara, confetti, shamrocks, fireworks, autumnLeaves, eggBasket, petals
     case ramadanLantern, crescentGarland, candyBowl, oilLamps, pomegranates, menorah, colourPowder, kites
     case redLanterns, harvestMoon, wishNotes, sabzeh
 
-    enum Kind: Sendable { case above, sky, weather, tree, pot, floor, ground }
+    enum Kind: Sendable { case above, sky, weather, tree, wearing, pot, floor, ground }
 
     var kind: Kind {
         switch self {
-        case .bunting, .heartGarland, .spookyBunting, .papelPicado, .shamrocks, .crescentGarland, .kites, .redLanterns, .bats:
+        case .bunting, .heartGarland, .spookyBunting, .papelPicado, .shamrocks, .crescentGarland, .kites, .redLanterns, .bats,
+             .windChime:
             .above
-        case .dusk, .fullMoon, .harvestMoon, .fireworks:
+        case .dusk, .fullMoon, .harvestMoon, .fireworks, .windowsill, .balcony, .starryRooftop, .winterSky:
             .sky
         case .snowfall, .petals, .confetti, .autumnLeaves, .colourPowder:
             .weather
         case .fairyLights, .ornaments, .treeStar, .wishNotes:
             .tree
+        case .bow, .scarf, .partyHat, .tinyCrown:
+            .wearing
         case .terracotta, .glazedPot, .goldPot:
             .pot
         case .kilim:
             .ground
         case .wateringCan, .paperLantern, .pumpkin, .giftBox, .candyBowl, .bouquet, .kinara, .eggBasket,
-             .ramadanLantern, .oilLamps, .pomegranates, .menorah, .sabzeh, .marigolds:
+             .ramadanLantern, .oilLamps, .pomegranates, .menorah, .sabzeh, .marigolds, .birdFeeder, .watermelon:
             .floor
         }
     }
 
-    /// What it costs from the jar, in exactly one currency. Holiday things
-    /// have no price: they come with the day. The watering can is every
-    /// house's from the start.
-    public var price: Price? {
+    /// Snow and the like, left out where December is summer.
+    var isWintry: Bool { self == .snowfall || self == .winterSky }
+
+    /// Drawn in the scene so far; the rest stand in as their emoji until the
+    /// art pass.
+    var isDrawn: Bool {
         switch self {
-        case .terracotta: .leaves(80)
-        case .bunting: .leaves(100)
-        case .glazedPot: .leaves(120)
-        case .fairyLights: .leaves(150)
-        case .kilim: .leaves(250)
-        case .paperLantern: .sparkles(120)
-        case .dusk: .sparkles(160)
-        case .goldPot: .sparkles(240)
-        default: nil
+        case .windowsill, .balcony, .starryRooftop, .windChime, .bow, .scarf, .partyHat, .tinyCrown, .birdFeeder, .watermelon: false
+        default: true
         }
     }
-
-    /// Snow and the like, left out where December is summer.
-    var isWintry: Bool { self == .snowfall }
 }
 
 /// What sits in each spot. The tree takes up to four things; every other spot
 /// takes one.
 public struct SceneLayout: Codable, Equatable, Sendable {
-    enum CodingKeys: String, CodingKey { case above, sky, weather, tree, pot, left, right, ground }
+    enum CodingKeys: String, CodingKey { case above, sky, weather, tree, wearing, pot, left, right, ground }
 
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -417,6 +496,7 @@ public struct SceneLayout: Codable, Equatable, Sendable {
         sky = try? c.decodeIfPresent(String.self, forKey: .sky)
         weather = try? c.decodeIfPresent(String.self, forKey: .weather)
         tree = (try? c.decodeIfPresent([String].self, forKey: .tree)) ?? []
+        wearing = try? c.decodeIfPresent(String.self, forKey: .wearing)
         pot = try? c.decodeIfPresent(String.self, forKey: .pot)
         left = try? c.decodeIfPresent(String.self, forKey: .left)
         right = try? c.decodeIfPresent(String.self, forKey: .right)
@@ -427,6 +507,7 @@ public struct SceneLayout: Codable, Equatable, Sendable {
     public var sky: String?
     public var weather: String?
     public var tree: [String] = []
+    public var wearing: String?
     public var pot: String?
     public var left: String?
     public var right: String?
@@ -443,6 +524,7 @@ public struct SceneLayout: Codable, Equatable, Sendable {
             case .sky: sky
             case .weather: weather
             case .tree: tree.first
+            case .wearing: wearing
             case .pot: pot
             case .left: left
             case .right: right
@@ -455,6 +537,7 @@ public struct SceneLayout: Codable, Equatable, Sendable {
             case .sky: sky = newValue
             case .weather: weather = newValue
             case .tree: tree = newValue.map { [$0] } ?? []
+            case .wearing: wearing = newValue
             case .pot: pot = newValue
             case .left: left = newValue
             case .right: right = newValue
@@ -470,7 +553,7 @@ public struct SceneLayout: Codable, Equatable, Sendable {
 
     /// Everything placed, in any spot.
     public var all: [String] {
-        [above, sky, weather, pot, left, right, ground].compactMap { $0 } + tree
+        [above, sky, weather, wearing, pot, left, right, ground].compactMap { $0 } + tree
     }
 
     /// Puts `decor` in `spot`, or takes it out if it is already there. A floor
@@ -512,6 +595,7 @@ public struct SceneLayout: Codable, Equatable, Sendable {
         case .tree:
             if tree.count < Self.treeLimit { tree.append(raw) }
             else if let index = tree.firstIndex(where: { !keeping.contains($0) }) { tree[index] = raw }
+        case .wearing: if free(wearing) { wearing = raw }
         case .pot: if free(pot) { pot = raw }
         case .floor:
             if left == nil { left = raw }

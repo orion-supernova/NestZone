@@ -7,6 +7,20 @@ public struct NotesView: View {
 
     @Environment(\.theme) private var theme
 
+    /// The notes already on the board when it loaded. They are not news, so
+    /// they never slap down — not on the first frame, and not when they scroll
+    /// back into view. `nil` until the first load lands.
+    @State private var baseline: Set<NoteID>?
+    /// New notes that have already done their landing, so one that scrolls
+    /// away and back is simply there.
+    @State private var landed: Set<NoteID> = []
+    /// When this person last pressed Save in the composer. A note of theirs
+    /// that lands soon after is the one they just wrote, and only that one
+    /// thuds — somebody else's note arriving is theirs to feel, not this
+    /// phone's.
+    @State private var savedAt = Date.distantPast
+    @State private var thuds = 0
+
     public init(store: StoreOf<NotesFeature>) {
         self.store = store
     }
@@ -50,9 +64,27 @@ public struct NotesView: View {
         }
         .task { await store.send(.task).finish() }
         .sheet(item: $store.scope(state: \.destination?.compose, action: \.destination.compose)) {
-            ComposeNoteSheet(store: $0)
+            ComposeNoteSheet(store: $0, onSave: { savedAt = .now })
         }
         .alert($store.scope(state: \.alert, action: \.alert))
+        .onChange(of: store.isLoading, initial: true) { _, loading in
+            if !loading, baseline == nil { baseline = Set(store.notes.ids) }
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: thuds)
+    }
+
+    /// Arrived after the board loaded and not yet landed.
+    private func isNew(_ note: Note) -> Bool {
+        guard let baseline else { return false }
+        return !baseline.contains(note.id) && !landed.contains(note.id)
+    }
+
+    /// Called as a new note first appears, which is when it slaps down.
+    private func land(_ note: Note) {
+        landed.insert(note.id)
+        if store.state.canEdit(note), Date.now.timeIntervalSince(savedAt) < 30 {
+            thuds += 1
+        }
     }
 
     private func grid<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
@@ -69,14 +101,20 @@ public struct NotesView: View {
                 spacing: 18
             ) {
                 ForEach(Array(store.visibleNotes.enumerated()), id: \.element.id) { index, note in
+                    let fresh = isNew(note)
                     NoteCard(
                         note: note,
                         author: store.state.authorName(for: note),
                         canEdit: store.state.canEdit(note),
+                        isNew: fresh,
                         onEdit: { store.send(.editTapped(note.id)) },
                         onDelete: { store.send(.deleteTapped(note.id)) }
                     )
-                    .appear(index)
+                    .onAppear { if fresh { land(note) } }
+                    // Only the first screenful is choreographed: the grid is
+                    // lazy, so a note scrolled to later would otherwise fade in
+                    // behind up to a third of a second of delay.
+                    .appear(index < 8 ? index : 0)
                 }
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -90,6 +128,7 @@ private struct NoteCard: View {
     let note: Note
     let author: String
     let canEdit: Bool
+    let isNew: Bool
     let onEdit: () -> Void
     let onDelete: () -> Void
 
@@ -97,7 +136,8 @@ private struct NoteCard: View {
         StickyNote(
             text: note.body,
             color: StickyColor.parse(note.color),
-            seed: note.id.rawValue
+            seed: note.id.rawValue,
+            isNew: isNew
         ) {
             HStack(spacing: 4) {
                 Text(verbatim: "— \(author)")
@@ -130,6 +170,9 @@ private struct NoteCard: View {
 
 struct ComposeNoteSheet: View {
     @Bindable var store: StoreOf<ComposeNoteFeature>
+    /// Told about the Save tap itself, so the board can tell the note that
+    /// lands next is this person's doing.
+    var onSave: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isFocused: Bool
@@ -161,7 +204,10 @@ struct ComposeNoteSheet: View {
                     Button(role: .cancel) { dismiss() } label: { Text(L10n.commonCancel) }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button { store.send(.submitTapped) } label: {
+                    Button {
+                        onSave()
+                        store.send(.submitTapped)
+                    } label: {
                         if store.isSubmitting {
                             ProgressView().controlSize(.small)
                         } else {

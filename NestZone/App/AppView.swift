@@ -256,6 +256,17 @@ private struct SegmentedRoot: View {
             }
         }
         .animation(Motion.fade, value: store.selected)
+        #if DEBUG
+        .task {
+            // `-segmentCycle 1` walks the tab's segments on its own, to watch
+            // a switch frame by frame.
+            guard UserDefaults.standard.bool(forKey: "segmentCycle") else { return }
+            for module in group.modules.dropFirst() + group.modules {
+                try? await Task.sleep(for: .seconds(1.5))
+                store.send(.segmentPicked(module))
+            }
+        }
+        #endif
         .toolbar(removing: .title)
         // Inline for every module, including the one that asks for a large
         // title: a large title is drawn in the content, not the toolbar, so
@@ -307,7 +318,14 @@ private struct SegmentSwitch: View {
     let pick: (HubModule) -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var underline
+    /// How far the underline is drawn out while it travels — 1 at rest, about
+    /// 30pt over its 18 at full stretch.
+    @State private var stretch: CGFloat = 1
+
+    private static let underlineWidth: CGFloat = 18
+    private static let stretchedWidth: CGFloat = 30
 
     var body: some View {
         HStack(spacing: 18) {
@@ -319,14 +337,30 @@ private struct SegmentSwitch: View {
                             .font(.system(.title3, design: .rounded, weight: .bold))
                             .foregroundStyle(isSelected ? .primary : .secondary)
                             .lineLimit(1)
+                            // The name just chosen lands a touch small and
+                            // springs up to size. Every name hears the change;
+                            // only the chosen one moves.
+                            .keyframeAnimator(
+                                initialValue: CGFloat(1),
+                                trigger: reduceMotion ? nil : selected
+                            ) { name, scale in
+                                name.scaleEffect(isSelected ? scale : 1, anchor: .bottomLeading)
+                            } keyframes: { _ in
+                                MoveKeyframe(0.96)
+                                SpringKeyframe(1, duration: 0.32, spring: Spring(duration: 0.32, bounce: 0.4))
+                            }
                         ZStack {
                             if isSelected {
                                 Capsule()
                                     .fill(theme.accent)
+                                    // Inside the matched frame, so it stretches
+                                    // about its own centre as it slides rather
+                                    // than being thrown wider off course.
+                                    .scaleEffect(x: stretch, y: 1)
                                     .matchedGeometryEffect(id: "underline", in: underline)
                             }
                         }
-                        .frame(width: 18, height: 3)
+                        .frame(width: Self.underlineWidth, height: 3)
                     }
                     .frame(minHeight: Metrics.minTapTarget)
                     .contentShape(.rect)
@@ -337,6 +371,18 @@ private struct SegmentSwitch: View {
             }
         }
         .animation(Motion.spring, value: selected)
+        .onChange(of: selected) { _, _ in
+            // Under Reduce Motion the underline only moves; it does not also
+            // stretch.
+            guard !reduceMotion else { return }
+            // Drawn out as it leaves, gathered back in as it lands — the way
+            // a drop of ink travels.
+            withAnimation(.easeOut(duration: 0.14)) {
+                stretch = Self.stretchedWidth / Self.underlineWidth
+            } completion: {
+                withAnimation(Motion.release) { stretch = 1 }
+            }
+        }
         .sensoryFeedback(.selection, trigger: selected)
     }
 }
@@ -453,11 +499,20 @@ private struct CapturedToast: View {
     let outcome: CaptureOutcome
     let open: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// One per line filed while the toast is up — the first as it arrives, and
+    /// again if another lands before it has gone.
+    @State private var filed = 0
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: outcome.kind.symbol)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(outcome.kind.tint)
+                // The module's glyph hops as the line lands in it. Still under
+                // Reduce Motion, where the haptic says it alone.
+                .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.bounce, options: .nonRepeating, value: reduceMotion ? 0 : filed)
             Text(outcome.message)
                 .font(.subheadline)
                 .lineLimit(1)
@@ -476,6 +531,10 @@ private struct CapturedToast: View {
         .padding(.trailing, 4)
         .padding(.vertical, 6)
         .glassEffect(.regular.interactive(), in: .capsule)
+        // Only ever shown for this person's own Add, so the haptic is theirs.
+        .sensoryFeedback(.success, trigger: filed)
+        .onAppear { filed += 1 }
+        .onChange(of: outcome) { _, _ in filed += 1 }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: Text(L10n.commonOpen), open)
     }

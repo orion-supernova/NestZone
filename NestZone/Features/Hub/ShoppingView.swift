@@ -5,7 +5,20 @@ public struct ShoppingView: View {
     @Bindable var store: StoreOf<ShoppingFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isComposerFocused: Bool
+
+    /// Things this person ticked off here, for the haptic. Counted at the tap,
+    /// not read off the item: an item also changes when somebody else buys it,
+    /// and that is their phone's to buzz. On the list rather than the row,
+    /// because a ticked row moves to the purchased section in the same frame —
+    /// the row that was tapped is already on its way out.
+    @State private var bought = 0
+    /// Lines sent from the composer, for the arrow's hop and its tap.
+    @State private var sends = 0
+    /// The spinner waits a beat before it takes the arrow's place. A quick
+    /// server never shows it, and the hop is what answers the tap.
+    @State private var showsAddSpinner = false
 
     /// Everything the list shows, kept out of `body` — inline, the whole
     /// screen was one expression and the compiler gave up type-checking it.
@@ -129,6 +142,27 @@ public struct ShoppingView: View {
         .task { await store.send(.task).finish() }
         .alert($store.scope(state: \.alert, action: \.alert))
         .animation(Motion.spring, value: store.items)
+        .sensoryFeedback(.success, trigger: bought)
+        // A clear in flight only ever starts from this person confirming one —
+        // no push from another phone puts a group in `clearing` — so the thud
+        // can be keyed on it directly. It lands as the rows go.
+        .sensoryFeedback(.impact(weight: .medium), trigger: store.clearing.count) { old, new in
+            new > old
+        }
+    }
+
+    /// Every checkbox on the screen goes through here, so the haptic counts
+    /// ticks made on this phone and nothing else.
+    private func toggle(_ item: ShoppingItem) {
+        if !item.isPurchased { bought += 1 }
+        store.send(.togglePurchased(item.id))
+    }
+
+    /// The composer's send. Counted only when there is something to send, so a
+    /// return on an empty field neither hops nor taps.
+    private func add() {
+        if store.canAdd { sends += 1 }
+        store.send(.addTapped)
     }
 
     /// How much of the shop is done, at a glance.
@@ -144,6 +178,8 @@ public struct ShoppingView: View {
                 Text(store.progress, format: .percent.precision(.fractionLength(0)))
                     .font(.system(.caption, design: .rounded, weight: .bold))
                     .monospacedDigit()
+                    // Rolls with the ring rather than snapping ahead of it.
+                    .contentTransition(.numericText(value: store.progress))
             }
             .frame(width: 58, height: 58)
             .animation(Motion.spring, value: store.progress)
@@ -213,7 +249,7 @@ public struct ShoppingView: View {
             ShoppingRow(
                 item: item,
                 showsCategory: true,
-                onToggle: { store.send(.togglePurchased(item.id)) }
+                onToggle: { toggle(item) }
             )
             .glassListRow()
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -254,7 +290,7 @@ public struct ShoppingView: View {
                     ShoppingRow(
                         item: item,
                         showsCategory: false,
-                        onToggle: { store.send(.togglePurchased(item.id)) }
+                        onToggle: { toggle(item) }
                     )
                     .glassListRow()
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -298,7 +334,7 @@ public struct ShoppingView: View {
                     ShoppingRow(
                         item: item,
                         showsCategory: false,
-                        onToggle: { store.send(.togglePurchased(item.id)) }
+                        onToggle: { toggle(item) }
                     )
                     .glassListRow()
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -339,7 +375,7 @@ public struct ShoppingView: View {
                     ShoppingRow(
                         item: item,
                         showsCategory: false,
-                        onToggle: { store.send(.togglePurchased(item.id)) }
+                        onToggle: { toggle(item) }
                     )
                     .glassListRow()
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -373,7 +409,7 @@ public struct ShoppingView: View {
                 ShoppingRow(
                     item: item,
                     showsCategory: false,
-                    onToggle: { store.send(.togglePurchased(item.id)) }
+                    onToggle: { toggle(item) }
                 )
                 .glassListRow()
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -398,7 +434,7 @@ public struct ShoppingView: View {
                 ShoppingRow(
                     item: item,
                     showsCategory: false,
-                    onToggle: { store.send(.togglePurchased(item.id)) }
+                    onToggle: { toggle(item) }
                 )
                 .glassListRow()
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -437,14 +473,16 @@ public struct ShoppingView: View {
             }
             .focused($isComposerFocused)
             .submitLabel(.done)
-            .onSubmit { store.send(.addTapped) }
+            .onSubmit(add)
 
-            Button { store.send(.addTapped) } label: {
+            Button(action: add) {
                 // An item has no id until the server answers, so it cannot be
                 // shown as a row yet. The button says the work is happening
                 // instead — before, typing and sending looked identical to
-                // typing and nothing at all.
-                if store.pendingAdds > 0 {
+                // typing and nothing at all. First the arrow hops, which is the
+                // answer to the tap; the spinner takes over only if the server
+                // is still thinking a beat later.
+                if showsAddSpinner {
                     ProgressView()
                         .controlSize(.small)
                         .frame(width: 28, height: 28)
@@ -452,6 +490,7 @@ public struct ShoppingView: View {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title2)
                         .symbolRenderingMode(.hierarchical)
+                        .symbolEffect(.bounce.up, value: reduceMotion ? 0 : sends)
                         .frame(width: 28, height: 28)
                 }
             }
@@ -460,7 +499,20 @@ public struct ShoppingView: View {
             .opacity(store.canAdd || store.pendingAdds > 0 ? 1 : 0.4)
             .animation(Motion.fade, value: store.canAdd)
             .animation(Motion.fade, value: store.pendingAdds > 0)
+            .animation(Motion.fade, value: showsAddSpinner)
+            .sensoryFeedback(.impact(weight: .light), trigger: sends)
             .accessibilityLabel(Text(L10n.commonAdd))
+            .task(id: store.pendingAdds > 0) {
+                guard store.pendingAdds > 0 else {
+                    showsAddSpinner = false
+                    return
+                }
+                // Long enough for the hop to finish. A cancelled sleep returns
+                // at once, so a quick answer never shows the spinner at all.
+                try? await Task.sleep(for: .seconds(0.4))
+                guard !Task.isCancelled else { return }
+                showsAddSpinner = store.pendingAdds > 0
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -477,29 +529,55 @@ private struct ShoppingRow: View {
     var showsCategory: Bool = false
     let onToggle: () -> Void
 
+    /// Ticks from this checkbox, for the pop — local, so an item somebody else
+    /// bought changes its glyph without celebrating a tap nobody here made.
+    /// The haptic is the list's: see `ShoppingView.bought`.
+    @State private var pops = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     /// Just the card. The swipe belongs to the `List` this row sits in — a
     /// hand-built one lost the touch to whatever else wanted it.
     var body: some View { card }
 
     private var card: some View {
         HStack(spacing: 12) {
-            Button(action: onToggle) {
+            Button(action: toggle) {
                 Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(item.isPurchased ? Palette.success : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
+                    // The tick grows out of the ring rather than swapping in.
+                    .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
+                    // Squash, overshoot, settle: the box answers the thumb.
+                    .keyframeAnimator(initialValue: CGFloat(1), trigger: pops) { content, scale in
+                        content.scaleEffect(scale)
+                    } keyframes: { _ in
+                        CubicKeyframe(0.8, duration: 0.08)
+                        SpringKeyframe(1.18, duration: 0.12)
+                        SpringKeyframe(1, duration: 0.15, spring: .init(duration: 0.15, bounce: 0.5))
+                    }
                     .frame(width: 32, height: 32)
                     .contentShape(.circle)
             }
             .buttonStyle(.pressable)
-            .sensoryFeedback(.success, trigger: item.isPurchased) { _, bought in bought }
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.name)
                     .font(.subheadline)
-                    .strikethrough(item.isPurchased, color: .secondary)
                     .foregroundStyle(item.isPurchased ? .secondary : .primary)
                     .lineLimit(1)
+                    // The line alone, swept across by a copy of the name whose
+                    // letters are clear; there only while the item is bought.
+                    .overlay(alignment: .leading) {
+                        if item.isPurchased {
+                            Text(item.name)
+                                .font(.subheadline)
+                                .strikethrough(color: .secondary)
+                                .foregroundStyle(.clear)
+                                .lineLimit(1)
+                                .transition(strikeTransition)
+                                .accessibilityHidden(true)
+                        }
+                    }
                 if showsCategory {
                     Label {
                         Text(item.category.title)
@@ -526,6 +604,26 @@ private struct ShoppingRow: View {
         .animation(Motion.spring, value: item.isPurchased)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(item.isPurchased ? [.isButton, .isSelected] : .isButton)
+    }
+
+    /// Only buying pops; putting something back on the list is a correction.
+    /// Reduce Motion keeps the glyph and the haptic and drops the squash.
+    private func toggle() {
+        if !item.isPurchased, !reduceMotion { pops += 1 }
+        onToggle()
+    }
+
+    private var strikeTransition: AnyTransition {
+        reduceMotion ? .opacity : AnyTransition(Strike()).animation(.easeOut(duration: 0.25))
+    }
+
+    /// The strikethrough drawing itself across the name, left to right. A
+    /// horizontal scale rather than a mask: the letters on this layer are
+    /// clear, so the line is all there is to stretch.
+    private struct Strike: Transition {
+        func body(content: Content, phase: TransitionPhase) -> some View {
+            content.scaleEffect(x: phase.isIdentity ? 1 : 0.01, anchor: .leading)
+        }
     }
 }
 

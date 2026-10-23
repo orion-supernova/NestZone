@@ -33,6 +33,9 @@ public struct InboxBell: View {
     @Bindable var store: StoreOf<InboxFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Bumped only when the count goes up — see `body`.
+    @State private var rings = 0
 
     public init(store: StoreOf<InboxFeature>) {
         self.store = store
@@ -49,10 +52,13 @@ public struct InboxBell: View {
                 // and the bell stays legible against whatever is behind it.
                 .symbolRenderingMode(store.badge.hasUnread ? .palette : .monochrome)
                 .foregroundStyle(pipTint, Color.primary)
-                // Rings when something arrives, and only then. `.bounce` fires
-                // on a *change* of the trigger value, so a badge that stays at
-                // three is still.
-                .symbolEffect(.bounce, value: store.badge.total)
+                // The badge grows onto the bell and comes off it, rather than
+                // one glyph cutting to the other.
+                .contentTransition(.symbolEffect(.replace))
+                // Rings when something arrives, and only then. It used to key
+                // on the total itself, so reading things — the count going
+                // *down* — rang it too, as if more had come.
+                .symbolEffect(.wiggle.byLayer, options: .nonRepeating, value: rings)
                 .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
                 .overlay(alignment: .topTrailing) {
                     if store.badge.hasUnread {
@@ -73,6 +79,11 @@ public struct InboxBell: View {
         }
         .buttonStyle(.pressable)
         .animation(Motion.spring, value: store.badge.total)
+        // Silent under Reduce Motion: the glyph and the pip still change, the
+        // bell just does not swing.
+        .onChange(of: store.badge.total) { old, new in
+            if new > old, !reduceMotion { rings += 1 }
+        }
         .accessibilityLabel(Text(L10n.inboxOpenPanel))
         .accessibilityValue(
             store.badge.hasUnread
@@ -109,6 +120,12 @@ struct InboxPanel: View {
 
     @Environment(\.theme) private var theme
     @Namespace private var switcherGlass
+    /// Your own taps on the switcher. The tick keys on these rather than on the
+    /// tab, which the bell also sets when it opens the panel on the side with
+    /// something new. The filters are `Chip`s, which tick on their own.
+    @State private var selectionTaps = 0
+    /// Your own taps on "Mark all read".
+    @State private var markReadTaps = 0
 
     var body: some View {
         NavigationStack {
@@ -134,6 +151,8 @@ struct InboxPanel: View {
                 }
             }
             .animation(Motion.fade, value: store.tab)
+            .sensoryFeedback(.selection, trigger: selectionTaps)
+            .sensoryFeedback(.impact(weight: .light), trigger: markReadTaps)
             .navigationTitle(Text(L10n.inboxTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -165,6 +184,7 @@ struct InboxPanel: View {
     private var overflow: some View {
         Menu {
             Button {
+                markReadTaps += 1
                 store.send(.markAllReadTapped)
             } label: {
                 Label { Text(L10n.inboxMarkAllRead) } icon: {
@@ -216,7 +236,10 @@ struct InboxPanel: View {
         let isSelected = store.tab == tab
         let count = tab == .activity ? store.badge.activity : store.badge.updates
 
-        return Button { store.send(.tabSelected(tab)) } label: {
+        return Button {
+            if !isSelected { selectionTaps += 1 }
+            store.send(.tabSelected(tab))
+        } label: {
             HStack(spacing: 7) {
                 Image(systemName: tab.symbol)
                     .font(.footnote.weight(.semibold))
@@ -265,10 +288,11 @@ struct InboxPanel: View {
             } else if store.sections.isEmpty {
                 emptyActivity
             } else {
+                let starts = rowStarts(store.sections)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: Metrics.sectionSpacing, pinnedViews: []) {
-                        ForEach(store.sections) { section in
-                            daySection(section)
+                        ForEach(Array(store.sections.enumerated()), id: \.element.id) { index, section in
+                            daySection(section, startingAt: starts[index])
                         }
                         feedFooter
                     }
@@ -327,7 +351,7 @@ struct InboxPanel: View {
     /// A card per day rather than a card per row. Thirty glass surfaces is
     /// thirty blur passes for a list that reads perfectly well as a grouped
     /// one, and the day is the unit somebody is actually scanning for.
-    private func daySection(_ section: ActivitySection) -> some View {
+    private func daySection(_ section: ActivitySection, startingAt start: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(section.title)
                 .font(.footnote.weight(.semibold))
@@ -340,6 +364,7 @@ struct InboxPanel: View {
                     ActivityRow(
                         row: row,
                         isNew: store.state.isNew(row),
+                        order: start + index,
                         action: { store.send(.rowTapped(row)) }
                     )
                     if index < section.rows.count - 1 {
@@ -349,6 +374,18 @@ struct InboxPanel: View {
             }
             .glassCard()
         }
+    }
+
+    /// Where each day's rows begin in the feed as a whole, so a wave down the
+    /// list keeps going across the day cards instead of restarting in each.
+    private func rowStarts(_ sections: [ActivitySection]) -> [Int] {
+        var starts: [Int] = []
+        var running = 0
+        for section in sections {
+            starts.append(running)
+            running += section.rows.count
+        }
+        return starts
     }
 
     /// The end of the list: more to load, or the reason there is not.
@@ -416,7 +453,11 @@ struct InboxPanel: View {
                     LazyVStack(spacing: Metrics.stackSpacing) {
                         ForEach(Array(store.updateRows.enumerated()), id: \.element.id) { index, update in
                             UpdateCard(update: update, isNew: store.state.isNew(update))
-                                .appear(index)
+                                // Only the first screenful staggers: a lazy card
+                                // appears when it is scrolled to, and one far down
+                                // waiting out its capped delay read as the feed
+                                // lagging behind the finger.
+                                .appear(index < 8 ? index : 0)
                         }
 
                         Text(L10n.inboxVersionFooter(AppVersion.current.raw))
@@ -443,9 +484,12 @@ struct InboxPanel: View {
 private struct ActivityRow: View {
     let row: HomeActivity
     let isNew: Bool
+    /// Its place in the whole feed, for the wave "Mark all read" sends down it.
+    let order: Int
     let action: () -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button(action: action) {
@@ -502,6 +546,16 @@ private struct ActivityRow: View {
             .padding(.horizontal, Metrics.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(isNew ? theme.accent.opacity(0.07) : .clear)
+            // Read, one row after another rather than all at once, so marking
+            // everything read looks like something swept down the list. The
+            // stagger is capped, so a long feed is not still going a second
+            // later; under Reduce Motion the rows fade together.
+            .animation(
+                reduceMotion
+                    ? Motion.fade
+                    : Motion.exit.delay(Motion.stagger(order, step: 0.03, cap: 0.3)),
+                value: isNew
+            )
             .contentShape(.rect)
         }
         .buttonStyle(.pressable)
@@ -529,6 +583,8 @@ private struct ActivityRow: View {
                         .frame(width: 8, height: 8)
                         .overlay(Circle().strokeBorder(.background, lineWidth: 1.5))
                         .offset(x: 2, y: -2)
+                        // Shrinks away into the icon when it is read.
+                        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
                 }
             }
     }

@@ -107,6 +107,12 @@ extension Palette {
 /// Tapping re-pins it — the tilt flips to the other side and picks a new angle,
 /// with a press-down and a light haptic. It does nothing useful, and that is
 /// the point.
+///
+/// A note that is new to the board lands: it arrives a size too big and dead
+/// level, as if just lifted off the pad, and slaps down into its tilt. Only
+/// the first time it is drawn — the caller says which notes are new, because
+/// only the board knows what was already on it, and a note scrolling back into
+/// view is not arriving.
 public struct StickyNote<Footer: View>: View {
     private let text: String
     private let color: StickyColor
@@ -119,13 +125,20 @@ public struct StickyNote<Footer: View>: View {
     @State private var tilt: Double
     @State private var isPressed = false
     @State private var flipCount = 0
+    /// 1 while a new note is still in the air, 0 once it is down. Fixed at
+    /// creation like the tilt, so the first frame is already the lifted one.
+    @State private var landing: Double
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// - Parameter isNew: lands with a slap on its first appearance. The haptic
+    ///   that goes with it is the caller's to fire, because only the caller
+    ///   knows whether this person is the one who put the note there.
     public init(
         text: String,
         color: StickyColor,
         seed: String,
+        isNew: Bool = false,
         @ViewBuilder footer: () -> Footer
     ) {
         self.text = text
@@ -135,7 +148,12 @@ public struct StickyNote<Footer: View>: View {
         // Set here rather than in `onAppear`, so the note is already tilted on
         // its first frame instead of snapping into place after it lands.
         _tilt = State(initialValue: Self.restingAngle(for: seed))
+        _landing = State(initialValue: isNew ? 1 : 0)
     }
+
+    /// How far off the board the note is drawn. Always 0 under Reduce Motion:
+    /// a note there simply appears, already pinned, with no lift and no swing.
+    private var airborne: Double { reduceMotion ? 0 : landing }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -156,14 +174,28 @@ public struct StickyNote<Footer: View>: View {
         .background(paper)
         // 2pt, not 20: paper corners are cut, not rounded.
         .clipShape(.rect(cornerRadius: 2))
-        .rotationEffect(.degrees(tilt))
-        .scaleEffect(isPressed ? 0.95 : 1)
+        // In the air it hangs level and a size up; coming down it swings into
+        // its angle and the spring carries both a little past rest — the slap.
+        .rotationEffect(.degrees(tilt * (1 - airborne)))
+        .scaleEffect(CGFloat((isPressed ? 0.95 : 1) * (1 + 0.15 * airborne)))
         .shadow(color: .black.opacity(0.18), radius: 4, x: 1, y: 3)
         .contentShape(.rect)
         .onTapGesture { repin() }
+        .onAppear(perform: land)
         .sensoryFeedback(.impact(weight: .light), trigger: flipCount)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// One-shot: `landing` only ever goes from 1 to 0, so a note that is
+    /// already down is untouched by every later appearance.
+    private func land() {
+        guard landing > 0 else { return }
+        if reduceMotion {
+            landing = 0
+        } else {
+            withAnimation(Motion.pop) { landing = 0 }
+        }
     }
 
     /// Colour, plus a soft sheen so it reads as a sheet rather than a swatch.

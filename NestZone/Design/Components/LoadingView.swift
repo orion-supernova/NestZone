@@ -7,6 +7,18 @@ import SwiftUI
 public struct LoadingView: View {
     private let message: LocalizedStringResource?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Where the highlight is across the words: -1 before them, 1 past them.
+    @State private var sweep: CGFloat = -1
+
+    /// The highlight: a soft band, solid in the middle. Only its alpha is
+    /// used, as a mask.
+    private static let band = LinearGradient(
+        colors: [.clear, .black, .clear],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
     public init(message: LocalizedStringResource? = nil) {
         self.message = message
     }
@@ -18,6 +30,33 @@ public struct LoadingView: View {
                 Text(message)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .overlay {
+                        if !reduceMotion {
+                            // The same words in the primary colour, seen only
+                            // through a band of light passing across them.
+                            let travel = sweep
+                            Text(message)
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                                .mask {
+                                    Self.band.visualEffect { band, proxy in
+                                        band.offset(x: proxy.size.width * travel)
+                                    }
+                                }
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .onAppear {
+                        // For as long as this view is up, which is exactly as
+                        // long as the wait — the same terms the image
+                        // placeholder's shimmer runs on. Never under Reduce
+                        // Motion, where a sweep that does not end is the very
+                        // thing the setting is for.
+                        guard !reduceMotion else { return }
+                        withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
+                            sweep = 1
+                        }
+                    }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

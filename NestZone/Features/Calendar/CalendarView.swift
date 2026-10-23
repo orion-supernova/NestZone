@@ -6,12 +6,14 @@ import SwiftUI
 /// One window, three resolutions. The month grid is for "when is that", the
 /// week timeline is for "how full is Thursday", and the agenda is for "what is
 /// coming" — so they share a scrubber, a filter row and a subscription, and swap
-/// with a cross-dissolve rather than a slide. They are three views of one month,
-/// not three places.
+/// as a zoom rather than a slide. They are three views of one month, not three
+/// places, so changing between them reads as moving closer or further away,
+/// never sideways.
 public struct CalendarView: View {
     @Bindable var store: StoreOf<CalendarFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var daySelection
     @Namespace private var modePill
     /// The row with its delete button showing, if any. Held here rather than in
@@ -19,6 +21,13 @@ public struct CalendarView: View {
     @State private var revealedID: EventOccurrence.ID?
     @State private var isSearching = false
     @FocusState private var isSearchFocused: Bool
+    /// Which way the last switch between faces went — see `FaceZoom`.
+    @State private var zoom = FaceZoom()
+    /// The month grid's frame inside its own face, so a zoom to or from the
+    /// month can centre on the selected day's cell.
+    @State private var gridFrame: CGRect?
+    /// Your own answers on the next-up card — see `RSVPTaps`.
+    @State private var rsvpTaps = RSVPTaps()
 
     public init(store: StoreOf<CalendarFeature>) {
         self.store = store
@@ -32,7 +41,11 @@ public struct CalendarView: View {
                 if isSearching { searchField }
                 if store.state.showsFilterRow { filterRow }
 
-                Group {
+                // Overlaid rather than stacked. In the lazy stack the face on its
+                // way out and the one on its way in sat one above the other for
+                // the length of the transition, so the new face arrived a whole
+                // screen down and jumped up when the old one left.
+                ZStack(alignment: .top) {
                     // Any filter replaces the calendar rather than thinning it
                     // in place.
                     //
@@ -45,22 +58,27 @@ public struct CalendarView: View {
                     // subset.
                     if store.state.isFiltering {
                         resultsPage
+                            .transition(.opacity.combined(with: .offset(y: 10)))
                     } else {
-                        switch store.mode {
-                        case .month: monthPage
-                        case .week: weekPage
-                        case .agenda: agendaPage
+                        // Nested, so a filter coming on or off cross-fades the
+                        // whole calendar away while a change of face zooms —
+                        // the zoom only ever runs between two faces.
+                        ZStack(alignment: .top) {
+                            modeFace
+                                // Each face is its own view, not three states of
+                                // one. Without the id all three share an
+                                // identity, so SwiftUI swaps the content in
+                                // place, the transition never has an insertion
+                                // to run, and none of the `appear` staggers
+                                // inside it ever see a second `onAppear` —
+                                // switching to an empty week looks like nothing
+                                // happened at all.
+                                .id(store.mode)
+                                .transition(FaceZoomTransition(zoom: zoom, reduceMotion: reduceMotion))
                         }
+                        .transition(.opacity.combined(with: .offset(y: 10)))
                     }
                 }
-                // Each face is its own view, not three states of one. Without
-                // the id all three branches share an identity, so SwiftUI swaps
-                // the content in place, the transition never has an insertion to
-                // run, and none of the `appear` staggers inside it ever see a
-                // second `onAppear` — switching to an empty week looks like
-                // nothing happened at all.
-                .id(store.state.isFiltering ? "results" : store.mode.rawValue)
-                .transition(.opacity.combined(with: .offset(y: 10)))
             }
             .padding(.bottom, Metrics.scrollBottomInset)
             .animation(Motion.spring, value: store.mode)
@@ -243,7 +261,7 @@ public struct CalendarView: View {
         HStack(spacing: 2) {
             ForEach(CalendarFeature.State.Mode.allCases) { mode in
                 let isSelected = store.mode == mode
-                Button { store.send(.modeSelected(mode)) } label: {
+                Button { switchFace(to: mode) } label: {
                     HStack(spacing: 5) {
                         Image(systemName: mode.symbol)
                             .font(.caption2.weight(.semibold))
@@ -258,23 +276,70 @@ public struct CalendarView: View {
                     .foregroundStyle(isSelected ? Color.white : Color.secondary)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
-                    .background {
-                        if isSelected {
-                            Capsule()
-                                .fill(theme.accent)
-                                .matchedGeometryEffect(id: "calendarMode", in: modePill)
-                        }
-                    }
+                    // Each slot only marks where the pill can land.
+                    .matchedGeometryEffect(id: mode, in: modePill)
                     .contentShape(.capsule)
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
             }
         }
+        // One pill for the whole control rather than one per slot: a pill that
+        // is a different view in every slot can glide between them, but it
+        // cannot stretch on the way, because nothing lives through the move.
+        .background {
+            Capsule()
+                .fill(theme.accent)
+                .matchedGeometryEffect(id: store.mode, in: modePill, isSource: false)
+                // Pulled across rather than slid: a quarter wider mid-way,
+                // settling back to its slot as it lands.
+                .keyframeAnimator(
+                    initialValue: CGFloat(1),
+                    trigger: reduceMotion ? nil : store.mode
+                ) { pill, stretch in
+                    pill.scaleEffect(x: stretch, y: 1)
+                } keyframes: { _ in
+                    CubicKeyframe(1.25, duration: 0.14)
+                    SpringKeyframe(1, duration: 0.28, spring: .init(duration: 0.3, bounce: 0.3))
+                }
+        }
         .padding(3)
         .glassEffect(.regular, in: .capsule)
         .padding(.horizontal, Metrics.screenPadding)
         .animation(Motion.spring, value: store.mode)
+        // The mode is this screen's own state — nothing pushed from the server
+        // moves it — so the tick can key on it directly.
+        .sensoryFeedback(.selection, trigger: store.mode)
+    }
+
+    /// Records which way the zoom goes, then switches.
+    ///
+    /// The order matters: both faces read `zoom` while their transitions run,
+    /// and the switch is what starts them.
+    private func switchFace(to mode: CalendarFeature.State.Mode) {
+        let from = store.mode
+        guard mode != from else { return }
+        // Month, week, agenda: widest to narrowest, so a step to the right is a
+        // step in.
+        let order = CalendarFeature.State.Mode.allCases
+        zoom.inward = (order.firstIndex(of: mode) ?? 0) > (order.firstIndex(of: from) ?? 0)
+        zoom.pivot = mode == .month || from == .month ? monthPivot : nil
+        store.send(.modeSelected(mode))
+    }
+
+    /// The selected day's cell, in the month face's own coordinates.
+    ///
+    /// `nil` until the grid has been on screen once — a calendar opened on the
+    /// agenda has no cell to measure, and zooms about the middle instead.
+    private var monthPivot: CGPoint? {
+        let days = store.grid.days
+        guard let frame = gridFrame,
+              let index = days.firstIndex(of: store.selectedDay) else { return nil }
+        let rows = CGFloat((days.count + 6) / 7)
+        return CGPoint(
+            x: frame.minX + frame.width * (CGFloat(index % 7) + 0.5) / 7,
+            y: frame.minY + frame.height * (CGFloat(index / 7) + 0.5) / rows
+        )
     }
 
     private var filterRow: some View {
@@ -363,6 +428,18 @@ public struct CalendarView: View {
         }
         .animation(Motion.spring, value: store.kindFilter)
         .animation(Motion.spring, value: store.onlyMine)
+        // No tick of its own: every filter here is a `Chip`, which ticks on
+        // its own taps.
+    }
+
+    /// Whichever of the three faces the picker is on.
+    @ViewBuilder
+    private var modeFace: some View {
+        switch store.mode {
+        case .month: monthPage
+        case .week: weekPage
+        case .agenda: agendaPage
+        }
     }
 
     // MARK: - Month
@@ -386,6 +463,9 @@ public struct CalendarView: View {
             dayPanel
                 .padding(.horizontal, Metrics.screenPadding)
         }
+        // The grid is measured against the face itself, inside the zoom, so the
+        // measurement holds still while the face scales around it.
+        .coordinateSpace(.named(monthFaceSpace))
     }
 
     private var weekdayHeadings: some View {
@@ -419,6 +499,9 @@ public struct CalendarView: View {
         }
         .animation(Motion.spring, value: store.selectedDay)
         .sensoryFeedback(.selection, trigger: store.selectedDay)
+        .onGeometryChange(for: CGRect.self) {
+            $0.frame(in: .named(monthFaceSpace))
+        } action: { gridFrame = $0 }
         // The whole grid is redrawn when the month changes, and the redraw is
         // the transition: cells cross-fade rather than sliding, because the
         // dates underneath them have changed identity entirely.
@@ -596,7 +679,8 @@ public struct CalendarView: View {
                     }
                     .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                // The same squash as a day in the month grid.
+                .buttonStyle(DayPressStyle())
                 .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
             }
         }
@@ -740,11 +824,25 @@ public struct CalendarView: View {
         return HStack(spacing: 6) {
             ForEach(RSVPStatus.allCases) { status in
                 let isMine = mine == status
-                Button { store.send(.rsvpTapped(occurrence, status)) } label: {
+                Button {
+                    store.send(.rsvpTapped(occurrence, status))
+                    // Only a tap that took. The reducer refuses one while the
+                    // last is still in flight, and that is not an answer to
+                    // acknowledge.
+                    let now = store.state.occurrences[id: occurrence.id]?
+                        .rsvp(of: store.currentUserID)
+                    if now != mine { rsvpTaps.record(now) }
+                } label: {
                     HStack(spacing: 5) {
                         Image(systemName: status.symbol)
                             .font(.caption2.weight(.bold))
-                            .bounces(when: isMine)
+                            // Keyed on your tap, not on the answer: the card
+                            // appearing, or somebody's push, is not a choice.
+                            .symbolEffect(
+                                .bounce,
+                                options: .nonRepeating,
+                                value: reduceMotion ? 0 : rsvpTaps.bounces(of: status)
+                            )
                         Text(status.title)
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
@@ -758,12 +856,12 @@ public struct CalendarView: View {
                     )
                     .contentShape(.capsule)
                 }
-                .buttonStyle(.pressable)
+                .buttonStyle(.pressableQuiet)
                 .accessibilityAddTraits(isMine ? [.isButton, .isSelected] : .isButton)
             }
         }
         .animation(Motion.spring, value: mine)
-        .sensoryFeedback(.selection, trigger: mine)
+        .sensoryFeedback(trigger: rsvpTaps, RSVPTaps.feedback)
     }
 
     // MARK: - Shared pieces
@@ -874,5 +972,109 @@ public struct CalendarView: View {
         let index = calendar.component(.weekday, from: day.date(calendar)) - 1
         let symbols = calendar.veryShortWeekdaySymbols
         return index >= 0 && index < symbols.count ? symbols[index] : ""
+    }
+}
+
+// MARK: - Switching faces
+
+/// The month face's coordinate space, which the grid is measured in.
+private let monthFaceSpace = "calendarMonthFace"
+
+/// Which way the last switch went, and the point it zoomed about.
+///
+/// A reference rather than `@State` values, on purpose. A face on its way out
+/// keeps the transition it was last drawn with, so a direction held as a value
+/// reached the outgoing face one switch late — month → week → month zoomed the
+/// week face out the wrong way. The picker writes here before it sends, and
+/// each face's transition reads it when its phase is actually evaluated.
+private final class FaceZoom {
+    /// Month → week → agenda is wide to narrow: inward.
+    var inward = true
+    /// Where the zoom is centred, in the faces' shared coordinates — the
+    /// selected day's cell whenever the month is one end of the switch, and
+    /// `nil` (the middle of what is on screen) otherwise.
+    var pivot: CGPoint?
+}
+
+/// A face arriving or leaving as a zoom.
+///
+/// Inward, the old face swells past you and fades while the new one rises from
+/// a little under its size; outward is the same film run backwards. Under
+/// Reduce Motion it is a cross-fade and nothing else.
+private struct FaceZoomTransition: Transition {
+    let zoom: FaceZoom
+    let reduceMotion: Bool
+
+    func body(content: Content, phase: TransitionPhase) -> some View {
+        content
+            .modifier(PivotScale(scale: scale(for: phase), pivot: zoom.pivot))
+            .opacity(phase.isIdentity ? 1 : 0)
+    }
+
+    private func scale(for phase: TransitionPhase) -> CGFloat {
+        guard !reduceMotion else { return 1 }
+        switch phase {
+        case .willAppear: return zoom.inward ? 0.92 : 1.08
+        case .identity: return 1
+        case .didDisappear: return zoom.inward ? 1.08 : 0.92
+        }
+    }
+}
+
+/// Scales about a point in the view's own coordinates rather than a fraction of
+/// its size, so two faces of different heights zoom about the same spot on the
+/// screen.
+private struct PivotScale: GeometryEffect {
+    var scale: CGFloat
+    let pivot: CGPoint?
+
+    var animatableData: CGFloat {
+        get { scale }
+        set { scale = newValue }
+    }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        // With no day to zoom on: the middle of what is likely on screen, not
+        // the middle of an agenda that may run a metre below it.
+        let point = pivot ?? CGPoint(x: size.width / 2, y: min(size.height / 2, 240))
+        return ProjectionTransform(
+            CGAffineTransform(translationX: point.x, y: point.y)
+                .scaledBy(x: scale, y: scale)
+                .translatedBy(x: -point.x, y: -point.y)
+        )
+    }
+}
+
+// MARK: - Answering
+
+/// Your own RSVP taps, counted — what the answer's bounce and haptic key on.
+///
+/// Never the answer itself. That also changes when the sheet opens on one, when
+/// a live push lands, and when a refused write is rolled back, and a phone
+/// should not tap its owner's hand for something they did not do.
+struct RSVPTaps: Equatable {
+    /// Per answer, bumped only when a tap lands on it, so only that glyph
+    /// bounces — not the one being left.
+    private var landed: [RSVPStatus: Int] = [:]
+    /// Every tap that changed the answer.
+    private var count = 0
+    /// What the last one changed it to; `nil` for taking an answer back.
+    private var answer: RSVPStatus?
+
+    mutating func record(_ answer: RSVPStatus?) {
+        count += 1
+        self.answer = answer
+        if let answer { landed[answer, default: 0] += 1 }
+    }
+
+    func bounces(of status: RSVPStatus) -> Int {
+        landed[status, default: 0]
+    }
+
+    /// For `sensoryFeedback(trigger:_:)`: nothing unless a tap was recorded,
+    /// and a little more than a tick for saying you are coming.
+    static func feedback(_ old: RSVPTaps, _ new: RSVPTaps) -> SensoryFeedback? {
+        guard new.count != old.count else { return nil }
+        return new.answer == .going ? .success : .selection
     }
 }

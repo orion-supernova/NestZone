@@ -12,7 +12,150 @@ extension Species {
         case .azalea: L10n.speciesAzalea
         case .lemon: L10n.speciesLemon
         case .olive: L10n.speciesOlive
+        case .basil: L10n.speciesBasil
+        case .sunflower: L10n.speciesSunflower
+        case .cactus: L10n.speciesCactus
+        case .daisy: L10n.speciesDaisy
+        case .mint: L10n.speciesMint
+        case .rosemary: L10n.speciesRosemary
+        case .snakePlant: L10n.speciesSnakePlant
+        case .fern: L10n.speciesFern
+        case .lavender: L10n.speciesLavender
+        case .peony: L10n.speciesPeony
+        case .monstera: L10n.speciesMonstera
+        case .rose: L10n.speciesRose
+        case .orchid: L10n.speciesOrchid
+        case .bonsai: L10n.speciesBonsai
+        case .tulip: L10n.speciesTulip
+        case .maple: L10n.speciesMaple
+        case .pumpkin: L10n.speciesPumpkin
+        case .pine: L10n.speciesPine
+        case .snowdrop: L10n.speciesSnowdrop
         case .duckling: L10n.speciesDuckling
+        case .kitten: L10n.speciesKitten
+        case .hedgehog: L10n.speciesHedgehog
+        case .hamster: L10n.speciesHamster
+        case .turtle: L10n.speciesTurtle
+        case .goldfish: L10n.speciesGoldfish
+        case .puppy: L10n.speciesPuppy
+        case .bunny: L10n.speciesBunny
+        case .fox: L10n.speciesFox
+        case .owl: L10n.speciesOwl
+        case .deer: L10n.speciesDeer
+        case .penguin: L10n.speciesPenguin
+        case .snowFox: L10n.speciesSnowFox
+        case .polarCub: L10n.speciesPolarCub
+        }
+    }
+}
+
+extension SpeciesPack {
+    public var title: LocalizedStringResource {
+        switch self {
+        case .forestFriends: L10n.packForestFriends
+        case .snowFriends: L10n.packSnowFriends
+        }
+    }
+}
+
+extension ShopItem {
+    public var title: LocalizedStringResource {
+        switch self {
+        case let .decor(decor): decor.title
+        case let .species(species): species.title
+        case let .pack(pack): pack.title
+        }
+    }
+}
+
+extension Standing {
+    /// One short line under a thing whose price chip isn't there: free, the
+    /// house's, or when it comes. Short enough for a narrow card in Turkish.
+    func status(for item: ShopItem, southern: Bool, now: Date) -> LocalizedStringResource? {
+        switch self {
+        case .free: return L10n.standingFree
+        case .have: return L10n.decorateYours
+        case .freeToday:
+            if case .species = item { return L10n.standingSeasonFree }
+            return L10n.decorateFree
+        case .buy, .sale: return nil
+        case let .locked(.season(season)):
+            guard let back = season.returns(after: now, southern: southern) else { return nil }
+            return L10n.standingBack(back.formatted(Date.FormatStyle().month(.wide).locale(L10n.locale)))
+        case let .locked(.holiday(holiday)):
+            return holiday?.title ?? L10n.standingHolidays
+        case let .locked(.reward(.graduations(count))): return L10n.standingAlbum(count)
+        case .locked(.reward(.birthday)): return L10n.standingBirthdays
+        case .locked(.reward(.grownAll)): return L10n.standingGrowAll
+        }
+    }
+
+    /// The symbol beside that line.
+    var statusSymbol: String? {
+        switch self {
+        case .freeToday: "gift.fill"
+        case .locked(.season), .locked(.holiday): "calendar"
+        case .locked(.reward(.graduations)): "book.closed.fill"
+        case .locked(.reward(.birthday)): "birthday.cake.fill"
+        case .locked(.reward(.grownAll)): "crown.fill"
+        default: nil
+        }
+    }
+
+    /// The card's sentence for a thing that isn't for sale today: how it is
+    /// had, or what to do with it.
+    func explanation(for item: ShopItem, southern: Bool, now: Date) -> LocalizedStringResource {
+        let isSpecies = if case .species = item { true } else { false }
+        switch self {
+        case .free: return isSpecies ? L10n.infoYoursToGrow : L10n.infoFree
+        case .have: return isSpecies ? L10n.infoYoursToGrow : L10n.infoHave
+        case .freeToday: return isSpecies ? L10n.infoSeasonFree : L10n.infoFreeToday
+        case .buy, .sale: return L10n.infoHave
+        case let .locked(.season(season)):
+            let back = season.returns(after: now, southern: southern) ?? now
+            return L10n.infoSeason(back.formatted(Date.FormatStyle().month(.wide).locale(L10n.locale)))
+        case let .locked(.holiday(holiday)):
+            return holiday.map { L10n.infoHoliday(String(localized: $0.title)) } ?? L10n.infoHolidays
+        case let .locked(.reward(.graduations(count))): return L10n.infoAlbum(count)
+        case .locked(.reward(.birthday)): return L10n.infoBirthday
+        case .locked(.reward(.grownAll)): return L10n.infoGrowAll
+        }
+    }
+}
+
+extension ShopItem {
+    /// What a thing is for, under its name on the card.
+    var purpose: String {
+        switch self {
+        case let .decor(decor): String(localized: decor.kind.purpose)
+        case let .species(species): String(localized: species.isPet ? L10n.forPet : L10n.forPlant)
+        case let .pack(pack):
+            pack.species.map { String(localized: $0.title) }.formatted(.list(type: .and).locale(L10n.locale))
+        }
+    }
+}
+
+extension DecorItem.Kind {
+    var purpose: LocalizedStringResource {
+        switch self {
+        case .sky: L10n.forSky
+        case .above: L10n.forAbove
+        case .tree: L10n.forTree
+        case .wearing: L10n.forWearing
+        case .pot: L10n.forPot
+        case .floor: L10n.forFloor
+        case .ground: L10n.forGround
+        case .weather: L10n.forWeather
+        }
+    }
+}
+
+extension Price {
+    /// The price as coins in the jar.
+    var coins: Coins {
+        switch self {
+        case let .leaves(amount): Coins(leaves: amount, sparkles: 0)
+        case let .sparkles(amount): Coins(leaves: 0, sparkles: amount)
         }
     }
 }
@@ -62,6 +205,7 @@ extension Spot {
         case .sky: L10n.spotSky
         case .weather: L10n.spotWeather
         case .tree: L10n.spotTree
+        case .wearing: L10n.spotWearing
         case .pot: L10n.spotPot
         case .left: L10n.spotLeft
         case .right: L10n.spotRight
@@ -98,6 +242,17 @@ extension DecorItem {
         case .glazedPot: L10n.decorGlazedPot
         case .goldPot: L10n.decorGoldPot
         case .dusk: L10n.decorDusk
+        case .windowsill: L10n.decorWindowsill
+        case .balcony: L10n.decorBalcony
+        case .starryRooftop: L10n.decorStarryRooftop
+        case .winterSky: L10n.decorWinterSky
+        case .windChime: L10n.decorWindChime
+        case .bow: L10n.decorBow
+        case .scarf: L10n.decorScarf
+        case .partyHat: L10n.decorPartyHat
+        case .tinyCrown: L10n.decorTinyCrown
+        case .birdFeeder: L10n.decorBirdFeeder
+        case .watermelon: L10n.decorWatermelon
         case .ornaments: L10n.decorOrnaments
         case .treeStar: L10n.decorTreeStar
         case .giftBox: L10n.decorGiftBox
@@ -144,6 +299,17 @@ extension DecorItem {
         case .glazedPot: "🫙"
         case .goldPot: "🏆"
         case .dusk: "🌆"
+        case .windowsill: "🪟"
+        case .balcony: "🌇"
+        case .starryRooftop: "🌌"
+        case .winterSky: "🌨️"
+        case .windChime: "🎐"
+        case .bow: "🎀"
+        case .scarf: "🧣"
+        case .partyHat: "🥳"
+        case .tinyCrown: "👑"
+        case .birdFeeder: "🪺"
+        case .watermelon: "🍉"
         case .ornaments: "🔴"
         case .treeStar: "⭐️"
         case .giftBox: "🎁"

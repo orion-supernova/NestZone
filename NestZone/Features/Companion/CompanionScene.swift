@@ -49,7 +49,9 @@ struct CompanionScene: View {
     @State private var isWaking = false
     @State private var stageUpAt: Date?
     @State private var dropAt: Date?
-    @State private var careAt: Date?
+    /// The water poured by recent taps on Water (hearts, for a pet), each
+    /// with its own start: a tap never restarts one already falling.
+    @State private var pours: [Pour] = []
     @State private var landedAt: Date?
     @State private var pettedAt: Date?
     @State private var petSide = 1.0
@@ -58,6 +60,13 @@ struct CompanionScene: View {
     @State private var didSettle = false
     @State private var viewSize = CGSize(width: 360, height: 360)
     @State private var crowns = CrownCache()
+
+    /// One tap's water: when it was poured, and a little to one side of the
+    /// last, so two pours in a row don't fall as one.
+    struct Pour: Equatable {
+        var at: Date
+        var shift: Double
+    }
 
     /// A one-off spray: sparkles from a landing, hearts from a pet.
     struct Burst: Equatable {
@@ -74,7 +83,7 @@ struct CompanionScene: View {
             let date = timeline.date
             ZStack {
                 Canvas { context, size in snapshot.drawBack(context, size: size, at: date) }
-                if let canopy, !companion.species.isPet {
+                if let canopy, companion.species.art == .tree {
                     let wind = snapshot.wind(viewSize, at: date)
                     let state = snapshot.treeState(at: date)
                     ZStack {
@@ -87,6 +96,14 @@ struct CompanionScene: View {
                     }
                     .transformEffect(wind.bend)
                     .scaleEffect(x: 1 - wind.bounce * 0.35, y: 1 + wind.bounce, anchor: SceneSpace.root)
+                } else if companion.species.art == .sketch, !companion.species.isPet {
+                    // A sketched plant has no crown yet; its lights and
+                    // baubles go round the emoji instead.
+                    let state = snapshot.treeState(at: date)
+                    if !state.decor.isEmpty {
+                        DecorLayer(state: state, anchors: snapshot.sketchAnchors(at: date), twinkle: snapshot.twinkle(state, at: date))
+                            .equatable()
+                    }
                 }
                 Canvas { context, size in snapshot.drawFront(context, size: size, at: date) }
             }
@@ -114,9 +131,21 @@ struct CompanionScene: View {
             dropAt = Date()
             land(after: reduceMotion ? 0 : 0.95)
         }
+        // Every tap pours its own water and gets its own landing — water and
+        // sparkle together. Tapped faster than the water can fall, the plant
+        // gives a happy wiggle instead of a fourth pour: one tap restarting
+        // the drops while every tap queued a sparkle showed one splash of
+        // water and a dozen sparkles.
         .onChange(of: careTick) { _, _ in
-            careAt = Date()
-            land(after: reduceMotion ? 0 : 0.7)
+            let now = Date()
+            pours.removeAll { now.timeIntervalSince($0.at) > 1 }
+            if pours.count < 3 {
+                pours.append(Pour(at: now, shift: pours.isEmpty ? 0 : Double.random(in: -14...14)))
+                land(after: reduceMotion ? 0 : 0.7)
+            } else {
+                pettedAt = now
+                petSide = -petSide
+            }
         }
     }
 
@@ -134,7 +163,7 @@ struct CompanionScene: View {
     // MARK: - Changes into motion
 
     private func settle() {
-        if canopy == nil, !companion.species.isPet {
+        if canopy == nil, companion.species.art == .tree {
             canopy = Canopy(seed: companion.seed, species: companion.species)
         }
         guard !didSettle else { return }
@@ -170,7 +199,7 @@ struct CompanionScene: View {
             moodFrom: moodFrom, moodTo: moodTo, moodAt: moodAt, isWaking: isWaking,
             progressFrom: progressFrom, progressTo: progressTo, progressAt: progressAt,
             revivedAt: revivedAt, revivedFromDozing: revivedFromDozing, stageUpAt: stageUpAt,
-            dropAt: dropAt, careAt: careAt, landedAt: landedAt, pettedAt: pettedAt, petSide: petSide, bursts: bursts,
+            dropAt: dropAt, landedAt: landedAt, pettedAt: pettedAt, pours: pours, petSide: petSide, bursts: bursts,
             crowns: crowns
         )
     }
@@ -218,7 +247,8 @@ struct SceneSnapshot {
     let moodFrom: Double, moodTo: Double, moodAt: Date, isWaking: Bool
     let progressFrom: Double, progressTo: Double, progressAt: Date
     let revivedAt: Date?, revivedFromDozing: Bool
-    let stageUpAt: Date?, dropAt: Date?, careAt: Date?, landedAt: Date?, pettedAt: Date?
+    let stageUpAt: Date?, dropAt: Date?, landedAt: Date?, pettedAt: Date?
+    let pours: [CompanionScene.Pour]
     let petSide: Double
     let bursts: [CompanionScene.Burst]
     let crowns: CrownCache
@@ -341,6 +371,9 @@ struct SceneSnapshot {
     /// worked out once per mood and stage, not once a frame.
     func crown(_ moment: Moment) -> CGRect {
         let center = moment.center
+        if companion.species.art == .sketch {
+            return sketchBox(progress: moment.frame.progress, center: center).insetBy(dx: -10, dy: -10)
+        }
         guard !companion.species.isPet, let canopy else {
             return companion.species.isPet
                 ? CGRect(x: center - 90, y: SceneSpace.floor - 190, width: 180, height: 150)
@@ -362,7 +395,8 @@ struct SceneSnapshot {
         painter.sky(c)
         painter.above(c)
         painter.rug(c)
-        if companion.species.isPet {
+        switch companion.species.art {
+        case .duckling:
             let pet = PetPainter(
                 frame: frame, stage: stage,
                 hop: [landedAt, stageUpAt].compactMap { $0 }.map { date.timeIntervalSince($0) }.min(),
@@ -370,9 +404,84 @@ struct SceneSnapshot {
                 waking: moment.revive.flatMap { $0 < 1.8 ? $0 : nil }
             )
             pet.draw(c, x: center, floor: SceneSpace.floor - 4, size: 190)
-        } else {
+        case .tree:
             painter.pot(c, style: PotStyle(seed: companion.seed))
+        case .sketch:
+            if !companion.species.isPet { painter.pot(c, style: PotStyle(seed: companion.seed)) }
+            sketch(c, moment)
         }
+    }
+
+    /// Where a hat sits and where a bow or scarf is tied, each the point its
+    /// foot stands on: the crown's top and the pot's front for a plant; the
+    /// head and the chin for a pet — the duckling's from its drawing, grown.
+    func wearingPoints(_ moment: Moment, crown: CGRect) -> (top: CGPoint, neck: CGPoint) {
+        let center = moment.center
+        let pot = CGPoint(x: center, y: SceneSpace.soil + 32)
+        switch (companion.species.art, companion.species.isPet) {
+        case (.duckling, _):
+            return (CGPoint(x: center - 22, y: SceneSpace.floor - 120), CGPoint(x: center - 18, y: SceneSpace.floor - 62))
+        case (.sketch, true):
+            let box = sketchBox(progress: moment.frame.progress, center: center)
+            return (CGPoint(x: box.midX, y: box.minY + 8), CGPoint(x: box.midX, y: box.maxY - box.height * 0.04))
+        case (.sketch, false):
+            let box = sketchBox(progress: moment.frame.progress, center: center)
+            return (CGPoint(x: box.midX, y: box.minY + 8), pot)
+        case (.tree, _):
+            return (CGPoint(x: crown.midX, y: crown.minY + 12), pot)
+        }
+    }
+
+    // MARK: Sketches
+
+    /// The point a sketched species is hatched or sprouted at: before it, an
+    /// egg or a seedling stands in for it.
+    private var sketchOpens: Double {
+        companion.species.isPet ? CompanionMath.petStages[2] : CompanionMath.plantStages[1]
+    }
+
+    /// Where a sketched species stands, in scene units: on the soil in its pot,
+    /// or on the floor, as tall as it has grown.
+    func sketchBox(progress: Double, center: Double) -> CGRect {
+        let isPet = companion.species.isPet
+        let size = progress < sketchOpens
+            ? (isPet ? 54.0 : 34)
+            : Ink.lerp(isPet ? 72 : 52, 150, Ink.ease((progress - sketchOpens) / (1 - sketchOpens)))
+        let base = isPet ? SceneSpace.floor - 4 : SceneSpace.soil + 4
+        return CGRect(x: center - size / 2, y: base - size, width: size, height: size)
+    }
+
+    /// A species not drawn yet, as its emoji: a seedling or an egg to begin
+    /// with, then itself, growing with every stage, swaying, bouncing when
+    /// something lands, and drooping and fading as the house goes quiet. It
+    /// stands in until the art pass.
+    func sketch(_ c: GraphicsContext, _ moment: Moment) {
+        let frame = moment.frame
+        let box = sketchBox(progress: frame.progress, center: moment.center)
+        let opened = frame.progress >= sketchOpens
+        let symbol = opened ? companion.species.symbol : companion.species.isPet ? "🥚" : "🌱"
+        let droop = Ink.smooth((0.66 - frame.mood) / 0.56)
+        let sway = frame.reduceMotion ? 0 : sin(moment.seconds * 1.25) * 0.035 * frame.wind
+        // The wobbly egg wobbles.
+        let wobble = !opened && stage >= 1 && !frame.reduceMotion ? sin(moment.seconds * 7) * 0.12 : 0
+        c.sketch(symbol, box.midX, box.maxY, size: box.height, angle: sway + wobble + frame.wobble * 0.4 + droop * 0.16,
+                 stretch: frame.bounce, opacity: 1 - 0.35 * droop)
+    }
+
+    /// Where things hang on a sketched plant, round its emoji, in the tree's
+    /// own space: across from the trunk, up from the soil.
+    func sketchAnchors(at date: Date) -> CanopyAnchors {
+        let box = sketchBox(progress: shownProgress(at: date), center: 0)
+        let top = box.minY - SceneSpace.soil, bottom = box.maxY - SceneSpace.soil
+        let middle = (top + bottom) / 2, radius = box.width * 0.36
+        let hangs = (0..<7).map { i in
+            let angle = Double.pi * (0.12 + 0.76 * Double(i) / 6)
+            return CGPoint(x: -cos(angle) * radius, y: middle + sin(angle) * radius * 0.7)
+        }
+        return CanopyAnchors(
+            left: box.minX, right: box.maxX, top: top, bottom: middle + radius * 0.5, crownTop: CGPoint(x: 0, y: top),
+            hangs: hangs, notes: [CGPoint(x: -radius * 0.55, y: middle - radius * 0.2), CGPoint(x: radius * 0.5, y: middle - radius * 0.35)]
+        )
     }
 
     /// In front of the tree: what stands on the floor, what flies, the
@@ -391,6 +500,10 @@ struct SceneSnapshot {
             painter.weather(c)
         }
         painter.glints(c, in: crown)
+        if !compact {
+            let (top, neck) = wearingPoints(moment, crown: crown)
+            painter.wearing(c, top: top, neck: neck)
+        }
 
         // Ready to graduate: a slow golden breath around it.
         if progress >= 1 {
@@ -427,18 +540,18 @@ struct SceneSnapshot {
                 drop(c, x: x, y: y, size: 1)
             }
         }
-        if let careAt {
-            let t = date.timeIntervalSince(careAt)
+        for pour in pours {
+            let t = date.timeIntervalSince(pour.at)
             for i in 0..<3 {
                 let start = Double(i) * 0.12
                 let k = (t - start) / 0.55
                 guard k >= 0, k < 1 else { continue }
                 if companion.species.isPet {
                     // A pet is petted, not watered: hearts rise off it.
-                    let x = center - 20 + Double(i) * 20, y = target - 20 - 70 * k
+                    let x = center - 20 + Double(i) * 20 + pour.shift, y = target - 20 - 70 * k
                     c.heart(x, y, 8, SceneInk.heart.opacity(1 - Ink.smooth((k - 0.6) / 0.4)))
                 } else {
-                    let x = center - 18 + Double(i) * 18, y = Ink.lerp(SceneSpace.soil - 190, target, k * k)
+                    let x = center - 18 + Double(i) * 18 + pour.shift, y = Ink.lerp(SceneSpace.soil - 190, target, k * k)
                     drop(c, x: x, y: y, size: 0.7)
                 }
             }
@@ -540,10 +653,10 @@ extension SceneSnapshot {
         self.init(
             companion: companion, progress: progress, stage: stage, layout: SceneLayout(), southern: false, now: now,
             compact: false, reduceMotion: reduceMotion,
-            canopy: companion.species.isPet ? nil : Canopy(seed: companion.seed, species: companion.species), epoch: epoch,
+            canopy: companion.species.art == .tree ? Canopy(seed: companion.seed, species: companion.species) : nil, epoch: epoch,
             moodFrom: mood.level, moodTo: mood.level, moodAt: .distantPast, isWaking: false,
             progressFrom: progress, progressTo: progress, progressAt: .distantPast,
-            revivedAt: nil, revivedFromDozing: false, stageUpAt: nil, dropAt: nil, careAt: nil, landedAt: nil, pettedAt: nil,
+            revivedAt: nil, revivedFromDozing: false, stageUpAt: nil, dropAt: nil, landedAt: nil, pettedAt: nil, pours: [],
             petSide: 1, bursts: [], crowns: CrownCache()
         )
     }
