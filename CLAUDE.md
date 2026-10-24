@@ -94,6 +94,26 @@ launch). `-frameMeter 2` also logs every late frame with its time, to see how a
 switch splits across frames; `-appTabSegments "calendar,tasks,finance"` opens
 each tab on the segment you name, to measure a first build of any of them.
 
+- **Launch, measured on the simulator (Release, MEASURE).** The first screen
+  is the launch view; Today replaces it once the session has been restored
+  (about 500 ms of network, nothing to optimise on the device) and then draws
+  in one frame of about 570 ms, which is what `-frameMeter 2` calls the first
+  late frame. Most of that is SwiftUI building a `TabView` and a
+  `NavigationStack` for the first time; the app's own code in it (store, reducer
+  state, `HomeView.body`) is about 60 ms. Two things in the measurement are
+  the simulator and not the app: about 700 ms before `main` (dyld loads every
+  framework off disk, notifying the debugger of each) and the accessibility
+  bundles loading. The first `Text(LocalizedStringResource)` used to cost
+  about 200 ms of the frame, inside the tab bar's labels (Markdown parsing
+  scans every attribute scope the runtime knows); `LaunchWarmup` does one off
+  the main thread at launch, so the frame finds it done. Measure launch with
+  `sample <pid> 5 1` started right after `simctl launch`, not with Time
+  Profiler: it is wall-clock, symbolicated for the app and for SwiftUI, and
+  shows time spent blocked, which Time Profiler on the simulator leaves out
+  and cannot symbolicate. Staging the first Today build the way Calendar is
+  staged was not done: the dock and Nestie each cost under 10% of the frame
+  when removed outright, and the dock cannot be built a beat late without it
+  sliding in.
 - **A tap switches tab or opens a screen in place — never both.** A whole
   module goes to its tab, switched to its segment and popped to root. A
   specific thing (an event, a problem, the chore split) is opened on the stack

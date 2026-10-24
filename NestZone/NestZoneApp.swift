@@ -25,6 +25,10 @@ struct NestZoneApp: App {
     /// and nowhere else, so the app keeps a delegate purely to forward it.
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() {
+        LaunchWarmup.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             #if DEBUG
