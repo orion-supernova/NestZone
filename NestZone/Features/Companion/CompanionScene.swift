@@ -330,7 +330,8 @@ struct SceneSnapshot {
         let hour = Double(Calendar.current.component(.hour, from: now)) + Double(Calendar.current.component(.minute, from: now)) / 60
         return TreeState(
             seed: companion.seed, species: companion.species, mood: shownMood(at: date), progress: shownProgress(at: date),
-            day: (SceneFrame.dayness(hour) * 50).rounded() / 50, decor: compact ? [] : layout.tree, reduceMotion: reduceMotion
+            day: (SceneFrame.dayness(hour) * 50).rounded() / 50, light: (SceneFrame.skySide(hour) * 10).rounded() / 10,
+            decor: compact ? [] : layout.tree, reduceMotion: reduceMotion
         )
     }
 
@@ -709,6 +710,9 @@ struct TreeState: Equatable, Sendable {
     /// The light, in fiftieths, so the clock redraws it now and then rather
     /// than every frame.
     var day: Double
+    /// Where the sun or the moon stands across the scene, -1 to 1, in tenths,
+    /// for the trees that take their light from it.
+    var light: Double = 0
     var decor: [String]
     var reduceMotion: Bool
 }
@@ -726,6 +730,7 @@ struct TreeLayer: View, Equatable {
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.state.seed == rhs.state.seed && lhs.state.species == rhs.state.species && lhs.state.mood == rhs.state.mood
             && lhs.state.progress == rhs.state.progress && lhs.state.day == rhs.state.day
+            && lhs.state.light == rhs.state.light
     }
 
     var body: some View {
@@ -742,7 +747,15 @@ struct TreeLayer: View, Equatable {
         var above = Path(CGRect(x: -size.width, y: -SceneSpace.soil, width: size.width * 2, height: SceneSpace.soil))
         above.addEllipse(in: SceneSpace.soilSurface)
         tree.clip(to: above)
-        CanopyPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day).draw(tree)
+        #if DEBUG
+        let started = CACurrentMediaTime()
+        defer { TreeTiming.note(state.species, light: state.light, since: started) }
+        #endif
+        if state.species == .pomegranate && !TreeTiming.legacyPomegranate {
+            PomegranatePainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(tree)
+        } else {
+            CanopyPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day).draw(tree)
+        }
     }
 }
 

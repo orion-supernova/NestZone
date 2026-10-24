@@ -1300,8 +1300,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionScene.swift": {
-    "mtime": 1792864405.1151087,
-    "ast_hash": "dfef5412fb26c19b57e667d9cd476f83",
+    "mtime": 1792872318.3544562,
+    "ast_hash": "526159b9b68f342207275268f3869d39",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionSheets.swift": {
@@ -1325,8 +1325,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ScenePainter.swift": {
-    "mtime": 1792864601.1099076,
-    "ast_hash": "3240694127b0e857871018efae828077",
+    "mtime": 1792871513.3495963,
+    "ast_hash": "4d16ed372972d265f4d269c9c5647bcf",
     "semantic_hash": ""
   },
   "NestZoneTests/CompanionTests.swift": {
@@ -1545,8 +1545,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CanopyPainter.swift": {
-    "mtime": 1792863695.9140375,
-    "ast_hash": "54c4ca8042057932ab07153afec8953c",
+    "mtime": 1792870769.756904,
+    "ast_hash": "be1bf364b694e73528559120f961a3ef",
     "semantic_hash": ""
   },
   "Docs/Companion/art/SHADERS.md": {
@@ -1950,8 +1950,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ArtSheet.swift": {
-    "mtime": 1792864691.252458,
-    "ast_hash": "3fbbd580b03a564babc9911283b2d0d0",
+    "mtime": 1792873234.8173254,
+    "ast_hash": "ec6df5c8a73eef10dc32f674d8387d4c",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPainter.swift": {
@@ -2052,6 +2052,76 @@
   "Docs/Companion/art/pass1/sunflower.png": {
     "mtime": 1792864755.0032833,
     "ast_hash": "1966bf88774ee488744f025439b4f772",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PomegranatePainter+Flowers.swift": {
+    "mtime": 1792873228.2534685,
+    "ast_hash": "6e0cd983671a1f103de94106fe3b9a7c",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PomegranatePainter+Fruit.swift": {
+    "mtime": 1792873337.2109873,
+    "ast_hash": "f50d7739d8ca5f266d8d19ea02080936",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PomegranatePainter+Wood.swift": {
+    "mtime": 1792871360.1526358,
+    "ast_hash": "48ecbfd01b0a5b1f894d44466ca7dc3f",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PomegranatePainter.swift": {
+    "mtime": 1792873909.8978932,
+    "ast_hash": "d7d0749385e4a089092315a6abae824e",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/TreeTiming.swift": {
+    "mtime": 1792872332.8523939,
+    "ast_hash": "3af08e7cbaaffffbe1047a2b62bece02",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/RULES.md": {
+    "mtime": 1792873995.1881075,
+    "ast_hash": "c82b3f55f048d7629f00df0851b16bec",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/index.html": {
+    "mtime": 1792869981.439336,
+    "ast_hash": "3177b201a480922229ad2a1d831407ef",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-before-closeup.png": {
+    "mtime": 1792873955.7892673,
+    "ast_hash": "16e7304ecdab0d679894dafdf25e8116",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-before-night-moods.png": {
+    "mtime": 1792873962.423104,
+    "ast_hash": "1d1cce492f8c9d6584b9b19bf1e4c6bd",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-before-sheet.png": {
+    "mtime": 1792870594.5140624,
+    "ast_hash": "582ca97aed976460b22c3624fc4a3c5d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v1-closeup.png": {
+    "mtime": 1792873949.185361,
+    "ast_hash": "0213e2bea08864dbf46f1c4862a52fba",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v1-night-moods.png": {
+    "mtime": 1792873942.6205814,
+    "ast_hash": "2f8b4bb1aefaff500a0585666606f6c9",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v1-pass1-closeup.png": {
+    "mtime": 1792873949.2477984,
+    "ast_hash": "39335208b683dda6387b373d0f2c297e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v1-stages.png": {
+    "mtime": 1792873935.9960768,
+    "ast_hash": "419888f75d689e5b3ff432895e08314f",
     "semantic_hash": ""
   }
 }

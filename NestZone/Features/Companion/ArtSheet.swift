@@ -25,11 +25,16 @@ struct ArtSheet: View {
             case "decor": decor(0)
             case "decor2": decor(1)
             case "grid": grid
+            case "pomegranate": pomegranateSheet
+            case "pomegranate-night": pomegranateNight
+            case "redraw": redraw
+            case "pomegranate-close": pomegranateClose
             default:
                 if let species = Species(rawValue: page) { speciesPage(species) }
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear { FrameMeter.shared.startIfAsked() }
     }
 
     // MARK: One species
@@ -69,6 +74,96 @@ struct ArtSheet: View {
             .overlay(alignment: .topLeading) {
                 Text(verbatim: label).font(.system(size: 9, design: .monospaced)).foregroundStyle(.white.opacity(0.7)).padding(3)
             }
+    }
+
+    // MARK: Redraw stress
+
+    /// Four grown trees whose growth moves every frame, so each is drawn whole
+    /// every frame: the worst case for a painter, which the app never asks of
+    /// one (the tree layer is drawn only when its state changes). Read the
+    /// late frames with `-frameMeter 1`; `-artSheetSpecies magnolia` swaps
+    /// the tree, and `-pomegranateLegacy 1` draws the pomegranate the old way.
+    ///   -artSheet redraw -frameMeter 1
+    private var redraw: some View {
+        let species = UserDefaults.standard.string(forKey: "artSheetSpecies").flatMap(Species.init(rawValue:)) ?? .pomegranate
+        let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+        let count = max(1, UserDefaults.standard.integer(forKey: "artSheetCount") == 0 ? 4 : UserDefaults.standard.integer(forKey: "artSheetCount"))
+        return TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 2), spacing: 4) {
+                ForEach(0..<count, id: \.self) { i in
+                    cell(ScenePortrait(companion: companion, progress: 0.8 + 0.17 * sin(t * 2 + Double(i)), mood: .content, stage: 5, now: hour(13)), "\(i)")
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    // MARK: The pomegranate, the hero
+
+    /// Every stage by day and at dusk, big enough to judge.
+    ///   -artSheet pomegranate        day and dusk
+    ///   -artSheet pomegranate-night  night, the moods, the light from each side
+    private var pomegranateSheet: some View {
+        let companion = Companion(species: .pomegranate, seed: Self.seed, startedAt: .distantPast)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: "pomegranate - stages at 13h and 19h").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ForEach([13, 19], id: \.self) { h in
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
+                    ForEach(Array(Self.plantStages.enumerated()), id: \.offset) { index, item in
+                        cell(ScenePortrait(companion: companion, progress: item.1, mood: .content, stage: index, now: hour(h)), item.0)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    private var pomegranateNight: some View {
+        let companion = Companion(species: .pomegranate, seed: Self.seed, startedAt: .distantPast)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: "pomegranate - night, moods, light").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
+                ForEach(Array(Self.plantStages.enumerated()).suffix(3), id: \.offset) { index, item in
+                    cell(ScenePortrait(companion: companion, progress: item.1, mood: .content, stage: index, now: hour(22)), item.0 + " 22h")
+                }
+                ForEach([("morning", 8), ("evening", 18), ("moon", 23)], id: \.0) { name, h in
+                    cell(ScenePortrait(companion: companion, progress: 0.97, mood: .bright, stage: 5, now: hour(h)), name)
+                }
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 2), spacing: 4) {
+                ForEach(Mood.allCases, id: \.self) { mood in
+                    cell(ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 5, now: hour(13)), mood.rawValue)
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// The grown tree at the size of the card, then close crops of its
+    /// fruit and flowers, drawn large (not scaled up) so the detail is real.
+    ///   -artSheet pomegranate-close
+    private var pomegranateClose: some View {
+        let companion = Companion(species: .pomegranate, seed: Self.seed, startedAt: .distantPast)
+        func crop(_ progress: Double, _ h: Int, _ dx: Double, _ dy: Double, _ label: String) -> some View {
+            ScenePortrait(companion: companion, progress: progress, mood: .content, stage: 5, now: hour(h))
+                .frame(width: 1400, height: 1400)
+                .offset(x: dx, y: dy)
+                .frame(width: 195, height: 195, alignment: .topLeading)
+                .clipShape(.rect(cornerRadius: 8))
+                .overlay(alignment: .topLeading) { Text(verbatim: label).font(.system(size: 9, design: .monospaced)).foregroundStyle(.white.opacity(0.7)).padding(3) }
+        }
+        return VStack(alignment: .leading, spacing: 4) {
+            ScenePortrait(companion: companion, progress: 0.97, mood: .content, stage: 5, now: hour(13))
+                .frame(height: 300).clipShape(.rect(cornerRadius: 8))
+            ScenePortrait(companion: companion, progress: 0.97, mood: .content, stage: 5, now: hour(19))
+                .frame(height: 300).clipShape(.rect(cornerRadius: 8))
+            HStack(spacing: 4) {
+                crop(0.97, 13, -739, -759, "fruit, split")
+                crop(0.80, 13, -778, -553, "flowers")
+            }
+        }
+        .padding(.horizontal, 4)
     }
 
     // MARK: Decorations in a scene

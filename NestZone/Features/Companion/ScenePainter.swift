@@ -28,6 +28,15 @@ struct SceneFrame {
     static func dayness(_ hour: Double) -> Double {
         Ink.clamp((cos((hour - 13) / 24 * .pi * 2) + 0.4) / 1.1)
     }
+
+    /// How far across the sky the sun (6 to 20) or the moon has gone, 0…1.
+    static func skyProgress(_ hour: Double) -> Double {
+        hour >= 6 && hour < 20 ? (hour - 6) / 14 : (hour + 4).truncatingRemainder(dividingBy: 24) / 10
+    }
+
+    /// Which side of the tree the sun or moon stands on, -1 the far left to 1
+    /// the far right, so what is lit and what is in shadow agree with the sky.
+    static func skySide(_ hour: Double) -> Double { 2 * skyProgress(hour) - 1 }
 }
 
 /// The scene is drawn in a fixed space 360 points tall, as wide as the card
@@ -137,7 +146,7 @@ struct ScenePainter {
     private var isDaytime: Bool { frame.hour >= 6 && frame.hour < 20 }
 
     private var sunPosition: (Double, Double) {
-        let f = isDaytime ? (frame.hour - 6) / 14 : (frame.hour + 4).truncatingRemainder(dividingBy: 24) / 10
+        let f = SceneFrame.skyProgress(frame.hour)
         return (width * (0.12 + 0.76 * f), 62 - sin(f * .pi) * 38)
     }
 
@@ -291,11 +300,17 @@ struct ScenePainter {
             pebbles.addEllipse(in: CGRect(x: bx + x - r * 1.3, y: by + y - r * 0.8, width: r * 2.6, height: r * 1.6))
         }
         context.fill(pebbles, with: .color(tint(30, 12, Ink.lerp(58, 44, wet), 0.8)))
-        // A highlight running along the front of the lip.
+        // A highlight running along the front of the lip, on the side the sun
+        // (or the moon) is on, with a pinpoint of sky caught on the rim itself.
+        let side: Double = SceneFrame.skySide(frame.hour) > 0.25 ? 1 : -1
         var rimLight = Path()
-        rimLight.move(to: CGPoint(x: bx - 50, y: by + 2))
-        rimLight.addQuadCurve(to: CGPoint(x: bx - 6, y: by + 5), control: CGPoint(x: bx - 32, y: by + 6))
+        rimLight.move(to: CGPoint(x: bx + side * 50, y: by + 2))
+        rimLight.addQuadCurve(to: CGPoint(x: bx + side * 6, y: by + 5), control: CGPoint(x: bx + side * 32, y: by + 6))
         context.stroke(rimLight, with: .color(Color.white.opacity(0.28)), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+        var skyGlint = Path()
+        skyGlint.move(to: CGPoint(x: bx + side * 38, y: by - 6.4))
+        skyGlint.addQuadCurve(to: CGPoint(x: bx + side * 30, y: by - 7.6), control: CGPoint(x: bx + side * 34, y: by - 7.4))
+        context.stroke(skyGlint, with: .color(Color.white.opacity(0.7)), style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
         if mood < 0.45 {
             var cracks = Path()
             for (x0, dir) in [(-30.0, 1.0), (-6, -1), (18, 1)] {

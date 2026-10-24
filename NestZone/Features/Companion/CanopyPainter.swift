@@ -19,16 +19,16 @@ struct Canopy: Equatable, Sendable {
     /// half-width either side of the trunk.
     let fit: Double
 
-    fileprivate let kind: Kind
-    fileprivate let limbs: [Limb]
-    fileprivate let clumps: [Clump]
-    fileprivate let blossoms: [Blossom]
-    fileprivate let fruits: [Fruit]
-    fileprivate let fallen: [Fallen]
-    fileprivate let sparks: [Spark]
+    let kind: Kind
+    let limbs: [Limb]
+    let clumps: [Clump]
+    let blossoms: [Blossom]
+    let fruits: [Fruit]
+    let fallen: [Fallen]
+    let sparks: [Spark]
     /// Which way the trunk leans, so a wilting tree slumps the way it already
     /// leans.
-    fileprivate let leanSign: Double
+    let leanSign: Double
 
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.seed == rhs.seed && lhs.species == rhs.species }
 
@@ -82,7 +82,7 @@ struct Canopy: Equatable, Sendable {
 extension Canopy {
     /// A piece of wood, a trunk segment or a limb. Its angle is relative to its
     /// parent's, so a bend low down carries everything above it.
-    fileprivate struct Limb: Sendable {
+    struct Limb: Sendable {
         /// -1 for the first segment of a stem.
         var parent: Int
         var rel, len: Double
@@ -92,7 +92,7 @@ extension Canopy {
 
     /// One leaf-shaped piece of a clump: a lobe of its outline, an under-lobe,
     /// or an accent that breaks the outline.
-    fileprivate struct Lobe: Sendable {
+    struct Lobe: Sendable {
         var a, r0, len, hw, keep: Double
         var under: Bool
         /// Where it sits on the clump, as `cos a` and `sin a`.
@@ -115,12 +115,12 @@ extension Canopy {
     }
 
     /// A leaf cut out of a clump's light, in the clump's own units.
-    fileprivate struct Cut: Sendable {
+    struct Cut: Sendable {
         var x, y, a, len, keep: Double
         var shingle, share: Double
     }
 
-    fileprivate struct Clump: Sendable {
+    struct Clump: Sendable {
         var node: Int
         var R, ox, oy, birth, die: Double
         var tier: Int
@@ -132,24 +132,24 @@ extension Canopy {
         var ph: Double
     }
 
-    fileprivate struct Blossom: Sendable {
+    struct Blossom: Sendable {
         var clump: Int
         var dx, dy, size, rot, tilt, born, birth: Double
     }
 
-    fileprivate struct Fruit: Sendable {
+    struct Fruit: Sendable {
         var clump: Int
         var dx, hang, size, born, tilt, birth: Double
     }
 
     /// A leaf lying on the soil, in the scene's own units: the fit never
     /// scales it.
-    fileprivate struct Fallen: Sendable {
+    struct Fallen: Sendable {
         var x, y, a, len: Double
     }
 
     /// A glint round a bright crown.
-    fileprivate struct Spark: Sendable {
+    struct Spark: Sendable {
         var u, v, s, ph: Double
     }
 
@@ -159,17 +159,17 @@ extension Canopy {
     static let light = (x: -0.62, y: -0.78)
 
     /// Any angle into [-π, π), the prototype's `wrap`.
-    fileprivate static func wrap(_ a: Double) -> Double {
+    static func wrap(_ a: Double) -> Double {
         ((a.truncatingRemainder(dividingBy: tau)) + tau * 1.5).truncatingRemainder(dividingBy: tau) - .pi
     }
 
-    fileprivate static func shingle(_ a: Double) -> (Double, Double) {
+    static func shingle(_ a: Double) -> (Double, Double) {
         let dev = wrap(a - up)
         return (dev > 0 ? 1 : dev < 0 ? -1 : 1, min(1, abs(dev) / 1.1))
     }
 
     /// The tree grown from the seed, in the prototype's order.
-    fileprivate struct Grower {
+    struct Grower {
         let kind: Kind
         var r: Ink.Random
         var limbs: [Limb] = []
@@ -440,7 +440,7 @@ extension Canopy {
     /// quadratic, each clump's centre and size, and the box round them all.
     /// Parents come before their children, so a limb is placed from its
     /// parent's end.
-    fileprivate struct Pose {
+    struct Pose {
         struct Span { var x, y, x1, y1, cx, cy, a1, w0, w1, g: Double }
         struct Spot { var x, y, R, k: Double }
 
@@ -606,7 +606,7 @@ extension Canopy {
     }
 
     /// Every colour one redraw uses.
-    fileprivate struct Tones {
+    struct Tones {
         /// How far each ramp step is lifted towards a pale blush halfway into
         /// bloom, deep to highlight.
         static let haze = [0.18, 0.3, 0.45, 0.55, 0.55]
@@ -750,11 +750,11 @@ struct CanopyPainter {
 }
 
 extension CanopyPainter {
-    fileprivate typealias RGB = Canopy.RGB
+    typealias RGB = Canopy.RGB
 
     /// One redraw's numbers, worked out once: the pose, the mood's five
     /// factors, this light's colours, and the shape every clump shares.
-    fileprivate struct Still {
+    struct Still {
         /// One depth tier's paint: the shadow shape runs light to dark along the
         /// light, the lit shape is radial from its upper left; the split halves,
         /// the sunny patch and the cut-outs are solid.
@@ -1663,7 +1663,7 @@ extension Path {
     /// on the soil must not show a round foot below it. `off` slides it
     /// sideways by that share of the limb's own width, for the lit edge and
     /// the core shadow.
-    fileprivate mutating func limb(_ q: Canopy.Pose.Span, _ w0: Double, _ w1: Double, _ off: Double, flat: Bool) {
+    mutating func limb(_ q: Canopy.Pose.Span, _ w0: Double, _ w1: Double, _ off: Double, flat: Bool) {
         var (x, y, x1, y1, cx, cy) = (q.x, q.y, q.x1, q.y1, q.cx, q.cy)
         let a0 = atan2(cy - y, cx - x), a1 = atan2(y1 - cy, x1 - cx), am = atan2(y1 - y, x1 - x), wm = (w0 + w1) / 4
         let n0 = (x: -sin(a0), y: cos(a0)), n1 = (x: -sin(a1), y: cos(a1)), nm = (x: -sin(am), y: cos(am))
@@ -1685,7 +1685,7 @@ extension Path {
     }
 
     /// The root flare where the stems meet the soil, w wide.
-    fileprivate mutating func flare(_ w: Double) {
+    mutating func flare(_ w: Double) {
         let h = w * 0.9, fw = w * 0.98
         move(to: CGPoint(x: -fw, y: 1.4))
         addCurve(to: CGPoint(x: -w * 0.5, y: -h), control1: CGPoint(x: -w * 0.6, y: 0.6), control2: CGPoint(x: -w * 0.5, y: -h * 0.3))
@@ -1698,12 +1698,12 @@ extension Path {
 // MARK: - The species
 
 extension Canopy {
-    fileprivate enum FlowerKind { case cup, sakura, flame, azalea, star, tiny }
-    fileprivate enum CropKind { case pom, lemon, olive }
-    fileprivate enum BarkMark { case none, band, groove, fibre }
+    enum FlowerKind { case cup, sakura, flame, azalea, star, tiny }
+    enum CropKind { case pom, lemon, olive }
+    enum BarkMark { case none, band, groove, fibre }
 
     /// What the seed cannot change: the prototype's `SP` table, verbatim.
-    fileprivate struct Kind: Sendable {
+    struct Kind: Sendable {
         /// The wood: stems, the trunk's segments, how limbs fan and fork.
         struct Form: Sendable {
             var stems: Int, stemSpread: Double, segs: Int, trunk, trunkW, taper: Double, limbs: Int, limbsJ, spread, limbLen: Double
