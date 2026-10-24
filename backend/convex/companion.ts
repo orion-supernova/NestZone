@@ -156,6 +156,11 @@ const houseValue = v.object({
   region: v.union(v.string(), v.null()),
   tzOffset: v.union(v.number(), v.null()),
   albumCount: v.number(),
+  /**
+   * The species the house has grown all the way, sorted: the shop's "grown
+   * them all" reward reads it. Bounded by the catalog.
+   */
+  grownSpecies: v.array(v.string()),
 });
 
 const currentValue = v.object({
@@ -166,7 +171,20 @@ const currentValue = v.object({
   startedAt: v.number(),
   points: v.number(),
   stage: v.number(),
+  /**
+   * `graduate` would take it now: the points, the six-day floor, and still the
+   * one growing. The server's own decision (`readiness`), never re-derived
+   * on a phone. The read runs again at `readyAt` on its own (`wake`).
+   */
   isReady: v.boolean(),
+  /** The points are there (64), whatever its age. */
+  pointsReady: v.boolean(),
+  /**
+   * The earliest it may graduate: `startedAt` plus the six-day floor. With
+   * the points not there yet this is still the floor; `isReady` says when
+   * both hold.
+   */
+  readyAt: v.number(),
   paidStage: v.number(),
   lastCareAt: v.union(v.number(), v.null()),
   /** The caller's own care days on this one, newest first, `YYYY-MM-DD` in the house's days. */
@@ -234,6 +252,7 @@ export const forHome = query({
 
     const loaded = house.current_id ? await ctx.db.get(house.current_id) : null;
     const growing = loaded && loaded.status === "growing" ? loaded : null;
+    const ready = growing ? readiness(house, growing, Date.now()) : null;
     const startDay = growing ? dayOf(growing.started_at, tzOf(growing, house)) : "";
 
     const [recent, jar, care] = await Promise.all([
@@ -277,8 +296,9 @@ export const forHome = query({
         region: house.region ?? null,
         tzOffset: house.tz_offset ?? null,
         albumCount: house.album_count,
+        grownSpecies: [...(house.grown_species ?? [])].sort(),
       },
-      current: growing
+      current: growing && ready
         ? {
             id: growing._id,
             uuid: growing.uuid,
@@ -287,7 +307,9 @@ export const forHome = query({
             startedAt: growing.started_at,
             points: growing.points,
             stage: stageFor(growing.points, isPetSpecies(growing.species)),
-            isReady: isReady(growing),
+            isReady: ready.isReady,
+            pointsReady: ready.pointsReady,
+            readyAt: ready.readyAt,
             paidStage: growing.paid_stage,
             lastCareAt: growing.last_care_at ?? null,
             myCareDays: care.map((row) => row.day),
@@ -334,9 +356,138 @@ function tzOf(companion: Doc<"companions">, house: Doc<"companion_homes">): numb
   return companion.tz_offset ?? house.tz_offset ?? 0;
 }
 
-function isReady(companion: Doc<"companions">): boolean {
-  return companion.points >= CATALOG.graduateAt - 1e-9;
+function hasPoints(points: number): boolean {
+  return points >= CATALOG.graduateAt - 1e-9;
 }
+
+/**
+ * Whether a companion may graduate now, and from when: the one rule `graduate`,
+ * `start` and `forHome` all ask. Growing, the house's current one, its points
+ * there, and six days old — however the days fell, nothing grows up in under
+ * six: the floor the curve was tuned to, held here rather than trusted to the
+ * arithmetic.
+ */
+function readiness(
+  house: Doc<"companion_homes">,
+  companion: Doc<"companions">,
+  now: number,
+): { isReady: boolean; pointsReady: boolean; readyAt: number } {
+  const readyAt = companion.started_at + MIN_GROW_MS;
+  const pointsReady = hasPoints(companion.points);
+  const isReady =
+    companion.status === "growing" && house.current_id === companion._id && pointsReady && now >= readyAt;
+  return { isReady, pointsReady, readyAt };
+}
+
+/**
+ * Into the album, the graduation into the jar, and the house free to choose
+ * the next. The caller has checked `readiness`. Paid once per album slot
+ * (`graduation:<slot>`), as stages are, and only here does the slot move.
+ */
+async function graduateNow(
+  ctx: MutationCtx,
+  house: Doc<"companion_homes">,
+  companion: Doc<"companions">,
+  userId: Id<"users">,
+  now: number,
+): Promise<{ paid: { leaves: number; sparkles: number } | null }> {
+  const slot = house.album_count;
+  await ctx.db.patch(companion._id, { status: "graduated", graduated_at: now });
+  const grown = new Set(house.grown_species ?? []);
+  grown.add(companion.species);
+  await ctx.db.patch(house._id, {
+    current_id: undefined,
+    album_count: slot + 1,
+    grown_species: [...grown].sort(),
+    updated: now,
+  });
+  const coins = CATALOG.rewards.graduation;
+  const paid = await moveJar(ctx, house._id, {
+    key: `graduation:${slot}`,
+    kind: "graduation",
+    leaves: coins.leaves,
+    sparkles: coins.sparkles,
+    userId,
+    companionId: companion._id,
+  });
+  return { paid: paid ? coins : null };
+}
+
+/**
+ * Schedules the one wake a companion gets, at its floor, if the floor is still
+ * ahead. Called once per start: in `start` after the insert, and in
+ * `importLocal` when it creates one or moves one's start.
+ */
+async function wakeAtFloor(ctx: MutationCtx, companionId: Id<"companions">, startedAt: number): Promise<void> {
+  const readyAt = startedAt + MIN_GROW_MS;
+  if (Date.now() < readyAt) {
+    await ctx.scheduler.runAt(readyAt, internal.companion.wake, { companionId, startedAt });
+  }
+}
+
+/**
+ * The six-day floor has passed. Writes the moment on the row, which is all it
+ * is for: `forHome` reads the clock, and a query doesn't re-run when time
+ * passes, only when what it read changes. Pinned to the start it was
+ * scheduled for, and a no-op after the first; run early, it puts itself back
+ * at the floor rather than stamping.
+ */
+export const wake = internalMutation({
+  args: { companionId: v.id("companions"), startedAt: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { companionId, startedAt }) => {
+    const companion = await ctx.db.get(companionId);
+    if (!companion || companion.status !== "growing" || companion.of_age_at !== undefined) return null;
+    if (companion.started_at !== startedAt) return null;
+    if (Date.now() < startedAt + MIN_GROW_MS) {
+      await wakeAtFloor(ctx, companionId, startedAt);
+      return null;
+    }
+    await ctx.db.patch(companionId, { of_age_at: Date.now() });
+    return null;
+  },
+});
+
+/** Companions one `scheduleMissingWakes` page looks at; each page schedules the next. */
+const WAKE_PAGE = 200;
+
+/**
+ * One-off, after the deploy that brought the wake: schedules it for every
+ * companion growing whose floor is still ahead, which is exactly the range
+ * `by_status` gives (`started_at` after six days ago, up to now). Duplicates
+ * are accepted rather than stamped: one that already has a wake (started
+ * after the deploy) gets a second, and whichever runs second finds
+ * `of_age_at` set and does nothing. Running it twice is as harmless.
+ *
+ *   npx convex run companion:scheduleMissingWakes '{}'
+ */
+export const scheduleMissingWakes = internalMutation({
+  args: { cursor: v.optional(v.union(v.string(), v.null())), now: v.optional(v.number()) },
+  returns: v.object({ scheduled: v.number(), done: v.boolean() }),
+  handler: async (ctx, args): Promise<{ scheduled: number; done: boolean }> => {
+    // Pinned across pages, so the range doesn't slide under the cursor.
+    const now = args.now ?? Date.now();
+    const page = await ctx.db
+      .query("companions")
+      .withIndex("by_status", (q) =>
+        q.eq("status", "growing").gt("started_at", now - MIN_GROW_MS).lte("started_at", now),
+      )
+      .paginate({ cursor: args.cursor ?? null, numItems: WAKE_PAGE });
+    let scheduled = 0;
+    for (const companion of page.page) {
+      if (companion.of_age_at !== undefined) continue;
+      await wakeAtFloor(ctx, companion._id, companion.started_at);
+      scheduled++;
+    }
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(0, internal.companion.scheduleMissingWakes, {
+        cursor: page.continueCursor,
+        now,
+      });
+    }
+    return { scheduled, done: page.isDone };
+  },
+});
 
 /**
  * Pays stages `from + 1 … to` into the jar, each once per house slot.
@@ -439,30 +590,79 @@ export const setPlace = mutation({
  * bought, earned, or in its season. Choosing again before anything graduates
  * lets the one growing go, as on the phone. The house's first comes with the
  * welcome gift, once, keyed `welcome`.
+ *
+ * One that is ready to graduate is never let go: it graduates first, in this
+ * same write, paid exactly as `graduate` pays it, and then the new one starts
+ * in the next album slot. That is the case where a phone's `graduate` failed
+ * and it moved on to Choose anyway, or a second phone chose while the first
+ * was still in the ceremony; either way the house grew it, and losing the
+ * album card and the reward for a tap order would be the server's mistake,
+ * not the household's. `graduated` says it happened, so the phone can show
+ * the card. A later `graduate` for it finds it graduated and pays nothing.
+ * The species is checked against the house after that graduation, so what
+ * it earns (a graduation count, "grown them all") counts for this choice.
  */
 export const start = mutation({
-  args: { homeId: v.id("homes"), species: v.string(), ...placeArgs },
+  args: {
+    homeId: v.id("homes"),
+    species: v.string(),
+    /**
+     * The tap's id. A retry with the same one, while what it started is still
+     * the house's current, returns the first answer and starts nothing.
+     */
+    requestId: v.optional(v.string()),
+    ...placeArgs,
+  },
   returns: v.object({
     companionId: v.id("companions"),
     /** The welcome gift landed with this one. */
     welcome: v.union(coinsValue, v.null()),
+    /** The one that was ready, graduated by this call before the new one started. */
+    graduated: v.union(
+      v.object({
+        companionId: v.id("companions"),
+        species: v.string(),
+        paid: v.union(coinsValue, v.null()),
+      }),
+      v.null(),
+    ),
   }),
-  handler: async (ctx, { homeId, species, tzOffset, region }) => {
+  handler: async (ctx, { homeId, species, requestId, tzOffset, region }) => {
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, homeId);
     if (!SPECIES.has(species)) throw new Error("There's no such companion");
-    const house = await ensureHouse(ctx, homeId, { tzOffset, region });
+    let house = await ensureHouse(ctx, homeId, { tzOffset, region });
     const now = Date.now();
+    const request = requestId?.trim().slice(0, 128) || undefined;
+
+    const previous = house.current_id ? await ctx.db.get(house.current_id) : null;
+    // A retry of the call that started the one growing: the same answer,
+    // nothing released, nothing started, nothing paid again.
+    if (request !== undefined && previous?.start_request === request) {
+      const followed = previous.follows ? await ctx.db.get(previous.follows) : null;
+      return {
+        companionId: previous._id,
+        welcome: null,
+        graduated: followed ? { companionId: followed._id, species: followed.species, paid: null } : null,
+      };
+    }
+    // Without an id: a double tap, or two phones choosing the same one at once.
+    if (previous?.status === "growing" && previous.species === species && now - previous.created < 10_000) {
+      return { companionId: previous._id, welcome: null, graduated: null };
+    }
+    let graduated: { companionId: Id<"companions">; species: string; paid: { leaves: number; sparkles: number } | null } | null =
+      null;
+    if (previous && readiness(house, previous, now).isReady) {
+      const { paid } = await graduateNow(ctx, house, previous, user._id, now);
+      graduated = { companionId: previous._id, species: previous.species, paid };
+      house = (await ctx.db.get(house._id))!;
+    } else if (previous?.status === "growing") {
+      await ctx.db.patch(previous._id, { status: "released" });
+    }
+    // Checked after any graduation; a refusal throws, which undoes it too.
     if (!isUsable(standingOfSpecies(species, shopContext(house, now)))) {
       throw new Error("That one can't be grown yet");
     }
-
-    const previous = house.current_id ? await ctx.db.get(house.current_id) : null;
-    // A double tap, or two phones choosing the same one at once.
-    if (previous?.status === "growing" && previous.species === species && now - previous.created < 10_000) {
-      return { companionId: previous._id, welcome: null };
-    }
-    if (previous?.status === "growing") await ctx.db.patch(previous._id, { status: "released" });
 
     const companionId = await ctx.db.insert("companions", {
       home_id: homeId,
@@ -476,7 +676,11 @@ export const start = mutation({
       tz_offset: house.tz_offset ?? 0,
       origin: "server",
       created: now,
+      start_request: request,
+      follows: graduated?.companionId,
     });
+    // Its one wake, at the floor.
+    await wakeAtFloor(ctx, companionId, now);
     await ctx.db.patch(house._id, { current_id: companionId, updated: now });
 
     let welcome: { leaves: number; sparkles: number } | null = null;
@@ -493,7 +697,7 @@ export const start = mutation({
       await ctx.db.patch(house._id, { welcomed: true });
       welcome = gift;
     }
-    return { companionId, welcome };
+    return { companionId, welcome, graduated };
   },
 });
 
@@ -540,37 +744,12 @@ export const graduate = mutation({
     if (!companion || companion.home_id !== homeId) throw new Error("Companion not found");
     await requireDocHome(ctx, companion, "Companion");
     if (companion.status === "graduated") return { paid: null };
-    if (companion.status !== "growing" || !isReady(companion)) throw new Error("Not grown up yet");
-    // However the days fell, nothing grows up in under six: the floor the
-    // curve was tuned to, held here rather than trusted to the arithmetic.
-    if (Date.now() - companion.started_at < MIN_GROW_MS) throw new Error("Not grown up yet");
-
     const house = await ensureHouse(ctx, homeId);
-    // Only the one growing graduates: one let go can't be brought back for a
-    // second reward.
-    if (house.current_id !== companionId) throw new Error("Not grown up yet");
-    const slot = house.album_count;
     const now = Date.now();
-    await ctx.db.patch(companionId, { status: "graduated", graduated_at: now });
-    const grown = new Set(house.grown_species ?? []);
-    grown.add(companion.species);
-    await ctx.db.patch(house._id, {
-      current_id: undefined,
-      album_count: slot + 1,
-      grown_species: [...grown].sort(),
-      updated: now,
-    });
-    const coins = CATALOG.rewards.graduation;
-    const paid = await moveJar(ctx, house._id, {
-      // Once per album slot, as stages are.
-      key: `graduation:${slot}`,
-      kind: "graduation",
-      leaves: coins.leaves,
-      sparkles: coins.sparkles,
-      userId: user._id,
-      companionId,
-    });
-    return { paid: paid ? coins : null };
+    // The points, the six-day floor, and only the one growing: one let go
+    // can't be brought back for a second reward.
+    if (!readiness(house, companion, now).isReady) throw new Error("Not grown up yet");
+    return await graduateNow(ctx, house, companion, user._id, now);
   },
 });
 
@@ -871,6 +1050,9 @@ export const importLocal = mutation({
 
         // The fortnight's care days, as this person's.
         const companion = (await ctx.db.get(companionId))!;
+        // Created, or its start moved: its one wake, at the new floor (a wake
+        // pinned to the old start finds it moved and does nothing).
+        await wakeAtFloor(ctx, companion._id, companion.started_at);
         const ctz = companion.tz_offset ?? tz;
         const today = dayOf(now, ctz);
         const earliest = [dayOf(companion.started_at, ctz), addDays(today, -(IMPORT_CARE_DAYS - 1))].sort()[1];

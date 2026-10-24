@@ -28,7 +28,7 @@ import type { Access, CatalogHoliday, DecorKind, Price, Reward, Season } from ".
  * `COMPANION_VERSION`, which `forHome` sends, so a build can tell when the
  * server no longer answers the way it does.
  */
-export const RULES_VERSION = 1;
+export const RULES_VERSION = 2;
 export const COMPANION_VERSION = `${CATALOG_VERSION}-r${RULES_VERSION}`;
 
 export const SPECIES = new Map(CATALOG.species.map((s) => [s.id, s]));

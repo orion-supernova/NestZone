@@ -1478,6 +1478,19 @@ export default defineSchema({
     /** `import` came from one phone's MVP file; only such a one may be swapped by a later import. */
     origin: v.union(v.literal("server"), v.literal("import")),
     created: v.number(),
+    /**
+     * Set by `companion:wake` when the six-day floor passes. Every companion
+     * gets exactly one wake, scheduled at its start (`start`, or `importLocal`
+     * when it creates one or moves its start; `scheduleMissingWakes` for those
+     * growing before the wake existed). The rule is the clock (`readiness`);
+     * this write only exists so every card's `forHome` read runs again at
+     * that moment, since a query does not re-run on time passing alone.
+     */
+    of_age_at: v.optional(v.number()),
+    /** The `requestId` of the `start` that made this one: a retry with it is answered, not repeated. */
+    start_request: v.optional(v.string()),
+    /** The one that `start` graduated just before making this one, so a retry can say so again. */
+    follows: v.optional(v.id("companions")),
   })
     // The album: `eq(status, "graduated")`, newest first.
     .index("by_home_status_graduated", ["home_id", "status", "graduated_at"])
