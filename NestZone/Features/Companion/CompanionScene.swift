@@ -96,6 +96,20 @@ struct CompanionScene: View {
                     }
                     .transformEffect(wind.bend)
                     .scaleEffect(x: 1 - wind.bounce * 0.35, y: 1 + wind.bounce, anchor: SceneSpace.root)
+                } else if companion.species.art == .plant, let plan = PlantPlan.of(companion.species) {
+                    // The same wind and bounce as the tree, over a plant.
+                    let wind = snapshot.wind(viewSize, at: date)
+                    let state = snapshot.treeState(at: date)
+                    ZStack {
+                        PlantLayer(plan: plan, state: state)
+                            .equatable()
+                        if !state.decor.isEmpty {
+                            DecorLayer(state: state, anchors: snapshot.anchors(at: date), twinkle: snapshot.twinkle(state, at: date))
+                                .equatable()
+                        }
+                    }
+                    .transformEffect(wind.bend)
+                    .scaleEffect(x: 1 - wind.bounce * 0.35, y: 1 + wind.bounce, anchor: SceneSpace.root)
                 } else if companion.species.art == .sketch, !companion.species.isPet {
                     // A sketched plant has no crown yet; its lights and
                     // baubles go round the emoji instead.
@@ -363,6 +377,9 @@ struct SceneSnapshot {
 
     /// Where decorations hang on the crown as it stands.
     func anchors(at date: Date) -> CanopyAnchors {
+        if let plan = PlantPlan.of(companion.species) {
+            return crowns.anchors(plan, species: companion.species, seed: companion.seed, progress: shownProgress(at: date), mood: shownMood(at: date))
+        }
         guard let canopy else { return CrownCache.none }
         return crowns.anchors(canopy, progress: shownProgress(at: date), mood: shownMood(at: date))
     }
@@ -373,6 +390,11 @@ struct SceneSnapshot {
         let center = moment.center
         if companion.species.art == .sketch {
             return sketchBox(progress: moment.frame.progress, center: center).insetBy(dx: -10, dy: -10)
+        }
+        if let plan = PlantPlan.of(companion.species) {
+            let crown = crowns.anchors(plan, species: companion.species, seed: companion.seed, progress: moment.frame.progress, mood: moment.frame.mood)
+            return CGRect(x: center + crown.left - 10, y: SceneSpace.soil + crown.top - 10,
+                          width: crown.right - crown.left + 20, height: max(crown.bottom - crown.top + 20, 40))
         }
         guard !companion.species.isPet, let canopy else {
             return companion.species.isPet
@@ -404,7 +426,16 @@ struct SceneSnapshot {
                 waking: moment.revive.flatMap { $0 < 1.8 ? $0 : nil }
             )
             pet.draw(c, x: center, floor: SceneSpace.floor - 4, size: 190)
-        case .tree:
+        case .critter:
+            if let plan = CritterPlan.of(companion.species) {
+                CritterPainter(
+                    plan: plan, frame: frame, stage: stage,
+                    hop: [landedAt, stageUpAt].compactMap { $0 }.map { date.timeIntervalSince($0) }.min(),
+                    wiggle: pettedAt.map { date.timeIntervalSince($0) },
+                    waking: moment.revive.flatMap { $0 < 1.8 ? $0 : nil }
+                ).draw(c, x: center, floor: SceneSpace.floor - 4, size: 190)
+            }
+        case .tree, .plant:
             painter.pot(c, style: PotStyle(seed: companion.seed))
         case .sketch:
             if !companion.species.isPet { painter.pot(c, style: PotStyle(seed: companion.seed)) }
@@ -421,13 +452,19 @@ struct SceneSnapshot {
         switch (companion.species.art, companion.species.isPet) {
         case (.duckling, _):
             return (CGPoint(x: center - 22, y: SceneSpace.floor - 120), CGPoint(x: center - 18, y: SceneSpace.floor - 62))
+        case (.critter, _):
+            guard let plan = CritterPlan.of(companion.species) else { return (CGPoint(x: center, y: SceneSpace.floor - 140), CGPoint(x: center, y: SceneSpace.floor - 80)) }
+            let w = CritterPainter.wearing(plan, stage: stage), k = 190.0 / 120
+            let floor = SceneSpace.floor - 4
+            func scene(_ p: CGPoint) -> CGPoint { CGPoint(x: center + (p.x - 60) * k, y: floor + (p.y - 108) * k) }
+            return (scene(w.top), scene(w.neck))
         case (.sketch, true):
             let box = sketchBox(progress: moment.frame.progress, center: center)
             return (CGPoint(x: box.midX, y: box.minY + 8), CGPoint(x: box.midX, y: box.maxY - box.height * 0.04))
         case (.sketch, false):
             let box = sketchBox(progress: moment.frame.progress, center: center)
             return (CGPoint(x: box.midX, y: box.minY + 8), pot)
-        case (.tree, _):
+        case (.tree, _), (.plant, _):
             return (CGPoint(x: crown.midX, y: crown.minY + 12), pot)
         }
     }
@@ -648,10 +685,10 @@ extension EnvironmentValues {
 
 extension SceneSnapshot {
     /// The scene at rest: nothing easing in, nothing in flight.
-    init(still companion: Companion, progress: Double, mood: Mood, stage: Int, now: Date, reduceMotion: Bool) {
+    init(still companion: Companion, progress: Double, mood: Mood, stage: Int, now: Date, reduceMotion: Bool, layout: SceneLayout = SceneLayout()) {
         let epoch = Date(timeIntervalSinceReferenceDate: 0)
         self.init(
-            companion: companion, progress: progress, stage: stage, layout: SceneLayout(), southern: false, now: now,
+            companion: companion, progress: progress, stage: stage, layout: layout, southern: false, now: now,
             compact: false, reduceMotion: reduceMotion,
             canopy: companion.species.art == .tree ? Canopy(seed: companion.seed, species: companion.species) : nil, epoch: epoch,
             moodFrom: mood.level, moodTo: mood.level, moodAt: .distantPast, isWaking: false,
@@ -720,16 +757,20 @@ struct ScenePortrait: View {
     var mood: Mood = .content
     var stage = 5
     let now: Date
+    /// What is out in the scene; none for a portrait in a grid.
+    var layout = SceneLayout()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Canvas { context, size in
-            let snapshot = SceneSnapshot(still: companion, progress: progress, mood: mood, stage: stage, now: now, reduceMotion: reduceMotion)
+            let snapshot = SceneSnapshot(still: companion, progress: progress, mood: mood, stage: stage, now: now, reduceMotion: reduceMotion, layout: layout)
             let date = snapshot.epoch
             snapshot.drawBack(context, size: size, at: date)
             if let canopy = snapshot.canopy {
                 TreeLayer.paint(context, size: size, canopy: canopy, state: snapshot.treeState(at: date))
+            } else if let plan = PlantPlan.of(companion.species) {
+                PlantLayer.paint(context, size: size, plan: plan, state: snapshot.treeState(at: date))
             }
             snapshot.drawFront(context, size: size, at: date)
         }
@@ -774,6 +815,18 @@ struct DecorLayer: View, Equatable {
 /// millisecond or two on a development build, which a wake-up would pay
 /// thirty times a second.
 final class CrownCache {
+    private var plantKey: (species: Species, seed: String, progress: Double, mood: Double)?
+    private var plantCached = CrownCache.none
+
+    /// The same for a drawn plant (`PlantPainter.anchors`).
+    func anchors(_ plan: PlantPlan, species: Species, seed: String, progress: Double, mood: Double) -> CanopyAnchors {
+        let progress = (progress * 200).rounded() / 200, mood = (mood * 40).rounded() / 40
+        if let plantKey, plantKey.species == species, plantKey.seed == seed, plantKey.progress == progress, plantKey.mood == mood { return plantCached }
+        plantCached = PlantPainter(plan: plan, seed: seed, growth: progress, mood: mood, day: 1).anchors()
+        plantKey = (species, seed, progress, mood)
+        return plantCached
+    }
+
     private var key: (canopy: Canopy, progress: Double, mood: Double)?
     static let none = CanopyAnchors(left: 0, right: 0, top: 0, bottom: 0, crownTop: .zero, hangs: [], notes: [])
     private var cached = CrownCache.none

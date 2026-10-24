@@ -25,8 +25,8 @@
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "NestZone/NestZoneApp.swift": {
-    "mtime": 1792839946.7252107,
-    "ast_hash": "43012fd95428c8c0a0a202bfcb05002c",
+    "mtime": 1792864478.0489976,
+    "ast_hash": "0c226937521847ccb30127178dc31161",
     "semantic_hash": ""
   },
   "Docs/PocketBase/README.md": {
@@ -1290,8 +1290,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionModels.swift": {
-    "mtime": 1792853838.8159862,
-    "ast_hash": "62e706c622959b559da6c27c30d7df67",
+    "mtime": 1792864569.6168551,
+    "ast_hash": "9282f956db1681444c074b0631a4f398",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionNames.swift": {
@@ -1300,8 +1300,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionScene.swift": {
-    "mtime": 1792783674.3251498,
-    "ast_hash": "8ec30a2b76609433958bdf8519035d63",
+    "mtime": 1792864405.1151087,
+    "ast_hash": "dfef5412fb26c19b57e667d9cd476f83",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionSheets.swift": {
@@ -1315,8 +1315,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PetPainter.swift": {
-    "mtime": 1792783674.3257482,
-    "ast_hash": "69f4cec76add6fcdf8bceafbc899d321",
+    "mtime": 1792864281.175001,
+    "ast_hash": "66b8355fedc7617538a20188a1601df6",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/SceneInk.swift": {
@@ -1325,8 +1325,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ScenePainter.swift": {
-    "mtime": 1792783674.3260336,
-    "ast_hash": "6afc639307a43245ee320ed49c37fd14",
+    "mtime": 1792864601.1099076,
+    "ast_hash": "3240694127b0e857871018efae828077",
     "semantic_hash": ""
   },
   "NestZoneTests/CompanionTests.swift": {
@@ -1355,8 +1355,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/plan/index.html": {
-    "mtime": 1792855287.5774858,
-    "ast_hash": "01d8af4254c47d119af5bc5b488e45f9",
+    "mtime": 1792863235.7331798,
+    "ast_hash": "e45adb6c201e7362535ee7db9ca3f2a6",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/plant.html": {
@@ -1545,8 +1545,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CanopyPainter.swift": {
-    "mtime": 1792783674.3243148,
-    "ast_hash": "3c308a43cad48c50d2f1596b3195aa1d",
+    "mtime": 1792863695.9140375,
+    "ast_hash": "54c4ca8042057932ab07153afec8953c",
     "semantic_hash": ""
   },
   "Docs/Companion/art/SHADERS.md": {
@@ -1875,8 +1875,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/NestieBench.swift": {
-    "mtime": 1792862761.9054809,
-    "ast_hash": "a8fbc98c61248863bf839a98853a2aaa",
+    "mtime": 1792863361.4780493,
+    "ast_hash": "bca1b600d76c4ba8841839a1ce5da73c",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/PushTokenMemory.swift": {
@@ -1930,8 +1930,8 @@
     "semantic_hash": ""
   },
   "NestZoneTests/SparkleStoreTests.swift": {
-    "mtime": 1792863043.551485,
-    "ast_hash": "ebd78c8bbb1ccf67e47e7f34da793cb6",
+    "mtime": 1792863183.416789,
+    "ast_hash": "5133b015de4665d821174e2e30740520",
     "semantic_hash": ""
   },
   "backend/convex/jar.ts": {
@@ -1947,6 +1947,111 @@
   "backend/convex/lib/jar.ts": {
     "mtime": 1792863030.225254,
     "ast_hash": "a13a69578d47d796e0205e047684039e",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/ArtSheet.swift": {
+    "mtime": 1792864691.252458,
+    "ast_hash": "3fbbd580b03a564babc9911283b2d0d0",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterPainter.swift": {
+    "mtime": 1792864731.7706034,
+    "ast_hash": "a173400e70ad60b96b97980781fbeb8e",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterPlan.swift": {
+    "mtime": 1792864214.9487374,
+    "ast_hash": "9609e0a4ed3f781f25a25cbfc44ccde8",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PetMotion.swift": {
+    "mtime": 1792864281.1751614,
+    "ast_hash": "df9c43d7d098b36846e46c8c1a1c379a",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantLayer.swift": {
+    "mtime": 1792864405.0935743,
+    "ast_hash": "8f3f7dc857dd0ab81163b3655a842e83",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Bush.swift": {
+    "mtime": 1792864001.390083,
+    "ast_hash": "2ac4f4a4329cef86412c7edd9929c855",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Column.swift": {
+    "mtime": 1792864569.6166577,
+    "ast_hash": "e9d64ee63b3f83dff3b7081311ff7ae4",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Stalk.swift": {
+    "mtime": 1792864731.7673078,
+    "ast_hash": "b2bbedeb140ece8ead8da47189b81989",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Vine.swift": {
+    "mtime": 1792864649.5169187,
+    "ast_hash": "8f8a4d4124adb774fac5f2863d3f44cb",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter.swift": {
+    "mtime": 1792863959.4311085,
+    "ast_hash": "9c605c762388bc72fac4d85ba2ebbb3b",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPlan.swift": {
+    "mtime": 1792864140.706976,
+    "ast_hash": "c3bb033591c2eb3477a07bd72ebea48c",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/ScenePainter+Party.swift": {
+    "mtime": 1792864569.6209447,
+    "ast_hash": "51dc9b8907078a0a693573094b80c850",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/basil.png": {
+    "mtime": 1792864758.6930497,
+    "ast_hash": "591d71afb3121bf980c68001e5efb2f1",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/cactus.png": {
+    "mtime": 1792864762.4220104,
+    "ast_hash": "f415d71202d0a6b05a526e56c16b1eb2",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/decor.png": {
+    "mtime": 1792864777.1662095,
+    "ast_hash": "33249278de4adc8b6bde8556bf4f3d68",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/decor2.png": {
+    "mtime": 1792864780.9175308,
+    "ast_hash": "d49963c8f7861d4bbacf9d76a45dee26",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/grid.png": {
+    "mtime": 1792864784.7093542,
+    "ast_hash": "65a999eb13a3f12c1ed69e80d6a6ad02",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/kitten.png": {
+    "mtime": 1792864769.8437293,
+    "ast_hash": "41d5dcf9f168dd521fff7e222155bc98",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/monstera.png": {
+    "mtime": 1792864766.0977995,
+    "ast_hash": "97cab74e8c904315a9d3c02c8166fe61",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/owl.png": {
+    "mtime": 1792864773.4898462,
+    "ast_hash": "36f92f4bbe137977c4837244a3f6270a",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pass1/sunflower.png": {
+    "mtime": 1792864755.0032833,
+    "ast_hash": "1966bf88774ee488744f025439b4f772",
     "semantic_hash": ""
   }
 }

@@ -68,8 +68,8 @@ struct ScenePainter {
     let width: Double
     let seed: Ink.Random
     private var center: Double { width / 2 }
-    private var day: Double { frame.day }
-    private var time: Double { frame.reduceMotion ? 0 : frame.time }
+    var day: Double { frame.day }
+    var time: Double { frame.reduceMotion ? 0 : frame.time }
 
     init(frame: SceneFrame, width: Double, seed: String) {
         self.frame = frame
@@ -561,7 +561,8 @@ struct ScenePainter {
     func wearing(_ context: GraphicsContext, top: CGPoint, neck: CGPoint) {
         guard let raw = frame.layout.wearing, let item = DecorItem(rawValue: raw) else { return }
         switch item {
-        case .partyHat, .tinyCrown: context.sketch(item.symbol, top.x, top.y, size: 30)
+        case .partyHat: partyHat(context, at: top)
+        case .tinyCrown: context.sketch(item.symbol, top.x, top.y, size: 30)
         default: context.sketch(item.symbol, neck.x, neck.y, size: 26)
         }
     }
@@ -735,6 +736,8 @@ struct ScenePainter {
                 crown.addLine(to: CGPoint(x: x + dx + 3, y: py - 8)); crown.closeSubpath()
                 context.fill(crown, with: .color(Ink.color(0x7F1D1D)))
             }
+        case .birdFeeder:
+            birdFeeder(context, x: x, y: y)
         case .sabzeh:
             shadow(22)
             // Sprouted wheatgrass in a dish, tied with a red ribbon.

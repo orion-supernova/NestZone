@@ -11,7 +11,7 @@ import os
 //       [-nestieOrder pushFirst|answerFirst] \
 //       [-nestieBuy honest|owned|short|unavailable|priceChanged] \
 //       [-nestieFail care,start,startAfter,buy,buyAfter,graduate,layout,holidays,ballot,decide,hang] \
-//       [-nestieLatency 250] [-nestiePush 1] [-todayScroll 1] [-frameMeter 1]
+//       [-nestieSpecies <raw value>] [-nestieLatency 250] [-nestiePush 1] [-todayScroll 1] [-frameMeter 1]
 //
 // The real thing runs behind a session (Convex Auth rotates the refresh token
 // on every exchange, so a copy of a signed-in simulator's keychain would sign
@@ -352,7 +352,9 @@ actor FakeNestieServer {
     private func seedHouse(points: Double, startedAgo: TimeInterval, now: Date) {
         leaves = 150; sparkles = 180; welcomed = true
         owned = []
-        current = Current(species: .magnolia, seed: "bench-home-0", startedAt: now.addingTimeInterval(-startedAgo), points: points, paidStage: 2)
+        // `-nestieSpecies sunflower` grows that one instead, to measure a drawing.
+        let species = UserDefaults.standard.string(forKey: "nestieSpecies").flatMap(Species.init(rawValue:)) ?? .magnolia
+        current = Current(species: species, seed: "bench-home-0", startedAt: now.addingTimeInterval(-startedAgo), points: points, paidStage: 2)
         // Two people finishing things lately, and a kind this build has never heard of.
         recent = [
             ("chore", now.addingTimeInterval(-3_600), "u1"), ("chore", now.addingTimeInterval(-7_200), "u2"),

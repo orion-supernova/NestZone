@@ -36,15 +36,20 @@ public enum Species: String, CaseIterable, Codable, Identifiable, Sendable {
         }
     }
 
-    /// How it is drawn: a gouache tree, the duckling, or — until its drawing
-    /// is made — a sketch of its emoji, sprouting or hatching and growing.
-    public enum Art: Sendable { case tree, duckling, sketch }
+    /// How it is drawn: a gouache tree, a plant on a growth rule (`PlantPlan`),
+    /// the duckling, a pet on a body plan (`CritterPlan`) or — until its
+    /// drawing is made — a sketch of its emoji, sprouting or hatching and
+    /// growing.
+    public enum Art: Sendable { case tree, plant, duckling, critter, sketch }
 
     public var art: Art {
         switch self {
         case .magnolia, .cherry, .pomegranate, .azalea, .lemon, .olive: .tree
         case .duckling: .duckling
-        default: .sketch
+        default:
+            if PlantPlan.of(self) != nil { .plant }
+            else if CritterPlan.of(self) != nil { .critter }
+            else { .sketch }
         }
     }
 
@@ -542,7 +547,7 @@ public enum DecorItem: String, CaseIterable, Codable, Sendable {
     /// art pass.
     var isDrawn: Bool {
         switch self {
-        case .windowsill, .balcony, .starryRooftop, .windChime, .bow, .scarf, .partyHat, .tinyCrown, .birdFeeder, .watermelon: false
+        case .windowsill, .balcony, .starryRooftop, .windChime, .bow, .scarf, .tinyCrown, .watermelon: false
         default: true
         }
     }

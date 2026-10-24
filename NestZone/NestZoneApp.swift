@@ -37,6 +37,9 @@ struct NestZoneApp: App {
             //   xcrun simctl launch booted com.walhallaa.NestZone -glassLab
             if ProcessInfo.processInfo.arguments.contains("-glassLab") {
                 GlassListLab()
+            } else if let page = UserDefaults.standard.string(forKey: "artSheet") {
+                // A contact sheet of the companion's art (Features/Companion/ArtSheet.swift).
+                ArtSheet(page: page)
             } else if ProcessInfo.processInfo.arguments.contains("-nestieBench") {
                 // Nestie against a stand-in server, signed out
                 // (Features/Companion/NestieBench.swift).

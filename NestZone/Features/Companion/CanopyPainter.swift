@@ -153,10 +153,10 @@ extension Canopy {
         var u, v, s, ph: Double
     }
 
-    fileprivate static let up = -Double.pi / 2
-    fileprivate static let tau = Double.pi * 2
+    static let up = -Double.pi / 2
+    static let tau = Double.pi * 2
     /// Towards the light, for every part: the upper left.
-    fileprivate static let light = (x: -0.62, y: -0.78)
+    static let light = (x: -0.62, y: -0.78)
 
     /// Any angle into [-π, π), the prototype's `wrap`.
     fileprivate static func wrap(_ a: Double) -> Double {
@@ -413,7 +413,7 @@ extension Canopy {
 
 extension Canopy {
     /// One mood in, the five things it moves out.
-    fileprivate struct Mood {
+    struct Mood {
         let m: Double
         /// Colour drains, lobes shrink and fall: 0 at .6 and above, 1 at .3 and below.
         let thirst: Double
@@ -512,7 +512,7 @@ extension Canopy {
     /// A colour as the prototype holds one: red, green and blue in 0…255,
     /// unrounded until it is drawn. Mood moves are made in HSL, night is a
     /// filter in RGB.
-    fileprivate struct RGB {
+    struct RGB {
         var r, g, b: Double
 
         init(_ r: Double, _ g: Double, _ b: Double) { (self.r, self.g, self.b) = (r, g, b) }
@@ -583,16 +583,16 @@ extension Canopy {
     }
 
     /// Where a thirsty canopy is heading, ramp step by ramp step: olive.
-    fileprivate static let dry: [UInt32] = [0x4D4B31, 0x646039, 0x7F7B44, 0x9D9652, 0xC9C07C]
+    static let dry: [UInt32] = [0x4D4B31, 0x646039, 0x7F7B44, 0x9D9652, 0xC9C07C]
     /// Where a dozing one is heading: pale straw, with little contrast.
-    fileprivate static let dozy: [UInt32] = [0x8B8466, 0xA29A78, 0xBAB08B, 0xCFC59F, 0xE4DBB9]
+    static let dozy: [UInt32] = [0x8B8466, 0xA29A78, 0xBAB08B, 0xCFC59F, 0xE4DBB9]
     /// How much each ramp step dims at night: the highlights hold up least.
-    fileprivate static let dim = [1, 0.96, 0.92, 0.86, 0.74]
+    static let dim = [1, 0.96, 0.92, 0.86, 0.74]
 
     /// One ramp step in this mood and light. Thirsty and dozing are RGB mixes
     /// towards `dry` and `dozy`, so they pass through olive rather than
     /// rotating through odd hues.
-    fileprivate static func leafTone(_ c: RGB, _ i: Int, _ M: Mood, day: Double) -> RGB {
+    static func leafTone(_ c: RGB, _ i: Int, _ M: Mood, day: Double) -> RGB {
         let c = c.mix(RGB(dry[i]), M.thirst * (i < 2 ? 0.75 : 0.85)).mix(RGB(dozy[i]), M.doze * 0.8)
         var (h, s, l) = c.hsl
         s *= 1 + 0.34 * M.glow
@@ -1592,7 +1592,7 @@ extension CanopyPainter {
 /// overlapping pieces filled nonzero never punches a hole. Circles are four
 /// cubics rather than `Path(ellipseIn:)`, whose direction would have to be
 /// checked against the leaves'.
-private extension Path {
+extension Path {
     /// An ellipse about (cx, cy), turned by `rot`: four cubics from +rx,
     /// going clockwise.
     mutating func oval(_ cx: Double, _ cy: Double, _ rx: Double, _ ry: Double, _ rot: Double = 0) {
@@ -1663,7 +1663,7 @@ private extension Path {
     /// on the soil must not show a round foot below it. `off` slides it
     /// sideways by that share of the limb's own width, for the lit edge and
     /// the core shadow.
-    mutating func limb(_ q: Canopy.Pose.Span, _ w0: Double, _ w1: Double, _ off: Double, flat: Bool) {
+    fileprivate mutating func limb(_ q: Canopy.Pose.Span, _ w0: Double, _ w1: Double, _ off: Double, flat: Bool) {
         var (x, y, x1, y1, cx, cy) = (q.x, q.y, q.x1, q.y1, q.cx, q.cy)
         let a0 = atan2(cy - y, cx - x), a1 = atan2(y1 - cy, x1 - cx), am = atan2(y1 - y, x1 - x), wm = (w0 + w1) / 4
         let n0 = (x: -sin(a0), y: cos(a0)), n1 = (x: -sin(a1), y: cos(a1)), nm = (x: -sin(am), y: cos(am))
@@ -1685,7 +1685,7 @@ private extension Path {
     }
 
     /// The root flare where the stems meet the soil, w wide.
-    mutating func flare(_ w: Double) {
+    fileprivate mutating func flare(_ w: Double) {
         let h = w * 0.9, fw = w * 0.98
         move(to: CGPoint(x: -fw, y: 1.4))
         addCurve(to: CGPoint(x: -w * 0.5, y: -h), control1: CGPoint(x: -w * 0.6, y: 0.6), control2: CGPoint(x: -w * 0.5, y: -h * 0.3))
