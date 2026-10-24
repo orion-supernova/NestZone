@@ -445,17 +445,39 @@ In order — each step can go to testers on its own:
      Recipes' first switch got 60–90 ms worse. Staging a `List`'s rows or the
      whole list (Tasks, Shopping, Recipes): nothing measurable, and a staged
      whole list leaves the screen with no toolbar and no backdrop.
-   - *Still open.* The first frame of a screen is 100–150 ms even with nothing
-     in it: the screen's own modifiers (a dozen sheets, alerts, feedback and
-     tasks are a dozen types to look up, about 40% of that frame in the
-     profile) plus the switch. Below 150 needs fewer or shared modifier
-     chains per screen, or the `List` screens' first build (UIKit list
-     creation, about 100 ms of Tasks), neither of which can change the
-     picture. The data arriving after the build is a frame of its own on
-     Shopping (about 375 ms with a long list). This is Debug on the
-     simulator, where unspecialised generics make every type lookup slow; a
-     phone in Release has not been measured, and the iOS 27.0 simulator needs
-     a signed-in account.
+   - *The 40% was found* (24 October, `xctrace` Time Profiler; frames from
+     the simulator's runtime are symbolicated by running `atos -l <load
+     address> -o <image in the simulator's RuntimeRoot>` on the exported
+     addresses). In a `List` screen's first build 140–170 of 400 samples are
+     `swift_conformsToProtocol`, almost all under `DynamicPropertyCache.fields`:
+     SwiftUI asks, once per field type of every view and modifier it meets,
+     whether the field is a `DynamicProperty`, and the answer (yes or no) is
+     cached for the process. An interposed `swift_conformsToProtocol` timed a
+     cold ask at 0.85–1 ms, and a warm one at 0.0006 ms. It is the simulator:
+     its frameworks are separate images on disk, so every cold ask reads all
+     their conformance records, where a device answers from the dyld cache's
+     table and reads only the app's ~4,000. `SIMCTL_CHILD_SWIFT_DEBUG_ENABLE_
+     SHARED_CACHE_PROTOCOL_CONFORMANCES` changes nothing here.
+   - *A warm-up was tried and dropped.* Asking the same questions on
+     background threads after launch (Debug, simulator only) took 10–60 ms off
+     each first build — Meals 228–246 to 177–201, Shopping's data frame
+     206–228 to 162–174, Tasks barely — by walking 5,365 types through the
+     runtime's private reflection entry points for ~4.8 s of eight threads.
+     It made the simulator's numbers better and the app no better, so it is
+     not in. With every runtime cache warm, a `List` screen's first build is
+     120–140 ms in Debug: that is the simulator's floor, not a device's.
+   - *Not reproduced.* Shopping's 375 ms data frame needs a long list; this
+     household's is four items and arrives in 160–230 ms, mostly cold asks and
+     the first `Text` formats. The code that grows with the list
+     (`eventSections`, the grouping) was not profiled with a long one: add
+     items, then read `-frameMeter 2`.
+   - *Still open.* The `List` screens' first build is 115–200 ms on the
+     simulator in Debug, and most of what is left of it is the simulator's
+     lookups (above), not the screen's modifier chain as first thought.
+     Shopping's 375 ms data frame needs a long list to reproduce: add items,
+     then read `-frameMeter 2`. None of this is worth more work until it is
+     measured where people run it — a Release build on a phone, step 1 below.
+     The iOS 27.0 simulator needs a signed-in account.
    - *iOS 27.* The 27.1 SDK was checked for anything that keeps a view
      hidden, shows or hides a toolbar item or search, or reports visibility.
      Nothing does; what it adds nearby (`visibilityPriority`,

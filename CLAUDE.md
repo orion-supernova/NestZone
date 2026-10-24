@@ -59,7 +59,13 @@ beats (`stagedBuild` and `Staged`, `Design/Staged.swift`): the bar and the
 container in the tap's frame, each piece a frame after the one before, fading
 up as it lands. That took their first build from 245–280 ms to 130–155. A
 `List` screen cannot be staged (a list that is nothing has no toolbar), and
-Tasks, Shopping, Recipes, Notes and Movies are still 120–250 ms. There is no
+Tasks, Shopping, Recipes, Notes and Movies are still 115–200 ms. About 40% of
+that is the simulator, not the app: SwiftUI asks the runtime once per field
+type whether it is a `DynamicProperty`, and a cold answer costs a millisecond
+there because the simulator reads every framework's conformance records off
+disk, where a device has a table the system built. Warming those answers in
+Debug was tried and dropped — it flattered the simulator and changed nothing
+a person feels. The next real number is a Release build on a phone. There is no
 slow *return*: the one that was measured was a first build, because
 `-segmentCycle` used to end on the last segment, which is remembered, so the
 next launch opened there. It now ends where it began. See
