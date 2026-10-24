@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { cascadeDeletePoll } from "./lib/relations";
+import { noteGrowth } from "./lib/companion";
 import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
@@ -150,6 +151,13 @@ export const vote = mutation({
       .first();
 
     const now = Date.now();
+    // A movie round the house agrees on grows Nestie (convex/companion.ts).
+    // Only a vote that can move the answer is worth a reconcile: a new yes,
+    // or a yes turned to no. Re-sending the same vote, or a first no, can't.
+    const moves = existing ? existing.vote !== args.vote : args.vote;
+    if (poll.type === "movie" && moves) {
+      await noteGrowth(ctx, poll.home_id, { kind: "poll", id: args.pollId });
+    }
     if (existing) {
       await ctx.db.patch(existing._id, { vote: args.vote, updated: now });
       return existing._id;
@@ -197,7 +205,13 @@ export const unvote = mutation({
     // Undoing a swipe the server never recorded is not a failure: the vote is
     // gone either way, which is all the caller asked for. The optimistic client
     // can outrun its own write, and that must not surface as an error.
-    if (existing) await ctx.db.delete(existing._id);
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      // Taking back a yes can undo the house agreeing on a film (convex/companion.ts).
+      if (existing.vote && poll.type === "movie") {
+        await noteGrowth(ctx, poll.home_id, { kind: "poll", id: args.pollId });
+      }
+    }
   },
 });
 

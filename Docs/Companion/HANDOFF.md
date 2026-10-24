@@ -475,18 +475,62 @@ In order — each step can go to testers on its own:
      simulator in Debug, and most of what is left of it is the simulator's
      lookups (above), not the screen's modifier chain as first thought.
      Shopping's 375 ms data frame needs a long list to reproduce: add items,
-     then read `-frameMeter 2`. None of this is worth more work until it is
-     measured where people run it — a Release build on a phone, step 1 below.
-     The iOS 27.0 simulator needs a signed-in account.
+     then read `-frameMeter 2`. The phone has now answered (step 1): first
+     builds are 42–86 ms there, not 115–290, so the `List` screens' first build
+     is no longer worth work. What is open instead: the single 50 ms warm
+     switch to Shopping (one frame, one run in two; undiagnosed, the trace was
+     not kept), and the offscreen passes the first switches show (step 1).
+     The iOS 27.0 simulator needs a signed-in account; the phone is on 27.0.1.
    - *iOS 27.* The 27.1 SDK was checked for anything that keeps a view
      hidden, shows or hides a toolbar item or search, or reports visibility.
      Nothing does; what it adds nearby (`visibilityPriority`,
      `toolbarOverflowMenu`, `CrossFadeNavigationTransition`,
      `TabsPickerStyle`) does a different job, so nothing is behind
      `#available(iOS 27, *)`.
-1. **Measure on a phone.** A Debug build on a device with `-frameMeter 1`;
-   scroll Today, Choose and the shop. Opening Choose still drops one frame on
-   the simulator.
+1. **Measure on a phone** — partly done (24 October): the segment switches.
+   - *Setup.* iPhone 16e (60 Hz), iOS 27.0.1, a **Release** build with the
+     hooks compiled in (`MEASURE`, CLAUDE.md, Commands), launched under
+     `xcrun xctrace record --template 'Animation Hitches' --instrument os_log
+     --device <udid> --launch com.walhallaa.NestZone --time-limit 40s -- <args>`.
+     The template gives the system's hitches; the `os_log` instrument carries
+     the frame meter (`-frameMeter 2`), which the device otherwise only shows
+     to root (`log collect` wants sudo). Export both with `xctrace export
+     --xpath '/trace-toc/run[1]/data/table[@schema="os-log"]'` (and
+     `"hitches"`). The app must not already be running, or the recording ends
+     at once with no rows. Kill a hung `xctrace` and delete
+     `$TMPDIR/instruments*.ktrace`: an aborted run leaves gigabytes there.
+   - *Numbers* (worst late frame per switch, ms; Release on the phone, two or
+     three runs, then the iPhone 17 simulator in Debug from step 0):
+
+     | Switch | Phone | Simulator |
+     |---|---|---|
+     | Lists, first build | 48–86 (one 261 on Shopping, not repeated) | 110–224 |
+     | Lists, return | 31–45 | 134 |
+     | Lists, warm | 30–50 | 75–98 |
+     | Plans, first build | 42–52 | 116–292 |
+     | Plans, return | 34–35 | 232 |
+     | Plans, warm | 30–41 | 86–93 |
+     | House, first, return, warm | 25–33 | 77–291 |
+     | First window after launch | 138–222 | n/a |
+
+     Two or three late frames per switch, not one. The 40% was a simulator
+     artefact in the sense that matters (first builds are 3–5 times faster on
+     the phone, warm ones about 2), but this compares Release on a device with
+     Debug on a simulator, so it does not separate `-Onone` from the
+     conformance lookups.
+   - *What the hitches say.* The 50–67 ms system hitches in the first switches
+     of Lists and Plans carry "potentially expensive render, 44–54 offscreen
+     passes" and "expensive GPU work": the crossfade of a whole screen as one
+     group is rendered offscreen. It is a lead, not a diagnosis; no profile of
+     it was taken. Nothing else on the phone is over 66 ms but the launch.
+   - *Not measured, still to do:* Today scrolling (`-todayScroll 1`), Choose
+     (`-companionDemo choose`, `-companionScroll 1`) and the shop
+     (`-companionDemo shop`, `-companionShelfCycle 1`) — the owner took the
+     phone back first; cold launch with the App Launch template; House with the
+     second opening (`-appTabSegments "tasks,calendar,maintenance"`); Time
+     Profiler on the 50 ms warm switch to Shopping and on the offscreen passes.
+     Whatever is on the phone is the Release+`MEASURE` build, not a Debug one:
+     reinstall a Debug build (or TestFlight) before it is used.
 2. **Shared by the house — the server version.** Backend first, additive only:
    - Tables: `companions`, `companion_growth` (a ledger keyed per credited
      thing), `companion_scene`, the jar plus `jar_ledger`, `owned_items`
@@ -502,6 +546,166 @@ In order — each step can go to testers on its own:
    - The app swaps `@Shared(.companion)` for a client with a live
      subscription; the feature's state shape stays.
    - Remember: one deployment serves every app version. Add, never remove.
+
+   **The backend is built (24 October), not deployed.** It typechecks, and
+   both rounds of the Convex review's blockers are fixed. Nothing existing changed its
+   arguments or its return; the client is untouched. The API freezes when the
+   first client build that calls it ships.
+   - *Tables* (all new):
+     - `companion_homes`, one per house: the jar's two balances, `welcomed`,
+       what was bought (decor and species, bounded by the catalog), the
+       layout, the holidays (absent means the region's), region, `tz_offset`,
+       the one growing, the album's count and species, and the imports'
+       high-water marks. The plan's scene, jar, holidays and owned items
+       became this one row, so the card reads one document.
+     - `companions`: the one growing and the album (`growing`, `graduated`,
+       `released` when swapped before graduating). `points` is kept on the
+       row, never summed on a read.
+     - `companion_growth`, the ledger: one row per credited thing, its key
+       unique per companion (`task:<id>`, `shop:<id>:<at>`, `meal:<date>`,
+       `fix:<id>`, `poll:<id>`, `event:<id>:<start>`,
+       `care:<companion>:<user>:<day>`). Nothing counts twice, and a
+       graduate's rows are its history: never moved, never recounted.
+     - `companion_days`: each day's tally, the rest bank, and the house's size
+       as of that day (written the first time the day is counted, so a member
+       moving in doesn't regrow last month). A change recounts that day and
+       carries the bank through the few after it, moving `points` by the
+       difference.
+     - `jar_ledger`: signed moves, each keyed once (`welcome`,
+       `stage:<slot>:<n>`, `graduation:<slot>`, `buy:<requestId>`,
+       `import:<userId>`, later `topUp:<txn>`). The balance and its row are
+       written together (`moveJar`), so the jar and its feed can't disagree.
+       A reward's slot is the house's place in its album (`album_count`
+       when paid), not the companion: letting one go and starting another
+       never pays a stage twice, only a graduation moves the slot, and only
+       the one growing can graduate. Every credit is once per real
+       achievement: the welcome once per house, a stage once per slot, a
+       graduation once per slot, and `graduate` refuses anything younger than
+       six days. The curve alone could get there in about three — a day
+       split across a midnight counts twice — so the floor is held there,
+       not trusted to the arithmetic.
+   - *Growth is the sim's curve* (`tools/growth_sim.py`), and the server's
+     number is the truth (your call, 24 October): a day's life is
+     `9·(1−e^(−raw/R_N))`, care at most 2, with the sim's rules (a repeated
+     chore a quarter, a quick log half, past four a person's chores halve, two
+     shopping trips, two events, two fixes — a problem fixed within ten
+     minutes of being written down counts half — one movie, the rest bank).
+     64 graduates; stages are the app's thresholds. Care counts once per
+     person per day. A companion counts its days in the offset the house had
+     when it arrived (`companions.tz_offset`), so moving the house's days
+     can't add any under one that is growing.
+   - *Hooks.* `noteGrowth` in `tasks:update` (ticked or reopened),
+     `tasks:removeFinished`, `shopping:setPurchased`, `meals:set`,
+     `meals:clear`, `issues:setStatus` (to or from fixed), `polls:vote`
+     (movie rounds, and only a vote that can move the answer) and
+     `polls:unvote` (a yes taken back): one indexed
+     read, and a scheduled `companion:reconcile` only for a house growing one.
+     The reconcile reads the thing back from its own table, so it is right in
+     any order and any number of times.
+     - Shopping is credited per trip (`shop:<id>:<at>`): a second tick of the
+       same item within 12 hours is the same trip, and an untick takes the
+       credit back only within 2 hours of it (a slip). Unticking something
+       bought last week takes nothing, because that trip happened; ticking it
+       again next week is a new one.
+     - A movie round counts once two people (or the only one) said yes to the
+       same title. Bills don't count yet.
+     - The hourly cron `sweepEvents` walks the companions that are growing,
+       20 houses a page, not the deployment's events. Each house is two reads
+       of at most 100 on `by_home_series_end` — what could only have ended
+       inside the window, and what runs on past it with `FOREVER` series
+       first — so a house with many one-offs planned ahead can't push its
+       standing series out, and a page stays near 4,000 reads. It credits
+       occurrences that ended in the last three hours (the key makes the
+       overlap harmless) and the day's planned dinner once it is 17:00 in
+       the house; a dinner, today's included, never counts before then. Each
+       page and each credit is caught and logged, so one house failing costs
+       nobody else; the next hour picks up what was missed. No write
+       schedules a job of its own.
+     - An import's chore backfill is a page of 100 at a time, each page
+       scheduling the next, at the live path's weights. The chain is pinned
+       to the companion and the start it was made for, and stops if either
+       moves.
+   - *`shop:buy`* is `ShopContext.standing` and `checkout` ported, make-up
+     included. `requestId` is the tap's: a retry with the same thing returns
+     the first answer (made-up Leaves included) and never debits twice; the
+     same id for a different thing is refused; a second phone buying the same
+     thing gets `owned`. `expectedPrice`, required, is what the card showed;
+     if the catalog says otherwise nothing is bought (`priceChanged`). Every
+     outcome the card has a screen for is a status: `bought`, `owned`,
+     `short`, `unavailable`, `priceChanged`.
+   - *Where the house is.* Region and offset are set when the house's row is
+     made and move after that only through `companion:setPlace`, which fills
+     in what's missing at once; after that the offset moves at most once a
+     day and the region at most once in 30, so the hemisphere can't be
+     flipped to bring a season's species round early. A phone travelling
+     does not move the house.
+   - *Reads.* `companion:forHome`: the version, the house, the one growing
+     (points, stage, ready, paid stage, last care, the caller's care days on
+     it, at most 60), the newest 120 credited things for the mood, the newest
+     30 jar moves (who added, who spent). `companion:album` is its own read,
+     opened with the album. Writes: `setPlace`, `start` (the welcome, once),
+     `care`, `graduate`, `setLayout` (filtered as Decorate's Done is),
+     `setHolidays`, `importLocal`.
+   - *One catalog.* `tools/catalog_export/export_catalog.sh` compiles the
+     app's own `CompanionModels.swift`, `CompanionCatalog.swift` and
+     `Holidays.swift` and writes `backend/convex/lib/companionData.ts`:
+     prices, access, packs, stages, rewards, every holiday's first days for
+     2025–2036 as Foundation computes them, the defaults per region, the
+     south. The Swift stays the one source and the server never re-derives a
+     lunar calendar. `forHome`'s `catalogVersion` is the file's hash plus
+     `RULES_VERSION` (lib/companion.ts), bumped by hand whenever a rule there
+     changes an answer. Foundation's calendars can move a lunar date between
+     macOS releases, so the output is checked in and its diff reviewed like
+     code; a diff nobody expected is a question, not a commit. Run it with
+     any catalog change, in the same commit, backend first.
+   - *A test phone's MVP file* (`importLocal`). The MVP only ran on Debug
+     builds, so only the admins (`lib/admin.ts`) and the ids in
+     `COMPANION_IMPORT_USER_IDS` may import; anyone else, and anyone after
+     `IMPORT_SUNSET` (31 March 2027), gets `closed`. Once per person per
+     house. A file is a phone's word, so it is taken only as far as the house
+     could really have got, and the same house results whichever phone comes
+     first:
+     - **no Sparkles, ever, and nothing priced in them** (your call, 24
+       October, belt and braces: the MVP's Sparkles were free tests, and the
+       test store's are reset when the jar starts taking real money, step 4);
+     - Leaves are capped at what the file could have earned — the welcome if
+       the house hadn't had it here, six stages and a graduation per album
+       card accepted, the paid stages of the one growing — and credited only
+       above the most any import has brought (`import_max_leaves`), so
+       imports come to the largest, never a sum;
+     - what was bought is the union of Leaves-priced things; the holidays are
+       the union with what the house keeps now, region defaults included;
+     - album cards are kept only if they could have been grown: at least six
+       days each (64 points at 11 a day), none overlapping another card or a
+       companion the house chose here and is growing, and no more of them
+       than six-day runs fit since the MVP first landed (`IMPORT_EPOCH`, 20
+       October 2026, a471076);
+     - the one growing is the earliest started, its start clamped between
+       `IMPORT_EPOCH` and now, if the house could grow it today — judged
+       before this file's purchases count, so a file can't grant itself a
+       species and pass — and it started after the album's last card; a
+       later phone replaces one an import made, never one chosen here, and
+       its scene comes with it. The stages its file was paid for are marked
+       paid in the slot;
+     - care days count from the last fortnight only; the lab stays on the
+       phone;
+     - growth is recounted from the chores since it started, so an imported
+       companion may land at a lower stage than the phone showed (your call,
+       24 October: the curve is the truth). Stages already paid are never
+       paid again or taken back.
+   - *Deleting a house* drops its `companion_homes` row with the house and
+     drains the rest in batches (`companion:purgeHome`), so leaving never
+     waits on a long ledger.
+   - *The client swap* (the iOS job): a `CompanionClient` with a live
+     subscription to `forHome`, one-shot or live `album` with its sheet, and
+     the writes above. `CompanionHouse` is filled from the payload (album ids
+     are the UUIDs the server keeps), an optional server `points` on
+     `Companion` wins, and the mood reads `recent` rather than chores alone.
+     The lab moves to a local key. A `requestId` per buy tap and the card's
+     price as `expectedPrice`; `setPlace` only when `tzOffset` is null or
+     somebody changes it on purpose; `importLocal` once, keeping the old file.
+     `recent[].kind`, `jar[].kind` and every status string decode leniently
+     (`decodeLenient`): new kinds will come.
 3. **The vote for the next one** (a `generic` poll; a new poll kind would decode
    as `.movie` on old builds), and at most three notifications.
 4. **The jar takes money.** Choose StoreKit 2 or RevenueCat; it replaces

@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { outstandingItems, outstandingNames } from "./lib/pending";
+import { noteGrowth } from "./lib/companion";
 
 // Shown as the notification title; the body carries what actually changed.
 const NOTIFY_TITLE = "Added to the list";
@@ -257,6 +258,8 @@ export const setPurchased = mutation({
     if (!item) throw new Error("Item not found");
     await requireDocHome(ctx, item, "Item");
     await ctx.db.patch(id, { is_purchased, updated_by: user._id, updated: Date.now() });
+    // A trip to the shops grows Nestie (convex/companion.ts).
+    await noteGrowth(ctx, item.home_id, { kind: "shopping", id });
     return await ctx.db.get(id);
   },
 });

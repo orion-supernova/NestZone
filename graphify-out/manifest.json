@@ -25,8 +25,8 @@
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "NestZone/NestZoneApp.swift": {
-    "mtime": 1792796329.838058,
-    "ast_hash": "bd034ee7c22c9d4523f358e94b143983",
+    "mtime": 1792829571.1246989,
+    "ast_hash": "f78ac9e9de7fc91201204e32c46e20ec",
     "semantic_hash": ""
   },
   "Docs/PocketBase/README.md": {
@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.d.ts": {
-    "mtime": 1792184107.2571266,
-    "ast_hash": "0700b3d3030202bbf08fe3a86fa966c2",
+    "mtime": 1792830509.7327898,
+    "ast_hash": "a4fc4af660a9f9de8e220afbc6aeafe2",
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.js": {
@@ -125,8 +125,8 @@
     "semantic_hash": ""
   },
   "backend/convex/polls.ts": {
-    "mtime": 1789046923.0313709,
-    "ast_hash": "f2b58048a0d7e0c413709ddd66ae3878",
+    "mtime": 1792833031.8531642,
+    "ast_hash": "b844440523d0db1954899dc68b3c9b0f",
     "semantic_hash": ""
   },
   "backend/convex/recipes.ts": {
@@ -135,18 +135,18 @@
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1789926205.27361,
-    "ast_hash": "4d6b2d5d13a8d38726132087e878043a",
+    "mtime": 1792833848.7552109,
+    "ast_hash": "e0e53e16fade63fc1fed0906c77b7743",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
-    "mtime": 1792570522.603586,
-    "ast_hash": "634edf8d2e4cda8fee1f36ea47ad0cdc",
+    "mtime": 1792830482.6501856,
+    "ast_hash": "1655bbc08f1c52bec1f9a3868fa069b3",
     "semantic_hash": ""
   },
   "backend/convex/tasks.ts": {
-    "mtime": 1789926205.273959,
-    "ast_hash": "2b1bf8498adcf5fbe0ed7b255bae15ad",
+    "mtime": 1792830482.6496816,
+    "ast_hash": "d5522edc58d97c79472ab0a57621cfb1",
     "semantic_hash": ""
   },
   "backend/convex/users.ts": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792805479.4400487,
-    "ast_hash": "98efa4721d4a55feaa639076d746e6d3",
+    "mtime": 1792833565.9182682,
+    "ast_hash": "2ca70ea3eaea47057c581337cf5d9ee4",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "backend/convex/lib/relations.ts": {
-    "mtime": 1789926205.2726114,
-    "ast_hash": "b409d3dae5a751ddebb14fcbca72101c",
+    "mtime": 1792832233.3335128,
+    "ast_hash": "8ace64e540e36c9374a5ab9389008ede",
     "semantic_hash": ""
   },
   "backend/convex/lib/apple.ts": {
@@ -220,13 +220,13 @@
     "semantic_hash": ""
   },
   "NestZone/App/AppView.swift": {
-    "mtime": 1792805347.1109338,
-    "ast_hash": "c0afc6a0387ebf339a6f42ddc4cea873",
+    "mtime": 1792833878.8638508,
+    "ast_hash": "775fbfc7e440d3824bcf0f03ead0ddfd",
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1792804560.3374214,
-    "ast_hash": "804c0d3c6419f7313cc84855a542d20e",
+    "mtime": 1792829571.1311884,
+    "ast_hash": "9a45cf8a0fae2619a4d3412bd4120fb5",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeView.swift": {
-    "mtime": 1792783674.328184,
-    "ast_hash": "ef6d4c7a346525d88a929ff7ec3932a2",
+    "mtime": 1792829571.1372547,
+    "ast_hash": "338986bc718cd067a3abba3bd0258f27",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/CreateHomeFeature.swift": {
@@ -700,8 +700,8 @@
     "semantic_hash": ""
   },
   "backend/convex/meals.ts": {
-    "mtime": 1789046923.0304182,
-    "ast_hash": "9ca7eeb92dbf99854927b940fe0cb855",
+    "mtime": 1792832258.910226,
+    "ast_hash": "2734cec938a85f308308a2b7bb38203b",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/RelativeTime.swift": {
@@ -775,8 +775,8 @@
     "semantic_hash": ""
   },
   "backend/convex/crons.ts": {
-    "mtime": 1789926205.2700086,
-    "ast_hash": "6d412c226516abb7c363ba31f7c304a4",
+    "mtime": 1792832321.7436876,
+    "ast_hash": "e8786f26e768441d9002e1e74540fbca",
     "semantic_hash": ""
   },
   "NestZone/Design/KeyboardDismiss.swift": {
@@ -885,8 +885,8 @@
     "semantic_hash": ""
   },
   "backend/convex/issues.ts": {
-    "mtime": 1789926205.2718368,
-    "ast_hash": "58ba509cf06e084164f52bc9c16ce1fb",
+    "mtime": 1792830500.6808124,
+    "ast_hash": "2359250f6d672084bf9eab6bc5f5f0a6",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/CurrencyPicker.swift": {
@@ -1280,13 +1280,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCard.swift": {
-    "mtime": 1792783674.324483,
-    "ast_hash": "6c7d34b90e6979056edf70b64a8c1d2a",
+    "mtime": 1792829571.1448693,
+    "ast_hash": "89c91c7792b7a3a923768bf8836f3073",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionFeature.swift": {
-    "mtime": 1792783674.324749,
-    "ast_hash": "ae3362fee75c867dabf3179116b22754",
+    "mtime": 1792829571.1345475,
+    "ast_hash": "b0d60441e47636bb2415fd5aeabaf553",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionModels.swift": {
@@ -1305,8 +1305,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionSheets.swift": {
-    "mtime": 1792783674.3253088,
-    "ast_hash": "d300965c8a0b8aeaf4f4216dd9d28192",
+    "mtime": 1792829571.1398585,
+    "ast_hash": "5be13fa970e9c8887912b9fd3b09699c",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/Holidays.swift": {
@@ -1335,8 +1335,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/HANDOFF.md": {
-    "mtime": 1792805739.352125,
-    "ast_hash": "dbbb20ed63b450f5113b19d867d81780",
+    "mtime": 1792833890.510732,
+    "ast_hash": "5f173c8ea6eaee10d3b2c1257b8af719",
     "semantic_hash": ""
   },
   "Docs/Companion/HOLIDAYS.md": {
@@ -1355,8 +1355,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/plan/index.html": {
-    "mtime": 1792783674.312782,
-    "ast_hash": "675d9cf8869465066f1118df39c5e6cd",
+    "mtime": 1792833651.6087978,
+    "ast_hash": "13916746197069e638e89bbd2d663e11",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/plant.html": {
@@ -1655,8 +1655,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/FrameMeter.swift": {
-    "mtime": 1792805347.1111927,
-    "ast_hash": "650bb6650416eb465abf8ddcb5f93e5f",
+    "mtime": 1792829571.204408,
+    "ast_hash": "175bb7f54f13be819f1dace4b42c70da",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCatalog.swift": {
@@ -1670,8 +1670,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionShop.swift": {
-    "mtime": 1792783674.3254664,
-    "ast_hash": "cdfd2a2d3f6ef511c92999eae82614c3",
+    "mtime": 1792829571.1425018,
+    "ast_hash": "4afd98871dc1f9ded961d0c1fa54bbad",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ShopDesign.swift": {
@@ -1802,6 +1802,51 @@
   "NestZone/Design/Staged.swift": {
     "mtime": 1792805739.3513033,
     "ast_hash": "69c8cb9449d5d028bab8628a0f399f54",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/tools/catalog_export/Stub.swift": {
+    "mtime": 1792830009.859785,
+    "ast_hash": "c98cf4f23b4ece3256eed2977e97a490",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/tools/catalog_export/export_catalog.sh": {
+    "mtime": 1792830009.87386,
+    "ast_hash": "38642f06ee8bd14634f62e49640e54ab",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/tools/catalog_export/main.swift": {
+    "mtime": 1792830009.8657136,
+    "ast_hash": "ec1c1c9eef950881eba8d1f008312372",
+    "semantic_hash": ""
+  },
+  "backend/convex/companion.ts": {
+    "mtime": 1792833871.1270483,
+    "ast_hash": "a928674f3db86769125411ad97d1e351",
+    "semantic_hash": ""
+  },
+  "backend/convex/lib/companion.ts": {
+    "mtime": 1792833848.7539594,
+    "ast_hash": "4938d09ad7ec96fe0e133e4da7b15849",
+    "semantic_hash": ""
+  },
+  "backend/convex/lib/companionData.ts": {
+    "mtime": 1792830025.60271,
+    "ast_hash": "fd057ed3768a1630764254418b8783b3",
+    "semantic_hash": ""
+  },
+  "backend/convex/lib/companionTypes.ts": {
+    "mtime": 1792830042.9641852,
+    "ast_hash": "9a8d7e20a399108de7b79ab5f9adee6e",
+    "semantic_hash": ""
+  },
+  "backend/convex/shop.ts": {
+    "mtime": 1792832248.7695663,
+    "ast_hash": "ecfa320392bb2bd205bcb0eee7169328",
+    "semantic_hash": ""
+  },
+  "NestZone/App/ZZProbe.swift": {
+    "mtime": 1792833878.8427935,
+    "ast_hash": "0cfc26d17696cbfc11e5042f5f135c79",
     "semantic_hash": ""
   }
 }

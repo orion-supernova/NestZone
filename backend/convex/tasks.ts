@@ -6,6 +6,7 @@ import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { openTasks } from "./lib/pending";
 import { requireMembers } from "./lib/relations";
+import { noteGrowth } from "./lib/companion";
 
 // Shown as the notification title; the body carries what actually changed.
 const NOTIFY_TITLE = "New task";
@@ -453,6 +454,13 @@ export const update = mutation({
       }
     }
 
+    // Nestie grows from finished chores (convex/companion.ts). One indexed
+    // read, and a scheduled reconcile only for a house growing one, so ticking
+    // a box stays as fast as it was.
+    if (justCompleted || reopened) {
+      await noteGrowth(ctx, task.home_id, { kind: "task", id });
+    }
+
     // Being handed a job is personal, so it goes to the assignee alone rather
     // than to the whole household.
     const justAssigned =
@@ -567,6 +575,9 @@ export const removeFinished = mutation({
     }
     await retractCompletion(ctx, id);
     await ctx.db.delete(id);
+    // The credit goes with it here too: the reconcile finds no task and takes
+    // the chore off the companion growing now.
+    await noteGrowth(ctx, task.home_id, { kind: "task", id });
     return { ok: true };
   },
 });

@@ -35,6 +35,7 @@ import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireMembers } from "./lib/relations";
 import { outstandingNames } from "./lib/pending";
+import { noteGrowth } from "./lib/companion";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -948,6 +949,11 @@ export const setStatus = mutation({
           : (issue.title ?? "A house problem"),
       category: "issues",
     });
+
+    // A fix grows Nestie, and reopening takes it back (convex/companion.ts).
+    if (status === "fixed" || issue.status === "fixed") {
+      await noteGrowth(ctx, issue.home_id, { kind: "issue", id });
+    }
 
     return await ctx.db.get(id);
   },

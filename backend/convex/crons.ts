@@ -1,7 +1,7 @@
 // Scheduled work.
 //
-// Four jobs: the bill, event and house-problem reminder sweeps, and the one
-// that throws old household activity away.
+// Five jobs: the bill, event and house-problem reminder sweeps, the one that
+// throws old household activity away, and Nestie's look over events that ended.
 //
 // Daily rather than hourly, and at a fixed UTC hour, because a `bills` row has
 // no timezone on it — the household that owns it does, and the server does not
@@ -76,6 +76,23 @@ crons.daily(
   "activity retention",
   { hourUTC: 3, minuteUTC: 0 },
   internal.inbox.sweep,
+);
+
+// Nestie grows from the household's events too, once they have happened.
+//
+// An event ends at an instant nobody writes down — nothing is saved when the
+// party is over — so this is the one growth source that has to be looked for
+// rather than reported. Hourly is enough: growth is counted per day, and an
+// hour late changes no day's tally but the last one before midnight, which the
+// overlapping window still catches. Idempotent by `event:<id>:<start>` in the
+// growth ledger, so the three-hour window can overlap the last run freely.
+// The same pass counts a dinner planned ahead once its evening comes, so no
+// write ever schedules a job of its own. See `sweepEvents` in
+// convex/companion.ts.
+crons.interval(
+  "companion event growth",
+  { hours: 1 },
+  internal.companion.sweepEvents,
 );
 
 export default crons;

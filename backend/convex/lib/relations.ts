@@ -12,6 +12,7 @@
 
 import { Doc, Id, TableNames } from "../_generated/dataModel";
 import { MutationCtx, QueryCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
 
 /** Load a referenced document or throw. Use before storing any v.id(). */
 export async function requireRef<T extends TableNames>(
@@ -259,6 +260,20 @@ export async function cascadeDeleteHome(
   removed["conversations"] = convos.length;
   removed["messages"] = messageCounts.reduce((n, c) => n + c, 0);
   removed["users_scrubbed"] = scrubbed.length;
+
+  // Nestie's rows outlive nothing either, but a companion's ledger grows with
+  // the house's age, so only the one `companion_homes` row goes here and the
+  // rest drain in batches behind it (`companion:purgeHome`). Scheduling cannot
+  // fail the way a long delete can, so leaving stays one quick transaction.
+  const companionHomes = await ctx.db
+    .query("companion_homes")
+    .withIndex("by_home", (q) => q.eq("home_id", homeId))
+    .take(10);
+  await Promise.all(companionHomes.map((row) => ctx.db.delete(row._id)));
+  if (companionHomes.length > 0) {
+    await ctx.scheduler.runAfter(0, internal.companion.purgeHome, { homeId });
+  }
+  removed["companion_homes"] = companionHomes.length;
 
   await ctx.db.delete(homeId);
   removed["homes"] = 1;

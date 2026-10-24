@@ -368,7 +368,7 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
 <div class="wrap">
 
   <header class="col">
-    <span class="eyebrow">Nestie · companion plan · version 9 · 23 October 2026</span>
+    <span class="eyebrow">Nestie · companion plan · version 10 · 24 October 2026</span>
     <h1>A companion that grows with the house</h1>
     <p class="lead">Your household picks a plant or a pet. It lives at the top of Today and grows from what the house already does: chores ticked, the shopping bought, dinner decided, a leak fixed, a movie night that happened. In about two weeks it's fully grown: a short ceremony, a card in the album, Leaves for the shop, and the next one chosen together. Everything ships in one release.</p>
     <div class="btns"><button class="act primary" id="openCatalog" aria-haspopup="dialog">Open the catalog</button><span class="muted" style="font-size:14px">The plan's first catalog. The app now has 39 companions and 51 decorations.</span></div>
@@ -376,49 +376,49 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
 
   <section class="wide" id="next">
     <div class="col">
-      <span class="eyebrow">Start here · 23 October 2026</span>
+      <span class="eyebrow">Start here · 24 October 2026</span>
       <h2>Where we left off, and what's next</h2>
-      <p class="lead">Round four is built and pushed to <code>dev</code> as work in progress. Nothing is released: <code>stage</code> hasn't moved, and Nestie is still on development builds only. You said yes to keeping the segments' screens alive, so that's the next job.</p>
+      <p class="lead">Segment switches are done: on your iPhone 16e every switch is two or three frames at worst. The server side of Nestie — one jar, album and scene per house — passed three reviews and is live, added beside everything else; the app doesn't read it yet. Nothing is released; <code>stage</code> hasn't moved and Nestie is still on development builds only.</p>
     </div>
     <div class="nextgrid">
       <div class="box nextup">
-        <span class="nexttag">Next · your call</span>
-        <h3>Keep the segments' screens alive</h3>
-        <p>Switching Tasks → Shopping, Calendar → Meals or Money → Problems throws the old screen away and builds the new one from scratch. That costs one 100–200 ms frame on the simulator, worst the first time, which is why the very first switch's underline jumps instead of sliding. It was there before the motion work: measured against the last commit, alternating the two builds.</p>
-        <p>The fix: build each segment once, the first time it's opened, and keep it, hiding the others instead of throwing them away. What to watch:</p>
+        <span class="nexttag">Done · 23–24 October</span>
+        <h3>Segment switches that don't hitch</h3>
         <ul>
-          <li><b>The entrances still replay.</b> You like them playing on every switch, so a kept screen needs a nudge to play them again when it comes back.</li>
-          <li><b>Only the shown screen's buttons.</b> Every module puts buttons in the bar, and Notes, Movies and Meals a search. Hidden screens mustn't add theirs.</li>
-          <li><b>Live data stays on</b> for a hidden screen, three modules a tab at most. That's what makes the switch instant.</li>
-          <li><b>Measured before and after</b> on Lists, Plans and House, with the tab switching segments by itself.</li>
+          <li><b>Screens are kept.</b> Each segment is built the first time it's opened and kept after that, with its scroll position and live data. Only the shown one puts buttons and search in the bar, and the entrances still replay on every switch.</li>
+          <li><b>A switch is split over two moments.</b> The fade and the underline land on the tap; the bar, search and entrances follow 50 ms later, so no single frame carries all of it.</li>
+          <li><b>Big screens build in steps.</b> Calendar, Money and Problems draw their bar first and the rest a frame at a time, pixel-for-pixel the same picture.</li>
+          <li><b>On your phone (Release):</b> first switch 42–86 ms, going back 31–45, again 25–50. The simulator said 77–292, and most of that turned out to be the simulator itself.</li>
         </ul>
-        <p class="muted" style="font-size:14px">The code-level plan is in HANDOFF.md, "Next steps", step 0.</p>
       </div>
       <div class="box">
-        <h3>After that, in order</h3>
+        <h3>Now, in order</h3>
         <ol>
-          <li><b>Measure on a phone.</b> Every number so far is from the simulator.</li>
-          <li><b>Shared by the house:</b> the server version, so two phones see one jar, album and scene.</li>
+          <li><b>Launch.</b> The first second after opening the app had 138–222 ms frames on the phone, and the very first frame up to half a second. Being profiled now, on the simulator, along with a lead that the switch's fade is drawn offscreen over the glass.</li>
+          <li><b>Shared by the house: the app's side.</b> The server is live since 24 October: growth credited once per chore, nothing graduates in under six days, buying that can never charge twice. Three reviews found and closed two ways to mint Sparkles and a way to grow twice as fast. Next the app switches its Nestie over to it.</li>
+          <li><b>The rest of the phone measurement:</b> Today, Choose, the shop, cold launch.</li>
           <li><b>The vote</b> for the next one, and at most three notifications.</li>
-          <li><b>The jar takes money:</b> StoreKit 2 or RevenueCat, chosen then.</li>
-          <li><b>The art pass:</b> the 32 sketched species and 10 decorations, drawn.</li>
-          <li><b>The finale</b> and its crown.</li>
-          <li><b>Release:</b> Nestie on for everyone, its changelog entry, the version bumped.</li>
+          <li><b>The jar takes money:</b> StoreKit 2 or RevenueCat, chosen then. The free test Sparkles are reset when it does.</li>
+          <li><b>The art pass</b>, <b>the finale</b>, then <b>release</b>.</li>
         </ol>
+        <h3>Decided for you</h3>
+        <ul>
+          <li>Test Sparkles from the development builds don't survive into the paid jar.</li>
+          <li>The server's pace of growth is the one that counts. A stage already paid is never paid again or taken back.</li>
+          <li>Only test accounts can bring a phone's Nestie into the shared one, and they bring Leaves only.</li>
+        </ul>
         <h3>Look at on your phone</h3>
         <ul>
-          <li>The new micro-animations in Lists, Plans, House and Messages. They build, but the simulator here can't be tapped, so they weren't watched one by one.</li>
-          <li>"All square": does the check draw itself in, and how does it look with Reduce Motion on?</li>
-          <li>The budget ring past 100%: the short pause between its two sweeps.</li>
+          <li>It has a measuring build on it. Reinstall from TestFlight when convenient.</li>
+          <li>Switching views inside Money and Problems; Money with two currencies; Notes search keeping its text across a switch; a sheet left open while switching segments.</li>
+          <li>The micro-animations, "All square" with Reduce Motion, the budget ring past 100%.</li>
         </ul>
-        <h3>Before the next release</h3>
-        <p>The motion pass isn't behind Nestie's switch, so it ships with the next version. It needs a "Fixes and improvements" entry once that version number is picked; the draft is in HANDOFF.md.</p>
       </div>
     </div>
     <div class="box">
       <h3>Picking it up in a new session</h3>
       <p class="muted">A new session remembers nothing of this one. Paste this to start it:</p>
-      <pre class="prompt" id="resumePrompt">Read Docs/Companion/HANDOFF.md first, then CLAUDE.md. Round four of Nestie is committed and pushed to dev as work in progress. Do step 0 of "Next steps": keep the segments' screens alive so a segment switch stops hitching, keeping the entrances that replay on every switch. Measure with -frameMeter 1 -openTab lists -segmentCycle 1 before and after, on Lists, Plans and House. Build and typecheck only, no tests.</pre>
+      <pre class="prompt" id="resumePrompt">Read Docs/Companion/HANDOFF.md first, then CLAUDE.md. Segment switching is done and measured on a phone (step 0 and step 1). Next: finish the launch and offscreen-fade work, get the Nestie server code (step 2, backend/convex/companion.ts and shop.ts) through review and deploy it additively, then switch the app's companion over to it. Use the specialist agents in .claude/agents. Build and typecheck only, no tests.</pre>
       <div class="btns"><button class="act" id="copyPrompt" type="button">Copy</button></div>
     </div>
   </section>

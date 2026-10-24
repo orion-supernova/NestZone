@@ -1371,4 +1371,220 @@ export default defineSchema({
     user_id: v.id("users"),
     read_at: v.number(),
   }).index("by_user", ["user_id"]),
+
+  // --- Nestie, the household companion --------------------------------------
+  //
+  // A plant or a pet the house grows from what it already does. Shared by the
+  // house: one jar, one scene, one album, whoever's phone is looking. The rules
+  // live in convex/lib/companion.ts and the catalog in lib/companionData.ts,
+  // which is generated from the app's own Swift so the two cannot price a thing
+  // differently. Docs/Companion/HANDOFF.md, step 2, is the design.
+
+  /**
+   * One per home: the jar, what it bought, the scene, the days it keeps.
+   *
+   * The jar's two balances are denormalised from `jar_ledger` and written in
+   * the same transaction as every ledger row (`moveJar`), so the number on the
+   * card and the list under it cannot disagree.
+   */
+  companion_homes: defineTable({
+    home_id: v.id("homes"),
+    /** Progress, earned by growing and never sold. Can be spent with Sparkles making up the rest. */
+    leaves: v.number(),
+    /** What people buy, plus a pinch earned at stages and graduations. Below zero only after a refund. */
+    sparkles: v.number(),
+    /** Whether the house has had its welcome gift. Once per house, ever. */
+    welcomed: v.boolean(),
+    /** Everyday decorations the jar bought (`DecorItem` ids), plus the watering can. Bounded by the catalog. */
+    owned_decor: v.array(v.string()),
+    /** Species bought, alone or in a pack. Bounded by the catalog. */
+    owned_species: v.array(v.string()),
+    /** What sits where. Spots are `SceneLayout`'s; the tree holds up to four. */
+    layout: v.object({
+      above: v.optional(v.string()),
+      sky: v.optional(v.string()),
+      weather: v.optional(v.string()),
+      tree: v.array(v.string()),
+      wearing: v.optional(v.string()),
+      pot: v.optional(v.string()),
+      left: v.optional(v.string()),
+      right: v.optional(v.string()),
+      ground: v.optional(v.string()),
+    }),
+    /** The holidays this house keeps. Absent means its region's defaults; empty means none. */
+    holidays: v.optional(v.array(v.string())),
+    /** Two-letter region: the default holidays, and which way round the seasons go. */
+    region: v.optional(v.string()),
+    /** Minutes east of UTC, as `events.tz_offset`: where the house's days begin. */
+    tz_offset: v.optional(v.number()),
+    /** The one growing now. Absent before the first and between a graduation and the next. */
+    current_id: v.optional(v.id("companions")),
+    /**
+     * How many the house has grown all the way, and which species. Denormalised
+     * from the album so a reward check ("grow two", "grow them all") is a field
+     * read rather than an album read. The set is bounded by the catalog.
+     */
+    album_count: v.number(),
+    grown_species: v.optional(v.array(v.string())),
+    /**
+     * The most Leaves any phone's MVP file has brought. An import is credited
+     * only what it brings above this, so imports add up to the largest one
+     * whatever their order and whatever was spent in between.
+     */
+    import_max_leaves: v.optional(v.number()),
+    /**
+     * Unused: imports bring no Sparkles. Reserved, should Sparkles ever be
+     * imported under the same high-water rule; nothing writes or reads it.
+     */
+    import_max_sparkles: v.optional(v.number()),
+    /** When `setPlace` last moved the offset: at most once a day. */
+    place_set_at: v.optional(v.number()),
+    /**
+     * When `setPlace` last moved the region: at most once in 30 days, so the
+     * hemisphere can't be flipped to bring a season's species round early.
+     */
+    region_set_at: v.optional(v.number()),
+    created: v.number(),
+    updated: v.number(),
+  }).index("by_home", ["home_id"]),
+
+  /**
+   * Every companion a house has had: the one growing, and the album.
+   *
+   * `points` is denormalised from `companion_days` — moved by the difference
+   * whenever a day is recounted — so the card's growth is a field, not a sum.
+   */
+  companions: defineTable({
+    home_id: v.id("homes"),
+    /** The album card's identity (`Graduate.id` is a UUID on the phone). Kept from an import. */
+    uuid: v.string(),
+    species: v.string(),
+    /** Seeds the drawing: `<homeId>-<album count when it arrived>`, as the app has always made it. */
+    seed: v.string(),
+    started_at: v.number(),
+    /** `released` is one swapped for another before it graduated: never in the album. */
+    status: v.union(v.literal("growing"), v.literal("graduated"), v.literal("released")),
+    graduated_at: v.optional(v.number()),
+    points: v.number(),
+    /** The highest stage already paid into the jar, so a stage pays once even if points dip. */
+    paid_stage: v.number(),
+    last_care_at: v.optional(v.number()),
+    /**
+     * The house's offset when this one arrived. Its days are counted in this
+     * for its whole life, so moving the house's offset can't add days under
+     * a companion that is growing.
+     */
+    tz_offset: v.optional(v.number()),
+    /** `import` came from one phone's MVP file; only such a one may be swapped by a later import. */
+    origin: v.union(v.literal("server"), v.literal("import")),
+    created: v.number(),
+  })
+    // The album: `eq(status, "graduated")`, newest first.
+    .index("by_home_status_graduated", ["home_id", "status", "graduated_at"])
+    // An import's album cards, so the same card never lands twice.
+    .index("by_home_uuid", ["home_id", "uuid"])
+    // Every house growing one, for the hourly event sweep.
+    .index("by_status", ["status", "started_at"]),
+
+  /**
+   * The growth ledger: one row per credited thing.
+   *
+   * Keyed per thing (`task:<id>`, `meal:<date>`, `fix:<id>`, `poll:<id>`,
+   * `event:<id>:<start>`, `care:<companion>:<user>:<day>`; purchases
+   * `shop:<id>:<at>`, one per trip) and unique per companion, so ticking a box
+   * twice or a reconcile running twice can never count a thing twice. A row
+   * belongs to the companion it was credited to for good: a graduate's rows
+   * are its history, and nothing moves or recounts them.
+   */
+  companion_growth: defineTable({
+    home_id: v.id("homes"),
+    companion_id: v.id("companions"),
+    key: v.string(),
+    kind: v.union(
+      v.literal("chore"),
+      v.literal("purchase"),
+      v.literal("dinner"),
+      v.literal("event"),
+      v.literal("fix"),
+      v.literal("movie"),
+      v.literal("care"),
+    ),
+    /** The house's day it counts on, `YYYY-MM-DD`. */
+    day: v.string(),
+    at: v.number(),
+    /** Who did it. Absent when the app can't say. */
+    user_id: v.optional(v.id("users")),
+    /** Its weight before the day's rules (repeats, per-person halving, caps). */
+    weight: v.number(),
+    /** For chores: the title, normalised, to spot the same chore twice in a day. */
+    title_key: v.optional(v.string()),
+  })
+    .index("by_companion_key", ["companion_id", "key"])
+    // Recounting one day.
+    .index("by_companion_day", ["companion_id", "day"])
+    // The newest few, for the mood.
+    .index("by_companion_at", ["companion_id", "at"])
+    // One person's care days, for "cared today".
+    .index("by_companion_kind_user", ["companion_id", "kind", "user_id", "day"])
+    .index("by_home", ["home_id"]),
+
+  /**
+   * One row per day a companion had anything credited: the day's tally, the
+   * rest bank across it, and what it grew. Recounted from the ledger when one
+   * of its rows changes, then the bank is carried forward to the days after.
+   */
+  companion_days: defineTable({
+    home_id: v.id("homes"),
+    companion_id: v.id("companions"),
+    day: v.string(),
+    raw: v.number(),
+    carers: v.number(),
+    /** Banked rest paid into this day. */
+    paid: v.number(),
+    /** The bank carried out of it. */
+    bank_out: v.number(),
+    growth: v.number(),
+    /** How many lived in the house when the day was first counted; recounts keep it. */
+    members: v.optional(v.number()),
+  })
+    .index("by_companion_day", ["companion_id", "day"])
+    .index("by_home", ["home_id"]),
+
+  /**
+   * Everything that ever went in or out of a house's jar, and who did it.
+   *
+   * `key` is unique within a home and is the idempotency of every move:
+   * `welcome`, `stage:<album slot>:<stage>`, `graduation:<album slot>` (the
+   * slot is `album_count` when paid, so swapping companions never pays twice),
+   * `buy:<requestId>`, `import:<userId>`, and `topUp:<transactionId>` when
+   * the store takes money (step 4). Amounts are signed deltas.
+   */
+  jar_ledger: defineTable({
+    home_id: v.id("homes"),
+    key: v.string(),
+    kind: v.union(
+      v.literal("welcome"),
+      v.literal("stage"),
+      v.literal("graduation"),
+      v.literal("buy"),
+      v.literal("import"),
+      v.literal("topUp"),
+      v.literal("refund"),
+    ),
+    leaves: v.number(),
+    sparkles: v.number(),
+    user_id: v.optional(v.id("users")),
+    /** What was bought: `decor:<id>`, `species:<id>` or `pack:<id>`. */
+    item: v.optional(v.string()),
+    /** For a purchase: the Leaves its Sparkles made up, so a replay says so too. */
+    made_up: v.optional(v.number()),
+    companion_id: v.optional(v.id("companions")),
+    created: v.number(),
+  })
+    .index("by_home_key", ["home_id", "key"])
+    // The jar's feed: who added and who spent, newest first. Also the purge's.
+    .index("by_home_created", ["home_id", "created"])
+    // Unused so far. Reserved for step 4, when the store takes money: "this
+    // house's top-ups" and "its refunds" are the questions it answers.
+    .index("by_home_kind", ["home_id", "kind"]),
 });
