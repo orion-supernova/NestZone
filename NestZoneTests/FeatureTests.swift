@@ -2260,38 +2260,169 @@ struct SessionRestoreTests {
             $0.restoreFailedOffline = false
         }
     }
+
+    /// The handover from the cached tabs to the real session must never show
+    /// the launch screen, which would rebuild the tab container.
+    @Test("An optimistic launch stays on the tabs through the handover")
+    func provisionalHandoverKeepsTheTabs() async {
+        let home = Home(id: "h1", name: "The Nest")
+        var state = AppFeature.State()
+        state.homeGate.homes = [home]
+        state.homeGate.isLoading = false
+        state.homeGate.$selectedHomeIDRaw.withLock { $0 = home.id.rawValue }
+        state.main = MainFeature.State(homeID: home.id, home: home, user: nil)
+        state.isProvisional = true
+        #expect(state.screen == .main)
+
+        let store = TestStore(initialState: state) {
+            AppFeature()
+        } withDependencies: {
+            $0.push.authorizationStatus = { .notDetermined }
+            $0.homes.mine = { .never }
+            $0.auth.currentUser = { .never }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.authStatusChanged(.authenticated))
+        #expect(!store.state.isProvisional)
+        #expect(!store.state.isRestoringSession)
+        #expect(store.state.screen == .main)
+    }
+
+    private func provisional(_ home: Home) -> AppFeature.State {
+        var state = AppFeature.State()
+        state.homeGate.homes = [home]
+        state.homeGate.isLoading = false
+        state.homeGate.$selectedHomeIDRaw.withLock { $0 = home.id.rawValue }
+        state.main = MainFeature.State(homeID: home.id, home: home, user: nil)
+        state.main?.settings.isAwaitingSession = true
+        state.isProvisional = true
+        return state
+    }
+
+    /// A phone with no signal can retry the restore for as long as it likes,
+    /// and a person who asked to sign out is not held for all of it.
+    @Test("A sign-out waiting on the restore goes after ten seconds, and ends the session")
+    func signOutReleasedAfterTenSeconds() async {
+        let home = Home(id: "h1", name: "The Nest")
+        let clock = TestClock()
+        let handed = LockIsolated<[String?]>([])
+        let ended = LockIsolated(0)
+        let store = TestStore(initialState: provisional(home)) {
+            AppFeature()
+        } withDependencies: {
+            $0.continuousClock = clock
+            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+            $0.auth.endOptimisticLaunch = { ended.withValue { $0 += 1 } }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.main(.settings(.signOutConfirmed)))
+        #expect(store.state.main?.settings.isSigningOut == true)
+        await clock.advance(by: .seconds(9))
+        #expect(handed.value.isEmpty)
+        #expect(store.state.isProvisional)
+
+        await clock.advance(by: .seconds(1))
+        await store.receive(\.provisionalSignOutExpired)
+        await store.receive(\.main.settings.sessionReady)
+        await store.receive(\.main.settings.delegate)
+
+        #expect(handed.value == [String?.none])
+        #expect(ended.value == 1)
+        #expect(store.state.screen == .signedOut)
+        #expect(store.state.main == nil)
+    }
+
+    @Test("A sign-out waiting on the restore goes when the restore succeeds")
+    func signOutReleasedByTheRestore() async {
+        let home = Home(id: "h1", name: "The Nest")
+        let handed = LockIsolated<[String?]>([])
+        let store = TestStore(initialState: provisional(home)) {
+            AppFeature()
+        } withDependencies: {
+            $0.continuousClock = TestClock()
+            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+            $0.auth.currentUser = { .never }
+            $0.homes.mine = { .never }
+            $0.push.authorizationStatus = { .notDetermined }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.main(.settings(.signOutConfirmed)))
+        #expect(handed.value.isEmpty)
+
+        await store.send(.authStatusChanged(.authenticated))
+        await store.receive(\.main.settings.sessionReady)
+        await store.receive(\.main.settings.delegate)
+        #expect(handed.value.count == 1)
+        #expect(store.state.screen == .signedOut)
+    }
+
+    @Test("A refused session on an optimistic launch goes to sign-in and drops the household")
+    func provisionalRefusalSignsOut() async {
+        let home = Home(id: "h1", name: "The Nest")
+        var state = AppFeature.State()
+        state.homeGate.homes = [home]
+        state.homeGate.isLoading = false
+        state.homeGate.$selectedHomeIDRaw.withLock { $0 = home.id.rawValue }
+        state.main = MainFeature.State(homeID: home.id, home: home, user: nil)
+        state.isProvisional = true
+
+        let store = TestStore(initialState: state) { AppFeature() }
+        store.exhaustivity = .off
+
+        // The SDK's own `.unauthenticated` is not the answer.
+        await store.send(.authStatusChanged(.unauthenticated))
+        #expect(store.state.screen == .main)
+
+        await store.send(.sessionRestoreFinished(.noSession))
+        #expect(store.state.screen == .signedOut)
+        #expect(store.state.main == nil)
+        #expect(store.state.homeGate.cachedHomes.isEmpty)
+    }
 }
 
 @MainActor
 @Suite("Sign out")
 struct SignOutTests {
 
+    private func run(
+        _ state: SettingsFeature.State,
+        handed: LockIsolated<[String?]>
+    ) -> TestStoreOf<SettingsFeature> {
+        TestStore(initialState: state) {
+            SettingsFeature()
+        } withDependencies: {
+            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+        }
+    }
+
     @Test("Signing out hands the push token over so the device stops receiving")
     func signOutUnregistersDevice() async {
         let handed = LockIsolated<[String?]>([])
         var state = SettingsFeature.State(homeID: "h1")
         state.pushRegistration = .registered(token: "abc123")
+        let store = run(state, handed: handed)
 
-        let store = TestStore(initialState: state) {
-            SettingsFeature()
-        } withDependencies: {
-            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+        await store.send(.signOutConfirmed) {
+            $0.isSigningOut = true
+            $0.signOutSent = true
         }
-
-        await store.send(.signOutConfirmed)
+        await store.receive(\.delegate)
         #expect(handed.value == ["abc123"])
     }
 
     @Test("A device with no push token still signs out cleanly")
     func signOutWithoutToken() async {
         let handed = LockIsolated<[String?]>([])
-        let store = TestStore(initialState: SettingsFeature.State(homeID: "h1")) {
-            SettingsFeature()
-        } withDependencies: {
-            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
-        }
+        let store = run(SettingsFeature.State(homeID: "h1"), handed: handed)
 
-        await store.send(.signOutConfirmed)
+        await store.send(.signOutConfirmed) {
+            $0.isSigningOut = true
+            $0.signOutSent = true
+        }
+        await store.receive(\.delegate)
         #expect(handed.value == [String?.none])
     }
 
@@ -2304,14 +2435,38 @@ struct SignOutTests {
         let handed = LockIsolated<[String?]>([])
         var state = SettingsFeature.State(homeID: "h1")
         state.pushRegistration = .failed(token: "abc123")
+        let store = run(state, handed: handed)
 
-        let store = TestStore(initialState: state) {
-            SettingsFeature()
-        } withDependencies: {
-            $0.auth.signOut = { token in handed.withValue { $0.append(token) } }
+        await store.send(.signOutConfirmed) {
+            $0.isSigningOut = true
+            $0.signOutSent = true
         }
+        await store.receive(\.delegate)
+        #expect(handed.value == ["abc123"])
+    }
 
-        await store.send(.signOutConfirmed)
+    @Test("A sign-out confirmed before the restore answers waits for it, then goes")
+    func signOutWaitsForTheRestore() async {
+        let handed = LockIsolated<[String?]>([])
+        var state = SettingsFeature.State(homeID: "h1")
+        state.isAwaitingSession = true
+        state.pushRegistration = .pending(token: "abc123")
+        let store = run(state, handed: handed)
+
+        await store.send(.signOutConfirmed) { $0.isSigningOut = true }
+        #expect(handed.value.isEmpty)
+
+        // Nothing goes while the restore is still out.
+        await store.send(.sessionReady)
+        #expect(handed.value.isEmpty)
+
+        // The restore answered: it goes, once, with the token.
+        await store.send(.binding(.set(\.isAwaitingSession, false))) {
+            $0.isAwaitingSession = false
+        }
+        await store.send(.sessionReady) { $0.signOutSent = true }
+        await store.receive(\.delegate)
+        await store.send(.sessionReady)
         #expect(handed.value == ["abc123"])
     }
 }

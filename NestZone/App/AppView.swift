@@ -149,6 +149,9 @@ struct MainView: View {
             .accessibilityIdentifier("MessagesTab")
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        #if DEBUG || MEASURE
+        .onAppear { FrameMeter.shared.todayAppeared() }
+        #endif
         .dock(isEnabled: showsDock) {
             NowDock(store: store.scope(state: \.now, action: \.now))
         }

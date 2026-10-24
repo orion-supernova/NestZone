@@ -22,6 +22,17 @@ public struct AuthClient: Sendable {
     public var signOut: @Sendable (_ pushToken: String?) async -> Void
     /// Attempts a silent restore from the Keychain.
     public var restoreSession: @Sendable () async -> RestoreOutcome = { .noSession }
+    /// Asks whether the launch may draw the app from what the device already
+    /// knows while `restoreSession` runs: true when a session is stored. Says
+    /// yes by closing the connection's gate, so every read and write a screen
+    /// starts in the meantime waits for the session instead of going out
+    /// without one. Synchronous, because the gate has to be shut before the
+    /// first screen that could start a read exists. Call `restoreSession` after
+    /// a yes, and only once.
+    public var beginOptimisticLaunch: @Sendable () -> Bool = { false }
+    /// Ends an optimistic launch that will not get an answer, so nothing is
+    /// left waiting on a session that is not coming.
+    public var endOptimisticLaunch: @Sendable () -> Void = {}
     public var updateDisplayName: @Sendable (String) async throws -> Void
 }
 
@@ -93,24 +104,62 @@ extension AuthClient: DependencyKey {
                     connection.authProvider.pending = nil
                     throw ConvexAuthError.mapped(error)
                 }
+                // A session now exists, whatever state the gate was left in.
+                connection.gate.open()
             },
             signOut: { pushToken in
                 // Unregister first: after `logout()` there is no identity left
                 // to authorise the mutation with.
-                if let pushToken {
-                    try? await connection.mutate(
-                        "push:unregisterDevice", args: ["token": pushToken]
+                await PushTokenMemory.standard.unregisterAtSignOut(current: pushToken) { token in
+                    try await connection.mutate(
+                        "push:unregisterDevice", args: ["token": token]
                     )
                 }
                 await connection.client.logout()
+                // No session is coming: nothing may stay waiting for one.
+                connection.gate.reject()
             },
             restoreSession: {
-                guard connection.authProvider.hasStoredSession else { return .noSession }
-                if case .success = await connection.client.loginFromCache() { return .restored }
+                guard connection.authProvider.storedSession != .absent else {
+                    connection.gate.reject()
+                    return .noSession
+                }
+                if case .success = await connection.client.loginFromCache() {
+                    connection.gate.open()
+                    return .restored
+                }
+                // The provider drops the stored token only when the server
+                // answered and refused it. If the Keychain now says there is
+                // nothing, the session is over: say so now rather than after
+                // another round of retries. Only a Keychain that *answered*
+                // counts; one that could not be read is a bad moment, and a
+                // bad moment must never send somebody to sign in or clear their
+                // household.
+                guard connection.authProvider.storedSession != .absent else {
+                    connection.gate.reject()
+                    return .noSession
+                }
                 // A stored session that failed to restore is far more likely to
                 // be a bad moment than a real sign-out, so say so and let the
                 // caller retry rather than showing the sign-in screen.
+                connection.gate.markOffline()
                 return .transientFailure
+            },
+            beginOptimisticLaunch: {
+                #if DEBUG || MEASURE
+                // `-optimisticLaunch 0` is the launch as it was, for measuring
+                // the two against each other.
+                if UserDefaults.standard.object(forKey: "optimisticLaunch") != nil,
+                   !UserDefaults.standard.bool(forKey: "optimisticLaunch") { return false }
+                #endif
+                guard ConvexAppleAuthProvider.launchSession != .absent else { return false }
+                connection.gate.begin()
+                return true
+            },
+            endOptimisticLaunch: {
+                // The restore is over without an answer (cancelled). Whatever
+                // waits is told no, and the gate opens.
+                connection.gate.reject()
             },
             updateDisplayName: { name in
                 let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -21,6 +21,17 @@ public struct AppFeature: Sendable {
         /// A stored session exists but could not be exchanged. The user is not
         /// signed out — the network is just unavailable.
         public var restoreFailedOffline = false
+        /// The tabs are up from the cached home while the stored session is
+        /// still being restored in the background. Set only at launch, and only
+        /// when there is both a stored session and a home to draw; ends when
+        /// the restore answers. `ConvexConnection`'s gate is what keeps the
+        /// reads and writes the tabs start in the meantime from going out
+        /// without a session.
+        public var isProvisional = false
+        /// The launch has started its one restore. `.task` runs again when the
+        /// language changes (the root view is re-identified), and a second
+        /// restore beside the first is two exchanges of a token that rotates.
+        public var restoreStarted = false
         /// This device's standing with APNs and with the server, held here
         /// because this is the only reducer that lives for the whole session.
         /// iOS delivers a token once per launch, long before there is a
@@ -44,6 +55,10 @@ public struct AppFeature: Sendable {
         }
 
         public var screen: Screen {
+            // The home was read off the device's own cache, so it is on screen
+            // before anything has asked the server. Waiting for `main` is the
+            // same wait as below: it is built in the same reducer pass.
+            if isProvisional { return main == nil ? .launching : .main }
             if isRestoringSession || status == .unknown { return .launching }
             if status == .unauthenticated {
                 return restoreFailedOffline ? .offline : .signedOut
@@ -79,13 +94,15 @@ public struct AppFeature: Sendable {
         case deviceRegistrationFailed(String)
         case appEnteredForeground
         case retryRestoreTapped
+        /// A sign-out confirmed during the restore has waited as long as it may.
+        case provisionalSignOutExpired
         case auth(AuthFeature.Action)
         case homeGate(HomeManagementFeature.Action)
         case main(MainFeature.Action)
     }
 
     private enum CancelID {
-        case authState, currentUser, deviceToken, deviceRegistration, foreground
+        case authState, currentUser, deviceToken, deviceRegistration, foreground, restore, signOutWait
     }
 
     @Dependency(\.auth) var authClient
@@ -103,6 +120,19 @@ public struct AppFeature: Sendable {
             switch action {
             case .task:
                 L10n.apply(state.language)
+                // Draw the tabs from the cached home now, and restore the
+                // session behind them. Only on the first `.task` (a language
+                // change re-runs it), and only with both a stored session and a
+                // home to show: anything else is the launch screen until the
+                // restore answers, as it always was. Asking closes the
+                // connection's gate, which has to happen before the tabs exist.
+                let firstRun = !state.restoreStarted
+                state.restoreStarted = true
+                if firstRun, state.isRestoringSession, state.selectedHome != nil,
+                   authClient.beginOptimisticLaunch() {
+                    state.isProvisional = true
+                    _ = syncMain(&state)
+                }
                 return .merge(
                     .run { send in
                         for await status in authClient.authState() {
@@ -111,7 +141,7 @@ public struct AppFeature: Sendable {
                     }
                     .cancellable(id: CancelID.authState),
 
-                    .run { send in
+                    firstRun ? .run { [optimistic = state.isProvisional] send in
                         // Silent restore from the Keychain refresh token.
                         //
                         // Retried, because Convex Auth rotates the token on
@@ -119,15 +149,32 @@ public struct AppFeature: Sendable {
                         // leave a perfectly good session stranded, and giving up
                         // on the first try signs the user out for what is often
                         // a two-second network blip.
+                        //
+                        // One at a time, always: this loop is the only caller,
+                        // and each attempt waits for the one before it (and the
+                        // provider's own semaphore backs that up). An optimistic
+                        // launch does not give up after three. Its tabs are
+                        // already on screen, so a phone without a network keeps
+                        // what it has and tries again every few seconds, rather
+                        // than being sent to a retry screen over a household it
+                        // can already show.
                         var outcome = await authClient.restoreSession()
                         var attempt = 1
-                        while outcome == .transientFailure, attempt <= 3 {
-                            try? await clock.sleep(for: .seconds(attempt))
+                        while outcome == .transientFailure, optimistic || attempt <= 3 {
+                            do {
+                                try await clock.sleep(for: .seconds(min(attempt, 10)))
+                            } catch {
+                                // Cancelled without an answer: nothing may be
+                                // left waiting on a session that is not coming.
+                                authClient.endOptimisticLaunch()
+                                return
+                            }
                             outcome = await authClient.restoreSession()
                             attempt += 1
                         }
                         await send(.sessionRestoreFinished(outcome))
-                    },
+                    }
+                    .cancellable(id: CancelID.restore) : .none,
 
                     // Lives as long as the app does, deliberately unscoped to
                     // auth: it has to be listening before the first sign-in and
@@ -149,11 +196,29 @@ public struct AppFeature: Sendable {
                 // whatever the user was in the middle of.
                 guard status != .unknown else { return .none }
 
+                // The SDK says `.unauthenticated` when it opens and again when
+                // a restore fails, and neither is the end of a session that is
+                // still being restored: the restore's own answer
+                // (`sessionRestoreFinished`) is what decides, and acting on
+                // this would tear down the tabs the launch just drew.
+                if status == .unauthenticated, state.isProvisional { return .none }
+
                 let wasAuthenticated = state.status == .authenticated
                 state.status = status
+                // The handover from the cached tabs to the real session. Both
+                // flags go in the same pass: `screen` reads them together, and
+                // clearing only `isProvisional` would show the launch screen
+                // for a pass, which rebuilds the tab container.
+                let wasProvisional = state.isProvisional
+                if status == .authenticated, wasProvisional {
+                    state.isProvisional = false
+                    state.isRestoringSession = false
+                    state.main?.settings.isAwaitingSession = false
+                }
 
                 switch status {
                 case .authenticated where !wasAuthenticated:
+                    let parkedSignOut = wasProvisional && state.main?.settings.isSigningOut == true
                     return .merge(
                         .run { send in
                             for try await user in authClient.currentUser() {
@@ -172,48 +237,21 @@ public struct AppFeature: Sendable {
                         // Only ask iOS for a token if the user has already
                         // agreed to notifications. Registering does not prompt,
                         // but there is no point holding a token we cannot use.
-                        listenForDeviceToken(onlyIfAlreadyAuthorized: true)
+                        listenForDeviceToken(onlyIfAlreadyAuthorized: true),
+
+                        // A sign-out was parked on this restore (see
+                        // `provisionalSignOutExpired`) and goes now, with the
+                        // push token if one has arrived.
+                        parkedSignOut ? .send(.main(.settings(.sessionReady))) : .none
                     )
 
                 case .unauthenticated:
-                    state.currentUser = nil
-                    state.main = nil
-                    // The token belongs to the device and outlives the session,
-                    // but this standing does not: it was registered against the
-                    // user who just left. The broker replays the token to the
-                    // listener that the next sign-in starts, which registers it
-                    // afresh against whoever that is.
-                    state.pushRegistration = .none
-                    // Drop the cached home list before rebuilding the gate, or
-                    // the fresh state seeds itself straight back out of it.
-                    //
                     // Only for a session that had actually started:
                     // `.unauthenticated` is also the auth stream's opening value
                     // on every launch, before the cached session is restored,
                     // and clearing there would throw the cache away on each
                     // launch — which is the one thing it exists to prevent.
-                    //
-                    // Cleared at all because it is one household's data: a
-                    // session that has ended must not leave its home names on
-                    // the device for whoever signs in next.
-                    if wasAuthenticated {
-                        state.homeGate.$cachedHomes.withLock { $0 = [] }
-                    }
-                    state.homeGate = HomeManagementFeature.State()
-                    return .merge(
-                        .cancel(id: CancelID.currentUser),
-                        .cancel(id: CancelID.deviceToken),
-                        // Including a registration still backing off. It would
-                        // authorise as nobody, and the token belongs to whoever
-                        // signs in next.
-                        .cancel(id: CancelID.deviceRegistration),
-                        // On the same terms as the cached home list above: a
-                        // household's faces are a household's data, and the
-                        // directory outlives every screen that filled it. An
-                        // effect rather than a line in the reducer because it
-                        // is the main actor's state, not this one's.
-                        .run { _ in await AvatarDirectory.shared.clear() }
-                    )
+                    return endSession(&state, clearCache: wasAuthenticated)
 
                 default:
                     return .none
@@ -237,6 +275,30 @@ public struct AppFeature: Sendable {
 
             case let .sessionRestoreFinished(outcome):
                 state.isRestoringSession = false
+                if state.isProvisional {
+                    switch outcome {
+                    case .restored:
+                        // `.authenticated` is what ends the provisional state,
+                        // and starts the reads; it is on its way.
+                        return .none
+                    case .noSession:
+                        // The server refused the stored session. Exactly the
+                        // sign-in screen a launch without the cache would have
+                        // got, and the household it was drawing goes with it:
+                        // it belonged to a session that no longer exists.
+                        state.isProvisional = false
+                        state.status = .unauthenticated
+                        return endSession(&state, clearCache: true)
+                    case .transientFailure:
+                        state.isProvisional = false
+                        state.status = .unauthenticated
+                        state.restoreFailedOffline = true
+                        return .merge(
+                            endSession(&state, clearCache: false),
+                            .run { _ in authClient.endOptimisticLaunch() }
+                        )
+                    }
+                }
                 // Distinguish "signed out" from "could not reach the server".
                 // Only the first should show the sign-in screen.
                 state.restoreFailedOffline = outcome == .transientFailure
@@ -349,11 +411,98 @@ public struct AppFeature: Sendable {
                  .main(.home(.delegate(.notificationsEnabled))):
                 return listenForDeviceToken()
 
+            // Signing out while the launch is still restoring. Settings parks
+            // the sign-out on a spinner, and it goes when the restore ends:
+            // success sends it on (above), a refusal ends the session and with
+            // it the tabs. If the restore is still going after ten seconds (a
+            // phone with no signal can retry for as long as it likes), the
+            // person is not held any longer.
+            case .main(.settings(.alert(.presented(.confirmSignOut)))),
+                 .main(.settings(.signOutConfirmed)):
+                guard state.isProvisional else { return .none }
+                return .run { send in
+                    try await clock.sleep(for: .seconds(10))
+                    await send(.provisionalSignOutExpired)
+                }
+                .cancellable(id: CancelID.signOutWait, cancelInFlight: true)
+
+            case .provisionalSignOutExpired:
+                guard state.isProvisional, state.main?.settings.isSigningOut == true
+                else { return .none }
+                // Signed in, as far as anything else is concerned, so that the
+                // sign-out below is the end of a session and clears the cache
+                // like any other. The restore stops; it was not going to
+                // answer. Rejecting the gate first lets the sign-out's own
+                // unregister fail at once instead of waiting out the write
+                // limit for a session that is not coming.
+                state.isProvisional = false
+                state.isRestoringSession = false
+                state.status = .authenticated
+                state.main?.settings.isAwaitingSession = false
+                return .merge(
+                    .cancel(id: CancelID.restore),
+                    .run { send in
+                        authClient.endOptimisticLaunch()
+                        await send(.main(.settings(.sessionReady)))
+                    }
+                )
+
+            // The sign-out ran to its end. Ending the session here, and not
+            // waiting for the SDK to say so, is what makes sign-out
+            // deterministic: the SDK's `.unauthenticated` is ignored while a
+            // launch is still provisional, and may not be re-sent at all.
+            case .main(.settings(.delegate(.signedOut))):
+                state.isProvisional = false
+                state.isRestoringSession = false
+                state.status = .unauthenticated
+                return .merge(
+                    .cancel(id: CancelID.restore),
+                    .cancel(id: CancelID.signOutWait),
+                    endSession(&state, clearCache: true)
+                )
+
             case .auth, .main:
                 return .none
             }
         }
         .ifLet(\.main, action: \.main) { MainFeature() }
+    }
+
+    /// Everything a session leaving takes with it: the tabs, the signed-in user,
+    /// the household's cache and faces, and the effects that served them.
+    private func endSession(_ state: inout State, clearCache: Bool) -> Effect<Action> {
+        state.currentUser = nil
+        state.main = nil
+        // The token belongs to the device and outlives the session,
+        // but this standing does not: it was registered against the
+        // user who just left. The broker replays the token to the
+        // listener that the next sign-in starts, which registers it
+        // afresh against whoever that is.
+        state.pushRegistration = .none
+        // Drop the cached home list before rebuilding the gate, or
+        // the fresh state seeds itself straight back out of it.
+        //
+        // Cleared at all because it is one household's data: a
+        // session that has ended must not leave its home names on
+        // the device for whoever signs in next.
+        if clearCache {
+            state.homeGate.$cachedHomes.withLock { $0 = [] }
+        }
+        state.homeGate = HomeManagementFeature.State()
+        return .merge(
+            .cancel(id: CancelID.currentUser),
+            .cancel(id: CancelID.deviceToken),
+            // Including a registration still backing off. It would
+            // authorise as nobody, and the token belongs to whoever
+            // signs in next.
+            .cancel(id: CancelID.deviceRegistration),
+            // On the same terms as the cached home list above: a
+            // household's faces are a household's data, and the
+            // directory outlives every screen that filled it. An
+            // effect rather than a line in the reducer because it
+            // is the main actor's state, not this one's.
+            .run { _ in await AvatarDirectory.shared.clear() }
+        )
     }
 
     /// Asks iOS for an APNs token and forwards every token it hands back.
@@ -401,6 +550,12 @@ public struct AppFeature: Sendable {
         // subscription rather than opening a second one of its own.
         if state.main?.settings.homes != homes {
             state.main?.settings.applyHomes(homes)
+        }
+        // A tab container built while the session is still being restored
+        // tells Settings to hold a sign-out until it has answered.
+        let provisional = state.isProvisional
+        if state.main?.settings.isAwaitingSession != provisional {
+            state.main?.settings.isAwaitingSession = provisional
         }
         // The token almost always arrives before this container exists — it is
         // asked for at sign-in, while the home list is still in flight — and a

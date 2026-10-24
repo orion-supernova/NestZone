@@ -21,6 +21,14 @@ public struct SettingsFeature: Sendable {
         /// here — this screen displays it, and sign-out unregisters it.
         public var pushRegistration: PushRegistration = .none
         public var notificationStatus: UNAuthorizationStatus = .notDetermined
+        /// The launch is still restoring the session behind these tabs, so this
+        /// device's push token is not known to the server yet and a sign-out
+        /// now could not unregister it. Owned by `AppFeature`.
+        public var isAwaitingSession = false
+        /// A sign-out was confirmed and is on its way: waiting for the restore
+        /// (see above) or already running. Draws the row as busy.
+        public var isSigningOut = false
+        var signOutSent = false
         public var isSendingTestPush = false
         /// The row shows the first eight characters, which is all you need to
         /// pick this device out of a list. Matching one against a backend row,
@@ -164,6 +172,9 @@ public struct SettingsFeature: Sendable {
         case openAppStoreTapped(URL)
         case signOutTapped
         case signOutConfirmed
+        /// The restore behind the tabs has answered (or has nothing to
+        /// answer with), so a sign-out that was waiting for it can go.
+        case sessionReady
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<Alert>)
@@ -181,6 +192,11 @@ public struct SettingsFeature: Sendable {
             /// Customize belongs to the tab bar, not to Settings, so the tab
             /// container opens it — over this sheet.
             case customizeTapped
+            /// The sign-out finished. Raised so the root ends the session
+            /// itself, rather than relying on the SDK announcing it: the SDK
+            /// says nothing the root will act on while the launch is still
+            /// restoring.
+            case signedOut
         }
     }
 
@@ -443,14 +459,19 @@ public struct SettingsFeature: Sendable {
                 return .none
 
             case .alert(.presented(.confirmSignOut)), .signOutConfirmed:
-                // Deliberately `token` and not "the token the server told us
-                // it took": an earlier launch may have registered this same
-                // token successfully, and skipping the unregister because
-                // *this* launch could not confirm it leaves the device
-                // receiving a household's notifications after leaving it.
-                return .run { [token = state.pushRegistration.token] _ in
-                    await auth.signOut(token)
-                }
+                state.isSigningOut = true
+                // Before the restore has answered this device's token has not
+                // been registered, so there is nothing to unregister, and a
+                // sign-out now would leave it receiving the household's
+                // notifications. Wait: `AppFeature` sends `.sessionReady` when
+                // the restore has answered. If the restore ends in a refusal
+                // the tabs go and there is nothing to unregister.
+                guard !state.isAwaitingSession else { return .none }
+                return signOut(&state)
+
+            case .sessionReady:
+                guard state.isSigningOut, !state.isAwaitingSession else { return .none }
+                return signOut(&state)
 
             case .destination(.presented(.editName(.finished))):
                 state.destination = nil
@@ -462,6 +483,22 @@ public struct SettingsFeature: Sendable {
         }
         .ifLet(\.$destination, action: \.destination)
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+extension SettingsFeature {
+    /// Signs out, once. Deliberately `token` and not "the token the server told
+    /// us it took": an earlier launch may have registered this same token
+    /// successfully, and skipping the unregister because *this* launch could not
+    /// confirm it leaves the device receiving a household's notifications after
+    /// leaving it.
+    fileprivate func signOut(_ state: inout State) -> Effect<Action> {
+        guard !state.signOutSent else { return .none }
+        state.signOutSent = true
+        return .run { [token = state.pushRegistration.token] send in
+            await auth.signOut(token)
+            await send(.delegate(.signedOut))
+        }
     }
 }
 

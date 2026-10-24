@@ -29,6 +29,9 @@ public final class ConvexConnection: @unchecked Sendable {
     static let log = Logger(subsystem: "com.walhallaa.NestZone", category: "Convex")
 
     public let authProvider: ConvexAppleAuthProvider
+    /// Reads and writes wait here while an optimistic launch restores the
+    /// session in the background. Open on every other launch. See `AuthGate`.
+    let gate = AuthGate()
     let client: ConvexClientWithAuth<ConvexAuthTokens>
 
     private let diagnostics = DiagnosticsBag()
@@ -133,6 +136,18 @@ public final class ConvexConnection: @unchecked Sendable {
 
                 while !Task.isCancelled {
                     do {
+                        // Before every attempt, re-opens included: a query
+                        // that starts before the session is back is dead on
+                        // arrival (see `AuthGate`). Instant once it is open.
+                        do {
+                            try await self.gate.wait()
+                        } catch {
+                            // Cancelled, or the stored session was refused and
+                            // the root is already on its way to the sign-in
+                            // screen. Neither is a failure of the query, and
+                            // an error here would raise an alert over it.
+                            return continuation.finish()
+                        }
                         for try await value in self.attemptSubscription(to: name, args: boxed.args, as: T.self) {
                             // A value proves the query is not broken, so a
                             // long-lived stream gets its full budget back after
@@ -281,6 +296,7 @@ public final class ConvexConnection: @unchecked Sendable {
     /// creation and every update and delete in the app. `Discarded` accepts any
     /// JSON shape and keeps none of it.
     public func mutate(_ name: String, args: [String: ConvexEncodable?]? = nil) async throws {
+        try await awaitSession(for: name)
         do {
             let _: Discarded? = try await client.mutation(name, with: args)
         } catch {
@@ -294,6 +310,7 @@ public final class ConvexConnection: @unchecked Sendable {
         args: [String: ConvexEncodable?]? = nil,
         as type: T.Type = T.self
     ) async throws -> T {
+        try await awaitSession(for: name)
         do {
             return try await client.mutation(name, with: args)
         } catch {
@@ -308,10 +325,29 @@ public final class ConvexConnection: @unchecked Sendable {
         args: [String: ConvexEncodable?]? = nil,
         as type: T.Type = T.self
     ) async throws -> T {
+        try await awaitSession(for: name)
         do {
             return try await client.action(name, with: args)
         } catch {
             throw Self.mapped(error, at: name)
+        }
+    }
+
+    /// Holds a write back until the launch's session restore has finished.
+    ///
+    /// A write is never sent without its identity: it would be refused, and
+    /// nothing would send it again. While the restore is only slow it waits, up
+    /// to `AuthGate.writeLimit`; past that, or once the restore has found the
+    /// network gone, it fails with `.offline`, which every caller already
+    /// answers by putting the old value back. Writes that waited are released in
+    /// the order they were made and then run in parallel, like any others.
+    private func awaitSession(for name: String) async throws {
+        do {
+            try await gate.admit()
+        } catch {
+            let mapped = AppError(error)
+            Self.log.error("\(name, privacy: .public) not sent: \(mapped.diagnostic, privacy: .public)")
+            throw mapped
         }
     }
 

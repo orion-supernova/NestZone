@@ -15,6 +15,8 @@ import UIKit
 /// real one with nothing to find.
 enum LaunchWarmup {
     static func start() {
+        // The Keychain question the launch decision asks (see the store).
+        KeychainTokenStore.primeLaunchLookup()
         Task.detached(priority: .userInitiated) {
             // The same route SwiftUI takes for `Text(LocalizedStringResource)`:
             // the catalog's string, parsed as Markdown, then handed to UIKit.

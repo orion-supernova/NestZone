@@ -25,8 +25,33 @@ final class FrameMeter: NSObject {
     private var windowStart: CFTimeInterval = 0
     private let verbose = UserDefaults.standard.integer(forKey: "frameMeter") >= 2
 
+    /// Launch, as the frame meter sees it: milliseconds since the process was
+    /// created, logged when the launch screen first appears and on the first
+    /// frame after the tab container does. The process's own start time, so it
+    /// includes the time before `main` (dyld, which a simulator makes slow).
+    private var todayPending = false
+    private var todayLogged = false
+
+    private func sinceLaunch() -> Int {
+        var info = kinfo_proc()
+        var size = MemoryLayout<kinfo_proc>.stride
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
+        guard sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0) == 0 else { return -1 }
+        let start = info.kp_proc.p_un.__p_starttime
+        let began = Date(timeIntervalSince1970: TimeInterval(start.tv_sec) + TimeInterval(start.tv_usec) / 1e6)
+        return Int(Date().timeIntervalSince(began) * 1000)
+    }
+
+    /// The tab container is in the hierarchy; the next frame is the one that
+    /// draws it.
+    func todayAppeared() {
+        guard link != nil, !todayLogged else { return }
+        todayPending = true
+    }
+
     func startIfAsked() {
         guard link == nil, UserDefaults.standard.integer(forKey: "frameMeter") > 0 else { return }
+        log.notice("launch: first view \(self.sinceLaunch()) ms after process start")
         let link = CADisplayLink(target: self, selector: #selector(tick))
         link.add(to: .main, forMode: .common)
         self.link = link
@@ -35,6 +60,11 @@ final class FrameMeter: NSObject {
     @objc private func tick(_ link: CADisplayLink) {
         let now = link.timestamp, expected = link.targetTimestamp - link.timestamp
         defer { last = now }
+        if todayPending {
+            todayPending = false
+            todayLogged = true
+            log.notice("launch: Today first frame \(self.sinceLaunch()) ms after process start")
+        }
         guard last > 0, expected > 0 else { windowStart = now; return }
         let interval = now - last
         frames += 1

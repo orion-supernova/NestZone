@@ -585,10 +585,19 @@ public struct SettingsView: View {
     private var accountSection: some View {
         Section {
             Button(role: .destructive) { store.send(.signOutTapped) } label: {
-                Label { Text(L10n.settingsLogoutButtonTitle) } icon: {
-                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                HStack {
+                    Label { Text(L10n.settingsLogoutButtonTitle) } icon: {
+                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                    }
+                    // Waiting for the launch's restore to answer before the
+                    // device is unregistered; see `SettingsFeature`.
+                    if store.isSigningOut {
+                        Spacer()
+                        ProgressView()
+                    }
                 }
             }
+            .disabled(store.isSigningOut)
         } header: {
             Text(L10n.settingsAccountTitle)
         }
