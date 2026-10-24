@@ -109,18 +109,18 @@ extension SharedKey where Self == FileStorageKey<[Home]>.Default {
     }
 }
 
-extension SharedKey where Self == FileStorageKey<CompanionHouse>.Default {
-    /// One home's companion: the one growing, the album, the jar, what is out
-    /// in the scene and the days the house celebrates.
+extension SharedKey where Self == FileStorageKey<CompanionHouse.Lab>.Default {
+    /// One home's Lab on this phone: a local preview for development builds
+    /// (a pretend mood or day, points and coins that are not the house's).
+    /// Nothing in it is ever sent to the server.
     ///
-    /// On this device only, one file per home, while the companion is an MVP
-    /// being tried on development builds; the server version replaces the
-    /// storage and keeps the shape. Documents, like `cachedHomes`, so a
-    /// low-storage purge does not take somebody's album with it.
-    public static func companion(_ homeID: HomeID) -> Self {
+    /// The house's companion itself is the server's now (`CompanionClient`).
+    /// The MVP's own file, `companion-<home>.json`, is only read once, to be
+    /// offered to the house (`LocalCompanion`), and is never written.
+    public static func companionLab(_ homeID: HomeID) -> Self {
         Self[
-            .fileStorage(.documentsDirectory.appending(component: "companion-\(homeID.rawValue).json")),
-            default: .empty
+            .fileStorage(.documentsDirectory.appending(component: "companionLab-\(homeID.rawValue).json")),
+            default: CompanionHouse.Lab()
         ]
     }
 }

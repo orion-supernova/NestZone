@@ -169,9 +169,30 @@ before changing anything here.
 
 - **An MVP on Debug builds only** (`CompanionFlag`). Release builds compile it and
   never draw it; turning it on is part of shipping it, with its changelog entry.
-- Growth is read from the chores' `completed_at`, which every phone already
-  receives; everything else is on the device per home
-  (`SharedKey.companion`) until the server version replaces that storage.
+- **The companion is the house's, on the server** (`CompanionClient`: live
+  `companion:forHome`, `companion:album` while its sheet is open, writes and
+  `shop:buy`; all through `ConvexConnection`). Growth and "ready" are the
+  server's; the client counts nothing. `State.house` is computed: `served` plus
+  the writes in flight (`writes`) plus the Lab. **An entry shows only while
+  `served` does not already show it**, and on the answer its result is folded
+  into `served` before it goes (a start's and a graduation's wait for the
+  push), so the answer and the push can come in either order; a write is
+  raced against 15 s and a timeout is a failure. A buy debits locally, sends a
+  request id per tap and the card's price, and handles `bought`, `owned`,
+  `short`, `unavailable` and `priceChanged`; the server's prices win. The Lab
+  is a local preview and nothing it influences is sent (`serverShop` is built
+  from `served` and `now` only). What the card draws is stored and assigned
+  only on change (`refresh`), and the card is small views that read their own
+  part. The MVP's one-phone file is offered once per person and home to
+  `importLocal` and kept. `-nestieBench 1` runs it signed out against a
+  stand-in server (`-nestieOrder pushFirst|answerFirst`).
+- **A graduation is never lost.** When `start` graduates a ready companion in
+  the same write (`graduated`), the moment is held in `State.moment` (memory
+  only: after a relaunch the album card is the record) and plays once, 450 ms
+  after no sheet is open and none is about to open (`momentReady`, a delayed
+  action: a sheet presented in the action that dismisses another is dropped;
+  `pendingSheet` and `placeOnOpen` say what is about to open). Closing the
+  ceremony ends the moment; closing anything else lets it play.
 - All art and motion are code (SwiftUI `Canvas`), by decision: no paid tools. `CompanionScene` draws from a `Snapshot` read in
   `body` — state read only inside the canvas closure is not tracked, and the
   scene drew without its tree.

@@ -8215,9 +8215,9 @@ public enum L10n {
         r("lab_title", "Lab")
     }
 
-    /// Development builds only · stays on this phone
+    /// Local preview · nothing is saved to the house
     public static var labNote: LocalizedStringResource {
-        r("lab_note", "Development builds only · stays on this phone")
+        r("lab_note", "Local preview · nothing is saved to the house")
     }
 
     /// Grow
@@ -9334,5 +9334,39 @@ public enum L10n {
     /// Best value
     public static var storeBestValue: LocalizedStringResource {
         r("store_best_value", "Best value")
+    }
+
+    // MARK: - Nestie on the server
+
+    /// Not for sale right now
+    public static var cardUnavailableTitle: LocalizedStringResource {
+        r("card_unavailable_title", "Not for sale right now")
+    }
+
+    /// It isn't on sale today, so nothing was spent.
+    public static var cardUnavailableLine: LocalizedStringResource {
+        r("card_unavailable_line", "It isn't on sale today, so nothing was spent.")
+    }
+
+    /// Couldn't buy it
+    public static var cardOfflineTitle: LocalizedStringResource {
+        r("card_offline_title", "Couldn't buy it")
+    }
+
+    /// Nothing was spent. Check your connection and try again.
+    public static var cardOfflineLine: LocalizedStringResource {
+        r("card_offline_line", "Nothing was spent. Check your connection and try again.")
+    }
+
+    // MARK: - Nestie, step 2 review
+
+    /// Nestie couldn't be read just now
+    public static var companionUnreadable: LocalizedStringResource {
+        r("companion_unreadable", "Nestie couldn't be read just now")
+    }
+
+    /// Ready on %1$@
+    public static func companionReadyOn(_ a0: String) -> LocalizedStringResource {
+        r("companion_ready_on", "Ready on \(a0)")
     }
 }

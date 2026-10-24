@@ -90,7 +90,7 @@ private struct ChooseView: View {
         #if DEBUG || MEASURE
         .task { await scrollForever() }
         #endif
-        .navigationTitle(Text(store.house.album.isEmpty ? L10n.companionMeetTitle(String(localized: L10n.companionBrand)) : L10n.companionNextTitle))
+        .navigationTitle(Text(store.house.albumCount == 0 ? L10n.companionMeetTitle(String(localized: L10n.companionBrand)) : L10n.companionNextTitle))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -139,7 +139,7 @@ private struct ChooseView: View {
             ShopGrid(columns: 2) {
                 ForEach(shelved(species, shop)) { kind in
                     SpeciesTile(
-                        species: kind, seed: "\(store.homeID.rawValue)-\(store.house.album.count)",
+                        species: kind, seed: "\(store.homeID.rawValue)-\(store.house.albumCount)",
                         standing: shop.standing(of: kind), southern: store.southern, now: store.clock
                     ) {
                         store.send(.growTapped(kind), animation: ShopMotion.cardIn)
@@ -434,11 +434,16 @@ private struct AlbumView: View {
 
     var body: some View {
         ScrollView {
-            if store.house.album.isEmpty {
+            if store.house.albumCount == 0 {
                 Text(L10n.albumEmpty)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .oneLine()
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 40)
+            } else if store.house.album.isEmpty {
+                // The house has graduated some; their cards are on their way.
+                ProgressView()
                     .frame(maxWidth: .infinity)
                     .padding(.top, 40)
             } else {
@@ -528,8 +533,8 @@ private struct HolidaysView: View {
     }
 
     private func when(_ holiday: Holiday) -> String {
-        if holiday.isUnderway(on: store.clock, region: store.region) { return String(localized: L10n.holidayNow) }
-        guard let next = holiday.next(after: store.clock, region: store.region) else { return "" }
+        if holiday.isUnderway(on: store.clock, region: store.placeRegion) { return String(localized: L10n.holidayNow) }
+        guard let next = holiday.next(after: store.clock, region: store.placeRegion) else { return "" }
         return String(localized: L10n.holidayNext(next.formatted(Date.FormatStyle().day().month(.wide).year().locale(L10n.locale))))
     }
 }
@@ -560,7 +565,7 @@ private struct LabView: View {
             Section(header: Text(L10n.labDay)) {
                 Button { store.send(.labDate(nil)) } label: { Text(L10n.labToday).oneLine() }
                 ForEach(Holiday.all) { holiday in
-                    if let start = holiday.next(after: Date(), region: store.region) {
+                    if let start = holiday.next(after: Date(), region: store.placeRegion) {
                         Button { store.send(.labDate(Calendar.current.date(bySettingHour: 20, minute: 0, second: 0, of: start))) } label: {
                             Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))").oneLine()
                         }
@@ -595,6 +600,30 @@ private struct LabView: View {
 /// the album and Leaves for the jar. Short, and only ever started by a tap.
 struct CeremonyView: View {
     let store: StoreOf<CompanionFeature>
+
+    /// Who is graduating: the one on Today, or — when choosing the next one
+    /// graduated a ready one in the same write — the one that was.
+    private struct Subject {
+        var companion: Companion
+        var stage: Int
+        var days: Int
+        var paid: Coins?
+    }
+
+    private var subject: Subject? {
+        if let moment = store.moment {
+            let isPet = moment.species.isPet
+            return Subject(
+                companion: Companion(species: moment.species, seed: moment.seed, startedAt: moment.startedAt),
+                stage: CompanionMath.stageCount(isPet: isPet) - 1,
+                days: Graduate(id: UUID(), species: moment.species, seed: moment.seed,
+                               startedAt: moment.startedAt, graduatedAt: moment.graduatedAt).days,
+                paid: moment.paid
+            )
+        }
+        guard let current = store.look else { return nil }
+        return Subject(companion: current, stage: store.stage, days: store.day, paid: Rewards.graduation)
+    }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var beat = 0
 
@@ -604,9 +633,9 @@ struct CeremonyView: View {
             if !reduceMotion { Petals().ignoresSafeArea().allowsHitTesting(false) }
             VStack(spacing: 18) {
                 Spacer()
-                if let current = store.current {
+                if let subject {
                     CompanionScene(
-                        companion: current, progress: 1, mood: .bright, stage: store.stage,
+                        companion: subject.companion, progress: 1, mood: .bright, stage: subject.stage,
                         layout: store.visibleLayout, southern: store.southern, now: store.clock,
                         choreTick: 0, careTick: beat
                     )
@@ -622,21 +651,25 @@ struct CeremonyView: View {
                         .foregroundStyle(.white)
                         .oneLine()
                         .opacity(beat >= 2 ? 1 : 0)
-                    Text(L10n.ceremonyGrownIn(String(localized: current.species.title), store.day))
+                    Text(L10n.ceremonyGrownIn(String(localized: subject.companion.species.title), subject.days))
                         .font(.body)
                         .foregroundStyle(SheetInk.caption)
                         .oneLine()
                         .opacity(beat >= 2 ? 1 : 0)
-                    Text(L10n.ceremonyCoins(Rewards.graduation.leaves, Rewards.graduation.sparkles))
-                        .font(.headline)
-                        .foregroundStyle(Palette.lemon)
-                        .oneLine()
-                        .opacity(beat >= 3 ? 1 : 0)
-                        .scaleEffect(beat >= 3 ? 1 : 0.6)
+                    if let paid = subject.paid {
+                        Text(L10n.ceremonyCoins(paid.leaves, paid.sparkles))
+                            .font(.headline)
+                            .foregroundStyle(Palette.lemon)
+                            .oneLine()
+                            .opacity(beat >= 3 ? 1 : 0)
+                            .scaleEffect(beat >= 3 ? 1 : 0.6)
+                    }
                 }
                 Spacer()
                 PrimaryButton(L10n.ceremonyAlbum, symbol: "book.closed.fill") {
-                    store.send(.ceremonyFinished, animation: Motion.arrive)
+                    // A graduation that already happened (a start brought it)
+                    // only closes; the one on Today graduates the companion.
+                    store.send(store.moment == nil ? .ceremonyFinished : .momentDismissed, animation: Motion.arrive)
                 }
                 .opacity(beat >= 3 ? 1 : 0)
                 .padding(.horizontal, Metrics.screenPadding)

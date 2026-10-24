@@ -112,6 +112,7 @@ public struct MainFeature: Sendable {
             self.now = now
             var companion = CompanionFeature.State(homeID: homeID)
             companion.memberCount = memberCount
+            if CompanionFlag.isEnabled { companion.userID = user?.id }
             self.companion = companion
             self.settings = SettingsFeature.State(homeID: homeID, home: home, user: user)
             self.inbox = InboxFeature.State(homeID: homeID, currentUserID: user?.id)
@@ -243,6 +244,7 @@ public struct MainFeature: Sendable {
                 return .send(.companion(.completionsUpdated(state.homeTab.completions)))
             case .home(.membersUpdated):
                 state.companion.memberCount = max(state.homeTab.members.count, 1)
+                if CompanionFlag.isEnabled { state.companion.refresh() }
                 return .none
             // A birthday in the calendar puts the party hat out for the day.
             case let .home(.upcomingEventsUpdated(events)):
@@ -551,7 +553,10 @@ extension MainFeature.State {
         if homeTab.now != now.now { homeTab.now = now.now }
         let dock = now.dockItem
         if homeTab.dock != dock { homeTab.dock = dock }
-        if companion.now != now.now { companion.now = now.now }
+        if companion.now != now.now {
+            companion.now = now.now
+            if CompanionFlag.isEnabled { companion.refresh() }
+        }
         plans.segments[id: .recipes]?.screen.apply(tonight: tonight)
     }
 
@@ -571,6 +576,7 @@ extension MainFeature.State {
         now.currentUserID = userID
         if now.members.isEmpty { now.memberCount = memberCount }
         settings.user = user
+        if CompanionFlag.isEnabled { companion.userID = userID }
         settings.home = home
         inbox.currentUserID = user?.id
     }

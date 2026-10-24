@@ -200,6 +200,9 @@ struct MainView: View {
         // The dock is on every tab, so what it reads is subscribed to here,
         // for the life of the tab bar rather than of any one tab.
         .task { await store.send(.now(.task)).finish() }
+        // The house's companion is shared, so it is read for the life of the
+        // tab bar too; Release builds draw none of it and never ask.
+        .task { if CompanionFlag.isEnabled { await store.send(.companion(.task)).finish() } }
     }
 
     /// Whether the dock is drawn. It steps aside where the screen has a field

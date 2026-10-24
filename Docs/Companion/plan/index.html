@@ -378,7 +378,7 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
     <div class="col">
       <span class="eyebrow">Start here · 24 October 2026</span>
       <h2>Where we left off, and what's next</h2>
-      <p class="lead">Segment switches are done: on your iPhone 16e every switch is two or three frames at worst. The server side of Nestie — one jar, album and scene per house — passed three reviews and is live, added beside everything else; the app doesn't read it yet. Nothing is released; <code>stage</code> hasn't moved and Nestie is still on development builds only.</p>
+      <p class="lead">Segment switches are done: on your iPhone 16e every switch is two or three frames at worst. Nestie is now one per house: the server side is live and the app reads and writes it, on development builds. Launch opens straight on Today. Nothing is released; <code>stage</code> hasn't moved.</p>
     </div>
     <div class="nextgrid">
       <div class="box nextup">
@@ -394,18 +394,25 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
       <div class="box">
         <h3>Now, in order</h3>
         <ol>
-          <li><b>Launch.</b> The first second after opening the app had 138–222 ms frames on the phone, and the very first frame up to half a second. Being profiled now, on the simulator, along with a lead that the switch's fade is drawn offscreen over the glass.</li>
-          <li><b>Shared by the house: the app's side.</b> The server is live since 24 October: growth credited once per chore, nothing graduates in under six days, buying that can never charge twice. Three reviews found and closed two ways to mint Sparkles and a way to grow twice as fast. Next the app switches its Nestie over to it.</li>
-          <li><b>The rest of the phone measurement:</b> Today, Choose, the shop, cold launch.</li>
+          <li><b>Try it signed in.</b> The simulator lost its sign-in during the launch work and only you can sign it back in. Then: a real Nestie on your house, one care tap, a start, the album, and the frame meter on Today.</li>
+          <li><b>On your phone:</b> the launch (does Today really come ~0.5 s sooner?), the segment fade's offscreen cost, Today, Choose, the shop and cold launch.</li>
           <li><b>The vote</b> for the next one, and at most three notifications.</li>
           <li><b>The jar takes money:</b> StoreKit 2 or RevenueCat, chosen then. The free test Sparkles are reset when it does.</li>
           <li><b>The art pass</b>, <b>the finale</b>, then <b>release</b>.</li>
         </ol>
+        <h3>Done since 23 October</h3>
+        <ul>
+          <li><b>Nestie, shared by the house.</b> One jar, album and scene per house on the server. Growth credited once per chore; nothing graduates in under six days; buying can never charge twice or at a price the card didn't show. Three server reviews closed two ways to mint Sparkles and a way to grow twice as fast. The app shows every change at once and takes it back if the server says no, whichever arrives first; a graduation is never lost, even with a sheet open.</li>
+          <li><b>Launch opens on Today</b> from what the phone already has while the sign-in finishes behind it, instead of waiting ~0.5 s every time. Nothing is sent before sign-in; a refused sign-in goes to the sign-in screen and forgets the house.</li>
+          <li><b>The first text drawn</b> no longer pays a one-time setup cost inside the launch frame.</li>
+        </ul>
         <h3>Decided for you</h3>
         <ul>
           <li>Test Sparkles from the development builds don't survive into the paid jar.</li>
           <li>The server's pace of growth is the one that counts. A stage already paid is never paid again or taken back.</li>
           <li>Only test accounts can bring a phone's Nestie into the shared one, and they bring Leaves only.</li>
+          <li>Picking the next one while the current one is ready graduates it first: the house keeps its card and reward.</li>
+          <li>A graduation that lands while a sheet is open plays when the sheet closes.</li>
         </ul>
         <h3>Look at on your phone</h3>
         <ul>
@@ -418,7 +425,7 @@ details.earlier { margin-top: 4px; } details.earlier .faq { margin-top: 14px; }
     <div class="box">
       <h3>Picking it up in a new session</h3>
       <p class="muted">A new session remembers nothing of this one. Paste this to start it:</p>
-      <pre class="prompt" id="resumePrompt">Read Docs/Companion/HANDOFF.md first, then CLAUDE.md. Segment switching is done and measured on a phone (step 0 and step 1). Next: finish the launch and offscreen-fade work, get the Nestie server code (step 2, backend/convex/companion.ts and shop.ts) through review and deploy it additively, then switch the app's companion over to it. Use the specialist agents in .claude/agents. Build and typecheck only, no tests.</pre>
+      <pre class="prompt" id="resumePrompt">Read Docs/Companion/HANDOFF.md first, then CLAUDE.md. Segment switching is done and measured on a phone (step 0 and step 1). Nestie is on the server and the app uses it (step 2); launch is optimistic (step 0b). Next: sign the simulator in and check Nestie on a real house, then measure launch and the remaining screens on a phone (step 1), then step 3, the vote. Use the specialist agents in .claude/agents. Build and typecheck only, no tests.</pre>
       <div class="btns"><button class="act" id="copyPrompt" type="button">Copy</button></div>
     </div>
   </section>

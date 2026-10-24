@@ -4885,6 +4885,40 @@
         }
       }
     },
+    "card_offline_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was spent. Check your connection and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiçbir şey harcanmadı. Bağlantını kontrol edip tekrar dene."
+          }
+        }
+      }
+    },
+    "card_offline_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't buy it"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alınamadı"
+          }
+        }
+      }
+    },
     "card_pay": {
       "extractionState": "manual",
       "localizations": {
@@ -5034,6 +5068,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hemen büyümeye başlar"
+          }
+        }
+      }
+    },
+    "card_unavailable_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It isn't on sale today, so nothing was spent."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün satışta değil, hiçbir şey harcanmadı."
+          }
+        }
+      }
+    },
+    "card_unavailable_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not for sale right now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şu an satılmıyor"
           }
         }
       }
@@ -5837,6 +5905,23 @@
         }
       }
     },
+    "companion_ready_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready on %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ günü hazır"
+          }
+        }
+      }
+    },
     "companion_scene_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -5867,6 +5952,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@, %2$@, yüzde %3$lld büyüdü, %4$@"
+          }
+        }
+      }
+    },
+    "companion_unreadable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nestie couldn't be read just now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nestie şu an okunamadı"
           }
         }
       }
@@ -21316,13 +21418,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Development builds only · stays on this phone"
+            "value": "Local preview · nothing is saved to the house"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece geliştirme sürümü · bu telefonda kalır"
+            "value": "Sadece önizleme · eve kaydedilmez"
           }
         }
       }

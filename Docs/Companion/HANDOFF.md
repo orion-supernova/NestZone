@@ -487,6 +487,85 @@ In order — each step can go to testers on its own:
      `toolbarOverflowMenu`, `CrossFadeNavigationTransition`,
      `TabsPickerStyle`) does a different job, so nothing is behind
      `#available(iOS 27, *)`.
+0b. **Launch** — an optimistic launch built (24 October), not yet measured
+   cleanly.
+   - *What the previous pass found* (Release + `MEASURE`, iPhone 17
+     simulator): about 700 ms before `main` is simulator dyld, which a phone
+     does not pay; about 140 ms of store init; about 500 ms of session restore
+     (network) with the launch screen up and the main thread idle; then a
+     570 ms Today frame, nearly all SwiftUI building the `TabView` and
+     `NavigationStack` for the first time (app code about 60 ms; the dock and
+     Nestie each under 10%). `LaunchWarmup` took the first `Text`'s cost off:
+     about 130 ms of CPU, 27 ms of wall clock. The offscreen-pass lead on the
+     segment fades has a structural explanation (glass and vibrancy layers
+     under a fractional opacity) that the simulator cannot show; on a phone,
+     run Animation Hitches with and without the fade, and if it confirms it a
+     snapshot crossfade is the candidate. Tooling: `xctrace` on the simulator
+     shows running samples only, so use `sample <pid> 5 1` right after
+     `simctl launch`; the Simulator's Debug menu and `CA_COLOR_OFFSCREEN` are
+     not available headless; an aborted `xctrace` leaves `instruments*.ktrace`
+     in `$TMPDIR`.
+   - *What was built.* With a stored session and a cached home, Today and the
+     tabs are drawn from the cache while the restore runs behind them
+     (`AppFeature.State.isProvisional`). convex-swift does not wait for auth:
+     `subscribe`, `mutation` and `action` queue their message at once, and
+     the Rust client sends it with no identity (`convex` crate, `base_client`:
+     nothing in `mutation`/`subscribe` looks at the auth state). A
+     `requireUser` query throws, which ends the Combine publisher for good, and
+     a mutation is refused, not parked. So `ConvexConnection.gate`
+     (`AuthGate`) holds them: reads wait for the session, writes wait too and
+     fail with `.offline` once the restore has found no network (the callers'
+     rollback puts the old value back), and a refused session ends the reads
+     quietly (no alert) and fails the writes with `.notAuthenticated`. The
+     provider's single restore and its semaphore are untouched; an optimistic
+     launch retries every few seconds, forever, instead of three times and the
+     retry screen. Signing out from Settings before the restore has answered
+     stays on a spinner until the restore ends or 10 s pass, then signs out with
+     whatever push token exists and ends the session itself (the SDK's
+     `.unauthenticated` is ignored while provisional, and `CurrentValueSubject`
+     re-sends on `logout()` but only on its success path, so it cannot be
+     relied on). If the token has not arrived by then, the sign-out
+     unregisters the last token the device registered with (`PushTokenMemory`,
+     in `UserDefaults`, written when a register succeeds), so an earlier
+     launch's registration does not outlive it; it is forgotten once the server
+     has dropped it, and kept if the call failed. A token iOS reissued between
+     launches is handled at register time: the stale one is unregistered and the
+     new one remembered, and sign-out unregisters both this launch's and the
+     remembered token when they differ. Convex runs one client's mutations in submission order, so an unregister
+     cannot overtake a register already sent. A write waits at most 8 s;
+     released writes run in parallel, in arrival order at the start, like every
+     other write. A refused
+     session goes to the sign-in screen and now also
+     clears the cached household (before, the file survived such a launch). A
+     rejection also skips the one-second retry that used to precede it.
+   - *Hooks.* `-optimisticLaunch 0` launches the old way, to measure the two
+     against each other; with `-frameMeter 1` the log carries `launch: first
+     view` and `launch: Today first frame`, in milliseconds since the process
+     was created.
+   - *Numbers* (simulator, Release + `MEASURE`, Today first frame since process
+     start, ms): the machine was at a load average of 100+ because of other
+     builds, so these are ordering, not size. Old / optimistic, three
+     interleaved pairs: 1971 / 1348, 1654 / 1485, 2128 / 1805; first view was
+     740–1100 in both. The restore overlaps the Today build now, so the
+     difference should approach the restore's 500 ms on a quiet machine.
+     Not done: five clean pairs, and a `sample`. The simulator lost its
+     session part-way (see the report: the app is terminated seconds after
+     launch in the script, which can kill an exchange that has rotated the
+     token), and it needs a signed-in account again.
+   - *A phone must confirm:* Today's first frame with the network on and with
+     it off (the cached Today should stay and the writes should roll back);
+     that no placeholder flicker or entrance replays when live data lands; a
+     refused session (revoke it on the server) lands on sign-in with no
+     household left on screen; sign-out before the restore answers, online
+     (signs out when the restore ends) and offline (after 10 s); offline, sign
+     out, sign in again, and `users:me` and `homes:listMine` come up. **The
+     roughly 500 ms gain has to be measured on a phone** (and on a quiet
+     simulator): the three simulator pairs above were taken under load.
+   - *Open product question.* The app has no offline indicator except the
+     full-screen retry view, which an optimistic launch never shows. A phone
+     with no signal keeps the cached Today with placeholders and writes that
+     roll back after 8 s, and nothing says why. Whether that needs a cue is the
+     owner's call; nothing was added.
 1. **Measure on a phone** — partly done (24 October): the segment switches.
    - *Setup.* iPhone 16e (60 Hz), iOS 27.0.1, a **Release** build with the
      hooks compiled in (`MEASURE`, CLAUDE.md, Commands), launched under
@@ -547,10 +626,14 @@ In order — each step can go to testers on its own:
      subscription; the feature's state shape stays.
    - Remember: one deployment serves every app version. Add, never remove.
 
-   **The backend is built (24 October), not deployed.** It typechecks, and
+   **The backend is deployed (852fec8, 24 October).** It typechecks, and
    both rounds of the Convex review's blockers are fixed. Nothing existing changed its
-   arguments or its return; the client is untouched. The API freezes when the
-   first client build that calls it ships.
+   arguments or its return. No shipped build calls it yet, so it can still be
+   widened (never narrowed); the API freezes when the first client build that
+   calls it ships. A second, additive round — readiness, `grownSpecies`,
+   graduate-before-start, the wake, `start`'s `requestId`, `RULES_VERSION` 2 —
+   is built and reviewed, waiting on its deploy; after it, run
+   `npx convex run companion:scheduleMissingWakes '{}'` once.
    - *Tables* (all new):
      - `companion_homes`, one per house: the jar's two balances, `welcomed`,
        what was bought (decor and species, bounded by the catalog), the
@@ -583,7 +666,30 @@ In order — each step can go to testers on its own:
        graduation once per slot, and `graduate` refuses anything younger than
        six days. The curve alone could get there in about three — a day
        split across a midnight counts twice — so the floor is held there,
-       not trusted to the arithmetic.
+       not trusted to the arithmetic. That rule is one function,
+       `readiness` (growing, the house's current one, 64 points, six days
+       old), and `graduate`, `start` and `forHome` all ask it.
+     - **A ready one is never let go** (24 October). `start` called while
+       the current one `readiness` says is ready graduates it first, in the
+       same write, through the same `graduateNow` `graduate` uses — the
+       album card, `graduation:<slot>`, the slot moved — and only then
+       starts the new one in the next slot (its stages key on the new
+       `album_count`). Chosen over refusing because the case is a phone
+       whose `graduate` failed and that moved on to Choose, or a second
+       phone choosing mid-ceremony: the house did grow it, so refusing
+       would strand a choice behind an error for a tap-order problem, and
+       releasing it would lose the card and the reward. `start` returns
+       `graduated` so the phone can show it; a late `graduate` for it finds
+       it graduated and pays nothing. The new species is checked against
+       the house after that graduation, so what it just earned counts; a
+       refusal throws and undoes the graduation with it.
+     - **`start` takes an optional `requestId`**, the tap's, stored on the
+       new row (`start_request`) with the one it graduated (`follows`). A
+       retry with the same id while that one is still the house's current
+       returns the first answer — the same `companionId`, `welcome: null`,
+       and `graduated` naming the one it followed with `paid: null` — and
+       releases, starts and pays nothing. Without an id, the 10-second
+       same-species guard still covers a double tap.
    - *Growth is the sim's curve* (`tools/growth_sim.py`), and the server's
      number is the truth (your call, 24 October): a day's life is
      `9·(1−e^(−raw/R_N))`, care at most 2, with the sim's rules (a repeated
@@ -639,11 +745,27 @@ In order — each step can go to testers on its own:
      day and the region at most once in 30, so the hemisphere can't be
      flipped to bring a season's species round early. A phone travelling
      does not move the house.
-   - *Reads.* `companion:forHome`: the version, the house, the one growing
-     (points, stage, ready, paid stage, last care, the caller's care days on
-     it, at most 60), the newest 120 credited things for the mood, the newest
-     30 jar moves (who added, who spent). `companion:album` is its own read,
-     opened with the album. Writes: `setPlace`, `start` (the welcome, once),
+   - *Reads.* `companion:forHome`: the version, the house (with
+     `grownSpecies`, bounded by the catalog, for the shop's "grown them all"),
+     the one growing (points, stage, paid stage, last care, the caller's care
+     days on it, at most 60, and its readiness: `isReady` is `graduate`'s
+     own answer, `pointsReady` the 64 points alone, `readyAt` the six-day
+     floor, `startedAt + 6 days`, which is also what is sent while the points
+     aren't there), the newest 120 credited things for the mood, the newest
+     30 jar moves (who added, who spent). A query doesn't re-run because
+     time passed, so every companion gets exactly one scheduled
+     `companion:wake` at `readyAt`: from `start` right after the insert, and
+     from `importLocal` when it creates one or moves one's start (a wake is
+     pinned to the start it was made for, so one for an old start does
+     nothing). It only stamps `of_age_at` on the row to make every card's
+     read run again; the rule stays the clock. Run early, it reschedules
+     itself at the floor instead of stamping. Companions growing from before
+     the wake existed get theirs from the one-off
+     `companion:scheduleMissingWakes` (the `by_status` range whose floor is
+     still ahead, a page of 200 at a time); duplicates are accepted rather
+     than tracked, because the second wake to run finds `of_age_at` set and
+     does nothing.
+     `companion:album` is its own read, opened with the album. Writes: `setPlace`, `start` (the welcome, once),
      `care`, `graduate`, `setLayout` (filtered as Decorate's Done is),
      `setHolidays`, `importLocal`.
    - *One catalog.* `tools/catalog_export/export_catalog.sh` compiles the
@@ -696,16 +818,80 @@ In order — each step can go to testers on its own:
    - *Deleting a house* drops its `companion_homes` row with the house and
      drains the rest in batches (`companion:purgeHome`), so leaving never
      waits on a long ledger.
-   - *The client swap* (the iOS job): a `CompanionClient` with a live
-     subscription to `forHome`, one-shot or live `album` with its sheet, and
-     the writes above. `CompanionHouse` is filled from the payload (album ids
-     are the UUIDs the server keeps), an optional server `points` on
-     `Companion` wins, and the mood reads `recent` rather than chores alone.
-     The lab moves to a local key. A `requestId` per buy tap and the card's
-     price as `expectedPrice`; `setPlace` only when `tzOffset` is null or
-     somebody changes it on purpose; `importLocal` once, keeping the old file.
-     `recent[].kind`, `jar[].kind` and every status string decode leniently
-     (`decodeLenient`): new kinds will come.
+   - *The client swap* — **done (24 October), not yet run against the real
+     house.** `CompanionClient` (`Core/Network/Clients/`) holds the live
+     `companion:forHome` (the whole card, decoded by `CompanionPayload`; kinds
+     lenient, rows lossy, an unreadable companion is an error state and never
+     "none"), `companion:album` (live only while the album sheet is open; the
+     shop reads `house.grownSpecies`), and the writes `setPlace`, `start`,
+     `care`, `graduate`, `setLayout`, `setHolidays`, `importLocal`, `shop:buy`;
+     all through `ConvexConnection`, so the auth gate covers them.
+     `CompanionFeature.State` keeps its shape: `house` is computed from
+     `served` (the server's) with the in-flight `writes` and the Lab laid over
+     it. Failures alert (`AlertState.failure`), except a care tap, which just
+     un-checks the button. How it holds together:
+     - *An entry shows only while `served` does not already show it* (a buy's
+       debit stops once `served` owns the thing, a start's companion once
+       `served` is growing it, the welcome while `served.welcomed` is false), so
+       the answer and the push can arrive in either order. On the answer, what
+       the server returned is folded into `served` (layout, holidays, care day,
+       the jar after a buy) and the entry goes; a start's and a graduation's
+       entry wait for the push that has the new companion. Graduation is drawn
+       before a start. A timeout (15 s) is a failure; request ids make a late
+       arrival harmless. A lost answer that the push already shows is not an
+       error. Floaters ("+10") fire from the write and the server's real
+       `welcome`/`paid`, once per write, never from a delivery for a write of
+       ours. `-nestieOrder pushFirst|answerFirst` runs either order.
+     - *Buying.* Debit locally, `shop:buy` with a request id per tap and the
+       card's price. `bought` confirms, `owned` shows the item as had,
+       `short` shows "not enough", `priceChanged` re-asks at the server's
+       price, `unavailable` and a network error show a notice on the card. A
+       lost answer keeps the request id, so Try again is the same purchase.
+       `start` has its own per-tap request id and may answer `graduated` (a
+       ready one was graduated first): its coins and a one-time ceremony.
+     - *The timeout* (15 s) is one continuation resumed once by the call, the
+       sleeper or a cancel (`WriteRace`), because the Rust call ignores
+       cancellation and a task group would wait for it; a late success is
+       ignored and the push corrects the screen.
+     - *A graduation is never lost.* One that `start` brought is held in
+       `State.moment` (memory only; after a relaunch the album card is the
+       record) and plays once, 450 ms after no sheet is open and none is about
+       to open (`momentReady`; `pendingSheet`/`placeOnOpen` declare what is
+       about to). Presenting it in the action that closes a sheet is dropped by
+       SwiftUI, hence the delay. A graduation pushed from another phone shows
+       no ceremony today.
+     - Answered start and graduation entries also go when the served companion
+       moves on, and after 120 s; an unanswered choice's request id is dropped
+       once the house is growing something else.
+     - *Ready* is the server's `isReady` as sent; `readyAt` is the "Ready on …"
+       line. The client has no day floor of its own.
+     - *Nothing the Lab influences is sent.* The server calls use `serverShop`
+       (`served` and `now` only), Decorate's Done and Dress go through
+       `serverSafe`, the care gate and key use `now`, a buy under Lab coins
+       stays in the Lab. The Lab is a local preview in its own file
+       (`companionLab-<home>.json`); the test store's Sparkles land there too
+       (no `jar:topUp` yet).
+     - *Place* once per launch, only when the house row lacks it. *Import:* the
+       MVP's file is offered once per person and home (mark in UserDefaults,
+       written on any answer or error that asking again would repeat, never
+       after a transport failure); the file is never changed.
+     - *Delivery cost.* What the card draws (`jar`, `look`, `mood`, `stage`,
+       `visibleLayout`, …) is worked out once per action in `refresh()` and
+       assigned only on change, and the card is built of small views that each
+       read their own part. Measured in the bench (Debug, simulator, Today-like
+       scroll): quiet 120/120 with 0 late; a push every 400 ms that only adds
+       activity 0 late; a push that also moves the points every 2 s, 0–4 late per
+       2 s (it redraws the scene's growth). Before the split the same
+       400 ms push cost 0–3 late per 2 s.
+     - *Catalog version:* `CatalogVersion.exported` (kept by
+       `export_catalog.sh`) is compared with `forHome`'s and logged.
+     - *Bench:* `-nestieBench 1` (`NestieBench.swift`, Debug) runs the real
+       feature against a stand-in server with no session; its header lists the
+       scenario, script, order and failure arguments. Every write was run in
+       both orders. Tests: `CompanionServerTests` (written; the suite was
+       built, not run). Still to do signed in: a real `forHome` decode, one
+       care tap, a start, an album open, the frame meter on the real Today.
+
 3. **The vote for the next one** (a `generic` poll; a new poll kind would decode
    as `.movie` on old builds), and at most three notifications.
 4. **The jar takes money.** Choose StoreKit 2 or RevenueCat; it replaces

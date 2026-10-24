@@ -242,7 +242,7 @@ struct ShopView: View {
         ShopGrid(columns: 2) {
             ForEach(shelved(list, shop)) { kind in
                 SpeciesTile(
-                    species: kind, seed: "\(store.homeID.rawValue)-\(store.house.album.count)",
+                    species: kind, seed: "\(store.homeID.rawValue)-\(store.house.albumCount)",
                     standing: shop.standing(of: kind), southern: store.southern, now: store.clock
                 ) {
                     store.send(.itemTapped(.species(kind)), animation: ShopMotion.cardIn)
@@ -588,7 +588,9 @@ private struct PurchaseCard: View {
         .tint(.primary)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
-        .onChange(of: card.isBought) { _, bought in if bought { pay() } }
+        .onChange(of: card.isBought) { _, bought in
+            if bought { pay() } else { landed = false }
+        }
         .sensoryFeedback(.success, trigger: landed) { _, now in now }
     }
 
@@ -614,10 +616,10 @@ private struct PurchaseCard: View {
             case let .decor(decor):
                 Text(verbatim: decor.symbol).font(.system(size: 58)).padding(.bottom, 10)
             case let .species(species):
-                SpeciesPortrait(species: species, seed: "\(store.homeID.rawValue)-\(store.house.album.count)", hour: stage.portraitHour)
+                SpeciesPortrait(species: species, seed: "\(store.homeID.rawValue)-\(store.house.albumCount)", hour: stage.portraitHour)
             case let .pack(pack):
                 if let first = pack.species.first {
-                    SpeciesPortrait(species: first, seed: "\(store.homeID.rawValue)-\(store.house.album.count)", hour: stage.portraitHour)
+                    SpeciesPortrait(species: first, seed: "\(store.homeID.rawValue)-\(store.house.albumCount)", hour: stage.portraitHour)
                 }
             }
         }
@@ -671,6 +673,10 @@ private struct PurchaseCard: View {
         case .about:
             (card.item.title, String(localized: store.shop.standing(of: card.item)
                 .explanation(for: card.item, southern: store.southern, now: store.clock)))
+        case .notice(.unavailable):
+            (L10n.cardUnavailableTitle, String(localized: L10n.cardUnavailableLine))
+        case .notice(.offline):
+            (L10n.cardOfflineTitle, String(localized: L10n.cardOfflineLine))
         }
         VStack(spacing: 4) {
             Text(heading)
@@ -690,7 +696,7 @@ private struct PurchaseCard: View {
     /// "Kilim is 250 Leaves. The jar has 60 Leaves and 120 Sparkles: 70
     /// Sparkles short." The sum, so nobody has to do it.
     private func shortSum(_ sparkles: Int) -> String {
-        guard let price = card.purchase?.item.price else { return "" }
+        guard let price = card.purchase?.price else { return "" }
         let house = store.house
         return switch price {
         case let .leaves(amount):
@@ -747,7 +753,7 @@ private struct PurchaseCard: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
-        case .bought, .about:
+        case .bought, .about, .notice:
             EmptyView()
         }
     }
@@ -765,7 +771,7 @@ private struct PurchaseCard: View {
     /// What the jar has toward the price, in the price's terms: Leaves and
     /// Sparkles both count toward Leaves, one for one.
     private var shortProgress: (Int, Int, Amount.Currency) {
-        guard let price = card.purchase?.item.price else { return (0, 0, .leaves) }
+        guard let price = card.purchase?.price else { return (0, 0, .leaves) }
         let house = store.house
         return switch price {
         case let .leaves(amount): (min(max(house.leaves, 0) + max(house.sparkles, 0), amount), amount, .leaves)
@@ -827,6 +833,14 @@ private struct PurchaseCard: View {
                 }
                 .opacity(landed ? 1 : 0)
             }
+        case .notice(.unavailable):
+            PrimaryButton(L10n.commonDone) { store.send(.cardDismissed, animation: Motion.exit) }
+        case .notice(.offline):
+            // The same purchase again: the tap keeps its request id, so if the
+            // first one did get through the house is not charged twice.
+            PrimaryButton(L10n.commonRetry) { store.send(.cardBuyTapped, animation: Motion.spring) }
+                .accessibilityIdentifier("CardRetry")
+            SecondaryButton(L10n.commonCancel) { store.send(.cardDismissed, animation: Motion.exit) }
         case .about:
             let standing = store.shop.standing(of: card.item)
             if case .decor = card.item, standing.isUsable, store.sheet != .decorate {
@@ -855,8 +869,11 @@ private struct PurchaseCard: View {
         geometry.launch(coinsPaid, from: jarFrame, to: artFrame)
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.45))
+            // The server can take the purchase back while the coins fly.
+            guard store.card?.isBought == true else { return }
             squash += 1
             try? await Task.sleep(for: .seconds(0.12))
+            guard store.card?.isBought == true else { return }
             withAnimation(Motion.pop) { landed = true }
         }
     }
@@ -1043,7 +1060,7 @@ struct SparkleStoreView: View {
     /// every pack bought toward it — then that it's enough.
     @ViewBuilder
     private var goal: some View {
-        if let pending = store.pending, let price = pending.item.price {
+        if let pending = store.pending, let price = pending.price {
             let short: Int = if case let .short(more) = store.house.checkout(price) { more } else { 0 }
             HStack(spacing: 12) {
                 StageWell(cornerRadius: 12, shadow: false) {
@@ -1078,7 +1095,7 @@ struct SparkleStoreView: View {
     /// The smallest pack that covers what the house is short, if it came here
     /// for something.
     private var enoughPack: SparklePack.ID? {
-        guard let pending = store.pending, let price = pending.item.price, case let .short(more) = store.house.checkout(price) else { return nil }
+        guard let pending = store.pending, let price = pending.price, case let .short(more) = store.house.checkout(price) else { return nil }
         return store.packs.first { $0.sparkles >= more }?.id
     }
 

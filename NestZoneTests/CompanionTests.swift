@@ -230,7 +230,7 @@ struct CompanionTests {
         let halloween = try #require(Holiday.with(.halloween))
         let christmas = try #require(Holiday.with(.christmas))
         func shelf(_ holidays: [Holiday]) -> ShopContext {
-            ShopContext(clock: date(2026, 10, 25), southern: false, owned: [], ownedSpecies: [], album: [],
+            ShopContext(clock: date(2026, 10, 25), southern: false, owned: [], ownedSpecies: [], albumCount: 0, grown: [],
                         holidays: holidays, isBirthday: false)
         }
         #expect(shelf([diwali]).standing(of: DecorItem.fairyLights) == .sale(.leaves(150), freeToday: true))

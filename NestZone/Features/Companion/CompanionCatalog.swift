@@ -196,7 +196,10 @@ public struct ShopContext: Sendable {
     public var southern: Bool
     public var owned: Set<String>
     public var ownedSpecies: Set<String>
-    public var album: [Graduate]
+    /// How many the house has graduated, and which species those were: the
+    /// count comes with every read, the species with the album's cards.
+    public var albumCount: Int
+    public var grown: Set<Species>
     public var holidays: [Holiday]
     public var isBirthday: Bool
     /// For working out a holiday's dates: some move by country.
@@ -272,9 +275,9 @@ public struct ShopContext: Sendable {
 
     func earned(_ reward: Reward) -> Bool {
         switch reward {
-        case let .graduations(count): album.count >= count
+        case let .graduations(count): albumCount >= count
         case .birthday: isBirthday
-        case .grownAll: Species.freeToHave.isSubset(of: Set(album.map(\.species)))
+        case .grownAll: Species.freeToHave.isSubset(of: grown)
         }
     }
 
@@ -446,4 +449,17 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
         guard priced.count == packs.count, packs.count > 1 else { return nil }
         return priced.min { $0.1 < $1.1 }?.0
     }
+}
+
+// MARK: - Which catalog this is
+
+/// The catalog the server was last told about by this file.
+///
+/// `companion:forHome` sends the version of the catalog it prices from
+/// (`catalogVersion`: the generated file's hash, `-r`, the rules' version). A
+/// build that differs logs it, and the server's prices win either way. The next
+/// line is rewritten by `Docs/Companion/tools/catalog_export/export_catalog.sh`
+/// when it regenerates `companionData.ts`; do not edit it by hand.
+public enum CatalogVersion {
+    public static let exported = "79790c743d93-r1"
 }

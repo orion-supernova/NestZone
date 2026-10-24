@@ -4,10 +4,11 @@ import Foundation
 // grows from what the house already does, graduates into an album, and is
 // dressed up for the days the house celebrates.
 //
-// This is the MVP: everything here is kept on the device, per home, and the
-// growth is read off the chores the household finishes, which every phone
-// already receives. The server version (docs in Docs/Companion) replaces the
-// storage, not these types.
+// The house's companion lives on the server now (`companion:forHome`), shared
+// by every phone in the house: these types are what it is drawn from. The
+// MVP kept all of it in one file per phone (`companion-<home>.json`); that
+// file's shape is still decoded, once, to be offered to the server
+// (`LocalCompanion`), and the Lab keeps its own small file.
 
 // MARK: - Species
 
@@ -97,19 +98,20 @@ public enum Species: String, CaseIterable, Codable, Identifiable, Sendable {
 /// How a companion's points become stages, and how the house's last few days
 /// become a mood.
 public enum CompanionMath {
-    /// Points to graduate. With a chore worth one and a day capped at
-    /// `dayCap`, an active couple gets there in about two weeks, a quiet one
-    /// in four or five, and nobody in under a week (Docs/Companion: the
+    /// Points to graduate (the server's `graduateAt` says the same). With the
+    /// simulated curve an active couple gets there in about two weeks, a quiet
+    /// one in four or five, and nobody in under a week (Docs/Companion: the
     /// simulation behind these numbers).
     public static let graduateAt = 64.0
     /// The most finished chores one day can count, for the whole house: a
-    /// Saturday clear-out grows it, it does not finish it.
+    /// Saturday clear-out grows it, it does not finish it. The MVP's rule,
+    /// kept for the tests and the old file; the server counts growth now.
     public static let dayCap = 9
-    /// What one person's care is worth, once a day.
+    /// What one person's care was worth in the MVP, once a day.
     public static let carePoints = 1.0
 
     /// Points from finished chores since the companion arrived, each day
-    /// capped.
+    /// capped. The MVP's local sum; nothing draws from it now.
     public static func chorePoints(_ completions: [Completion], since start: Date, calendar: Calendar = .current) -> Double {
         let counted = completions.filter { $0.at >= start }
         let byDay = Dictionary(grouping: counted) { calendar.startOfDay(for: $0.at) }
@@ -137,7 +139,7 @@ public enum CompanionMath {
         return min(max((progress - low) / max(high - low, 0.0001), 0), 1)
     }
 
-    /// How the house has been.
+    /// How the house has been, from what it did (the server's `recent`).
     ///
     /// Bright needs people together — two of them finishing something in the
     /// last two days — or a busy day; a house of one is bright after three
@@ -168,7 +170,8 @@ public enum CompanionMath {
     }
 }
 
-/// One finished chore, as far as the companion cares: when, and by whom.
+/// One thing the house did that grew it, as far as the mood cares: when, and
+/// by whom. Chores to start with, and now dinners, trips, fixes and the rest.
 public struct Completion: Equatable, Hashable, Sendable {
     public var at: Date
     public var by: UserID?
@@ -197,8 +200,11 @@ public enum Mood: String, Codable, CaseIterable, Sendable {
 
 // MARK: - The house's companion, its album and its jar
 
-/// Everything one home keeps about its companion. One file per home on this
-/// device in the MVP.
+/// Everything one home keeps about its companion, as the server tells it.
+///
+/// Still `Codable` for one reason: the MVP's file on a test phone has this
+/// shape, and `LocalCompanion` reads it to offer it to the house once. Nothing
+/// is written in it any more.
 public struct CompanionHouse: Codable, Equatable, Sendable {
     /// The one growing now. `nil` before the first is chosen and between a
     /// graduation and the next choice.
@@ -224,15 +230,35 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
     public var holidays: [String]?
     /// The highest stage already paid into the jar, so a stage pays once.
     public var paidStage = 0
-    /// Overrides for trying things out on a development build.
+    /// Overrides for trying things out on a development build: a local
+    /// preview, laid over the house when it is drawn and never sent anywhere.
     public var lab = Lab()
+
+    // What only the server version has. Not in the old file's keys.
+    /// How many the house has graduated. The album's cards load with the
+    /// album; the count is part of every read, because the seed of the next
+    /// one and what a graduation earns depend on it.
+    public var albumCount = 0
+    /// Which species the house has grown all the way: what "grown them all"
+    /// is counted from, so it needs no album.
+    public var grown: Set<Species> = []
+    /// Where the house is: the region its default holidays and its seasons
+    /// come from, and its offset in minutes east of UTC, whose days growth is
+    /// counted in. `nil` until somebody's phone says.
+    public var region: String?
+    public var tzOffset: Int?
 
     public init() {}
 
     public static let empty = CompanionHouse()
 
+    /// The Lab: a LOCAL PREVIEW for development builds. It is laid over the
+    /// house when it is drawn (`CompanionFeature.State.house`) and lives in its
+    /// own file on this phone (`SharedKey.companionLab`). Nothing in it is ever
+    /// sent to the server, and a purchase made while it holds coins stays in it
+    /// too, so the house's jar cannot be spent on what only the Lab gave.
     public struct Lab: Codable, Equatable, Sendable {
-        /// Pretend the house has been like this, whatever the chores say.
+        /// Pretend the house has been like this, whatever it has done.
         public var mood: Mood?
         /// Pretend it is this day — to see a holiday arrive.
         public var date: Date?
@@ -240,9 +266,21 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
         public var birthday = false
         /// The shop's stages at dusk rather than lit, to compare the two.
         public var dusk = false
+        /// Points added (or taken away) by hand, over the server's.
+        public var bonus = 0.0
+        /// Coins added to (or taken from) the jar as it is drawn. The test
+        /// store's Sparkles land here too: there is no top-up on the server yet.
+        public var leaves = 0
+        public var sparkles = 0
+        /// What was bought with those coins.
+        public var owned: Set<String> = []
+        public var ownedSpecies: Set<String> = []
         public init() {}
 
-        enum CodingKeys: String, CodingKey { case mood, date, birthday, dusk }
+        /// Whether the jar being drawn is not the house's real one.
+        public var touchesJar: Bool { leaves != 0 || sparkles != 0 }
+
+        enum CodingKeys: String, CodingKey { case mood, date, birthday, dusk, bonus, leaves, sparkles, owned, ownedSpecies }
 
         public init(from decoder: any Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -250,6 +288,11 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
             date = try? c.decodeIfPresent(Date.self, forKey: .date)
             birthday = (try? c.decodeIfPresent(Bool.self, forKey: .birthday)) ?? false
             dusk = (try? c.decodeIfPresent(Bool.self, forKey: .dusk)) ?? false
+            bonus = (try? c.decodeIfPresent(Double.self, forKey: .bonus)) ?? 0
+            leaves = (try? c.decodeIfPresent(Int.self, forKey: .leaves)) ?? 0
+            sparkles = (try? c.decodeIfPresent(Int.self, forKey: .sparkles)) ?? 0
+            owned = (try? c.decodeIfPresent(Set<String>.self, forKey: .owned)) ?? []
+            ownedSpecies = (try? c.decodeIfPresent(Set<String>.self, forKey: .ownedSpecies)) ?? []
         }
     }
 
@@ -265,6 +308,7 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         current = try? c.decodeIfPresent(Companion.self, forKey: .current)
         album = (try? c.decodeIfPresent([Graduate].self, forKey: .album)) ?? []
+        albumCount = album.count
         leaves = (try? c.decodeIfPresent(Int.self, forKey: .leaves)) ?? 0
         sparkles = (try? c.decodeIfPresent(Int.self, forKey: .sparkles)) ?? 0
         welcomed = (try? c.decodeIfPresent(Bool.self, forKey: .welcomed)) ?? false
@@ -282,11 +326,26 @@ public struct Companion: Codable, Equatable, Sendable {
     /// Seeds the drawing: the same seed grows the same tree on every phone.
     public var seed: String
     public var startedAt: Date
-    /// The days this device cared for it, `yyyy-MM-dd`. One counts per day.
+    /// The days this person cared for it, `yyyy-MM-dd` in the house's days.
+    /// One counts per day.
     public var careDays: [String] = []
+    /// When anyone in the house last came by.
     public var lastCareAt: Date?
-    /// Points added by hand on a development build.
-    public var bonus = 0.0
+
+    // What the server says. Absent in the old file, and on a companion that is
+    // only just being started, before the server has answered.
+    /// The server's id for it, which graduating names.
+    public var id: String?
+    /// Its growth, which the server counts: nothing here adds chores up.
+    public var points: Double?
+    public var serverStage: Int?
+    /// Whether it can graduate, as the server says: the points and its floor of
+    /// days both. Taken as it comes; nothing here works it out.
+    public var isReady = false
+    /// The points are there, whatever the days say.
+    public var pointsReady = false
+    /// When it can graduate, if the points are there by then.
+    public var readyAt: Date?
 
     public init(species: Species, seed: String, startedAt: Date) {
         self.species = species
@@ -294,7 +353,7 @@ public struct Companion: Codable, Equatable, Sendable {
         self.startedAt = startedAt
     }
 
-    enum CodingKeys: String, CodingKey { case species, seed, startedAt, careDays, lastCareAt, bonus }
+    enum CodingKeys: String, CodingKey { case species, seed, startedAt, careDays, lastCareAt }
 
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -303,10 +362,7 @@ public struct Companion: Codable, Equatable, Sendable {
         startedAt = try c.decode(Date.self, forKey: .startedAt)
         careDays = (try? c.decodeIfPresent([String].self, forKey: .careDays)) ?? []
         lastCareAt = try? c.decodeIfPresent(Date.self, forKey: .lastCareAt)
-        bonus = (try? c.decodeIfPresent(Double.self, forKey: .bonus)) ?? 0
     }
-
-    public var carePoints: Double { Double(careDays.count) * CompanionMath.carePoints }
 }
 
 /// A companion that grew up, as its album card remembers it.

@@ -81,3 +81,24 @@ extension AppError: LocalizedError {
     /// Cancellation is bookkeeping, not something to show anyone.
     public var isSilent: Bool { self == .cancelled }
 }
+
+extension AppError {
+    /// Whether this is the request failing to get an answer, rather than an
+    /// answer. A write that failed this way may or may not have been applied
+    /// and may be sent again as it was; one that failed any other way will
+    /// fail the same again.
+    ///
+    /// The edge: `ConvexConnection.mapped` turns an `InternalError` into
+    /// `.offline` only while the socket is down at that moment. A link that
+    /// drops *during* a call can still arrive as `.server`, and is taken here
+    /// as an answer. The cost is bounded: the import is not marked (it asks
+    /// again next launch only if the file is still unmarked), and a buy or
+    /// start that was in fact applied is corrected by the push and replayed by
+    /// its request id.
+    public var isTransport: Bool {
+        switch self {
+        case .offline, .cancelled, .notAuthenticated: true
+        case .noHomeSelected, .server, .decoding, .validation, .unknown: false
+        }
+    }
+}

@@ -37,6 +37,10 @@ struct NestZoneApp: App {
             //   xcrun simctl launch booted com.walhallaa.NestZone -glassLab
             if ProcessInfo.processInfo.arguments.contains("-glassLab") {
                 GlassListLab()
+            } else if ProcessInfo.processInfo.arguments.contains("-nestieBench") {
+                // Nestie against a stand-in server, signed out
+                // (Features/Companion/NestieBench.swift).
+                NestieBench()
             } else {
                 root
             }
