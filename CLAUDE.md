@@ -588,6 +588,14 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
 # Push is a quiet no-op until all four are set. To check a key without sending
 # a real push, sign a JWT and POST to a fake device: `BadDeviceToken` means the
 # credentials are good, `InvalidProviderToken` means they are not.
+
+# Who hears Nestie's three notifications (ready, the vote, the new one).
+# Unset or off: nobody, no push and no feed row. sandbox: push only to
+# development-signed Xcode installs (the APNs sandbox gateway), no feed row.
+# on: everyone, like any notification. Turn it on in the same release as
+# CompanionFlag; until then only Debug builds draw Nestie. The "sent" mark is
+# written either way, so switching it on never announces anything stale.
+#   npx convex env set COMPANION_NOTIFY sandbox
 ```
 
 ## Backend notes

@@ -78,6 +78,19 @@ import {
   standingOfSpecies,
   titleKey,
 } from "./lib/companion";
+import {
+  NESTIE_CATEGORY,
+  NESTIE_NOTES,
+  PUSH_LANGUAGE,
+  VOTE_MS,
+  VOTE_ROWS_MAX,
+  answeredAll,
+  ranking,
+  tally,
+  voteHow,
+  voteOptions,
+  type NoteKey,
+} from "./lib/companionVote";
 
 const HOUR_MS = 3_600_000;
 
@@ -189,6 +202,48 @@ const currentValue = v.object({
   lastCareAt: v.union(v.number(), v.null()),
   /** The caller's own care days on this one, newest first, `YYYY-MM-DD` in the house's days. */
   myCareDays: v.array(v.string()),
+  /**
+   * A seed the house hasn't chosen yet: growing since the last one graduated,
+   * while `vote` runs or after it ended with no yes. `species` is only the
+   * vote's first option; draw a seed (or an egg), not it.
+   */
+  undecided: v.boolean(),
+});
+
+const voteOptionValue = v.object({
+  species: v.string(),
+  isPet: v.boolean(),
+  /** Already in the album: a tie goes to one that isn't. */
+  grown: v.boolean(),
+  /** Current members who said yes, and no. */
+  yes: v.number(),
+  no: v.number(),
+});
+
+const voteValue = v.object({
+  /** The `generic` poll the ballots go to: `polls:vote` / `polls:unvote` with a species as the target. */
+  pollId: v.id("polls"),
+  status: v.union(v.literal("open"), v.literal("closed")),
+  openedAt: v.number(),
+  /** When it closes on its own if not everybody has answered every option. */
+  closesAt: v.number(),
+  closedAt: v.union(v.number(), v.null()),
+  how: v.union(voteHow, v.null()),
+  /** What it chose. `null` while open, and on a vote that ended with no yes: then anyone picks. */
+  winner: v.union(v.string(), v.null()),
+  /** Best first, which is also the tie-break's last word. */
+  options: v.array(voteOptionValue),
+  /** The caller's own answers. */
+  mine: v.array(v.object({ species: v.string(), yes: v.boolean() })),
+  members: v.number(),
+  /** Members who have answered every option. */
+  answered: v.number(),
+  /**
+   * Somebody other than the caller has answered. While false, `start` with any
+   * species the house can grow is a straight pick; once true, the caller can
+   * vote or `decide`, never pick past it.
+   */
+  othersVoted: v.boolean(),
 });
 
 const graduateValue = v.object({
@@ -235,10 +290,17 @@ export const forHome = query({
     current: v.union(currentValue, v.null()),
     recent: v.array(recentValue),
     jar: v.array(jarEntryValue),
+    /**
+     * The vote that chose (or is choosing) the one growing now, with the
+     * tally: open while `current.undecided`, closed with its `winner` after,
+     * for as long as that one grows. `null` when the one growing was picked
+     * without a vote — a house of one, or a choice made through `start`.
+     */
+    vote: v.union(voteValue, v.null()),
   }),
   handler: async (ctx, { homeId }) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, homeId);
+    const home = await requireHomeMember(ctx, homeId);
     const empty = {
       catalogVersion: COMPANION_VERSION,
       graduateAt: CATALOG.graduateAt,
@@ -246,6 +308,7 @@ export const forHome = query({
       current: null,
       recent: [],
       jar: [],
+      vote: null,
     };
     const house = await houseFor(ctx, homeId);
     if (!house) return empty;
@@ -255,7 +318,8 @@ export const forHome = query({
     const ready = growing ? readiness(house, growing, Date.now()) : null;
     const startDay = growing ? dayOf(growing.started_at, tzOf(growing, house)) : "";
 
-    const [recent, jar, care] = await Promise.all([
+    const voteDoc = growing?.vote_id ? await ctx.db.get(growing.vote_id) : null;
+    const [recent, jar, care, ballots] = await Promise.all([
       growing
         ? ctx.db
             .query("companion_growth")
@@ -281,7 +345,42 @@ export const forHome = query({
             .order("desc")
             .take(CARE_DAYS_MAX)
         : Promise.resolve([]),
+      voteDoc
+        ? ctx.db
+            .query("poll_votes")
+            .withIndex("by_poll", (q) => q.eq("poll_id", voteDoc.poll_id))
+            .take(VOTE_ROWS_MAX)
+        : Promise.resolve([]),
     ]);
+
+    let vote: Infer<typeof voteValue> | null = null;
+    if (voteDoc) {
+      const counts = tally(voteDoc.options, ballots, home.members);
+      const grown = new Set(house.grown_species ?? []);
+      const members = new Set<string>(home.members);
+      vote = {
+        pollId: voteDoc.poll_id,
+        status: voteDoc.status,
+        openedAt: voteDoc.opened_at,
+        closesAt: voteDoc.closes_at,
+        closedAt: voteDoc.closed_at ?? null,
+        how: voteDoc.how ?? null,
+        winner: voteDoc.winner ?? null,
+        options: voteDoc.options.map((species) => ({
+          species,
+          isPet: isPetSpecies(species),
+          grown: grown.has(species),
+          yes: counts.get(species)?.yes ?? 0,
+          no: counts.get(species)?.no ?? 0,
+        })),
+        mine: ballots
+          .filter((b) => b.user_id === user._id && voteDoc.options.includes(b.target_external_id))
+          .map((b) => ({ species: b.target_external_id, yes: b.vote })),
+        members: home.members.length,
+        answered: answeredAll(voteDoc.options, ballots, home.members),
+        othersVoted: ballots.some((b) => b.user_id !== user._id && members.has(b.user_id)),
+      };
+    }
 
     return {
       ...empty,
@@ -313,6 +412,7 @@ export const forHome = query({
             paidStage: growing.paid_stage,
             lastCareAt: growing.last_care_at ?? null,
             myCareDays: care.map((row) => row.day),
+            undecided: growing.undecided === true,
           }
         : null,
       recent: recent.map((row) => ({ kind: row.kind, at: row.at, userId: row.user_id ?? null })),
@@ -325,6 +425,7 @@ export const forHome = query({
         userId: row.user_id ?? null,
         at: row.created,
       })),
+      vote,
     };
   },
 });
@@ -362,8 +463,9 @@ function hasPoints(points: number): boolean {
 
 /**
  * Whether a companion may graduate now, and from when: the one rule `graduate`,
- * `start` and `forHome` all ask. Growing, the house's current one, its points
- * there, and six days old — however the days fell, nothing grows up in under
+ * `start` and `forHome` all ask. Growing, the house's current one, chosen (a
+ * seed still waiting on its vote is not yet anything), its points there, and
+ * six days old — however the days fell, nothing grows up in under
  * six: the floor the curve was tuned to, held here rather than trusted to the
  * arithmetic.
  */
@@ -375,7 +477,11 @@ function readiness(
   const readyAt = companion.started_at + MIN_GROW_MS;
   const pointsReady = hasPoints(companion.points);
   const isReady =
-    companion.status === "growing" && house.current_id === companion._id && pointsReady && now >= readyAt;
+    companion.status === "growing" &&
+    house.current_id === companion._id &&
+    !companion.undecided &&
+    pointsReady &&
+    now >= readyAt;
   return { isReady, pointsReady, readyAt };
 }
 
@@ -444,6 +550,7 @@ export const wake = internalMutation({
       return null;
     }
     await ctx.db.patch(companionId, { of_age_at: Date.now() });
+    await announceReady(ctx, companionId);
     return null;
   },
 });
@@ -519,6 +626,394 @@ async function payStages(
     });
   }
 }
+
+
+// MARK: - Choosing the next one together
+
+/**
+ * The welcome gift, once per house (`welcome`), with whichever one it starts.
+ * `start` and a seed being chosen both pay it through here, so a house that
+ * somehow graduated without it still gets it exactly once.
+ */
+async function welcomeIfNew(
+  ctx: MutationCtx,
+  house: Doc<"companion_homes">,
+  userId: Id<"users"> | undefined,
+  companionId: Id<"companions">,
+): Promise<{ leaves: number; sparkles: number } | null> {
+  const fresh = await ctx.db.get(house._id);
+  if (!fresh || fresh.welcomed) return null;
+  const gift = CATALOG.rewards.welcome;
+  await moveJar(ctx, house._id, {
+    key: "welcome",
+    kind: "welcome",
+    leaves: gift.leaves,
+    sparkles: gift.sparkles,
+    userId,
+    companionId,
+  });
+  await ctx.db.patch(house._id, { welcomed: true });
+  return gift;
+}
+
+/**
+ * Who hears Nestie, from `COMPANION_NOTIFY`, until it ships to everyone:
+ *
+ * - unset or `off`: nobody. No push and no feed row; `notifyHome` is never
+ *   scheduled. Every build reads the feed, and only Debug builds draw Nestie.
+ * - `sandbox`: pushes to development-signed installs only (the APNs sandbox
+ *   gateway, which is what an Xcode install registers), and no feed row.
+ * - `on`: the whole house, push and feed, like every other notification.
+ *
+ * The key is written whatever this says, so turning it on later never
+ * announces a "ready" that is days old.
+ */
+function companionNotify(): "off" | "sandbox" | "on" {
+  const value = (process.env.COMPANION_NOTIFY ?? "").trim().toLowerCase();
+  return value === "on" || value === "sandbox" ? value : "off";
+}
+
+/**
+ * Says one of the three things, once per companion: the key goes on the row
+ * in the same write that schedules the push, so a retry, a re-run or a second
+ * phone finds it there and sends nothing. Through `push.notifyHome`, which
+ * files it in the house's feed whether or not a push arrives. `alsoMark` are
+ * keys this one stands in for, marked with it and never sent after it.
+ */
+async function announce(
+  ctx: MutationCtx,
+  companion: Doc<"companions">,
+  key: NoteKey,
+  actor?: Id<"users">,
+  alsoMark: NoteKey[] = [],
+): Promise<void> {
+  const notified = companion.notified ?? [];
+  if (notified.includes(key)) return;
+  await ctx.db.patch(companion._id, { notified: [...new Set([...notified, key, ...alsoMark])] });
+  const mode = companionNotify();
+  if (mode === "off") return;
+  const copy = NESTIE_NOTES[key][PUSH_LANGUAGE];
+  await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+    homeId: companion.home_id,
+    actor,
+    title: copy.title,
+    body: copy.body,
+    category: NESTIE_CATEGORY,
+    ...(mode === "sandbox" ? { environment: "sandbox" as const, skipFeed: true } : {}),
+  });
+}
+
+/**
+ * "All grown up", the moment `readiness` first says so: from the wake (the
+ * floor passed with the points there), from a recount (the points arrived
+ * after the floor), or from a seed being chosen. To the whole house.
+ */
+async function announceReady(
+  ctx: MutationCtx,
+  companionId: Id<"companions">,
+  alsoMark: NoteKey[] = [],
+): Promise<boolean> {
+  const companion = await ctx.db.get(companionId);
+  if (!companion || (companion.notified ?? []).includes("ready")) return false;
+  const house = await houseFor(ctx, companion.home_id);
+  if (!house || !readiness(house, companion, Date.now()).isReady) return false;
+  await announce(ctx, companion, "ready", undefined, alsoMark);
+  return true;
+}
+
+/**
+ * Opens the vote for the next one, in the write that graduated `graduated`,
+ * for a house of two or more with at least two things to choose from.
+ *
+ * The seed starts growing now — the first option stands in for its species —
+ * so what the house does while it decides is counted like any other day. The
+ * ballot is a `generic` poll, which no shipped build lists; the deadline is
+ * one scheduled `closeVote`. Returns the poll, or null when the house just
+ * picks (one member, or one choice).
+ */
+async function openVote(
+  ctx: MutationCtx,
+  home: Doc<"homes">,
+  graduated: Doc<"companions">,
+  userId: Id<"users">,
+  now: number,
+): Promise<Id<"polls"> | null> {
+  if ((home.members ?? []).length < 2) return null;
+  const house = await houseFor(ctx, home._id);
+  if (!house || house.current_id) return null;
+  const options = voteOptions(house, now, graduated.species);
+  if (options.length < 2) return null;
+
+  const pollId = await ctx.db.insert("polls", {
+    home_id: home._id,
+    owner_id: userId,
+    // The app draws its own, localised; this is for the dashboard.
+    title: "Who's next?",
+    type: "generic",
+    status: "active",
+    genre: "companion",
+    created: now,
+    updated: now,
+  });
+  await Promise.all(
+    options.map((species, order) =>
+      ctx.db.insert("poll_items", {
+        poll_id: pollId,
+        external_id: species,
+        label: species,
+        order,
+        created: now,
+        updated: now,
+      }),
+    ),
+  );
+
+  const companionId = await ctx.db.insert("companions", {
+    home_id: home._id,
+    uuid: crypto.randomUUID().toUpperCase(),
+    species: options[0],
+    seed: `${home._id}-${house.album_count}`,
+    started_at: now,
+    status: "growing",
+    points: 0,
+    paid_stage: 0,
+    tz_offset: house.tz_offset ?? 0,
+    origin: "server",
+    created: now,
+    // Not `follows`: that is `start`'s record of a graduation it did itself,
+    // and a retried `start` reports it. The vote keeps `after_id`.
+    undecided: true,
+  });
+  const closesAt = now + VOTE_MS;
+  const voteId = await ctx.db.insert("companion_votes", {
+    home_id: home._id,
+    poll_id: pollId,
+    companion_id: companionId,
+    after_id: graduated._id,
+    options,
+    status: "open",
+    opened_at: now,
+    closes_at: closesAt,
+  });
+  await ctx.db.patch(companionId, { vote_id: voteId });
+  await wakeAtFloor(ctx, companionId, now);
+  await ctx.db.patch(house._id, { current_id: companionId, updated: now });
+  await ctx.scheduler.runAt(closesAt, internal.companion.closeVote, { voteId });
+  await announce(ctx, (await ctx.db.get(companionId))!, "vote", userId);
+  return pollId;
+}
+
+/**
+ * Gives a seed its species: the vote's winner, or somebody's pick. Exactly
+ * `start`'s rule — only what the house can grow today — so nothing the vote
+ * offered can start once it has gone out of season, and nothing `start` would
+ * refuse starts here. The growth so far stays; the stages are measured again
+ * for what it turned out to be, and paid once per slot as ever.
+ */
+async function chooseSeed(
+  ctx: MutationCtx,
+  house: Doc<"companion_homes">,
+  seed: Doc<"companions">,
+  species: string,
+  userId: Id<"users"> | undefined,
+  now: number,
+): Promise<{ leaves: number; sparkles: number } | null> {
+  if (!SPECIES.has(species)) throw new Error("There's no such companion");
+  if (!isUsable(standingOfSpecies(species, shopContext(house, now)))) {
+    throw new Error("That one can't be grown yet");
+  }
+  const stage = stageFor(seed.points, isPetSpecies(species));
+  await ctx.db.patch(seed._id, {
+    species,
+    undecided: undefined,
+    chosen_at: now,
+    paid_stage: Math.max(stage, seed.paid_stage),
+  });
+  if (stage > seed.paid_stage) await payStages(ctx, house._id, seed._id, seed.paid_stage, stage);
+  const welcome = await welcomeIfNew(ctx, house, userId, seed._id);
+  // A seed left undecided long enough is all grown up the moment it is
+  // chosen. Then "ready" says both, and "arrived" is marked with it rather
+  // than sent a second later.
+  await announceReady(ctx, seed._id, ["arrived"]);
+  return welcome;
+}
+
+/** "The new one's here": only where there was a vote to wait on. */
+async function announceArrived(
+  ctx: MutationCtx,
+  seedId: Id<"companions">,
+  home: Doc<"homes">,
+  actor: Id<"users"> | undefined,
+): Promise<void> {
+  if ((home.members ?? []).length < 2) return;
+  const seed = await ctx.db.get(seedId);
+  if (seed) await announce(ctx, seed, "arrived", actor);
+}
+
+async function closePoll(ctx: MutationCtx, pollId: Id<"polls">, now: number): Promise<void> {
+  const poll = await ctx.db.get(pollId);
+  if (poll && poll.status !== "closed") await ctx.db.patch(pollId, { status: "closed", updated: now });
+}
+
+/**
+ * Ends a vote and applies what it chose. Idempotent: a vote already closed
+ * answers with what it chose and writes nothing, so two phones finishing it at
+ * once, the deadline landing as the last ballot does, or a retried `decide`
+ * all come to one choice — Convex runs the two writes one after the other,
+ * and the second finds the first's `closed`.
+ *
+ * The winner is the most yeses among current members (`ranking`), the first
+ * of them the house can still grow. No yes at all closes it with no winner:
+ * the seed keeps growing and the first person to pick, picks.
+ */
+async function resolveVote(
+  ctx: MutationCtx,
+  vote: Doc<"companion_votes">,
+  how: Infer<typeof voteHow>,
+  actor: Id<"users"> | undefined,
+): Promise<{ winner: string | null }> {
+  if (vote.status !== "open") return { winner: vote.winner ?? null };
+  const now = Date.now();
+  const [seed, house, home] = await Promise.all([
+    ctx.db.get(vote.companion_id),
+    houseFor(ctx, vote.home_id),
+    ctx.db.get(vote.home_id),
+  ]);
+  const close = async (patch: Partial<Doc<"companion_votes">>) => {
+    await ctx.db.patch(vote._id, { status: "closed", closed_at: now, closed_by: actor, ...patch });
+    await closePoll(ctx, vote.poll_id, now);
+  };
+  if (!seed || !house || !home || house.current_id !== seed._id || seed.status !== "growing" || !seed.undecided) {
+    await close({ how: "moved" });
+    return { winner: null };
+  }
+  const ballots = await ctx.db
+    .query("poll_votes")
+    .withIndex("by_poll", (q) => q.eq("poll_id", vote.poll_id))
+    .take(VOTE_ROWS_MAX);
+  const ranked = ranking(vote.options, tally(vote.options, ballots, home.members), new Set(house.grown_species ?? []));
+  const shop = shopContext(house, now);
+  const winner = ranked.find((id) => isUsable(standingOfSpecies(id, shop))) ?? null;
+  await close({ how, winner: winner ?? undefined });
+  if (winner) {
+    await chooseSeed(ctx, house, seed, winner, actor, now);
+    await announceArrived(ctx, seed._id, home, actor);
+  }
+  return { winner };
+}
+
+/**
+ * Settles the vote now on the ballots so far — for the one who'd rather not
+ * wait. Not a way round anyone: every answer already given counts exactly as
+ * it would at the deadline, and with no yes yet there is nothing to settle
+ * (`noVotes`, and it stays open). The feed names who settled it.
+ *
+ * Only once somebody else has answered (`alone` before that, still open).
+ * Settling a vote nobody else has touched is picking, and `start` already
+ * does that honestly, as a pick. A minimum age would only make the one who's
+ * there wait, and protect nobody.
+ */
+export const decide = mutation({
+  args: { homeId: v.id("homes") },
+  returns: v.object({
+    status: v.union(
+      v.literal("chosen"),
+      v.literal("noVotes"),
+      v.literal("alone"),
+      v.literal("closed"),
+      v.literal("none"),
+    ),
+    winner: v.union(v.string(), v.null()),
+  }),
+  handler: async (ctx, { homeId }) => {
+    const user = await requireUser(ctx);
+    const home = await requireHomeMember(ctx, homeId);
+    const house = await houseFor(ctx, homeId);
+    const seed = house?.current_id ? await ctx.db.get(house.current_id) : null;
+    const vote = seed?.vote_id ? await ctx.db.get(seed.vote_id) : null;
+    if (!vote) return { status: "none" as const, winner: null };
+    if (vote.status === "closed") return { status: "closed" as const, winner: vote.winner ?? null };
+    const ballots = await ctx.db
+      .query("poll_votes")
+      .withIndex("by_poll", (q) => q.eq("poll_id", vote.poll_id))
+      .take(VOTE_ROWS_MAX);
+    const members = new Set<string>(home.members);
+    if (!ballots.some((b) => b.user_id !== user._id && members.has(b.user_id))) {
+      return { status: "alone" as const, winner: null };
+    }
+    const counts = tally(vote.options, ballots, home.members);
+    if (![...counts.values()].some((c) => c.yes > 0)) return { status: "noVotes" as const, winner: null };
+    const { winner } = await resolveVote(ctx, vote, "decided", user._id);
+    return winner ? { status: "chosen" as const, winner } : { status: "closed" as const, winner: null };
+  },
+});
+
+/** Closes the vote if every current member has answered every option. */
+async function closeIfEveryone(
+  ctx: MutationCtx,
+  vote: Doc<"companion_votes"> | null,
+  actor: Id<"users"> | undefined,
+): Promise<void> {
+  if (!vote || vote.status !== "open") return;
+  const home = await ctx.db.get(vote.home_id);
+  if (!home) return;
+  const ballots = await ctx.db
+    .query("poll_votes")
+    .withIndex("by_poll", (q) => q.eq("poll_id", vote.poll_id))
+    .take(VOTE_ROWS_MAX);
+  if (answeredAll(vote.options, ballots, home.members) >= home.members.length) {
+    await resolveVote(ctx, vote, "everyone", actor);
+  }
+}
+
+/**
+ * After a ballot that changed something (`polls:vote` schedules it): closes
+ * the vote once every current member has answered every option.
+ */
+export const voteChanged = internalMutation({
+  args: { pollId: v.id("polls"), userId: v.id("users") },
+  returns: v.null(),
+  handler: async (ctx, { pollId, userId }) => {
+    const vote = await ctx.db
+      .query("companion_votes")
+      .withIndex("by_poll", (q) => q.eq("poll_id", pollId))
+      .first();
+    await closeIfEveryone(ctx, vote, userId);
+    return null;
+  },
+});
+
+/**
+ * After someone leaves the house (`homes:leave` schedules it): the one still
+ * to answer may have been them, so "everyone" is asked again of who is left.
+ */
+export const membersChanged = internalMutation({
+  args: { homeId: v.id("homes") },
+  returns: v.null(),
+  handler: async (ctx, { homeId }) => {
+    const house = await houseFor(ctx, homeId);
+    const seed = house?.current_id ? await ctx.db.get(house.current_id) : null;
+    const vote = seed?.vote_id ? await ctx.db.get(seed.vote_id) : null;
+    await closeIfEveryone(ctx, vote, undefined);
+    return null;
+  },
+});
+
+/** The deadline, scheduled once by `openVote`. A no-op on a vote already closed. */
+export const closeVote = internalMutation({
+  args: { voteId: v.id("companion_votes") },
+  returns: v.null(),
+  handler: async (ctx, { voteId }) => {
+    const vote = await ctx.db.get(voteId);
+    if (!vote || vote.status !== "open") return null;
+    if (Date.now() < vote.closes_at) {
+      await ctx.scheduler.runAt(vote.closes_at, internal.companion.closeVote, { voteId });
+      return null;
+    }
+    await resolveVote(ctx, vote, "deadline", undefined);
+    return null;
+  },
+});
 
 // MARK: - The house's writes
 
@@ -646,8 +1141,56 @@ export const start = mutation({
         graduated: followed ? { companionId: followed._id, species: followed.species, paid: null } : null,
       };
     }
+    // A seed the house hasn't chosen yet: this is the choice, and it keeps
+    // the growth since the last one graduated. While its vote is open that is
+    // a straight pick only until somebody else has answered; after that the
+    // ballots decide (`decide`), and no answer is ever thrown away.
+    if (previous?.status === "growing" && previous.undecided) {
+      const home = await ctx.db.get(homeId);
+      const vote = previous.vote_id ? await ctx.db.get(previous.vote_id) : null;
+      if (home && vote?.status === "open") {
+        const ballots = await ctx.db
+          .query("poll_votes")
+          .withIndex("by_poll", (q) => q.eq("poll_id", vote.poll_id))
+          .take(VOTE_ROWS_MAX);
+        const members = new Set<string>(home.members);
+        if (ballots.some((b) => b.user_id !== user._id && members.has(b.user_id))) {
+          throw new Error("The house is voting on the next one");
+        }
+        await ctx.db.patch(vote._id, {
+          status: "closed",
+          closed_at: now,
+          how: "picked",
+          winner: species,
+          closed_by: user._id,
+        });
+        await closePoll(ctx, vote.poll_id, now);
+      }
+      const welcome = await chooseSeed(ctx, house, previous, species, user._id, now);
+      await ctx.db.patch(previous._id, { start_request: request });
+      if (home) await announceArrived(ctx, previous._id, home, user._id);
+      return { companionId: previous._id, welcome, graduated: null };
+    }
+    // What the house voted for stays until it graduates. A pick that lands
+    // after the vote chose — a phone that was offline, a Choose screen left
+    // open — agrees with it (same answer, nothing written) or is refused;
+    // it never lets the vote's choice go. A "picked" seed was one person's
+    // choice before anyone else answered, and can change like any pick. Once
+    // it is ready, `start` graduates it first as always.
+    if (previous?.status === "growing" && previous.vote_id && !readiness(house, previous, now).isReady) {
+      const vote = await ctx.db.get(previous.vote_id);
+      if (vote?.status === "closed" && vote.winner !== undefined && vote.how !== "picked") {
+        if (species !== previous.species) throw new Error("The house already chose");
+        return { companionId: previous._id, welcome: null, graduated: null };
+      }
+    }
     // Without an id: a double tap, or two phones choosing the same one at once.
-    if (previous?.status === "growing" && previous.species === species && now - previous.created < 10_000) {
+    // A seed counts from when it was chosen, not from when it was planted.
+    if (
+      previous?.status === "growing" &&
+      previous.species === species &&
+      now - (previous.chosen_at ?? previous.created) < 10_000
+    ) {
       return { companionId: previous._id, welcome: null, graduated: null };
     }
     let graduated: { companionId: Id<"companions">; species: string; paid: { leaves: number; sparkles: number } | null } | null =
@@ -683,20 +1226,7 @@ export const start = mutation({
     await wakeAtFloor(ctx, companionId, now);
     await ctx.db.patch(house._id, { current_id: companionId, updated: now });
 
-    let welcome: { leaves: number; sparkles: number } | null = null;
-    if (!house.welcomed) {
-      const gift = CATALOG.rewards.welcome;
-      await moveJar(ctx, house._id, {
-        key: "welcome",
-        kind: "welcome",
-        leaves: gift.leaves,
-        sparkles: gift.sparkles,
-        userId: user._id,
-        companionId,
-      });
-      await ctx.db.patch(house._id, { welcomed: true });
-      welcome = gift;
-    }
+    const welcome = await welcomeIfNew(ctx, house, user._id, companionId);
     return { companionId, welcome, graduated };
   },
 });
@@ -736,10 +1266,19 @@ export const care = mutation({
  */
 export const graduate = mutation({
   args: { homeId: v.id("homes"), companionId: v.id("companions") },
-  returns: v.object({ paid: v.union(coinsValue, v.null()) }),
+  returns: v.object({
+    paid: v.union(coinsValue, v.null()),
+    /**
+     * The vote for the next one this opened, in a house of two or more; then
+     * the next one is already growing as a seed (`forHome.current.undecided`).
+     * `null`: this house just picks (`start`), as before. Absent from a
+     * repeat call, which opens nothing.
+     */
+    vote: v.optional(v.union(v.id("polls"), v.null())),
+  }),
   handler: async (ctx, { homeId, companionId }) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, homeId);
+    const home = await requireHomeMember(ctx, homeId);
     const companion = await ctx.db.get(companionId);
     if (!companion || companion.home_id !== homeId) throw new Error("Companion not found");
     await requireDocHome(ctx, companion, "Companion");
@@ -749,7 +1288,9 @@ export const graduate = mutation({
     // The points, the six-day floor, and only the one growing: one let go
     // can't be brought back for a second reward.
     if (!readiness(house, companion, now).isReady) throw new Error("Not grown up yet");
-    return await graduateNow(ctx, house, companion, user._id, now);
+    const { paid } = await graduateNow(ctx, house, companion, user._id, now);
+    const vote = await openVote(ctx, home, companion, user._id, now);
+    return { paid, vote };
   },
 });
 
@@ -1268,12 +1809,17 @@ async function recount(
   }
 
   const points = Math.max(0, companion.points + delta);
-  const stage = stageFor(points, isPetSpecies(companion.species));
+  // An undecided seed's species is only the vote's first option, whose curve
+  // may not be the one it turns out to grow on (a pet has more stages, earlier
+  // on). It grows, but pays no stage until it is chosen: `chooseSeed` pays up
+  // to the real species' stage then.
+  const stage = companion.undecided ? companion.paid_stage : stageFor(points, isPetSpecies(companion.species));
   const paidStage = Math.max(stage, companion.paid_stage);
   if (points !== companion.points || paidStage !== companion.paid_stage) {
     await ctx.db.patch(companionId, { points, paid_stage: paidStage });
   }
   if (stage > companion.paid_stage) await payStages(ctx, house._id, companionId, companion.paid_stage, stage);
+  if (hasPoints(points) && !(companion.notified ?? []).includes("ready")) await announceReady(ctx, companionId);
 }
 
 /**
@@ -1613,6 +2159,11 @@ export const purgeHome = internalMutation({
           .withIndex("by_home_status_graduated", (q) => q.eq("home_id", homeId))
           .take(PURGE_BATCH),
       () => ctx.db.query("jar_ledger").withIndex("by_home_created", (q) => q.eq("home_id", homeId)).take(PURGE_BATCH),
+      () =>
+        ctx.db
+          .query("companion_votes")
+          .withIndex("by_home_opened", (q) => q.eq("home_id", homeId))
+          .take(PURGE_BATCH),
       () => ctx.db.query("companion_homes").withIndex("by_home", (q) => q.eq("home_id", homeId)).take(PURGE_BATCH),
     ];
     for (const batch of batches) {

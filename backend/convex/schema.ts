@@ -1491,6 +1491,23 @@ export default defineSchema({
     start_request: v.optional(v.string()),
     /** The one that `start` graduated just before making this one, so a retry can say so again. */
     follows: v.optional(v.id("companions")),
+    /**
+     * A seed: started by the server the moment its predecessor graduated in a
+     * house of two or more, so nothing done while the house votes is lost.
+     * `species` is the vote's first option until the house chooses; then this
+     * is cleared and `chosen_at` set. A seed is never ready (`readiness`).
+     */
+    undecided: v.optional(v.boolean()),
+    /** When a seed's species was chosen, by the vote or by somebody picking. */
+    chosen_at: v.optional(v.number()),
+    /** The vote this seed is waiting on (`companion_votes`). */
+    vote_id: v.optional(v.id("companion_votes")),
+    /**
+     * Notifications already sent about this one, each once: `ready` (all grown
+     * up), and on a seed `vote` (the vote opened) and `arrived` (it was
+     * chosen). Written in the same mutation that schedules the push.
+     */
+    notified: v.optional(v.array(v.string())),
   })
     // The album: `eq(status, "graduated")`, newest first.
     .index("by_home_status_graduated", ["home_id", "status", "graduated_at"])
@@ -1498,6 +1515,53 @@ export default defineSchema({
     .index("by_home_uuid", ["home_id", "uuid"])
     // Every house growing one, for the hourly event sweep.
     .index("by_status", ["status", "started_at"]),
+
+  /**
+   * Choosing the next one together: one row per vote, opened by the server in
+   * the write that graduates a companion in a house of two or more.
+   *
+   * The ballot itself is an ordinary `generic` poll (`poll_id`, its
+   * `poll_items` and `poll_votes`), so the swipe deck and `polls:vote` work on
+   * it unchanged and every shipped build — which lists only `movie` and
+   * `recipe` rounds — never shows it. This row is what makes that poll
+   * Nestie's: the options the server chose, the seed waiting on it, the
+   * deadline, and how it ended. `polls:create` can make a `generic` poll too,
+   * but never one of these.
+   */
+  companion_votes: defineTable({
+    home_id: v.id("homes"),
+    poll_id: v.id("polls"),
+    /** The seed growing while the house decides; the winner is applied to it. */
+    companion_id: v.id("companions"),
+    /** The one that graduated and opened this vote. */
+    after_id: v.optional(v.id("companions")),
+    /** Species ids, in the server's order: the tie-break after "not grown yet". */
+    options: v.array(v.string()),
+    status: v.union(v.literal("open"), v.literal("closed")),
+    opened_at: v.number(),
+    closes_at: v.number(),
+    closed_at: v.optional(v.number()),
+    /**
+     * How it ended: `everyone` answered every option, the `deadline` came,
+     * somebody `decided` on the votes so far, or somebody `picked` before
+     * anybody else had voted. `moved` is a seed that stopped being the house's
+     * (the house was deleted under it, say).
+     */
+    how: v.optional(
+      v.union(
+        v.literal("everyone"),
+        v.literal("deadline"),
+        v.literal("decided"),
+        v.literal("picked"),
+        v.literal("moved"),
+      ),
+    ),
+    /** The species chosen. Absent on a vote that ended with no yes at all. */
+    winner: v.optional(v.string()),
+    closed_by: v.optional(v.id("users")),
+  })
+    .index("by_poll", ["poll_id"])
+    .index("by_home_opened", ["home_id", "opened_at"]),
 
   /**
    * The growth ledger: one row per credited thing.

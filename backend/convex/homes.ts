@@ -211,6 +211,10 @@ export const leave = mutation({
     await ctx.db.patch(user._id, {
       home_id: (user.home_id ?? []).filter((h) => h !== homeId),
     });
+    // Nestie's vote may have been waiting only on the one who just left: ask
+    // "has everyone answered?" again of who is left. Scheduled, so leaving
+    // never waits on it or fails for it; a house with no open vote is a no-op.
+    await ctx.scheduler.runAfter(0, internal.companion.membersChanged, { homeId });
     return { ok: true, deletedHome: false };
   },
 });

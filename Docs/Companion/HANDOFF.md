@@ -894,6 +894,135 @@ In order — each step can go to testers on its own:
 
 3. **The vote for the next one** (a `generic` poll; a new poll kind would decode
    as `.movie` on old builds), and at most three notifications.
+
+   **The server side is built (24 October), typechecked and dry-run, not
+   deployed or committed.** Additive only: a `companion_votes` table, four
+   optional fields on `companions` (`undecided`, `chosen_at`, `vote_id`,
+   `notified`), `companion:decide`, three internal mutations (`voteChanged`,
+   `membersChanged`, `closeVote`), wider returns on `forHome` and `graduate`,
+   guards on `polls:vote`, `unvote`, `addItem`, `remove` and `setStatus` that
+   only fire for this poll, a scheduled re-check in `homes:leave` (its
+   arguments and return unchanged), and two internal-only options on
+   `push.notifyHome`. The dry run deletes no index. The rules are in
+   `lib/companionVote.ts`; the writes are in `companion.ts`. Reviewed once;
+   the fixes are in. (While this was being written, the deployment gained the
+   `companion_votes` table and its indexes from another push, without these
+   functions, so the latest dry run lists no index to add.)
+   - *Who and when.* The server opens it, inside `graduate`, when the house
+     has two or more members and at least two things to choose. A house of
+     one picks as before (`start`). So does `start`'s graduate-first path:
+     that phone is already choosing.
+   - *A seed grows meanwhile* (the plan's promise). The same write starts the
+     next one as a seed (`undecided`), the first option standing in for its
+     species, so chores, care, events and dinners while the house decides all
+     count, and its six days run from the graduation. A seed is never ready
+     (`readiness`). The vote gives it a species; the growth stays.
+   - *The options.* Three: the best plant, the best pet, the best of the rest.
+     Only what `start` would take today (every house's, bought, earned, in
+     season), never the one that just graduated. Bought and not grown leads
+     (the newest arrival), then in season, earned, every house's; anything in
+     the album comes last. Within a tier the order turns by the album's count,
+     so two graduations in a row don't offer the same three.
+   - *The ballot.* Yes or no per option, swiped like movie night, through
+     `polls:vote` with the species as the target. A ballot grows nothing.
+   - *How it ends.* When every member has answered every option (asked again
+     after each new answer, and when somebody leaves the house); after 24
+     hours; when someone settles it (`decide`, on the ballots so far, once
+     somebody else has answered); or when someone picks before anyone else has
+     answered (`start`).
+   - *The winner.* Most yeses among current members. A tie goes to one the
+     house hasn't grown, then to the fewer noes, then to the server's order.
+     It has to be growable at that moment (a season can end inside the day);
+     if it isn't, the next one wins.
+   - *Nobody says yes.* It closes with no winner and no notification. The
+     seed keeps growing, and whoever picks first picks: any species the house
+     can grow.
+   - *Twice can't happen.* The vote turns `closed` in the write that applies
+     the species, and Convex runs two closing writes one after the other: the
+     second finds it closed and answers with what was chosen.
+   - *Picking instead of voting* (my call). Nobody waits on anybody, and no
+     answer is thrown away. A member may pick straight away, any species,
+     until someone else has answered; after that they vote or `decide`, and
+     `decide` counts every answer exactly as the deadline would. A free
+     override would make the vote theatre, and no override would hold a house
+     to the slowest phone for a day. `decide` waits for one other answer
+     rather than an hour: settling a vote nobody else has touched is just
+     picking, which `start` already does, and a waiting time would only hold
+     up the person who's there.
+   - *The house's choice holds until it graduates.* A pick that lands after
+     the vote chose (a phone that was offline, Choose left open) gets the same
+     answer if it agrees and "The house already chose" if it doesn't. It can
+     never let the choice go, along with its growth. There is no window for a
+     change of mind: one member undoing the house's vote is the case it
+     guards against. The next chance is the next vote, and a ready one still
+     graduates through `start` as always. A seed that one person `picked`
+     before anyone else answered can be changed like any pick.
+   - *Old builds* (verified in the review with git). Every TCA build has
+     `case movie, recipe, generic` (`Poll.swift` since 3efc4a5, and on `stage`
+     at 1.11.0), so a `generic` poll decodes as `generic`, never as the
+     `.movie` fallback. They list polls by kind, too: `.movie` in movie night,
+     `.recipe` in dinner, `.movie` in the dock (dev). Pre-TCA builds filter on
+     the string, `$0.type == "movie"` (`PollsManager.swift:129`). So a
+     `generic` poll is never drawn anywhere. The server never calls
+     `polls:create`, whose `polls` push every build routes to the movie game.
+   - *Three notifications,* through `push.notifyHome`, so each lands in the
+     feed: `ready` (all grown up, to the whole house), and only where there's
+     a vote, `vote` (it opened) and `arrived` (it was chosen; not to whoever
+     chose it). A seed that grew up while nobody chose gets `ready` alone when
+     it is chosen, with `arrived` marked rather than sent a second later.
+     Category `companion`: an old build shows a plain row that goes nowhere,
+     never the movie game. Each is keyed once on `companions.notified`,
+     written in the same mutation that schedules the push. The copy is in both
+     languages; English is sent, as by every other push, because nothing on
+     the server knows a reader's language.
+     - *Who hears them: `COMPANION_NOTIFY`.* Unset or `off`, nobody: no push,
+       no feed row. Only Debug builds draw Nestie, and every build reads the
+       feed. `sandbox`: pushes only to devices on the APNs sandbox gateway
+       (development-signed Xcode installs; `push_tokens.environment` is the
+       gateway the token really works on, corrected on the first
+       `BadDeviceToken`), and no feed row. `on`: everyone, push and feed. The
+       key is written whatever the setting, so turning it on later announces
+       nothing stale. It goes to `sandbox` after the deploy, and to `on` with
+       `CompanionFlag` (step 7).
+       A `sandbox` send is strict: a `BadDeviceToken` is skipped, never retried
+       on production, corrected or dropped, so a TestFlight build that
+       misreports "sandbox" isn't reached through the fallback.
+     - `ready`: "Nestie's all grown up!" / "It's the big moment. Come to
+       Today." TR "Nestie kocaman oldu!" / "Büyük an geldi, Bugün'e bir uğra."
+     - `vote`: "Who's next?" / "Nestie's in the album now. Help pick the
+       next one." TR "Sıradaki kim olsun?" / "Nestie albüme girdi. Yenisini
+       beraber seçiyoruz, gel oyunu ver."
+     - `arrived`: "The new one's here!" / "Come say hi on Today." TR "Yenisi
+       geldi!" / "Bugün'e gel, bir merhaba de."
+   - *The economy.* No new coin. The welcome is once, stages once per slot,
+     the graduation as before. An undecided seed grows but pays no stage
+     (its stand-in may be a pet, whose seven stages come earlier); when it is
+     chosen, `chooseSeed` pays up to the real species' stage at its points.
+   - *For the client* (not started):
+     - `forHome.current.undecided`: draw a seed or an egg, not `species`.
+     - `forHome.vote`: the poll, open or closed, the deadline, the options
+       with yes and no counts, the caller's answers, `answered` of `members`,
+       `othersVoted`, how it ended, the winner.
+     - Ballots: `polls:vote` and `polls:unvote` on `vote.pollId`.
+     - `companion:decide { homeId }` gives `chosen`, `noVotes`, `alone`
+       (nobody else has answered: pick with `start` instead), `closed` or
+       `none`.
+     - `start` on a seed is the pick. It throws "The house is voting on the
+       next one" once someone else has answered, and "The house already chose"
+       for a different species once the vote has chosen.
+     - `graduate` now also returns `vote`: show the vote, not Choose.
+     - `ActivityCategory.companion`, routed to Today.
+     - The pick, `decide` and the ballots are optimistic, each with its own
+       rollback.
+   - *Questions for you* (each with my recommendation):
+     - Turkish pushes need the phone's language on the server: an optional
+       `language` on `registerDevice`, then per-device copy for every push,
+       not only Nestie's. Recommended, as its own small change.
+     - Twenty-four hours, or shorter? Recommended: 24 h. Most votes end
+       earlier, when everyone has answered.
+     - Should a member on an old build, who can't see Nestie, count towards
+       "everyone"? Today they do, so that house's vote waits for the deadline
+       unless someone settles it. Recommended: keep it. Settling it is one tap.
 4. **The jar takes money.** Choose StoreKit 2 or RevenueCat; it replaces
    `SparkleStoreClient.liveValue`. Four consumables in App Store Connect,
    priced from Apple's tiers. `jar:topUp` verifies each transaction on the
@@ -907,7 +1036,9 @@ In order — each step can go to testers on its own:
 6. **The finale**: "You've grown them all", the crown, growing a favourite
    again in a new colour.
 7. **Release:**
-   - turn `CompanionFlag` on for Release;
+   - turn `CompanionFlag` on for Release, and in the same release
+     `npx convex env set COMPANION_NOTIFY on` (it is `sandbox` until then, so
+     only Xcode installs hear Nestie and the feed stays clean);
    - an accessibility pass (VoiceOver on the shop and the store) and one more
      read of the Turkish;
    - a feature-tier changelog entry for the version, written for the household;
