@@ -358,6 +358,12 @@ public enum Checkout: Equatable, Sendable {
     case makeUp(Coins, short: Int)
     /// Not enough even so; this many Sparkles more would do it.
     case short(sparkles: Int)
+
+    /// Not enough, even with Sparkles to make up the Leaves.
+    public var isShort: Bool {
+        if case .short = self { return true }
+        return false
+    }
 }
 
 extension CompanionHouse {
@@ -440,6 +446,12 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
     /// compares them at example prices, which it never shows or charges.
     public static let shelf: [SparklePack] = zip([300, 1_000, 2_200, 5_000], [Decimal(string: "2.99"), Decimal(string: "8.99"), Decimal(string: "17.99"), Decimal(string: "34.99")]).map {
         SparklePack(id: "com.walhallaa.NestZone.sparkles.\($0)", sparkles: $0, displayPrice: nil, price: $1)
+    }
+
+    /// How many Sparkles a product id stands for: the number it ends in, and
+    /// `0` for an id that is not a pack.
+    public static func sparkles(inProduct id: String) -> Int {
+        shelf.first { $0.id == id }?.sparkles ?? 0
     }
 
     /// The one pack that is cheapest per Sparkle, if the store priced them

@@ -203,6 +203,13 @@ struct MainView: View {
         // The house's companion is shared, so it is read for the life of the
         // tab bar too; Release builds draw none of it and never ask.
         .task { if CompanionFlag.isEnabled { await store.send(.companion(.task)).finish() } }
+        // Purchases that finish outside a tap (Ask to Buy, an interrupted one):
+        // for as long as this screen is, which is as long as somebody is signed
+        // in with a home.
+        // Keyed on the house and the person, so a change of either restarts it.
+        .task(id: PurchaseWatch(home: store.companion.homeID, user: store.companion.userID)) {
+            if CompanionFlag.isEnabled { await store.send(.companion(.watchPurchases)).finish() }
+        }
     }
 
     /// Whether the dock is drawn. It steps aside where the screen has a field
@@ -639,4 +646,10 @@ private struct CapturedToast: View {
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: Text(L10n.commonOpen), open)
     }
+}
+
+/// Who the purchase listener is for.
+private struct PurchaseWatch: Hashable {
+    var home: HomeID
+    var user: UserID?
 }

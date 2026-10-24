@@ -231,6 +231,14 @@ enum Bench {
             report("picked", store)
             try? await Task.sleep(for: .seconds(2))
             report("pick settled", store)
+        case "store":
+            // The Sparkles store's shelf: what the store priced, or that it
+            // could not be asked. Buys nothing.
+            store.send(.storeTapped)
+            store.send(.storeAppeared)
+            try? await Task.sleep(for: .seconds(3))
+            let shelf = store.packs.map { "\($0.sparkles)=\($0.displayPrice ?? "-")" }.joined(separator: " ")
+            log.notice("[store] test \(SparkleStoreClient.isTestStore) packs \(shelf, privacy: .public) loaded \(store.arePacksLoaded) unavailable \(store.packsUnavailable)")
         case "decorate":
             store.send(.decorateTapped)
             store.send(.spotPicked(.ground))
@@ -371,7 +379,10 @@ actor FakeNestieServer {
             setLayout: { _, layout in try await self.setLayout(layout) },
             setHolidays: { _, holidays in try await self.setHolidays(holidays) },
             importLocal: { _, _, _ in .closed },
-            buy: { _, item, requestID, expected in try await self.buy(item, requestID, expected) }
+            buy: { _, item, requestID, expected in try await self.buy(item, requestID, expected) },
+            // The bench has no jar to top up: a real StoreKit purchase made on
+            // it is refused, and stays unfinished.
+            topUp: { _, _ in TopUpOutcome(status: .invalid) }
         )
     }
 

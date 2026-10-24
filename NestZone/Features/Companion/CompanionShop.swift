@@ -1105,12 +1105,34 @@ struct SparkleStoreView: View {
     private var packs: some View {
         let best = SparklePack.bestValue(store.packs)
         return VStack(spacing: 0) {
-            ForEach(Array(store.packs.enumerated()), id: \.element.id) { index, pack in
-                if index > 0 { Divider().padding(.leading, 70) }
-                row(pack, size: index, isBest: best == pack.id)
+            if store.packs.isEmpty {
+                unpriced
+            } else {
+                ForEach(Array(store.packs.enumerated()), id: \.element.id) { index, pack in
+                    if index > 0 { Divider().padding(.leading, 70) }
+                    row(pack, size: index, isBest: best == pack.id)
+                }
             }
         }
         .glassCard()
+    }
+
+    /// The store has not priced the packs yet, or cannot be reached.
+    @ViewBuilder
+    private var unpriced: some View {
+        if store.packsUnavailable {
+            VStack(spacing: 12) {
+                Text(L10n.storeUnavailable)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                SecondaryButton(L10n.storeRetry, symbol: "arrow.clockwise") { store.send(.storeAppeared) }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(20)
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity, minHeight: 120)
+        }
     }
 
     private func row(_ pack: SparklePack, size: Int, isBest: Bool) -> some View {
@@ -1159,12 +1181,17 @@ struct SparkleStoreView: View {
                 }
                 if let note {
                     Label {
-                        Text(note.isWaiting ? L10n.storeWaiting : L10n.storeDidnt)
+                        switch note.kind {
+                        case .waiting: Text(L10n.storeWaiting)
+                        case .failed: Text(L10n.storeDidnt)
+                        case .unverified: Text(L10n.storeUnverified)
+                        case .retrying: Text(L10n.storeRetrying)
+                        }
                     } icon: {
-                        Image(systemName: note.isWaiting ? "clock" : "exclamationmark.circle")
+                        Image(systemName: note.kind == .failed || note.kind == .unverified ? "exclamationmark.circle" : "clock")
                     }
                     .font(.footnote)
-                    .foregroundStyle(note.isWaiting ? Color.secondary : Palette.danger)
+                    .foregroundStyle(note.kind == .failed || note.kind == .unverified ? Palette.danger : Color.secondary)
                 }
             }
             Spacer(minLength: 8)
@@ -1183,7 +1210,7 @@ struct SparkleStoreView: View {
             // others wait their turn.
             .disabled(store.buyingPack != nil && !isBuying)
             .allowsHitTesting(!isBuying)
-            .shake(on: note.map { $0.isWaiting ? 0 : 1 } ?? 0)
+            .shake(on: note.map { $0.kind == .failed || $0.kind == .unverified ? 1 : 0 } ?? 0)
             .accessibilityLabel(Text(verbatim: "\(Price.sparkles(pack.sparkles).spoken), \(pack.displayPrice ?? String(localized: L10n.storeTestPrice))\(isBest ? ", \(String(localized: L10n.storeBestValue))" : "")"))
             .accessibilityIdentifier("Pack.\(pack.sparkles)")
         }

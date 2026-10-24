@@ -43,6 +43,38 @@ public struct CompanionClient: Sendable {
     /// Buys one thing for the house. `requestID` is the tap's own, so a retry
     /// with it is the same purchase; `expected` is the price the card showed.
     public var buy: @Sendable (HomeID, ShopItem, _ requestID: String, _ expected: Price) async throws -> BuyOutcome
+    /// Gives the house the Sparkles of one App Store transaction (`jar:topUp`,
+    /// an action: the server verifies Apple's signature, once per transaction).
+    /// `signedTransaction` is the JWS of the transaction exactly as StoreKit
+    /// signed it. Safe to repeat: the second answer is `already`.
+    public var topUp: @Sendable (HomeID, _ signedTransaction: String) async throws -> TopUpOutcome
+}
+
+/// What `jar:topUp` made of one transaction.
+public struct TopUpOutcome: Equatable, Sendable {
+    public enum Status: Equatable, Sendable {
+        /// These Sparkles are in the jar now.
+        case credited
+        /// They were already; nothing was added.
+        case already
+        /// The transaction did not verify, or is not one of ours.
+        case invalid
+        /// Apple took the purchase back: nothing to credit, nothing to wait for.
+        case revoked
+        /// A status this build does not know. Treated as not final.
+        case unknown
+    }
+
+    public var status: Status
+    public var sparkles: Int
+    /// The jar after, when the server says. The live read carries it anyway.
+    public var jar: Coins?
+
+    public init(status: Status, sparkles: Int = 0, jar: Coins? = nil) {
+        self.status = status
+        self.sparkles = sparkles
+        self.jar = jar
+    }
 }
 
 /// Where a phone says the house is: minutes east of UTC and a two-letter region.
@@ -229,6 +261,10 @@ extension CompanionClient: DependencyKey {
                 "expectedPrice": expected.arguments,
             ]
             return try await ConvexConnection.shared.mutate("shop:buy", args: args, as: Bought.self).outcome
+        },
+        topUp: { homeID, signedTransaction in
+            let args: [String: ConvexEncodable?] = ["homeId": homeID, "signedTransaction": signedTransaction]
+            return try await ConvexConnection.shared.act("jar:topUp", args: args, as: ToppedUp.self).outcome
         }
     )
 
@@ -443,6 +479,25 @@ extension DecideOutcome {
         case "closed": .closed(winner: winner)
         default: .none
         }
+    }
+}
+
+/// The answer to `jar:topUp`. A status this build does not know decodes as
+/// `.unknown` and the transaction is left to be asked about again.
+private struct ToppedUp: Decodable, Sendable {
+    var status: String
+    var sparkles: Int?
+    var jar: WireCoins?
+
+    var outcome: TopUpOutcome {
+        let known: TopUpOutcome.Status = switch status {
+        case "credited": .credited
+        case "already": .already
+        case "invalid": .invalid
+        case "revoked": .revoked
+        default: .unknown
+        }
+        return TopUpOutcome(status: known, sparkles: sparkles ?? 0, jar: jar?.coins)
     }
 }
 

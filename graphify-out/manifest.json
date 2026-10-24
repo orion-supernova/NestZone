@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.d.ts": {
-    "mtime": 1792853608.6517446,
-    "ast_hash": "bad8f1fe43ca67cb65661443303ad168",
+    "mtime": 1792862563.90596,
+    "ast_hash": "c0fb87303b21747bcba6c867d3e4040b",
     "semantic_hash": ""
   },
   "backend/convex/_generated/api.js": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "backend/convex/http.ts": {
-    "mtime": 1789046923.0287228,
-    "ast_hash": "9096bef06ca8413bd4b49bfde9914632",
+    "mtime": 1792862558.8024285,
+    "ast_hash": "cad5ab69265a43a9a0a759dc4a078a4a",
     "semantic_hash": ""
   },
   "backend/convex/lib/auth.ts": {
@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1792844662.2327318,
-    "ast_hash": "3ab6785be448a414f6667b4fa8c6157f",
+    "mtime": 1792863055.112038,
+    "ast_hash": "91298083dfe18119da04596c15c95529",
     "semantic_hash": ""
   },
   "backend/convex/shopping.ts": {
@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "backend/package.json": {
-    "mtime": 1789046923.0337932,
-    "ast_hash": "7c0958db528b4c7c4537975205e3bc61",
+    "mtime": 1792862343.677983,
+    "ast_hash": "360a5c99d40e7aea08ceb3523bd18557",
     "semantic_hash": ""
   },
   "backend/scripts/run-migration.mjs": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792853206.118329,
-    "ast_hash": "9549944381879e2dc36e64d1de8c77c9",
+    "mtime": 1792863143.6958382,
+    "ast_hash": "80ead65371a373676675833ef2dee682",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/AppView.swift": {
-    "mtime": 1792839374.203383,
-    "ast_hash": "be6b5cda75481b7f212c092fb644e1c3",
+    "mtime": 1792863016.1030834,
+    "ast_hash": "823df6a208acfd7b2e73c5c2000de67b",
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1792855070.3243744,
-    "ast_hash": "dc22872cf51ceed35fab4db7e89ccca2",
+    "mtime": 1792862503.1915846,
+    "ast_hash": "f007f945ba1ca496c9c9048db7680df1",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -1285,8 +1285,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionFeature.swift": {
-    "mtime": 1792855122.9023976,
-    "ast_hash": "8302f01c31819a157f76f5882c7a5329",
+    "mtime": 1792863016.1023571,
+    "ast_hash": "cf80a55983149329531868d56333c651",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionModels.swift": {
@@ -1335,8 +1335,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/HANDOFF.md": {
-    "mtime": 1792854676.414744,
-    "ast_hash": "76a98f717c18449d1608599771ecae58",
+    "mtime": 1792863143.6966317,
+    "ast_hash": "796c9b7a633d2ed8d5c92d90a4af1192",
     "semantic_hash": ""
   },
   "Docs/Companion/HOLIDAYS.md": {
@@ -1355,8 +1355,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/plan/index.html": {
-    "mtime": 1792854995.5843747,
-    "ast_hash": "cd3621f829fb19f843bc86ced4c84442",
+    "mtime": 1792855287.5774858,
+    "ast_hash": "01d8af4254c47d119af5bc5b488e45f9",
     "semantic_hash": ""
   },
   "Docs/Companion/plan/plant.html": {
@@ -1660,18 +1660,18 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCatalog.swift": {
-    "mtime": 1792839024.9756207,
-    "ast_hash": "7ae30fe13a0f441133be295673aedb90",
+    "mtime": 1792863016.1025841,
+    "ast_hash": "9c0e2633b2d2c3678a3f0f1a04fe3533",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/SparkleStore.swift": {
-    "mtime": 1792783674.3262472,
-    "ast_hash": "97ad258d7f93733a851bdb89dc96e64d",
+    "mtime": 1792863008.5975318,
+    "ast_hash": "918a774b046ed6c6c48a6439863ec16a",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionShop.swift": {
-    "mtime": 1792855065.1363194,
-    "ast_hash": "2c67ecd9494c752004f9a79a17d1b5fd",
+    "mtime": 1792862540.9479964,
+    "ast_hash": "78ccb067f74e943c17aa73441adb89da",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ShopDesign.swift": {
@@ -1860,8 +1860,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/CompanionClient.swift": {
-    "mtime": 1792855045.0702806,
-    "ast_hash": "1a7ec7bc4a428794bd0f3ae311ecbadb",
+    "mtime": 1792862421.780273,
+    "ast_hash": "d20248502ad0a617fac10aabd4a79457",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionServed.swift": {
@@ -1875,8 +1875,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/NestieBench.swift": {
-    "mtime": 1792854610.0959072,
-    "ast_hash": "8d6d98facf65e3c24b1351ea71db7661",
+    "mtime": 1792862761.9054809,
+    "ast_hash": "a8fbc98c61248863bf839a98853a2aaa",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/PushTokenMemory.swift": {
@@ -1917,6 +1917,36 @@
   "NestZone/Features/Companion/CompanionVoteViews.swift": {
     "mtime": 1792855065.1366558,
     "ast_hash": "d02e92be872f0ad402b6b276c1243748",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/SparkleSettlement.swift": {
+    "mtime": 1792863043.5513244,
+    "ast_hash": "a0b5802d16a74418a42fe5d9c766e598",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/SparkleStoreKit.swift": {
+    "mtime": 1792863043.5511446,
+    "ast_hash": "39f7a1b315f9242ce24c5c53716490a0",
+    "semantic_hash": ""
+  },
+  "NestZoneTests/SparkleStoreTests.swift": {
+    "mtime": 1792863043.551485,
+    "ast_hash": "ebd78c8bbb1ccf67e47e7f34da793cb6",
+    "semantic_hash": ""
+  },
+  "backend/convex/jar.ts": {
+    "mtime": 1792863100.073328,
+    "ast_hash": "0f6d77ae356f08216195f08a1f927d46",
+    "semantic_hash": ""
+  },
+  "backend/convex/jarStore.ts": {
+    "mtime": 1792863055.1116238,
+    "ast_hash": "c1f756dc2b84ef064e9994f61837d655",
+    "semantic_hash": ""
+  },
+  "backend/convex/lib/jar.ts": {
+    "mtime": 1792863030.225254,
+    "ast_hash": "a13a69578d47d796e0205e047684039e",
     "semantic_hash": ""
   }
 }

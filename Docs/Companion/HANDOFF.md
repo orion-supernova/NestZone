@@ -870,7 +870,7 @@ In order — each step can go to testers on its own:
        `serverSafe`, the care gate and key use `now`, a buy under Lab coins
        stays in the Lab. The Lab is a local preview in its own file
        (`companionLab-<home>.json`); the test store's Sparkles land there too
-       (no `jar:topUp` yet).
+       (the server's `jar:topUp` exists since step 4; the test store never calls it).
      - *Place* once per launch, only when the house row lacks it. *Import:* the
        MVP's file is offered once per person and home (mark in UserDefaults,
        written on any answer or error that asking again would repeat, never
@@ -1038,6 +1038,112 @@ In order — each step can go to testers on its own:
    server, once; App Store Server Notifications for refunds (the jar can go
    below zero; nothing bought is taken back). The review notes say Sparkles are
    consumables, shared by the house, with no random boxes.
+   - *Client, done (StoreKit 2):* `SparkleStoreKit` behind
+     `SparkleStoreClient`; `SparkleSettlement` is the rule (server first, then
+     `finish`; `credited`/`already`/`revoked` finish, `invalid` and unknown
+     do not). `appAccountToken` is a v5 UUID derived from the user id
+     (`SparkleAccount`: SHA-256 of `nestzone.user:<id>`), so the server can
+     tie a receipt to a person. `NestZone.storekit` (repo root, outside the
+     target) is the Debug run scheme's StoreKit configuration; `-sparkleStore
+     test` is the old test store. To do: App Store Connect products, the
+     server's environment setting for Xcode/sandbox, an end-to-end purchase
+     on a device, then the refunds (server notifications).
+
+   **StoreKit 2, chosen (open question 6). The server side is built (24
+   October), typechecked and dry-run, not deployed or committed.** Additive
+   only: a new table, three new modules, one HTTP route, one dependency
+   (`@apple/app-store-server-library`, the first `"use node"` module on this
+   deployment; the dry run shows only "the server's version for Node.js
+   actions" changing).
+   - *The contract.* `jar:topUp({ homeId, signedTransaction })`, an action;
+     `signedTransaction` is `jwsRepresentation`. It answers `{ status,
+     sparkles, jar }`: `credited` (now in the jar), `already` (credited
+     before: this house hears the same `sparkles`, another house 0), `revoked`
+     (Apple took it back; nothing moved now), `invalid` (not ours to credit).
+     `invalid` means the data is not Apple's or not ours to credit: offline
+     verification fails, Sandbox while it is off, Xcode from a non-test
+     account, not a consumable, or bought by another account. The client
+     leaves `invalid` unfinished anyway, so the buyer's own phone can still
+     send it. A thrown error is not an answer — not a member, or a genuine
+     Apple transaction we can't settle yet (online check failed but offline
+     passed, `APPLE_APP_ID` unset, a Production product not in the table) —
+     and the transaction stays unfinished for the next try. `jar` is the
+     balances after, or null.
+   - *The buyer.* The app signs `appAccountToken` into every purchase,
+     `SparkleAccount.token`: SHA-256 of `nestzone.user:<users._id>`, the first
+     16 bytes as a version 5 UUID. `accountToken` in lib/jar.ts is the same
+     bytes; `credit` refuses (`invalid`, logged) a token that isn't the
+     caller's, and a missing one outside Xcode. Test vector, checked in Swift
+     and Node: `jh7abc123def456ghi789jkl0mn1pq2r` ->
+     `d04f2213-14a2-506a-8069-fc02089326a9`.
+   - *Products.* `com.walhallaa.NestZone.sparkles.300`, `.1000`, `.2200`,
+     `.5000`, consumables. The server's table is `CATALOG.sparklePacks` from
+     the exported catalog, so it is `SparklePack.shelf` by construction; a
+     `quantity` above one multiplies, up to ten.
+   - *Verification* (convex/jar.ts): the environment is read off the JWS only
+     to choose a verifier, which then refuses it if the claim was false. Apple
+     Root CA - G3 is pinned in lib/jar.ts (fingerprint in the comment,
+     checked twice against apple.com's certificate). Online first (OCSP); if
+     that fails for any reason, offline as of the JWS's signing date, and only
+     the offline verdict can make it `invalid`. Then bundle id, `Consumable`,
+     a known product. `JAR_ENVIRONMENTS` says what may credit, and always
+     includes Production; unknown names are logged. Production without
+     `APPLE_APP_ID` throws. `Xcode` is
+     unverifiable and so accepted only when listed, and only for the admins
+     and `JAR_TEST_USER_IDS`: it mints Sparkles, and is for Debug builds
+     running the StoreKit configuration file.
+   - *Once* (convex/jarStore.ts). `jar_purchases`, one row per
+     (transaction, environment) across the deployment, written in the same
+     transaction as the `topUp` ledger row (`topup:<transactionId>`; other
+     environments carry their name, `topup:Sandbox:<id>`, because Xcode
+     numbers from 0 on every Mac). Never purged with a house.
+   - *Refunds.* `POST /appstore/notifications` (http.ts) for V2: `REFUND` and
+     `REVOKE` debit what was credited, once (`refund:<transactionId>`), and
+     set `revoked_at`; the jar may go below zero and nothing bought is taken
+     back. A refund for a transaction we never saw leaves a tombstone, so the
+     pre-refund JWS can't be credited afterwards. Anything else — `TEST`,
+     `REFUND_DECLINED`, `REFUND_REVERSED`, consumption requests, unknown
+     transactions — is a 200 and ignored. Every verified type is logged
+     first, `TEST` included. 400 for a payload that isn't Apple's; 500 when a
+     retry could work, and for a genuine payload addressed to another app id
+     or environment (`INVALID_APP_IDENTIFIER`/`INVALID_ENVIRONMENT`, logged as
+     an error): that is our configuration, and a 200 would lose a refund. Sandbox and Production
+     notifications are both verified whatever `JAR_ENVIRONMENTS` says, so a
+     Sandbox top-up credited while Sandbox was on still comes back out.
+   - *The test store.* The phone's `SparkleStoreClient` (while `isTestStore`)
+     never calls the server and its Sparkles stay in the Lab, so there was
+     nothing to gate: no path mints Sparkles on the server except `Xcode`
+     above.
+   - *Not done, deliberately.* `REFUND_REVERSED` does not re-credit (rare; a
+     second key would be needed so a later refund still debits). A JWS signed
+     before a refund whose notification never arrived would still credit;
+     closing that needs the App Store Server API's transaction lookup, which
+     needs an API key. No push or feed row for a top-up yet.
+   - *Your App Store Connect to-do:*
+     1. Create four consumables with exactly these product ids:
+        `com.walhallaa.NestZone.sparkles.300`, `…sparkles.1000`,
+        `…sparkles.2200`, `…sparkles.5000`, priced from the tiers in open
+        question 2 (2.99 / 8.99 / 17.99 / 34.99).
+     2. Copy the app's Apple ID (App Information -> Apple ID, digits) and
+        `npx convex env set APPLE_APP_ID <digits>`.
+     3. App Information -> App Store Server Notifications: Version 2, both
+        Production and Sandbox URL
+        `https://nestzone-convex-api.walhallaa.com/appstore/notifications`.
+     4. On the server, add a cloudflared ingress rule like the
+        `/.well-known/*` one, `path: /appstore/.*` -> `http://127.0.0.1:3211`,
+        above the catch-all for that hostname, and restart the tunnel. Until
+        then the URL is 404 (checked 24 October). Then "Request a Test
+        Notification" should log a `TEST` and get a 200.
+     5. For a TestFlight round, `JAR_ENVIRONMENTS "Production,Sandbox"`, back
+        to `Production` after: Sandbox Sparkles are free to anyone with a
+        sandbox account, and this is the only deployment. **While a build is
+        in App Review, `JAR_ENVIRONMENTS` must include Sandbox, or the
+        reviewer's purchase won't deliver; remove it after.** What a round
+        credited, newest first, 500 at most a call:
+        `npx convex run jarStore:credited '{"environment":"Sandbox"}'`.
+   - *What's left for the app:* `SparkleStoreClient.liveValue` on StoreKit 2,
+     calling `jar:topUp` with `jwsRepresentation` and finishing on any status;
+     `Transaction.updates` and `.unfinished` sent the same way.
 5. **The art pass** (its own job): the 32 sketched species — new growth rules
    for the plants, a few body plans for the pets — and the 10 sketched
    decorations; scenes as real backdrops; things to wear drawn on. Measure

@@ -229,9 +229,16 @@ before changing anything here.
   is glass snapped to the bottom edge, running on past the home indicator —
   not a native half-sheet, whose float leaves a strip of screen under it,
   which the owner rejected. Real money goes through the store's own sheet with
-  nothing of ours in front of it. The store is a test store
-  (`SparkleStoreClient`) until StoreKit or RevenueCat replaces its
-  `liveValue`, and nothing else.
+  nothing of ours in front of it. The store is StoreKit 2
+  (`SparkleStoreKit`, behind `SparkleStoreClient`): a purchase is sent to
+  `jar:topUp` as its signed transaction and **finished only after the server
+  answers** `credited`, `already` or `revoked` (`SparkleSettlement`), so a
+  crash or a dead network costs a delay, never the Sparkles. A listener over
+  `Transaction.unfinished` and `.updates` (`watchPurchases`, started by the
+  screen's task, ended with it) lands Ask to Buy approvals and interrupted
+  purchases. Debug builds can still use the old test store with
+  `-sparkleStore test`; `NestZone.storekit` is the Debug run scheme's
+  StoreKit configuration and is not in the app target.
 - **The shop is an ordinary NestZone screen that happens to sell things.**
   Glass cards on the Backdrop, the theme's accent, the app's type, SF Symbols.
   Money is `Amount` (`leaf.fill` and `sparkle`, colour on the glyph only via
@@ -589,6 +596,32 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
 # a real push, sign a JWT and POST to a fake device: `BadDeviceToken` means the
 # credentials are good, `InvalidProviderToken` means they are not.
 
+# Sparkle top-ups (StoreKit 2, `jar:topUp`). Production fails closed until the
+# app's numeric Apple ID is set (App Store Connect -> App Information -> Apple
+# ID); Apple signs it into every Production transaction.
+#   npx convex env set APPLE_APP_ID <digits>
+# Which environments may credit a jar. Production is always in. Sandbox is
+# free to the buyer, so on this one deployment it mints Sparkles for anyone
+# with a sandbox account: on for a TestFlight round, off after. **While a
+# build is in App Review, JAR_ENVIRONMENTS must include Sandbox, or the
+# reviewer's purchase won't deliver; remove it after.** "Xcode" (the
+# StoreKit configuration file, signed by your own Mac, unverifiable) is
+# accepted only for the admins and JAR_TEST_USER_IDS, and is for development.
+#   npx convex env set JAR_ENVIRONMENTS "Production"
+#   npx convex env set JAR_ENVIRONMENTS "Production,Sandbox,Xcode"   # dev only
+#   npx convex env set JAR_TEST_USER_IDS "jh7abc..."
+# Refunds: App Store Connect -> the app -> App Information -> App Store Server
+# Notifications, Version 2, Production and Sandbox URL both:
+#   https://nestzone-convex-api.walhallaa.com/appstore/notifications
+# That hostname is the API origin (:3210); HTTP actions live on the site
+# origin (:3211), and the tunnel forwards only /.well-known/* there today, so
+# the route answers 404 until a second ingress rule sends /appstore/.* to
+# :3211 too (Docs/Convex-Migration/Backend-Deploy-Runbook.md, the tunnel
+# section). App Store Connect's "Request a Test Notification" then lands as a
+# TEST, which the server answers 200 and ignores (`npx convex logs`).
+# What a Sandbox round credited, and to which jars (bounded, newest first):
+#   npx convex run jarStore:credited '{"environment":"Sandbox"}'
+
 # Who hears Nestie's three notifications (ready, the vote, the new one).
 # Unset or off: nobody, no push and no feed row. sandbox: push only to
 # development-signed Xcode installs (the APNs sandbox gateway), no feed row.
@@ -728,6 +761,33 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   activity older than 90 days in self-rescheduling batches. The feed is the one
   table here that is *meant* to be forgotten; kept forever it is not a storage
   bill but a slow bell.
+- **A Sparkle top-up is credited by the server, from Apple's signature, once
+  per transaction across the deployment.** The phone sends StoreKit 2's
+  `jwsRepresentation` to `jar:topUp` (a Node action, convex/jar.ts: Apple's
+  `SignedDataVerifier`, the chain to a pinned Apple Root CA - G3, OCSP, bundle
+  id, environment, consumable, a product in lib/jar.ts's table, which is the
+  catalog the Swift exports) and convex/jarStore.ts writes the purchase row,
+  the ledger row and the balance in one transaction. `jar_purchases` is the
+  idempotency, not the ledger, because a ledger key is unique only within a
+  home and a receipt must credit one home: the same house asking again hears
+  `already` with its Sparkles, another house `already` with 0. A purchase
+  credits only its buyer: the app signs `appAccountToken` (a UUID derived
+  from the user id, `accountToken` in lib/jar.ts, the same bytes as
+  `SparkleAccount.token`, with a test vector both sides keep) and a mismatch,
+  or no token outside Xcode, is `invalid`. Those rows
+  outlive the house (`purgeHome` leaves them) or a deleted house's receipts
+  could be spent again. `invalid` is only for data that is not Apple's or
+  not ours to credit (offline verification fails, Sandbox off, Xcode from a
+  non-test account, not a consumable, another buyer). A genuine Apple
+  transaction we can't settle yet — the online check fails but the offline
+  one passes, `APPLE_APP_ID` unset, a Production product the table doesn't
+  know — is thrown, so the phone keeps it and asks again. Refunds arrive at
+  `POST /appstore/notifications`: `REFUND` and `REVOKE` debit the jar once
+  (`refund:<transactionId>`), the jar may go below zero and nothing bought is
+  taken back; a refund for a transaction never credited leaves a tombstone so
+  its pre-refund JWS can't be credited later. Every other type and every
+  unknown transaction is a 200. The phone's test store (`SparkleStoreClient`
+  while `isTestStore`) never reaches the server: its Sparkles land in the Lab.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

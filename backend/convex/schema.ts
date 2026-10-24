@@ -1633,8 +1633,10 @@ export default defineSchema({
    * `key` is unique within a home and is the idempotency of every move:
    * `welcome`, `stage:<album slot>:<stage>`, `graduation:<album slot>` (the
    * slot is `album_count` when paid, so swapping companions never pays twice),
-   * `buy:<requestId>`, `import:<userId>`, and `topUp:<transactionId>` when
-   * the store takes money (step 4). Amounts are signed deltas.
+   * `buy:<requestId>`, `import:<userId>`, `topup:<transactionId>` for a
+   * verified App Store top-up and `refund:<transactionId>` for its refund
+   * (non-Production environments carry their name: `topup:Sandbox:<id>`, see
+   * lib/jar.ts). Amounts are signed deltas.
    */
   jar_ledger: defineTable({
     home_id: v.id("homes"),
@@ -1661,7 +1663,43 @@ export default defineSchema({
     .index("by_home_key", ["home_id", "key"])
     // The jar's feed: who added and who spent, newest first. Also the purge's.
     .index("by_home_created", ["home_id", "created"])
-    // Unused so far. Reserved for step 4, when the store takes money: "this
-    // house's top-ups" and "its refunds" are the questions it answers.
+    // "This house's top-ups" and "its refunds". Nothing reads it yet: the
+    // deployment-wide record of a purchase is `jar_purchases`.
     .index("by_home_kind", ["home_id", "kind"]),
+
+  /**
+   * Every App Store transaction the server has ruled on, once per transaction
+   * across the whole deployment (`jar:topUp`, convex/jarStore.ts).
+   *
+   * This, not the ledger, is what makes a top-up idempotent: the ledger's key
+   * is unique only within a home, and a transaction must credit one home,
+   * once, whichever house a phone sends it to. So these rows outlive the house
+   * they credited — `companion:purgeHome` never touches them — or a deleted
+   * house's receipts could be spent again in another.
+   *
+   * A row with no `credited_at` is a tombstone: Apple said it was refunded or
+   * revoked before any jar was credited, and it never will be.
+   */
+  jar_purchases: defineTable({
+    transaction_id: v.string(),
+    original_transaction_id: v.string(),
+    product_id: v.string(),
+    /** What the transaction is worth, from lib/jar.ts's table, at the time. */
+    sparkles: v.number(),
+    /** The house credited. Absent on a tombstone written from a notification. */
+    home_id: v.optional(v.id("homes")),
+    /** Whose phone sent it. Absent on a tombstone written from a notification. */
+    user_id: v.optional(v.id("users")),
+    environment: v.union(v.literal("Production"), v.literal("Sandbox"), v.literal("Xcode")),
+    purchased_at: v.number(),
+    credited_at: v.optional(v.number()),
+    revoked_at: v.optional(v.number()),
+    created: v.number(),
+  })
+    // Apple's ids are per environment (Xcode starts at 0 on every Mac), so the
+    // identity is the pair.
+    .index("by_transaction_environment", ["transaction_id", "environment"])
+    // What one environment credited, newest first (`jarStore:credited`):
+    // listing a Sandbox round after TestFlight or App Review.
+    .index("by_environment_credited", ["environment", "credited_at"]),
 });

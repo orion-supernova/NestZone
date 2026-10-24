@@ -123,8 +123,16 @@ public struct CompanionFeature: Sendable {
         /// are enough, the store closes onto the same card.
         public var pending: Purchase?
         /// The packs on the store's shelf, and the one being bought.
-        public var packs = SparklePack.shelf
+        /// Empty until the store has priced them: the live store has no
+        /// packs to show before it answers, and an unpriced shelf would be
+        /// buttons for products it may not have. Loaded once, then kept.
+        public var packs = SparkleStoreClient.isTestStore ? SparklePack.shelf : []
+        public var arePacksLoaded = false
+        /// The store could not be asked, or had none to sell.
+        public var packsUnavailable = false
         public var buyingPack: SparklePack.ID?
+        /// The way back to the card is already on its way (see `landed`).
+        var isReturning = false
         /// A pack that didn't simply go through: waiting for a parent's OK, or
         /// failed.
         public var packNote: PackNote?
@@ -288,8 +296,22 @@ public struct CompanionFeature: Sendable {
         }
 
         public struct PackNote: Equatable, Sendable {
+            public enum Kind: Equatable, Sendable {
+                /// Ask to Buy: a parent has to say yes.
+                case waiting
+                /// The store said no, or never answered.
+                case failed
+                /// The purchase did not verify: nothing was added.
+                case unverified
+                /// Paid, and the server could not be asked yet. The purchase
+                /// is kept and credited the next time the app can reach it.
+                case retrying
+            }
+
             public var id: SparklePack.ID
-            public var isWaiting: Bool
+            public var kind: Kind
+
+            public var isWaiting: Bool { kind == .waiting }
         }
 
         /// One purchase tap, for a retry to reuse.
@@ -780,9 +802,15 @@ public struct CompanionFeature: Sendable {
         case storeDismissed
         case storeAppeared
         case packsLoaded([SparklePack])
+        case packsUnavailable
         case packTapped(SparklePack)
         case packBought(SparklePack.ID, PurchaseOutcome)
-        case packFailed(SparklePack.ID)
+        case packFailed(SparklePack.ID, SparkleStoreError?)
+        /// Listens for purchases that finish without a tap on a pack, for as
+        /// long as the effect lives (the screen's task; signing out ends it).
+        case watchPurchases
+        /// Sparkles the server credited from one of those.
+        case sparklesArrived(Int)
         /// Back from the store with enough, after the Sparkles were seen to land.
         case storeReturned
         case birthdaysUpdated(Set<CalendarDay>)
@@ -815,7 +843,7 @@ public struct CompanionFeature: Sendable {
         public enum Alert: Equatable {}
     }
 
-    enum CancelID { case served, album, grow, retry, moment }
+    enum CancelID { case served, album, grow, retry, moment, purchases }
 
     /// How long a write waits for the server before it is taken as failed.
     static let writeTimeout: Duration = .seconds(15)
@@ -1065,6 +1093,7 @@ public struct CompanionFeature: Sendable {
                 return .none
 
             case .storeTapped:
+                state.isReturning = false
                 state.pending = nil
                 state.landed = nil
                 state.packNote = nil
@@ -1072,6 +1101,7 @@ public struct CompanionFeature: Sendable {
                 return .none
 
             case .storeDismissed:
+                state.isReturning = false
                 state.storeOpen = false
                 state.pending = nil
                 state.landed = nil
@@ -1079,62 +1109,94 @@ public struct CompanionFeature: Sendable {
                 return .none
 
             case .storeAppeared:
+                guard !state.arePacksLoaded else { return .none }
+                state.packsUnavailable = false
                 return .run { send in
-                    if let packs = try? await sparkleStore.packs(), !packs.isEmpty {
-                        await send(.packsLoaded(packs))
+                    guard let packs = try? await sparkleStore.packs(), !packs.isEmpty else {
+                        await send(.packsUnavailable)
+                        return
                     }
+                    await send(.packsLoaded(packs))
                 }
 
             case let .packsLoaded(packs):
                 state.packs = packs
+                state.arePacksLoaded = true
+                state.packsUnavailable = false
+                return .none
+
+            case .packsUnavailable:
+                state.packsUnavailable = true
                 return .none
 
             case let .packTapped(pack):
                 guard state.buyingPack == nil else { return .none }
                 state.buyingPack = pack.id
                 state.packNote = nil
+                let homeID = state.homeID
+                let userID = state.userID?.rawValue
                 return .run { send in
                     do {
-                        await send(.packBought(pack.id, try await sparkleStore.purchase(pack.id)))
+                        await send(.packBought(pack.id, try await sparkleStore.purchase(pack.id, homeID, userID)))
                     } catch {
-                        await send(.packFailed(pack.id))
+                        await send(.packFailed(pack.id, error as? SparkleStoreError))
                     }
                 }
 
+            case .watchPurchases:
+                let homeID = state.homeID
+                let userID = state.userID?.rawValue
+                return .run { send in
+                    for await sparkles in sparkleStore.credits(homeID, userID) {
+                        await send(.sparklesArrived(sparkles))
+                    }
+                }
+                .cancellable(id: CancelID.purchases, cancelInFlight: true)
+
+            case let .sparklesArrived(sparkles):
+                // Ask to Buy, or a purchase finished elsewhere, landing while
+                // the store is open: say so. With the store closed the jar
+                // simply changes.
+                guard state.storeOpen else { return .none }
+                state.packNote = nil
+                return landed(sparkles, isInJar: false, state: &state)
+
             case let .packBought(id, outcome):
                 state.buyingPack = nil
-                let sparkles: Int
                 switch outcome {
                 case .cancelled: return .none
                 case .pending:
-                    state.packNote = State.PackNote(id: id, isWaiting: true)
+                    state.packNote = State.PackNote(id: id, kind: .waiting)
                     return .none
-                case let .added(added): sparkles = added
-                }
-                // The test store's Sparkles are not money, and the server has
-                // no top-up yet (`jar:topUp`, step 4): they land in the Lab's
-                // local preview, and what they buy stays there too.
-                state.$lab.withLock { $0.sparkles += sparkles }
-                state.landed = sparkles
-                state.landedTick += 1
-                // Enough now for what sent them here: a moment to see the
-                // Sparkles land — that second is how anyone knows it worked —
-                // then back to the card, which already says so. Not enough
-                // yet, and the store stays.
-                guard let price = state.pending?.price else { return .none }
-                if case .short = state.house.checkout(price) { return .none }
-                return .run { send in
-                    try await clock.sleep(for: .milliseconds(1300))
-                    await send(.storeReturned)
+                case let .added(sparkles):
+                    // The server has them; the jar itself comes on the live
+                    // read, so nothing is added here.
+                    return landed(sparkles, isInJar: false, state: &state)
+                case let .preview(sparkles):
+                    // The test store's Sparkles are not money, and the server
+                    // never hears of them: they land in the Lab's local
+                    // preview, and what they buy stays there too.
+                    state.$lab.withLock { $0.sparkles += sparkles }
+                    return landed(sparkles, isInJar: true, state: &state)
                 }
 
-            case let .packFailed(id):
+            case let .packFailed(id, error):
                 state.buyingPack = nil
-                state.packNote = State.PackNote(id: id, isWaiting: false)
+                let kind: State.PackNote.Kind = switch error {
+                case .notConfirmed: .retrying
+                case .unverified, .refused: .unverified
+                case .unavailable, nil: .failed
+                }
+                state.packNote = State.PackNote(id: id, kind: kind)
                 return .none
 
             case .storeReturned:
+                state.isReturning = false
                 guard state.storeOpen else { return .none }
+                // The Sparkles of a real purchase come on the live read, which
+                // may be a moment behind the answer: if the jar still falls
+                // short, the store stays until it doesn't.
+                if let price = state.pending?.price, case .short = state.house.checkout(price) { return .none }
                 state.storeOpen = false
                 state.pending = nil
                 state.landed = nil
@@ -1445,6 +1507,26 @@ public struct CompanionFeature: Sendable {
     /// A new delivery of the house. Assigns only what changed, so a delivery
     /// that moved the jar does not redraw the scene, and one that moved the
     /// mood does not redraw the jar.
+    /// Sparkles that just landed: said in the store, and, when they are enough
+    /// for what sent the house there, a moment later back to the card.
+    /// `isInJar` is whether the jar already shows them (the Lab's preview
+    /// does); a real purchase's come on the live read, so `storeReturned`
+    /// looks again before it leaves.
+    private func landed(_ sparkles: Int, isInJar: Bool, state: inout State) -> Effect<Action> {
+        state.landed = sparkles
+        state.landedTick += 1
+        // Enough now for what sent them here: a moment to see the Sparkles
+        // land — that second is how anyone knows it worked — then back to the
+        // card, which already says so. Not enough yet, and the store stays.
+        guard let price = state.pending?.price, !state.isReturning else { return .none }
+        if isInJar, case .short = state.house.checkout(price) { return .none }
+        state.isReturning = true
+        return .run { send in
+            try await clock.sleep(for: .milliseconds(1300))
+            await send(.storeReturned)
+        }
+    }
+
     private func receive(_ served: CompanionServed, state: inout State) -> Effect<Action> {
         state.streamRetries = 0
         state.isLoaded = true
@@ -1529,6 +1611,17 @@ public struct CompanionFeature: Sendable {
                     if !error.isTransport { LocalCompanion.markOffered(homeID, userID: userID) }
                     await send(.importAnswered(.failure(error)))
                 }
+            })
+        }
+        // A real purchase's Sparkles can reach the jar after the 1.3 s beat
+        // has already looked: when the read that brings them shows enough,
+        // the store goes back to the card after a short beat of its own.
+        if state.storeOpen, state.landed != nil, !state.isReturning,
+           let price = state.pending?.price, !state.house.checkout(price).isShort {
+            state.isReturning = true
+            effects.append(.run { send in
+                try await clock.sleep(for: .milliseconds(600))
+                await send(.storeReturned)
             })
         }
         return .merge(effects)

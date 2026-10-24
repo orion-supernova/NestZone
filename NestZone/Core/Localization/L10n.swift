@@ -9314,6 +9314,26 @@ public enum L10n {
         r("store_waiting", "Waiting for approval")
     }
 
+    /// Couldn't verify it. Nothing added.
+    public static var storeUnverified: LocalizedStringResource {
+        r("store_unverified", "Couldn't verify it. Nothing added.")
+    }
+
+    /// Not confirmed yet. We'll retry.
+    public static var storeRetrying: LocalizedStringResource {
+        r("store_retrying", "Not confirmed yet. We'll retry.")
+    }
+
+    /// Couldn't reach the App Store.
+    public static var storeUnavailable: LocalizedStringResource {
+        r("store_unavailable", "Couldn't reach the App Store.")
+    }
+
+    /// Try again
+    public static var storeRetry: LocalizedStringResource {
+        r("store_retry", "Try again")
+    }
+
     /// Didn't go through. Try again.
     public static var storeDidnt: LocalizedStringResource {
         r("store_didnt", "Didn't go through. Try again.")
