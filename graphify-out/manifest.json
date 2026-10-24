@@ -1300,8 +1300,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionScene.swift": {
-    "mtime": 1792872318.3544562,
-    "ast_hash": "526159b9b68f342207275268f3869d39",
+    "mtime": 1792879713.3016143,
+    "ast_hash": "ef6320b9b5a1e5421d19a670b2836991",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionSheets.swift": {
@@ -1315,8 +1315,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PetPainter.swift": {
-    "mtime": 1792864281.175001,
-    "ast_hash": "66b8355fedc7617538a20188a1601df6",
+    "mtime": 1792879731.0117304,
+    "ast_hash": "404d2440752b730830515e0ab2a5088a",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/SceneInk.swift": {
@@ -1325,8 +1325,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ScenePainter.swift": {
-    "mtime": 1792871513.3495963,
-    "ast_hash": "4d16ed372972d265f4d269c9c5647bcf",
+    "mtime": 1792879713.3018374,
+    "ast_hash": "81358b2ea5a4e5aa4713b923f3097485",
     "semantic_hash": ""
   },
   "NestZoneTests/CompanionTests.swift": {
@@ -1950,23 +1950,23 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ArtSheet.swift": {
-    "mtime": 1792873234.8173254,
-    "ast_hash": "ec6df5c8a73eef10dc32f674d8387d4c",
+    "mtime": 1792882385.5893893,
+    "ast_hash": "53f1741d1e2e48898c343ccd3733ed91",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPainter.swift": {
-    "mtime": 1792864731.7706034,
-    "ast_hash": "a173400e70ad60b96b97980781fbeb8e",
+    "mtime": 1792879731.0111222,
+    "ast_hash": "9fe254fa8ecc86cb3ca4278fe9d3f6aa",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPlan.swift": {
-    "mtime": 1792864214.9487374,
-    "ast_hash": "9609e0a4ed3f781f25a25cbfc44ccde8",
+    "mtime": 1792878560.6666317,
+    "ast_hash": "388e5ac44f8206c6a2b340aab8cd9b7c",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PetMotion.swift": {
-    "mtime": 1792864281.1751614,
-    "ast_hash": "df9c43d7d098b36846e46c8c1a1c379a",
+    "mtime": 1792879342.470539,
+    "ast_hash": "bffbacb8898e1adbd896fc95cab8f2ec",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantLayer.swift": {
@@ -2055,33 +2055,33 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter+Flowers.swift": {
-    "mtime": 1792873228.2534685,
+    "mtime": 1792882138.2475328,
     "ast_hash": "6e0cd983671a1f103de94106fe3b9a7c",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter+Fruit.swift": {
-    "mtime": 1792873337.2109873,
-    "ast_hash": "f50d7739d8ca5f266d8d19ea02080936",
+    "mtime": 1792882566.8581815,
+    "ast_hash": "cd075090225f0bf17c697a5cdb8572ff",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter+Wood.swift": {
-    "mtime": 1792871360.1526358,
-    "ast_hash": "48ecbfd01b0a5b1f894d44466ca7dc3f",
+    "mtime": 1792882138.2486813,
+    "ast_hash": "7f367658ea816edbace864f766502a54",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter.swift": {
-    "mtime": 1792873909.8978932,
-    "ast_hash": "d7d0749385e4a089092315a6abae824e",
+    "mtime": 1792882522.3174577,
+    "ast_hash": "aca2d122911e964d048014f2393d0276",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/TreeTiming.swift": {
-    "mtime": 1792872332.8523939,
-    "ast_hash": "3af08e7cbaaffffbe1047a2b62bece02",
+    "mtime": 1792882138.2499478,
+    "ast_hash": "daa3c84b8c2be665f2a09102fe37ec0f",
     "semantic_hash": ""
   },
   "Docs/Companion/art/RULES.md": {
-    "mtime": 1792873995.1881075,
-    "ast_hash": "c82b3f55f048d7629f00df0851b16bec",
+    "mtime": 1792883066.5796165,
+    "ast_hash": "f0b86d829b53e7c44b473560c01dcc43",
     "semantic_hash": ""
   },
   "Docs/Companion/art/pass1/index.html": {
@@ -2122,6 +2122,231 @@
   "Docs/Companion/art/hero/pomegranate-v1-stages.png": {
     "mtime": 1792873935.9960768,
     "ast_hash": "419888f75d689e5b3ff432895e08314f",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterGeometry.swift": {
+    "mtime": 1792879681.0929823,
+    "ast_hash": "528851b110c99ba95c1ce116ba99ff0f",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterLook.swift": {
+    "mtime": 1792875182.582248,
+    "ast_hash": "8129ba16ae7ae07398ce63278c7824f6",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterPainter+Bird.swift": {
+    "mtime": 1792879713.3012955,
+    "ast_hash": "a735acc8f57a0971550c53714b978de0",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterPainter+Face.swift": {
+    "mtime": 1792879696.6503425,
+    "ast_hash": "10942744b13b198f756963050a9495c2",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterPainter+Sitter.swift": {
+    "mtime": 1792879937.7122278,
+    "ast_hash": "ad913ed043f8747cd21e96277b0234a1",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PetTiming.swift": {
+    "mtime": 1792874325.7269232,
+    "ast_hash": "31f9a72b7e1236a575d916699a7079b2",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PomegranatePainter+Art.swift": {
+    "mtime": 1792882455.8722243,
+    "ast_hash": "fc700d994827e8fee66a042d4aa4f366",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PomegranatePainter+Split.swift": {
+    "mtime": 1792882138.2482674,
+    "ast_hash": "1405a0526b385ff1c52e1a9dc094143f",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PomegranatePainter+Young.swift": {
+    "mtime": 1792882138.2490318,
+    "ast_hash": "ec3ed93353a67b35021c8ad383eb5fb9",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/RULES-pets.md": {
+    "mtime": 1792880526.348538,
+    "ast_hash": "4e3edd266840b9c6dfefe44d7eb76c1b",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/index.html": {
+    "mtime": 1792883066.5849707,
+    "ast_hash": "e31af10800268a39e74e6bcfd2d0290d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/index.html": {
+    "mtime": 1792880526.353674,
+    "ast_hash": "fed383606f540abbb5f85af6c3b55c58",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-before-close.png": {
+    "mtime": 1792874721.757745,
+    "ast_hash": "61450f44e7a7369a060292e1bd37c3ab",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-before-moods.png": {
+    "mtime": 1792874728.8528726,
+    "ast_hash": "47a2098f6ed83a7f8d44641c8d5e6b8b",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-before-sheet.png": {
+    "mtime": 1792874714.575208,
+    "ast_hash": "2be5699e8decac76095fc2a2a0d51c4c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v1-close.png": {
+    "mtime": 1792878983.5165741,
+    "ast_hash": "3f74945a0b296bf20d20912b22ab0c96",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v1-moods.png": {
+    "mtime": 1792878983.5246058,
+    "ast_hash": "a49abfe17473b93307be32e3d839c000",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v1-sheet.png": {
+    "mtime": 1792878983.5105016,
+    "ast_hash": "4cf93535c0d953e6898363f3ddf6ee59",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v1-stages.png": {
+    "mtime": 1792878983.5295181,
+    "ast_hash": "77f7243221a2b7b619cb74c5efe3d678",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-before-close.png": {
+    "mtime": 1792874744.9616642,
+    "ast_hash": "a3d411692e247534279d9c20c6a3ba35",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-before-moods.png": {
+    "mtime": 1792874751.3955548,
+    "ast_hash": "a254a8a38ff665365a027c299cf2d170",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-before-sheet.png": {
+    "mtime": 1792874736.1783948,
+    "ast_hash": "5fd9fde8e606a6fbcd71a208a6dd24bf",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v1-close.png": {
+    "mtime": 1792878983.5428674,
+    "ast_hash": "a5be428515b077cafb731dd961de845c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v1-moods.png": {
+    "mtime": 1792878983.5476801,
+    "ast_hash": "13454d2d8cbf39bf73136ce2a05c97a9",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v1-sheet.png": {
+    "mtime": 1792878983.5366027,
+    "ast_hash": "055018b491d788f7d8577066e38ad064",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v1-stages.png": {
+    "mtime": 1792878983.5709753,
+    "ast_hash": "d29d43247ba885d60011a5f5ba8c7536",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/pets-v1-variants.png": {
+    "mtime": 1792878983.5752566,
+    "ast_hash": "f6b5f0d23cbc7f88902da10581cc4674",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/CritterFur.swift": {
+    "mtime": 1792879673.9562368,
+    "ast_hash": "ad563410667aabfdb8f3e01e28988ef6",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/duckling-v2-moods.png": {
+    "mtime": 1792880294.5464175,
+    "ast_hash": "4056f6e88c5e40b1d02d83d041b36c5c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v2-close.png": {
+    "mtime": 1792880294.5098252,
+    "ast_hash": "293ab80a2fd8e5c0a76b4194b3079e48",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v2-moods.png": {
+    "mtime": 1792880294.5134904,
+    "ast_hash": "0f58b727095a5ae1f8984bce33b869e3",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v2-sheet.png": {
+    "mtime": 1792880294.5046012,
+    "ast_hash": "1966e742205dca2c3853ad8e5e552458",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/kitten-v2-stages.png": {
+    "mtime": 1792880294.5194488,
+    "ast_hash": "7fff8f457ec3fe0d7dc60362fcb630b3",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v2-close.png": {
+    "mtime": 1792880294.5288746,
+    "ast_hash": "2a6b6b38b889383cc0eb3a7f06cf5416",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v2-moods.png": {
+    "mtime": 1792880294.5339649,
+    "ast_hash": "ffa31706491971d576e139ef2203700c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v2-sheet.png": {
+    "mtime": 1792880294.5234296,
+    "ast_hash": "40827b0b5232e934cb70a0f31ee5f001",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/owl-v2-stages.png": {
+    "mtime": 1792880294.5378435,
+    "ast_hash": "a685d541969061b93184f6699f2e6910",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/pets-v2-variants.png": {
+    "mtime": 1792880294.5433326,
+    "ast_hash": "0e3599b7f41d3377a1b27d08209f0a05",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v2-closeup.png": {
+    "mtime": 1792882923.210855,
+    "ast_hash": "791e220f3cd7457ee345a092c4cecb24",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v2-crown.png": {
+    "mtime": 1792882959.4354959,
+    "ast_hash": "90f86092001761bc0900d4adcfad3a1f",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v2-fruit.png": {
+    "mtime": 1792882983.546133,
+    "ast_hash": "e9d503f0eeeba1924d8c48faae472fd2",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v2-night-moods.png": {
+    "mtime": 1792882947.4004753,
+    "ast_hash": "e2ccfd3e3df8e3e185af1cd3000a7e5b",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v2-shop.png": {
+    "mtime": 1792882995.5866096,
+    "ast_hash": "82242e3abf3e45c30e60f9e28c06303b",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v2-stages.png": {
+    "mtime": 1792882935.351921,
+    "ast_hash": "911f92cef47c59c10d1e766da66cd7ee",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/hero/pomegranate-v2-young.png": {
+    "mtime": 1792882971.4813159,
+    "ast_hash": "16e0faaef9004e03f261259beb86ca4c",
     "semantic_hash": ""
   }
 }

@@ -826,11 +826,11 @@ struct ScenePainter {
     }
 
     /// Bright and daytime: two butterflies around the crown.
-    func butterflies(_ context: GraphicsContext, around crown: CGPoint) {
+    func butterflies(_ context: GraphicsContext, around crown: CGPoint, swing: Double = 70) {
         guard frame.mood > 0.82, day > 0.35 else { return }
         for i in 0..<2 {
             let d = Double(i)
-            let x = crown.x + sin(time * 0.55 + d * 2.4) * 70, y = crown.y - 10 + cos(time * 0.8 + d * 1.7) * 36
+            let x = crown.x + sin(time * 0.55 + d * 2.4) * swing, y = crown.y - 10 + cos(time * 0.8 + d * 1.7) * 36 * swing / 70
             let flap = frame.reduceMotion ? 0.7 : 0.25 + 0.75 * abs(sin(time * 13 + d))
             var c = context
             c.translateBy(x: x, y: y)

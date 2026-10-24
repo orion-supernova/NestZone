@@ -6,7 +6,7 @@ extension PomegranatePainter.Look {
     private typealias RGB = Canopy.RGB
 
     /// A point a share `u` of the way along a limb's centre line.
-    private func along(_ q: Canopy.Pose.Span, _ u: Double) -> CGPoint {
+    func along(_ q: Canopy.Pose.Span, _ u: Double) -> CGPoint {
         let v = 1 - u
         return CGPoint(x: v * v * q.x + 2 * u * v * q.cx + u * u * q.x1, y: v * v * q.y + 2 * u * v * q.cy + u * u * q.y1)
     }
@@ -169,7 +169,7 @@ extension PomegranatePainter.Look {
             full.lance(q.x1, q.y1, cos(a), sin(a), 12 * kc, 2.7 * kc, s * 0.1, 0)
             lit.lance(q.x1, q.y1, cos(a), sin(a), 12 * kc, 2.7 * kc, s * 0.1, (-sin(a) * L.x + cos(a) * L.y) >= 0 ? 1 : -1)
         }
-        context.fill(full, with: .color(ink.far[1]))
-        context.fill(lit, with: .color(ink.lit[2]))
+        context.fill(full, with: .color(ink.m))
+        context.fill(lit, with: .color(ink.s))
     }
 }

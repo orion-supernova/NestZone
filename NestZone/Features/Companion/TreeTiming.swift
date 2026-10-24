@@ -17,6 +17,13 @@ enum TreeTiming {
     static let legacyPomegranate = UserDefaults.standard.bool(forKey: "pomegranateLegacy")
     private static let on = UserDefaults.standard.integer(forKey: "frameMeter") > 0 || UserDefaults.standard.bool(forKey: "treeTiming")
 
+    /// One clump's leaves built for the cache (`LeafArt`): the cost a redraw
+    /// pays once per light and mood, and never while a tree only grows.
+    static func built(_ clump: Int, leaves: Int, since start: CFTimeInterval) {
+        guard on else { return }
+        log.info("leaf art clump \(clump) leaves \(leaves) \((CACurrentMediaTime() - start) * 1000, format: .fixed(precision: 2)) ms")
+    }
+
     static func note(_ species: Species, light: Double = 0, since start: CFTimeInterval) {
         guard on else { return }
         log.info("tree draw \(species.rawValue, privacy: .public) light \(light, format: .fixed(precision: 1)) \((CACurrentMediaTime() - start) * 1000, format: .fixed(precision: 2)) ms")
@@ -25,5 +32,6 @@ enum TreeTiming {
 #else
 enum TreeTiming {
     static let legacyPomegranate = false
+    static func built(_ clump: Int, leaves: Int, since start: Double) {}
 }
 #endif

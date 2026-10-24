@@ -23,15 +23,31 @@ struct PetPainter {
     private var time: Double { frame.reduceMotion ? 0 : frame.time }
     /// 0 when fast asleep, 1 when fully awake and bright.
     private var awake: Double { Ink.smooth((frame.mood - 0.15) / 0.5) }
-    private var eyesClosed: Bool { frame.mood < 0.42 }
+    private var pm: PetMotion { PetMotion(frame: frame, stage: stage, hop: hop, wiggle: wiggle, waking: waking) }
+    /// Shut only when properly asleep: a thirsty duck is awake and wanting.
+    private var eyesClosed: Bool { pm.sleep > 0.5 }
 
     /// Draws the duck standing on the floor at `x`, `size` points tall.
     func draw(_ context: GraphicsContext, x: Double, floor: Double, size: Double) {
+        PetTiming.measure("duckling") { paint(context, x: x, floor: floor, size: size) }
+    }
+
+    private func paint(_ context: GraphicsContext, x: Double, floor: Double, size: Double) {
         var c = context
         let k = size / 120
         c.translateBy(x: x - 60 * k, y: floor - 108 * k)
         c.scaleBy(x: k, y: k)
         shadow(c)
+        // A thirsty duck has a little empty bowl beside it, the same one the
+        // other pets have (drawn by `CritterPainter`, which owns it).
+        if stage >= 3, pm.weights.thirst > 0.02, let plan = CritterPlan.of(.kitten) {
+            var ground = c
+            let scale = Self.scales[stage]
+            ground.translateBy(x: 60, y: 108)
+            ground.scaleBy(x: scale, y: scale)
+            ground.translateBy(x: -60, y: -108)
+            CritterPainter(plan: plan, frame: frame, stage: stage, hop: nil, wiggle: nil, waking: nil).bowl(ground)
+        }
         var body = c
         // Everything moves about the feet.
         body.translateBy(x: 60, y: 108)
@@ -136,7 +152,7 @@ struct PetPainter {
         var h = c
         // A sleepy head nods forward.
         h.translateBy(x: 46, y: 68)
-        h.rotate(by: .radians((1 - awake) * 0.21))
+        h.rotate(by: .radians(pm.by(0.21, -0.2, 0.06, 0)))
         h.translateBy(x: -46, y: -68)
         h.circle(46, 50, 19, .color(body))
         var tuft = Path()
@@ -151,6 +167,11 @@ struct PetPainter {
         beak.addQuadCurve(to: CGPoint(x: 38, y: 56), control: CGPoint(x: 37, y: 62))
         beak.closeSubpath()
         h.fill(beak, with: .color(Self.beak))
+        // Wanting something: the beak a little open.
+        let thirst = pm.weights.thirst
+        if thirst > 0.05 {
+            h.fill(Path(ellipseIn: CGRect(x: 23, y: 56.2, width: 9, height: 1.6)), with: .color(Self.ink.opacity(0.75 * thirst)))
+        }
         eye(h)
         h.circle(51, 57, 3.4, .color(Self.blush.opacity(Ink.lerp(0.2, 0.95, Ink.smooth((frame.mood - 0.3) / 0.7)))))
         nightcap(h)
@@ -173,8 +194,15 @@ struct PetPainter {
         e.scaleBy(x: 1, y: blink)
         e.translateBy(x: -42, y: -47)
         let bright = frame.mood > 0.82
-        e.ellipse(42, 47, bright ? 3.8 : 3.2, bright ? 4.8 : 4.2, .color(Self.ink))
-        e.circle(bright ? 43.3 : 43, bright ? 45.2 : 45.5, bright ? 1.6 : 1.2, .color(.white))
+        // Wanting something it looks at it: a ring of white round the eye, the
+        // dark of it shifted toward the bowl, down and to the left.
+        let thirst = pm.weights.thirst
+        if thirst > 0.05 {
+            e.ellipse(42, 47, 4.9, 5.4, .color(Color.white.opacity(0.95 * thirst)))
+        }
+        let gx = -1.5 * thirst, gy = 1.6 * thirst
+        e.ellipse(42 + gx, 47 + gy, bright ? 3.8 : 3.2, bright ? 4.8 : 4.2, .color(Self.ink))
+        e.circle((bright ? 43.3 : 43) + gx * 0.5, (bright ? 45.2 : 45.5) + gy * 0.5, bright ? 1.6 : 1.2, .color(.white))
         if bright { e.circle(40.6, 49, 0.8, .color(.white)) }
     }
 

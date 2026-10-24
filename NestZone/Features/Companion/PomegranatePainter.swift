@@ -4,15 +4,21 @@ import SwiftUI
 /// skeleton as every `Canopy` tree (the limbs, the clumps' places, the fruit
 /// and flower places, all in the prototype's order), but where the other trees
 /// paint a clump as a cut-paper blob of lobes, this one paints each clump as
-/// sprigs of narrow, glossy, lance-shaped leaves, opposite on a twig, with a
-/// light edge where the sun catches them. Its fruit hang from bending twigs
-/// with a calyx crown, ripen from green-blush to red, and one is split open
-/// on the grown tree. The rules this establishes for every species are in
-/// `Docs/Companion/art/RULES.md`.
+/// sprigs of narrow, glossy, lance-shaped leaves, opposite on a twig. The
+/// leaves are sorted by light into four classes (the shade, the middle, the lit
+/// and the sunstruck), so a crown has dark interior and underside, lit sprigs
+/// on the sun's side and dappled patches between. The fruit sits in the leaves
+/// on short stalks, overlapped by them, and one is split open. The rules this
+/// establishes for every species are in `Docs/Companion/art/RULES.md`.
 ///
 /// Like `CanopyPainter`, this is one still picture drawn only when the state
 /// changes: no wind, no clock. The light is the one thing it takes that the
 /// others do not: where the sun or moon stands across the scene.
+///
+/// A clump's leaves are worked out once in the clump's own units and kept
+/// (`LeafArt`, in `+Art.swift`), so a redraw while the tree grows is a
+/// translate, a scale and a few fills per clump, not a few hundred leaves
+/// built again.
 struct PomegranatePainter {
     let canopy: Canopy
     /// 0…1, as for any tree: the seed .04, a sprout .16, young .38, growing
@@ -35,17 +41,18 @@ struct PomegranatePainter {
         let order = look.order()
         var n = 0
         for tier in 0..<3 {
-            // Fruit sitting up in the leaves goes down before this tier's
-            // clumps, so their own leaves hang over it.
-            if tier > 0 { look.fruit(tree, tier, nested: true) }
             while n < order.count && canopy.clumps[order[n]].tier == tier {
-                look.foliage(tree, order[n])
+                look.clump(tree, order[n])
                 n += 1
             }
             if tier == 0 {
                 look.wood(tree)
+                look.youngSprigs(tree)
             } else {
-                look.fruit(tree, tier, nested: false)
+                if tier == 2 {
+                    look.dapple(tree)
+                    look.splitFruit(tree)
+                }
                 look.blossoms(tree, tier)
             }
         }
@@ -58,12 +65,14 @@ struct PomegranatePainter {
 extension PomegranatePainter {
     typealias RGB = Canopy.RGB
 
-    /// What a leaf is painted with in one tier: three classes of green (deep,
-    /// middle, sunlit), each a gradient along the light, a lit half, and the
-    /// edge, midrib and gloss that catch it.
+    /// What a leaf is painted with in one tier: four classes of green (the
+    /// shade, the middle, the lit and the sunstruck), and the edge light, the
+    /// dark body and the shadow it casts round them.
     struct LeafInk {
-        var near: [Color], far: [Color], lit: [Color]
-        var edge: Color, gloss: Color, body: Color, twig: Color
+        var d, m, l, s: Color
+        var mLit, mShade: Color
+        var rim, body: Color
+        var shadow: Gradient
     }
 
     struct Look {
@@ -76,9 +85,12 @@ extension PomegranatePainter {
         let L: (x: Double, y: Double)
         /// Tier 0, 1, 2, each plain then fresh (bronze new growth).
         let inks: [LeafInk]
-        let seed: UInt32
-        /// The share of leaves left off, curled short, and the posture.
-        let drop, curl, lenK, wK, pull: Double
+        let art: LeafArt
+        /// The fruit that is opened, if any: its index among the tree's.
+        let split: Int?
+        /// The warm (or amber, or cool) of a patch of light on the leaves.
+        let glow: RGB
+        let dusk: Double
 
         init(_ painter: PomegranatePainter) {
             canopy = painter.canopy
@@ -86,47 +98,71 @@ extension PomegranatePainter {
             day = painter.day
             night = 1 - painter.day
             M = Canopy.Mood(painter.mood)
-            pose = Canopy.Pose(canopy, growth: painter.growth, mood: M)
+            pose = Self.splayed(Canopy.Pose(canopy, growth: painter.growth, mood: M), growth: painter.growth)
             tones = Canopy.Tones(canopy.kind, M, day: painter.day, growth: painter.growth)
-            seed = Ink.hash(canopy.seed)
-
-            // Overhead noon would light a tree flat, so the light is never
-            // quite above it: at least a quarter of the way to a side.
-            let sx = abs(painter.light) < 0.25 ? (painter.light > 0 ? 0.25 : -0.25) : painter.light
-            let sy = -(0.45 + 0.4 * painter.day)
-            let len = (sx * sx * 0.81 + sy * sy).squareRoot()
-            L = (sx * 0.9 / len, sy / len)
-
-            drop = 0.12 * M.thirst + 0.18 * M.doze
-            curl = 0.5 * M.thirst + 0.3 * M.doze
-            lenK = 1 - 0.1 * M.wilt
-            wK = 1 - 0.22 * M.wilt
-            pull = 0.1 + 0.2 * M.wilt + 0.07 * M.doze - 0.05 * M.glow
+            split = Self.splitIndex(canopy, pose)
+            L = LeafArt.sun(light: painter.light, day: painter.day)
+            art = LeafArt.of(canopy, mood: painter.mood, light: painter.light, day: painter.day)
 
             // Light on the leaf edge: a warm white by day, amber when the sun
             // is low, cool by the moon.
             let dusk = 4 * painter.day * (1 - painter.day)
+            self.dusk = dusk
             let moon = Ink.smooth((0.3 - painter.day) / 0.3)
             let rim = RGB(0xFFF3C4).mix(RGB(0xFF9A5C), Ink.clamp(dusk * 1.4)).mix(RGB(0xC4D2FF), moon)
+            glow = RGB(0xFFE9A8).mix(RGB(0xFFB070), Ink.clamp(dusk * 1.4)).mix(RGB(0xB8C8FF), moon)
             let bronze = RGB.tone(0xBE5A38, day: painter.day, dim: 0.9)
             let ramp = tones.ramp, thirst = M.thirst, doze = M.doze
             var inks: [LeafInk] = []
             for tier in 0..<3 {
                 for fresh in [false, true] {
-                    var base = [ramp[tier], ramp[tier + 1], ramp[tier + 1].mix(ramp[tier + 2], 0.32 * (1 - moon))]
-                    if fresh { base = base.map { $0.mix(bronze, 0.4 * (1 - 0.5 * thirst)) } }
-                    // By moonlight the lit side is a cool, deep green, not a pale one.
-                    let hi = ramp[min(4, tier + 2)].mix(ramp[tier + 1], 0.8 * moon)
-                    let edge = ramp[4].mix(rim, 0.65)
-                    let edgeA = (0.45 + 0.2 * dusk + 0.25 * moon) * (1 - 0.35 * doze) * (tier == 0 ? 1.2 : 1)
+                    // Where the four classes sit on the ramp, tier by tier: the
+                    // back is a step down the ramp from the front.
+                    var d, m, l, s: RGB
+                    switch tier {
+                    case 0:
+                        d = ramp[0].mix(ramp[1], 0.6)
+                        m = ramp[1].mix(ramp[2], 0.3)
+                        l = ramp[1].mix(ramp[2], 0.7)
+                        s = ramp[2].mix(ramp[3], 0.1)
+                    case 1:
+                        d = ramp[1].mix(ramp[2], 0.1)
+                        m = ramp[1].mix(ramp[2], 0.7)
+                        l = ramp[2].mix(ramp[3], 0.45)
+                        s = ramp[2].mix(ramp[3], 0.95)
+                    default:
+                        d = ramp[1].mix(ramp[2], 0.55)
+                        m = ramp[2].mix(ramp[3], 0.55)
+                        l = ramp[3].mix(ramp[4], 0.15)
+                        s = ramp[3].mix(ramp[4], 0.4)
+                    }
+                    // The shade leans cool and the light warm, as it does in paint.
+                    d = d.mix(RGB(0x143A44), 0.22)
+                    if fresh {
+                        let k = 0.3 * (1 - 0.5 * thirst)
+                        d = d.mix(bronze, k * 0.6)
+                        m = m.mix(bronze, k)
+                        l = l.mix(bronze, k)
+                        s = s.mix(bronze, k)
+                    }
+                    // By moonlight the lit side is a cool, deep green, not a
+                    // pale one; by day the sunstruck leaves take the sun's warmth.
+                    d = d.mix(m, 0.3 * moon)
+                    l = l.mix(m, 0.75 * moon)
+                    s = s.mix(m, 0.6 * moon).mix(glow, 0.16 * (1 - moon) * (0.6 + 0.4 * day))
+                    if fresh {
+                        // New leaves are a fresh yellow-green with bronze at the tip.
+                        m = m.mix(ramp[3], 0.25)
+                        l = l.mix(ramp[4], 0.2)
+                    }
+                    let deep = ramp[0].mix(RGB(0x0B1A1C), 0.4)
+                    let edgeA = (0.34 + 0.06 * dusk - 0.16 * moon) * (1 - 0.35 * doze)
                     inks.append(LeafInk(
-                        near: base.map { $0.shifted(2 - 5 * moon, -3).color() },
-                        far: base.map { $0.shifted(-5, 6).color() },
-                        lit: base.map { $0.mix(hi, 0.42).shifted(1).color() },
-                        edge: edge.color(min(1, edgeA)),
-                        gloss: RGB(0xFFFFFF).mix(rim, 0.4).color(0.38 * (1 - 0.6 * thirst - 0.4 * doze)),
-                        body: ramp[tier].mix(ramp[tier + 1], 0.45).color(),
-                        twig: tones.bark.mix(ramp[tier + 1], 0.35).color(0.9)
+                        d: d.color(), m: m.color(), l: l.color(), s: s.color(),
+                        mLit: m.shifted(2 - 5 * moon, -3).color(), mShade: m.shifted(-5, 6).color(),
+                        rim: ramp[4].mix(rim, 0.65).color(min(1, edgeA)),
+                        body: ramp[tier].mix(deep, 0.35).color(),
+                        shadow: Gradient(colors: [deep.color(0.4 * (1 - 0.3 * doze)), deep.color(0.16), deep.color(0)])
                     ))
                 }
             }
@@ -145,144 +181,75 @@ extension PomegranatePainter {
             }
             return order
         }
-
-        /// A generator of one clump's own, so its leaves are the same at every
-        /// growth and the same on every redraw.
-        func rng(_ i: Int, _ salt: UInt32 = 97) -> Ink.Random {
-            Ink.Random(seed: seed &+ UInt32(truncatingIfNeeded: i) &* 2_654_435_761 &+ salt)
-        }
-
-        /// Which way a heading sags under its own weight: towards the side it points.
-        func fall(_ h: Double) -> Double { cos(h) >= 0 ? 1 : -1 }
     }
 }
 
-// MARK: - Leaves
+// MARK: - One clump
 
 extension PomegranatePainter.Look {
-    /// Everything one clump's leaves add, by class of green.
-    struct Parts {
-        var full = [Path(), Path(), Path()], lit = [Path(), Path(), Path()]
-        var gloss = Path(), twig = Path()
-    }
+    /// The disc a clump's shadow is poured into, in the clump's units.
+    private static let shadowDisc: Path = {
+        var disc = Path()
+        disc.oval(0, 0.4, 0.85, 0.85)
+        return disc
+    }()
 
-    /// One clump: a dark body for the depth between the leaves, then a few
-    /// sprigs. Each sprig is a twig that bends as it goes, with a pair of lance
-    /// leaves at every node and one at the tip. Leaves are filled by class,
-    /// deep to sunlit, each class as one gradient along the light, with the
-    /// half of every leaf that faces the light lifted, a thin edge where the
-    /// light grazes it, and now and then a streak of gloss.
-    func foliage(_ context: GraphicsContext, _ i: Int) {
-        let c = canopy.clumps[i], q = pose.clumps[i]!, tier = c.tier
-        // A young tip's whorl of leaves is drawn broader than its small clump.
-        let R = q.R * (c.tuft ? 1.3 : 1)
+    /// One clump, back to front: the shade it casts on what is behind, a dark
+    /// body, then the leaves by class, shade first. The fruit that lives in it
+    /// goes between the classes, so the lit leaves are over it: the ones sunk
+    /// deepest after the shade (and then covered by the middle leaves too),
+    /// the rest after the middle.
+    func clump(_ tree: GraphicsContext, _ i: Int) {
+        guard let q = pose.clumps[i] else { return }
+        let c = canopy.clumps[i], tier = c.tier
+        // The first tuft up a young stem would hide the bare cane: leave it out.
+        if c.tuft && canopy.limbs[c.node].parent < 0 && canopy.limbs[c.node].depth == 0 && p < 0.55 { return }
         let fresh = c.tuft || p - c.birth < 0.05
         let ink = inks[tier * 2 + (fresh ? 1 : 0)]
-        var r = rng(i)
-        var parts = Parts()
-        let sprigs = c.tuft ? 3 : (tier == 2 ? 5 : tier == 1 ? 4 : 3)
-        let pairs = tier == 0 || c.tuft ? 2 : 3
-        let hair = max(0.5, R * 0.03)
+        let leaves = art.clump(i)
+        let fruit = tier > 0 ? hangings(i, q) : []
 
-        func leaf(_ x: Double, _ y: Double, _ a: Double, _ len0: Double, _ cls0: Int) {
-            let keep = r.next(), curlR = r.next(), glossR = r.next(), lenJ = r.next(), flip = r.next()
-            if keep < drop { return }
-            let curled = curlR < curl
-            let len = len0 * Ink.lerp(0.88, 1.12, lenJ) * lenK * (curled ? 0.62 : 1)
-            let hw = len * 0.155 * wK * (curled ? 0.8 : 1)
-            let ca = cos(a), sa = sin(a)
-            let bend = fall(a) * (0.08 + pull - 0.1 + (curled ? 0.2 : 0))
-            // How far towards the light this leaf sits and points.
-            let l = ((x - q.x) * L.x + (y - q.y) * L.y) / R + (ca * L.x + sa * L.y) * 0.5
-            let cls = max(0, min(2, (l > 0.45 ? 2 : l > -0.1 ? 1 : 0) + (flip < 0.2 ? -1 : flip > 0.85 ? 1 : 0)))
-            parts.full[cls].lance(x, y, ca, sa, len, hw, bend, 0)
-            let nl = -sa * L.x + ca * L.y
-            let side = nl >= 0 ? 1.0 : -1
-            // Light costs fills, so it is spent where it shows: the front tier's
-            // sunlit leaves get their lit half; every tier's light edge comes
-            // from one shifted copy of its path (see below), not from a shape
-            // per leaf.
-            if tier == 2 && cls == 2 && l > -0.05 { parts.lit[cls].lance(x, y, ca, sa, len, hw, bend, side) }
-            if glossR < 0.14 && l > 0.25 && cls == 2 && !curled { parts.gloss.lanceGloss(x, y, ca, sa, len, hw, bend, side) }
+        var g = tree
+        g.translateBy(x: q.x, y: q.y)
+        g.scaleBy(x: q.R, y: q.R)
+        if leaves.casts {
+            g.fill(Self.shadowDisc, with: .radialGradient(ink.shadow, center: CGPoint(x: 0, y: 0.4), startRadius: 0, endRadius: 0.85))
         }
-
-        for s in 0..<(sprigs + 2) {
-            let under = s >= sprigs
-            let f = (Double(s) + 0.5) / Double(sprigs)
-            let jitter = (r.next() - 0.5) * 0.3
-            // A tuft is a whorl of leaves, so its sprigs spread wide.
-            let arc = c.tuft ? 0.18 : 0.1
-            var h = under ? (s == sprigs ? 0.18 : 0.82) * .pi + jitter : Ink.lerp(.pi * (1 + arc), .pi * (2 - arc), f) + jitter
-            let reach = R * Ink.lerp(0.58, 0.86, r.next()) * (under ? 0.8 : 1)
-            let step = reach / 4, lean = (r.next() - 0.5) * 0.16
-            let ob = under ? 0.12 : 0.1
-            var x = q.x + cos(h) * R * ob, y = q.y + sin(h) * R * ob + R * 0.04
-            parts.twig.move(to: CGPoint(x: x, y: y))
-            let cls0 = under ? 0 : 1
-            for k in 1...4 {
-                h += pull * 0.5 * fall(h) * abs(cos(h)) + lean
-                let nx = x + cos(h) * step, ny = y + sin(h) * step
-                parts.twig.addLine(to: CGPoint(x: nx, y: ny))
-                x = nx
-                y = ny
-                let size = R * 0.52 * (1 - 0.06 * Double(k))
-                if k < 4 && k <= pairs {
-                    let spread = Ink.lerp(0.62, 0.95, r.next())
-                    leaf(x, y, h - spread, size, cls0)
-                    leaf(x, y, h + spread, size, cls0)
-                } else if k == 4 {
-                    leaf(x, y, h, size * 1.05, cls0)
-                }
-            }
-        }
-
-        // Now and then a long young shoot stands up out of the crown, which
-        // breaks the dome's outline the way a real one is broken.
-        if !c.tuft && tier >= 1 && r.next() < 0.4 {
-            var h = -Double.pi / 2 + (r.next() - 0.5) * 0.7
-            var x = q.x + (r.next() - 0.5) * R * 0.5, y = q.y - R * 0.3
-            let step = R * 0.3
-            parts.twig.move(to: CGPoint(x: x, y: y))
-            for k in 1...4 {
-                h += pull * 0.25 * fall(h) * abs(cos(h)) + 0.05 * fall(h)
-                x += cos(h) * step
-                y += sin(h) * step
-                parts.twig.addLine(to: CGPoint(x: x, y: y))
-                if k < 4 {
-                    leaf(x, y, h - 0.8, R * 0.4, 2)
-                    leaf(x, y, h + 0.8, R * 0.4, 2)
-                } else {
-                    leaf(x, y, h, R * 0.45, 2)
-                }
-            }
-        }
-
-        context.fill(bodyPath(q), with: .color(ink.body))
-        if tier > 0 { context.stroke(parts.twig, with: .color(ink.twig), style: StrokeStyle(lineWidth: hair, lineCap: .round, lineJoin: .round)) }
-        let a = CGPoint(x: q.x + L.x * R, y: q.y + L.y * R), b = CGPoint(x: q.x - L.x * R, y: q.y - L.y * R)
-        for cls in 0..<3 where !parts.full[cls].isEmpty {
-            // The light edge: the same leaves, shifted towards the light and
-            // painted in the rim colour first, show as a sliver on every leaf's
-            // lit side. On the back tier it is the rim light; elsewhere it
-            // keeps to the leaves that face the light.
-            if (tier == 2 && cls == 2) || (tier == 0 && cls >= 1) {
-                var shifted = context
-                shifted.translateBy(x: L.x * hair * 0.9, y: L.y * hair * 0.9)
-                shifted.fill(parts.full[cls], with: .color(ink.edge))
-            }
-            context.fill(parts.full[cls], with: tier == 2 ? .linearGradient(Gradient(colors: [ink.near[cls], ink.far[cls]]), startPoint: a, endPoint: b)
-                                                          : .color(ink.near[cls].opacity(1)))
-            if !parts.lit[cls].isEmpty { context.fill(parts.lit[cls], with: .color(ink.lit[cls])) }
-        }
-        if !parts.gloss.isEmpty { context.stroke(parts.gloss, with: .color(ink.gloss), style: StrokeStyle(lineWidth: hair * 0.55, lineCap: .round)) }
+        if !leaves.body.isEmpty { g.fill(leaves.body, with: .color(ink.body)) }
+        g.fill(leaves.d, with: .color(ink.d))
+        for h in fruit where h.deep { self.fruit(tree, h, q) }
+        g.fill(leaves.m, with: tier == 2
+               ? .linearGradient(Gradient(colors: [ink.mLit, ink.mShade]), startPoint: CGPoint(x: L.x * 0.9, y: L.y * 0.9), endPoint: CGPoint(x: -L.x * 0.9, y: -L.y * 0.9))
+               : .color(ink.m))
+        for h in fruit where !h.deep && !h.split { self.fruit(tree, h, q) }
+        g.fill(leaves.l, with: .color(ink.l))
+        if !leaves.s.isEmpty { g.fill(leaves.s, with: .color(ink.s)) }
+        if !leaves.rim.isEmpty { g.fill(leaves.rim, with: .color(ink.rim)) }
+        for h in fruit { cover(tree, h, ink) }
     }
 
-    /// The soft dark mass behind a clump's leaves.
-    private func bodyPath(_ q: Canopy.Pose.Spot) -> Path {
-        var body = Path()
-        let k = 1 - 0.45 * (M.thirst + M.doze)
-        body.oval(q.x, q.y + q.R * 0.08, q.R * 0.56 * k, q.R * 0.44 * k)
-        return body
+    /// The fruit that is cut open, after every clump of the front tier: the
+    /// others are nestled in the leaves, but this is the one a person looks at
+    /// closely, and no leaf lies across the cut.
+    func splitFruit(_ tree: GraphicsContext) {
+        guard let index = split, let q = pose.clumps[canopy.fruits[index].clump] else { return }
+        for h in hangings(canopy.fruits[index].clump, q) where h.split { fruit(tree, h, q) }
+    }
+
+    /// Patches of sun on the front of the crown: a soft pool of light poured
+    /// over the sunniest of the front clumps, so the lit leaves under it read
+    /// as one patch of light and not as a scatter of pale leaves.
+    func dapple(_ tree: GraphicsContext) {
+        let alpha = (0.11 * day + 0.1 * dusk + 0.08 * night) * (1 - 0.4 * M.doze) * (1 - 0.5 * M.thirst) * (0.6 + 0.4 * M.glow)
+        guard alpha > 0.02, p > 0.85 else { return }
+        for (i, off) in art.pools {
+            guard let q = pose.clumps[i] else { continue }
+            let centre = CGPoint(x: q.x + (L.x * 0.28 + off.x) * q.R, y: q.y + (L.y * 0.3 + off.y) * q.R)
+            var pool = Path()
+            pool.oval(centre.x, centre.y, q.R * 0.65, q.R * 0.55)
+            tree.fill(pool, with: .radialGradient(Gradient(colors: [glow.color(alpha), glow.color(alpha * 0.4), glow.color(0)]),
+                                                  center: centre, startRadius: 0, endRadius: q.R * 0.65))
+        }
     }
 }
 
@@ -305,24 +272,59 @@ extension Path {
         let base = P(0, 0), tip = P(1, 0)
         move(to: base)
         if half >= 0 {
-            addCurve(to: tip, control1: P(0.2, hw * 1.55), control2: P(0.68, hw * 1.3))
+            addQuadCurve(to: tip, control: P(0.42, hw * 2.2))
         } else {
             addQuadCurve(to: tip, control: P(0.5, 0))
         }
         if half == 0 {
-            addCurve(to: base, control1: P(0.68, -hw * 1.3), control2: P(0.2, -hw * 1.55))
+            addQuadCurve(to: base, control: P(0.42, -hw * 2.2))
         } else if half > 0 {
             addQuadCurve(to: base, control: P(0.5, 0))
         } else {
-            addCurve(to: base, control1: P(0.68, -hw * 1.3), control2: P(0.2, -hw * 1.55))
+            addQuadCurve(to: base, control: P(0.42, -hw * 2.2))
         }
         closeSubpath()
     }
 
-    /// A short bright streak on the lit side of the midrib: a glossy leaf.
+    /// A short bright lens on the lit side of the midrib: a glossy leaf. A fill
+    /// and not a stroke, because the simulator's GPU charges dearly for strokes.
     mutating func lanceGloss(_ x: Double, _ y: Double, _ ca: Double, _ sa: Double, _ len: Double, _ hw: Double, _ bend: Double, _ side: Double) {
-        move(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.3, side * hw * 0.42))
-        addLine(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.58, side * hw * 0.34))
+        move(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.3, side * hw * 0.4))
+        addQuadCurve(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.6, side * hw * 0.33),
+                     control: Self.lancePoint(x, y, ca, sa, len, bend, 0.45, side * hw * 0.58))
+        addQuadCurve(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.3, side * hw * 0.4),
+                     control: Self.lancePoint(x, y, ca, sa, len, bend, 0.45, side * hw * 0.3))
+        closeSubpath()
+    }
+
+    /// The edge of a leaf on one side, base to tip, as a thin sliver of the
+    /// leaf itself: where the light grazes it.
+    mutating func lanceEdge(_ x: Double, _ y: Double, _ ca: Double, _ sa: Double, _ len: Double, _ hw: Double, _ bend: Double, _ side: Double) {
+        move(to: Self.lancePoint(x, y, ca, sa, len, bend, 0, 0))
+        addQuadCurve(to: Self.lancePoint(x, y, ca, sa, len, bend, 1, 0),
+                     control: Self.lancePoint(x, y, ca, sa, len, bend, 0.42, side * hw * 2.2))
+        addQuadCurve(to: Self.lancePoint(x, y, ca, sa, len, bend, 0, 0),
+                     control: Self.lancePoint(x, y, ca, sa, len, bend, 0.42, side * hw * 1.7))
+        closeSubpath()
+    }
+
+    /// A leaf's midrib: a thin lens down its middle.
+    mutating func lanceVein(_ x: Double, _ y: Double, _ ca: Double, _ sa: Double, _ len: Double, _ hw: Double, _ bend: Double) {
+        move(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.08, 0))
+        addQuadCurve(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.82, 0), control: Self.lancePoint(x, y, ca, sa, len, bend, 0.45, hw * 0.34))
+        addQuadCurve(to: Self.lancePoint(x, y, ca, sa, len, bend, 0.08, 0), control: Self.lancePoint(x, y, ca, sa, len, bend, 0.45, -hw * 0.14))
+        closeSubpath()
+    }
+
+    /// A tapered bit of twig from one point to the next, as a thin filled quad.
+    mutating func twig(_ a: CGPoint, _ b: CGPoint, _ w0: Double, _ w1: Double) {
+        let dx = b.x - a.x, dy = b.y - a.y, d = max(1e-6, (dx * dx + dy * dy).squareRoot())
+        let nx = -dy / d, ny = dx / d
+        move(to: CGPoint(x: a.x + nx * w0, y: a.y + ny * w0))
+        addLine(to: CGPoint(x: b.x + nx * w1, y: b.y + ny * w1))
+        addLine(to: CGPoint(x: b.x - nx * w1, y: b.y - ny * w1))
+        addLine(to: CGPoint(x: a.x - nx * w0, y: a.y - ny * w0))
+        closeSubpath()
     }
 
     /// A frilled blob, for crinkled petals: an ellipse whose edge ripples,

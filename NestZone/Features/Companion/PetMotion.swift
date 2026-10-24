@@ -21,13 +21,67 @@ struct PetMotion {
     var time: Double { frame.reduceMotion ? 0 : frame.time }
     /// 0 when fast asleep, 1 when fully awake and bright.
     var awake: Double { Ink.smooth((frame.mood - 0.15) / 0.5) }
-    var eyesClosed: Bool { frame.mood < 0.42 }
+
+    // MARK: Mood, as acting
+
+    /// How much each of the four moods is in the pose: they sum to 1 and ease
+    /// into one another as the shown mood does (dozing .05, thirsty .3,
+    /// content .62, bright 1), so a pose is a blend of the four and never a
+    /// switch. Every part of a pet that acts (ears, tail, lids, gaze, posture)
+    /// takes its numbers through `by`, which is what keeps "thirsty" from
+    /// being a half-asleep content.
+    struct Weights {
+        var doze = 0.0, thirst = 0.0, content = 0.0, bright = 0.0
+    }
+
+    var weights: Weights {
+        let m = frame.mood
+        var w = Weights()
+        if m <= 0.05 { w.doze = 1 }
+        else if m < 0.3 { let t = Ink.smooth((m - 0.05) / 0.25); w.doze = 1 - t; w.thirst = t }
+        else if m < 0.62 { let t = Ink.smooth((m - 0.3) / 0.32); w.thirst = 1 - t; w.content = t }
+        else if m < 1 { let t = Ink.smooth((m - 0.62) / 0.38); w.content = 1 - t; w.bright = t }
+        else { w.bright = 1 }
+        return w
+    }
+
+    /// A number that is `d` when dozing, `t` when thirsty, `c` when content
+    /// and `b` when bright, and between them in between.
+    func by(_ d: Double, _ t: Double, _ c: Double, _ b: Double) -> Double {
+        let w = weights
+        return d * w.doze + t * w.thirst + c * w.content + b * w.bright
+    }
+
+    /// 1 once the pet is properly asleep, 0 from thirsty up.
+    var sleep: Double { Ink.smooth((0.22 - frame.mood) / 0.14) }
+
+    /// A one-off beat that comes round every `period` seconds, lasting
+    /// `length`, as 0 to 1 and back (a sine arch). `offset` keeps two beats
+    /// from landing together. Frozen under Reduce Motion.
+    func beat(every period: Double, lasting length: Double, offset: Double = 0) -> Double {
+        guard !frame.reduceMotion else { return 0 }
+        let t = (time + offset).truncatingRemainder(dividingBy: period)
+        return t < length ? sin(t / length * .pi) : 0
+    }
 
     /// Offsets, scale and turn for this instant: the idle bob, and any hop,
     /// wiggle or stretch under way. About the feet.
-    func offsets() -> (dx: Double, dy: Double, sx: Double, sy: Double, turn: Double) {
+    func offsets(calm: Bool = false) -> (dx: Double, dy: Double, sx: Double, sy: Double, turn: Double) {
         var dy = 0.0, dx = 0.0, sx = 1.0, sy = 1.0, turn = 0.0
-        if !frame.reduceMotion {
+        if !frame.reduceMotion, calm {
+            // A mammal sitting: it does not bob, it breathes (the chest a
+            // little wider and taller on the in-breath), and a bright one
+            // rocks up on its paws now and then.
+            let breath = sin(time / 3.6 * .pi * 2)
+            let depth = by(0.03, 0.016, 0.014, 0.018)
+            sx = 1 + depth * 0.5 * breath
+            sy = 1 + depth * breath
+            if frame.mood > 0.82 {
+                let t = (time / 1.5).truncatingRemainder(dividingBy: 1)
+                dy = -3 * max(0, sin(t * .pi)) * Ink.smooth((frame.mood - 0.82) / 0.18)
+            }
+            if stage == 1 { turn = sin(time / 1.3 * .pi * 2) * 0.16 }
+        } else if !frame.reduceMotion {
             if frame.mood > 0.82 {
                 // Bright: a bouncy little idle.
                 let t = (time / 1.1).truncatingRemainder(dividingBy: 1)
@@ -61,6 +115,17 @@ struct PetMotion {
             if waking > 0.9, waking < 1.4 { turn += sin((waking - 0.9) / 0.5 * .pi * 4) * 0.12 }
         }
         return (dx, dy, sx, sy, turn)
+    }
+
+    /// How far the lids are down, 0 open to 1 shut, from sleep, the quick
+    /// blink every four seconds (and two together now and then), the slow,
+    /// trusting one of a content pet, and the flutter of waking. The mood's own
+    /// droop (heavy lids when content, wide eyes when thirsty) is the face's.
+    func lids() -> Double {
+        if let waking, waking < 0.45 { return 1 - (abs(cos(waking / 0.45 * .pi * 2)) * 0.9 + 0.1) }
+        let quick = max(beat(every: 4.3, lasting: 0.16), beat(every: 12.9, lasting: 0.16, offset: 12.6))
+        let slow = beat(every: 7.5, lasting: 0.8, offset: 2) * weights.content * 0.95
+        return max(sleep, quick, slow)
     }
 
     /// How open the eyes are, 0.1 shut to 1 open: the blink every four

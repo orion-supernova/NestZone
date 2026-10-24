@@ -534,7 +534,11 @@ struct SceneSnapshot {
         painter.floor(c)
         painter.fireflies(c)
         if !compact {
-            painter.butterflies(c, around: CGPoint(x: crown.midX, y: crown.midY))
+            // Butterflies keep clear of a pet's head: they circle a point up and
+            // to the right of it (the head is left of centre, and a butterfly
+            // on the face reads as a glitch).
+            let around = companion.species.isPet ? CGPoint(x: center + 96, y: SceneSpace.floor - 168) : CGPoint(x: crown.midX, y: crown.midY)
+            painter.butterflies(c, around: around, swing: companion.species.isPet ? 44 : 70)
             painter.weather(c)
         }
         painter.glints(c, in: crown)
@@ -549,7 +553,7 @@ struct SceneSnapshot {
             c.glow(crown.midX, crown.midY, 170, Ink.color(0xFFD27A, 0.18 + 0.12 * pulse))
         }
         if companion.species.isPet {
-            if frame.mood < 0.42, moment.revive == nil, stage > 1 { painter.zees(c, x: center + 46, y: SceneSpace.floor - 150) }
+            if frame.mood < 0.2, moment.revive == nil, stage > 1 { painter.zees(c, x: center + 46, y: SceneSpace.floor - 150) }
         } else {
             painter.fallingLeaf(c, from: anchors(at: date).hangs)
             painter.thirstBubble(c, near: crown)
