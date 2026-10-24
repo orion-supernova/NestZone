@@ -21,6 +21,10 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
     public var isUnreadable: Bool
     public var recent: [Recent]
     public var jar: [JarEntry]
+    /// The vote that chose (or is choosing) the one growing, if there was one.
+    /// A vote this build cannot read is `nil`, not an unreadable house: the
+    /// card still draws, it just has no ballot to offer.
+    public var vote: CompanionVote?
 
     public struct House: Decodable, Equatable, Sendable {
         public var leaves: Int
@@ -77,9 +81,13 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
         /// The caller's own care days on this one, newest first, `YYYY-MM-DD`
         /// in the house's days.
         public var myCareDays: [String]
+        /// The house has not chosen what this is yet: `species` is only the
+        /// vote's first option, standing in. Draw a seed, never it.
+        public var undecided: Bool
 
         enum CodingKeys: String, CodingKey {
             case id, uuid, species, seed, startedAt, points, stage, isReady, pointsReady, readyAt, paidStage, lastCareAt, myCareDays
+            case undecided
         }
 
         public init(from decoder: any Decoder) throws {
@@ -99,6 +107,7 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
             lastCareAt = ((try? c.decodeIfPresent(Double.self, forKey: .lastCareAt)) ?? nil)
                 .map { Date(timeIntervalSince1970: $0 / 1000) }
             myCareDays = (try? c.decodeIfPresent([String].self, forKey: .myCareDays)) ?? []
+            undecided = (try? c.decodeIfPresent(Bool.self, forKey: .undecided)) ?? false
         }
     }
 
@@ -174,7 +183,7 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
         }
     }
 
-    enum CodingKeys: String, CodingKey { case catalogVersion, graduateAt, house, current, recent, jar }
+    enum CodingKeys: String, CodingKey { case catalogVersion, graduateAt, house, current, recent, jar, vote }
 
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -186,6 +195,7 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
         isUnreadable = unreadable
         recent = (try? c.decodeIfPresent(LossyList<Recent>.self, forKey: .recent))?.elements ?? []
         jar = (try? c.decodeIfPresent(LossyList<JarEntry>.self, forKey: .jar))?.elements ?? []
+        vote = (try? c.decodeIfPresent(CompanionVote.self, forKey: .vote)) ?? nil
     }
 
     /// A field that may be null. Present and unreadable is not null.

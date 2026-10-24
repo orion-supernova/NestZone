@@ -51,8 +51,12 @@ extension AppError: LocalizedError {
             String(localized: "error.notAuthenticated", defaultValue: "You've been signed out. Sign in to continue.")
         case .offline:
             String(localized: "error.offline", defaultValue: "You're offline. We'll retry when you're back.")
-        case .server:
-            String(localized: "error.server", defaultValue: "Something went wrong on our end. Try again.")
+        case let .server(message):
+            // The server's own words are for the log. The few it says on
+            // purpose, because the person can do something about them, have
+            // copy of their own (`CompanionVoteRefusal`).
+            CompanionVoteRefusal(serverMessage: message).map { String(localized: $0.copy) }
+                ?? String(localized: "error.server", defaultValue: "Something went wrong on our end. Try again.")
         case .decoding:
             String(localized: "error.decoding", defaultValue: "We couldn't read that response. Try again.")
         case let .validation(message):

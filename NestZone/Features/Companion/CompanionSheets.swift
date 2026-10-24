@@ -17,6 +17,7 @@ struct CompanionSheet: View {
             Group {
                 switch sheet {
                 case .choose: ChooseView(store: store)
+                case .vote: VoteView(store: store)
                 case .decorate: DecorateView(store: store)
                 case .shop: ShopView(store: store)
                 case .album: AlbumView(store: store)

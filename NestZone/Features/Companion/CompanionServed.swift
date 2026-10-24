@@ -59,9 +59,11 @@ public struct CompanionServed: Equatable, Sendable {
             companion.isReady = current.isReady
             companion.pointsReady = current.pointsReady
             companion.readyAt = current.readyAt
+            companion.isUndecided = current.undecided
             house.current = companion
             house.paidStage = current.paidStage
         }
+        house.vote = payload.vote
         self.house = house
         activity = payload.recent.filter { $0.kind != .care }.map { Completion(at: $0.at, by: $0.userID) }
         jarFeed = payload.jar

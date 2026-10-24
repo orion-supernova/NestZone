@@ -188,6 +188,9 @@ public struct HomeActivity: Codable, Identifiable, Hashable, Sendable {
 public enum ActivityCategory: String, CaseIterable, Codable, Hashable, Sendable {
     case tasks, shopping, finance, calendar, issues, notes
     case messages, movies, meals, recipes, polls, home
+    /// Nestie, the house's plant or pet: it is all grown up, or the vote for
+    /// the next one has opened or ended.
+    case companion
     case other
 
     public var symbol: String {
@@ -204,6 +207,7 @@ public enum ActivityCategory: String, CaseIterable, Codable, Hashable, Sendable 
         case .recipes: "book.closed.fill"
         case .polls: "chart.bar.fill"
         case .home: "house.fill"
+        case .companion: "leaf.fill"
         case .other: "bell.fill"
         }
     }
@@ -228,6 +232,7 @@ public enum ActivityCategory: String, CaseIterable, Codable, Hashable, Sendable 
         case .recipes: Palette.spendDining
         case .polls: Palette.cyan
         case .home: Palette.eventPeople
+        case .companion: Palette.leaf
         case .other: Palette.spendOther
         }
     }
@@ -246,6 +251,7 @@ public enum ActivityCategory: String, CaseIterable, Codable, Hashable, Sendable 
         case .recipes: L10n.inboxCategoryRecipes
         case .polls: L10n.inboxCategoryPolls
         case .home: L10n.inboxCategoryHome
+        case .companion: L10n.companionBrand
         case .other: L10n.inboxCategoryOther
         }
     }

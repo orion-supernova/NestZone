@@ -247,6 +247,9 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
     /// counted in. `nil` until somebody's phone says.
     public var region: String?
     public var tzOffset: Int?
+    /// The house's vote for the one growing, open or decided. Not in the old
+    /// file: only the server has votes.
+    public var vote: CompanionVote?
 
     public init() {}
 
@@ -346,6 +349,10 @@ public struct Companion: Codable, Equatable, Sendable {
     public var pointsReady = false
     /// When it can graduate, if the points are there by then.
     public var readyAt: Date?
+    /// The house has not chosen what this is yet, so `species` is only the
+    /// vote's first option standing in. A seed grows meanwhile (the server
+    /// counts what the house does), but it is drawn as a seed and called one.
+    public var isUndecided = false
 
     public init(species: Species, seed: String, startedAt: Date) {
         self.species = species

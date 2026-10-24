@@ -6,11 +6,11 @@ import os
 // Nestie against a stand-in server, on a simulator nobody is signed in on.
 //
 //   xcrun simctl launch <udid> com.walhallaa.NestZone -nestieBench 1 \
-//       [-nestieScenario fresh|growing|ready|young] \
-//       [-nestieScript buy|care|ceremony|decorate|holidays|choose|chooseReady] \
+//       [-nestieScenario fresh|growing|ready|young|vote|voteAlone] \
+//       [-nestieScript buy|care|ceremony|decorate|holidays|choose|chooseReady|vote|voteSettle|votePick] \
 //       [-nestieOrder pushFirst|answerFirst] \
 //       [-nestieBuy honest|owned|short|unavailable|priceChanged] \
-//       [-nestieFail care,start,startAfter,buy,buyAfter,graduate,layout,holidays,hang] \
+//       [-nestieFail care,start,startAfter,buy,buyAfter,graduate,layout,holidays,ballot,decide,hang] \
 //       [-nestieLatency 250] [-nestiePush 1] [-todayScroll 1] [-frameMeter 1]
 //
 // The real thing runs behind a session (Convex Auth rotates the refresh token
@@ -205,6 +205,32 @@ enum Bench {
             report("ceremony finished", store)
             try? await Task.sleep(for: .seconds(2))
             report("ceremony settled", store)
+        case "vote":
+            // Open the vote, answer two of three, and see the card.
+            store.send(.voteTapped)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.ballotTapped("cherry", yes: true))
+            try? await Task.sleep(for: .seconds(0.6))
+            store.send(.ballotTapped("duckling", yes: false))
+            report("two answered", store)
+            try? await Task.sleep(for: .seconds(1.5))
+            report("settled", store)
+        case "voteSettle":
+            store.send(.voteTapped)
+            try? await Task.sleep(for: .seconds(1.2))
+            store.send(.settleTapped)
+            report("settle tapped", store)
+            try? await Task.sleep(for: .seconds(2))
+            report("settle answered", store)
+        case "votePick":
+            store.send(.voteTapped)
+            try? await Task.sleep(for: .seconds(1.2))
+            store.send(.pickInsteadTapped)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.chose(.sunflower))
+            report("picked", store)
+            try? await Task.sleep(for: .seconds(2))
+            report("pick settled", store)
         case "decorate":
             store.send(.decorateTapped)
             store.send(.spotPicked(.ground))
@@ -246,7 +272,33 @@ actor FakeNestieServer {
         var points: Double, paidStage = 0
         var lastCare: Date?
         var careDays: [String] = []
+        /// A seed the house has not named: `species` is the vote's first option.
+        var undecided = false
     }
+
+    /// The vote for the next one, as the server keeps it, with one housemate
+    /// (`u1`) whose answers are `others`.
+    private struct VoteState {
+        var options = ["cherry", "duckling", "fern"]
+        var mine: [String: Bool] = [:]
+        var others: [String: Bool] = ["cherry": true, "duckling": false, "fern": true]
+        var othersVoted = true
+        var status = "open"
+        var how: String?
+        var winner: String?
+        var closesAt = Date().addingTimeInterval(23 * 3_600)
+
+        func yes(_ id: String) -> Int { (mine[id] == true ? 1 : 0) + (othersVoted && others[id] == true ? 1 : 0) }
+        func no(_ id: String) -> Int { (mine[id] == false ? 1 : 0) + (othersVoted && others[id] == false ? 1 : 0) }
+        var answered: Int {
+            (mine.count == options.count ? 1 : 0) + (othersVoted && others.count == options.count ? 1 : 0)
+        }
+        /// Most yeses, the earlier option on a tie; none without a yes.
+        var leader: String? {
+            options.filter { yes($0) > 0 }.max { yes($0) < yes($1) }
+        }
+    }
+    private var voteState: VoteState?
 
     // What it has been asked.
     private var seenBuys: [String: BuyOutcome] = [:]
@@ -277,6 +329,13 @@ actor FakeNestieServer {
             seedHouse(points: 64, startedAgo: 8 * day, now: now)
         case "young":
             seedHouse(points: 64, startedAgo: 2 * day, now: now)
+        case "vote", "voteAlone":
+            seedHouse(points: 12, startedAgo: day, now: now)
+            current?.species = .cherry
+            current?.undecided = true
+            current?.paidStage = 0
+            voteState = VoteState()
+            if config.scenario == "voteAlone" { voteState?.othersVoted = false }
         default:
             seedHouse(points: 20.6, startedAgo: 3 * day, now: now)
         }
@@ -305,7 +364,10 @@ actor FakeNestieServer {
             setPlace: { _, place in try await self.setPlace(place) },
             start: { _, species, place, requestID in try await self.start(species, place, requestID) },
             care: { _ in try await self.care() },
-            graduate: { _, id in try await self.graduate(id) },
+            graduate: { _, id in GraduateOutcome(paid: try await self.graduate(id)) },
+            // A vote exists only in the `vote` scenarios, with one housemate who has answered.
+            ballot: { _, species, answer in try await self.ballot(species, answer) },
+            decide: { _ in try await self.decide() },
             setLayout: { _, layout in try await self.setLayout(layout) },
             setHolidays: { _, holidays in try await self.setHolidays(holidays) },
             importLocal: { _, _, _ in .closed },
@@ -399,6 +461,19 @@ actor FakeNestieServer {
                 "isReady": pointsReady && Date() >= readyAt, "pointsReady": pointsReady, "readyAt": ms(readyAt),
                 "paidStage": c.paidStage,
                 "lastCareAt": c.lastCare.map(ms) as Any? ?? NSNull(), "myCareDays": c.careDays,
+                "undecided": c.undecided,
+            ] as [String: Any]
+        } ?? NSNull()
+        json["vote"] = voteState.map { v in
+            [
+                "pollId": "bench-poll", "status": v.status, "openedAt": ms(Date().addingTimeInterval(-3_600)),
+                "closesAt": ms(v.closesAt), "closedAt": NSNull(), "how": v.how as Any? ?? NSNull(),
+                "winner": v.winner as Any? ?? NSNull(),
+                "options": v.options.map { id in
+                    ["species": id, "isPet": Species(rawValue: id)?.isPet ?? false, "grown": false, "yes": v.yes(id), "no": v.no(id)] as [String: Any]
+                },
+                "mine": v.mine.map { ["species": $0.key, "yes": $0.value] as [String: Any] },
+                "members": 2, "answered": v.answered, "othersVoted": v.othersVoted,
             ] as [String: Any]
         } ?? NSNull()
         // swiftlint:disable:next force_try
@@ -466,6 +541,20 @@ actor FakeNestieServer {
             })
         }
         if !hasHouse { hasHouse = true; tzOffset = place.tzOffset; region = place.region }
+        // A seed the house has not named: this is the pick, and it keeps its growth.
+        if var seed = current, seed.undecided {
+            if voteState?.status == "open", voteState?.othersVoted == true {
+                throw AppError.server("The house is voting on the next one")
+            }
+            seed.species = species
+            seed.undecided = false
+            current = seed
+            if voteState?.status == "open" { voteState?.status = "closed"; voteState?.how = "picked"; voteState?.winner = species.rawValue }
+            let outcome = StartOutcome(companionID: seed.id)
+            starts[requestID] = outcome
+            publish()
+            return outcome
+        }
         // A ready one graduates first, in the same write.
         var graduated: GraduatedCompanion?
         if let c = current, c.points >= 64 - 1e-9, Date().timeIntervalSince(c.startedAt) >= 6 * 86_400 {
@@ -492,6 +581,35 @@ actor FakeNestieServer {
         // The write went through and the answer was lost on the way back.
         if config.fail.contains("startAfter"), startCalls == 1 { throw URLError(.networkConnectionLost) }
         return outcome
+    }
+
+    /// An answer to one option, or (`nil`) taking it back. When both people
+    /// have answered everything, the vote ends and the seed is named.
+    private func ballot(_ species: String, _ answer: Bool?) async throws {
+        try await wait("ballot")
+        guard var v = voteState, v.status == "open" else { throw AppError.server("That vote is over") }
+        v.mine[species] = answer
+        if v.answered >= 2, let winner = v.leader {
+            v.status = "closed"; v.how = "everyone"; v.winner = winner
+            current?.species = Species(rawValue: winner) ?? .cherry
+            current?.undecided = false
+        }
+        voteState = v
+        publish()
+    }
+
+    private func decide() async throws -> DecideOutcome {
+        try await wait("decide")
+        guard var v = voteState else { return .none }
+        if v.status != "open" { return .closed(winner: v.winner) }
+        guard v.othersVoted else { return .alone }
+        guard let winner = v.leader else { return .noVotes }
+        v.status = "closed"; v.how = "decided"; v.winner = winner
+        voteState = v
+        current?.species = Species(rawValue: winner) ?? .cherry
+        current?.undecided = false
+        publish()
+        return .chosen(winner: winner)
     }
 
     private func care() async throws -> Bool {

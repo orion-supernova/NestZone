@@ -93,6 +93,19 @@ public struct CompanionFeature: Sendable {
         public var birthdays: Set<CalendarDay> = []
         /// A graduation that happened under a start, to be shown once.
         public var moment: Moment?
+        /// Bumped when this phone answers an option of the vote: the tap's own
+        /// haptic is keyed on it, never on the tally a push can also move.
+        public var ballotTick = 0
+        /// Settling the vote is on its way to the server.
+        public var isDeciding = false
+        /// Why settling did nothing, until anything about the vote moves.
+        public var voteNote: VoteNote?
+        /// When the ceremony's cover was closed, so a sheet that follows it
+        /// waits out what is left of the pause a closing presentation needs.
+        var ceremonyClosedAt: Date?
+        /// A graduation into a vote is on its way and the vote is not known
+        /// yet: the card says so and offers no pick.
+        public var isOpeningVote = false
 
         /// The card that asks before anything is bought — what it costs and
         /// what is left, the Leaves made up with Sparkles, or how many more it
@@ -161,9 +174,28 @@ public struct CompanionFeature: Sendable {
         public var activeHolidays: [Holiday] = []
         public var holidayToDress: Holiday?
         public var visibleLayout = SceneLayout()
+        /// The house has not chosen what the one growing is: it is drawn and
+        /// called a seed, and `species` is nil (the server's is only the
+        /// vote's first option, standing in).
+        public var isUndecided = false
+        /// The house's vote for the one growing, with this phone's own ballots
+        /// laid over it.
+        public var vote: CompanionVote?
+
+        /// What stands in for a seed's species where one is needed to draw:
+        /// a sketched plant, whose first stage is a sprout whatever it grows
+        /// into, so the stand-in is never drawn as if it had been chosen.
+        static let seedStandIn = Species.basil
+
+        public enum VoteNote: Equatable, Sendable {
+            /// Nobody else has answered: settling would be a pick.
+            case alone
+            /// Nobody has said yes to anything yet.
+            case noVotes
+        }
 
         public enum Sheet: String, Equatable, Identifiable, Sendable {
-            case choose, decorate, album, holidays, lab, ceremony, welcome, shop
+            case choose, decorate, album, holidays, lab, ceremony, welcome, shop, vote
             public var id: String { rawValue }
             /// Shown over everything rather than as a sheet: the moments.
             var isMoment: Bool { self == .ceremony || self == .welcome }
@@ -289,10 +321,16 @@ public struct CompanionFeature: Sendable {
             /// answer to an earlier write from the one that is current.
             var layout: Layout?
             var holidays: Holidays?
+            /// This person's answers to the vote, by species, on their way.
+            var ballots: [String: Ballot] = [:]
 
             var isEmpty: Bool {
                 care == nil && buys.isEmpty && start == nil && graduating == nil && layout == nil && holidays == nil
+                    && ballots.isEmpty
             }
+
+            /// `nil` is an answer taken back.
+            struct Ballot: Equatable, Sendable { var answer: Bool? }
 
             struct Care: Equatable, Sendable { var day: String; var at: Date }
             struct Buy: Equatable, Sendable { var item: ShopItem; var coins: Coins }
@@ -313,6 +351,30 @@ public struct CompanionFeature: Sendable {
                 /// The server's answer, once it has come, and the id it gave.
                 var companionID: String?
                 var since = Date.distantFuture
+                /// Set when this chose what an undecided seed would be: the
+                /// seed is the same companion, with its growth, so it is
+                /// drawn chosen only once the push says its species.
+                var seedID: String?
+
+                /// Whether `served` shows this write's companion, by its
+                /// answer's id when it has come.
+                func isShown(in served: CompanionHouse) -> Bool {
+                    guard let current = served.current else { return false }
+                    if seedID != nil { return isShownByPush(in: served) }
+                    if let companionID { return current.id == companionID }
+                    return isShownByPush(in: served)
+                }
+
+                /// Whether `served` is growing what this started, whatever
+                /// the answer said: the push that shows it, for an answer
+                /// that was lost.
+                func isShownByPush(in served: CompanionHouse) -> Bool {
+                    guard let current = served.current else { return false }
+                    if let seedID {
+                        return current.id == seedID && !current.isUndecided && current.species == species
+                    }
+                    return current.id != previousID && current.species == species
+                }
             }
             struct Graduating: Equatable, Sendable {
                 var companionID: String
@@ -320,6 +382,12 @@ public struct CompanionFeature: Sendable {
                 var previousPay: Payment?
                 var isAnswered = false
                 var since = Date.distantFuture
+                /// A house of two or more: the server opens the vote in the
+                /// same write, so the next one is drawn as a seed at once and
+                /// Choose is not opened ahead of the answer.
+                var predictsSeed = false
+                /// The answer said there is no vote: the house picks.
+                var noVote = false
             }
             struct Layout: Equatable, Sendable { var token: Int; var value: SceneLayout }
             struct Holidays: Equatable, Sendable { var token: Int; var value: [String]? }
@@ -334,9 +402,9 @@ public struct CompanionFeature: Sendable {
             /// no longer the one it replaced (somebody else moved on), and any
             /// answered entry goes after `patience`.
             mutating func settle(against served: CompanionHouse, now: Date = .distantPast) {
-                if let start, let id = start.companionID {
+                if let start, start.companionID != nil {
                     let moved = served.current?.id != start.previousID
-                    if served.current?.id == id || moved || now.timeIntervalSince(start.since) > Self.patience {
+                    if start.isShown(in: served) || moved || now.timeIntervalSince(start.since) > Self.patience {
                         self.start = nil
                     }
                 }
@@ -397,19 +465,44 @@ public struct CompanionFeature: Sendable {
             }
             if let graduating = writes.graduating, served.current?.id == graduating.companionID {
                 house.current = nil
+                house.vote = nil
+                // The vote opens in the same write for a house of two or more,
+                // and the next one is already growing, as a seed.
+                if graduating.predictsSeed {
+                    var seed = Companion(
+                        species: Self.seedStandIn, seed: "\(homeID.rawValue)-\(served.albumCount + 1)", startedAt: graduating.since
+                    )
+                    seed.isUndecided = true
+                    house.current = seed
+                }
                 house.albumCount += 1
                 house.add(Rewards.graduation)
                 house.paidStage = 0
             }
-            if let start = writes.start, !servedShows(start) {
-                var started = Companion(species: start.species, seed: start.seed, startedAt: start.startedAt)
-                started.points = 0
-                house.current = started
-                house.paidStage = 0
-                if start.welcome, !served.welcomed {
-                    house.add(Rewards.welcome)
-                    house.welcomed = true
+            if let start = writes.start, !start.isShown(in: served) {
+                if start.seedID != nil, var seed = house.current {
+                    // The seed is chosen: the same companion with the same
+                    // growth, and the vote is over with the pick.
+                    seed.species = start.species
+                    seed.isUndecided = false
+                    house.current = seed
+                    house.vote?.close(winner: start.species.rawValue, how: .picked)
+                } else {
+                    var started = Companion(species: start.species, seed: start.seed, startedAt: start.startedAt)
+                    started.points = 0
+                    house.current = started
+                    house.paidStage = 0
+                    if start.welcome, !served.welcomed {
+                        house.add(Rewards.welcome)
+                        house.welcomed = true
+                    }
                 }
+            }
+            // An answer shows only while `served` does not already: the tally
+            // is moved by what this person's ballot changes, and by nothing the
+            // push has counted.
+            for (species, ballot) in writes.ballots where served.vote?.mine[species] != ballot.answer {
+                house.vote?.answer(species, as: ballot.answer)
             }
             if let care = writes.care, var current = house.current,
                served.current?.careDays.contains(care.day) != true {
@@ -419,12 +512,6 @@ public struct CompanionFeature: Sendable {
             }
             if let layout = writes.layout { house.layout = layout.value }
             if let holidays = writes.holidays { house.holidays = holidays.value }
-        }
-
-        private func servedShows(_ start: Writes.Start) -> Bool {
-            guard let current = served.current else { return false }
-            if let id = start.companionID { return current.id == id }
-            return current.id != start.previousID && current.species == start.species
         }
 
         private func overlay(_ lab: CompanionHouse.Lab, on house: inout CompanionHouse) {
@@ -554,23 +641,33 @@ public struct CompanionFeature: Sendable {
             }
             let context = shop(for: house, at: clock, birthday: lab.birthday, holidays: holidays)
             let current = house.current
-            let isPet = current?.species.isPet ?? false
+            // A seed nobody has named yet is a plant's sprout, never the pet
+            // or the plant the vote happens to list first.
+            let undecided = current?.isUndecided == true
+            let isPet = !undecided && (current?.species.isPet ?? false)
 
             set(\.jar, Coins(leaves: house.leaves, sparkles: house.sparkles))
             set(\.current, current)
             set(\.hasCompanion, current != nil)
-            set(\.species, current?.species)
-            set(\.look, current.map { Companion(species: $0.species, seed: $0.seed, startedAt: $0.startedAt) })
+            set(\.isUndecided, undecided)
+            set(\.isOpeningVote, writes.graduating.map { $0.predictsSeed && !$0.noVote } ?? false)
+            set(\.vote, house.vote)
+            set(\.species, undecided ? nil : current?.species)
+            set(\.look, current.map {
+                Companion(species: $0.isUndecided ? Self.seedStandIn : $0.species, seed: $0.seed, startedAt: $0.startedAt)
+            })
             let points = current.map { max(($0.points ?? 0) + lab.bonus, 0) } ?? 0
             set(\.points, points)
-            let progress = min(points / CompanionMath.graduateAt, 1)
+            // A seed holds still as a seed while the house decides: it grows
+            // (the server counts it) but is not drawn as anything yet.
+            let progress = undecided ? 0 : min(points / CompanionMath.graduateAt, 1)
             set(\.progress, progress)
             // The server's word on its stage and on being ready, unless the
             // Lab has moved the points: it can pretend, for the ceremony.
-            let stage = (lab.bonus == 0 ? current?.serverStage : nil)
+            let stage = undecided ? 0 : (lab.bonus == 0 ? current?.serverStage : nil)
                 ?? CompanionMath.stage(progress: progress, isPet: isPet)
             set(\.stage, stage)
-            set(\.isReady, current.map { $0.isReady || (lab.bonus > 0 && progress >= 1 && !$0.pointsReady) } ?? false)
+            set(\.isReady, !undecided && (current.map { $0.isReady || (lab.bonus > 0 && progress >= 1 && !$0.pointsReady) } ?? false))
             let mood: Mood = if let current {
                 lab.mood ?? CompanionMath.mood(
                     now: clock, completions: activity, lastCare: current.lastCareAt,
@@ -631,7 +728,18 @@ public struct CompanionFeature: Sendable {
         case completionsUpdated([Completion])
         case careTapped
         case chooseTapped
+        /// The pause before a sheet that follows a closing presentation is over.
+        case presentPending
         case chose(Species)
+        /// The card's way into the vote for the next one.
+        case voteTapped
+        /// One option of the vote, answered: yes, or no; the same answer again
+        /// takes it back.
+        case ballotTapped(String, yes: Bool)
+        /// "Settle it": the ballots so far decide.
+        case settleTapped
+        /// Pick instead of voting, while nobody else has answered.
+        case pickInsteadTapped
         /// The welcome gift's "Decorate now".
         case welcomeDecorateTapped
         case celebrateTapped
@@ -694,7 +802,10 @@ public struct CompanionFeature: Sendable {
         case buyAnswered(String, Result<BuyOutcome, AppError>)
         case careAnswered(Result<Bool, AppError>)
         case startAnswered(Result<StartOutcome, AppError>)
-        case graduateAnswered(Result<Coins?, AppError>)
+        case graduateAnswered(Result<GraduateOutcome, AppError>)
+        /// `nil`: the server took it.
+        case ballotAnswered(String, AppError?)
+        case decideAnswered(Result<DecideOutcome, AppError>)
         case layoutAnswered(token: Int, Result<SceneLayout, AppError>)
         case holidaysAnswered(token: Int, Result<[String]?, AppError>)
         case importAnswered(Result<ImportOutcome, AppError>)
@@ -805,8 +916,99 @@ public struct CompanionFeature: Sendable {
                 return .none
 
             case .chooseTapped:
+                // Not while the vote that is about to be known is the way.
+                guard !state.isOpeningVote else { return .none }
+                state.pendingSheet = nil
                 state.sheet = .choose
                 return .none
+
+            case .presentPending:
+                // What waited for a closing presentation to finish; dropped if
+                // anything else has been opened since.
+                guard let sheet = state.pendingSheet else { return .none }
+                state.pendingSheet = nil
+                guard state.sheet == nil else { return .none }
+                state.sheet = sheet
+                return .none
+
+            case .voteTapped:
+                state.pendingSheet = nil
+                state.voteNote = nil
+                state.sheet = .vote
+                return .none
+
+            case let .ballotTapped(species, yes):
+                // Only while it is open, on its own options, and one answer to
+                // an option at a time: two in flight could land out of order.
+                guard let vote = state.house.vote, vote.isOpen, vote.options.contains(where: { $0.id == species }),
+                      state.writes.ballots[species] == nil
+                else { return .none }
+                let answer: Bool? = vote.mine[species] == yes ? nil : yes
+                state.ballotTick += 1
+                state.voteNote = nil
+                state.writes.ballots[species] = State.Writes.Ballot(answer: answer)
+                let pollID = vote.pollID
+                return .run { send in
+                    let result = await attempt { try await companionClient.ballot(pollID, species, answer) }
+                    await send(.ballotAnswered(species, result.failureValue))
+                }
+
+            case let .ballotAnswered(species, error):
+                guard let ballot = state.writes.ballots.removeValue(forKey: species) else { return .none }
+                if let error { return failed(error, "polls:vote", state: &state) }
+                // Folded in before the entry goes, so the answer does not
+                // blink between here and the push. A push that already
+                // counted it makes this a no-op.
+                state.served.vote?.answer(species, as: ballot.answer)
+                return .none
+
+            case .settleTapped:
+                guard let vote = state.house.vote, vote.isOpen, !state.isDeciding else { return .none }
+                state.voteNote = nil
+                // What the live read already says: nobody else has answered
+                // (that is a pick, and `start` does it), or nothing is a yes.
+                // The server says the same when it is asked.
+                guard vote.othersVoted else {
+                    state.voteNote = .alone
+                    return .none
+                }
+                guard vote.hasYes else {
+                    state.voteNote = .noVotes
+                    return .none
+                }
+                state.isDeciding = true
+                let homeID = state.homeID
+                return .run { send in
+                    await send(.decideAnswered(await attempt { try await companionClient.decide(homeID) }))
+                }
+
+            case let .decideAnswered(result):
+                state.isDeciding = false
+                switch result {
+                case let .success(outcome):
+                    switch outcome {
+                    case let .chosen(winner):
+                        Self.fold(winner: winner, how: .decided, into: &state)
+                    case let .closed(winner):
+                        if let winner { Self.fold(winner: winner, how: .other, into: &state) }
+                    case .noVotes: state.voteNote = .noVotes
+                    case .alone: state.voteNote = .alone
+                    case .none: break
+                    }
+                    return .none
+                case let .failure(error):
+                    return failed(error, "companion:decide", state: &state)
+                }
+
+            case .pickInsteadTapped:
+                // The vote's sheet closes first and Choose opens once it has
+                // gone, so the two never fight over the screen.
+                state.pendingSheet = .choose
+                state.sheet = nil
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(450))
+                    await send(.chooseTapped)
+                }
 
             case let .chose(species):
                 return grow(species, state: &state)
@@ -970,11 +1172,18 @@ public struct CompanionFeature: Sendable {
                     return .none
                 }
                 let floater = (state.lastPay?.id ?? 0) + 1
-                state.writes.graduating = State.Writes.Graduating(companionID: id, floater: floater, previousPay: state.lastPay, since: state.now)
+                // A house of two or more votes on the next one, and the server
+                // opens it in this very write; a house of one picks.
+                let votes = state.memberCount > 1
+                state.writes.graduating = State.Writes.Graduating(
+                    companionID: id, floater: floater, previousPay: state.lastPay, since: state.now, predictsSeed: votes
+                )
                 state.lastPay = State.Payment(coins: Rewards.graduation, id: floater)
                 // Straight on to the next one: nothing done while the house
                 // decides is lost, because growth counts from when it arrives.
-                state.sheet = .choose
+                // For a house that votes, the answer says which sheet.
+                state.sheet = votes ? nil : .choose
+                state.ceremonyClosedAt = currentDate
                 let homeID = state.homeID
                 return .run { send in
                     await send(.graduateAnswered(await attempt { try await companionClient.graduate(homeID, id) }))
@@ -983,16 +1192,29 @@ public struct CompanionFeature: Sendable {
             case let .graduateAnswered(result):
                 guard var graduating = state.writes.graduating else { return .none }
                 switch result {
-                case let .success(paid):
+                case let .success(outcome):
                     // What was really paid, once: more or less than the
                     // coins that were shown arriving, or none (it had been).
                     if state.lastPay?.id == graduating.floater {
-                        if let paid { state.lastPay?.coins = paid } else { state.lastPay = graduating.previousPay }
+                        if let paid = outcome.paid { state.lastPay?.coins = paid } else { state.lastPay = graduating.previousPay }
                     }
                     graduating.isAnswered = true
+                    // A repeat call says nothing of a vote (the key is absent):
+                    // the push decides. An explicit null is "this house picks".
+                    let picks = outcome.vote == nil && !outcome.isRepeat
+                    if picks { graduating.noVote = true }
                     state.writes.graduating = graduating
                     let served = state.served
                     state.writes.settle(against: served)
+                    // The vote it opened is what comes next, not Choose; a
+                    // house with nothing to vote on picks as before. Presented
+                    // after the pause a closing cover needs, or it is dropped.
+                    if outcome.vote != nil, state.sheet == nil || state.sheet == .choose {
+                        state.voteNote = nil
+                        return present(.vote, afterSheet: state.sheet != nil, state: &state)
+                    } else if picks, graduating.predictsSeed, state.sheet == nil {
+                        return present(.choose, afterSheet: false, state: &state)
+                    }
                     return .none
                 case .failure(let error) where error.isTransport && state.served.current?.id != graduating.companionID:
                     // The answer was lost but the graduation was not.
@@ -1000,6 +1222,10 @@ public struct CompanionFeature: Sendable {
                     state.writes.graduating = graduating
                     let served = state.served
                     state.writes.settle(against: served)
+                    if graduating.predictsSeed, state.sheet == nil {
+                        if served.current?.isUndecided == true { return present(.vote, afterSheet: false, state: &state) }
+                        if served.current == nil { return present(.choose, afterSheet: false, state: &state) }
+                    }
                     return .none
                 case let .failure(error):
                     // Nothing graduated. It is back on Today, ready, and the
@@ -1308,6 +1534,34 @@ public struct CompanionFeature: Sendable {
         return .merge(effects)
     }
 
+    /// Presents a sheet once whatever was closing has finished closing: a sheet
+    /// presented in the action that dismisses another is dropped, and the state
+    /// would then say `.vote` with nothing on screen. `afterSheet` is a sheet
+    /// of this feature being replaced, which needs the whole pause; otherwise
+    /// it is what is left of it since the ceremony's cover closed.
+    private func present(_ sheet: State.Sheet, afterSheet: Bool, state: inout State) -> Effect<Action> {
+        let pause = 450
+        let elapsed = state.ceremonyClosedAt.map { Int(currentDate.timeIntervalSince($0) * 1000) } ?? pause
+        let wait = afterSheet ? pause : max(0, pause - max(elapsed, 0))
+        state.pendingSheet = sheet
+        state.sheet = nil
+        return .run { send in
+            try await clock.sleep(for: .milliseconds(wait))
+            await send(.presentPending)
+        }
+    }
+
+    /// What a settled vote chose, folded into what the server last said, the way
+    /// a purchase's answer is: the card does not wait on the push to stop being
+    /// a seed. A vote that is over already keeps its own ending.
+    private static func fold(winner: String, how: CompanionVote.How, into state: inout State) {
+        if state.served.vote?.isOpen == true { state.served.vote?.close(winner: winner, how: how) }
+        if state.served.current?.isUndecided == true, let species = Species(rawValue: winner) {
+            state.served.current?.species = species
+            state.served.current?.isUndecided = false
+        }
+    }
+
     // MARK: - Writes
 
     /// Runs a call against the write timeout and says how it ended. A timeout
@@ -1352,11 +1606,15 @@ public struct CompanionFeature: Sendable {
         guard state.writes.start == nil, state.serverShop.standing(of: species).isUsable else { return .none }
         let house = state.house
         let firstTime = !house.welcomed
-        let seed = "\(state.homeID.rawValue)-\(house.albumCount)"
+        // Choosing for a seed the house has not named is the same companion
+        // with its growth, not a new one: it keeps its seed and its start.
+        let undecided = state.served.current.flatMap { $0.isUndecided ? $0 : nil }
+        let seed = undecided?.seed ?? "\(state.homeID.rawValue)-\(house.albumCount)"
         let floater = (state.lastPay?.id ?? 0) + 1
         state.writes.start = State.Writes.Start(
-            species: species, seed: seed, startedAt: state.now, previous: state.served.current,
-            welcome: firstTime, floater: firstTime ? floater : nil, previousPay: state.lastPay, since: state.now
+            species: species, seed: seed, startedAt: undecided?.startedAt ?? state.now, previous: state.served.current,
+            welcome: firstTime, floater: firstTime ? floater : nil, previousPay: state.lastPay, since: state.now,
+            seedID: undecided?.id
         )
         state.sheet = firstTime ? .welcome : nil
         if firstTime { state.lastPay = State.Payment(coins: Rewards.welcome, id: floater) }
@@ -1405,9 +1663,7 @@ public struct CompanionFeature: Sendable {
             let shown = state.served
             state.writes.settle(against: shown)
             return .none
-        case let .failure(error) where error.isTransport && state.served.current.map({
-            $0.id != start.previousID && $0.species == start.species
-        }) == true:
+        case let .failure(error) where error.isTransport && start.isShownByPush(in: state.served):
             // The answer was lost but the write was not: the push already
             // shows it growing. Nothing to take back and nothing to alert.
             state.startAttempt = nil
@@ -1594,6 +1850,13 @@ public struct CompanionFeature: Sendable {
         guard error != .cancelled else { return .none }
         state.alert = .failure(error)
         return .none
+    }
+}
+
+extension Result {
+    /// What went wrong, or `nil` when nothing did.
+    var failureValue: Failure? {
+        if case let .failure(error) = self { error } else { nil }
     }
 }
 

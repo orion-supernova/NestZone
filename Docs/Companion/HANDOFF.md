@@ -998,7 +998,16 @@ In order — each step can go to testers on its own:
      the graduation as before. An undecided seed grows but pays no stage
      (its stand-in may be a pet, whose seven stages come earlier); when it is
      chosen, `chooseSeed` pays up to the real species' stage at its points.
-   - *For the client* (not started):
+   - *Client built (24 October), built and test-built, tests not run.* Payload
+     (`CompanionVote`, `Current.undecided`), `ballot` / `decide` / wider
+     `graduate` in `CompanionClient`, entries `writes.ballots` and a seed
+     pick (`Start.seedID`) in `CompanionFeature`, `CompanionVoteViews.swift`
+     (card section, `VoteView` sheet), `ActivityCategory.companion` -> Today,
+     server refusals as copy (`CompanionVoteRefusal`). An undecided seed is
+     drawn as a sprout (`seedStandIn`), never as its stand-in. The server does
+     not say who voted, only counts. Bench: `-nestieScenario vote|voteAlone`,
+     `-nestieScript vote|voteSettle|votePick`.
+   - *For the client* (spec, now built):
      - `forHome.current.undecided`: draw a seed or an egg, not `species`.
      - `forHome.vote`: the poll, open or closed, the deadline, the options
        with yes and no counts, the caller's answers, `answered` of `members`,

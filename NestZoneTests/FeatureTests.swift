@@ -2944,6 +2944,18 @@ struct TabNavigationTests {
         }
     }
 
+    @Test("A Nestie notification opens Today, back at its root")
+    func companionNotificationOpensToday() async {
+        var state = Self.main()
+        state.selectedTab = .house
+        let store = TestStore(initialState: state) { MainFeature() }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.inbox(.delegate(.open(.companion))))
+        #expect(store.state.selectedTab == .today)
+        #expect(store.state.today.path.isEmpty)
+    }
+
     @Test("House's counters button pushes At a glance on House")
     func statsFromHouse() async {
         let store = TestStore(initialState: Self.main()) { MainFeature() }

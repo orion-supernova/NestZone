@@ -9369,4 +9369,166 @@ public enum L10n {
     public static func companionReadyOn(_ a0: String) -> LocalizedStringResource {
         r("companion_ready_on", "Ready on \(a0)")
     }
+
+    // MARK: - Nestie, step 3: the house votes on the next one
+
+    /// A new seed
+    public static var voteSeedTitle: LocalizedStringResource {
+        r("vote_seed_title", "A new seed")
+    }
+
+    /// The house is picking
+    public static var voteSeedSubtitle: LocalizedStringResource {
+        r("vote_seed_subtitle", "The house is picking")
+    }
+
+    /// Vote
+    public static var voteVote: LocalizedStringResource {
+        r("vote_vote", "Vote")
+    }
+
+    /// Change my votes
+    public static var voteChange: LocalizedStringResource {
+        r("vote_change", "Change my votes")
+    }
+
+    /// %1$lld of %2$lld have answered
+    public static func voteAnswered(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("vote_answered", "\(a0) of \(a1) have answered")
+    }
+
+    /// Closes
+    public static var voteCloses: LocalizedStringResource {
+        r("vote_closes", "Closes")
+    }
+
+    /// Nobody said yes to any of them. Pick one yourself.
+    public static var voteNobody: LocalizedStringResource {
+        r("vote_nobody", "Nobody said yes to any of them. Pick one yourself.")
+    }
+
+    /// Getting the options
+    public static var voteLoading: LocalizedStringResource {
+        r("vote_loading", "Getting the options")
+    }
+
+    /// %@, you said yes
+    public static func voteYouYes(_ a0: String) -> LocalizedStringResource {
+        r("vote_you_yes", "\(a0), you said yes")
+    }
+
+    /// %@, you said no
+    public static func voteYouNo(_ a0: String) -> LocalizedStringResource {
+        r("vote_you_no", "\(a0), you said no")
+    }
+
+    /// %@, not answered yet
+    public static func voteNotAnswered(_ a0: String) -> LocalizedStringResource {
+        r("vote_not_answered", "\(a0), not answered yet")
+    }
+
+    /// Say yes or no to each one. The one with the most yeses wins.
+    public static var voteHint: LocalizedStringResource {
+        r("vote_hint", "Say yes or no to each one. The one with the most yeses wins.")
+    }
+
+    /// Yes
+    public static var voteYes: LocalizedStringResource {
+        r("vote_yes", "Yes")
+    }
+
+    /// No
+    public static var voteNo: LocalizedStringResource {
+        r("vote_no", "No")
+    }
+
+    /// Yes to %@
+    public static func voteYesFor(_ a0: String) -> LocalizedStringResource {
+        r("vote_yes_for", "Yes to \(a0)")
+    }
+
+    /// No to %@
+    public static func voteNoFor(_ a0: String) -> LocalizedStringResource {
+        r("vote_no_for", "No to \(a0)")
+    }
+
+    /// %1$lld yes · %2$lld no
+    public static func voteCounts(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("vote_counts", "\(a0) yes · \(a1) no")
+    }
+
+    /// Already in your album
+    public static var voteInAlbum: LocalizedStringResource {
+        r("vote_in_album", "Already in your album")
+    }
+
+    /// Plant
+    public static var voteKindPlant: LocalizedStringResource {
+        r("vote_kind_plant", "Plant")
+    }
+
+    /// Pet
+    public static var voteKindPet: LocalizedStringResource {
+        r("vote_kind_pet", "Pet")
+    }
+
+    /// Settle it now
+    public static var voteSettle: LocalizedStringResource {
+        r("vote_settle", "Settle it now")
+    }
+
+    /// Counts the answers so far and picks the winner.
+    public static var voteSettleHint: LocalizedStringResource {
+        r("vote_settle_hint", "Counts the answers so far and picks the winner.")
+    }
+
+    /// Nobody else has answered yet, so there's nothing to count. Pick one yourself, or give the others a little longer.
+    public static var voteNoteAlone: LocalizedStringResource {
+        r("vote_note_alone", "Nobody else has answered yet, so there's nothing to count. Pick one yourself, or give the others a little longer.")
+    }
+
+    /// Nobody has said yes to anything yet. Say yes to the ones you like, or wait for the others.
+    public static var voteNoteNoYes: LocalizedStringResource {
+        r("vote_note_no_yes", "Nobody has said yes to anything yet. Say yes to the ones you like, or wait for the others.")
+    }
+
+    /// Pick one yourself
+    public static var votePickInstead: LocalizedStringResource {
+        r("vote_pick_instead", "Pick one yourself")
+    }
+
+    /// The house picked %@
+    public static func voteResultTitle(_ a0: String) -> LocalizedStringResource {
+        r("vote_result_title", "The house picked \(a0)")
+    }
+
+    /// A new kind
+    public static var voteUnknownKind: LocalizedStringResource {
+        r("vote_unknown_kind", "A new kind")
+    }
+
+    /// The house is voting on this one now. Say yes or no to each, or settle it.
+    public static var voteRefusedVoting: LocalizedStringResource {
+        r("vote_refused_voting", "The house is voting on this one now. Say yes or no to each, or settle it.")
+    }
+
+    /// The house already chose. The new one will show up in a moment.
+    public static var voteRefusedChose: LocalizedStringResource {
+        r("vote_refused_chose", "The house already chose. The new one will show up in a moment.")
+    }
+
+    /// That vote is over.
+    public static var voteRefusedOver: LocalizedStringResource {
+        r("vote_refused_over", "That vote is over.")
+    }
+
+    /// That isn't one of the options.
+    public static var voteRefusedOption: LocalizedStringResource {
+        r("vote_refused_option", "That isn't one of the options.")
+    }
+
+    /// Opening the vote
+    public static var voteOpening: LocalizedStringResource {
+        r("vote_opening", "Opening the vote")
+    }
 }

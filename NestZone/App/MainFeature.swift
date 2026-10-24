@@ -486,6 +486,13 @@ public struct MainFeature: Sendable {
             state.selectedTab = .messages
             return .none
 
+        // Nestie lives on Today, as the card. The tab, back to its root: the
+        // vote or the ceremony it announces is the card's to show.
+        case .companion:
+            state.selectedTab = .today
+            state[stack: .today].path.removeAll()
+            return .none
+
         // Membership, invites, somebody joining or leaving — all of which are
         // Settings' subject. A sheet, and the panel is a sheet that is only
         // now going away: presenting one while the other is still leaving is

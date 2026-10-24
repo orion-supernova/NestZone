@@ -24,9 +24,15 @@ public struct CompanionClient: Sendable {
     public var start: @Sendable (HomeID, Species, Place, _ requestID: String) async throws -> StartOutcome
     /// Water or pet it. `true` when it counted as today's care.
     public var care: @Sendable (HomeID) async throws -> Bool
-    /// The ceremony's end. The coins the graduation paid, or `nil` when it had
-    /// already been paid.
-    public var graduate: @Sendable (HomeID, _ companionID: String) async throws -> Coins?
+    /// The ceremony's end: the coins the graduation paid (`nil` when it had
+    /// already been paid) and the vote it opened for the next one, if it did.
+    public var graduate: @Sendable (HomeID, _ companionID: String) async throws -> GraduateOutcome
+    /// This person's answer to one option of the vote (`species` is the
+    /// ballot's target): yes, no, or `nil` to take it back. Answers to the
+    /// vote's poll (`vote.pollID`), through `polls:vote` and `polls:unvote`.
+    public var ballot: @Sendable (PollID, _ species: String, _ answer: Bool?) async throws -> Void
+    /// Settles the vote now, on the ballots so far.
+    public var decide: @Sendable (HomeID) async throws -> DecideOutcome
     /// Decorate's Done. Answers with what the server kept.
     public var setLayout: @Sendable (HomeID, SceneLayout) async throws -> SceneLayout
     /// Our holidays; `nil` goes back to the region's defaults.
@@ -81,6 +87,39 @@ public struct GraduatedCompanion: Equatable, Sendable {
         self.species = species
         self.paid = paid
     }
+}
+
+/// What ending the ceremony did on the server.
+public struct GraduateOutcome: Equatable, Sendable {
+    public var paid: Coins?
+    /// The vote for the next one, opened in the same write: the next one is
+    /// already growing, as a seed. `nil`: the house just picks.
+    public var vote: PollID?
+    /// The answer had no `vote` key at all, as a repeat graduate's has: it
+    /// opened nothing, and says nothing about whether the house votes.
+    public var isRepeat: Bool
+
+    public init(paid: Coins? = nil, vote: PollID? = nil, isRepeat: Bool = false) {
+        self.paid = paid
+        self.vote = vote
+        self.isRepeat = isRepeat
+    }
+}
+
+/// How settling the vote ended. The server answers each as a status, not an
+/// error; one this build does not know is `.none`, because nothing was shown
+/// to have happened and the live read says what did.
+public enum DecideOutcome: Equatable, Sendable {
+    /// The ballots so far picked `winner`.
+    case chosen(winner: String)
+    /// Nobody has said yes to anything, so there is nothing to settle. Still open.
+    case noVotes
+    /// Nobody else has answered: that is a pick, which `start` does. Still open.
+    case alone
+    /// It was over already (somebody else settled it, or the deadline came).
+    case closed(winner: String?)
+    /// There is no vote.
+    case none
 }
 
 /// How a purchase ended. The server answers every outcome the card has a
@@ -142,9 +181,21 @@ extension CompanionClient: DependencyKey {
             try await ConvexConnection.shared.mutate("companion:care", args: ["homeId": homeID], as: Counted.self).counted
         },
         graduate: { homeID, companionID in
-            try await ConvexConnection.shared.mutate(
+            let graduated = try await ConvexConnection.shared.mutate(
                 "companion:graduate", args: ["homeId": homeID, "companionId": companionID], as: Graduated.self
-            ).paid?.coins
+            )
+            return GraduateOutcome(paid: graduated.paid?.coins, vote: graduated.vote, isRepeat: !graduated.hasVoteKey)
+        },
+        ballot: { pollID, species, answer in
+            // Taking an answer back is a different function, with no `vote`.
+            try await ConvexConnection.shared.mutate(
+                answer == nil ? "polls:unvote" : "polls:vote", args: .ballot(pollID, species, answer)
+            )
+        },
+        decide: { homeID in
+            try await ConvexConnection.shared.mutate(
+                "companion:decide", args: ["homeId": homeID], as: Decided.self
+            ).outcome
         },
         setLayout: { homeID, layout in
             try await ConvexConnection.shared.mutate(
@@ -208,6 +259,13 @@ extension Dictionary where Key == String, Value == ConvexEncodable? {
         args["homeId"] = homeID
         args["species"] = species.rawValue
         args["requestId"] = requestID
+        return args
+    }
+
+    /// One answer to one option of the vote, or (`nil`) taking it back.
+    static func ballot(_ pollID: PollID, _ species: String, _ answer: Bool?) -> Self {
+        var args: Self = ["pollId": pollID, "target_external_id": species]
+        if let answer { args["vote"] = answer }
         return args
     }
 
@@ -346,6 +404,46 @@ private struct WireGraduated: Decodable, Sendable {
 
 private struct Graduated: Decodable, Sendable {
     var paid: WireCoins?
+    /// Absent on a repeat call, `null` for a house that just picks.
+    var vote: PollID?
+    var hasVoteKey: Bool
+
+    enum CodingKeys: String, CodingKey { case paid, vote }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        paid = (try? c.decodeIfPresent(WireCoins.self, forKey: .paid)) ?? nil
+        vote = (try? c.decodeIfPresent(PollID.self, forKey: .vote)) ?? nil
+        hasVoteKey = c.contains(.vote)
+    }
+}
+
+private struct Decided: Decodable, Sendable {
+    var outcome: DecideOutcome
+
+    enum CodingKeys: String, CodingKey { case status, winner }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        outcome = DecideOutcome(
+            status: (try? c.decode(String.self, forKey: .status)) ?? "",
+            winner: (try? c.decodeIfPresent(String.self, forKey: .winner)) ?? nil
+        )
+    }
+}
+
+extension DecideOutcome {
+    /// From the server's `status` and `winner`. A `chosen` with no winner, or
+    /// a status this build does not know, claims nothing it cannot show.
+    init(status: String, winner: String?) {
+        self = switch status {
+        case "chosen": winner.map { .chosen(winner: $0) } ?? .closed(winner: nil)
+        case "noVotes": .noVotes
+        case "alone": .alone
+        case "closed": .closed(winner: winner)
+        default: .none
+        }
+    }
 }
 
 private struct Imported: Decodable, Sendable {

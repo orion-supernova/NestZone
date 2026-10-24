@@ -510,11 +510,14 @@ struct SpeciesPortrait: View {
     let seed: String
     var hour = 13
     var mood: Mood = .bright
+    /// A fixed moment, for a portrait that must not be redrawn by every
+    /// re-evaluation of its parent (the default is the hour, today).
+    var now: Date?
 
     var body: some View {
         ScenePortrait(
             companion: Companion(species: species, seed: seed, startedAt: .distantPast), mood: mood,
-            now: Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date()
+            now: now ?? Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date()
         )
         .allowsHitTesting(false)
     }

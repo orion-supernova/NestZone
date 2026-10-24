@@ -167,7 +167,7 @@ struct CompanionCard: View {
                     Spacer(minLength: 0)
                     CardJar(store: store, covered: isCovered)
                 }
-                CardProgress(store: store)
+                CardFooter(store: store)
                 actions
             }
             .padding(14)
@@ -298,7 +298,7 @@ private struct CardScene: View {
                 choreTick: store.choreTick, careTick: store.careTick, compact: compact, paused: covered
             )
             .accessibilityElement()
-            .accessibilityLabel(Text(L10n.companionSceneLabel(
+            .accessibilityLabel(store.isUndecided ? Text(L10n.voteSeedTitle) : Text(L10n.companionSceneLabel(
                 String(localized: look.species.title),
                 String(localized: stageTitle),
                 Int((store.progress * 100).rounded()),
@@ -325,6 +325,12 @@ private struct CardTitle: View {
                 Text(species.title)
                     .font(font)
                     .oneLine()
+            } else if store.isUndecided {
+                // The house has not chosen: it is a seed, whatever the vote
+                // lists first.
+                Text(L10n.voteSeedTitle)
+                    .font(font)
+                    .oneLine()
             }
             Text(subtitle)
                 .font(detail)
@@ -335,9 +341,26 @@ private struct CardTitle: View {
     }
 
     private var subtitle: String {
-        [String(localized: CompanionMath.stageTitle(store.stage, isPet: store.isPet, isReady: store.isReady)),
+        if store.isUndecided {
+            return [String(localized: L10n.voteSeedSubtitle), String(localized: L10n.companionDay(store.day))]
+                .joined(separator: " · ")
+        }
+        return [String(localized: CompanionMath.stageTitle(store.stage, isPet: store.isPet, isReady: store.isReady)),
          String(localized: store.mood.title(isPet: store.isPet)),
          String(localized: L10n.companionDay(store.day))].joined(separator: " · ")
+    }
+}
+
+/// The growth bar, or — while the house has not chosen what this is — its vote.
+private struct CardFooter: View {
+    let store: StoreOf<CompanionFeature>
+
+    var body: some View {
+        if store.isUndecided {
+            CardVote(store: store)
+        } else {
+            CardProgress(store: store)
+        }
     }
 }
 
@@ -554,7 +577,29 @@ private struct StripAction: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        if store.isReady {
+        if store.isUndecided {
+            // The one line has room for one button: the vote, while there is
+            // one to answer, and the pick when there is not.
+            let voting = store.vote?.isOpen == true
+            if store.isOpeningVote {
+                // The vote is on its way; nothing to offer yet.
+                Image(systemName: "hourglass")
+                    .padding(8)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(Text(L10n.voteOpening))
+            } else if voting || store.vote?.winner == nil {
+              Button { store.send(voting ? .voteTapped : .chooseTapped) } label: {
+                Image(systemName: voting ? "hand.raised.fill" : "sparkles")
+                    .padding(8)
+                    .glassControl(tinted: theme.accent.opacity(0.35))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(voting ? L10n.voteVote : L10n.companionChoose))
+            } else {
+                // Chosen, the push on its way: water is all it asks.
+                CareButton(store: store, small: true)
+            }
+        } else if store.isReady {
             Button { store.send(.celebrateTapped) } label: {
                 Image(systemName: "party.popper.fill")
                     .padding(8)

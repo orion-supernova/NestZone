@@ -318,7 +318,7 @@ struct CompanionServerTests {
 
     // MARK: Graduating
 
-    private func graduatingStore(gate: Gate<Coins?>, clock: TestClock<Duration> = TestClock()) -> TestStoreOf<CompanionFeature> {
+    private func graduatingStore(gate: Gate<GraduateOutcome>, clock: TestClock<Duration> = TestClock()) -> TestStoreOf<CompanionFeature> {
         var client = CompanionClient()
         client.graduate = { _, _ in try await gate.wait() }
         return store(house(current: growing(id: "a", ready: true)), client: client, clock: clock)
@@ -332,13 +332,13 @@ struct CompanionServerTests {
 
     @Test("Graduate: shown at once, answered, and let go when the push has the next one")
     func graduateSucceeds() async {
-        let gate = Gate<Coins?>()
+        let gate = Gate<GraduateOutcome>()
         let store = graduatingStore(gate: gate)
         await store.send(.ceremonyFinished)
         #expect(store.state.current == nil)
         #expect(store.state.house.leaves == 250)
         #expect(store.state.sheet == .choose)
-        gate.release(Coins(leaves: 100, sparkles: 25))
+        gate.release(GraduateOutcome(paid: Coins(leaves: 100, sparkles: 25)))
         await store.receive(\.graduateAnswered)
         // Waiting for the push that shows it.
         #expect(store.state.writes.graduating?.isAnswered == true)
@@ -350,7 +350,7 @@ struct CompanionServerTests {
 
     @Test("Graduate fails: it is back on Today, ready, with an alert")
     func graduateFails() async {
-        let gate = Gate<Coins?>()
+        let gate = Gate<GraduateOutcome>()
         let store = graduatingStore(gate: gate)
         await store.send(.ceremonyFinished)
         gate.fail(AppError.server("Not grown up yet"))
@@ -365,7 +365,7 @@ struct CompanionServerTests {
 
     @Test("Graduate: a lost answer the push already shows is not an error")
     func graduateTransportFailureShownByPush() async {
-        let gate = Gate<Coins?>()
+        let gate = Gate<GraduateOutcome>()
         let store = graduatingStore(gate: gate)
         await store.send(.ceremonyFinished)
         await store.send(push(graduated))
@@ -586,6 +586,583 @@ struct CompanionServerTests {
         draft.ground = "kilim"
         #expect(state.serverSafe(draft).ground == nil)
     }
+
+    // MARK: The vote for the next one
+
+    /// A seed the house has not named: the server's species is only the
+    /// vote's first option, standing in.
+    private func seed(id: String = "s", standIn: Species = .cherry, ready: Bool = false) -> Companion {
+        var companion = growing(id: id, species: standIn, ready: ready)
+        companion.isUndecided = true
+        return companion
+    }
+
+    private func vote(
+        mine: [String: Bool] = [:], yes: [String: Int] = ["cherry": 1], no: [String: Int] = [:],
+        othersVoted: Bool = false, answered: Int = 0, status: CompanionVote.Status = .open,
+        how: CompanionVote.How? = nil, winner: String? = nil
+    ) -> CompanionVote {
+        func option(_ id: String, pet: Bool = false) -> CompanionVote.Option {
+            CompanionVote.Option(id: id, isPet: pet, yes: yes[id] ?? 0, no: no[id] ?? 0)
+        }
+        return CompanionVote(
+            pollID: "p1", status: status, openedAt: Self.now.addingTimeInterval(-3_600),
+            closesAt: Self.now.addingTimeInterval(23 * 3_600), how: how, winner: winner,
+            options: [option("cherry"), option("duckling", pet: true), option("fern")],
+            mine: mine, members: 3, answered: answered, othersVoted: othersVoted
+        )
+    }
+
+    private func voting(_ vote: CompanionVote?, current: Companion? = nil) -> CompanionHouse {
+        var house = house(current: current ?? seed())
+        house.vote = vote
+        return house
+    }
+
+    private func ballotStore(
+        _ vote: CompanionVote, gate: Gate<Void>, calls: LockIsolated<[String]> = .init([]), clock: TestClock<Duration> = TestClock()
+    ) -> TestStoreOf<CompanionFeature> {
+        var client = CompanionClient()
+        client.ballot = { poll, species, answer in
+            calls.withValue { $0.append("\(poll.rawValue):\(species):\(answer.map(String.init(describing:)) ?? "nil")") }
+            try await gate.wait()
+        }
+        return store(voting(vote), client: client, clock: clock)
+    }
+
+    @Test("An undecided seed is drawn as a seed, never as the species the vote lists first")
+    func seedIsNotItsStandIn() {
+        let seeded = store(voting(vote()))
+        #expect(seeded.state.isUndecided)
+        #expect(seeded.state.species == nil)
+        #expect(seeded.state.look?.species == CompanionFeature.State.seedStandIn)
+        #expect(seeded.state.look?.species != .cherry)
+        #expect(seeded.state.stage == 0)
+        #expect(seeded.state.progress == 0)
+        // The server never calls a seed ready; and if it did, a seed has no ceremony.
+        #expect(!seeded.state.isReady)
+        #expect(!seeded.state.isPet)
+        // Chosen, the same companion is drawn as itself.
+        let chosen = store(voting(vote(status: .closed, how: .everyone, winner: "fern"), current: growing(id: "s", species: .fern)))
+        #expect(!chosen.state.isUndecided)
+        #expect(chosen.state.species == .fern)
+        #expect(chosen.state.look?.species == .fern)
+    }
+
+    @Test("A yes shows at once, is counted once whichever of the answer and the push comes first")
+    func ballotAnswerFirst() async {
+        let gate = Gate<Void>()
+        let calls = LockIsolated<[String]>([])
+        let store = ballotStore(vote(), gate: gate, calls: calls)
+        await store.send(.ballotTapped("cherry", yes: true))
+        #expect(store.state.vote?.mine["cherry"] == true)
+        #expect(store.state.vote?.options.first?.yes == 2)
+        #expect(store.state.writes.ballots["cherry"] != nil)
+        #expect(calls.value == ["p1:cherry:Optional(true)"] || calls.value == ["p1:cherry:true"])
+        gate.release(())
+        await store.receive(\.ballotAnswered)
+        // Folded into what the server said before the entry went.
+        #expect(store.state.writes.ballots.isEmpty)
+        #expect(store.state.served.vote?.mine["cherry"] == true)
+        #expect(store.state.vote?.options.first?.yes == 2)
+        // The push that counts it too changes nothing.
+        await store.send(push(voting(vote(mine: ["cherry": true], yes: ["cherry": 2]))))
+        #expect(store.state.vote?.options.first?.yes == 2)
+    }
+
+    @Test("A yes the push already counted is not counted twice by the entry in flight")
+    func ballotPushFirst() async {
+        let gate = Gate<Void>()
+        let store = ballotStore(vote(), gate: gate)
+        await store.send(.ballotTapped("cherry", yes: true))
+        await store.send(push(voting(vote(mine: ["cherry": true], yes: ["cherry": 2]))))
+        #expect(store.state.vote?.options.first?.yes == 2)
+        gate.release(())
+        await store.receive(\.ballotAnswered)
+        #expect(store.state.vote?.options.first?.yes == 2)
+        #expect(store.state.writes.ballots.isEmpty)
+    }
+
+    @Test("The same answer again takes it back, and sends no vote")
+    func ballotUnvote() async {
+        let gate = Gate<Void>()
+        let calls = LockIsolated<[String]>([])
+        let store = ballotStore(vote(mine: ["cherry": true], yes: ["cherry": 2]), gate: gate, calls: calls)
+        await store.send(.ballotTapped("cherry", yes: true))
+        #expect(store.state.vote?.mine["cherry"] == nil)
+        #expect(store.state.vote?.options.first?.yes == 1)
+        #expect(calls.value.count == 1 && calls.value[0].hasSuffix(":nil"))
+        gate.release(())
+        await store.receive(\.ballotAnswered)
+        #expect(store.state.served.vote?.mine["cherry"] == nil)
+        #expect(store.state.vote?.options.first?.yes == 1)
+        // Yes then no on the same option moves the answer between the counts.
+        let change = Gate<Void>()
+        let other = ballotStore(vote(mine: ["cherry": true], yes: ["cherry": 2]), gate: change)
+        await other.send(.ballotTapped("cherry", yes: false))
+        #expect(other.state.vote?.mine["cherry"] == false)
+        #expect(other.state.vote?.options.first?.yes == 1)
+        #expect(other.state.vote?.options.first?.no == 1)
+        change.release(())
+        await other.receive(\.ballotAnswered)
+    }
+
+    @Test("A ballot that fails puts the count and the answer back, and says why")
+    func ballotRollsBack() async {
+        let gate = Gate<Void>()
+        let store = ballotStore(vote(), gate: gate)
+        await store.send(.ballotTapped("cherry", yes: true))
+        gate.fail(AppError.server("Uncaught Error: That vote is over\n  at handler"))
+        await store.receive(\.ballotAnswered)
+        #expect(store.state.writes.ballots.isEmpty)
+        #expect(store.state.vote?.mine["cherry"] == nil)
+        #expect(store.state.vote?.options.first?.yes == 1)
+        #expect(store.state.served.vote?.options.first?.yes == 1)
+        #expect(store.state.alert != nil)
+    }
+
+    @Test("A ballot that never answers is rolled back when the clock reaches 15 seconds")
+    func ballotTimeout() async {
+        let clock = TestClock<Duration>()
+        var client = CompanionClient()
+        let parked = LockIsolated<[CheckedContinuation<Void, Never>]>([])
+        let entered = LockIsolated(false)
+        client.ballot = { _, _, _ in
+            await withCheckedContinuation { continuation in
+                parked.withValue { $0.append(continuation) }
+                entered.setValue(true)
+            }
+        }
+        let store = store(voting(vote()), client: client, clock: clock)
+        await store.send(.ballotTapped("fern", yes: false))
+        #expect(store.state.vote?.mine["fern"] == false)
+        await waitUntil { entered.value }
+        await advance(clock, by: .seconds(15))
+        await store.receive(\.ballotAnswered)
+        #expect(store.state.vote?.mine["fern"] == nil)
+        #expect(store.state.vote?.options.last?.no == 0)
+        #expect(store.state.writes.ballots.isEmpty)
+    }
+
+    @Test("One answer to an option at a time, and the tap's own haptic counts only taps")
+    func ballotOneAtATime() async {
+        let gate = Gate<Void>()
+        let calls = LockIsolated<[String]>([])
+        let store = ballotStore(vote(), gate: gate, calls: calls)
+        await store.send(.ballotTapped("cherry", yes: true))
+        await store.send(.ballotTapped("cherry", yes: false))
+        #expect(store.state.ballotTick == 1)
+        #expect(store.state.vote?.mine["cherry"] == true)
+        // A push moves the tally but is not a tap.
+        await store.send(push(voting(vote(yes: ["cherry": 3], othersVoted: true))))
+        #expect(store.state.ballotTick == 1)
+        // Three said yes, and this phone's own makes four, once.
+        #expect(store.state.vote?.options.first?.yes == 4)
+        gate.release(())
+        await store.receive(\.ballotAnswered)
+        #expect(store.state.vote?.options.first?.yes == 4)
+        #expect(store.state.vote?.mine["cherry"] == true)
+        #expect(calls.value.count == 1)
+        // A closed vote takes no ballots.
+        let over = self.store(voting(vote(status: .closed, how: .deadline)))
+        await over.send(.ballotTapped("cherry", yes: true))
+        #expect(over.state.ballotTick == 0)
+        #expect(over.state.writes.ballots.isEmpty)
+    }
+
+    @Test("Having answered every option is voting, and a last answer moves the count")
+    func answeredAll() async {
+        let gate = Gate<Void>()
+        let store = ballotStore(vote(mine: ["cherry": true, "duckling": false], answered: 1), gate: gate)
+        #expect(store.state.vote?.hasAnsweredAll == false)
+        await store.send(.ballotTapped("fern", yes: true))
+        #expect(store.state.vote?.hasAnsweredAll == true)
+        #expect(store.state.vote?.answered == 2)
+        gate.fail(AppError.offline)
+        await store.receive(\.ballotAnswered)
+        #expect(store.state.vote?.hasAnsweredAll == false)
+        #expect(store.state.vote?.answered == 1)
+    }
+
+    // MARK: Settling it
+
+    private func decideStore(
+        _ house: CompanionHouse, gate: Gate<DecideOutcome>, calls: LockIsolated<Int> = .init(0)
+    ) -> TestStoreOf<CompanionFeature> {
+        var client = CompanionClient()
+        client.decide = { _ in
+            calls.withValue { $0 += 1 }
+            return try await gate.wait()
+        }
+        return store(house, client: client)
+    }
+
+    @Test("Settling with nobody else's answers explains it, and asks the server nothing")
+    func settleAlone() async {
+        let calls = LockIsolated(0)
+        let store = decideStore(voting(vote(othersVoted: false)), gate: Gate(), calls: calls)
+        await store.send(.settleTapped)
+        #expect(store.state.voteNote == .alone)
+        #expect(!store.state.isDeciding)
+        #expect(calls.value == 0)
+        // Opening the vote again starts clean.
+        await store.send(.voteTapped)
+        #expect(store.state.voteNote == nil)
+    }
+
+    @Test("Settling with no yes anywhere says so, and asks the server nothing")
+    func settleNoYes() async {
+        let calls = LockIsolated(0)
+        let store = decideStore(voting(vote(yes: [:], no: ["cherry": 1], othersVoted: true)), gate: Gate(), calls: calls)
+        await store.send(.settleTapped)
+        #expect(store.state.voteNote == .noVotes)
+        #expect(calls.value == 0)
+    }
+
+    @Test("Settling when the server says alone or noVotes: the note, and still open")
+    func settleServerSaysNo() async {
+        for (outcome, note) in [(DecideOutcome.alone, CompanionFeature.State.VoteNote.alone), (.noVotes, .noVotes)] {
+            let gate = Gate<DecideOutcome>()
+            let store = decideStore(voting(vote(othersVoted: true)), gate: gate)
+            await store.send(.settleTapped)
+            #expect(store.state.isDeciding)
+            gate.release(outcome)
+            await store.receive(\.decideAnswered)
+            #expect(!store.state.isDeciding)
+            #expect(store.state.voteNote == note)
+            #expect(store.state.vote?.isOpen == true)
+            #expect(store.state.isUndecided)
+        }
+    }
+
+    @Test("Settled: the card stops being a seed when the answer comes, and the push agrees")
+    func settleChosen() async {
+        let gate = Gate<DecideOutcome>()
+        let store = decideStore(voting(vote(othersVoted: true)), gate: gate)
+        await store.send(.settleTapped)
+        // A second tap while it is on its way does nothing.
+        await store.send(.settleTapped)
+        gate.release(.chosen(winner: "fern"))
+        await store.receive(\.decideAnswered)
+        #expect(store.state.vote?.status == .closed)
+        #expect(store.state.vote?.winner == "fern")
+        #expect(store.state.vote?.how == .decided)
+        #expect(!store.state.isUndecided)
+        #expect(store.state.species == .fern)
+        // The push, which has it too, changes nothing.
+        await store.send(push(voting(
+            vote(status: .closed, how: .decided, winner: "fern"), current: growing(id: "s", species: .fern)
+        )))
+        #expect(store.state.species == .fern)
+        #expect(store.state.vote?.winner == "fern")
+    }
+
+    @Test("Settled, the push first: the answer folds into what is already true")
+    func settleChosenPushFirst() async {
+        let gate = Gate<DecideOutcome>()
+        let store = decideStore(voting(vote(othersVoted: true)), gate: gate)
+        await store.send(.settleTapped)
+        await store.send(push(voting(
+            vote(status: .closed, how: .deadline, winner: "duckling"), current: growing(id: "s", species: .duckling)
+        )))
+        gate.release(.closed(winner: "duckling"))
+        await store.receive(\.decideAnswered)
+        // The ending the server gave stays; the answer does not rewrite it.
+        #expect(store.state.vote?.how == .deadline)
+        #expect(store.state.species == .duckling)
+    }
+
+    @Test("Settling that fails stops waiting and says so")
+    func settleFails() async {
+        let gate = Gate<DecideOutcome>()
+        let store = decideStore(voting(vote(othersVoted: true)), gate: gate)
+        await store.send(.settleTapped)
+        gate.fail(AppError.offline)
+        await store.receive(\.decideAnswered)
+        #expect(!store.state.isDeciding)
+        #expect(store.state.alert != nil)
+        #expect(store.state.vote?.isOpen == true)
+    }
+
+    // MARK: Picking instead
+
+    private func pickStore(_ house: CompanionHouse, gate: Gate<StartOutcome>) -> TestStoreOf<CompanionFeature> {
+        var client = CompanionClient()
+        client.start = { _, _, _, _ in try await gate.wait() }
+        return store(house, client: client)
+    }
+
+    @Test("A pick on a seed is the same companion, chosen: it stays until the push says so")
+    func pickSeed() async {
+        let gate = Gate<StartOutcome>()
+        let store = pickStore(voting(vote()), gate: gate)
+        await store.send(.chose(.sunflower))
+        let current = store.state.house.current
+        #expect(current?.id == "s")
+        #expect(current?.species == .sunflower)
+        #expect(current?.isUndecided == false)
+        // Its growth is kept; it did not start again.
+        #expect(current?.points == 20)
+        #expect(store.state.house.vote?.status == .closed)
+        #expect(store.state.house.vote?.how == .picked)
+        #expect(store.state.writes.start?.seedID == "s")
+        gate.release(StartOutcome(companionID: "s"))
+        await store.receive(\.startAnswered)
+        // The answer names the seed's own id, which `served` already has: it
+        // must not take the entry off while `served` is still a seed.
+        #expect(store.state.writes.start != nil)
+        #expect(store.state.house.current?.species == .sunflower)
+        #expect(store.state.isUndecided == false)
+        await store.send(push(voting(
+            vote(status: .closed, how: .picked, winner: "sunflower"), current: growing(id: "s", species: .sunflower)
+        )))
+        #expect(store.state.writes.start == nil)
+        #expect(store.state.species == .sunflower)
+    }
+
+    @Test("A pick the server turns away puts the seed back, with copy a person can act on")
+    func pickRefused() async {
+        let gate = Gate<StartOutcome>()
+        let store = pickStore(voting(vote()), gate: gate)
+        await store.send(.chose(.sunflower))
+        gate.fail(AppError.server("[CONVEX M(companion:start)] Server Error Uncaught Error: The house is voting on the next one at handler"))
+        await store.receive(\.startAnswered)
+        #expect(store.state.writes.start == nil)
+        #expect(store.state.isUndecided)
+        #expect(store.state.species == nil)
+        #expect(store.state.vote?.isOpen == true)
+        #expect(store.state.alert != nil)
+    }
+
+    @Test("A pick whose answer was lost, while the push already shows it, is not an error")
+    func pickLostAnswerShownByPush() async {
+        let gate = Gate<StartOutcome>()
+        let store = pickStore(voting(vote()), gate: gate)
+        await store.send(.chose(.sunflower))
+        await store.send(push(voting(
+            vote(status: .closed, how: .picked, winner: "sunflower"), current: growing(id: "s", species: .sunflower)
+        )))
+        gate.fail(AppError.offline)
+        await store.receive(\.startAnswered)
+        #expect(store.state.alert == nil)
+        #expect(store.state.writes.start == nil)
+        #expect(store.state.species == .sunflower)
+    }
+
+    @Test("Picking instead of voting closes the vote's sheet, then opens Choose")
+    func pickInstead() async {
+        let clock = TestClock<Duration>()
+        let store = store(voting(vote()), clock: clock) { $0.sheet = .vote }
+        await store.send(.pickInsteadTapped)
+        #expect(store.state.sheet == nil)
+        #expect(store.state.pendingSheet == .choose)
+        await advance(clock, by: .milliseconds(450))
+        await store.receive(\.chooseTapped)
+        #expect(store.state.sheet == .choose)
+        #expect(store.state.pendingSheet == nil)
+    }
+
+    // MARK: Graduating into a vote
+
+    @Test("A house that votes: no Choose ahead of the answer, the next one is a seed at once, and the vote is shown")
+    func graduateIntoVote() async {
+        let gate = Gate<GraduateOutcome>()
+        var client = CompanionClient()
+        client.graduate = { _, _ in try await gate.wait() }
+        let clock = TestClock<Duration>()
+        let store = store(house(current: growing(id: "a", ready: true)), client: client, clock: clock) { $0.memberCount = 3 }
+        await store.send(.ceremonyFinished)
+        #expect(store.state.sheet == nil)
+        #expect(store.state.isUndecided)
+        #expect(store.state.species == nil)
+        // No pick is offered while the vote is not known.
+        #expect(store.state.isOpeningVote)
+        await store.send(.chooseTapped)
+        #expect(store.state.sheet == nil)
+        gate.release(GraduateOutcome(paid: Coins(leaves: 100, sparkles: 25), vote: "p1"))
+        await store.receive(\.graduateAnswered)
+        // Not in the action that follows the cover closing: it would be dropped.
+        #expect(store.state.sheet == nil)
+        #expect(store.state.pendingSheet == .vote)
+        await advance(clock, by: .milliseconds(450))
+        await store.receive(\.presentPending)
+        #expect(store.state.sheet == .vote)
+        #expect(store.state.pendingSheet == nil)
+        // The sheet waits for the push that has the vote.
+        #expect(store.state.vote == nil)
+        var next = voting(vote(), current: seed(id: "n"))
+        next.albumCount = 1
+        await store.send(push(next))
+        #expect(store.state.writes.graduating == nil)
+        #expect(store.state.vote?.pollID == "p1")
+        #expect(store.state.house.current?.id == "n")
+    }
+
+    @Test("A house with nothing to vote on picks as before")
+    func graduateWithoutVote() async {
+        let gate = Gate<GraduateOutcome>()
+        var client = CompanionClient()
+        client.graduate = { _, _ in try await gate.wait() }
+        let clock = TestClock<Duration>()
+        let store = store(house(current: growing(id: "a", ready: true)), client: client, clock: clock) { $0.memberCount = 3 }
+        await store.send(.ceremonyFinished)
+        gate.release(GraduateOutcome(paid: Coins(leaves: 100, sparkles: 25), vote: nil))
+        await store.receive(\.graduateAnswered)
+        // The house picks, so the card may offer it.
+        #expect(!store.state.isOpeningVote)
+        await advance(clock, by: .milliseconds(450))
+        await store.receive(\.presentPending)
+        #expect(store.state.sheet == .choose)
+    }
+
+    @Test("A repeat graduate says nothing of a vote: no sheet is opened, the push decides")
+    func graduateRepeat() async {
+        let gate = Gate<GraduateOutcome>()
+        var client = CompanionClient()
+        client.graduate = { _, _ in try await gate.wait() }
+        let store = store(house(current: growing(id: "a", ready: true)), client: client) { $0.memberCount = 3 }
+        await store.send(.ceremonyFinished)
+        gate.release(GraduateOutcome(paid: nil, vote: nil, isRepeat: true))
+        await store.receive(\.graduateAnswered)
+        #expect(store.state.sheet == nil)
+        #expect(store.state.pendingSheet == nil)
+    }
+
+    @Test("Choose swapped for the vote in place is dismissed first, then presented")
+    func chooseSwappedForVote() async {
+        let gate = Gate<GraduateOutcome>()
+        var client = CompanionClient()
+        client.graduate = { _, _ in try await gate.wait() }
+        let clock = TestClock<Duration>()
+        // The phone thought the house of one: Choose was opened ahead of the answer.
+        let store = store(house(current: growing(id: "a", ready: true)), client: client, clock: clock)
+        await store.send(.ceremonyFinished)
+        #expect(store.state.sheet == .choose)
+        gate.release(GraduateOutcome(paid: nil, vote: "p1"))
+        await store.receive(\.graduateAnswered)
+        #expect(store.state.sheet == nil)
+        #expect(store.state.pendingSheet == .vote)
+        await advance(clock, by: .milliseconds(450))
+        await store.receive(\.presentPending)
+        #expect(store.state.sheet == .vote)
+    }
+
+    @Test("A sheet that waited is dropped if something else was opened meanwhile")
+    func pendingDroppedWhenBusy() async {
+        let store = store(house()) { $0.pendingSheet = .vote; $0.sheet = .album }
+        await store.send(.presentPending)
+        #expect(store.state.sheet == .album)
+        #expect(store.state.pendingSheet == nil)
+    }
+
+    @Test("A graduation that fails in a house that votes leaves no sheet and no seed")
+    func graduateIntoVoteFails() async {
+        let gate = Gate<GraduateOutcome>()
+        var client = CompanionClient()
+        client.graduate = { _, _ in try await gate.wait() }
+        let store = store(house(current: growing(id: "a", ready: true)), client: client) { $0.memberCount = 3 }
+        await store.send(.ceremonyFinished)
+        gate.fail(AppError.server("Not grown up yet"))
+        await store.receive(\.graduateAnswered)
+        #expect(store.state.sheet == nil)
+        #expect(!store.state.isUndecided)
+        #expect(store.state.current?.id == "a")
+        #expect(store.state.alert != nil)
+    }
+
+    // MARK: The payload, with a vote
+
+    @Test("A seed and its vote decode, with every field optional and every enum lenient")
+    func voteDecodes() throws {
+        let json = #"""
+        {"catalogVersion":"x","graduateAt":64,"house":null,
+         "current":{"id":"s","uuid":"U","species":"cherry","seed":"h-1","startedAt":1000,"points":12,"stage":2,
+                    "isReady":false,"pointsReady":false,"readyAt":2000,"paidStage":0,"lastCareAt":null,
+                    "myCareDays":[],"undecided":true},
+         "recent":[],"jar":[],
+         "vote":{"pollId":"p1","status":"open","openedAt":1000,"closesAt":2000,"closedAt":null,"how":null,"winner":null,
+                 "options":[{"species":"cherry","isPet":false,"grown":false,"yes":1,"no":0},
+                            {"species":"duckling","isPet":true,"grown":true,"yes":0,"no":2},
+                            {"species":"quokka","isPet":false,"grown":false,"yes":0,"no":0},{"bad":1}],
+                 "mine":[{"species":"cherry","yes":true},{"nope":1}],"members":3,"answered":1,"othersVoted":true}}
+        """#
+        let payload = try JSONDecoder().decode(CompanionPayload.self, from: Data(json.utf8))
+        #expect(!payload.isUnreadable)
+        #expect(payload.current?.undecided == true)
+        let vote = try #require(payload.vote)
+        #expect(vote.isOpen && vote.how == nil && vote.winner == nil)
+        #expect(vote.options.map(\.id) == ["cherry", "duckling", "quokka"])
+        // A species this build cannot draw is an option with no species, not another one.
+        #expect(vote.options.map(\.species) == [.cherry, .duckling, nil])
+        #expect(vote.options[1].no == 2 && vote.options[1].grown)
+        #expect(vote.mine == ["cherry": true])
+        #expect(vote.members == 3 && vote.answered == 1 && vote.othersVoted)
+        #expect(vote.closesAt == Date(timeIntervalSince1970: 2))
+        let served = CompanionServed(payload)
+        #expect(served.house.current?.isUndecided == true)
+        #expect(served.house.vote == vote)
+    }
+
+    @Test("A status or an ending from a later build is .other; a vote that cannot be read is no vote, not a broken house")
+    func voteLenient() throws {
+        let later = #"""
+        {"catalogVersion":"x","graduateAt":64,"house":null,"current":null,"recent":[],"jar":[],
+         "vote":{"pollId":"p1","status":"paused","openedAt":1,"closesAt":2,"how":"coin-toss","winner":"fern",
+                 "options":[],"mine":[],"members":2,"answered":0,"othersVoted":false}}
+        """#
+        let vote = try #require(try JSONDecoder().decode(CompanionPayload.self, from: Data(later.utf8)).vote)
+        #expect(vote.status == .other && !vote.isOpen)
+        #expect(vote.how == .other)
+        #expect(vote.winner == "fern")
+        let broken = #"{"catalogVersion":"x","graduateAt":64,"house":null,"current":null,"recent":[],"jar":[],"vote":{"status":"open"}}"#
+        let payload = try JSONDecoder().decode(CompanionPayload.self, from: Data(broken.utf8))
+        #expect(payload.vote == nil)
+        #expect(!payload.isUnreadable)
+        // An older server sends neither.
+        let old = #"{"catalogVersion":"x","graduateAt":64,"house":null,"current":{"id":"a","seed":"s"},"recent":[],"jar":[]}"#
+        let before = try JSONDecoder().decode(CompanionPayload.self, from: Data(old.utf8))
+        #expect(before.vote == nil)
+        #expect(before.current?.undecided == false)
+    }
+
+    @Test("What settling answers, and what a ballot sends")
+    func decideAndBallotArguments() throws {
+        #expect(DecideOutcome(status: "chosen", winner: "fern") == .chosen(winner: "fern"))
+        #expect(DecideOutcome(status: "chosen", winner: nil) == .closed(winner: nil))
+        #expect(DecideOutcome(status: "alone", winner: nil) == .alone)
+        #expect(DecideOutcome(status: "noVotes", winner: nil) == .noVotes)
+        #expect(DecideOutcome(status: "closed", winner: "fern") == .closed(winner: "fern"))
+        #expect(DecideOutcome(status: "none", winner: nil) == .none)
+        #expect(DecideOutcome(status: "something new", winner: "fern") == .none)
+        let yes = try object(.ballot("p1", "fern", true))
+        #expect(Set(yes.keys) == ["pollId", "target_external_id", "vote"])
+        #expect(yes["vote"] as? Bool == true)
+        let back = try object(.ballot("p1", "fern", nil))
+        #expect(Set(back.keys) == ["pollId", "target_external_id"])
+    }
+
+    @Test("The server's words about the vote become copy a person can act on, found inside Convex's wrapping")
+    func refusalCopy() {
+        let wrapped = { (message: String) in AppError.server("[CONVEX M(x)] [Request ID: 1] Server Error\nUncaught Error: \(message)\n  at handler") }
+        #expect(wrapped("The house already chose").errorDescription == String(localized: L10n.voteRefusedChose))
+        #expect(wrapped("The house is voting on the next one").errorDescription == String(localized: L10n.voteRefusedVoting))
+        #expect(wrapped("That vote is over").errorDescription == String(localized: L10n.voteRefusedOver))
+        #expect(wrapped("That isn't one of the options").errorDescription == String(localized: L10n.voteRefusedOption))
+        // Anything else is the generic line, never the server's own words.
+        #expect(wrapped("Something odd").errorDescription?.contains("Something odd") == false)
+    }
+
+    @Test("Nestie's notifications are a category of their own, and go somewhere")
+    func companionCategory() throws {
+        #expect(ActivityCategory(rawValue: "companion") == .companion)
+        #expect(ActivityCategory.companion.isRoutable)
+        let counts = try JSONDecoder().decode(
+            ActivityCategoryCounts.self,
+            from: Data(#"{"total":3,"categories":[{"category":"companion","count":2},{"category":"hologram","count":1}]}"#.utf8)
+        )
+        #expect(counts.counts == [.companion: 2])
+    }
+
 
     // MARK: The payload
 
