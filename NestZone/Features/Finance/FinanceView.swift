@@ -28,40 +28,44 @@ public struct FinanceView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: Metrics.sectionSpacing) {
-                monthScrubber
-                if store.hasSeveralCurrencies {
-                    currencyPicker
-                }
-                sectionPicker
-
-                Group {
-                    switch store.section {
-                    case .overview: overview
-                    case .ledger: ledger
-                    case .bills: billsPage
-                    case .budgets: budgetsPage
+                Staged(1) {
+                    monthScrubber
+                    if store.hasSeveralCurrencies {
+                        currencyPicker
                     }
+                    sectionPicker
                 }
-                // Each face is its own view, not four states of one.
-                //
-                // Without the id, all four branches shared an identity: SwiftUI
-                // swapped the content in place, so the transition below never
-                // had an insertion to run and none of the `appear` staggers
-                // inside ever saw a second `onAppear`. Switching to an empty
-                // Bills tab looked like nothing had happened at all. With it,
-                // the outgoing face leaves, the incoming one arrives, and its
-                // contents stagger in every time — which is the whole point of
-                // a picker that swaps a page.
-                //
-                // It rebuilds the subtree on each switch. That is the price of
-                // the effect and it is a fair one: the switch is a deliberate
-                // tap, it happens at most a few times a visit, and each face is
-                // a handful of cards.
-                .id(store.section)
-                // Faces cross-dissolve and lift rather than sliding: they are
-                // four views of one month, not four places, and a horizontal
-                // slide would claim otherwise.
-                .transition(.opacity.combined(with: .offset(y: 10)))
+
+                Staged(2, fades: false) {
+                    Group {
+                        switch store.section {
+                        case .overview: overview
+                        case .ledger: ledger
+                        case .bills: billsPage
+                        case .budgets: budgetsPage
+                        }
+                    }
+                    // Each face is its own view, not four states of one.
+                    //
+                    // Without the id, all four branches shared an identity: SwiftUI
+                    // swapped the content in place, so the transition below never
+                    // had an insertion to run and none of the `appear` staggers
+                    // inside ever saw a second `onAppear`. Switching to an empty
+                    // Bills tab looked like nothing had happened at all. With it,
+                    // the outgoing face leaves, the incoming one arrives, and its
+                    // contents stagger in every time — which is the whole point of
+                    // a picker that swaps a page.
+                    //
+                    // It rebuilds the subtree on each switch. That is the price of
+                    // the effect and it is a fair one: the switch is a deliberate
+                    // tap, it happens at most a few times a visit, and each face is
+                    // a handful of cards.
+                    .id(store.section)
+                    // Faces cross-dissolve and lift rather than sliding: they are
+                    // four views of one month, not four places, and a horizontal
+                    // slide would claim otherwise.
+                    .transition(.opacity.combined(with: .offset(y: 10)))
+                }
             }
             .padding(.bottom, Metrics.scrollBottomInset)
             .animation(Motion.spring, value: store.section)
@@ -139,6 +143,7 @@ public struct FinanceView: View {
         .sensoryFeedback(.success, trigger: squareUp.successes)
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
+        .stagedBuild(2)
         .alert($store.scope(state: \.alert, action: \.alert))
         .modifier(FinanceDestinations(store: store))
     }

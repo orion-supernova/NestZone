@@ -75,7 +75,7 @@ public struct MonthGrid: Equatable, Sendable {
 
 /// A single cell: the date, up to three dots for what is on, and the states
 /// that matter — today, selected, outside the month.
-public struct DayCell: View {
+public struct DayCell: View, Equatable {
     private let day: CalendarDay
     private let kinds: [EventKind]
     private let extra: Int
@@ -113,6 +113,20 @@ public struct DayCell: View {
         if !isInMonth { return Color.secondary.opacity(0.4) }
         if isToday { return theme.accent }
         return .primary
+    }
+
+    /// Everything the cell draws, and nothing it does: `action` is a closure and
+    /// cannot be compared, and it only ever sends this day to the same store.
+    /// With the cell compared this way a month's grid redraws the cells whose
+    /// day, dots or state changed, not all forty-two.
+    public nonisolated static func == (lhs: DayCell, rhs: DayCell) -> Bool {
+        lhs.day == rhs.day
+            && lhs.kinds == rhs.kinds
+            && lhs.extra == rhs.extra
+            && lhs.isInMonth == rhs.isInMonth
+            && lhs.isSelected == rhs.isSelected
+            && lhs.isToday == rhs.isToday
+            && lhs.namespace == rhs.namespace
     }
 
     public var body: some View {
@@ -170,13 +184,39 @@ public struct DayCell: View {
         .buttonStyle(DayPressStyle())
         .opacity(isInMonth ? 1 : 0.5)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(day.date().formatted(
-            Date.FormatStyle(date: .complete, time: .omitted).locale(L10n.locale)
-        )))
+        .accessibilityLabel(Text(DayLabels.text(for: day)))
         .accessibilityValue(kinds.isEmpty
             ? Text(L10n.calendarNothingOn)
             : Text(L10n.calendarEventCount(kinds.count + extra)))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+/// "Saturday, 24 October 2026", said once per day and language.
+///
+/// Building the format style and running it cost about as much as the rest of
+/// a cell's body, forty-two times over for every month drawn, and the answer
+/// for a given day only changes with the language.
+@MainActor
+private enum DayLabels {
+    private struct Key: Hashable {
+        let day: CalendarDay
+        let language: String
+    }
+
+    private static var cache: [Key: String] = [:]
+
+    static func text(for day: CalendarDay) -> String {
+        let key = Key(day: day, language: L10n.locale.identifier)
+        if let known = cache[key] { return known }
+        let text = day.date().formatted(
+            Date.FormatStyle(date: .complete, time: .omitted).locale(L10n.locale)
+        )
+        // A few months either side is what anybody scrubs through; past that
+        // it starts again rather than growing for the life of the process.
+        if cache.count > 400 { cache.removeAll(keepingCapacity: true) }
+        cache[key] = text
+        return text
     }
 }
 

@@ -53,9 +53,17 @@ fade (scoped to the opacity alone, `.animation(Motion.fade) { $0.opacity }`,
 because an `animation(value:)` on the container animated every row and the
 bar too) and the underline land in the tap's frame, and the bar items, search
 and entrances follow 50 ms later (`onStage`). Warm switches went from about
-55–98 ms to about 55–80 ms; the first switch to a module is still 220–300 ms
-and is view construction, which keeping alive cannot remove (see
-`Docs/Companion/HANDOFF.md`, step 0, for the numbers and what is open).
+55–98 ms to about 55–80 ms. The first switch to a module is view construction,
+which keeping alive cannot remove, so Calendar, Issues and Finance build in
+beats (`stagedBuild` and `Staged`, `Design/Staged.swift`): the bar and the
+container in the tap's frame, each piece a frame after the one before, fading
+up as it lands. That took their first build from 245–280 ms to 130–155. A
+`List` screen cannot be staged (a list that is nothing has no toolbar), and
+Tasks, Shopping, Recipes, Notes and Movies are still 120–250 ms. There is no
+slow *return*: the one that was measured was a first build, because
+`-segmentCycle` used to end on the last segment, which is remembered, so the
+next launch opened there. It now ends where it began. See
+`Docs/Companion/HANDOFF.md`, step 0, for the numbers and what is open.
 `SegmentedRoot` tells each screen where it stands through
 `\.segmentPhase` (`onScreen`, `leaving`, `away`; `segmentChosen` is the same
 without the 50 ms lag), and what only makes sense in front of a person waits
@@ -74,7 +82,9 @@ continuous animation, follows the same rules. Measure a switch with
 `-frameMeter 1 -openTab lists -segmentCycle 4` (Debug): it opens on that tab
 and, after five seconds, walks its segments every four, so each switch lands in
 a log window of its own (`-segmentCycle 1` walks every 1.5 s, straight from
-launch).
+launch). `-frameMeter 2` also logs every late frame with its time, to see how a
+switch splits across frames; `-appTabSegments "calendar,tasks,finance"` opens
+each tab on the segment you name, to measure a first build of any of them.
 
 - **A tap switches tab or opens a screen in place — never both.** A whole
   module goes to its tab, switched to its segment and popped to root. A

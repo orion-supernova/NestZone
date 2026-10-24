@@ -25,7 +25,7 @@
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "NestZone/NestZoneApp.swift": {
-    "mtime": 1792790880.6742253,
+    "mtime": 1792796329.838058,
     "ast_hash": "bd034ee7c22c9d4523f358e94b143983",
     "semantic_hash": ""
   },
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792793079.547136,
-    "ast_hash": "8703ba1143e93d0fef45f557f0bb9310",
+    "mtime": 1792805479.4400487,
+    "ast_hash": "98efa4721d4a55feaa639076d746e6d3",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -220,12 +220,12 @@
     "semantic_hash": ""
   },
   "NestZone/App/AppView.swift": {
-    "mtime": 1792793287.969371,
-    "ast_hash": "c702f092750d6195a2ffe307b8c33cc0",
+    "mtime": 1792805347.1109338,
+    "ast_hash": "c0afc6a0387ebf339a6f42ddc4cea873",
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1792783674.3153334,
+    "mtime": 1792804560.3374214,
     "ast_hash": "804c0d3c6419f7313cc84855a542d20e",
     "semantic_hash": ""
   },
@@ -510,7 +510,7 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Hub/ShoppingView.swift": {
-    "mtime": 1792785126.2750278,
+    "mtime": 1792802745.6808727,
     "ast_hash": "207e5564f1188b9c3eb215771ded725f",
     "semantic_hash": ""
   },
@@ -560,7 +560,7 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Recipes/RecipesView.swift": {
-    "mtime": 1792785126.2759404,
+    "mtime": 1792802263.1671371,
     "ast_hash": "da4622a6aaba159842b39d5a7477f9ba",
     "semantic_hash": ""
   },
@@ -585,7 +585,7 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TasksView.swift": {
-    "mtime": 1792785126.2760406,
+    "mtime": 1792803691.1060812,
     "ast_hash": "88db082c044d421e3b21d04ee017d8d6",
     "semantic_hash": ""
   },
@@ -605,7 +605,7 @@
     "semantic_hash": ""
   },
   "NestZoneTests/FeatureTests.swift": {
-    "mtime": 1792570522.6019459,
+    "mtime": 1792804560.3381793,
     "ast_hash": "646967c19e50df68a8a3aa412971f5b6",
     "semantic_hash": ""
   },
@@ -765,8 +765,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Finance/FinanceView.swift": {
-    "mtime": 1792791495.605809,
-    "ast_hash": "3191bd87872d6a52392cd9593bf0fdca",
+    "mtime": 1792805739.3517897,
+    "ast_hash": "1c90635fa251bdf467ed9e2d8963fdcc",
     "semantic_hash": ""
   },
   "backend/convex/finance.ts": {
@@ -795,8 +795,8 @@
     "semantic_hash": ""
   },
   "NestZone/Design/Components/CalendarGrid.swift": {
-    "mtime": 1792783674.3197384,
-    "ast_hash": "68346a849caea770a699cde69bcffc19",
+    "mtime": 1792805347.111545,
+    "ast_hash": "c36e4d0368c537459a486b03c044d093",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarFeature.swift": {
@@ -805,8 +805,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarView.swift": {
-    "mtime": 1792785126.2742443,
-    "ast_hash": "ac0262951ecf67770418dd915dabcc70",
+    "mtime": 1792805739.3515737,
+    "ast_hash": "24dc68d26325eff1445aa57d4cf7353f",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventComposerFeature.swift": {
@@ -880,8 +880,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Issues/IssuesView.swift": {
-    "mtime": 1792785126.2754073,
-    "ast_hash": "58b2ca481ba4132d542c88ba40c1e87f",
+    "mtime": 1792805739.3519406,
+    "ast_hash": "b46e9fe8b9ddcc9ef4b8f5d32df3471e",
     "semantic_hash": ""
   },
   "backend/convex/issues.ts": {
@@ -1210,7 +1210,7 @@
     "semantic_hash": ""
   },
   "NestZone/App/Modules.swift": {
-    "mtime": 1792570522.582153,
+    "mtime": 1792804564.7853723,
     "ast_hash": "ccd7e6e29b74842478ce628909487d85",
     "semantic_hash": ""
   },
@@ -1335,8 +1335,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/HANDOFF.md": {
-    "mtime": 1792793287.969574,
-    "ast_hash": "9f032c351e211f6d571aeb195c566e15",
+    "mtime": 1792805739.352125,
+    "ast_hash": "dbbb20ed63b450f5113b19d867d81780",
     "semantic_hash": ""
   },
   "Docs/Companion/HOLIDAYS.md": {
@@ -1655,8 +1655,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/FrameMeter.swift": {
-    "mtime": 1792783674.3151238,
-    "ast_hash": "97a8211d4a69c569e938f42f8ffa22a6",
+    "mtime": 1792805347.1111927,
+    "ast_hash": "650bb6650416eb465abf8ddcb5f93e5f",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCatalog.swift": {
@@ -1797,6 +1797,11 @@
   ".claude/agents/swiftui-performance-reviewer.md": {
     "mtime": 1792784329.3836849,
     "ast_hash": "85f9f7cbf19eb771e666cbf4a06038f2",
+    "semantic_hash": ""
+  },
+  "NestZone/Design/Staged.swift": {
+    "mtime": 1792805739.3513033,
+    "ast_hash": "69c8cb9449d5d028bab8628a0f399f54",
     "semantic_hash": ""
   }
 }

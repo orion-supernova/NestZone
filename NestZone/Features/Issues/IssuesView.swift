@@ -29,28 +29,30 @@ public struct IssuesView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: Metrics.sectionSpacing) {
-                sectionPicker
+                Staged(1) { sectionPicker }
 
-                Group {
-                    switch store.section {
-                    case .board: board
-                    case .list: list
-                    case .rooms: rooms
-                    case .history: history
+                Staged(2, fades: false) {
+                    Group {
+                        switch store.section {
+                        case .board: board
+                        case .list: list
+                        case .rooms: rooms
+                        case .history: history
+                        }
                     }
+                    // Each face is its own view, not four states of one.
+                    //
+                    // Without the id all four branches share an identity: SwiftUI
+                    // swaps the content in place, so the transition below never has
+                    // an insertion to run and none of the `appear` staggers inside
+                    // ever sees a second `onAppear`. It rebuilds the subtree on each
+                    // switch, which is the price of the effect and a fair one — the
+                    // switch is a deliberate tap and each face is a handful of cards.
+                    .id(store.section)
+                    // Faces cross-dissolve and lift rather than sliding: they are
+                    // four views of one house, not four places.
+                    .transition(.opacity.combined(with: .offset(y: 10)))
                 }
-                // Each face is its own view, not four states of one.
-                //
-                // Without the id all four branches share an identity: SwiftUI
-                // swaps the content in place, so the transition below never has
-                // an insertion to run and none of the `appear` staggers inside
-                // ever sees a second `onAppear`. It rebuilds the subtree on each
-                // switch, which is the price of the effect and a fair one — the
-                // switch is a deliberate tap and each face is a handful of cards.
-                .id(store.section)
-                // Faces cross-dissolve and lift rather than sliding: they are
-                // four views of one house, not four places.
-                .transition(.opacity.combined(with: .offset(y: 10)))
             }
             .padding(.bottom, Metrics.scrollBottomInset)
             .animation(Motion.spring, value: store.section)
@@ -86,6 +88,7 @@ public struct IssuesView: View {
         .sensoryFeedback(trigger: advances) { advancedToFixed ? .success : .selection }
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
+        .stagedBuild(2)
         .alert($store.scope(state: \.alert, action: \.alert))
         .sheet(item: $store.scope(state: \.compose, action: \.compose)) { store in
             IssueComposerSheet(store: store)

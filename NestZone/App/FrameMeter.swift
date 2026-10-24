@@ -9,6 +9,8 @@ import UIKit
 ///     xcrun simctl spawn booted log stream --predicate 'category == "Frames"'
 ///
 /// A frame is late when it arrives more than half a frame after it was due.
+/// `-frameMeter 2` also logs each late frame as it happens, to see how a
+/// switch's work is split across frames and not only how bad the worst is.
 /// Development builds only.
 @MainActor
 final class FrameMeter: NSObject {
@@ -20,9 +22,10 @@ final class FrameMeter: NSObject {
     private var frames = 0, late = 0, dropped = 0
     private var worst: CFTimeInterval = 0
     private var windowStart: CFTimeInterval = 0
+    private let verbose = UserDefaults.standard.integer(forKey: "frameMeter") >= 2
 
     func startIfAsked() {
-        guard link == nil, UserDefaults.standard.bool(forKey: "frameMeter") else { return }
+        guard link == nil, UserDefaults.standard.integer(forKey: "frameMeter") > 0 else { return }
         let link = CADisplayLink(target: self, selector: #selector(tick))
         link.add(to: .main, forMode: .common)
         self.link = link
@@ -38,6 +41,7 @@ final class FrameMeter: NSObject {
         if interval > expected * 1.5 {
             late += 1
             dropped += Int((interval / expected).rounded()) - 1
+            if verbose { log.notice("late frame \(Int(interval * 1000)) ms") }
         }
         guard now - windowStart >= 2 else { return }
         log.notice("frames \(self.frames), late \(self.late), dropped \(self.dropped), worst \(Int(self.worst * 1000)) ms, frame \(Int(expected * 1000)) ms")

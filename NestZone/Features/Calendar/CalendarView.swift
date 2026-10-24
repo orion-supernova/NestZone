@@ -36,8 +36,10 @@ public struct CalendarView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: Metrics.sectionSpacing) {
-                monthScrubber
-                modePicker
+                Staged(1) {
+                    monthScrubber
+                    modePicker
+                }
                 if isSearching { searchField }
                 if store.state.showsFilterRow { filterRow }
 
@@ -106,6 +108,7 @@ public struct CalendarView: View {
         .animation(Motion.spring, value: store.pendingDeletion)
         .animation(Motion.spring, value: isSearching)
         .task { await store.send(.task).finish() }
+        .stagedBuild(3)
         .alert($store.scope(state: \.alert, action: \.alert))
         .sheet(item: $store.scope(
             state: \.destination?.compose,
@@ -448,21 +451,25 @@ public struct CalendarView: View {
     @ViewBuilder
     private var monthPage: some View {
         VStack(spacing: Metrics.sectionSpacing) {
-            GlassCard(padding: 12) {
-                VStack(spacing: 6) {
-                    weekdayHeadings
-                    grid
+            Staged(2) {
+                GlassCard(padding: 12) {
+                    VStack(spacing: 6) {
+                        weekdayHeadings
+                        grid
+                    }
                 }
-            }
-            .padding(.horizontal, Metrics.screenPadding)
-            // A horizontal drag anywhere on the grid changes the month, which is
-            // the gesture everybody tries first. Simultaneous rather than
-            // exclusive, so a vertical scroll that starts on the grid still
-            // reaches the scroll view.
-            .simultaneousGesture(monthSwipe)
-
-            dayPanel
                 .padding(.horizontal, Metrics.screenPadding)
+                // A horizontal drag anywhere on the grid changes the month, which is
+                // the gesture everybody tries first. Simultaneous rather than
+                // exclusive, so a vertical scroll that starts on the grid still
+                // reaches the scroll view.
+                .simultaneousGesture(monthSwipe)
+            }
+
+            Staged(3, fades: false) {
+                dayPanel
+                    .padding(.horizontal, Metrics.screenPadding)
+            }
         }
         // The grid is measured against the face itself, inside the zoom, so the
         // measurement holds still while the face scales around it.
@@ -496,6 +503,7 @@ public struct CalendarView: View {
                 ) {
                     store.send(.daySelected(day))
                 }
+                .equatable()
             }
         }
         .animation(Motion.spring, value: store.selectedDay)

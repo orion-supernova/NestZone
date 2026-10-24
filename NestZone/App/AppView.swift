@@ -302,7 +302,15 @@ private struct SegmentedRoot: View {
             // after the launch has settled, so a switch's late frames are not
             // lost in the launch's.
             if asked > 1 { try? await Task.sleep(for: .seconds(5)) }
-            for module in group.modules.dropFirst() + group.modules {
+            // The others (their first builds), the one it opened on (a return
+            // to a screen already built), the others again (warm), and home. It
+            // ends where it began because the last segment is remembered per
+            // device: a walk that ended on another module opened the next
+            // launch there, and its "return" to the first module was that
+            // module's first build.
+            let opened = store.selected ?? group.defaultModule
+            let others = group.modules.filter { $0 != opened }
+            for module in others + [opened] + others + [opened] {
                 try? await Task.sleep(for: .seconds(asked > 1 ? asked : 1.5))
                 store.send(.segmentPicked(module))
             }

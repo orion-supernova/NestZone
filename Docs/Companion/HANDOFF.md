@@ -14,9 +14,10 @@ the old conversation.
   version comes next (see "Before the next release").
 - **The next job:** the segments' screens are kept alive now (step 0 under
   "Next steps" says what was done and measured). What is left of the hitch is
-  the first switch to each module, which has to build it, and a warm switch
-  that is now about 55–80 ms after staging; the open items are in step 0's
-  "Still open".
+  the first switch to each module, which has to build it (Calendar, Issues and
+  Finance now build in beats, 130–155 ms; the `List` screens are still 120–250),
+  and a warm switch of about 55–80 ms; the open items are in step 0's "Still
+  open".
 - **To look at on a phone:** the new micro-animations (they build, but the
   simulator here can't be tapped, so they weren't watched one by one);
   whether the check in the "All square" seal draws itself in; the stamp with
@@ -25,10 +26,9 @@ the old conversation.
   here", the v9 shop in screenshots and the roadmap. `plan/shop.html` has
   v8's prototype and how each of its decisions was answered.
 - **A prompt for a fresh session:** "Read Docs/Companion/HANDOFF.md first,
-  then CLAUDE.md. Step 0 of Next steps is done; read its "Still open" and
-  find why the first return to Calendar or Tasks is slow. Measure with
-  `-frameMeter 1 -openTab plans -segmentCycle 4`. Build and typecheck only,
-  no tests."
+  then CLAUDE.md. Step 0 of Next steps is done; read its "Still open". Measure with
+  `-frameMeter 2 -openTab plans -segmentCycle 4 -appTabSegments "calendar,tasks,finance"`.
+  Build and typecheck only, no tests."
 
 ## How we got here
 
@@ -403,12 +403,59 @@ In order — each step can go to testers on its own:
      and Meals. Notes' search keeping its text across a switch was not driven
      (nothing here can type into the simulator). The same Plans run on an
      iOS 27.0 simulator was not possible: it needs a signed-in account.
-   - *Still open.* The first switch (about 220–260 ms) is view construction.
-     Building the other segments at idle would move it to an arbitrary moment,
-     so it is your call. The first return to Calendar or Tasks (200–230 ms) is
-     slow and its trigger has not been found; the other returns are warm.
-     Ruled out earlier: the entrance replays, the crossfade, the bar items and
-     search. `-segmentCycle 4` exists for this.
+   - *The slow "first return" was a first build* (24 October). `-segmentCycle`
+     walked `dropFirst + all`, ending on the tab's last segment, and the last
+     segment is remembered per device, so every later run opened on Movies,
+     Notes or Issues. Its "return" to Calendar or Tasks was that screen's first
+     build, 200–230 ms. Proved by log: with Calendar the opening segment there
+     is no `CalendarView` body and no `DayCell` body on return, and the frame
+     is 58–78 ms like any warm one; opened on Movies, `@identity` changes on
+     the `CalendarView` at the same switch. The walk now goes others, the
+     opening one, others again, home, and ends where it began.
+   - *Building in beats* (`Design/Staged.swift`). A screen's first frame was
+     most of its cost: SwiftUI looks up the whole type of the screen (every
+     modifier, every branch) and builds it in one block. `stagedBuild(n)` at a
+     screen's root and `Staged(k) { ... }` around pieces of it make the piece
+     at beat k, one display frame after the one before (`FrameTick`; a sleep
+     resumed the moment the main thread was free and put two beats in one
+     block), starting once the screen is on stage. The piece is type-erased
+     (`AnyView`) so its type is not part of the screen's, and fades up as it
+     lands unless it was made later by a face switch. In use: Calendar (bar |
+     grid | day panel), Issues and Finance (bar | the face). Only a first build
+     is staged; a kept segment is already at its last beat.
+   - *Measured* (iPhone 17 simulator, iOS 26.5, `-frameMeter 2`, worst late
+     frame per switch, three runs each, before then after; `-appTabSegments`
+     picks the segment a tab opens on): Calendar first 243–281 to 149–154,
+     Finance first 243–249 to 129–157, Issues first 168–179 to 135–142.
+     Unchanged: Recipes first 251–265 (224–315 after, noisy), Shopping 213–228,
+     Tasks 185–199, Notes 116–160, Movies 105–162. Returns: Calendar 58–74 to
+     60–78, Tasks about 64, Finance 52–61 to 47–55, Issues 47–51. Warm
+     switches 40–120 before and after.
+   - *Identical picture.* Month grid, Issues board and Finance overview, light
+     and dark, before and after: no differing pixel in the content area
+     (six pairs).
+   - *Smaller things.* `DayCell` is `Equatable` (not the closure) and says its
+     date once per day and language, so a month's cells redraw when their own
+     day, dots or state change, and not forty-two date formats on every
+     push. `-frameMeter 2` logs each late frame.
+   - *What did not work, so nobody tries it again.* Resolving the screens'
+     body types on a background thread beforehand (10–20 ms of 215). Erasing
+     branches that are not taken (no change). Writing `TabSegments.remember`
+     from an effect instead of the reducer: it took the tap's 14 ms off but
+     Recipes' first switch got 60–90 ms worse. Staging a `List`'s rows or the
+     whole list (Tasks, Shopping, Recipes): nothing measurable, and a staged
+     whole list leaves the screen with no toolbar and no backdrop.
+   - *Still open.* The first frame of a screen is 100–150 ms even with nothing
+     in it: the screen's own modifiers (a dozen sheets, alerts, feedback and
+     tasks are a dozen types to look up, about 40% of that frame in the
+     profile) plus the switch. Below 150 needs fewer or shared modifier
+     chains per screen, or the `List` screens' first build (UIKit list
+     creation, about 100 ms of Tasks), neither of which can change the
+     picture. The data arriving after the build is a frame of its own on
+     Shopping (about 375 ms with a long list). This is Debug on the
+     simulator, where unspecialised generics make every type lookup slow; a
+     phone in Release has not been measured, and the iOS 27.0 simulator needs
+     a signed-in account.
    - *iOS 27.* The 27.1 SDK was checked for anything that keeps a view
      hidden, shows or hides a toolbar item or search, or reports visibility.
      Nothing does; what it adds nearby (`visibilityPriority`,
