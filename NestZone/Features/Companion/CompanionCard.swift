@@ -48,12 +48,12 @@ struct CompanionCard: View {
                 CeremonyView(store: store)
             }
         }
-        #if DEBUG
+        #if DEBUG || MEASURE
         .task { await demo() }
         #endif
     }
 
-    #if DEBUG
+    #if DEBUG || MEASURE
     /// Development builds can be driven from the command line, for
     /// screenshots of states that otherwise need a finger:
     /// `simctl launch … -companionDemo care` (or decorate, album, holidays,

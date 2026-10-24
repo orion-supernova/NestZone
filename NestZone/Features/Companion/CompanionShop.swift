@@ -118,7 +118,7 @@ private struct Arc: ViewModifier, Animatable {
 /// end.
 struct ShopView: View {
     let store: StoreOf<CompanionFeature>
-    #if DEBUG
+    #if DEBUG || MEASURE
     /// `-companionShelf pets` opens it on that shelf, for screenshots.
     @State private var shelf = UserDefaults.standard.string(forKey: "companionShelf").flatMap(Shelf.init(rawValue:)) ?? .decor
     #else
@@ -146,7 +146,7 @@ struct ShopView: View {
             page { pets(shop) }.tag(Shelf.pets)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
-        #if DEBUG
+        #if DEBUG || MEASURE
         .task {
             // `-companionShelfCycle 1` switches shelves on its own, to watch
             // a switch frame by frame.

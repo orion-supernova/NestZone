@@ -59,13 +59,15 @@ beats (`stagedBuild` and `Staged`, `Design/Staged.swift`): the bar and the
 container in the tap's frame, each piece a frame after the one before, fading
 up as it lands. That took their first build from 245–280 ms to 130–155. A
 `List` screen cannot be staged (a list that is nothing has no toolbar), and
-Tasks, Shopping, Recipes, Notes and Movies are still 115–200 ms. About 40% of
+Tasks, Shopping, Recipes, Notes and Movies are still 115–200 ms
+on the simulator (on an iPhone 16e in Release: first builds 42–86 ms, returns 31–45,
+warm 30–50, so a phone does not need this work; HANDOFF.md, step 1). About 40% of
 that is the simulator, not the app: SwiftUI asks the runtime once per field
 type whether it is a `DynamicProperty`, and a cold answer costs a millisecond
 there because the simulator reads every framework's conformance records off
 disk, where a device has a table the system built. Warming those answers in
 Debug was tried and dropped — it flattered the simulator and changed nothing
-a person feels. The next real number is a Release build on a phone. There is no
+a person feels. The real number was a Release build on a phone, now taken (above). There is no
 slow *return*: the one that was measured was a first build, because
 `-segmentCycle` used to end on the last segment, which is remembered, so the
 next launch opened there. It now ends where it began. See
@@ -472,6 +474,15 @@ makes fixing a typo in an old note free.
 ```bash
 # build + run
 xcodebuild -scheme NestZone -destination 'platform=iOS Simulator,name=iPhone 17' build
+
+# measure on a phone: Release optimisation with the launch-argument hooks
+# (-frameMeter, -segmentCycle, -openTab, -todayScroll, -companionScroll,
+# -companionDemo) and Nestie compiled in. MEASURE is a command-line condition,
+# never in the project, so the App Store build cannot carry it. `$(inherited)`
+# matters: a bare MEASURE replaces the packages' own conditions and TCA stops
+# compiling. Read the frame meter with xctrace, see HANDOFF.md step 1.
+xcodebuild -scheme NestZone -configuration Release -destination 'id=<udid>' \
+  -allowProvisioningUpdates 'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) MEASURE' build
 
 # tests (reducer tests via TestStore, plus a UI walk of every tab)
 xcodebuild test -scheme NestZone -destination 'platform=iOS Simulator,name=iPhone 17'

@@ -48,7 +48,7 @@ struct NestZoneApp: App {
             // earliest the recogniser has anything to attach to.
             .onAppear {
                 KeyboardDismisser.shared.install()
-                #if DEBUG
+                #if DEBUG || MEASURE
                 FrameMeter.shared.startIfAsked()
                 #endif
             }

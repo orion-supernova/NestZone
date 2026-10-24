@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG || MEASURE
 import OSLog
 import UIKit
 
@@ -11,7 +11,8 @@ import UIKit
 /// A frame is late when it arrives more than half a frame after it was due.
 /// `-frameMeter 2` also logs each late frame as it happens, to see how a
 /// switch's work is split across frames and not only how bad the worst is.
-/// Development builds only.
+/// Development builds, and the `MEASURE` configuration (Release optimisation
+/// with the hooks compiled in; see CLAUDE.md, Commands).
 @MainActor
 final class FrameMeter: NSObject {
     static let shared = FrameMeter()

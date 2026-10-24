@@ -87,7 +87,7 @@ private struct ChooseView: View {
         }
         .scrollPosition($position)
         .scrollIndicators(.hidden)
-        #if DEBUG
+        #if DEBUG || MEASURE
         .task { await scrollForever() }
         #endif
         .navigationTitle(Text(store.house.album.isEmpty ? L10n.companionMeetTitle(String(localized: L10n.companionBrand)) : L10n.companionNextTitle))
@@ -99,7 +99,7 @@ private struct ChooseView: View {
         }
     }
 
-    #if DEBUG
+    #if DEBUG || MEASURE
     /// `-companionScroll 1` scrolls the sheet down and up on its own, so the
     /// scroll can be profiled on a simulator nobody can touch.
     private func scrollForever() async {

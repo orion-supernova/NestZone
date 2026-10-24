@@ -292,7 +292,7 @@ private struct SegmentedRoot: View {
             guard (try? await Task.sleep(for: Self.fadeOut)) != nil else { return }
             rested = visited.filter { $0 != store.selected }
         }
-        #if DEBUG
+        #if DEBUG || MEASURE
         .task {
             // `-segmentCycle 1` walks the tab's segments on its own, to watch
             // a switch frame by frame.

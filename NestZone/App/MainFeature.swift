@@ -22,7 +22,7 @@ public struct MainFeature: Sendable {
         public var homeID: HomeID
         public var home: Home?
         public var user: User?
-        #if DEBUG
+        #if DEBUG || MEASURE
         /// `-openTab lists` (or plans, house, messages) opens on that tab, to
         /// watch a tab on a simulator nobody touches.
         public var selectedTab: Tab = UserDefaults.standard.string(forKey: "openTab")

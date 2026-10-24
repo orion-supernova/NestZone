@@ -705,7 +705,7 @@ public struct CompanionFeature: Sendable {
 /// Whether the companion shows. On for development builds only while it is an
 /// MVP: a release build compiles it and never draws it.
 public enum CompanionFlag {
-    #if DEBUG
+    #if DEBUG || MEASURE
     public static let isEnabled = true
     #else
     public static let isEnabled = false

@@ -61,7 +61,7 @@ public struct HomeView<Companion: View>: View {
         }
         .onScrollPhaseChange { _, phase in isScrolling = phase.isScrolling }
         .scrollPosition($position)
-        #if DEBUG
+        #if DEBUG || MEASURE
         .task { await flickForever() }
         #endif
         .background(Backdrop(tint: theme.accent))
@@ -72,7 +72,7 @@ public struct HomeView<Companion: View>: View {
         .alert($store.scope(state: \.alert, action: \.alert))
     }
 
-    #if DEBUG
+    #if DEBUG || MEASURE
     /// `-todayScroll 1` flicks Today to the bottom and back, quickly and over
     /// and over, so its scroll can be profiled on a simulator nobody touches.
     private func flickForever() async {
