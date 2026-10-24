@@ -114,6 +114,27 @@ each tab on the segment you name, to measure a first build of any of them.
   staged was not done: the dock and Nestie each cost under 10% of the frame
   when removed outright, and the dock cannot be built a beat late without it
   sliding in.
+- **Optimistic launch.** With a stored session and a cached home, the tabs are
+  drawn from the cache while the session restores (`isProvisional`).
+  convex-swift sends a read or write immediately with whatever identity it has,
+  so `ConvexConnection` waits on `AuthGate` first: reads wait, writes wait and
+  fail `.offline` if the restore cannot reach the server, and a refused session
+  ends both quietly. A new network path must go through `subscribe`, `mutate`
+  or `act`, never `client` directly. Every way out of a closed gate leaves it
+  open or rejected (restore answered, refused, cancelled, signed out, signed
+  in). A write waits at most 8 s, then fails `.offline` so its rollback runs;
+  writes that waited are released in the order they were made and then run in
+  parallel like any others (nothing else orders writes, and a chain let one
+  stalled write hold every other). Signing out before the restore has answered
+  stays on a spinner until the restore ends or 10 s pass, then signs out with
+  whatever push token exists; the sign-out ends the session itself (the
+  delegate `signedOut` -> `endSession`), not by waiting for the SDK's
+  `.unauthenticated`, which the root ignores while the launch is provisional.
+  A Keychain that cannot be read is never "no session": only a Keychain that
+  answered "nothing" is, and the launch decision reads it off the main thread
+  (`LaunchWarmup`).
+  `-optimisticLaunch 0` (Debug, MEASURE) launches the old way. See
+  `Docs/Companion/HANDOFF.md`, step 0b.
 - **A tap switches tab or opens a screen in place — never both.** A whole
   module goes to its tab, switched to its segment and popped to root. A
   specific thing (an event, a problem, the chore split) is opened on the stack
@@ -483,6 +504,12 @@ makes fixing a typo in an old note free.
   a semaphore. Clear the stored token **only** when the server explicitly rejects
   it; a network failure must leave it in place and retry, or a two-second blip
   signs the user out permanently.
+- **A refused refresh token is answered with null tokens, not an error**
+  (`@convex-dev/auth` 0.0.87), so `persist` clearing the stored token on
+  `noTokens` is right and a rejection cannot cause an endless retry. Known
+  risk, and library behaviour: the library accepts a just-used refresh token
+  again for only `REFRESH_TOKEN_REUSE_WINDOW_MS` (10 s), so a launch killed
+  mid-exchange and reopened more than 10 s later loses the session.
 - **Sign-out unregisters the push token first**, while there is still an identity
   to authorise the mutation with.
 - **Mutation arguments are camelCase (`homeId`); document fields are snake_case
