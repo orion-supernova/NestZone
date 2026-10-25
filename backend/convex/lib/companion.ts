@@ -187,8 +187,47 @@ function earned(reward: Reward, ctx: ShopContext): boolean {
     case "birthday":
       return ctx.isBirthday;
     case "grownAll":
-      return FREE_TO_HAVE.every((id) => ctx.grownSpecies.has(id));
+      return grownAllFree(ctx.grownSpecies);
   }
+}
+
+// MARK: - The finale
+
+/**
+ * The finale: every species the house can have without paying
+ * (`freeToHave`) grown all the way. The same condition as the `grownAll`
+ * reward, so buying never brings it closer or puts it off. Read off
+ * `grown_species`, whenever it was reached: a house that got there before
+ * `finale_at` existed has reached it too.
+ */
+export function grownAllFree(grown: ReadonlySet<string> | readonly string[] | undefined): boolean {
+  const set = grown instanceof Set ? grown : new Set(grown ?? []);
+  return FREE_TO_HAVE.every((id) => set.has(id));
+}
+
+/** The colourways after the finale: 1 to this. Absent is the original. */
+export const COLOURS = 3;
+
+export function isColour(colour: number): boolean {
+  return Number.isInteger(colour) && colour >= 1 && colour <= COLOURS;
+}
+
+/** A colourway's entry in `companion_homes.grown_colours`. */
+export function colourKey(species: string, colour: number): string {
+  return `${species}:${colour}`;
+}
+
+/**
+ * Whether the house may start `species` in `colour`: past the finale, the
+ * species already grown in its original colour, and that colourway not grown
+ * yet. Nothing about whether the species itself can be grown today: `start`
+ * asks that separately, as it does for every start.
+ */
+export function colourOpen(house: Doc<"companion_homes">, species: string, colour: number): boolean {
+  if (!isColour(colour)) return false;
+  const grown = house.grown_species ?? [];
+  if (!grownAllFree(grown) || !grown.includes(species)) return false;
+  return !(house.grown_colours ?? []).includes(colourKey(species, colour));
 }
 
 function brings(decorId: string, ctx: ShopContext): boolean {

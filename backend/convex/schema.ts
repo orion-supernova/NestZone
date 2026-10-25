@@ -1427,6 +1427,20 @@ export default defineSchema({
     album_count: v.number(),
     grown_species: v.optional(v.array(v.string())),
     /**
+     * The colourways grown all the way after the finale, `"<species>:<colour>"`
+     * with the colour 1–3. Bounded by the catalog (species × 3). Absent means
+     * none; the original colour of a species is `grown_species`.
+     */
+    grown_colours: v.optional(v.array(v.string())),
+    /**
+     * When the house first had every `freeToHave` species in `grown_species`:
+     * written once, by the graduation that completed it. Absent for a house
+     * that completed it before this field existed (or through an import) —
+     * that house has still reached the finale (`grownAllFree`), it just has
+     * no moment to replay.
+     */
+    finale_at: v.optional(v.number()),
+    /**
      * The most Leaves any phone's MVP file has brought. An import is credited
      * only what it brings above this, so imports add up to the largest one
      * whatever their order and whatever was spent in between.
@@ -1508,6 +1522,11 @@ export default defineSchema({
      * chosen). Written in the same mutation that schedules the push.
      */
     notified: v.optional(v.array(v.string())),
+    /**
+     * The colourway, an integer 1–3, chosen by whoever started it after the
+     * house's finale (`start`'s `colour`). Absent is the original colour.
+     */
+    colour: v.optional(v.number()),
   })
     // The album: `eq(status, "graduated")`, newest first.
     .index("by_home_status_graduated", ["home_id", "status", "graduated_at"])
