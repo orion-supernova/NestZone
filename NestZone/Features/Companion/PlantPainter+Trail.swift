@@ -191,7 +191,8 @@ extension PlantPainter {
         c.translateBy(x: at.x, y: at.y - r * 0.82)
         let rx = r * 1.12, ry = r * 0.92
         let green: [RGB] = [ramp[0], ramp[1], ramp[2], ramp[3]]
-        let orange: [RGB] = [RGB.tone(0xA83F0C, day: day, dim: 0.9), RGB.tone(0xE06A18, day: day, dim: 0.9), RGB.tone(0xFF9A3A, day: day, dim: 0.9), RGB.tone(0xFFC47E, day: day, dim: 0.85)]
+        let skin = plan.fruitTones ?? [0xA83F0C, 0xE06A18, 0xFF9A3A, 0xFFC47E]
+        let orange: [RGB] = [RGB.tone(skin[0], day: day, dim: 0.9), RGB.tone(skin[1], day: day, dim: 0.9), RGB.tone(skin[2], day: day, dim: 0.9), RGB.tone(skin[3], day: day, dim: 0.85)]
         let t = (0..<4).map { green[$0].mix(orange[$0], ripe) }
         let side = L.x >= 0 ? 1.0 : -1.0
         // The shadow on the soil, then the whole globe in its darkest tone.

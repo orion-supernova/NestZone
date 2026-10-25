@@ -150,6 +150,17 @@ extension PlantPainter {
 
     // MARK: Tulip
 
+    /// The flames of a broken (Rembrandt) tulip in a tepal's own units: thin
+    /// lenses from near the base up towards the tip, one down the middle and two
+    /// either side that fall short, built once.
+    static let tepalFlames: Path = {
+        var p = Path()
+        for (v, to, w) in [(0.0, 0.9, 0.05), (0.13, 0.7, 0.04), (-0.13, 0.7, 0.04), (0.24, 0.5, 0.03), (-0.24, 0.5, 0.03)] {
+            p.lens(from: CGPoint(x: 0.12, y: v * 0.7), to: CGPoint(x: to, y: v * 0.45), width: w)
+        }
+        return p
+    }()
+
     /// A tulip: a cup of six waxy tepals (the two behind, the three in front
     /// that overlap), deep at the base and flamed with yellow, closed in a bud
     /// and opening to show a dark heart and its stamens. The cup stands along
@@ -186,7 +197,7 @@ extension PlantPainter {
             h.fill(anthers, with: .color(bloom(flower.anther).color(heartK)))
         }
         // The three in front: left and right, then the middle one over them.
-        var front = Path(), lit = Path(), shade = Path(), glints = Path(), veins = Path()
+        var front = Path(), lit = Path(), shade = Path(), glints = Path(), veins = Path(), flames = Path()
         for (lean, dx, scale, bend) in [(-1.0, -2.2, 1.0, -0.22), (1.0, 2.2, 1.0, 0.22), (0.0, 0.0, 1.04, 0.0)] {
             let (path, t) = tepal(lean * (spread + 0.06), dx, scale, bend: bend * open)
             let shape = LeafShape.of(.tepal, bend: bend * open)
@@ -197,11 +208,14 @@ extension PlantPainter {
             shade.addPath(toward >= 0 ? shape.sideB : shape.sideA, transform: t)
             if toward > -0.2 || lean == 0 { glints.addPath(toward >= 0 ? shape.glossA : shape.glossB, transform: t) }
             veins.addPath(shape.veins, transform: t)
+            if flower.streak != 0 { flames.addPath(Self.tepalFlames, transform: t) }
         }
         h.fill(front, with: .linearGradient(
             Gradient(stops: [.init(color: flame.mix(mid, 0.2).color(), location: 0), .init(color: deep.color(), location: 0.22),
                              .init(color: mid.color(), location: 0.62), .init(color: mid.mix(pale, 0.35).color(), location: 1)]),
             startPoint: CGPoint(x: 0, y: 2), endPoint: CGPoint(x: 0, y: -len)))
+        // A Rembrandt's flames: feathered streaks of the second colour running up each tepal.
+        if flower.streak != 0 { h.fill(flames, with: .color(bloom(flower.streak).color(0.9))) }
         h.fill(shade, with: .color(deep.shifted(-10).color(0.3)))
         h.fill(lit, with: .color(pale.mix(glow, 0.3 * (1 - night)).color(0.3)))
         h.fill(veins, with: .color(deep.shifted(-6).color(0.22)))

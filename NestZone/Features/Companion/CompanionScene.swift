@@ -34,6 +34,13 @@ struct CompanionScene: View {
     /// painters take it.
     var colourway = 0
 
+    /// The companion as it is painted: in the colourway the card was handed, else its own.
+    private var painted: Companion {
+        var companion = companion
+        if colourway > 0 { companion.colour = colourway }
+        return companion
+    }
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isScrolling) private var isScrolling
@@ -115,7 +122,7 @@ struct CompanionScene: View {
                     }
                     .transformEffect(wind.bend)
                     .scaleEffect(x: 1 - wind.bounce * 0.35, y: 1 + wind.bounce, anchor: SceneSpace.root)
-                } else if companion.species.art == .plant, let plan = PlantPlan.of(companion.species) {
+                } else if companion.species.art == .plant, let plan = PlantPlan.of(companion.species, colourway: painted.colourway) {
                     // The same wind and bounce as the tree, over a plant.
                     let wind = snapshot.wind(viewSize, at: date)
                     let state = snapshot.treeState(at: date)
@@ -146,8 +153,8 @@ struct CompanionScene: View {
         .onTapGesture(coordinateSpace: .local) { location in pet(at: location) }
         .onScrollVisibilityChange(threshold: 0.05) { isVisible = $0 }
         .onAppear(perform: settle)
-        .task(id: companion.species) {
-            guard let plan = CritterPlan.of(companion.species) else { return }
+        .task(id: "\(companion.species.rawValue)-\(painted.colourway)") {
+            guard let plan = CritterPlan.of(companion.species, colourway: painted.colourway) else { return }
             await Task.detached(priority: .utility) { CritterGeometry.prepare(plan) }.value
         }
         // A new companion can keep the old one's seed (choosing again before
@@ -155,6 +162,7 @@ struct CompanionScene: View {
         // too — keyed on the seed alone, a pomegranate kept the lemon's tree.
         .onChange(of: companion.species) { _, _ in canopy = nil; settle() }
         .onChange(of: companion.seed) { _, _ in canopy = nil; settle() }
+        .onChange(of: painted.colourway) { _, _ in canopy = nil; settle() }
         .onChange(of: mood) { old, new in moodChanged(from: old, to: new) }
         .onChange(of: progress) { _, new in
             progressFrom = shownProgress(at: Date())
@@ -201,7 +209,7 @@ struct CompanionScene: View {
 
     private func settle() {
         if canopy == nil, companion.species.art == .tree {
-            canopy = Canopy(seed: companion.seed, species: companion.species)
+            canopy = Canopy(seed: companion.seed, species: companion.species, colourway: painted.colourway)
         }
         guard !didSettle else { return }
         didSettle = true
@@ -231,7 +239,7 @@ struct CompanionScene: View {
     /// its seed) could be missed until something else redrew the card.
     private var snapshot: SceneSnapshot {
         SceneSnapshot(
-            companion: companion, progress: progress, stage: stage, layout: layout, southern: southern, now: now,
+            companion: painted, progress: progress, stage: stage, layout: layout, southern: southern, now: now,
             compact: compact, reduceMotion: reduceMotion, canopy: canopy, epoch: epoch,
             moodFrom: moodFrom, moodTo: moodTo, moodAt: moodAt, isWaking: isWaking,
             progressFrom: progressFrom, progressTo: progressTo, progressAt: progressAt,
@@ -357,7 +365,7 @@ struct SceneSnapshot {
         return TreeState(
             seed: companion.seed, species: companion.species, mood: shownMood(at: date), progress: shownProgress(at: date),
             day: (SceneFrame.dayness(hour) * 50).rounded() / 50, light: (SceneFrame.skySide(hour) * 10).rounded() / 10,
-            decor: compact ? [] : layout.tree + (hatsOnLayer ? hatRaw.map { [$0] } ?? [] : []), reduceMotion: reduceMotion
+            colourway: companion.colourway, decor: compact ? [] : layout.tree + (hatsOnLayer ? hatRaw.map { [$0] } ?? [] : []), reduceMotion: reduceMotion
         )
     }
 
@@ -473,7 +481,7 @@ struct SceneSnapshot {
             )
             pet.draw(c, x: center, floor: SceneSpace.floor - 4, size: 190)
         case .critter:
-            if let plan = CritterPlan.of(companion.species) {
+            if let plan = CritterPlan.of(companion.species, colourway: companion.colourway) {
                 CritterPainter(
                     plan: plan, frame: frame, stage: stage,
                     hop: [landedAt, stageUpAt].compactMap { $0 }.map { date.timeIntervalSince($0) }.min(),
@@ -764,7 +772,7 @@ extension SceneSnapshot {
         self.init(
             companion: companion, progress: progress, stage: stage, layout: layout, southern: false, now: now,
             compact: false, reduceMotion: reduceMotion,
-            canopy: companion.species.art == .tree ? Canopy(seed: companion.seed, species: companion.species) : nil, epoch: epoch,
+            canopy: companion.species.art == .tree ? Canopy(seed: companion.seed, species: companion.species, colourway: companion.colourway) : nil, epoch: epoch,
             moodFrom: mood.level, moodTo: mood.level, moodAt: .distantPast, isWaking: false,
             progressFrom: progress, progressTo: progress, progressAt: .distantPast,
             revivedAt: nil, revivedFromDozing: false, stageUpAt: nil, dropAt: nil, landedAt: nil, pettedAt: nil, pours: [],
@@ -786,6 +794,8 @@ struct TreeState: Equatable, Sendable {
     /// Where the sun or the moon stands across the scene, -1 to 1, in tenths,
     /// for the trees that take their light from it.
     var light: Double = 0
+    /// Which colourway it is painted in, so a new colour is a new picture.
+    var colourway = 0
     var decor: [String]
     var reduceMotion: Bool
 }
@@ -803,7 +813,7 @@ struct TreeLayer: View, Equatable {
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.state.seed == rhs.state.seed && lhs.state.species == rhs.state.species && lhs.state.mood == rhs.state.mood
             && lhs.state.progress == rhs.state.progress && lhs.state.day == rhs.state.day
-            && lhs.state.light == rhs.state.light
+            && lhs.state.light == rhs.state.light && lhs.state.colourway == rhs.state.colourway
     }
 
     var body: some View {
@@ -854,20 +864,22 @@ struct ScenePortrait: View {
     let now: Date
     /// What is out in the scene; none for a portrait in a grid.
     var layout = SceneLayout()
-    /// 0 is the original colours, 1-3 the new ones. Not read until the
-    /// painters take it.
+    /// 0 is the original colours, 1-3 the new ones; a companion that holds a
+    /// colour of its own (an art sheet's) is drawn in that when this is 0.
     var colourway = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Canvas { context, size in
+        var companion = self.companion
+        if colourway > 0 { companion.colour = colourway }
+        return Canvas { [companion] context, size in
             let snapshot = SceneSnapshot(still: companion, progress: progress, mood: mood, stage: stage, now: now, reduceMotion: reduceMotion, layout: layout)
             let date = snapshot.epoch
             snapshot.drawBack(context, size: size, at: date)
             if let canopy = snapshot.canopy {
                 TreeLayer.paint(context, size: size, canopy: canopy, state: snapshot.treeState(at: date))
-            } else if let plan = PlantPlan.of(companion.species) {
+            } else if let plan = PlantPlan.of(companion.species, colourway: companion.colourway) {
                 PlantLayer.paint(context, size: size, plan: plan, state: snapshot.treeState(at: date))
             }
             snapshot.drawFront(context, size: size, at: date)

@@ -45,7 +45,9 @@ struct ArtSheet: View {
             case "batch-b": batchB
             case "batch-b-night": batchBNight
             default:
-                if page.hasPrefix("decor-") { decorSheet(page) }
+                if let (family, n) = Self.coloursGrid(page) { coloursGridSheet(family, n) }
+                else if let (species, kind) = Self.coloursPage(page) { colours(species, kind) }
+                else if page.hasPrefix("decor-") { decorSheet(page) }
                 else if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
                 else if let species = Species(rawValue: page) { speciesPage(species) }
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
@@ -108,7 +110,8 @@ struct ArtSheet: View {
     ///   -artSheet redraw -frameMeter 1
     private var redraw: some View {
         let species = UserDefaults.standard.string(forKey: "artSheetSpecies").flatMap(Species.init(rawValue:)) ?? .pomegranate
-        let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+        // `-artSheetColour 2` draws it in that colourway, to price one against the original.
+        let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast, colour: UserDefaults.standard.integer(forKey: "artSheetColour"))
         let count = max(1, UserDefaults.standard.integer(forKey: "artSheetCount") == 0 ? 4 : UserDefaults.standard.integer(forKey: "artSheetCount"))
         return TimelineView(.animation) { timeline in
             let t = timeline.date.timeIntervalSinceReferenceDate
@@ -400,7 +403,7 @@ struct ArtSheet: View {
     ///   -artSheet pet-redraw -frameMeter 1 [-artSheetSpecies owl] [-artSheetCount 1]
     private var petRedraw: some View {
         let species = UserDefaults.standard.string(forKey: "artSheetSpecies").flatMap(Species.init(rawValue:)) ?? .kitten
-        let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+        let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast, colour: UserDefaults.standard.integer(forKey: "artSheetColour"))
         let count = UserDefaults.standard.integer(forKey: "artSheetCount") == 0 ? 4 : UserDefaults.standard.integer(forKey: "artSheetCount")
         let mood = UserDefaults.standard.string(forKey: "artSheetMood").flatMap(Mood.init(rawValue:)) ?? .content
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 2), spacing: 4) {

@@ -36,6 +36,10 @@ struct LeafSpec: Sendable {
     var lens = (0.78, 1.2)
     /// The share of leaves turned over to show their underside.
     var silver = 0.0
+    /// Whether which leaves are turned over is told by where they stand and not
+    /// by the clump's random draws: a colourway that marks leaves must not shift
+    /// the draws that place every leaf after it.
+    var silverByPlace = false
     /// The share of sunstruck leaves with a lens of gloss on the midrib.
     var gloss = 0.35
     /// How much of a clump is a dark body behind its leaves: thin leaves need
@@ -52,7 +56,7 @@ struct LeafSpec: Sendable {
     /// others stay the same tree, drooping and paling.
     var calm = 1.0
 
-    static func of(_ species: Species) -> LeafSpec {
+    static func of(_ species: Species, colourway: Int = 0) -> LeafSpec {
         var s = LeafSpec()
         if species != .pomegranate { s.calm = 0.45 }
         switch species {
@@ -66,6 +70,8 @@ struct LeafSpec: Sendable {
             s.spread = (0.5, 0.9)
             s.lens = (0.85, 1.2)
             s.gloss = 0.55
+            // A variegated eureka: a share of leaves are the other colour (`LemonPainter` sets it).
+            if colourway == 1 { (s.silver, s.silverByPlace) = (0.34, true) }
         case .olive:
             s.hw = 0.085
             s.size = 0.44

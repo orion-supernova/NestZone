@@ -116,10 +116,19 @@ private final class WaterCache: @unchecked Sendable {
 /// looking left, 29 units long without the tail.
 struct FishGeometry {
     let body, belly, scales, gill, pectoral, pelvic: Path
+    /// A calico's patches and an oranda's cap, cut to the body: built for every
+    /// fish, drawn only by a plan that has them.
+    let patchA, patchB, cap: Path
 
     init() {
-        body = .loop([CGPoint(x: -15.4, y: 0.6), CGPoint(x: -12.6, y: -8.2), CGPoint(x: -3.6, y: -12.6), CGPoint(x: 7.6, y: -9.6), CGPoint(x: 14.4, y: -3.2),
-                      CGPoint(x: 14.4, y: 3.4), CGPoint(x: 8, y: 9.4), CGPoint(x: -3.4, y: 12.8), CGPoint(x: -12.6, y: 8.4)])
+        let bodyPath = Path.loop([CGPoint(x: -15.4, y: 0.6), CGPoint(x: -12.6, y: -8.2), CGPoint(x: -3.6, y: -12.6), CGPoint(x: 7.6, y: -9.6), CGPoint(x: 14.4, y: -3.2),
+                                  CGPoint(x: 14.4, y: 3.4), CGPoint(x: 8, y: 9.4), CGPoint(x: -3.4, y: 12.8), CGPoint(x: -12.6, y: 8.4)])
+        body = bodyPath
+        patchA = bodyPath.intersection(.loop([CGPoint(x: -9, y: -16), CGPoint(x: 5, y: -16), CGPoint(x: 9, y: -6), CGPoint(x: 1, y: 1), CGPoint(x: -7, y: -3), CGPoint(x: -12, y: -9)]))
+        var pb = bodyPath.intersection(.loop([CGPoint(x: 6, y: -1), CGPoint(x: 18, y: -5), CGPoint(x: 18, y: 7), CGPoint(x: 8, y: 12), CGPoint(x: 1, y: 6)]))
+        pb.addPath(bodyPath.intersection(.loop([CGPoint(x: -6, y: 5), CGPoint(x: 0, y: 3), CGPoint(x: 2, y: 9), CGPoint(x: -4, y: 14)])))
+        patchB = pb
+        cap = bodyPath.intersection(Path(ellipseIn: CGRect(x: -19, y: -15, width: 17, height: 15)))
         belly = Path(ellipseIn: CGRect(x: -11, y: 2.4, width: 25, height: 9.6))
         var s = Path()
         for (row, y) in [-7.0, -2.0, 3.0, 8.0].enumerated() {

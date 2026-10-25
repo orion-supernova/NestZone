@@ -47,6 +47,8 @@ struct SitGeometry {
     let cotton: Path
     /// A fawn's white spots on the back and the haunch.
     let spots, haunchSpots: Path
+    /// A calico's patches on the body and on the haunch, cut to each.
+    let patchA, patchB, haunchPatchA, haunchPatchB: Path
     /// Where the form's centre is, for the gradients.
     let bodyCentre = CGPoint(x: 68, y: 84)
 
@@ -170,6 +172,15 @@ struct SitGeometry {
             }
         }
         spots = sp; haunchSpots = hs
+        var pa = Path(), pb = Path(), hpa = Path(), hpb = Path()
+        if !plan.patches.isEmpty {
+            pa = bodyPath.intersection(.loop([CGPoint(x: 52, y: 52), CGPoint(x: 70, y: 52), CGPoint(x: 84, y: 60), CGPoint(x: 80, y: 74), CGPoint(x: 68, y: 78), CGPoint(x: 56, y: 72), CGPoint(x: 48, y: 62)]))
+            pb = bodyPath.intersection(.loop([CGPoint(x: 90, y: 82), CGPoint(x: 100, y: 80), CGPoint(x: 102, y: 100), CGPoint(x: 88, y: 110), CGPoint(x: 78, y: 100), CGPoint(x: 82, y: 88)]))
+            pb.addPath(bodyPath.intersection(.loop([CGPoint(x: 30, y: 74), CGPoint(x: 42, y: 66), CGPoint(x: 50, y: 74), CGPoint(x: 46, y: 88), CGPoint(x: 34, y: 90)])))
+            hpa = haunch.intersection(.loop([CGPoint(x: 54, y: 70), CGPoint(x: 74, y: 70), CGPoint(x: 82, y: 82), CGPoint(x: 70, y: 92), CGPoint(x: 58, y: 88)]))
+            hpb = haunch.intersection(.loop([CGPoint(x: 80, y: 78), CGPoint(x: 98, y: 80), CGPoint(x: 98, y: 106), CGPoint(x: 84, y: 112), CGPoint(x: 78, y: 98), CGPoint(x: 84, y: 88)]))
+        }
+        patchA = pa; patchB = pb; haunchPatchA = hpa; haunchPatchB = hpb
         arms = a; handPaws = hp; handToes = ht2; seed = sd; seedStripes = ss
         cotton = plan.tail == .cotton
             ? FurEdge.furry(Path(ellipseIn: CGRect(x: -7.2, y: -7.2, width: 14.4, height: 14.4)), seed: "cotton-\(plan.key)", gap: 1.8...3.2, height: 0.9...2.1, width: 2.4)
@@ -181,6 +192,8 @@ struct SitGeometry {
 struct CurlGeometry {
     let body, stripes, hairs, haunch, haunchBars: Path
     let spots: Path
+    /// A calico's patches on the round and on the haunch.
+    let patchA, patchB, haunchPatchA, haunchPatchB: Path
     let bodyFur: [Path]
 
     init(_ plan: CritterPlan) {
@@ -225,6 +238,15 @@ struct CurlGeometry {
             }
         }
         spots = sp
+        var pa = Path(), pb = Path(), hpa = Path(), hpb = Path()
+        if !plan.patches.isEmpty {
+            pa = bodyPath.intersection(.loop([CGPoint(x: 34, y: 70), CGPoint(x: 60, y: 66), CGPoint(x: 72, y: 80), CGPoint(x: 62, y: 96), CGPoint(x: 40, y: 94), CGPoint(x: 26, y: 84)]))
+            pb = bodyPath.intersection(.loop([CGPoint(x: 86, y: 70), CGPoint(x: 112, y: 76), CGPoint(x: 112, y: 108), CGPoint(x: 90, y: 116), CGPoint(x: 80, y: 98)]))
+            pb.addPath(bodyPath.intersection(.loop([CGPoint(x: 14, y: 96), CGPoint(x: 28, y: 100), CGPoint(x: 34, y: 116), CGPoint(x: 14, y: 118)])))
+            hpa = haunch.intersection(.loop([CGPoint(x: 60, y: 76), CGPoint(x: 80, y: 78), CGPoint(x: 84, y: 96), CGPoint(x: 66, y: 98)]))
+            hpb = haunch.intersection(.loop([CGPoint(x: 84, y: 76), CGPoint(x: 106, y: 82), CGPoint(x: 104, y: 112), CGPoint(x: 86, y: 114), CGPoint(x: 82, y: 94)]))
+        }
+        patchA = pa; patchB = pb; haunchPatchA = hpa; haunchPatchB = hpb
     }
 }
 
@@ -252,6 +274,9 @@ struct HeadGeometry {
     let pouches, cheekWhite, tears: Path
     /// A pup's pale blaze, from the crown to the muzzle.
     let blaze: Path
+    /// A calico's patches on the head (one side and the other), and a panda's
+    /// rings round the eyes.
+    let patchA, patchB, eyePatches: Path
     /// How far the nose and the mouth sit below the kitten's: a long muzzle
     /// carries them to its end.
     let drop: Double
@@ -403,6 +428,20 @@ struct HeadGeometry {
         var bl = Path()
         if plan.species == .puppy { bl.fur(0, -17.2, .pi / 2, 21 + drop * 0.4, 2.4) }
         blaze = bl
+        var pa = Path(), pb = Path(), ep = Path()
+        if !plan.patches.isEmpty {
+            pa = headOutline.intersection(.loop([CGPoint(x: -w - 4, y: -22), CGPoint(x: -1, y: -22), CGPoint(x: 3, y: -9), CGPoint(x: -5, y: -1), CGPoint(x: -w * 0.55, y: 3), CGPoint(x: -w - 4, y: -2)]))
+            pb = headOutline.intersection(.loop([CGPoint(x: 6, y: -22), CGPoint(x: w + 4, y: -22), CGPoint(x: w + 4, y: -2), CGPoint(x: w * 0.5, y: 2), CGPoint(x: 10, y: -8)]))
+        }
+        if plan.eyePatch != nil {
+            // A tilted oval round each eye, the outer end low: the panda's.
+            let spread = 9.6 * plan.eyeSpread
+            for s in [-1.0, 1] {
+                ep.addPath(Path(ellipseIn: CGRect(x: -5.2, y: -7.2, width: 10.4, height: 14.4))
+                    .applying(CGAffineTransform(translationX: s * (spread + 0.8), y: -1.2).rotated(by: s * 0.42)))
+            }
+        }
+        patchA = pa; patchB = pb; eyePatches = ep
     }
 
     /// A bunny's ear: a leaf that stands up, bent more and more along its

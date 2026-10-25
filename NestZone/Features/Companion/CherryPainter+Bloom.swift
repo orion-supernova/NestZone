@@ -54,15 +54,16 @@ extension CherryPainter {
 
     /// Yellow-green, then orange-red, then a deep glossy red: a pair is never both
     /// the same colour at once, and the season runs from the first to the last.
-    private static let stops: [(at: Double, skin: Skin)] = [
-        (0, Skin(hi: RGB(0xE2E890), mid: RGB(0x9FB650), shade: RGB(0x4E6B2A))),
-        (0.45, Skin(hi: RGB(0xFFC89A), mid: RGB(0xE8785A), shade: RGB(0xA63A2E))),
-        (1, Skin(hi: RGB(0xFF8A94), mid: RGB(0xC41A36), shade: RGB(0x5A0A1A)))]
+    /// From the tree's colourway (`TreeColours.cherry`).
+    private static func stops(_ colourway: Int) -> [(at: Double, skin: Skin)] {
+        TreeColours.cherry(colourway).map { ($0.at, Skin(hi: RGB($0.skin.hi), mid: RGB($0.skin.mid), shade: RGB($0.skin.shade))) }
+    }
 
     private func skin(_ ripe: Double) -> Skin {
         let M = core.M, day = core.day
-        var a = Self.stops[0], b = Self.stops[1]
-        for k in 0..<(Self.stops.count - 1) where ripe >= Self.stops[k].at { (a, b) = (Self.stops[k], Self.stops[k + 1]) }
+        let stops = Self.stops(core.canopy.colourway)
+        var a = stops[0], b = stops[1]
+        for k in 0..<(stops.count - 1) where ripe >= stops[k].at { (a, b) = (stops[k], stops[k + 1]) }
         let t = Ink.smooth((ripe - a.at) / (b.at - a.at))
         let s = Skin(hi: a.skin.hi.mix(b.skin.hi, t), mid: a.skin.mid.mix(b.skin.mid, t), shade: a.skin.shade.mix(b.skin.shade, t))
         let k = (0.62 + 0.38 * M.m) * (1 - 0.3 * M.doze), dull = RGB(0x7A5A52)

@@ -20,7 +20,13 @@ struct LemonPainter: TreeArt {
         let M = Canopy.Mood(mood)
         self.canopy = canopy
         let tones = Canopy.Tones(canopy.kind, M, day: day, growth: growth)
-        core = TreeCore(canopy, growth: growth, mood: mood, day: day, light: light, tones: tones, M: M, fresh: 0xC4D45A)
+        var core = TreeCore(canopy, growth: growth, mood: mood, day: day, light: light, tones: tones, M: M, fresh: 0xC4D45A)
+        if canopy.colourway == 1 {
+            // A variegated eureka: a share of the leaves are cream and pale green, drawn as the olive's turned-over ones are.
+            let r = tones.ramp, cream = RGB(0xF4F0B8), cool = RGB(0x3A5578), moon = core.light.moon
+            core.under = [r[2].mix(cream, 0.5), r[3].mix(cream, 0.56), r[4].mix(cream, 0.5)].map { $0.mix(cool, 0.4 * moon).color() }
+        }
+        self.core = core
         split = Self.heroIndex(canopy, core.pose)
     }
 
@@ -86,7 +92,8 @@ struct LemonPainter: TreeArt {
                 body.oval(x, y, r * 1.15, r * 0.82, 0.15)
                 tip.oval(x + r * 1.2, y + 0.3, r * 0.2, r * 0.15, 0.15)
                 context.fill(shadow, with: .color(SceneInk.shadow))
-                let sk = RGB.tone(0xC7B038, day: day), dk = RGB.tone(0x7A6A1C, day: day)
+                let fallen = TreeColours.lemon(canopy.colourway).dropped
+                let sk = RGB.tone(fallen.sk, day: day), dk = RGB.tone(fallen.dk, day: day)
                 body.addPath(tip)
                 context.fill(body, with: .radialGradient(Gradient(colors: [sk.mix(RGB(0xFFFFFF), 0.25).color(), sk.color(), dk.color()]),
                                                           center: CGPoint(x: x - 1.5, y: y - 1.5), startRadius: 0, endRadius: r * 1.5))

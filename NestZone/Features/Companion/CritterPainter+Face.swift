@@ -57,7 +57,12 @@ extension CritterPainter {
                     for (i, weight) in [(lo, 1 - f), (lo + 1, f)] where weight > 0.02 {
                         var p = e
                         if weight < 0.98 { p.opacity = weight }
-                        form(p, g.earBends[i], centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, light, coat, dark, highlight: 0.4, core: 0.9, L: eL)
+                        // A rabbit with dark points has dark ears all through.
+                        if let tone = earTone {
+                            form(p, g.earBends[i], centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, tone.mix(light, 0.3), tone, tone.shifted(-10, 2), highlight: 0.35, core: 0.9, L: eL)
+                        } else {
+                            form(p, g.earBends[i], centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, light, coat, dark, highlight: 0.4, core: 0.9, L: eL)
+                        }
                         p.fill(g.earInnerBends[i], with: .radialGradient(Gradient(colors: [look.accent.shifted(7).color(), look.accent.color(), look.accent.shifted(-12, -4).color()]),
                                                                           center: CGPoint(x: 0.4, y: -g.earHeight * 0.45), startRadius: 0, endRadius: g.earHeight * 0.55))
                     }
@@ -70,7 +75,14 @@ extension CritterPainter {
                     glow(e, g.ear, look.lifted(tone, 0.4), centre: CGPoint(x: 4, y: 8), radius: 8, alpha: 0.35)
                     continue
                 }
-                form(e, g.ear, centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, light, coat, dark, highlight: 0.4, core: 0.9, L: eL)
+                if plan.ears == .round, let tone = earTone {
+                    // Ears in a colour of their own, all through: a panda's black ones.
+                    form(e, g.ear, centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, tone.mix(light, 0.3), tone, tone.shifted(-10, 2), highlight: 0.35, core: 0.9, L: eL)
+                    continue
+                }
+                // A calico's ears take the colour of the patch on their side.
+                let patch = plan.patches.isEmpty ? nil : patchTones(plan.patches[s < 0 ? 0 : 1])
+                form(e, g.ear, centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, patch?.0 ?? light, patch?.1 ?? coat, patch?.2 ?? dark, highlight: 0.4, core: 0.9, L: eL)
                 if let tone = earTone, !hang {
                     // The back of the ear shows dark at its tip.
                     e.fill(g.earTip, with: .linearGradient(Gradient(stops: [.init(color: tone.color(0.96), location: 0), .init(color: tone.color(0.9), location: 0.55),
@@ -87,6 +99,8 @@ extension CritterPainter {
 
         // MARK: The head: cheek fur first, then the form, lit from the sky.
         form(h, g.headFur, centre: CGPoint(x: 0, y: 0), radius: w * 1.35, light, coat, coat.shifted(-7, 3), highlight: 0.5, core: 0.6)
+        patches(h, g.patchA, g.patchB, centre: .zero, radius: w * 1.35)
+        if let tone = plan.eyePatch { h.fill(g.eyePatches, with: .color(look.tone(tone, dim: 0.4).color(0.94))) }
         if plan.marks == .tabby {
             hairs(h, g.brow, dark: mark, light: light, alpha: 0.62)
             h.fill(g.liner, with: .color(mark.color(0.55)))

@@ -55,7 +55,7 @@ struct PomegranateCrown: Sendable {
 /// 10 across their range, the day in quarters) so the picture is the same
 /// to the eye and a tree easing in does not build it again every frame.
 final class LeafArt: @unchecked Sendable {
-    private struct Key: Hashable { var seed: UInt32, species: String, clumps: Int, mood: Int, light: Int, day: Int }
+    private struct Key: Hashable { var seed: UInt32, species: String, colourway: Int, clumps: Int, mood: Int, light: Int, day: Int }
     private static let entries = Mutex<[Key: LeafArt]>([:])
     /// Keyed on the species and the clump count as well as the seed: a new
     /// companion keeps the old seed until something graduates, and a crown
@@ -75,7 +75,7 @@ final class LeafArt: @unchecked Sendable {
 
     static func of(_ canopy: Canopy, mood: Double, light: Double, day: Double) -> LeafArt {
         let seed = Ink.hash(canopy.seed)
-        let key = Key(seed: seed, species: canopy.species.rawValue, clumps: canopy.clumps.count, mood: Int((mood * 40).rounded()),
+        let key = Key(seed: seed, species: canopy.species.rawValue, colourway: canopy.colourway, clumps: canopy.clumps.count, mood: Int((mood * 40).rounded()),
                       light: Int((light * 10).rounded()), day: Int((day * 4).rounded()))
         return entries.withLock { entries in
             if let found = entries[key] { return found }
@@ -132,7 +132,7 @@ final class LeafArt: @unchecked Sendable {
         self.canopy = canopy
         self.crown = crown
         seed = key.seed
-        spec = LeafSpec.of(canopy.species)
+        spec = LeafSpec.of(canopy.species, colourway: canopy.colourway)
         let M = Canopy.Mood(Double(key.mood) / 40)
         let sun = Self.sun(light: Double(key.light) / 10, day: Double(key.day) / 4)
         L = sun
@@ -208,7 +208,10 @@ final class LeafArt: @unchecked Sendable {
 
         func leaf(_ x: Double, _ y: Double, _ a0: Double, _ len0: Double, _ luck: Double) {
             let keep = r.next(), curlR = r.next(), glossR = r.next(), lenJ = r.next(), flip = r.next()
-            let over = spec.silver > 0 ? r.next() : 1
+            let over: Double
+            if spec.silver == 0 { over = 1 }
+            else if spec.silverByPlace { let h = sin(x * 127.1 + y * 311.7 + Double(i) * 74.7) * 43758.5453; over = h - h.rounded(.down) }
+            else { over = r.next() }
             // No two leaves quite parallel: a sprig is a fan, a crown should not be.
             let a = a0 + (flip - 0.5) * 0.5
             if keep < drop { return }

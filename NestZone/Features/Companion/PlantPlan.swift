@@ -62,6 +62,18 @@ struct PlantPlan: Equatable, Sendable {
         var petals: Int
         var size: Double = 1
         var bloom: Bloom
+        /// A second colour streaked through the petals (a Rembrandt tulip's
+        /// flames), 0 for none.
+        var streak: UInt32 = 0
+    }
+
+    /// A pattern of another colour on the leaves: cut once from each leaf shape
+    /// and kept (`LeafShape.variegation`), drawn as one more fill a tier.
+    struct Variegation: Equatable, Sendable {
+        /// A leaf half or a splash that is pale, a scatter of flecks, or a pale margin.
+        enum Pattern: Int, Sendable { case albo, flecks, margin }
+        var pattern: Pattern
+        var tone: UInt32
     }
 
     /// One flower stem of a tuft: how far off centre it stands, how tall it
@@ -76,6 +88,8 @@ struct PlantPlan: Equatable, Sendable {
     }
 
     var rule: Rule
+    /// Which colourway this plan is (0 the original). Colour and pattern only.
+    var colourway = 0
     /// The grown plant's height above the soil, and its reach either side.
     var height: Double
     var reach: Double
@@ -104,9 +118,26 @@ struct PlantPlan: Equatable, Sendable {
     /// Whether the plant's stems cross the pot's rim, so it is not cut at the
     /// soil line.
     var overRim = false
+    /// A colourway's extras: a pattern on the leaves, the four tones of a
+    /// pumpkin's skin (dark to light) and the colour of a sculpted plant's wood.
+    var variegation: Variegation?
+    var fruitTones: [UInt32]?
+    var barkTone: UInt32?
 
     /// The plan for a species, or `nil` while it is still a sketch.
     static func of(_ species: Species) -> PlantPlan? { table[species] }
+
+    /// The plan in one of its colourways (`PlantColours`); 0 is the original.
+    /// Looked up, never built, because the scene asks every frame.
+    static func of(_ species: Species, colourway: Int) -> PlantPlan? {
+        guard colourway > 0 else { return table[species] }
+        return coloured[species].flatMap { colourway <= $0.count ? $0[colourway - 1] : nil } ?? table[species]
+    }
+
+    private static let coloured: [Species: [PlantPlan]] = Dictionary(
+        uniqueKeysWithValues: Species.allCases.compactMap { species in
+            table[species].map { plan in (species, (1...Colourway.count).map { plan.coloured(species, $0) }) }
+        })
 
     private static let table: [Species: PlantPlan] = Dictionary(
         uniqueKeysWithValues: Species.allCases.compactMap { species in PlantPlan(species).map { (species, $0) } })

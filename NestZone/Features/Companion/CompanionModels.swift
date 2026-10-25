@@ -380,13 +380,14 @@ public struct Companion: Codable, Equatable, Sendable {
     /// original. Drawn as `colourway: colour ?? 0`.
     public var colour: Int?
 
-    public init(species: Species, seed: String, startedAt: Date) {
+    public init(species: Species, seed: String, startedAt: Date, colour: Int? = nil) {
         self.species = species
         self.seed = seed
         self.startedAt = startedAt
+        self.colour = colour
     }
 
-    enum CodingKeys: String, CodingKey { case species, seed, startedAt, careDays, lastCareAt }
+    enum CodingKeys: String, CodingKey { case species, seed, startedAt, careDays, lastCareAt, colour }
 
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -395,7 +396,12 @@ public struct Companion: Codable, Equatable, Sendable {
         startedAt = try c.decode(Date.self, forKey: .startedAt)
         careDays = (try? c.decodeIfPresent([String].self, forKey: .careDays)) ?? []
         lastCareAt = try? c.decodeIfPresent(Date.self, forKey: .lastCareAt)
+        colour = (try? c.decodeIfPresent(Int.self, forKey: .colour)) ?? nil
     }
+
+    /// Which colourway is drawn: 0 is the original. On a Debug build
+    /// `-nestieColour <n>` stands in for a companion that has none.
+    public var colourway: Int { Colourway.drawn(colour) }
 }
 
 /// A companion that grew up, as its album card remembers it.
@@ -407,6 +413,9 @@ public struct Graduate: Codable, Equatable, Identifiable, Sendable {
     public var graduatedAt: Date
     /// The colourway it grew in; `nil` is the original.
     public var colour: Int?
+
+    /// Which colourway its card draws: 0 is the original.
+    public var colourway: Int { Colourway.clamp(colour) }
 
     public var days: Int {
         max(Calendar.current.dateComponents([.day], from: startedAt, to: graduatedAt).day ?? 0, 1)

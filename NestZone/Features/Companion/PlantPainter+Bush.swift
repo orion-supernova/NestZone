@@ -53,7 +53,7 @@ extension PlantPainter {
                     young.add(shape, base: start, angle: angle, length: length, light: L, bright: b, glossy: true)
                     young.stalks.addPath(Self.ribbon([base, start], 2, 1.6))
                 } else {
-                    tiers[tier].add(shape, base: start, angle: angle, length: length, light: L, bright: b, glossy: true)
+                    tiers[tier].add(shape, base: start, angle: angle, length: length, light: L, bright: b, glossy: true, vary: plan.variegation)
                     if petiole > 0.5 { tiers[tier].stalks.addPath(Self.ribbon([base, start], 2.2, 1.8)) }
                 }
             }
