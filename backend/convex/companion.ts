@@ -55,6 +55,8 @@ import {
   cleanLayout,
   cleanOffset,
   cleanRegion,
+  colourKey,
+  colourOpen,
   dayOf,
   dayStart,
   dayTally,
@@ -62,7 +64,9 @@ import {
   ensureHouse,
   growthKind,
   growthSource,
+  grownAllFree,
   houseFor,
+  isColour,
   isDay,
   isEmptyLayout,
   isPetSpecies,
@@ -174,6 +178,15 @@ const houseValue = v.object({
    * them all" reward reads it. Bounded by the catalog.
    */
   grownSpecies: v.array(v.string()),
+  /**
+   * When the house first grew every `freeToHave` species, by the graduation
+   * that did it. `null` before that, and also for a house that got there
+   * before this was recorded: that house has reached the finale all the same
+   * (every `freeToHave` id in `grownSpecies`), there is just no moment to play.
+   */
+  finaleAt: v.union(v.number(), v.null()),
+  /** The colourways grown after the finale, `"<species>:<colour>"`, sorted. Bounded by the catalog × 3. */
+  grownColours: v.array(v.string()),
 });
 
 const currentValue = v.object({
@@ -208,6 +221,8 @@ const currentValue = v.object({
    * vote's first option; draw a seed (or an egg), not it.
    */
   undecided: v.boolean(),
+  /** The colourway, 1–3, or `null` for the original. */
+  colour: v.union(v.number(), v.null()),
 });
 
 const voteOptionValue = v.object({
@@ -253,6 +268,8 @@ const graduateValue = v.object({
   seed: v.string(),
   startedAt: v.number(),
   graduatedAt: v.number(),
+  /** The colourway it grew in, 1–3, or `null` for the original. */
+  colour: v.union(v.number(), v.null()),
 });
 
 const recentValue = v.object({
@@ -396,6 +413,8 @@ export const forHome = query({
         tzOffset: house.tz_offset ?? null,
         albumCount: house.album_count,
         grownSpecies: [...(house.grown_species ?? [])].sort(),
+        finaleAt: house.finale_at ?? null,
+        grownColours: [...(house.grown_colours ?? [])].sort(),
       },
       current: growing && ready
         ? {
@@ -413,6 +432,7 @@ export const forHome = query({
             lastCareAt: growing.last_care_at ?? null,
             myCareDays: care.map((row) => row.day),
             undecided: growing.undecided === true,
+            colour: growing.colour ?? null,
           }
         : null,
       recent: recent.map((row) => ({ kind: row.kind, at: row.at, userId: row.user_id ?? null })),
@@ -448,6 +468,7 @@ export const album = query({
       seed: c.seed,
       startedAt: c.started_at,
       graduatedAt: c.graduated_at ?? c.started_at,
+      colour: c.colour ?? null,
     }));
   },
 });
@@ -489,6 +510,14 @@ function readiness(
  * Into the album, the graduation into the jar, and the house free to choose
  * the next. The caller has checked `readiness`. Paid once per album slot
  * (`graduation:<slot>`), as stages are, and only here does the slot move.
+ *
+ * A coloured one goes into `grown_colours`, and its species into
+ * `grown_species` as ever (it is already there: a colour is only offered on
+ * a species grown). `finale` is true on the one graduation that first
+ * completes `freeToHave`, which stamps `finale_at` with its own
+ * `graduated_at`; only once, because the next finds `finale_at` set, and a
+ * house that was already complete before this graduation (one from before
+ * `finale_at` existed) gets no moment, rather than a late one.
  */
 async function graduateNow(
   ctx: MutationCtx,
@@ -496,15 +525,23 @@ async function graduateNow(
   companion: Doc<"companions">,
   userId: Id<"users">,
   now: number,
-): Promise<{ paid: { leaves: number; sparkles: number } | null }> {
+): Promise<{ paid: { leaves: number; sparkles: number } | null; finale: boolean }> {
   const slot = house.album_count;
   await ctx.db.patch(companion._id, { status: "graduated", graduated_at: now });
+  const wasComplete = grownAllFree(house.grown_species);
   const grown = new Set(house.grown_species ?? []);
   grown.add(companion.species);
+  const finale = house.finale_at === undefined && !wasComplete && grownAllFree(grown);
+  const colours = new Set(house.grown_colours ?? []);
+  if (companion.colour !== undefined && isColour(companion.colour)) {
+    colours.add(colourKey(companion.species, companion.colour));
+  }
   await ctx.db.patch(house._id, {
     current_id: undefined,
     album_count: slot + 1,
     grown_species: [...grown].sort(),
+    ...(colours.size > (house.grown_colours ?? []).length ? { grown_colours: [...colours].sort() } : {}),
+    ...(finale ? { finale_at: now } : {}),
     updated: now,
   });
   const coins = CATALOG.rewards.graduation;
@@ -516,7 +553,7 @@ async function graduateNow(
     userId,
     companionId: companion._id,
   });
-  return { paid: paid ? coins : null };
+  return { paid: paid ? coins : null, finale };
 }
 
 /**
@@ -1096,6 +1133,15 @@ export const setPlace = mutation({
  * the card. A later `graduate` for it finds it graduated and pays nothing.
  * The species is checked against the house after that graduation, so what
  * it earns (a graduation count, "grown them all") counts for this choice.
+ *
+ * `colour` (1–3) grows a species again in a new colourway, after the finale:
+ * every `freeToHave` species grown, this species among those grown, and this
+ * colourway not grown yet (`colourOpen`), also checked after any graduation,
+ * so the graduation that completes the finale can be followed by a colour in
+ * the same write. Refused otherwise with "There's no such colour" (not an
+ * integer 1–3) or "That colour can't be grown yet". Without it nothing
+ * changes: a species already grown may be grown again in its original
+ * colour, as it always could.
  */
 export const start = mutation({
   args: {
@@ -1106,6 +1152,8 @@ export const start = mutation({
      * the house's current, returns the first answer and starts nothing.
      */
     requestId: v.optional(v.string()),
+    /** The colourway, an integer 1–3, after the finale. Absent or null is the original. */
+    colour: v.optional(v.union(v.number(), v.null())),
     ...placeArgs,
   },
   returns: v.object({
@@ -1118,27 +1166,43 @@ export const start = mutation({
         companionId: v.id("companions"),
         species: v.string(),
         paid: v.union(coinsValue, v.null()),
+        /**
+         * This graduation was the house's finale: the first time every
+         * `freeToHave` species had been grown. Present (true) on that one
+         * graduation only, and on a retry of the same `requestId`, which
+         * reports the same graduation again; absent otherwise.
+         */
+        finale: v.optional(v.boolean()),
       }),
       v.null(),
     ),
   }),
-  handler: async (ctx, { homeId, species, requestId, tzOffset, region }) => {
+  handler: async (ctx, { homeId, species, requestId, colour: sent, tzOffset, region }) => {
+    // A client that writes "no colour" as null means the original, as absent does.
+    const colour = sent ?? undefined;
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, homeId);
     if (!SPECIES.has(species)) throw new Error("There's no such companion");
+    if (colour !== undefined && !isColour(colour)) throw new Error("There's no such colour");
     let house = await ensureHouse(ctx, homeId, { tzOffset, region });
     const now = Date.now();
     const request = requestId?.trim().slice(0, 128) || undefined;
 
     const previous = house.current_id ? await ctx.db.get(house.current_id) : null;
     // A retry of the call that started the one growing: the same answer,
-    // nothing released, nothing started, nothing paid again.
+    // nothing released, nothing started, nothing paid again. The finale is
+    // said again if the graduation it reports was the one that stamped it
+    // (they share `now`), since the first answer may never have arrived.
     if (request !== undefined && previous?.start_request === request) {
       const followed = previous.follows ? await ctx.db.get(previous.follows) : null;
+      const finale =
+        followed !== null && house.finale_at !== undefined && followed.graduated_at === house.finale_at;
       return {
         companionId: previous._id,
         welcome: null,
-        graduated: followed ? { companionId: followed._id, species: followed.species, paid: null } : null,
+        graduated: followed
+          ? { companionId: followed._id, species: followed.species, paid: null, ...(finale ? { finale: true } : {}) }
+          : null,
       };
     }
     // A seed the house hasn't chosen yet: this is the choice, and it keeps
@@ -1166,8 +1230,13 @@ export const start = mutation({
         });
         await closePoll(ctx, vote.poll_id, now);
       }
+      // Nothing graduated on this path, so the house as read is the house.
+      // A refusal throws, which undoes the vote's close above too.
+      if (colour !== undefined && !colourOpen(house, species, colour)) {
+        throw new Error("That colour can't be grown yet");
+      }
       const welcome = await chooseSeed(ctx, house, previous, species, user._id, now);
-      await ctx.db.patch(previous._id, { start_request: request });
+      await ctx.db.patch(previous._id, { start_request: request, colour });
       if (home) await announceArrived(ctx, previous._id, home, user._id);
       return { companionId: previous._id, welcome, graduated: null };
     }
@@ -1180,7 +1249,9 @@ export const start = mutation({
     if (previous?.status === "growing" && previous.vote_id && !readiness(house, previous, now).isReady) {
       const vote = await ctx.db.get(previous.vote_id);
       if (vote?.status === "closed" && vote.winner !== undefined && vote.how !== "picked") {
-        if (species !== previous.species) throw new Error("The house already chose");
+        // The vote chose a species in its original colour; a colour on top is
+        // a different choice, and the house's stands.
+        if (species !== previous.species || colour !== previous.colour) throw new Error("The house already chose");
         return { companionId: previous._id, welcome: null, graduated: null };
       }
     }
@@ -1189,15 +1260,22 @@ export const start = mutation({
     if (
       previous?.status === "growing" &&
       previous.species === species &&
+      // An older build knows nothing of colours: its tap on the same species
+      // is the same tap, and must not let go of a colour just chosen.
+      (previous.colour === colour || colour === undefined) &&
       now - (previous.chosen_at ?? previous.created) < 10_000
     ) {
       return { companionId: previous._id, welcome: null, graduated: null };
     }
-    let graduated: { companionId: Id<"companions">; species: string; paid: { leaves: number; sparkles: number } | null } | null =
-      null;
+    let graduated: {
+      companionId: Id<"companions">;
+      species: string;
+      paid: { leaves: number; sparkles: number } | null;
+      finale?: boolean;
+    } | null = null;
     if (previous && readiness(house, previous, now).isReady) {
-      const { paid } = await graduateNow(ctx, house, previous, user._id, now);
-      graduated = { companionId: previous._id, species: previous.species, paid };
+      const { paid, finale } = await graduateNow(ctx, house, previous, user._id, now);
+      graduated = { companionId: previous._id, species: previous.species, paid, ...(finale ? { finale: true } : {}) };
       house = (await ctx.db.get(house._id))!;
     } else if (previous?.status === "growing") {
       await ctx.db.patch(previous._id, { status: "released" });
@@ -1205,6 +1283,9 @@ export const start = mutation({
     // Checked after any graduation; a refusal throws, which undoes it too.
     if (!isUsable(standingOfSpecies(species, shopContext(house, now)))) {
       throw new Error("That one can't be grown yet");
+    }
+    if (colour !== undefined && !colourOpen(house, species, colour)) {
+      throw new Error("That colour can't be grown yet");
     }
 
     const companionId = await ctx.db.insert("companions", {
@@ -1221,6 +1302,7 @@ export const start = mutation({
       created: now,
       start_request: request,
       follows: graduated?.companionId,
+      colour,
     });
     // Its one wake, at the floor.
     await wakeAtFloor(ctx, companionId, now);
@@ -1275,6 +1357,12 @@ export const graduate = mutation({
      * repeat call, which opens nothing.
      */
     vote: v.optional(v.union(v.id("polls"), v.null())),
+    /**
+     * This graduation was the house's finale (the first time every
+     * `freeToHave` species had been grown): true on that one call and on a
+     * repeat of it (its first answer may have been lost), absent otherwise.
+     */
+    finale: v.optional(v.boolean()),
   }),
   handler: async (ctx, { homeId, companionId }) => {
     const user = await requireUser(ctx);
@@ -1282,15 +1370,21 @@ export const graduate = mutation({
     const companion = await ctx.db.get(companionId);
     if (!companion || companion.home_id !== homeId) throw new Error("Companion not found");
     await requireDocHome(ctx, companion, "Companion");
-    if (companion.status === "graduated") return { paid: null };
+    if (companion.status === "graduated") {
+      // A retry after a lost answer: the finale is told again, as a retried
+      // `start` tells it, or the phone that grew it would never hear.
+      const done = await houseFor(ctx, homeId);
+      const wasFinale = done?.finale_at !== undefined && done.finale_at === companion.graduated_at;
+      return wasFinale ? { paid: null, finale: true } : { paid: null };
+    }
     const house = await ensureHouse(ctx, homeId);
     const now = Date.now();
     // The points, the six-day floor, and only the one growing: one let go
     // can't be brought back for a second reward.
     if (!readiness(house, companion, now).isReady) throw new Error("Not grown up yet");
-    const { paid } = await graduateNow(ctx, house, companion, user._id, now);
+    const { paid, finale } = await graduateNow(ctx, house, companion, user._id, now);
     const vote = await openVote(ctx, home, companion, user._id, now);
-    return { paid, vote };
+    return { paid, vote, ...(finale ? { finale: true } : {}) };
   },
 });
 
