@@ -21,13 +21,13 @@ struct PlantLayer: View, Equatable {
     }
 
     /// The plant on the scene's soil. Cut to it, so roots and a seed go into
-    /// the earth, except a vine, whose stem trails over the pot's rim.
+    /// the earth, except a plant whose stems cross the pot's rim (`PlantPlan.overRim`).
     static func paint(_ context: GraphicsContext, size: CGSize, plan: PlantPlan, state: TreeState) {
         let scale = size.height / SceneSpace.height
         var plant = context
         plant.scaleBy(x: scale, y: scale)
         plant.translateBy(x: size.width / scale / 2, y: SceneSpace.soil)
-        if plan.rule != .vine {
+        if !plan.overRim {
             var above = Path(CGRect(x: -size.width, y: -SceneSpace.soil, width: size.width * 2, height: SceneSpace.soil))
             above.addEllipse(in: SceneSpace.soilSurface)
             plant.clip(to: above)

@@ -155,6 +155,12 @@ struct PlantPainter {
         case .vine: vine(context, &marks)
         case .tuft: tuft(context, &marks)
         case .cane: cane(context, &marks)
+        case .sprig: sprig(context, &marks)
+        case .blades: blades(context, &marks)
+        case .frond: frond(context, &marks)
+        case .spray: spray(context, &marks)
+        case .sculpt: sculpt(context, &marks)
+        case .trail: trail(context, &marks)
         }
         return marks
     }
@@ -283,6 +289,64 @@ extension PlantPainter {
             kernel.ellipse(-0.6, -0.5, 3, 1.5, .color(RGB.night(100, 34, 54, day: day, dim: 0.8).color()))
             kernel.ellipse(-3.8, 1.2, 1.2, 0.8, .color(RGB.night(24, 40, 50, day: day, dim: 0.8).color()))
             kernel.ellipse(-1.2, -1.1, 1.3, 0.6, .color(Color.white.opacity(0.4)))
+        case .sprig:
+            // A cutting: a bare stub of stem with two small leaves.
+            var stub = Path(), leaves = Path()
+            stub.addPath(Self.ribbon([CGPoint(x: -2.5, y: 1.5), CGPoint(x: 0, y: -2), CGPoint(x: 2, y: -6)], 2.2, 1.4))
+            leaves.leaf(1.6, -5, 0.8, -0.6, 4.6, 1.5, 0.3)
+            leaves.leaf(0.8, -3.6, -0.8, -0.6, 4.2, 1.4, 0.3)
+            kernel.fill(stub, with: .color(RGB.night(24, 30, 34, day: day, dim: 0.8).color()))
+            kernel.fill(leaves, with: .color(RGB.night(120, 44, 40, day: day, dim: 0.8).color()))
+        case .rhizome:
+            // A snake plant's: pale, fat knuckles of rhizome with a pink eye.
+            for (x, y, r) in [(-3.6, 0.4, 3.2), (0.6, -0.4, 3.6), (4.6, 0.6, 2.6)] {
+                kernel.ellipse(x, y, r, r * 0.62, .color(RGB.night(64, 30, 62, day: day, dim: 0.8).color()))
+                kernel.ellipse(x - 0.5, y - 0.8, r * 0.55, r * 0.22, .color(RGB.night(70, 30, 78, day: day, dim: 0.8).color(0.8)))
+            }
+            kernel.ellipse(1.6, -2, 0.9, 0.6, .color(RGB.night(340, 50, 66, day: day, dim: 0.8).color()))
+        case .spore:
+            // Dust of spores, and one tiny coil.
+            var dust = Path()
+            for (x, y, r) in [(-4.2, 0.4, 0.8), (-2.4, -0.6, 0.7), (-0.4, 0.5, 0.9), (1.6, -0.5, 0.7), (3.4, 0.3, 0.8), (-1.2, -1.6, 0.6), (2.4, -1.4, 0.6)] {
+                dust.addEllipse(in: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2))
+            }
+            kernel.fill(dust, with: .color(RGB.night(28, 44, 28, day: day, dim: 0.8).color()))
+            kernel.stroke(Path { $0.addArc(center: CGPoint(x: 0, y: -4), radius: 1.6, startAngle: .degrees(60), endAngle: .degrees(330), clockwise: false) },
+                          with: .color(RGB.night(92, 40, 52, day: day, dim: 0.8).color()), lineWidth: 1)
+        case .bark:
+            // An orchid starts on bark: a chip with a silver root and a green tip.
+            var chip = Path()
+            chip.addRoundedRect(in: CGRect(x: -5.4, y: -2.2, width: 10.8, height: 4.2), cornerSize: CGSize(width: 1.8, height: 1.8))
+            kernel.fill(chip, with: .color(RGB.night(24, 32, 30, day: day, dim: 0.8).color()))
+            kernel.ellipse(-1, -1.6, 3.6, 0.9, .color(RGB.night(26, 34, 44, day: day, dim: 0.8).color(0.8)))
+            kernel.ellipse(5.6, 1.4, 2.6, 0.9, .color(RGB.night(110, 12, 66, day: day, dim: 0.8).color()))
+            kernel.ellipse(7.6, 1.4, 0.8, 0.8, .color(RGB.night(88, 56, 62, day: day, dim: 0.8).color()))
+        case .acorn:
+            // A bonsai's: an acorn with a cap.
+            kernel.ellipse(0, 0.4, 3.2, 4.2, .color(RGB.night(30, 52, 40, day: day, dim: 0.8).color()))
+            kernel.ellipse(-0.8, -0.4, 1.2, 2.4, .color(RGB.night(34, 50, 56, day: day, dim: 0.8).color(0.8)))
+            kernel.ellipse(0, -3, 3.8, 2, .color(RGB.night(26, 34, 26, day: day, dim: 0.8).color()))
+            kernel.ellipse(0, -5, 0.7, 0.9, .color(RGB.night(26, 34, 22, day: day, dim: 0.8).color()))
+        case .winged:
+            // A maple key: a seed and a wing.
+            var wing = Path()
+            wing.leaf(0, -1, 0.6, -0.8, 9, 2.6, 0.2)
+            kernel.fill(wing, with: .color(RGB.night(40, 44, 70, day: day, dim: 0.8).color(0.9)))
+            kernel.ellipse(-0.4, 0.4, 2.2, 2.6, .color(RGB.night(30, 50, 40, day: day, dim: 0.8).color()))
+            kernel.ellipse(-1.2, -0.4, 0.8, 1.2, .color(Color.white.opacity(0.4)))
+        case .cone:
+            // A pine cone: brown scales in rows.
+            kernel.ellipse(0, -1, 3.4, 4.6, .color(RGB.night(26, 46, 30, day: day, dim: 0.8).color()))
+            var scales = Path()
+            for r in 0..<4 { scales.addEllipse(in: CGRect(x: -3 + 0.4 * Double(r % 2), y: -4.6 + 2.2 * Double(r), width: 5.6, height: 1.2)) }
+            kernel.fill(scales, with: .color(RGB.night(24, 36, 52, day: day, dim: 0.8).color(0.8)))
+        case .flat:
+            // A pumpkin seed: a flat, pale teardrop with a rim.
+            var body = Path()
+            body.leaf(-4, 0, 1, 0, 8.4, 2.9, 0.1)
+            kernel.fill(body, with: .color(RGB.night(46, 40, 78, day: day, dim: 0.8).color()))
+            kernel.fill(body.offsetBy(dx: 0.3, dy: 0.2), with: .color(RGB.night(46, 34, 90, day: day, dim: 0.8).color(0.5)))
+            kernel.ellipse(-1.4, -0.4, 2.4, 0.6, .color(Color.white.opacity(0.4)))
         }
         _ = (pale, shade)
     }
@@ -390,11 +454,15 @@ extension Path {
 extension PlantPainter {
     /// A stem: its shade, the lit edge towards the light, and a thin bright
     /// streak of the sun's colour on it.
-    func paint(_ c: GraphicsContext, stem outline: Path, along points: [CGPoint], width: Double, tier: Int = 1) {
+    func paint(_ c: GraphicsContext, stem outline: Path, along points: [CGPoint], width: Double, tier: Int = 1, tint: UInt32 = 0) {
         let box = outline.boundingRect
         let side = L.x >= 0 ? 1.0 : -1.0
+        // A stem with a colour of its own (mint's is plum) takes it through the
+        // shade and the middle and keeps a green light on its edge.
+        let wood = tint == 0 ? nil : RGB.tone(tint, day: day, dim: 0.85)
+        func toned(_ i: Int, _ amount: Double) -> RGB { wood.map { ramp[i].mix($0, amount) } ?? ramp[i] }
         c.fill(outline, with: .linearGradient(
-            Gradient(colors: [ramp[tier + 2].mix(glow, 0.08 * (1 - night)).color(), ramp[tier + 1].color(), ramp[tier].shifted(-3).color()]),
+            Gradient(colors: [toned(tier + 2, 0.35).mix(glow, 0.08 * (1 - night)).color(), toned(tier + 1, 0.6).color(), toned(tier, 0.7).shifted(-3).color()]),
             startPoint: CGPoint(x: box.midX + side * box.width * 0.5, y: box.midY), endPoint: CGPoint(x: box.midX - side * box.width * 0.5, y: box.midY)))
         guard points.count > 2 else { return }
         let shift = side * width * 0.2

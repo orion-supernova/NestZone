@@ -162,10 +162,44 @@ extension Price {
 
 extension CompanionMath {
     /// "Sapling", "Little one" — or "Grown" once it is ready. A plant in a pot
-    /// (`Species.growsInPot`) has stages of its own: it was never a tree.
-    static func stageTitle(_ stage: Int, isPet: Bool, isReady: Bool, potted: Bool = false) -> LocalizedStringResource {
+    /// (`Species.growsInPot`) has stages of its own: it was never a tree, and not
+    /// every one of them blooms (`Species.stageWords`).
+    static func stageTitle(_ stage: Int, isPet: Bool, isReady: Bool, potted: Bool = false, species: Species? = nil) -> LocalizedStringResource {
         if isReady { return isPet ? L10n.petStageGrown : L10n.plantStageGrown }
         if potted, !isPet {
+            switch species?.stageWords ?? .blooming {
+            case .blooming:
+                break
+            case .foliage:
+                // A fern or a snake plant never flowers: it fills out.
+                return switch stage {
+                case 0: L10n.plantStageSeed
+                case 1: L10n.plantStageSprout
+                case 2: L10n.plantStageSeedling
+                case 3: L10n.plantStageLeafing
+                case 4: L10n.plantStageFilling
+                default: L10n.plantStageLush
+                }
+            case .woody:
+                // A bonsai, a maple and a pine are shaped, not bloomed.
+                return switch stage {
+                case 0: L10n.plantStageSeed
+                case 1: L10n.plantStageSprout
+                case 2: L10n.plantStageSeedling
+                case 3: L10n.plantStageSapling
+                case 4: L10n.plantStageShaping
+                default: L10n.plantStageGrown
+                }
+            case .fruiting:
+                return switch stage {
+                case 0: L10n.plantStageSeed
+                case 1: L10n.plantStageSprout
+                case 2: L10n.plantStageSeedling
+                case 3: L10n.plantStageLeafing
+                case 4: L10n.plantStageFruiting
+                default: L10n.plantStageRipe
+                }
+            }
             return switch stage {
             case 0: L10n.plantStageSeed
             case 1: L10n.plantStageSprout
@@ -449,8 +483,22 @@ extension Species {
     var growsInPot: Bool {
         switch self {
         case .basil, .sunflower, .cactus, .daisy, .mint, .rosemary, .snakePlant, .fern, .lavender, .peony, .monstera,
-             .rose, .orchid, .tulip, .pumpkin, .snowdrop: true
+             .rose, .orchid, .tulip, .pumpkin, .snowdrop, .bonsai, .maple, .pine: true
         default: false
+        }
+    }
+
+    /// The words for the last stages of a potted plant: most bloom; a fern and
+    /// a snake plant fill out; a bonsai, a maple and a pine are shaped; a
+    /// pumpkin sets fruit and ripens.
+    enum StageWords { case blooming, foliage, woody, fruiting }
+
+    var stageWords: StageWords {
+        switch self {
+        case .fern, .snakePlant: .foliage
+        case .bonsai, .maple, .pine: .woody
+        case .pumpkin: .fruiting
+        default: .blooming
         }
     }
 }

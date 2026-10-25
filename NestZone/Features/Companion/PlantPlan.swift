@@ -21,14 +21,36 @@ import Foundation
 /// - `cane`: woody canes that arch out with compound leaves, thorns and a bloom
 ///   at the tip: a rose. A climbing rose or a bramble is the same canes with
 ///   longer reach.
+///
+/// Round B added the rules the first eight could not say:
+///
+/// - `sprig`: upright woody stems dressed in needles, with tiny flowers in the
+///   leaf axils: rosemary (thyme or sage would be the same stems).
+/// - `blades`: a clump of sword leaves that rise out of the soil, banded and
+///   edged: a snake plant (an aloe or an agave are blades with other numbers).
+/// - `frond`: arching pinnate fronds out of a crown, and the young ones still
+///   curled in a spiral: a fern.
+/// - `spray`: broad leaves at the foot, aerial roots, and one flower spike that
+///   arches over carrying a row of blooms: an orchid.
+/// - `sculpt`: a trunk with branches that end in pads of foliage, grown for its
+///   shape: a bonsai, a potted maple and a potted pine differ in the pad.
+/// - `trail`: a vine that creeps over the pot's rim, with big leaves, tendrils,
+///   a flower and a fruit: a pumpkin.
+///
+/// Mint is a `bush` (the leaf, the stem's colour and runners over the rim are
+/// its numbers) and lavender and snowdrop are `tuft`s (a spike of tiny florets
+/// and a row of nodding bells are their blooms).
 struct PlantPlan: Equatable, Sendable {
-    enum Rule: Sendable { case stalk, bush, column, vine, tuft, cane }
+    enum Rule: Sendable { case stalk, bush, column, vine, tuft, cane, sprig, blades, frond, spray, sculpt, trail }
 
     /// What a bloom is, which says how its head is built.
-    enum Bloom: Sendable { case none, sunflower, spike, cactus, daisy, tulip, peony, rose }
+    enum Bloom: Sendable { case none, sunflower, spike, cactus, daisy, tulip, peony, rose, lavender, snowdrop, orchid, rosemary, pumpkin }
 
     /// What the seed looks like in the soil, so it is the species' own.
-    enum SeedLook: Sendable { case husk, dot, bulb, tuber, hip, cutting }
+    enum SeedLook: Sendable { case husk, dot, bulb, tuber, hip, cutting, sprig, rhizome, spore, bark, acorn, winged, cone, flat }
+
+    /// What a `sculpt`'s pads are made of.
+    enum Pad: Sendable { case none, leafy, maple, conifer }
 
     struct Flower: Equatable, Sendable {
         /// The petal's deep, middle and pale tones, and the heart of the bloom.
@@ -48,6 +70,9 @@ struct PlantPlan: Equatable, Sendable {
     struct Stem: Equatable, Sendable {
         var x, height, born, opens: Double
         var size = 1.0
+        /// How far the tip hooks over, so a bloom hangs from it (a snowdrop's
+        /// bell); 0 for a stem that stands.
+        var arch = 0.0
     }
 
     var rule: Rule
@@ -70,6 +95,15 @@ struct PlantPlan: Equatable, Sendable {
     /// Leaves on each flower stem.
     var stemLeaves = 0
     var seedLook = SeedLook.husk
+    /// What a bush's stem is tinted (mint's is plum), 0 for green, and how many
+    /// runners it throws over the pot's rim.
+    var stemTint: UInt32 = 0
+    var runners = 0
+    /// A sculpted plant's pads.
+    var pad = Pad.none
+    /// Whether the plant's stems cross the pot's rim, so it is not cut at the
+    /// soil line.
+    var overRim = false
 
     /// The plan for a species, or `nil` while it is still a sketch.
     static func of(_ species: Species) -> PlantPlan? { table[species] }
@@ -104,6 +138,7 @@ struct PlantPlan: Equatable, Sendable {
                       ramp: [0x123A2E, 0x1B5A40, 0x2A7E4B, 0x47A45A, 0x98D08A],
                       leaf: .monstera3, leafLength: 60, flower: nil)
             seedLook = .cutting
+            overRim = true
         case .daisy:
             self.init(rule: .tuft, height: 132, reach: 62,
                       ramp: [0x1E5230, 0x2F7A3C, 0x4A9C45, 0x7CC055, 0xC5E88A],
@@ -141,6 +176,90 @@ struct PlantPlan: Equatable, Sendable {
             basalLength = 40
             stemLeaves = 1
             seedLook = .tuber
+        case .mint:
+            self.init(rule: .bush, height: 118, reach: 84,
+                      ramp: [0x18502F, 0x27793A, 0x41A044, 0x76C85A, 0xC2EE8C],
+                      leaf: .mint, leafLength: 38,
+                      flower: Flower(deep: 0x8A5FC0, mid: 0xB89AE0, pale: 0xEADFF8, heart: 0x9CCB6A, petals: 4, size: 0.72, bloom: .spike))
+            stemTint = 0x8A3E5A
+            runners = 2
+            seedLook = .sprig
+            overRim = true
+        case .rosemary:
+            self.init(rule: .sprig, height: 152, reach: 64,
+                      ramp: [0x27493A, 0x3C6A52, 0x5C8C6C, 0x8EB38C, 0xD0DEC4],
+                      leaf: .strap, leafLength: 13,
+                      flower: Flower(deep: 0x6C7CCE, mid: 0x9DB0EC, pale: 0xDCE6FB, heart: 0xF4F0FF, petals: 3, bloom: .rosemary))
+            seedLook = .sprig
+        case .snakePlant:
+            self.init(rule: .blades, height: 150, reach: 54,
+                      ramp: [0x14382E, 0x1F5340, 0x2D7452, 0x4D9C6C, 0xA6D4A2],
+                      leaf: .strap, leafLength: 15, flower: nil)
+            spine = 0xE6D06C
+            basal = 7
+            seedLook = .rhizome
+        case .fern:
+            self.init(rule: .frond, height: 118, reach: 96,
+                      ramp: [0x164A2B, 0x247239, 0x3D9A45, 0x6EC05A, 0xB8EA88],
+                      leaf: .pinna, leafLength: 21, flower: nil)
+            basal = 9
+            seedLook = .spore
+            overRim = true
+        case .lavender:
+            self.init(rule: .tuft, height: 142, reach: 62,
+                      ramp: [0x2D5846, 0x487A5C, 0x6E9C78, 0x9CC098, 0xD6E8CA],
+                      leaf: .needle, leafLength: 72,
+                      flower: Flower(deep: 0x4E3592, mid: 0x7D58C8, pale: 0xBFA4EE, heart: 0x35246E, anther: 0xE4D6FF, petals: 5, size: 1, bloom: .lavender))
+            stems = [Stem(x: -4, height: 112, born: 0.3, opens: 0.66), Stem(x: 16, height: 98, born: 0.28, opens: 0.72, size: 0.95),
+                     Stem(x: -24, height: 94, born: 0.34, opens: 0.78, size: 0.95), Stem(x: 30, height: 80, born: 0.4, opens: 0.86, size: 0.9),
+                     Stem(x: -14, height: 84, born: 0.44, opens: 0.92, size: 0.9), Stem(x: -36, height: 68, born: 0.5, opens: 0.96, size: 0.85),
+                     Stem(x: 42, height: 64, born: 0.52, opens: 0.98, size: 0.85)]
+            basal = 15
+            basalLength = 64
+            stemLeaves = 0
+            seedLook = .dot
+        case .orchid:
+            self.init(rule: .spray, height: 156, reach: 84,
+                      ramp: [0x133C2B, 0x1E5B3D, 0x2D7E4F, 0x49A065, 0xA4D69E],
+                      leaf: .broad, leafLength: 78,
+                      flower: Flower(deep: 0xC24C8E, mid: 0xFCE0EE, pale: 0xFFFFFF, heart: 0xA3216E, anther: 0xF5C84B, tint: 0xE78AB8, petals: 5, size: 1, bloom: .orchid))
+            seedLook = .bark
+            overRim = true
+        case .bonsai:
+            self.init(rule: .sculpt, height: 142, reach: 70,
+                      ramp: [0x1A4A30, 0x296B3C, 0x3D8D47, 0x69B35A, 0xB8E08A],
+                      leaf: .ovate, leafLength: 7, flower: nil)
+            pad = .leafy
+            seedLook = .acorn
+        case .maple:
+            self.init(rule: .sculpt, height: 166, reach: 76,
+                      ramp: [0x66101F, 0x9C1D20, 0xD04420, 0xF0872C, 0xFFC866],
+                      leaf: .palmate, leafLength: 9, flower: nil)
+            pad = .maple
+            seedLook = .winged
+        case .pine:
+            self.init(rule: .sculpt, height: 178, reach: 58,
+                      ramp: [0x0F3A32, 0x175045, 0x236F59, 0x3B9173, 0x8CC8A6],
+                      leaf: .strap, leafLength: 12, flower: nil)
+            pad = .conifer
+            seedLook = .cone
+        case .pumpkin:
+            self.init(rule: .trail, height: 104, reach: 112,
+                      ramp: [0x1B4A24, 0x2B6A2E, 0x428C3A, 0x72B24E, 0xBBDA7C],
+                      leaf: .palmate, leafLength: 44,
+                      flower: Flower(deep: 0xE8920C, mid: 0xFFC21A, pale: 0xFFE98A, heart: 0xE08A0A, anther: 0xA05A10, petals: 5, size: 1, bloom: .pumpkin))
+            seedLook = .flat
+            overRim = true
+        case .snowdrop:
+            self.init(rule: .tuft, height: 108, reach: 54,
+                      ramp: [0x1F4A42, 0x2F6C5A, 0x4B8E78, 0x7BB8A0, 0xC9E6D8],
+                      leaf: .strap, leafLength: 60,
+                      flower: Flower(deep: 0xBFD3CB, mid: 0xF1F7F4, pale: 0xFFFFFF, heart: 0x78AE58, anther: 0xE8CF5A, petals: 6, size: 1, bloom: .snowdrop))
+            stems = [Stem(x: -6, height: 104, born: 0.3, opens: 0.74, arch: 1), Stem(x: 14, height: 88, born: 0.34, opens: 0.84, size: 0.92, arch: 1),
+                     Stem(x: -22, height: 74, born: 0.4, opens: 0.93, size: 0.85, arch: 1)]
+            basal = 4
+            basalLength = 62
+            seedLook = .bulb
         default:
             return nil
         }

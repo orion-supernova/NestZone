@@ -91,7 +91,9 @@ extension PlantPainter {
                     for (i, item) in list.enumerated() {
                         let b = bright(item.1, luck: luck(n * 5 + i), tier: leaf.tier)
                         let bend = (item.1 > -.pi / 2 ? 1.0 : -1.0) * (0.12 + 0.45 * wilt)
-                        batch.add(.of(.leaflet, bend: bend), base: item.0, angle: item.1, length: size * item.2, light: L, bright: b, glossy: i == 0)
+                        // The back tier's shadow is never drawn (`flush(casting: false)`), so it is not built.
+                        batch.add(.of(.leaflet, bend: bend), base: item.0, angle: item.1, length: size * item.2, light: L, bright: b, glossy: i == 0,
+                                  shadowed: leaf.tier > 0 || isYoung)
                     }
                 }
                 if isYoung { put(&young) } else { put(&tiers[leaf.tier]) }
