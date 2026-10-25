@@ -1176,6 +1176,15 @@ In order — each step can go to testers on its own:
      new art.
 6. **The finale**: "You've grown them all", the crown, growing a favourite
    again in a new colour.
+   - *Done (25 October):* server live (additive, reviewed, deployed:
+     `colour` on `start`, `finale` on the graduation that completes the
+     free set, `finaleAt` and `grownColours` on `forHome`); the ceremony
+     (held like a graduation, keyed on the companion so a retry never plays
+     it twice, its stills warmed while the moment waits: first frame 35 ms);
+     Choose's colour picker; 117 colourways (RULES.md §17, names in EN and
+     TR). Accessibility and Turkish pass done (`Docs/Companion/a11y/`):
+     VoiceOver on the phone is still to try (the purchase card's focus and
+     the ceremony's announcement first).
    - *Done (app half):* the server's `graduated.finale` / `graduate` `finale`
      holds `State.moment` with `isFinale` (keyed on the graduated companion's
      id in `finalesHeld`, so a retry never plays it twice) and plays it through
