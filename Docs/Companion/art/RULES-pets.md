@@ -17,10 +17,11 @@ drawing. Contact sheets, all Debug (`xcrun simctl launch <udid> com.walhallaa.Ne
 | `-artSheet batch-a` | the six pets of batch A (duckling, hamster, bunny, puppy, fox, hedgehog), grown, in the four moods |
 | `-artSheet batch-a-faces`, `batch-a-faces2` | their faces, bright and thirsty, cropped from an 800-point drawing |
 | `-artSheet batch-a-night` | the same six in the morning, at dusk, by night and by the moon |
+| `-artSheet batch-b`, `batch-b-night` | the seven pets of batch B (deer, snow fox, polar cub, penguin, turtle, goldfish, and the redone owl) grown in the four moods, then in the morning, at dusk, by night and by the moon |
 | `-artSheet pet-redraw -frameMeter 1` | the cost bench (below); `-artSheetSpecies owl`, `-artSheetCount 1`, `-artSheetMood thirsty` |
 | `-ducklingLegacy 1` | (any launch) draws the duckling with its old, flat painter (`PetPainter`), to compare |
 
-Any pet species works in place of `kitten`. The shots from the pass are in
+Launch arguments given to `xcrun simctl launch` did not reach the app on a simulator that other builds were also launching on; `xcrun simctl spawn <udid> defaults write com.walhallaa.NestZone artSheet <page>` (and `frameMeter`, `artSheetSpecies`, ...) and a plain launch did. Any pet species works in place of `kitten`. The shots from the pass are in
 `art/pets/` (`index.html` lays before and after side by side).
 
 ## 1. One light, from the sky
@@ -214,6 +215,26 @@ So:
   2, hedgehog 2, every one of them in the cold-start windows. `-companionScroll
   1` on Choose, 45 s, quiet machine, six runs each of the fox and the
   hedgehog: 1-6 late frames.
+- **Batch B** (deer, snow fox, polar cub, penguin, turtle, goldfish, owl), the
+  same bench, the kitten run first in the same session for every mood, medians
+  of the per-second means after the first second, content / bright / thirsty /
+  dozing, in ms: kitten .39-.43 / .39 / .46 / .35-.40; deer .30 / .28 / .30 /
+  .26; snow fox .43 / .38 / .44 / .36; polar cub .28 / .28 / .29 / .23; penguin
+  .20 / .19 / .24 / .18; turtle .26 / .25 / .32 / .29; goldfish .40 / .40 /
+  .44 / .42 (dozing is .07 over the kitten's .35, the bowl's dozen fills, and
+  .08 under its .50 before the pebbles' lit copies were merged into one);
+  owl .25 / .24 / .28 / .34 (.17 on a quiet machine before the redo, which
+  is not comparable with these). Worst frame after the first second under
+  1 ms for every pet but the snow fox's 0.9 and, in two runs, a single 8 to 15
+  ms frame (deer, owl) that the kitten's runs also show once in a while on a
+  shared machine. First frame of a cold process, no `prepare`: kitten 3.9-4.9,
+  turtle 3.0, penguin 2.8, snow fox 4.3, polar cub 4.8, owl 4.0, deer 13,
+  goldfish 15-45; the app prepares off the main thread, which the bench
+  (a bare `Canvas`) does not, so the last two are the worst case and were not
+  re-measured with `prepare`. `-nestieBench 1 -nestieSpecies <pet>
+  -todayScroll 1 -frameMeter 1` for 48 s: late frames of about 2,400 to 2,600:
+  kitten 2, deer 1, snow fox 1, polar cub 1, penguin 1, turtle 0, goldfish 1,
+  owl 1, all in the cold-start window.
 - **Scrolling is untouched**: `-nestieBench 1 -nestieSpecies kitten -todayScroll 1
   -frameMeter 1` for 75 s: 0-1 late frames in the steady state both before and
   after (the one run that showed 29 before and 4 after was the first-draw hitch
@@ -232,24 +253,26 @@ nose and the inner ear, the iris, and these numbers (kitten = 1):
 
 | Parameter | Does |
 |---|---|
-| `ears` | `.point`, `.round`, `.long` (a bunny's, bent at five steps), `.drop` (a pup's, furred and in `earColour`), `.tuft`, `.none` (the shape) |
+| `ears` | `.point`, `.round`, `.long` (a bunny's, bent at five steps), `.drop` (a pup's, furred and in `earColour`), `.leaf` (a fawn's: broad, pointed, held out to the side), `.tuft`, `.none` (the shape) |
 | `earHeight` | how tall they stand (1) |
 | `headWidth`, `bodyWidth` | the proportions |
 | `eyeSize`, `eyeSpread` | how big, how far apart (the eyes carry the soul: raise `eyeSize` for a hamster, lower it for a fox) |
 | `pupil` | `.slit` (cat, fox) or `.round` (everything else) |
 | `fur` | scales every edge dab: 0 sleek, 1 kitten, 1.6 fluffy |
 | `muzzle` | muzzle length (a dog or a fox 1.3-1.5, a hamster .7) |
-| `marks` | tabby stripes, plain, `.mask` (a fox's white lower face and dark tear lines), chevron |
+| `marks` | tabby stripes, plain, `.mask` (a fox's white lower face and dark tear lines), chevron, `.spots` (a fawn's, on the back and the haunch, curled up too) |
 | `tail` | `.curl`, `.stub`, `.plume` (a brush, fuller in the middle, with `tailTip`), `.wag` (a pup's), `.cotton` (a rabbit's ball), `.none` |
 | `whiskers` | off for birds, a dog and a hedgehog (the dots stay) |
 | `chin`, `cheek` | the lower face: 0 is the kitten's round chin, 1 a pointed muzzle (fox, hedgehog); `cheek` bulges it (a hamster's pouches, 1.7). A long muzzle carries the nose and mouth down to its end (`HeadGeometry.drop`) |
 | `noseSize`, `bib`, `eyeTilt` | the nose leather (a pup's is 1.7), how much bigger the pale chest is (a fox's bib 1.6), how far the outer eye corner is turned up (a fox's slant, radians) |
 | `socks`, `earColour`, `tailTip` | what the ends are coloured: legs from the ankle down, the ears (a pup's darker ones, a fox's black tips), the tail's tip |
+| `legWidth`, `tailFluff`, `tailSize` | how wide the legs are (a fawn's .62, a cub's 1.3), how much fuller a brush is (the winter fox's 1.3), how big a rabbit-style tail ball is (a deer's flag .62) |
+| `shell`, `plates` | a turtle's dome and the scutes on it |
 | `species` | the key under which `CritterGeometry` keeps what was built from the plan |
 
 Eyes, light, fur, the bowl, the nightcap, the five idle motions and all four
 moods are inherited as they are. The body plan (`sitter`, `perched`,
-`waddler`) decides which painter runs; a new plan that does not fit any is a
+`waddler`, `shelled`, `swimmer`) decides which painter runs; a new plan that does not fit any is a
 new painter, and should come with its own section here.
 
 ### Batch A: what the plan could not say
@@ -294,6 +317,83 @@ sit, hood and ball. Rules the batch wrote:
   the wing, thirsty bows the head to the bowl (rotation about the neck), and
   dozing brings the head down onto the chest, squashes the body and folds
   the wing.
+
+### Batch B: what the plans could not say
+
+Deer, snow fox and polar cub are rows of the sitter; the penguin is a second
+species of the waddler; the turtle (`shelled`) and the goldfish (`swimmer`)
+are the two body plans added, each with its own geometry file and painter
+(`CritterGeometry+Turtle`, `CritterPainter+Turtle`, `CritterGeometry+Fish`,
+`CritterPainter+Fish`), and everything else (the light, `form`, the eye, the
+bowl, the nightcap, the four moods) inherited. The owl was redone. Rules the
+batch wrote:
+
+- **A new kind of leg is a width, not a drawing.** `legWidth` narrows or
+  widens the sitter's legs, paws and toes about their own middle, at build
+  time: a fawn's .62 with a dark hoof (`socks`), a cub's 1.3. A fawn's spots
+  (`Marks.spots`) are soft ovals laid along the form, one path for the back
+  and one for the haunch, drawn through `hairs` in the belly's colour so each
+  has a lit edge; the curled pose has its own set.
+- **A winter coat is the same fox with more of it.** The snow fox is the fox
+  row with `fur` 1.8, `tailFluff` 1.3, a bib of 1.5, a pale blue shade (`8C9FC4`)
+  and frosty grey socks and ear backs. White on a pale sky only reads through
+  its shade, so the shade is a clear cool blue and the cast shadow stays
+  violet. Ice-blue eyes with the fox's slit.
+- **A thick coat is shorter tufts, not longer.** The cub at `fur` 1.7 grew
+  thorns along the haunch (the same mistake as rejection 10); at .85 the
+  edge is soft and the cheeks still look thick.
+- **A penguin rocks; it does not bounce.** `PetMotion.offsets(waddle:)`: a
+  lean of .075 rad every 0.9 s about the feet when bright, with the foot it
+  leans away from lifting 2.6 units (`PenguinGeometry` has its own feet);
+  content is a .014 sway every 2.8 s; thirsty holds still and bows. The head
+  is where the duckling's is (46, 47) so hats, the hatchling and the face
+  crop need no special case. Black head, a white face disc small enough to
+  leave a dark crown round it (a big one made it a ghost), a crescent of gold
+  at the neck, a flipper that waves when bright and hugs in when it dozes.
+- **A shell is built once and only filled.** The dome, the pale rim, 16
+  scutes (three rows of hexagons tilted to follow the curve, one path), their
+  growth rings: four fills and two strokes. What moves is the neck, a ribbon
+  laid out per frame from under the rim to the head: stretched and swaying
+  when bright, easy when content, sagging forward to the bowl when thirsty,
+  drawn back to rest at the rim when it dozes (the head and neck are drawn *behind*
+  the shell so a drawn-in head slides under it, the legs fold to 30%, the
+  shell settles 4 units and the nightcap goes on the shell). A turtle is low
+  and wide, so it is drawn 18% larger than the others to fill the card.
+- **Refraction is drawn once and cheap.** The goldfish's bowl is a cached
+  `BowlGeometry`: the glass, the water cut at eight levels (made when a level
+  is first drawn, `Path.intersection` was most of a 15 ms first frame), 30
+  pebbles, a rim of the sky's light on the lit side, a window highlight, a
+  pool of bright light on the floor *on the side away from the sun*. What
+  refraction does to the fish: it is magnified 20% and foreshortened by up
+  to 26% as it swims near the curved wall (`wall`), the gravel is seen
+  through a tint of the water, and a dashed line on the glass marks where the
+  water was when the bowl is low. The fish and the weed are the only things
+  that move. Thirsty is the water going down to level 62 and the fish hanging
+  at the surface, head up (+.62 rad), gulping, looking out; dozing it rests
+  on the gravel, eyes shut, the cap on its head. A bowl does not breathe
+  (`PetMotion.offsets(still:)`) and has no empty bowl beside it, it is the
+  bowl. Stages: a jelly egg on the gravel, a fry at 40%, then the fish grows
+  into the same bowl.
+- **Never mirror a catchlight.** The fish faces left or right by a mirrored
+  context, so its eye is drawn in a context mirrored back and the form's light
+  is flipped with it (`L` override), or the highlight lands on the wrong side
+  after a turn.
+- **Build off the main thread.** `CritterGeometry.prepare(plan)` builds every
+  shape of a plan on a utility task when the scene appears
+  (`CompanionScene`'s `.task(id:)`), so the first frame fills paths and
+  builds none. The first frame of an unprepared goldfish was 15 to 45 ms and
+  of the deer 13 ms (the kitten's, in the same bench, 4 to 5).
+- **The owl.** It had no fur treatment at all: a smooth egg and a smooth oval
+  head. Now painted feathers round the body and in each wing (`hairs`, one
+  fill each), the head's silhouette broken by short feathers (`FurEdge`, the
+  shadow side more), a ruff of short strokes round each face disc (2 to 3.4
+  long; the first, at 3 to 5, was a sun of thorns), the disc's hard ring
+  softened to .18 alpha, the brow feather at .22 alpha (at .5 it frowned), a
+  bigger hooked beak and bigger ear tufts.
+- **The duckling's collar is gone.** A pale arc under the bill read as a
+  collar or a strange smile whatever its width; removed, with its geometry.
+  The breast gradient already fades into the neck, which is what down looks
+  like.
 
 ## 9. What the art-direction passes rejected
 
@@ -348,3 +448,24 @@ are in `art/pets/index.html`):
 14. **Sticks for hands.** The hamster's paws as two thin arms and a seed nobody
     could see; short arms, paws held up under the chin, the seed 1.75 times
     its size and nibbled.
+
+Batch B's passes:
+
+15. **A rabbit with spots.** The fawn's first ears stood straight up. A deer's
+    are broad and held out to the side (`Ears.leaf`, +.82 rad when it is at
+    ease), and a longer, narrower muzzle with a darker nose.
+16. **Thorns on a bear.** Edge tufts at `fur` 1.7 on a white cub read as
+    spikes down the haunch; .85.
+17. **A flipper for a tail.** The snow fox's brush at 1.18 fluff with a blue-grey
+    tip was a fish tail. Rounder (fluff 1.3) and the tip nearly white.
+18. **A ghost with eyes.** The penguin's white face disc filled the whole head;
+    a smaller one with a dark crown round it, and the gold patch as a crescent
+    along the neck, not a blob.
+19. **Same pose, four moods.** At rest (time 0) every sine is zero, so the
+    goldfish's bright and content were one picture. Bright now has its own
+    static pose: the veil fanned wider, the dorsal fin taller, the fish higher
+    in the bowl and tilted up, the mouth wider.
+20. **A small bowl and a small turtle.** Both stood at 60% of the card's
+    height; the bowl is drawn 12% larger, the turtle 18%, the fish 20% larger
+    inside the bowl.
+21. **A sun of thorns on the owl.** See the owl above.

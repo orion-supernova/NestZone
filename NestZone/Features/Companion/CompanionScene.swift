@@ -127,6 +127,10 @@ struct CompanionScene: View {
         .onTapGesture(coordinateSpace: .local) { location in pet(at: location) }
         .onScrollVisibilityChange(threshold: 0.05) { isVisible = $0 }
         .onAppear(perform: settle)
+        .task(id: companion.species) {
+            guard let plan = CritterPlan.of(companion.species) else { return }
+            await Task.detached(priority: .utility) { CritterGeometry.prepare(plan) }.value
+        }
         // A new companion can keep the old one's seed (choosing again before
         // anything graduated), so the tree is grown again for a new species
         // too — keyed on the seed alone, a pomegranate kept the lemon's tree.

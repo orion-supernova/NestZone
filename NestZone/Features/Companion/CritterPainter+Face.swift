@@ -42,6 +42,7 @@ extension CritterPainter {
                     let flap = frame.reduceMotion ? 0 : sin(m.time * 9 + (s > 0 ? 0.8 : 0)) * 0.1 * wt.bright
                     spread = 0.28 + m.by(0.12, 0.04, 0, -0.2) + flap
                 }
+                if plan.ears == .leaf { spread += 0.82 * (1 - wt.thirst) - 0.1 * wt.bright }
                 let flick = (s > 0) == twitchRight ? twitch * (long ? 0.18 : 0.3) : 0
                 e.translateBy(x: s * (hang ? 15.5 : (long ? 8.6 : 13.2)), y: (hang ? -9 : (long ? -14 : -11)) + 1.8 * wt.thirst)
                 e.rotate(by: .radians(s * spread + s * flick))

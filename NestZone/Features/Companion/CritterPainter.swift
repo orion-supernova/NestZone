@@ -41,7 +41,7 @@ struct CritterPainter {
 
     /// Draws the pet standing on the floor at `x`, `size` points tall.
     func draw(_ context: GraphicsContext, x: Double, floor: Double, size: Double) {
-        PetTiming.measure(plan.body == .sitter ? "critter" : plan.body == .waddler ? "duckling" : "bird") { paint(context, x: x, floor: floor, size: size) }
+        PetTiming.measure(plan.body == .sitter ? "critter" : plan.body == .waddler ? "duckling" : plan.body == .perched ? "bird" : plan.body == .shelled ? "turtle" : "fish") { paint(context, x: x, floor: floor, size: size) }
     }
 
     private func paint(_ context: GraphicsContext, x: Double, floor: Double, size: Double) {
@@ -49,30 +49,33 @@ struct CritterPainter {
         let k = size / 120
         c.translateBy(x: x - 60 * k, y: floor - 108 * k)
         c.scaleBy(x: k, y: k)
-        let scale = stage < 2 ? 1 : PetMotion.scales[stage]
+        // A turtle is low and wide: it stands a little larger than the rest to fill the card.
+        let scale = stage < 2 ? 1 : (plan.body == .swimmer ? 1.12 : PetMotion.scales[stage]) * (plan.body == .shelled ? 1.18 : 1)
         var ground = c
         ground.translateBy(x: 60, y: 108)
         ground.scaleBy(x: scale, y: scale)
         ground.translateBy(x: -60, y: -108)
         shadow(ground)
-        if stage >= 3, thirst > 0.02 { bowl(ground) }
+        if stage >= 3, thirst > 0.02, plan.body != .swimmer { bowl(ground) }
         var body = c
         // Everything moves about the feet.
         body.translateBy(x: 60, y: 108)
-        let (dx, dy, sx, sy, turn) = motion.offsets(calm: plan.body != .waddler)
+        let (dx, dy, sx, sy, turn) = motion.offsets(calm: plan.body != .waddler, waddle: plan.species == .penguin, still: plan.body == .swimmer)
         body.translateBy(x: dx, y: dy)
         body.rotate(by: .radians(turn))
         body.scaleBy(x: sx, y: sy)
         body.translateBy(x: -60, y: -108)
-        if stage < 2 { wrapped(body); return }
+        if stage < 2 { plan.body == .swimmer ? fishEgg(body) : wrapped(body); return }
         body.translateBy(x: 60, y: 108)
         body.scaleBy(x: scale, y: scale)
         body.translateBy(x: -60, y: -108)
-        if stage == 2 { hatchling(body); return }
+        if stage == 2 { plan.body == .swimmer ? fish(body) : hatchling(body); return }
         switch plan.body {
         case .sitter: sitter(body)
         case .perched: perched(body)
         case .waddler: waddler(body)
+        case .shelled: turtle(body)
+        case .swimmer: fish(body)
         }
     }
 
@@ -81,6 +84,8 @@ struct CritterPainter {
     static func wearing(_ plan: CritterPlan, stage: Int) -> (top: CGPoint, neck: CGPoint) {
         var top = plan.body == .sitter ? CGPoint(x: 47, y: 31) : plan.body == .waddler ? CGPoint(x: 46, y: 33) : CGPoint(x: 60, y: 33)
         var neck = plan.body == .sitter ? CGPoint(x: 47, y: 67) : plan.body == .waddler ? CGPoint(x: 47, y: 70) : CGPoint(x: 60, y: 72)
+        if plan.body == .shelled { top = CGPoint(x: 72, y: 52); neck = CGPoint(x: 44, y: 90) }
+        if plan.body == .swimmer { top = CGPoint(x: 60, y: 26); neck = CGPoint(x: 60, y: 100) }
         if stage < 2 {
             top = CGPoint(x: 60, y: 46)
             neck = CGPoint(x: 60, y: 90)
@@ -88,9 +93,20 @@ struct CritterPainter {
             top = CGPoint(x: 60, y: 66)
             neck = CGPoint(x: 60, y: 90)
         }
-        let scale = stage < 2 ? 1 : PetMotion.scales[stage]
+        let scale = stage < 2 ? 1 : (plan.body == .swimmer ? 1.12 : PetMotion.scales[stage]) * (plan.body == .shelled ? 1.18 : 1)
         func scaled(_ p: CGPoint) -> CGPoint { CGPoint(x: 60 + (p.x - 60) * scale, y: 108 + (p.y - 108) * scale) }
         return (scaled(top), scaled(neck))
+    }
+
+    /// The head's centre in the box, for the art sheet's close crops.
+    static func faceSpot(_ plan: CritterPlan?) -> CGPoint {
+        switch plan?.body {
+        case .perched: CGPoint(x: 60, y: 50)
+        case .shelled: CGPoint(x: 28, y: 76)
+        case .swimmer: CGPoint(x: 45, y: 66)
+        case .waddler: CGPoint(x: 46, y: 49)
+        default: CGPoint(x: 47, y: 49)
+        }
     }
 
     // MARK: Brushes
@@ -140,7 +156,7 @@ struct CritterPainter {
     }
 
     private func shadow(_ c: GraphicsContext) {
-        let wide = plan.body == .sitter ? 38.0 : plan.body == .waddler ? 35 : 30
+        let wide = plan.body == .sitter ? 38.0 : plan.body == .waddler ? 35 : plan.body == .shelled ? 44 : plan.body == .swimmer ? 34 : 30
         let L = look.L
         let lean = -L.x * 5
         let w = stage < 2 ? 24.0 : wide
@@ -198,7 +214,7 @@ struct CritterPainter {
     /// The bundle or the egg it starts as: a knitted blanket tied at the top
     /// for a mammal, a speckled egg for a bird. The wobbly one has ears and a
     /// face looking out, or a crack.
-    private func wrapped(_ c: GraphicsContext) {
+    func wrapped(_ c: GraphicsContext) {
         let wrap = look.tone(plan.wrap, dim: 0.7)
         let L = look.L
         if plan.origin == .egg {
@@ -290,10 +306,15 @@ struct CritterPainter {
     private func hatchling(_ c: GraphicsContext) {
         var h = c
         h.translateBy(x: plan.body == .perched ? 0 : 14, y: plan.body == .perched ? 0 : 34)
+        var turtleHead = c
+        turtleHead.translateBy(x: 60, y: 79)
+        turtleHead.scaleBy(x: 1.45, y: 1.45)
         switch plan.body {
         case .sitter: sitterHead(h, babyness: 1, local: false)
         case .perched: perchedHead(h, babyness: 1, drop: 18)
         case .waddler: duckHead(h, babyness: 1)
+        case .shelled: self.turtleHead(turtleHead, babyness: 1)
+        case .swimmer: break
         }
         let wrap = look.tone(plan.wrap, dim: 0.7)
         let L = look.L

@@ -41,6 +41,8 @@ struct ArtSheet: View {
             case "batch-a-faces": batchAFaces(0)
             case "batch-a-faces2": batchAFaces(1)
             case "batch-a-night": batchANight
+            case "batch-b": batchB
+            case "batch-b-night": batchBNight
             default:
                 if let species = Species(rawValue: page) { speciesPage(species) }
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
@@ -194,7 +196,7 @@ struct ArtSheet: View {
         let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
         // The head's centre in the 120-unit box, then in the scene and in a
         // 1400-point drawing of it (the scene is 360 tall, the pet 190).
-        let head = CritterPlan.of(species)?.body == .perched ? CGPoint(x: 60, y: 50) : CGPoint(x: 47, y: 49)
+        let head = CritterPainter.faceSpot(CritterPlan.of(species))
         let k = 190.0 / 120, big = 800.0 / SceneSpace.height
         let hx = 400 + (head.x - 60) * k * big, hy = (SceneSpace.floor - 4 + (head.y - 108) * k) * big
         func face(_ h: Int, _ mood: Mood, _ label: String, dx: Double = 0, dy: Double = 0) -> some View {
@@ -314,7 +316,7 @@ struct ArtSheet: View {
     private func batchAFaces(_ half: Int) -> some View {
         func face(_ species: Species, _ mood: Mood, _ hourOfDay: Int) -> some View {
             let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
-            let head = CritterPlan.of(species)?.body == .perched ? CGPoint(x: 60, y: 50) : CGPoint(x: 47, y: 49)
+            let head = CritterPainter.faceSpot(CritterPlan.of(species))
             let k = 190.0 / 120, big = 800.0 / SceneSpace.height
             let hx = 400 + (head.x - 60) * k * big, hy = (SceneSpace.floor - 4 + (head.y - 108) * k) * big
             return ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 6, now: hour(hourOfDay))
@@ -341,6 +343,44 @@ struct ArtSheet: View {
         VStack(alignment: .leading, spacing: 3) {
             Text(verbatim: "batch A - morning, evening, night, moon").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
             ForEach(Self.batchA) { species in
+                let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+                HStack(spacing: 3) {
+                    ForEach([("morning", 8), ("evening", 18), ("night", 22), ("moon", 1)], id: \.0) { name, h in
+                        cell(ScenePortrait(companion: companion, progress: 0.97, mood: .content, stage: 6, now: hour(h)), "\(species.rawValue) \(name)")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 3)
+    }
+
+    // MARK: Batch B
+
+    private static let batchB: [Species] = [.deer, .snowFox, .polarCub, .penguin, .turtle, .goldfish, .owl]
+
+    /// The seven pets of batch B (and the owl) side by side, grown, in the four moods by day.
+    ///   -artSheet batch-b
+    private var batchB: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: "batch B - bright, content, thirsty, dozing").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ForEach(Self.batchB) { species in
+                let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+                HStack(spacing: 3) {
+                    ForEach(Mood.allCases, id: \.self) { mood in
+                        cell(ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 6, now: hour(13)), "\(species.rawValue) \(mood.rawValue)")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 3)
+    }
+
+    /// The light: each pet in the morning, at dusk, by night and by the moon.
+    ///   -artSheet batch-b-night
+    private var batchBNight: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: "batch B - morning, evening, night, moon").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ForEach(Self.batchB) { species in
                 let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
                 HStack(spacing: 3) {
                     ForEach([("morning", 8), ("evening", 18), ("night", 22), ("moon", 1)], id: \.0) { name, h in

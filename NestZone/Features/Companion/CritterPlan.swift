@@ -6,7 +6,7 @@ import Foundation
 ///
 /// - `sitter`: a small mammal sitting, seen from the front-left, with a head
 ///   that faces us. A kitten, and as rows of it the hamster, bunny, puppy,
-///   fox and hedgehog (deer and the two bears are still to come): ears
+///   fox and hedgehog, then deer, snow fox and polar cub: ears
 ///   (`Ears`), tail (`Tail`), markings, a longer or pointed muzzle, a
 ///   chubby cheek, socks, a bib, the coat's colours. What only one species
 ///   does (the hamster's seed, the hedgehog's spines) is a function for it in
@@ -16,17 +16,22 @@ import Foundation
 ///   tufts.
 /// - `waddler`: a bird seen from the side, round and downy, a bill that
 ///   opens, webbed feet: the duckling (`CritterPainter+Duck`). `PetPainter`
-///   is its old, flat painter, kept to compare against.
+///   is its old, flat painter, kept to compare against. The penguin is the
+///   same plan, upright and rocking (`CritterPainter+Penguin`).
+/// - `shelled`: a turtle seen from the side, a shell of scutes, a neck that
+///   stretches and tucks (`CritterPainter+Turtle`).
+/// - `swimmer`: a goldfish in its bowl (`CritterPainter+Fish`); the bowl is
+///   built once and the fish is what moves.
 ///
 /// All share the duckling's seven stages (`origin` says what comes before
 /// the animal: a blanket bundle for a mammal, an egg for a bird), its motion
 /// (`PetMotion`) and its moods.
 struct CritterPlan: Equatable, Sendable {
-    enum Body: Sendable { case sitter, perched, waddler }
+    enum Body: Sendable { case sitter, perched, waddler, shelled, swimmer }
     enum Origin: Sendable { case blanket, egg }
-    enum Ears: Sendable { case point, round, long, drop, tuft, none }
+    enum Ears: Sendable { case point, round, long, drop, tuft, leaf, none }
     enum Tail: Sendable { case curl, stub, plume, wag, cotton, none }
-    enum Marks: Sendable { case tabby, plain, mask, chevron }
+    enum Marks: Sendable { case tabby, plain, mask, chevron, spots }
     /// How a pupil answers the light: a cat's is a slit by day and opens
     /// round at night; a bird's is always round.
     enum Pupil: Sendable { case slit, round }
@@ -82,6 +87,15 @@ struct CritterPlan: Equatable, Sendable {
     /// (a fox's black socks), the ears (a puppy's darker ones, the fox's
     /// black backs), the tail's tip (a fox's white one).
     var socks: UInt32?
+    /// How wide the legs are against the kitten's (a fawn's are thin, a cub's
+    /// stout), how much fuller a brush is (a winter fox's), and how big a
+    /// rabbit-style tail ball is (a deer's flag is small).
+    var legWidth = 1.0
+    /// A turtle's shell: its dome, and the scutes laid on it.
+    var shell: UInt32 = 0x3F7A52
+    var plates: UInt32 = 0x9CCB66
+    var tailFluff = 1.0
+    var tailSize = 1.0
     var earColour: UInt32?
     var tailTip: UInt32?
 
@@ -199,6 +213,47 @@ struct CritterPlan: Equatable, Sendable {
             (earHeight, headWidth, bodyWidth) = (0.42, 0.98, 1.0)
             (eyeSize, eyeSpread, fur, muzzle, chin, noseSize) = (0.8, 1.12, 0.6, 1.3, 1.0, 1.4)
             (pupil, iris) = (.round, 0x2A1C14)
+        case .deer:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xE6B684, coat: 0xCB8C56, shade: 0x8C5632, belly: 0xFFF3E0, mark: 0x6E4429,
+                      nose: 0x2E2321, accent: 0xF2BDB0, wrap: 0xD4E6BE, ears: .leaf, tail: .cotton, marks: .spots, species: species, whiskers: false)
+            (earHeight, headWidth, bodyWidth) = (1.22, 0.9, 0.94)
+            (eyeSize, eyeSpread, fur, muzzle, chin, noseSize, cheek) = (1.12, 1.06, 0.3, 1.3, 0.85, 1.3, 0)
+            (pupil, iris) = (.round, 0x3A2418)
+            (legWidth, tailSize, socks) = (0.62, 0.62, 0x5A3E2C)
+        case .snowFox:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xFFFFFF, coat: 0xE4EBF5, shade: 0x8C9FC4, belly: 0xFFFFFF, mark: 0x7482A0,
+                      nose: 0x2B2B34, accent: 0xF0B7B7, wrap: 0xBFD8F0, ears: .point, tail: .plume, marks: .mask, species: species)
+            (earHeight, headWidth, bodyWidth) = (1.0, 1.02, 1.0)
+            (eyeSize, eyeSpread, fur, muzzle, chin, bib, eyeTilt) = (0.84, 1.02, 1.8, 1.38, 0.95, 1.5, 0.12)
+            (pupil, iris) = (.slit, 0x4F86B5)
+            (socks, earColour, tailTip) = (0x7482A0, 0x7C8BAA, 0xD8E1F0)
+            tailFluff = 1.3
+        case .polarCub:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xFFFBF1, coat: 0xF1EADF, shade: 0xB3A59B, belly: 0xFFFCF6, mark: 0xB6A79B,
+                      nose: 0x26262C, accent: 0xDDB5AA, wrap: 0xC2DDF4, ears: .round, tail: .stub, marks: .plain, species: species, whiskers: false)
+            (earHeight, headWidth, bodyWidth) = (0.5, 1.2, 1.16)
+            (eyeSize, eyeSpread, fur, muzzle, chin, noseSize, cheek) = (0.8, 1.14, 0.85, 1.35, 0.6, 1.8, 0.25)
+            (pupil, iris) = (.round, 0x2A1C14)
+            legWidth = 1.3
+        case .penguin:
+            self.init(body: .waddler, origin: .egg,
+                      light: 0x6C7CA8, coat: 0x3B4769, shade: 0x1B2238, belly: 0xF8FAFE, mark: 0x232B45,
+                      nose: 0xFF9A3C, accent: 0xFF9A3C, wrap: 0xE6F0FA, ears: .none, tail: .stub, marks: .plain, species: species, whiskers: false)
+            (iris, pupil, eyeSize, fur) = (0x2A1C14, .round, 1.0, 0.7)
+        case .turtle:
+            self.init(body: .shelled, origin: .egg,
+                      light: 0xE4EDAE, coat: 0xB9CF7A, shade: 0x7F9C4F, belly: 0xF4EEC8, mark: 0x547040,
+                      nose: 0x547040, accent: 0xF2A9A4, wrap: 0xD7EEE0, ears: .none, tail: .stub, marks: .plain, species: species, whiskers: false)
+            (iris, pupil, eyeSize) = (0x2D2416, .round, 1.0)
+            (shell, plates) = (0x3F7A52, 0xA3CD66)
+        case .goldfish:
+            self.init(body: .swimmer, origin: .egg,
+                      light: 0xFFC884, coat: 0xFF8B3E, shade: 0xCF4F1F, belly: 0xFFE8C2, mark: 0xB43A14,
+                      nose: 0xFFB59A, accent: 0xF2A9A4, wrap: 0xD4EEF4, ears: .none, tail: .stub, marks: .plain, species: species, whiskers: false)
+            (iris, pupil, eyeSize) = (0x2B1A10, .round, 1.0)
         default:
             return nil
         }

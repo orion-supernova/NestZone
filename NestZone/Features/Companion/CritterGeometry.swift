@@ -45,6 +45,8 @@ struct SitGeometry {
     /// A rabbit's tail: a ball of white fur about its own origin, edged with
     /// fur.
     let cotton: Path
+    /// A fawn's white spots on the back and the haunch.
+    let spots, haunchSpots: Path
     /// Where the form's centre is, for the gradients.
     let bodyCentre = CGPoint(x: 68, y: 84)
 
@@ -115,22 +117,30 @@ struct SitGeometry {
         for x in [58.6, 61.6, 64.6] { ht.move(to: CGPoint(x: x, y: 105.2)); ht.addLine(to: CGPoint(x: x - 0.8, y: 108.4)) }
         hindToes = ht
 
-        nearLeg = .loop([CGPoint(x: 37, y: 79), CGPoint(x: 49.5, y: 79), CGPoint(x: 48, y: 94), CGPoint(x: 50.2, y: 104), CGPoint(x: 36.5, y: 104), CGPoint(x: 39.5, y: 93)])
-        nearPaw = Path(ellipseIn: CGRect(x: 35.2, y: 101.6, width: 17, height: 8.6))
+        // A fawn's legs are thin and a cub's stout: the same legs, narrowed or
+        // widened about their own middle.
+        let lw = plan.legWidth
+        func stout(_ p: Path, _ cx: Double) -> Path {
+            lw == 1 ? p : p.applying(CGAffineTransform(translationX: cx, y: 0).scaledBy(x: lw, y: 1).translatedBy(x: -cx, y: 0))
+        }
+        let nearLegPath = stout(.loop([CGPoint(x: 37, y: 79), CGPoint(x: 49.5, y: 79), CGPoint(x: 48, y: 94), CGPoint(x: 50.2, y: 104), CGPoint(x: 36.5, y: 104), CGPoint(x: 39.5, y: 93)]), 43)
+        nearLeg = nearLegPath
+        nearPaw = stout(Path(ellipseIn: CGRect(x: 35.2, y: 101.6, width: 17, height: 8.6)), 43.7)
         var nt = Path()
-        for x in [39.4, 43.6, 47.8] { nt.move(to: CGPoint(x: x, y: 106.2)); nt.addLine(to: CGPoint(x: x, y: 109)) }
+        for x in [39.4, 43.6, 47.8] { nt.move(to: CGPoint(x: 43.7 + (x - 43.6) * lw, y: 106.2)); nt.addLine(to: CGPoint(x: 43.7 + (x - 43.6) * lw, y: 109)) }
         nearToes = nt
         var nb = Path()
         nb.fur(38.5, 86, 0.2, 9, 1.4, bend: 1)
         nb.fur(39.5, 92, 0.15, 8, 1.3, bend: 1)
         nearBars = nb
 
-        farLeg = .loop([CGPoint(x: 51, y: 82), CGPoint(x: 62, y: 82), CGPoint(x: 61, y: 95), CGPoint(x: 63, y: 105), CGPoint(x: 50, y: 105), CGPoint(x: 52, y: 94)])
-        farPaw = Path(ellipseIn: CGRect(x: 50, y: 102.4, width: 14, height: 7.4))
+        let farLegPath = stout(.loop([CGPoint(x: 51, y: 82), CGPoint(x: 62, y: 82), CGPoint(x: 61, y: 95), CGPoint(x: 63, y: 105), CGPoint(x: 50, y: 105), CGPoint(x: 52, y: 94)]), 56.5)
+        farLeg = farLegPath
+        farPaw = stout(Path(ellipseIn: CGRect(x: 50, y: 102.4, width: 14, height: 7.4)), 57)
 
         let lower = Path(CGRect(x: 0, y: 91, width: 120, height: 30))
-        nearSock = plan.socks == nil ? Path() : nearLeg.intersection(lower)
-        farSock = plan.socks == nil ? Path() : farLeg.intersection(lower)
+        nearSock = plan.socks == nil ? Path() : nearLegPath.intersection(lower)
+        farSock = plan.socks == nil ? Path() : farLegPath.intersection(lower)
 
         var a = Path(), hp = Path(), ht2 = Path(), sd = Path(), ss = Path()
         if plan.species == .hamster {
@@ -143,6 +153,23 @@ struct SitGeometry {
             sd = .loop([CGPoint(x: -6.4, y: 0.2), CGPoint(x: -2.4, y: -3.2), CGPoint(x: 3.6, y: -3), CGPoint(x: 7.4, y: 0.2), CGPoint(x: 3.6, y: 3), CGPoint(x: -2.4, y: 3.2)])
             for dy in [-1.8, 0.0, 1.8] { ss.move(to: CGPoint(x: -4.4, y: dy * 0.9)); ss.addQuadCurve(to: CGPoint(x: 5.4, y: dy * 0.5), control: CGPoint(x: 0.4, y: dy * 1.1 - 0.4)) }
         }
+        // A fawn's spots: soft ovals laid along the form, back and haunch.
+        var sp = Path(), hs = Path()
+        if plan.marks == .spots {
+            func dot(_ path: inout Path, _ x: Double, _ y: Double, _ rx: Double, _ ry: Double, _ a: Double) {
+                path.addPath(Path(ellipseIn: CGRect(x: -rx, y: -ry, width: rx * 2, height: ry * 2)).applying(CGAffineTransform(translationX: x, y: y).rotated(by: a)))
+            }
+            for (x, y, rx, ry, a) in [(50.0, 66.0, 2.3, 1.6, -0.5), (58, 61.5, 2.6, 1.7, -0.25), (67, 60.6, 2.8, 1.8, -0.05), (76, 62.2, 2.6, 1.7, 0.25),
+                                      (84, 67, 2.4, 1.6, 0.6), (89, 75, 2.2, 1.5, 1.0), (55, 70, 2.0, 1.4, -0.3), (63.5, 67, 2.3, 1.5, -0.1),
+                                      (72, 67.5, 2.3, 1.5, 0.1), (80, 72, 2.2, 1.5, 0.5), (60, 77, 1.8, 1.3, 0), (68.5, 74.5, 2.0, 1.4, 0.1)] {
+                dot(&sp, wide(x), y, rx, ry, a)
+            }
+            for (x, y, rx, ry, a) in [(73.0, 82.0, 2.4, 1.6, -0.5), (83, 80, 2.4, 1.6, 0.3), (89, 89, 2.2, 1.5, 1.1), (78, 90, 2.3, 1.5, 0),
+                                      (70, 95, 2.0, 1.4, -0.2), (84, 98, 2.0, 1.4, 0.9), (76, 101, 1.8, 1.2, 0)] {
+                dot(&hs, wide(x), y, rx, ry, a)
+            }
+        }
+        spots = sp; haunchSpots = hs
         arms = a; handPaws = hp; handToes = ht2; seed = sd; seedStripes = ss
         cotton = plan.tail == .cotton
             ? FurEdge.furry(Path(ellipseIn: CGRect(x: -7.2, y: -7.2, width: 14.4, height: 14.4)), seed: "cotton-\(plan.key)", gap: 1.8...3.2, height: 0.9...2.1, width: 2.4)
@@ -153,6 +180,7 @@ struct SitGeometry {
 /// The curled-up pose, in the same box: a round of fur lying on the floor.
 struct CurlGeometry {
     let body, stripes, hairs, haunch, haunchBars: Path
+    let spots: Path
     let bodyFur: [Path]
 
     init(_ plan: CritterPlan) {
@@ -188,6 +216,15 @@ struct CurlGeometry {
             }
         }
         bodyFur = [furred(-1), furred(1)]
+        var sp = Path()
+        if plan.marks == .spots {
+            for (x, y, rx, ry, a) in [(40.0, 82.0, 2.4, 1.6, -0.6), (50, 78.5, 2.7, 1.7, -0.3), (60, 76.8, 2.8, 1.8, -0.1), (70, 76.5, 2.8, 1.8, 0.05),
+                                      (80, 78, 2.7, 1.7, 0.25), (90, 82, 2.5, 1.6, 0.55), (97, 89, 2.2, 1.5, 1.0), (45, 88, 2.0, 1.4, -0.4), (56, 84, 2.4, 1.5, -0.2),
+                                      (66, 83, 2.4, 1.5, 0), (76, 85, 2.4, 1.5, 0.2), (85, 90, 2.3, 1.5, 0.6), (70, 92, 2.0, 1.4, 0.1), (91, 98, 2.0, 1.4, 0.9)] {
+                sp.addPath(Path(ellipseIn: CGRect(x: -rx, y: -ry, width: rx * 2, height: ry * 2)).applying(CGAffineTransform(translationX: x, y: y).rotated(by: a)))
+            }
+        }
+        spots = sp
     }
 }
 
@@ -322,6 +359,12 @@ struct HeadGeometry {
             ear = outline
             earInner = Path()
             earFurPath = FurEdge.furry(outline, seed: "ear-\(plan.key)", gap: 5...8, height: (0.9 * fur)...(1.8 * fur), width: 3.2) { p in p.y > 6 ? 1 : 0.3 }
+        case .leaf:
+            // A fawn's: broad, pointed, held out to the side, pale hairs inside.
+            ear = .loop([CGPoint(x: -8.5, y: 3), CGPoint(x: -11.6, y: -eh * 0.36), CGPoint(x: -8, y: -eh * 0.8), CGPoint(x: 0.6, y: -eh * 1.06),
+                         CGPoint(x: 8.6, y: -eh * 0.68), CGPoint(x: 11, y: -eh * 0.3), CGPoint(x: 8.6, y: 3)])
+            earInner = .loop([CGPoint(x: -5, y: 1.5), CGPoint(x: -7.4, y: -eh * 0.34), CGPoint(x: -4.2, y: -eh * 0.68), CGPoint(x: 0.5, y: -eh * 0.86),
+                              CGPoint(x: 5, y: -eh * 0.62), CGPoint(x: 7, y: -eh * 0.28), CGPoint(x: 5, y: 1.5)])
         default:
             ear = .loop([CGPoint(x: -8.8, y: 3), CGPoint(x: -6.2, y: -eh * 0.5), CGPoint(x: 0.5, y: -eh), CGPoint(x: 6.8, y: -eh * 0.45), CGPoint(x: 9.2, y: 3)])
             earInner = .loop([CGPoint(x: -5, y: 1.5), CGPoint(x: -3.3, y: -eh * 0.42), CGPoint(x: 0.4, y: -eh * 0.74), CGPoint(x: 4, y: -eh * 0.4), CGPoint(x: 5.2, y: 1.5)])
@@ -399,6 +442,22 @@ enum CritterGeometry {
     nonisolated(unsafe) private static var sits: [String: SitGeometry] = [:]
     nonisolated(unsafe) private static var curls: [String: CurlGeometry] = [:]
     nonisolated(unsafe) private static var heads: [String: HeadGeometry] = [:]
+
+    /// Builds what a pet will be drawn from, off the main thread, so the
+    /// first frame fills paths and builds none (the goldfish's bowl and the
+    /// fox's furred outlines were 13-45 ms on the first frame).
+    static func prepare(_ plan: CritterPlan) {
+        switch plan.body {
+        case .sitter:
+            _ = sit(plan); _ = curl(plan); _ = head(plan)
+            if plan.species == .hedgehog { _ = hedgehog(plan) }
+        case .perched: _ = bird(plan)
+        case .waddler:
+            if plan.species == .penguin { _ = penguin(plan) } else { _ = duck(plan) }
+        case .shelled: _ = turtle(plan)
+        case .swimmer: _ = bowlArt.water(0); _ = fishArt
+        }
+    }
 
     static func sit(_ plan: CritterPlan) -> SitGeometry {
         lock.lock(); defer { lock.unlock() }
