@@ -114,7 +114,7 @@ extension PlantPainter {
                 let kind: LeafShape.Kind = split < 0.22 ? .monstera0 : split < 0.5 ? .monstera1 : split < 0.8 ? .monstera2 : .monstera3
                 let shape = LeafShape.of(kind, bend: down * (0.3 + 0.5 * wilt))
                 var batch = LeafBatch()
-                batch.add(shape, base: start, angle: angle, length: length, light: L, bright: bright(angle, luck: luck(n + 5), tier: f.tier), glossy: true)
+                batch.add(shape, base: start, angle: angle, length: length, light: L, bright: bright(angle, luck: luck(n + 5), tier: f.tier), glossy: true, vary: plan.variegation)
                 let stalk = Self.quad(anchor, CGPoint(x: (anchor.x + start.x) / 2, y: min(anchor.y, start.y) - 3), start, n: 4)
                 batch.stalks.addPath(Self.ribbon(stalk, 2.8, 2.1))
                 batch.flush(c, inks[f.tier], holes: shape.holes)

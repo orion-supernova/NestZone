@@ -58,8 +58,9 @@ extension CritterPainter {
         // The body: a pear, heavier behind, the light on its shoulder.
         form(b, g.bodyFur[side], centre: g.bodyCentre, radius: 32, light, coat, dark, highlight: 0.62)
         hairs(b, g.hairs, dark: mark, light: look.lifted(light, 0.25), alpha: 0.28)
+        patches(b, g.patchA, g.patchB, centre: g.bodyCentre, radius: 32)
         if plan.marks == .tabby { hairs(b, g.stripes, dark: mark, light: light, alpha: 0.48) }
-        if plan.marks == .spots { hairs(b, g.spots, dark: belly.shifted(-5), light: look.lifted(belly, 0.3), alpha: 0.9) }
+        if plan.marks == .spots { hairs(b, g.spots, dark: spotDark, light: spotLight, alpha: 0.9) }
 
         // The chest, pale, where the head sits.
         // Soft all round: it fades to the coat at its rim, so no edge shows.
@@ -70,8 +71,9 @@ extension CritterPainter {
         // The haunch, a round of its own, and the foot under it.
         form(b, g.haunch, centre: CGPoint(x: 77, y: 91), radius: 20, light, coat, dark.shifted(2), highlight: 0.5)
         hairs(b, g.haunchHairs, dark: mark, light: look.lifted(light, 0.25), alpha: 0.28)
+        patches(b, g.haunchPatchA, g.haunchPatchB, centre: CGPoint(x: 77, y: 91), radius: 20)
         if plan.marks == .tabby { hairs(b, g.haunchBars, dark: mark, light: light, alpha: 0.5) }
-        if plan.marks == .spots { hairs(b, g.haunchSpots, dark: belly.shifted(-5), light: look.lifted(belly, 0.3), alpha: 0.9) }
+        if plan.marks == .spots { hairs(b, g.haunchSpots, dark: spotDark, light: spotLight, alpha: 0.9) }
         if species == .hamster {
             // Small round feet, the colour of the coat's underside.
             let foot = Path(ellipseIn: CGRect(x: 66, y: 102.8, width: 19, height: 7.6))
@@ -150,10 +152,12 @@ extension CritterPainter {
 
         form(b, g.bodyFur[look.L.x > 0 ? 0 : 1], centre: CGPoint(x: 62, y: 94), radius: 36, light, coat, dark, highlight: 0.6)
         hairs(b, g.hairs, dark: mark, light: look.lifted(light, 0.25), alpha: 0.28)
+        patches(b, g.patchA, g.patchB, centre: CGPoint(x: 62, y: 94), radius: 36)
         if plan.marks == .tabby { hairs(b, g.stripes, dark: mark, light: light, alpha: 0.55) }
         form(b, g.haunch, centre: CGPoint(x: 82, y: 95), radius: 18, light, coat, dark.shifted(2), highlight: 0.5)
+        patches(b, g.haunchPatchA, g.haunchPatchB, centre: CGPoint(x: 82, y: 95), radius: 18)
         if plan.marks == .tabby { hairs(b, g.haunchBars, dark: mark, light: light, alpha: 0.5) }
-        if plan.marks == .spots { hairs(b, g.spots, dark: belly.shifted(-5), light: look.lifted(belly, 0.3), alpha: 0.9) }
+        if plan.marks == .spots { hairs(b, g.spots, dark: spotDark, light: spotLight, alpha: 0.9) }
         let overHead = plan.tail == .plume
         // The tail goes round the front, over the paws; a fox's goes over its
         // nose as well, so its head is laid down first.

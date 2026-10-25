@@ -24,6 +24,12 @@ struct LeafShape: Sendable {
         case monstera0, monstera1, monstera2, monstera3
     }
 
+    /// What it was built as, so a pattern can be cut from it (`variegation`).
+    var kind = Kind.ovate
+    var bend = 0.0
+    /// The edge of the upper half, base to tip, before it is bent: what a pattern
+    /// is built from (`variegation`).
+    var edgePts: [CGPoint] = []
     var outline = Path()
     /// The two halves either side of the midrib, both wound the same way so
     /// that merging them never leaves a hole where two overlap.
@@ -182,6 +188,8 @@ struct LeafShape: Sendable {
     }
 
     private init(_ kind: Kind, bend: Double) {
+        self.kind = kind
+        self.bend = bend
         let spec = Self.spec(kind)
         // Slits and ruffles need their points close; a plain leaf at card size does not.
         let fine: Bool
@@ -214,6 +222,7 @@ struct LeafShape: Sendable {
             edge[i] = (p, s)
         }
 
+        edgePts = edge.map { $0.p }
         func centre(_ u: Double) -> CGPoint {
             guard abs(bend) > 0.01 else { return CGPoint(x: u, y: 0) }
             let phi = bend * u
@@ -325,15 +334,21 @@ struct LeafBatch {
     var shade = Path(), mid = Path(), lit = Path()
     var halves = Path(), veins = Path(), rim = Path(), gloss = Path()
     var shadow = Path(), stalks = Path()
+    /// The pale pattern of a variegated leaf (`PlantPlan.variegation`): empty
+    /// for every plant that has none, so it costs those nothing.
+    var pale = Path()
 
     /// A leaf with its base at `base`, pointing along `angle` and `length` long.
     /// `bright` 0...1 says which class of green it is; `L` is the light.
     mutating func add(_ shape: LeafShape, base: CGPoint, angle: Double, length: Double, light L: (x: Double, y: Double),
-                      bright: Double, glossy: Bool = false, shadowed: Bool = true) {
+                      bright: Double, glossy: Bool = false, shadowed: Bool = true, vary: PlantPlan.Variegation? = nil) {
         let t = CGAffineTransform(translationX: base.x, y: base.y).rotated(by: angle).scaledBy(x: length, y: length)
         if bright < 0.36 { shade.addPath(shape.outline, transform: t) }
         else if bright < 0.68 { mid.addPath(shape.outline, transform: t) }
         else { lit.addPath(shape.outline, transform: t) }
+        // Which leaf is marked how is decided by where it points and how long it is,
+        // so the same plant is marked the same way every time it is drawn.
+        if let vary, let marks = shape.variegation(vary.pattern, variant: Int((abs(angle) * 997 + length * 13).rounded()) % 5) { pale.addPath(marks, transform: t) }
         // The half whose side of the midrib looks at the light.
         let across = -sin(angle) * L.x + cos(angle) * L.y
         let litA = across >= 0
@@ -369,6 +384,7 @@ struct LeafBatch {
         if !shade.isEmpty { c.fill(shade, with: .color(ink.d), style: rule) }
         if !mid.isEmpty { c.fill(mid, with: .color(ink.m), style: rule) }
         if !lit.isEmpty { c.fill(lit, with: .color(ink.l), style: rule) }
+        if !pale.isEmpty { c.fill(pale, with: .color(ink.pale), style: rule) }
         if !halves.isEmpty { c.fill(halves, with: .color(ink.half), style: rule) }
         if !veins.isEmpty { c.fill(veins, with: .color(ink.vein)) }
         if !rim.isEmpty { c.fill(rim, with: .color(ink.rim)) }

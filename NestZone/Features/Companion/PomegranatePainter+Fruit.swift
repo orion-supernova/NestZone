@@ -11,11 +11,8 @@ extension PomegranatePainter.Look {
     /// Green with a blush, then the three ways a pomegranate ripens: deep red,
     /// rose, and a yellow sun-blushed one. A fruit goes green, then blush, then
     /// its own colour, so a tree in the middle of the season has all of them.
-    private static let green = Skin(hi: RGB(0xD9E49C), mid: RGB(0x8DB45A), shade: RGB(0x3C6A3A))
-    private static let blush = Skin(hi: RGB(0xFCEBB0), mid: RGB(0xF0B062), shade: RGB(0xB8503A))
-    private static let ripe = [Skin(hi: RGB(0xF07C84), mid: RGB(0xCD2C3F), shade: RGB(0x6C1223)),
-                               Skin(hi: RGB(0xF8A4AE), mid: RGB(0xDC536E), shade: RGB(0x8C2346)),
-                               Skin(hi: RGB(0xFCDCA0), mid: RGB(0xEE8E4C), shade: RGB(0xB93C2C))]
+    /// The skins come from the tree's colourway (`TreeColours.pomegranate`); the original's are the ones below.
+    private static func skin(_ s: TreeColours.Skin) -> Skin { Skin(hi: RGB(s.hi), mid: RGB(s.mid), shade: RGB(s.shade)) }
 
     /// One fruit as it sits now: where, how big, how ripe, and how it leans.
     struct Hanging {
@@ -29,8 +26,10 @@ extension PomegranatePainter.Look {
     }
 
     private func skin(_ ripe: Double, _ variety: Int) -> Skin {
-        let to = Self.ripe[variety]
-        let a = ripe < 0.5 ? Self.green : Self.blush, b = ripe < 0.5 ? Self.blush : to
+        let set = TreeColours.pomegranate(canopy.colourway)
+        let to = Self.skin(set.ripe[variety])
+        let green = Self.skin(set.green), blush = Self.skin(set.blush)
+        let a = ripe < 0.5 ? green : blush, b = ripe < 0.5 ? blush : to
         let t = Ink.smooth(ripe < 0.5 ? ripe * 2 : (ripe - 0.5) * 2)
         let s = Skin(hi: a.hi.mix(b.hi, t), mid: a.mid.mix(b.mid, t), shade: a.shade.mix(b.shade, t))
         // A thirsty or sleepy tree's fruit is duller, and a bright one's richer.

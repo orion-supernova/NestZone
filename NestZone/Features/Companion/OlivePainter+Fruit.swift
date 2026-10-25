@@ -8,11 +8,10 @@ extension OlivePainter {
     /// What an olive goes through: green, a yellow-green, a rose-violet and at
     /// last a purple that is nearly black. A cluster is never all one colour,
     /// because its olives were set a few days apart.
-    private static let stops: [(at: Double, skin: Skin)] = [
-        (0, Skin(hi: RGB(0xC9D98A), mid: RGB(0x7E9A3E), shade: RGB(0x3E5A22))),
-        (0.34, Skin(hi: RGB(0xE3E39A), mid: RGB(0xB7B85A), shade: RGB(0x6E7330))),
-        (0.62, Skin(hi: RGB(0xC58AA6), mid: RGB(0x8A4A72), shade: RGB(0x4A2448))),
-        (1, Skin(hi: RGB(0x8F7AA8), mid: RGB(0x3E2C4C), shade: RGB(0x1C1226)))]
+    /// From the tree's colourway (`TreeColours.olive`).
+    private static func stops(_ colourway: Int) -> [(at: Double, skin: Skin)] {
+        TreeColours.olive(colourway).stops.map { ($0.at, Skin(hi: RGB($0.skin.hi), mid: RGB($0.skin.mid), shade: RGB($0.skin.shade))) }
+    }
 
     /// One olive as it hangs now.
     struct Drupe {
@@ -27,9 +26,10 @@ extension OlivePainter {
 
     private func skin(_ ripe: Double) -> Skin {
         let M = core.M, day = core.day
-        var a = Self.stops[0], b = Self.stops[1]
-        for k in 0..<(Self.stops.count - 1) where ripe >= Self.stops[k].at {
-            (a, b) = (Self.stops[k], Self.stops[k + 1])
+        let stops = Self.stops(core.canopy.colourway)
+        var a = stops[0], b = stops[1]
+        for k in 0..<(stops.count - 1) where ripe >= stops[k].at {
+            (a, b) = (stops[k], stops[k + 1])
         }
         let t = Ink.smooth((ripe - a.at) / (b.at - a.at))
         let s = Skin(hi: a.skin.hi.mix(b.skin.hi, t), mid: a.skin.mid.mix(b.skin.mid, t), shade: a.skin.shade.mix(b.skin.shade, t))

@@ -65,7 +65,8 @@ extension PomegranatePainter.Look {
             let f = canopy.fallen[7]
             var aril = Path()
             aril.oval(f.x * 0.45, f.y - 0.4, 1.7, 1.55)
-            context.fill(aril, with: .radialGradient(Gradient(colors: [RGB(0xFF7A8C).color(), RGB(0xB8183A).color(), RGB(0x7C0C26).color()]),
+            let rolled = TreeColours.pomegranate(canopy.colourway).aril
+            context.fill(aril, with: .radialGradient(Gradient(colors: [RGB(rolled.hi).color(), RGB(rolled.mid).color(), RGB(rolled.shade).color()]),
                                                       center: CGPoint(x: f.x * 0.45 - 0.6, y: f.y - 1), startRadius: 0, endRadius: 2.4))
             var dot = Path()
             dot.oval(f.x * 0.45 - 0.6, f.y - 1, 0.45, 0.35)
@@ -79,7 +80,8 @@ extension PomegranatePainter.Look {
             body.oval(x, y, r, r * 0.92, 0.2)
             crown.oval(x + r * 0.7, y - r * 0.15, r * 0.28, r * 0.22)
             context.fill(shadow, with: .color(SceneInk.shadow))
-            let sk = RGB.tone(0x9A3A44, day: day), dk = RGB.tone(0x5A1E2A, day: day)
+            let fallen = TreeColours.pomegranate(canopy.colourway).dropped
+            let sk = RGB.tone(fallen.sk, day: day), dk = RGB.tone(fallen.dk, day: day)
             context.fill(body, with: .radialGradient(Gradient(colors: [sk.mix(RGB(0xFFFFFF), 0.2).color(), sk.color(), dk.color()]),
                                                       center: CGPoint(x: x - 1.6, y: y - 1.8), startRadius: 0, endRadius: r * 1.5))
             context.fill(crown, with: .color(dk.color()))

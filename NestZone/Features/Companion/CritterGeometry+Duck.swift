@@ -15,6 +15,9 @@ struct DuckGeometry {
     let headHairs: Path
     let tuft: Path
     let upperBill, lowerBill: Path
+    /// The face, where it is another colour than the crown: the cheek and the
+    /// eye's surround, cut from the head.
+    let face: Path
     let feet: [Path]
     let toes: Path
     static let bodyCentre = CGPoint(x: 62, y: 80)
@@ -66,10 +69,12 @@ struct DuckGeometry {
 
         let headCircle = Path(ellipseIn: CGRect(x: 27, y: 31, width: 38, height: 38))
         head = headCircle
-        headDown = FurEdge.furry(headCircle, seed: "duck-head", gap: 4.5...8, height: (1.1 * fur)...(2.3 * fur), width: 3.2) { p in
+        let downPath = FurEdge.furry(headCircle, seed: "duck-head", gap: 4.5...8, height: (1.1 * fur)...(2.3 * fur), width: 3.2) { p in
             // On the cheek and the back of the head, never over the face.
             Ink.smooth(((p.x - 46) / 19) * 0.9 + ((p.y - 50) / 19) * 0.45 + 0.1)
         }
+        headDown = downPath
+        face = plan.face == nil ? Path() : downPath.intersection(Path(ellipseIn: CGRect(x: 21, y: 40, width: 33, height: 31)))
         var hh = Path()
         for (x, y) in [(53.0, 45.0), (56, 52), (52, 60), (47, 63), (58, 42), (49, 36), (55, 36)] {
             hh.fur(x + r.between(-0.8, 0.8), y, atan2(y - 50, x - 46) + .pi / 2, r.between(3.4, 4.4), 0.6)

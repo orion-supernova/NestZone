@@ -70,8 +70,9 @@ extension PomegranatePainter.Look {
         // The skin's torn lip, the rind's thick pale band under it, and the
         // inside, set a touch off-centre so the rind is thicker on one side.
         let lip = sk.shade.mix(sk.mid, 0.4)
-        let pith = RGB.tone(0xF2D2C2, day: day, dim: 0.75).mix(sk.mid, 0.2)
-        let inside = RGB.tone(0x3F0818, day: day, dim: 0.5)
+        let set = TreeColours.pomegranate(canopy.colourway)
+        let pith = RGB.tone(set.pith, day: day, dim: 0.75).mix(sk.mid, 0.2)
+        let inside = RGB.tone(set.inside, day: day, dim: 0.5)
         tree.fill(torn(1.13, dx: -lx * r * 0.02, dy: -ly * r * 0.02), with: .color(lip.color()))
         tree.fill(torn(0.97), with: .color(pith.color()))
         let cavity = hollowed(dx: -lx * r * 0.03, dy: -ly * r * 0.03)
@@ -126,8 +127,8 @@ extension PomegranatePainter.Look {
                                              .init(color: RGB(lo).mix(RGB(0x3C0818), 0.4 * night).color(), location: 1)]),
                             startPoint: CGPoint(x: cx + lx * reach, y: cy + ly * reach), endPoint: CGPoint(x: cx - lx * reach, y: cy - ly * reach))
         }
-        tree.fill(deeper, with: jewel(0xE8405C, 0xB01236, 0x6A0A22))
-        tree.fill(lighter, with: jewel(0xFF6F82, 0xD21E41, 0x8A0E2C))
+        tree.fill(deeper, with: jewel(set.deeper.hi, set.deeper.mid, set.deeper.shade))
+        tree.fill(lighter, with: jewel(set.lighter.hi, set.lighter.mid, set.lighter.shade))
         var all = lighter
         all.addPath(deeper)
         tree.stroke(all, with: .color(RGB(0x4A0820).color(0.5)), lineWidth: r * 0.03)

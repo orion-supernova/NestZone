@@ -80,7 +80,7 @@ extension CritterPainter {
 
         form(h, g.headFur[side], centre: PenguinGeometry.headCentre, radius: 24, light, coat, dark, highlight: 0.55)
         // The gold at the side of the neck, soft to its edge.
-        let gold = look.tone(0xFFC857, dim: 0.5)
+        let gold = look.tone(plan.gold, dim: 0.5)
         var patch = Path()
         patch.move(to: CGPoint(x: -9, y: 0))
         patch.addQuadCurve(to: CGPoint(x: 9, y: 0.4), control: CGPoint(x: 0, y: -10.5))

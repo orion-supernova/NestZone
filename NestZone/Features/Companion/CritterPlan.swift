@@ -99,11 +99,31 @@ struct CritterPlan: Equatable, Sendable {
     var earColour: UInt32?
     var tailTip: UInt32?
 
+    // Colourway marks. Each is cut at build time from the form it sits on
+    // (`Path.intersection`), so it ends exactly at the fur, and none is in an
+    // original plan.
+    /// Patches of colour on a pale coat, a calico's orange and black (the
+    /// goldfish's too): up to two, drawn on the body, the haunch and the head.
+    var patches: [UInt32] = []
+    /// Spots on the coat in their own colour (a dalmatian's); the plan's
+    /// `.spots` marking draws them in the belly's.
+    var spotTone: UInt32?
+    /// Dark rings round the eyes (a panda's).
+    var eyePatch: UInt32?
+    /// A duckling's face: the colour of the cheek and the eye's surround,
+    /// where the head is another colour (a mallard duckling's buff, a runner's white).
+    var face: UInt32?
+    /// A penguin's gold at the neck.
+    var gold: UInt32 = 0xFFC857
+
     /// Which species this is, and the key under which what is built from the
     /// plan once is kept (`CritterGeometry`): the species' name, unless a
     /// Debug variant says otherwise.
     let species: Species
     var key: String
+    /// Which colourway this plan is (0 the original); the key of the plan's
+    /// cached shapes tells them apart where a marking differs.
+    var colourway = 0
 
     static func of(_ species: Species) -> CritterPlan? {
 #if DEBUG
@@ -111,6 +131,18 @@ struct CritterPlan: Equatable, Sendable {
 #endif
         return table[species]
     }
+
+    /// The plan in one of its colourways (`CritterColours`); 0 is the original.
+    /// Looked up, never built, because the scene asks every frame.
+    static func of(_ species: Species, colourway: Int) -> CritterPlan? {
+        guard colourway > 0 else { return of(species) }
+        return coloured[species].flatMap { colourway <= $0.count ? $0[colourway - 1] : nil } ?? of(species)
+    }
+
+    private static let coloured: [Species: [CritterPlan]] = Dictionary(
+        uniqueKeysWithValues: Species.allCases.compactMap { species in
+            table[species].map { plan in (species, (1...Colourway.count).map { plan.coloured($0) }) }
+        })
 
 #if DEBUG
     /// The art sheet draws a plan that is not in the table (`-artSheet

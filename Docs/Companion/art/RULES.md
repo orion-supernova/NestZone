@@ -816,3 +816,215 @@ kitten none 0/0, full 8/0, rooftop 1/0; magnolia none 0/0, full 1/0, rooftop 3/0
 sunflower none 0/0, full 4/1, rooftop 6/0. `-companionScroll 1` (Choose): 0 late
 before and after, main-thread busy 471 to 168 ms per 2 s. Measure on a quiet
 machine: another simulator booting swamps every number.
+
+
+## 17. Colourways (round 5)
+
+After the finale a house can grow a favourite species again in a new colour. A
+companion (and an album card) carries `colour: Int?`, 1 to 3; `nil` and 0 are the
+original, and a number this build has no colour for is drawn as the original
+(`Colourway.clamp`). Every species has three, so there are 117 palettes. Shots,
+one row a species (0 | 1 | 2 | 3, by day and by night), are in `art/colours/`
+(`index.html`); the names, English and Turkish, are in `ColourwayNames`, beside
+the painters that draw them, and in the tables below. Pages: `-artSheet
+colours-<species>` (the card by day 2 x 2, then thirsty, dozing, dusk and night,
+0 | 1 | 2 | 3), `colours-<species>-close` (the face or the crown cropped from a
+large drawing, by day and by night), `colours-<species>-stages`,
+`colours-<species>-names`, and `colours-grid-<pets|plants|trees>-<n>` (a whole
+family in colourway n at the shop's size). Debug launch arguments:
+`-nestieColour <n>` draws a companion that has no colour of its own in colourway
+n (the bench, a scene on the simulator), `-artSheetColour <n>` does the same on
+the two redraw pages. The sheets draw the original with an explicit 0 so the
+override never repaints it.
+
+**A colourway is a palette and a pattern, never new geometry.** The look stays
+inside each species' shapes, and a household's tree, plant or pet is the same one
+in every colour: the skeleton, the leaf and blossom places and the draws that
+place every leaf after them do not move (a lemon whose leaves are marked is told
+by where each leaf stands, not by one more random draw, `LeafSpec.silverByPlace`:
+the first try moved the leaves and showed the trunk's fork). Marking is the same
+as the fox's tips (section 8 of RULES-pets): cut from the form it sits on at
+build time (`Path.intersection`) and cached, never a shape laid over an edge.
+
+**Where the colour comes from.** There is one row for every species and the
+painters read it; nothing is a `switch` in a loop body.
+
+- *Trees* (`TreeColours.swift`): `Canopy.Kind.recolour` changes the species' own
+  table (the five leaf tones, the bloom ramp, the blossom, the crop), which every
+  painter already reads through `Canopy.Tones`; what a painter kept for itself
+  (the skins a fruit ripens through, the inside of a cut fruit, the fruit on the
+  soil) is a set indexed by `Canopy.colourway`, whose entry 0 holds the values the
+  painters used to hold, so the original is unchanged. The leaf and crown caches
+  (`LeafArt`) carry the colourway in their key, because the lemon's spec changes;
+  nothing else of them depends on colour.
+- *Plants* (`PlantColours.swift`): `PlantPlan.coloured` patches the plan's ramp,
+  flower, spine and wood. A pattern is `PlantPlan.variegation`: one more cached
+  fill a tier (`LeafBatch.pale`), cut once from each leaf shape and kept
+  (`PlantVariegation.swift`): an *albo* half-moon or splash, *flecks*, a cream
+  *margin*. It is empty for every plant without one, so those cost nothing. Its
+  colour is a leaf tone, so thirsty browns it and a dozing plant dims it. A
+  Rembrandt tulip's flames are one more fill over the front tepals
+  (`PlantPlan.Flower.streak`).
+- *Pets* (`CritterColours.swift`): `CritterPlan.coloured` is the plan with another
+  coat, and for a breed a small marking: a bib and socks, a calico's two patches
+  (`patches`, body, haunch, head and ears, in each pose), dark points (`earColour`
+  now also on rabbits' and pandas' ears), spots in their own colour (`spotTone`),
+  eye rings (`eyePatch`), a duckling's face (`face`), a goldfish's patches and its
+  oranda's cap, a penguin's gold (`gold`). The geometry key is the species' own
+  unless a marking changes what is built (`needsOwnShapes`), so a recolour shares
+  the original's cached shapes.
+- *Caches and keys.* `TreeState.colourway` is in `TreeLayer`'s and `PlantLayer`'s
+  `==` (a new colour redraws a kept layer); `Canopy.==` includes it; `SpeciesPortrait`
+  carries it and the shop's still is keyed `s|species|seed|hour|c<n>`, so a still
+  kept for one colour is never shown for another; `CompanionScene` regrows the
+  canopy and re-prepares the pet's shapes on a change (`.task(id:)` on species and
+  colour). The plan lookups are tables, never built per frame.
+
+**What the first look threw out** (screenshot, reject, fix): a silver fox that
+read as a grey wolf (it is darker, with the frosted ruff and the white tip);
+a panda whose ears were white because round ears had no colour of their own; a
+Himalayan rabbit whose points were invisible for the same reason on long ears;
+a blue Swedish duckling that read as a pigeon (the dark bill went orange);
+a chocolate mint that was mustard (a deeper, greener brown) and an apple mint
+that was washed out; a snake plant meant to be black that was the original's
+green (the greens are mood-toned, so the darkest step has to be nearly black);
+an autumn fern that was coral (copper and rust); a mint-green monstera that was
+white (richer greens); a Thai constellation with bubbles for flecks (forty
+small ones); an albo that glared (cream, not white); a painted turtle with a red
+smear under the chin (the belly colour is the chin's, so it is yellow and the rim
+is not red).
+
+**The palettes**, with what each was drawn from. Turkish names are what a person
+would say pointing at it.
+
+### Pets
+
+| Species | 1 | 2 | 3 |
+|---|---|---|---|
+| kitten | Silver tabby / *Gümüş tekir* | Black with a white bib / *Beyaz önlüklü kara* | Calico / *Üç renkli* |
+| owl | Snowy owl / *Kar baykuşu* | Barn owl / *Peçeli baykuş* | Red screech owl / *Kızıl baykuş* |
+| duckling | Mallard / *Yaban ördeği* | Black and white / *Siyah beyaz* | Blue Swedish / *Mavi ördek* |
+| hamster | Winter white / *Kar beyazı* | Chocolate / *Çikolata* | Dalmatian / *Benekli* |
+| bunny | Himalayan / *Himalaya* | Chestnut / *Kestane* | Lilac / *Leylak* |
+| puppy | Chocolate lab / *Çikolata* | Border collie / *Siyah beyaz* | Cream / *Krem* |
+| fox | Silver fox / *Gümüş tilki* | Cross fox / *Haçlı tilki* | Golden fox / *Altın tilki* |
+| hedgehog | Albino / *Albino* | Cinnamon / *Tarçın* | Salt and pepper / *Tuz biber* |
+| deer | Sika / *Sika* | Fallow / *Alageyik* | White fallow / *Beyaz geyik* |
+| snowFox | Arctic dusk / *Alacakaranlık* | Summer coat / *Yaz tüyü* | Lilac pearl / *Leylak inci* |
+| polarCub | Cinnamon bear / *Tarçın ayı* | Panda / *Panda* | Black bear / *Kara ayı* |
+| penguin | Little blue / *Minik mavi* | Rockhopper / *Sarı kaşlı* | Isabelline / *Kahverengi* |
+| turtle | Golden tortoise / *Altın kabuk* | Painted turtle / *Boyalı* | Albino / *Albino* |
+| goldfish | Calico fantail / *Üç renkli* | White oranda / *Kırmızı başlı* | Black moor / *Kara* |
+
+Kitten: a silver tabby; a black cat with a white bib and white socks; a calico
+(orange and black patches on white, ears in the colour of their side). Owl: snowy;
+barn (dark eyes, a pale beak); red screech. Duckling: a mallard duckling (brown
+back, buff face and breast); black and white; a blue Swedish. Hamster: winter
+white; chocolate; dalmatian. Bunny: a Himalayan (dark points, pink eyes);
+chestnut; lilac. Puppy: chocolate lab; border collie (white blaze, socks, bib);
+cream. Fox: silver (black, frosted, white tip); cross; golden. Hedgehog: albino;
+cinnamon; salt and pepper. Deer: sika; fallow; white fallow. Snow fox: a blue morph,
+the arctic at dusk; a summer coat; a lilac pearl. Polar cub: cinnamon; panda (eye
+rings, black ears and socks); black bear with a tan muzzle. Penguin: little blue;
+rockhopper (red eye, yellow crest); isabelline. Turtle: a Hermann's tortoise
+(golden scutes, dark seams); a painted turtle; an albino, pink-eyed. Goldfish: a
+calico fantail; a white oranda with a red cap; a black moor.
+
+### Plants
+
+| Species | 1 | 2 | 3 |
+|---|---|---|---|
+| sunflower | Velvet Queen / *Kadife kraliçe* | Lemon / *Limon sarısı* | Italian white / *Krem beyazı* |
+| basil | Dark Opal / *Mor fesleğen* | Lemon basil / *Limonlu fesleğen* | Variegated / *Alacalı* |
+| cactus | Blue torch / *Mavi sütun* | Golden barrel / *Altın fıçı* | Purple prickly pear / *Mor incir* |
+| daisy | English pink / *Pembe papatya* | Golden marguerite / *Altın papatya* | Blue felicia / *Mavi papatya* |
+| mint | Chocolate mint / *Çikolatalı nane* | Pineapple mint / *Alacalı nane* | Apple mint / *Elmalı nane* |
+| rosemary | Pink flowers / *Pembe çiçekli* | White flowers / *Beyaz çiçekli* | Golden / *Altın yapraklı* |
+| snakePlant | Moonshine / *Ay ışığı* | Black gold / *Kara altın* | Lime hahnii / *Limon yeşili* |
+| fern | Silver lady / *Gümüş eğrelti* | Lemon button / *Limon eğrelti* | Autumn fern / *Bakır eğrelti* |
+| lavender | White / *Beyaz lavanta* | Pink / *Pembe lavanta* | Hidcote / *Koyu lavanta* |
+| peony | White / *Beyaz şakayık* | Coral / *Mercan* | Crimson / *Koyu kırmızı* |
+| monstera | Albo variegata / *Beyaz alacalı* | Thai constellation / *Tayland yıldızı* | Mint / *Nane yeşili* |
+| rose | White / *Beyaz gül* | Peach / *Şeftali gül* | Burgundy / *Bordo gül* |
+| orchid | Butter yellow / *Tereyağı sarısı* | Violet / *Mor orkide* | Pure white / *Saf beyaz* |
+| bonsai | Autumn gold / *Sonbahar altını* | In blossom / *Çiçek açmış* | Silver olive / *Gümüş zeytin* |
+| maple | Golden / *Altın akçaağaç* | Spring green / *Bahar yeşili* | Bloodgood / *Mor akçaağaç* |
+| pumpkin | White Lumina / *Beyaz kabak* | Blue Jarrahdale / *Mavi kabak* | Red Cinderella / *Kızıl kabak* |
+| pine | Blue spruce / *Mavi ladin* | Golden pine / *Altın çam* | Frosted / *Kırağılı* |
+| snowdrop | Yellow / *Sarı kardelen* | Green-tipped / *Yeşil uçlu* | Glaucous / *Mavi yapraklı* |
+| tulip | Rembrandt / *Çizgili lale* | Queen of Night / *Gece kraliçesi* | Apricot / *Kayısı lale* |
+
+Variegation: monstera 1 albo variegata (a white half-moon or splash on about
+three leaves in five), monstera 2 Thai constellation (forty small cream flecks),
+basil 3 and mint 2 (a cream margin). Tulip 1 is a flamed Rembrandt. Pumpkin's three
+are the skin (`fruitTones`), snake plant's the margin as well as the greens
+(`spine`), the sculpted three the leaf ramp (maple 3 also a darker wood).
+
+### Trees
+
+| Species | 1 | 2 | 3 |
+|---|---|---|---|
+| magnolia | White / *Beyaz manolya* | Black Tulip / *Mor manolya* | Yellow / *Sarı manolya* |
+| cherry | White Yoshino / *Beyaz Yoshino* | Weeping pink / *Salkım pembe* | Deep Kanzan / *Koyu Kanzan* |
+| pomegranate | White-flowered / *Beyaz çiçekli* | Dark dwarf / *Kara nar* | Golden / *Altın nar* |
+| azalea | White / *Beyaz açelya* | Flame orange / *Alev turuncusu* | Violet / *Mor açelya* |
+| lemon | Pink variegated / *Pembe alacalı* | Lime / *Misket limonu* | Blood orange / *Kan portakalı* |
+| olive | Green Manzanilla / *Yeşil zeytin* | Golden bronze / *Altın zeytin* | Silver ruby / *Gümüş yakut* |
+
+Lemon 1 is a pink variegated eureka: a third of the leaves are cream, the fruit is
+striped green and cream and the cut one is pink (the cut lemon's inside is a set, as
+the pomegranate's is); 2 a lime; 3 a lemon with a blood orange's rind and crimson
+flesh. Pomegranate 1 has white flowers and rose-blushed fruit with pale arils, 2
+dark fruit with ruby arils, 3 golden fruit with amber ones. Cherry's fruit goes
+through its own skins in each (a Rainier's gold in the weeping one, nearly black in
+the Kanzan). Olive 1 keeps green fruit, 2 turns it bronze, 3 turns it ruby on
+silver-blue leaves.
+
+**Numbers** (iPhone 17 simulator, iOS 27, Debug, `-artSheet redraw` and
+`pet-redraw` with `-artSheetCount 4 -artSheetColour <n> -frameMeter 1`; `tree draw` and
+`pet draw` are the recording, the stress page is frames per two-second window, the
+first windows dropped; the Mac was shared and its load moved the same build by more
+than any colour moved it, so the colours were run interleaved, 0 1 2 3 0 1 2 3, two
+reads each).
+
+| | recording, 0 | 1 | 2 | 3 | stress frames per window, 0 (1 / 2 / 3) |
+|---|---|---|---|---|---|
+| kitten (3 is the calico) | 0.37, 0.34 | 0.37 | 0.28 | 0.36 | 117, 120 (113 / 118 / 120) |
+| polar cub (2 is the panda) | 0.23, 0.21 | 0.20 | 0.21 | 0.22 | 120 (120 / 120 / 120) |
+| goldfish (3 black moor, 2 oranda's cap) | 0.33, 0.35 | 0.30 | 0.36 | 0.35 | 120 (120 / 120 / 120) |
+| duckling (1 and 2 have a face patch) | 0.16, 0.17 | 0.16 | 0.16 | 0.16 | 120 (120 / 120 / 120) |
+| monstera (1 albo, 2 flecks) | 0.57, 0.54 | 0.60, 0.62 | 0.53, 0.62 | 0.59, 0.60 | 77, 81 (89, 74 / 82, 82 / 93, 67) |
+| basil (3 cream margin) | 0.49, 0.51 | 0.52, 0.53 | 0.50, 0.50 | 0.52, 0.51 | 108, 95 (88, 104 / 86, 98 / 112, 101) |
+| mint (2 cream margin) | 0.50, 0.67 | 1.04, 0.69 | 0.71, 0.88 | 0.50, 1.39 | 114, 87 (64, 92 / 96, 72 / 120, 55) |
+| lemon (1 marked leaves) | 0.52, 0.42 | 0.46, 0.45 | 0.43, 0.71 | 0.42, 0.66 | 48, 63 (53, 58 / 64, 44 / 59, 40) |
+| cherry | 0.77, 1.06 | 1.07, 0.79 | 0.77, 1.03 | 1.05, 0.34 | 43, 35 (34, 45 / 46, 34 / 34, 87) |
+| tulip (1 Rembrandt flames) | 0.30, 0.43 | 0.31 | 0.28 | 0.35 | 120, 104 (120 / 120 / 116) |
+| rose | 1.26, 1.00 | 1.12 | 0.82 | 0.98 | 49, 65 (57 / 75 / 65) |
+| pomegranate | 0.89, 1.09 | 1.29 | 0.91 | 1.10 | 36, 31 (28 / 37 / 30) |
+
+Pets and the plants without a pattern cost the same in every colour: the shapes
+are the original's and the fills are the same fills. The marked plants cost about
+the same to within the noise (monstera +4 to +10 percent, basil +3 percent); the
+trees' spread across two reads of the same colour is wider than the spread between
+colours. Today's flick (`-nestieBench 1 -nestieScenario ready -nestieSpecies <raw>
+-nestieColour <n> -todayScroll 1 -frameMeter 1`, launch arguments, the bench
+reads the argument list and not the defaults) for the kitten (0 and 3, the
+calico), the monstera (0 and 1, the albo), a panda polar cub and the variegated
+lemon: every window after the cold start of the first (3 or 4 late frames in the
+first window, in all of them, the original too) was 120 frames and none late.
+
+**Colourway 0 is pixel-identical to the build before.** Twenty-two contact
+sheets (`batch-a`, `batch-b`, `kitten-moods`, `pet-variants`, `plants-grid`,
+`plants-grid-b`, `grid`, `pomegranate`, the five trees' crowns, the kitten's,
+fox's, owl's and duckling's faces, the monstera, mint, tulip, rose and sunflower
+pages) were taken from `4663d4c` and from this build on the same simulator and
+compared pixel for pixel below the status bar: no page differs.
+
+**What measuring caught.** The first variegation was cut from each leaf with
+`Path.intersection` and `subtracting`. It looked right and cost a monstera 1.60 ms
+against 0.58 (the albo), 5.42 ms for the flecks and a basil 1.37 against 0.38 for
+its margin, because a boolean cut comes back as hundreds of tiny line segments a
+leaf and a plant that is redrawn while it grows transforms every one every frame.
+The patterns are now polygons from the leaf's own edge points (a half, a tip, a band
+of every other edge point, sixteen hexagons wholly inside the leaf): a few dozen
+points each. **A pattern is cut from the edge, never from a boolean of the outline.**

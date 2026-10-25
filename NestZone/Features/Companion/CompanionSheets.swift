@@ -468,7 +468,7 @@ private struct AlbumView: View {
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(store.house.album.reversed()) { graduate in
                         VStack(alignment: .leading, spacing: 4) {
-                            SpeciesPortrait(species: graduate.species, seed: graduate.seed, mood: .content)
+                            SpeciesPortrait(species: graduate.species, seed: graduate.seed, mood: .content, colourway: graduate.colourway)
                                 .frame(height: 150)
                                 .clipShape(.rect(cornerRadius: 6))
                             Text(graduate.species.title)

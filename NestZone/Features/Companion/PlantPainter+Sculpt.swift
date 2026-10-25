@@ -174,7 +174,7 @@ extension PlantPainter {
         paint(c, stem: Self.ribbon(paths[i], w0, w1, flat: false), along: paths[i], width: w0, tier: 1, tint: barkTint)
     }
 
-    private var barkTint: UInt32 { plan.pad == .conifer ? 0x7A4A36 : plan.pad == .maple ? 0x6E4A3C : 0x6C5442 }
+    private var barkTint: UInt32 { plan.barkTone ?? (plan.pad == .conifer ? 0x7A4A36 : plan.pad == .maple ? 0x6E4A3C : 0x6C5442) }
 
     /// The trunk: a tapered ribbon in wood, shaded across, with bark worked into
     /// it: short dark fissures and lighter flecks scattered across its width (not

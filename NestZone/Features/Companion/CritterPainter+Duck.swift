@@ -93,6 +93,13 @@ extension CritterPainter {
         form(h, g.tuft, centre: CGPoint(x: 48, y: 26), radius: 10, light, coat, mark.shifted(-6), highlight: 0.2, core: 0.5)
         form(h, g.headDown, centre: DuckGeometry.headCentre, radius: 24, light, coat, dark, highlight: 0.62)
         hairs(h, g.headHairs, dark: dark, light: look.lifted(light, 0.3), alpha: 0.26)
+        if let tone = plan.face {
+            // The face is its own colour, fading into the crown: a soft rim, never a mask.
+            let face = look.tone(tone, dim: 0.5)
+            h.fill(g.face, with: .radialGradient(Gradient(stops: [.init(color: look.lifted(face, 0.2).color(0.98), location: 0), .init(color: face.color(0.95), location: 0.55),
+                                                                  .init(color: face.color(0), location: 1)]),
+                                                 center: CGPoint(x: 36, y: 55), startRadius: 0, endRadius: 22))
+        }
 
         // The bill: its lower half drops and a mouth shows when it is bright,
         // and a little when it wants water.

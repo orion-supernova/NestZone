@@ -61,7 +61,8 @@ struct OlivePainter: TreeArt {
                 shadow.oval(x + 0.5, y + r * 0.6, r * 1.2, r * 0.25)
                 body.oval(x, y, r * 1.05, r * 0.78, 0.2)
                 context.fill(shadow, with: .color(SceneInk.shadow))
-                let sk = RGB.tone(0x6E4F7C, day: day), dk = RGB.tone(0x2A1A36, day: day)
+                let fallen = TreeColours.olive(canopy.colourway).dropped
+                let sk = RGB.tone(fallen.sk, day: day), dk = RGB.tone(fallen.dk, day: day)
                 context.fill(body, with: .radialGradient(Gradient(colors: [sk.mix(RGB(0xFFFFFF), 0.25).color(), sk.color(), dk.color()]),
                                                           center: CGPoint(x: x - 1.2, y: y - 1.2), startRadius: 0, endRadius: r * 1.4))
             }

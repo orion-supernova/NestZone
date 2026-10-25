@@ -14,6 +14,9 @@ import SwiftUI
 struct Canopy: Equatable, Sendable {
     let seed: String
     let species: Species
+    /// Which colourway the tree is painted in (0 is the original). Colour only:
+    /// the wood and the crown grow the same whatever it is.
+    let colourway: Int
     /// The one scale that fits the grown tree into the scene, measured on it
     /// fully grown and content: at most the species' height tall and its
     /// half-width either side of the trunk.
@@ -30,10 +33,10 @@ struct Canopy: Equatable, Sendable {
     /// leans.
     let leanSign: Double
 
-    static func == (lhs: Self, rhs: Self) -> Bool { lhs.seed == rhs.seed && lhs.species == rhs.species }
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.seed == rhs.seed && lhs.species == rhs.species && lhs.colourway == rhs.colourway }
 
-    init(seed: String, species: Species) {
-        let kind = Kind(species)
+    init(seed: String, species: Species, colourway: Int = 0) {
+        let kind = Kind(species, colourway: colourway)
         var grower = Grower(kind: kind, seed: seed)
         grower.grow()
 
@@ -65,6 +68,7 @@ struct Canopy: Equatable, Sendable {
 
         self.seed = seed
         self.species = species
+        self.colourway = colourway
         self.kind = kind
         fit = min(kind.H / max(1, -grown.top), kind.HW / max(1, -grown.left, grown.right))
         limbs = grower.limbs
@@ -1748,6 +1752,13 @@ extension Canopy {
         var crop: Crop? = nil
         /// The grown tree's height, and its reach either side of the trunk.
         var H, HW: Double
+
+        /// The species in one of its colourways: the same wood and crown, other
+        /// colours (`TreeColours`).
+        init(_ species: Species, colourway: Int) {
+            self.init(species)
+            if colourway > 0 { self.recolour(species, colourway) }
+        }
 
         // swiftlint:disable line_length
         init(_ species: Species) {

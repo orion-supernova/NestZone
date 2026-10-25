@@ -12,7 +12,7 @@ struct PlantLayer: View, Equatable {
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.state.seed == rhs.state.seed && lhs.state.species == rhs.state.species && lhs.state.mood == rhs.state.mood
             && lhs.state.progress == rhs.state.progress && lhs.state.day == rhs.state.day
-            && lhs.state.light == rhs.state.light
+            && lhs.state.light == rhs.state.light && lhs.state.colourway == rhs.state.colourway
     }
 
     var body: some View {

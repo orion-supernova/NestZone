@@ -154,6 +154,13 @@ extension CritterPainter {
 
         // The body, lit by the sky, its belly pale, its scales in rows.
         form(f, geometry.body, centre: CGPoint(x: 0, y: 0), radius: 18, light, coat, dark, highlight: 0.55, L: eL)
+        patches(f, geometry.patchA, geometry.patchB, centre: .zero, radius: 18, L: eL)
+        if let tone = plan.face {
+            // An oranda's cap: the head in its own colour, soft where it meets the body.
+            let cap = look.tone(tone, dim: 0.5)
+            f.fill(geometry.cap, with: .radialGradient(Gradient(stops: [.init(color: look.lifted(cap, 0.2).color(0.98), location: 0), .init(color: cap.color(0.94), location: 0.6),
+                                                                        .init(color: cap.color(0), location: 1)]), center: CGPoint(x: -10, y: -5), startRadius: 0, endRadius: 11))
+        }
         f.fill(geometry.belly, with: .radialGradient(Gradient(stops: [.init(color: look.lifted(belly, 0.2).color(0.9), location: 0), .init(color: belly.color(0.55), location: 0.55),
                                                                       .init(color: belly.color(0), location: 1)]), center: CGPoint(x: 0, y: 8.4), startRadius: 0, endRadius: 14))
         var litScales = f

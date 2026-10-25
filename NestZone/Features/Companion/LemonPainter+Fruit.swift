@@ -8,11 +8,8 @@ extension LemonPainter {
     /// Green, then a pale yellow-green, then the three ways a lemon ripens: a
     /// clear yellow, a greener one and a golden one. A fruit goes through them
     /// in turn, so a tree in the middle of the season has all of them.
-    private static let green = Skin(hi: RGB(0xE4EEA6), mid: RGB(0x9CBF4A), shade: RGB(0x4A7A2E))
-    private static let pale = Skin(hi: RGB(0xF4F4A8), mid: RGB(0xD5D545), shade: RGB(0x86982A))
-    private static let ripe = [Skin(hi: RGB(0xFFF7B4), mid: RGB(0xF7D234), shade: RGB(0xC48A12)),
-                               Skin(hi: RGB(0xF6F5A0), mid: RGB(0xE6DA3A), shade: RGB(0x9A9A1C)),
-                               Skin(hi: RGB(0xFFEFA0), mid: RGB(0xF2BE2A), shade: RGB(0xB97A10))]
+    /// The skins come from the tree's colourway (`TreeColours.lemon`).
+    private static func skin(_ s: TreeColours.Skin) -> Skin { Skin(hi: RGB(s.hi), mid: RGB(s.mid), shade: RGB(s.shade)) }
 
     /// One lemon as it sits now: where, how big, how ripe, and how it leans.
     struct Hang {
@@ -29,7 +26,8 @@ extension LemonPainter {
     private func skin(_ ripe: Double, _ variety: Int) -> Skin {
         let M = core.M, day = core.day
         let a: Skin, b: Skin
-        if ripe < 0.5 { (a, b) = (Self.green, Self.pale) } else { (a, b) = (Self.pale, Self.ripe[variety]) }
+        let set = TreeColours.lemon(canopy.colourway)
+        if ripe < 0.5 { (a, b) = (Self.skin(set.green), Self.skin(set.pale)) } else { (a, b) = (Self.skin(set.pale), Self.skin(set.ripe[variety])) }
         let t = Ink.smooth(ripe < 0.5 ? ripe * 2 : (ripe - 0.5) * 2)
         let s = Skin(hi: a.hi.mix(b.hi, t), mid: a.mid.mix(b.mid, t), shade: a.shade.mix(b.shade, t))
         // A thirsty or sleepy tree's fruit is duller, and a bright one's richer.

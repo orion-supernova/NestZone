@@ -41,7 +41,8 @@ extension LemonPainter {
             center: CGPoint(x: bx + L.x * Rf * 0.5, y: by + L.y * Rf * 0.5), startRadius: Rf * 0.2, endRadius: Rf * 1.7))
 
         // The rind, then the pith inside it.
-        let pith = RGB.tone(0xFFF4CE, day: day, dim: 0.8).mix(sk.hi, 0.12).mix(RGB(0xC9C09A), 0.35 * core.M.thirst)
+        let set = TreeColours.lemon(canopy.colourway)
+        let pith = RGB.tone(set.pith, day: day, dim: 0.8).mix(sk.hi, 0.12).mix(RGB(0xC9C09A), 0.35 * core.M.thirst)
         var rind = Path(), inner = Path()
         rind.oval(cx, cy, Rf, Rf * squash, rot)
         inner.oval(cx, cy, Rf * 0.925, Rf * 0.925 * squash, rot)
@@ -87,8 +88,8 @@ extension LemonPainter {
                                              .init(color: RGB.tone(c, day: day, dim: 0.75).color(), location: 1)]),
                             startPoint: CGPoint(x: cx + L.x * reach, y: cy + L.y * reach), endPoint: CGPoint(x: cx - L.x * reach, y: cy - L.y * reach))
         }
-        tree.fill(flesh, with: juice(0xFFF3A8, 0xF9DC5E, 0xE8B536))
-        tree.fill(vesicles, with: .color(RGB.tone(0xFFFAD0, day: day, dim: 0.8).color(0.5 * (1 - 0.3 * night))))
+        tree.fill(flesh, with: juice(set.juice.hi, set.juice.mid, set.juice.shade))
+        tree.fill(vesicles, with: .color(RGB.tone(set.vesicles, day: day, dim: 0.8).color(0.5 * (1 - 0.3 * night))))
         // The core, where the walls meet.
         var heart = Path()
         heart.oval(cx, cy, Rf * 0.085, Rf * 0.075, rot)
@@ -117,7 +118,7 @@ extension LemonPainter {
         drop.addLine(to: CGPoint(x: foot.x, y: foot.y + Rf * 0.12))
         drop.closeSubpath()
         shine.oval(foot.x + L.x * Rf * 0.02, foot.y + Rf * 0.155 + L.y * Rf * 0.02, Rf * 0.02, Rf * 0.026)
-        tree.fill(drop, with: .color(RGB.tone(0xF8E27A, day: day, dim: 0.8).color(0.95)))
+        tree.fill(drop, with: .color(RGB.tone(set.drop, day: day, dim: 0.8).color(0.95)))
         tree.fill(shine, with: .color(Color.white.opacity(0.9)))
     }
 }
