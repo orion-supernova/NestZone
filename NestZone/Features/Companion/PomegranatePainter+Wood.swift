@@ -11,80 +11,10 @@ extension PomegranatePainter.Look {
         return CGPoint(x: v * v * q.x + 2 * u * v * q.cx + u * u * q.x1, y: v * v * q.y + 2 * u * v * q.cy + u * u * q.y1)
     }
 
-    /// The stems and limbs: one silhouette with a root flare, a core shadow on
-    /// the side away from the light and a lit edge on the side towards it, then
-    /// the bark. A pomegranate's bark is grey-brown and shreds in long
-    /// strips, so thick wood gets long streaks, a few short flakes lifted
-    /// pale, and knots where it is gnarled. A young whip is smooth, and only
-    /// gets its bark as it thickens. The crown's shade falls over it last.
+    /// The stems and limbs. A pomegranate's bark is grey-brown and shreds in
+    /// long strips along the stem (`BarkStyle.shredded`).
     func wood(_ context: GraphicsContext) {
-        let t = tones
-        var outline = Path(), edge = Path(), core = Path()
-        var dark = Path(), pale = Path(), flakes = Path(), knots = Path(), shade = Path()
-        var flare = 0.0, any = false
-        for (i, nd) in canopy.limbs.enumerated() {
-            guard let q = pose.limbs[i] else { continue }
-            any = true
-            let root = nd.parent < 0
-            if root { flare = max(flare, q.w0) }
-            outline.limb(q, q.w0, q.w1, 0, flat: root)
-            let am = atan2(q.y1 - q.y, q.x1 - q.x)
-            let side: Double = sin(am) * L.x - cos(am) * L.y > 0 ? -1 : 1
-            edge.limb(q, q.w0 * 0.26, q.w1 * 0.2, side * 0.34, flat: root)
-            core.limb(q, q.w0 * 0.34, q.w1 * 0.3, -side * 0.3, flat: root)
-            guard nd.depth <= 1 && q.w0 > 2.2 else { continue }
-            let nx = -sin(am), ny = cos(am)
-            let thick = q.w0 > 4
-
-            // Long strips, a little wavy, running with the grain.
-            for (n, f) in [-0.3, 0.02, 0.3].enumerated() where thick || n == 1 {
-                let w0 = f * q.w0, w1 = f * q.w1, mid = f * (q.w0 + q.w1) * 0.5 + nx * 0 + (n == 1 ? q.w0 * 0.07 : -q.w0 * 0.05)
-                var path = Path()
-                path.move(to: CGPoint(x: q.x + nx * w0, y: q.y + ny * w0))
-                path.addQuadCurve(to: CGPoint(x: q.x1 + nx * w1, y: q.y1 + ny * w1), control: CGPoint(x: q.cx + nx * mid, y: q.cy + ny * mid))
-                if (f < 0) == (side < 0) { pale.addPath(path) } else { dark.addPath(path) }
-            }
-            // Short strips and flakes across the grain, tilted: the shreds.
-            var u = 0.14
-            var n = 0
-            while u < 0.9 {
-                let c = along(q, u), w = Ink.lerp(q.w0, q.w1, u)
-                let sx = Double((n * 5) % 7 - 3) * 0.1
-                let a = CGPoint(x: c.x + nx * w * (sx - 0.22), y: c.y + ny * w * (sx - 0.22))
-                let b = CGPoint(x: c.x + nx * w * (sx + 0.12) - ny * w * 0.3, y: c.y + ny * w * (sx + 0.12) + nx * w * 0.3)
-                if n % 4 == 0 { flakes.move(to: a); flakes.addLine(to: b) } else { dark.move(to: a); dark.addLine(to: b) }
-                u += thick ? 0.11 : 0.19
-                n += 1
-            }
-            if nd.depth == 0 && !root && q.g > 0.9 && thick {
-                let c = along(q, 0.46), w = Ink.lerp(q.w0, q.w1, 0.46)
-                knots.oval(c.x + nx * w * 0.1, c.y + ny * w * 0.1, w * 0.14, w * 0.22, am)
-            }
-        }
-        guard any else { return }
-        outline.flare(flare)
-        for (j, spot) in pose.clumps.enumerated() {
-            guard let q = spot, !canopy.clumps[j].tuft, canopy.clumps[j].tier > 0 else { continue }
-            shade.oval(q.x + q.R * 0.08, q.y + q.R * 0.42, q.R * 0.8, q.R * 0.7)
-        }
-
-        let fade = Gradient(stops: [.init(color: t.barkDark.color(), location: 0), .init(color: t.bark.color(), location: 0.55),
-                                    .init(color: t.bark.shifted(3).color(), location: 1)])
-        context.fill(outline, with: .linearGradient(fade, startPoint: CGPoint(x: 0, y: pose.bottom * 0.65 + pose.top * 0.35), endPoint: .zero))
-        context.fill(core, with: .color(t.barkDark.color(0.55)))
-        let shine = Gradient(stops: [.init(color: t.barkHi.color(0.35), location: 0), .init(color: t.barkHi.color(0.75), location: 0.5),
-                                     .init(color: t.barkHi.color(0.95), location: 1)])
-        context.fill(edge, with: .linearGradient(shine, startPoint: CGPoint(x: 0, y: pose.top), endPoint: .zero))
-        if !dark.isEmpty { context.stroke(dark, with: .color(t.barkDark.color(0.55)), style: StrokeStyle(lineWidth: 0.8, lineCap: .round)) }
-        if !pale.isEmpty { context.stroke(pale, with: .color(t.barkHi.color(0.5)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round)) }
-        if !flakes.isEmpty { context.stroke(flakes, with: .color(t.barkHi.shifted(6).color(0.4)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round)) }
-        if !knots.isEmpty { context.fill(knots, with: .color(t.barkDark.color(0.85))) }
-        guard !shade.isEmpty else { return }
-        let deep = t.ramp[0].mix(RGB(0x122027), 0.35).shifted(-10)
-        let under = Gradient(colors: [deep.color(0.42 * (1 - 0.3 * M.doze)), deep.color(0.12)])
-        var c = context
-        c.clip(to: outline)
-        c.fill(shade, with: .linearGradient(under, startPoint: CGPoint(x: 0, y: (pose.top + pose.bottom) / 2), endPoint: CGPoint(x: 0, y: pose.bottom + 20)))
+        TreeWood(canopy: canopy, pose: pose, L: L, tones: tones, M: M, style: .shredded).paint(context)
     }
 }
 
