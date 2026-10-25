@@ -79,6 +79,7 @@ final class LeafArt: @unchecked Sendable {
             if entries.count >= 8 { entries.removeAll() }
             let crown = crowns.withLock { crowns in
                 if let found = crowns[seed] { return found }
+                if crowns.count >= 8 { crowns.removeAll() }
                 let made = PomegranateCrown(canopy)
                 crowns[seed] = made
                 return made
