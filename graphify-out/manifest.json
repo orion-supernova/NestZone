@@ -160,8 +160,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792943383.1540122,
-    "ast_hash": "e77fd2fea4ac1ecfa8b8ed4798d457c1",
+    "mtime": 1792956714.4638996,
+    "ast_hash": "5c9acc075256842d16df7dfb3c137eaf",
     "semantic_hash": ""
   },
   "Docs/Convex-Migration/Backend-Deploy-Runbook.md": {
@@ -1310,8 +1310,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/HANDOFF.md": {
-    "mtime": 1792950595.1480503,
-    "ast_hash": "233bab442b4e02af53fbaf54f966e058",
+    "mtime": 1792956714.4655936,
+    "ast_hash": "a4e777b939ecdc81f86263238b3fa5ee",
     "semantic_hash": ""
   },
   "Docs/Companion/HOLIDAYS.md": {
@@ -1630,8 +1630,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/FrameMeter.swift": {
-    "mtime": 1792943383.6769397,
-    "ast_hash": "c7d4b7a55ae302429a81e3834099eeab",
+    "mtime": 1792956714.4666555,
+    "ast_hash": "232b57217cf1c4d0368461b0f5cf5bab",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCatalog.swift": {
@@ -1850,8 +1850,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/NestieBench.swift": {
-    "mtime": 1792950595.1719005,
-    "ast_hash": "486dabfa97e24195c9098cb148731107",
+    "mtime": 1792956714.468136,
+    "ast_hash": "7f14ee1669ed6a8c691697e592fab0dc",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/PushTokenMemory.swift": {
@@ -1935,8 +1935,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPlan.swift": {
-    "mtime": 1792944197.0566306,
-    "ast_hash": "556206faa6cd4d43ee0f38df2f070702",
+    "mtime": 1792952204.1467674,
+    "ast_hash": "2cbef4bc4235bd72eca23fe2cf2a4642",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PetMotion.swift": {
@@ -1970,8 +1970,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter.swift": {
-    "mtime": 1792944838.8881297,
-    "ast_hash": "3abde3440863b559e59c07ac874c192a",
+    "mtime": 1792952181.0480509,
+    "ast_hash": "b510ef2ac5b95f276aea94099f49ab6c",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPlan.swift": {
@@ -2055,8 +2055,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/RULES.md": {
-    "mtime": 1792950918.700554,
-    "ast_hash": "f3355f4c2b935e5daa32274e29707a63",
+    "mtime": 1792956709.205929,
+    "ast_hash": "44ea81e8e03eb37b52dc03bbd3fa8e00",
     "semantic_hash": ""
   },
   "Docs/Companion/art/pass1/index.html": {
@@ -2100,8 +2100,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterGeometry.swift": {
-    "mtime": 1792944112.7335877,
-    "ast_hash": "e6569aaeb77ffb1f91bc4e1a64f0e5b5",
+    "mtime": 1792952219.197026,
+    "ast_hash": "be81c13deaed3c66ca486a3b191e7151",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterLook.swift": {
@@ -2120,8 +2120,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPainter+Sitter.swift": {
-    "mtime": 1792944161.5195532,
-    "ast_hash": "711d3d22958a3ee1117bc50c9c488634",
+    "mtime": 1792952219.1976037,
+    "ast_hash": "fff36e262e7c6dda367efa49179c00de",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PetTiming.swift": {
@@ -2325,8 +2325,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantArt.swift": {
-    "mtime": 1792948081.6591623,
-    "ast_hash": "295f68f2653eaa51aaeffb3d4e807a1b",
+    "mtime": 1792952181.0476887,
+    "ast_hash": "51cb729343360eaab609ed2f2a9cbdf6",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter+Blooms.swift": {
@@ -4445,13 +4445,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterColours.swift": {
-    "mtime": 1792950706.8046088,
-    "ast_hash": "ad0ccea0a373ca563b6b4594e7b3aa88",
+    "mtime": 1792952204.147134,
+    "ast_hash": "4867b2631456ef4af1830c5360eab994",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPainter+Colour.swift": {
-    "mtime": 1792944197.0583973,
-    "ast_hash": "992c5243299fe00c5d2a07fda2dddb8c",
+    "mtime": 1792952219.1984339,
+    "ast_hash": "a58e672cf28ee93a6cc341a7087f4cd9",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/DecorPortrait.swift": {
@@ -4465,8 +4465,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantVariegation.swift": {
-    "mtime": 1792948081.659586,
-    "ast_hash": "c38915507d9db77c7f8a886742439e1c",
+    "mtime": 1792955016.2398849,
+    "ast_hash": "6fc8b5992a6c28bc499720eebe075e3b",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ShopStill.swift": {
@@ -4485,7 +4485,7 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/index.html": {
-    "mtime": 1792951747.9568923,
+    "mtime": 1792956272.9499354,
     "ast_hash": "7f93e587c4990f9536ffd233338bd966",
     "semantic_hash": ""
   },
@@ -4545,48 +4545,48 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-0-night.jpg": {
-    "mtime": 1792951744.0045366,
+    "mtime": 1792956272.6962643,
     "ast_hash": "9c6f80da56b27335536e18cde1af50a2",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-0.jpg": {
-    "mtime": 1792951744.000481,
+    "mtime": 1792956272.694462,
     "ast_hash": "e2dd628a59e7f4e6caf2ad5a96d310e3",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-1-night.jpg": {
-    "mtime": 1792951744.0259635,
+    "mtime": 1792956272.699863,
     "ast_hash": "aa74d8fb69aa17c9c7016fd816522d12",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-1.jpg": {
-    "mtime": 1792951744.009764,
+    "mtime": 1792956272.6980116,
     "ast_hash": "e8385af2b41462e46aa8d3e8bd8b3f42",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-2-night.jpg": {
-    "mtime": 1792951744.042485,
+    "mtime": 1792956272.7034278,
     "ast_hash": "714d083a80fa5a920a65f10ab3a617b1",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-2.jpg": {
-    "mtime": 1792951744.038709,
+    "mtime": 1792956272.7016957,
     "ast_hash": "e32d9cd342f5e89375e67a30270eef92",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-3-night.jpg": {
-    "mtime": 1792951744.0512044,
-    "ast_hash": "32383dd95c5c41437f7643c332a88344",
+    "mtime": 1792956272.7072356,
+    "ast_hash": "52268a612e16bb1e5df14df2b69a94f3",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-3.jpg": {
-    "mtime": 1792951744.0465088,
-    "ast_hash": "28f2ad74e2d7c5de0c1ec24aa2854222",
+    "mtime": 1792956272.705248,
+    "ast_hash": "60a453d2faaa21a749985ab4226497ca",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/basil-moods.jpg": {
-    "mtime": 1792951744.1455352,
-    "ast_hash": "5efdea7937e21e944662572aedaa23f1",
+    "mtime": 1792956272.7498882,
+    "ast_hash": "c7b92953ce40c6529254a3480e66fb54",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/bonsai-0-night.jpg": {
@@ -4950,48 +4950,48 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-0-night.jpg": {
-    "mtime": 1792951742.4246893,
+    "mtime": 1792956272.6049142,
     "ast_hash": "2bf6d3ffe6c8e2be6d6f92b8241540bb",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-0.jpg": {
-    "mtime": 1792951742.4209409,
+    "mtime": 1792956272.6028917,
     "ast_hash": "f462078c23dbeea766c0fc2caa752dac",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-1-night.jpg": {
-    "mtime": 1792951742.4322252,
+    "mtime": 1792956272.6088521,
     "ast_hash": "02dce0dc72e2946ed46a77c8a2e01113",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-1.jpg": {
-    "mtime": 1792951742.428556,
+    "mtime": 1792956272.6068628,
     "ast_hash": "e3d7d4655a9fd79f10a97606c69cb799",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-2-night.jpg": {
-    "mtime": 1792951742.4398375,
-    "ast_hash": "3a17cf19f89f23863727904bbc520a45",
+    "mtime": 1792956272.612599,
+    "ast_hash": "14eeede2d4d5c18b48fa722f0e2f5dd7",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-2.jpg": {
-    "mtime": 1792951742.4359727,
-    "ast_hash": "80a0c63a0dae6fb0fc072ba132698183",
+    "mtime": 1792956272.6106756,
+    "ast_hash": "24f510068edc1cc0bfcce676b329b855",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-3-night.jpg": {
-    "mtime": 1792951742.446883,
+    "mtime": 1792956272.6161892,
     "ast_hash": "cbf9ba3410046ddd754834cdddd24042",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-3.jpg": {
-    "mtime": 1792951742.443311,
+    "mtime": 1792956272.6143696,
     "ast_hash": "995840a2c9b898129a0417eae9cfc744",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/fox-moods.jpg": {
-    "mtime": 1792951742.5332181,
-    "ast_hash": "283d61ec9724a7006ef329768659b708",
+    "mtime": 1792956272.6603937,
+    "ast_hash": "ba3456fdd025eaa5f30ef4bedd4b55a1",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/goldfish-0-night.jpg": {
@@ -5130,48 +5130,48 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-0-night.jpg": {
-    "mtime": 1792951741.3383527,
+    "mtime": 1792956272.5002687,
     "ast_hash": "c7dd00939c2b12a6c0c2f4ad6aed2b4a",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-0.jpg": {
-    "mtime": 1792951741.3344853,
+    "mtime": 1792956272.49819,
     "ast_hash": "872bcbcfc0b02c5c35c0877a879bcd97",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-1-night.jpg": {
-    "mtime": 1792951741.3455415,
+    "mtime": 1792956272.5043406,
     "ast_hash": "221290c4889f7c00d43e54f94a9aaaff",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-1.jpg": {
-    "mtime": 1792951741.3419063,
+    "mtime": 1792956272.5022407,
     "ast_hash": "90b5a0bfb0a9fd199f0ce355e11e7599",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-2-night.jpg": {
-    "mtime": 1792951741.354257,
-    "ast_hash": "e7edc8dccc53668df5ad4a65a36cb712",
+    "mtime": 1792956272.5083787,
+    "ast_hash": "c88bb22e93a5331fa13a257ae7afc648",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-2.jpg": {
-    "mtime": 1792951741.3498518,
-    "ast_hash": "f26f6a0b94c973eebe962a28203729fb",
+    "mtime": 1792956272.5063515,
+    "ast_hash": "c8f75431b06c38c76238181425378792",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-3-night.jpg": {
-    "mtime": 1792951741.3608344,
+    "mtime": 1792956272.5123193,
     "ast_hash": "ffe17068304a4bb9bab11afb44f7c756",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-3.jpg": {
-    "mtime": 1792951741.3575377,
+    "mtime": 1792956272.5103345,
     "ast_hash": "4a2a74e985a0f22b6caff36c5a13fd87",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/kitten-moods.jpg": {
-    "mtime": 1792951741.4436445,
-    "ast_hash": "f91de28aac93e9d8fb2d06d4e5fb6301",
+    "mtime": 1792956272.5581574,
+    "ast_hash": "a174c77aafae8d4b00e114eafe78559b",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/lavender-0-night.jpg": {
@@ -5355,93 +5355,93 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-0-night.jpg": {
-    "mtime": 1792951744.579079,
+    "mtime": 1792956272.7900627,
     "ast_hash": "514b6b0a57430da978e85a31ddabac29",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-0.jpg": {
-    "mtime": 1792951744.5755415,
+    "mtime": 1792956272.7881157,
     "ast_hash": "2bf50827eb029f6aa60f68b11416a2ef",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-1-night.jpg": {
-    "mtime": 1792951744.5863316,
+    "mtime": 1792956272.7939372,
     "ast_hash": "6e811a7abc446b764297a5d52e85d90c",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-1.jpg": {
-    "mtime": 1792951744.5826817,
+    "mtime": 1792956272.791932,
     "ast_hash": "35bc8d031a0911c8a11e6b7f622ad4e2",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-2-night.jpg": {
-    "mtime": 1792951744.5936215,
-    "ast_hash": "4fd4d863f7c69b05f8c975cbd5627408",
+    "mtime": 1792956272.7980945,
+    "ast_hash": "aba27685e983f562a3fd781d83b9e635",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-2.jpg": {
-    "mtime": 1792951744.5899026,
-    "ast_hash": "5a2985d69f64edeb29a58b07ba4511a6",
+    "mtime": 1792956272.795949,
+    "ast_hash": "9fcf098fe89acc9e5668c6240c7ba053",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-3-night.jpg": {
-    "mtime": 1792951744.600544,
+    "mtime": 1792956272.8019352,
     "ast_hash": "c515d7d72cb75e29fb6e66e73294d8d6",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-3.jpg": {
-    "mtime": 1792951744.5970592,
+    "mtime": 1792956272.7999303,
     "ast_hash": "fb83e5f27e22fda315d9b22321659f3a",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/mint-moods.jpg": {
-    "mtime": 1792951744.6809707,
-    "ast_hash": "97ced0feb5d22f23227fd6b30cb3092d",
+    "mtime": 1792956272.8457527,
+    "ast_hash": "fe91db22121385d885dbaf0bd428af76",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-0-night.jpg": {
-    "mtime": 1792951745.375375,
+    "mtime": 1792956272.88951,
     "ast_hash": "423108a7d91e72b9edb7fa5d65c12b4c",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-0.jpg": {
-    "mtime": 1792951745.372783,
+    "mtime": 1792956272.8875644,
     "ast_hash": "e1f752b9cb47cd8de71548fb9cfed0cc",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-1-night.jpg": {
-    "mtime": 1792951745.3809266,
-    "ast_hash": "077508fc892a1f545378c71ad61e7a67",
+    "mtime": 1792956272.8935814,
+    "ast_hash": "6727f8a3ce2a74cc329d3dc162b99aa6",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-1.jpg": {
-    "mtime": 1792951745.378339,
-    "ast_hash": "22a2394ebc3e28a1a2a61e215883dbb7",
+    "mtime": 1792956272.8916245,
+    "ast_hash": "4b0b2bf4b473a341f675bf87dd9e68d8",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-2-night.jpg": {
-    "mtime": 1792951745.3860817,
+    "mtime": 1792956272.8974526,
     "ast_hash": "0f810f8d82f2aaadabcc77c6135d1993",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-2.jpg": {
-    "mtime": 1792951745.3835201,
+    "mtime": 1792956272.895517,
     "ast_hash": "06c81bc94dd495aeaebb0191cb7a8c08",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-3-night.jpg": {
-    "mtime": 1792951745.391331,
+    "mtime": 1792956272.9013393,
     "ast_hash": "1bf6f1f19f19db7e59f89ab6b2bc091e",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-3.jpg": {
-    "mtime": 1792951745.3887587,
+    "mtime": 1792956272.899325,
     "ast_hash": "80798bbcf5efab5dd7a2ce050086ef7b",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/monstera-moods.jpg": {
-    "mtime": 1792951745.4566076,
-    "ast_hash": "d7ba72880eb5f57296bca1b725845fcc",
+    "mtime": 1792956272.948902,
+    "ast_hash": "900840ab60de6bd59f5b4409e36cfe2e",
     "semantic_hash": ""
   },
   "Docs/Companion/art/colours/olive-0-night.jpg": {
