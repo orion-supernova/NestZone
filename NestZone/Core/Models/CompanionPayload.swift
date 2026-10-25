@@ -34,6 +34,11 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
         public var ownedSpecies: [String]
         /// Species the house has grown all the way.
         public var grownSpecies: [String]
+        /// `"<species>:<colour>"` for each colourway grown. Empty from a
+        /// server that predates colours.
+        public var grownColours: [String]
+        /// When the house finished every free species; `nil` until it has.
+        public var finaleAt: Date?
         public var layout: SceneLayout
         /// `nil` means the region's defaults.
         public var holidays: [String]?
@@ -42,7 +47,8 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
         public var albumCount: Int
 
         enum CodingKeys: String, CodingKey {
-            case leaves, sparkles, welcomed, owned, ownedSpecies, grownSpecies, layout, holidays, region, tzOffset, albumCount
+            case leaves, sparkles, welcomed, owned, ownedSpecies, grownSpecies, grownColours, finaleAt, layout, holidays, region
+            case tzOffset, albumCount
         }
 
         public init(from decoder: any Decoder) throws {
@@ -53,6 +59,9 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
             owned = (try? c.decodeIfPresent([String].self, forKey: .owned)) ?? []
             ownedSpecies = (try? c.decodeIfPresent([String].self, forKey: .ownedSpecies)) ?? []
             grownSpecies = (try? c.decodeIfPresent([String].self, forKey: .grownSpecies)) ?? []
+            grownColours = (try? c.decodeIfPresent([String].self, forKey: .grownColours)) ?? []
+            finaleAt = ((try? c.decodeIfPresent(Double.self, forKey: .finaleAt)) ?? nil)
+                .map { Date(timeIntervalSince1970: $0 / 1000) }
             layout = (try? c.decodeIfPresent(SceneLayout.self, forKey: .layout)) ?? SceneLayout()
             holidays = (try? c.decodeIfPresent([String].self, forKey: .holidays)) ?? nil
             region = (try? c.decodeIfPresent(String.self, forKey: .region)) ?? nil
@@ -84,10 +93,12 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
         /// The house has not chosen what this is yet: `species` is only the
         /// vote's first option, standing in. Draw a seed, never it.
         public var undecided: Bool
+        /// Its colourway, 1-3; `nil` is the original.
+        public var colour: Int?
 
         enum CodingKeys: String, CodingKey {
             case id, uuid, species, seed, startedAt, points, stage, isReady, pointsReady, readyAt, paidStage, lastCareAt, myCareDays
-            case undecided
+            case undecided, colour
         }
 
         public init(from decoder: any Decoder) throws {
@@ -108,6 +119,7 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
                 .map { Date(timeIntervalSince1970: $0 / 1000) }
             myCareDays = (try? c.decodeIfPresent([String].self, forKey: .myCareDays)) ?? []
             undecided = (try? c.decodeIfPresent(Bool.self, forKey: .undecided)) ?? false
+            colour = Colourway.read(c.decodeNumberIfPresent(forKey: .colour))
         }
     }
 
@@ -169,8 +181,10 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
         public var seed: String
         public var startedAt: Date
         public var graduatedAt: Date
+        /// The colourway it grew in; `nil` is the original.
+        public var colour: Int?
 
-        enum CodingKeys: String, CodingKey { case uuid, species, seed, startedAt, graduatedAt }
+        enum CodingKeys: String, CodingKey { case uuid, species, seed, startedAt, graduatedAt, colour }
 
         public init(from decoder: any Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -180,6 +194,7 @@ public struct CompanionPayload: Decodable, Equatable, Sendable {
             let started = (try? c.decode(Double.self, forKey: .startedAt)) ?? 0
             startedAt = Date(timeIntervalSince1970: started / 1000)
             graduatedAt = Date(timeIntervalSince1970: ((try? c.decode(Double.self, forKey: .graduatedAt)) ?? started) / 1000)
+            colour = Colourway.read(c.decodeNumberIfPresent(forKey: .colour))
         }
     }
 

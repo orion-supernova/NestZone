@@ -310,7 +310,8 @@ private struct CardScene: View {
             CompanionScene(
                 companion: look, progress: store.progress, mood: store.mood, stage: store.stage,
                 layout: store.visibleLayout, southern: store.southern, now: store.clock,
-                choreTick: store.choreTick, careTick: store.careTick, compact: compact, paused: covered
+                choreTick: store.choreTick, careTick: store.careTick, compact: compact, paused: covered,
+                colourway: look.colour ?? 0
             )
             .accessibilityElement()
             .accessibilityLabel(store.isUndecided ? Text(L10n.voteSeedTitle) : Text(L10n.companionSceneLabel(
@@ -337,7 +338,7 @@ private struct CardTitle: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             if let species = store.species {
-                Text(species.title)
+                (store.colour.map { Text(L10n.companionColoured(String(localized: species.title), String(localized: species.colourName($0)))) } ?? Text(species.title))
                     .font(font)
                     .oneLineUnlessAccessibility()
             } else if store.isUndecided {

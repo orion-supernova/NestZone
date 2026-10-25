@@ -6,8 +6,8 @@ import os
 // Nestie against a stand-in server, on a simulator nobody is signed in on.
 //
 //   xcrun simctl launch <udid> com.walhallaa.NestZone -nestieBench 1 \
-//       [-nestieScenario fresh|growing|ready|young|vote|voteAlone] \
-//       [-nestieScript buy|care|ceremony|decorate|holidays|choose|chooseReady|vote|voteSettle|votePick] \
+//       [-nestieScenario fresh|growing|ready|young|vote|voteAlone|finale] \
+//       [-nestieScript buy|care|ceremony|decorate|holidays|choose|chooseReady|vote|voteSettle|votePick|finale|finaleStart|finaleChoose] \
 //       [-nestieOrder pushFirst|answerFirst] \
 //       [-nestieBuy honest|owned|short|unavailable|priceChanged] \
 //       [-nestieFail care,start,startAfter,buy,buyAfter,graduate,layout,holidays,ballot,decide,hang] \
@@ -223,6 +223,47 @@ enum Bench {
             report("ceremony finished", store)
             try? await Task.sleep(for: .seconds(2))
             report("ceremony settled", store)
+        case "finale":
+            // `-nestieScenario finale`: the last free species is ready. The
+            // ceremony on Today, its button, and the answer says "finale":
+            // the finale plays in a cover of its own, and Choose opens on
+            // the colours when it closes. The last step grows one coloured.
+            store.send(.celebrateTapped)
+            try? await Task.sleep(for: .seconds(3.5))
+            store.send(.ceremonyFinished, animation: Motion.arrive)
+            report("ceremony finished", store)
+            try? await Task.sleep(for: .seconds(9))
+            report("finale playing", store)
+            store.send(.momentDismissed, animation: Motion.arrive)
+            try? await Task.sleep(for: .seconds(2))
+            report("choose with colours", store)
+            store.send(.growTapped(.kitten), animation: ShopMotion.cardIn)
+            try? await Task.sleep(for: .seconds(2))
+            report("colour picker", store)
+            store.send(.colourPicked(.kitten, 2), animation: Motion.exit)
+            report("coloured start tapped", store)
+            try? await Task.sleep(for: .seconds(2))
+            report("coloured start settled", store)
+        case "finaleStart":
+            // The same finale, brought by a start over the ready one: one
+            // cover, "All grown up!" and then "You've grown them all".
+            store.send(.chooseTapped)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.chose(.kitten))
+            report("chose over a ready one", store)
+            try? await Task.sleep(for: .seconds(14))
+            report("finale playing", store)
+            store.send(.momentDismissed, animation: Motion.arrive)
+            try? await Task.sleep(for: .seconds(2))
+            report("finale closed", store)
+        case "finaleChoose":
+            // After the finale (a house that finished): Choose, the picker
+            // for a grown one, and a colour the house has grown already.
+            store.send(.chooseTapped)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.growTapped(.kitten), animation: ShopMotion.cardIn)
+            try? await Task.sleep(for: .seconds(2))
+            report("colour picker", store)
         case "vote":
             // Open the vote, answer two of three, and see the card.
             store.send(.voteTapped)
@@ -290,6 +331,10 @@ actor FakeNestieServer {
     private var current: Current?
     private var recent: [(kind: String, at: Date, user: String?)] = []
     private var album: [(uuid: String, species: Species, seed: String, started: Date, graduated: Date)] = []
+    /// Colours of album cards, by uuid, and the house's finale.
+    private var albumColours: [String: Int] = [:]
+    private var grownColours: Set<String> = []
+    private var finaleAt: Date?
     private var jarFeed: [[String: Any]] = []
 
     private struct Current {
@@ -300,6 +345,7 @@ actor FakeNestieServer {
         var careDays: [String] = []
         /// A seed the house has not named: `species` is the vote's first option.
         var undecided = false
+        var colour: Int?
     }
 
     /// The vote for the next one, as the server keeps it, with one housemate
@@ -353,6 +399,24 @@ actor FakeNestieServer {
             region = nil
         case "ready":
             seedHouse(points: 64, startedAgo: 8 * day, now: now)
+        case "finale", "finaleDone":
+            // Every species that costs no Sparkles grown but one, which is
+            // ready (`finaleDone`: that one is grown too, a house that
+            // finished before the finale shipped).
+            seedHouse(points: 64, startedAgo: 8 * day, now: now)
+            let last = Species.sunflower
+            current?.species = last
+            for (index, species) in Species.allCases.filter({ Species.freeToHave.contains($0) && $0 != last }).enumerated() {
+                album.append((UUID().uuidString, species, "bench-home-\(index)", now.addingTimeInterval(-60 * day), now.addingTimeInterval(-30 * day)))
+            }
+            albumCount = album.count
+            if config.scenario == "finaleDone" {
+                album.append((UUID().uuidString, last, "bench-home-last", now.addingTimeInterval(-9 * day), now.addingTimeInterval(-8 * day)))
+                albumCount = album.count
+                current?.points = 20
+                finaleAt = now.addingTimeInterval(-8 * day)
+                grownColours = ["kitten:1"]
+            }
         case "young":
             seedHouse(points: 64, startedAgo: 2 * day, now: now)
         case "vote", "voteAlone":
@@ -380,7 +444,7 @@ actor FakeNestieServer {
         ]
         jarFeed = [["id": "j1", "kind": "welcome", "leaves": 150, "sparkles": 180, "item": NSNull(), "userId": "u1", "at": now.addingTimeInterval(-startedAgo).timeIntervalSince1970 * 1000],
                    ["id": "j2", "kind": "gift", "leaves": 1, "sparkles": 0, "item": NSNull(), "userId": NSNull(), "at": now.timeIntervalSince1970 * 1000]]
-        album = []
+        if config.scenario != "finale", config.scenario != "finaleDone" { album = [] }
         // `-nestieDecor full` (or a list of raw values, `windChime,bow`) owns
         // those decorations and puts them out, to measure what a scene full of
         // them costs against an empty one.
@@ -406,9 +470,12 @@ actor FakeNestieServer {
             forHome: { _ in self.stream() },
             album: { _ in self.albumStream() },
             setPlace: { _, place in try await self.setPlace(place) },
-            start: { _, species, place, requestID in try await self.start(species, place, requestID) },
+            start: { _, species, place, requestID, colour in try await self.start(species, place, requestID, colour) },
             care: { _ in try await self.care() },
-            graduate: { _, id in GraduateOutcome(paid: try await self.graduate(id)) },
+            graduate: { _, id in
+                let (paid, finale) = try await self.graduate(id)
+                return GraduateOutcome(paid: paid, finale: finale)
+            },
             // A vote exists only in the `vote` scenarios, with one housemate who has answered.
             ballot: { _, species, answer in try await self.ballot(species, answer) },
             decide: { _ in try await self.decide() },
@@ -493,6 +560,7 @@ actor FakeNestieServer {
             "leaves": leaves, "sparkles": sparkles, "welcomed": welcomed,
             "owned": owned.sorted(), "ownedSpecies": ownedSpecies.sorted(),
             "grownSpecies": album.map(\.species.rawValue),
+            "grownColours": grownColours.sorted(), "finaleAt": finaleAt.map(ms) as Any? ?? NSNull(),
             "layout": layoutJSON(), "holidays": holidays as Any? ?? NSNull(),
             "region": region as Any? ?? NSNull(), "tzOffset": tzOffset as Any? ?? NSNull(),
             "albumCount": albumCount,
@@ -508,7 +576,7 @@ actor FakeNestieServer {
                 "isReady": pointsReady && Date() >= readyAt, "pointsReady": pointsReady, "readyAt": ms(readyAt),
                 "paidStage": c.paidStage,
                 "lastCareAt": c.lastCare.map(ms) as Any? ?? NSNull(), "myCareDays": c.careDays,
-                "undecided": c.undecided,
+                "undecided": c.undecided, "colour": c.colour as Any? ?? NSNull(),
             ] as [String: Any]
         } ?? NSNull()
         json["vote"] = voteState.map { v in
@@ -538,7 +606,8 @@ actor FakeNestieServer {
     private func cards() -> CompanionPayload.Cards {
         let json: [[String: Any]] = album.map { card in
             ["uuid": card.uuid, "species": card.species.rawValue, "seed": card.seed,
-             "startedAt": card.started.timeIntervalSince1970 * 1000, "graduatedAt": card.graduated.timeIntervalSince1970 * 1000]
+             "startedAt": card.started.timeIntervalSince1970 * 1000, "graduatedAt": card.graduated.timeIntervalSince1970 * 1000,
+             "colour": albumColours[card.uuid] as Any? ?? NSNull()]
         }
         // swiftlint:disable:next force_try
         return try! JSONDecoder().decode(CompanionPayload.Cards.self, from: try! JSONSerialization.data(withJSONObject: json))
@@ -578,13 +647,29 @@ actor FakeNestieServer {
     private var starts: [String: StartOutcome] = [:]
     private var startCalls = 0
 
-    private func start(_ species: Species, _ place: Place, _ requestID: String) async throws -> StartOutcome {
+    /// What graduating a ready companion does to the house: the card, the jar,
+    /// the colour grown, and whether it finished every free species, once.
+    private func graduateCurrent(_ c: Current) -> (finale: Bool, paid: Coins) {
+        album.append((c.uuid, c.species, c.seed, c.startedAt, Date()))
+        if let colour = c.colour {
+            albumColours[c.uuid] = colour
+            grownColours.insert(Colourway.key(c.species, colour))
+        }
+        albumCount += 1
+        leaves += 100; sparkles += 25
+        let grown = Set(album.map(\.species))
+        let finale = finaleAt == nil && Species.freeToHave.isSubset(of: grown)
+        if finale { finaleAt = Date() }
+        return (finale, Coins(leaves: 100, sparkles: 25))
+    }
+
+    private func start(_ species: Species, _ place: Place, _ requestID: String, _ colour: Int?) async throws -> StartOutcome {
         startCalls += 1
         try await wait(startCalls == 1 ? "start" : "start-\(startCalls)")
         if let first = starts[requestID] {
             Self.log.notice("server: start replayed for the same request id")
             return StartOutcome(companionID: first.companionID, welcome: nil, graduated: first.graduated.map {
-                GraduatedCompanion(companionID: $0.companionID, species: $0.species, paid: nil)
+                GraduatedCompanion(companionID: $0.companionID, species: $0.species, paid: nil, finale: $0.finale)
             })
         }
         if !hasHouse { hasHouse = true; tzOffset = place.tzOffset; region = place.region }
@@ -602,20 +687,27 @@ actor FakeNestieServer {
             publish()
             return outcome
         }
+        // A colour is the server's to judge: after the finale, for a species
+        // grown, in a colour not grown yet. Thrown, with the server's words.
+        if let colour {
+            guard Colourway.range.contains(colour) else { throw AppError.server("There's no such colour") }
+            let finished = finaleAt != nil || Species.freeToHave.isSubset(of: Set(album.map(\.species)))
+            guard finished, album.contains(where: { $0.species == species }),
+                  !grownColours.contains(Colourway.key(species, colour))
+            else { throw AppError.server("That colour can't be grown yet") }
+        }
         // A ready one graduates first, in the same write.
         var graduated: GraduatedCompanion?
         if let c = current, c.points >= 64 - 1e-9, Date().timeIntervalSince(c.startedAt) >= 6 * 86_400 {
-            album.append((c.uuid, c.species, c.seed, c.startedAt, Date()))
-            albumCount += 1
-            leaves += 100; sparkles += 25
-            graduated = GraduatedCompanion(companionID: c.id, species: c.species, paid: Coins(leaves: 100, sparkles: 25))
+            let done = graduateCurrent(c)
+            graduated = GraduatedCompanion(companionID: c.id, species: c.species, paid: done.paid, finale: done.finale)
         }
         let free: Set<Species> = [.magnolia, .basil, .sunflower, .cactus, .duckling, .kitten]
         guard free.contains(species) || ownedSpecies.contains(species.rawValue) else {
             throw AppError.server("That one can't be grown yet")
         }
         let id = "companion-\(albumCount)-\(startCalls)"
-        current = Current(id: id, species: species, seed: "bench-home-\(albumCount)", startedAt: Date(), points: 0)
+        current = Current(id: id, species: species, seed: "bench-home-\(albumCount)", startedAt: Date(), points: 0, colour: colour)
         var welcome: Coins?
         if !welcomed {
             welcomed = true
@@ -671,17 +763,15 @@ actor FakeNestieServer {
         return counted
     }
 
-    private func graduate(_ id: String) async throws -> Coins? {
+    private func graduate(_ id: String) async throws -> (Coins?, Bool) {
         try await wait("graduate")
         guard let c = current, c.points >= 64 - 1e-9, Date().timeIntervalSince(c.startedAt) >= 6 * 86_400 else {
             throw AppError.server("Not grown up yet")
         }
-        album.append((c.uuid, c.species, c.seed, c.startedAt, Date()))
-        albumCount += 1
         current = nil
-        leaves += 100; sparkles += 25
+        let done = graduateCurrent(c)
         publish()
-        return Coins(leaves: 100, sparkles: 25)
+        return (done.paid, done.finale)
     }
 
     private func setLayout(_ layout: SceneLayout) async throws -> SceneLayout {

@@ -9591,4 +9591,193 @@ public enum L10n {
     public static var voteOpening: LocalizedStringResource {
         r("vote_opening", "Opening the vote")
     }
+
+    // MARK: - Nestie, step 6: the finale
+
+    /// %1$@ · %2$@
+    public static func companionColoured(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("companion_coloured", "\(a0) · \(a1)")
+    }
+
+    /// You've grown them all
+    public static var finaleTitle: LocalizedStringResource {
+        r("finale_title", "You've grown them all")
+    }
+
+    /// The tiny crown is yours now
+    public static var finaleCrown: LocalizedStringResource {
+        r("finale_crown", "The tiny crown is yours now")
+    }
+
+    /// Grow a favourite again, in a new colour
+    public static var finaleDoor: LocalizedStringResource {
+        r("finale_door", "Grow a favourite again, in a new colour")
+    }
+
+    /// On we go
+    public static var finaleDone: LocalizedStringResource {
+        r("finale_done", "On we go")
+    }
+
+    /// %lld grown
+    public static func finaleCount(_ a0: Int) -> LocalizedStringResource {
+        r("finale_count", "\(a0) grown")
+    }
+
+    /// %@, in a new colour
+    public static func colourPickTitle(_ a0: String) -> LocalizedStringResource {
+        r("colour_pick_title", "\(a0), in a new colour")
+    }
+
+    /// Every colour can be grown once
+    public static var colourPickHint: LocalizedStringResource {
+        r("colour_pick_hint", "Every colour can be grown once")
+    }
+
+    /// The usual colours
+    public static var colourPickOriginal: LocalizedStringResource {
+        r("colour_pick_original", "The usual colours")
+    }
+
+    /// Grown
+    public static var colourGrown: LocalizedStringResource {
+        r("colour_grown", "Grown")
+    }
+
+    /// That colour isn't open yet, or you've grown it already.
+    public static var colourRefusedLocked: LocalizedStringResource {
+        r("colour_refused_locked", "That colour isn't open yet, or you've grown it already.")
+    }
+
+    /// There's no such colour.
+    public static var colourRefusedNone: LocalizedStringResource {
+        r("colour_refused_none", "There's no such colour.")
+    }
+
+    // TODO: the colourway names come from the colourway table in Docs/Companion/art/RULES.md
+    // (not written yet). Until it is, every species reads "Colour 1/2/3" and "Renk 1/2/3";
+    // fill the English here and the Turkish in the catalog, key by key.
+    /// The name of one species' new colour (1-3), for its card and its swatch.
+    public static func companionColour(_ species: Species, _ colour: Int) -> LocalizedStringResource {
+        switch (species, colour) {
+        case (.magnolia, 1): r("companion_colour_magnolia_1", "Colour 1")
+        case (.magnolia, 2): r("companion_colour_magnolia_2", "Colour 2")
+        case (.magnolia, 3): r("companion_colour_magnolia_3", "Colour 3")
+        case (.cherry, 1): r("companion_colour_cherry_1", "Colour 1")
+        case (.cherry, 2): r("companion_colour_cherry_2", "Colour 2")
+        case (.cherry, 3): r("companion_colour_cherry_3", "Colour 3")
+        case (.pomegranate, 1): r("companion_colour_pomegranate_1", "Colour 1")
+        case (.pomegranate, 2): r("companion_colour_pomegranate_2", "Colour 2")
+        case (.pomegranate, 3): r("companion_colour_pomegranate_3", "Colour 3")
+        case (.azalea, 1): r("companion_colour_azalea_1", "Colour 1")
+        case (.azalea, 2): r("companion_colour_azalea_2", "Colour 2")
+        case (.azalea, 3): r("companion_colour_azalea_3", "Colour 3")
+        case (.lemon, 1): r("companion_colour_lemon_1", "Colour 1")
+        case (.lemon, 2): r("companion_colour_lemon_2", "Colour 2")
+        case (.lemon, 3): r("companion_colour_lemon_3", "Colour 3")
+        case (.olive, 1): r("companion_colour_olive_1", "Colour 1")
+        case (.olive, 2): r("companion_colour_olive_2", "Colour 2")
+        case (.olive, 3): r("companion_colour_olive_3", "Colour 3")
+        case (.basil, 1): r("companion_colour_basil_1", "Colour 1")
+        case (.basil, 2): r("companion_colour_basil_2", "Colour 2")
+        case (.basil, 3): r("companion_colour_basil_3", "Colour 3")
+        case (.sunflower, 1): r("companion_colour_sunflower_1", "Colour 1")
+        case (.sunflower, 2): r("companion_colour_sunflower_2", "Colour 2")
+        case (.sunflower, 3): r("companion_colour_sunflower_3", "Colour 3")
+        case (.cactus, 1): r("companion_colour_cactus_1", "Colour 1")
+        case (.cactus, 2): r("companion_colour_cactus_2", "Colour 2")
+        case (.cactus, 3): r("companion_colour_cactus_3", "Colour 3")
+        case (.daisy, 1): r("companion_colour_daisy_1", "Colour 1")
+        case (.daisy, 2): r("companion_colour_daisy_2", "Colour 2")
+        case (.daisy, 3): r("companion_colour_daisy_3", "Colour 3")
+        case (.mint, 1): r("companion_colour_mint_1", "Colour 1")
+        case (.mint, 2): r("companion_colour_mint_2", "Colour 2")
+        case (.mint, 3): r("companion_colour_mint_3", "Colour 3")
+        case (.rosemary, 1): r("companion_colour_rosemary_1", "Colour 1")
+        case (.rosemary, 2): r("companion_colour_rosemary_2", "Colour 2")
+        case (.rosemary, 3): r("companion_colour_rosemary_3", "Colour 3")
+        case (.snakePlant, 1): r("companion_colour_snake_plant_1", "Colour 1")
+        case (.snakePlant, 2): r("companion_colour_snake_plant_2", "Colour 2")
+        case (.snakePlant, 3): r("companion_colour_snake_plant_3", "Colour 3")
+        case (.fern, 1): r("companion_colour_fern_1", "Colour 1")
+        case (.fern, 2): r("companion_colour_fern_2", "Colour 2")
+        case (.fern, 3): r("companion_colour_fern_3", "Colour 3")
+        case (.lavender, 1): r("companion_colour_lavender_1", "Colour 1")
+        case (.lavender, 2): r("companion_colour_lavender_2", "Colour 2")
+        case (.lavender, 3): r("companion_colour_lavender_3", "Colour 3")
+        case (.peony, 1): r("companion_colour_peony_1", "Colour 1")
+        case (.peony, 2): r("companion_colour_peony_2", "Colour 2")
+        case (.peony, 3): r("companion_colour_peony_3", "Colour 3")
+        case (.monstera, 1): r("companion_colour_monstera_1", "Colour 1")
+        case (.monstera, 2): r("companion_colour_monstera_2", "Colour 2")
+        case (.monstera, 3): r("companion_colour_monstera_3", "Colour 3")
+        case (.rose, 1): r("companion_colour_rose_1", "Colour 1")
+        case (.rose, 2): r("companion_colour_rose_2", "Colour 2")
+        case (.rose, 3): r("companion_colour_rose_3", "Colour 3")
+        case (.orchid, 1): r("companion_colour_orchid_1", "Colour 1")
+        case (.orchid, 2): r("companion_colour_orchid_2", "Colour 2")
+        case (.orchid, 3): r("companion_colour_orchid_3", "Colour 3")
+        case (.bonsai, 1): r("companion_colour_bonsai_1", "Colour 1")
+        case (.bonsai, 2): r("companion_colour_bonsai_2", "Colour 2")
+        case (.bonsai, 3): r("companion_colour_bonsai_3", "Colour 3")
+        case (.tulip, 1): r("companion_colour_tulip_1", "Colour 1")
+        case (.tulip, 2): r("companion_colour_tulip_2", "Colour 2")
+        case (.tulip, 3): r("companion_colour_tulip_3", "Colour 3")
+        case (.maple, 1): r("companion_colour_maple_1", "Colour 1")
+        case (.maple, 2): r("companion_colour_maple_2", "Colour 2")
+        case (.maple, 3): r("companion_colour_maple_3", "Colour 3")
+        case (.pumpkin, 1): r("companion_colour_pumpkin_1", "Colour 1")
+        case (.pumpkin, 2): r("companion_colour_pumpkin_2", "Colour 2")
+        case (.pumpkin, 3): r("companion_colour_pumpkin_3", "Colour 3")
+        case (.pine, 1): r("companion_colour_pine_1", "Colour 1")
+        case (.pine, 2): r("companion_colour_pine_2", "Colour 2")
+        case (.pine, 3): r("companion_colour_pine_3", "Colour 3")
+        case (.snowdrop, 1): r("companion_colour_snowdrop_1", "Colour 1")
+        case (.snowdrop, 2): r("companion_colour_snowdrop_2", "Colour 2")
+        case (.snowdrop, 3): r("companion_colour_snowdrop_3", "Colour 3")
+        case (.duckling, 1): r("companion_colour_duckling_1", "Colour 1")
+        case (.duckling, 2): r("companion_colour_duckling_2", "Colour 2")
+        case (.duckling, 3): r("companion_colour_duckling_3", "Colour 3")
+        case (.kitten, 1): r("companion_colour_kitten_1", "Colour 1")
+        case (.kitten, 2): r("companion_colour_kitten_2", "Colour 2")
+        case (.kitten, 3): r("companion_colour_kitten_3", "Colour 3")
+        case (.hedgehog, 1): r("companion_colour_hedgehog_1", "Colour 1")
+        case (.hedgehog, 2): r("companion_colour_hedgehog_2", "Colour 2")
+        case (.hedgehog, 3): r("companion_colour_hedgehog_3", "Colour 3")
+        case (.hamster, 1): r("companion_colour_hamster_1", "Colour 1")
+        case (.hamster, 2): r("companion_colour_hamster_2", "Colour 2")
+        case (.hamster, 3): r("companion_colour_hamster_3", "Colour 3")
+        case (.turtle, 1): r("companion_colour_turtle_1", "Colour 1")
+        case (.turtle, 2): r("companion_colour_turtle_2", "Colour 2")
+        case (.turtle, 3): r("companion_colour_turtle_3", "Colour 3")
+        case (.goldfish, 1): r("companion_colour_goldfish_1", "Colour 1")
+        case (.goldfish, 2): r("companion_colour_goldfish_2", "Colour 2")
+        case (.goldfish, 3): r("companion_colour_goldfish_3", "Colour 3")
+        case (.puppy, 1): r("companion_colour_puppy_1", "Colour 1")
+        case (.puppy, 2): r("companion_colour_puppy_2", "Colour 2")
+        case (.puppy, 3): r("companion_colour_puppy_3", "Colour 3")
+        case (.bunny, 1): r("companion_colour_bunny_1", "Colour 1")
+        case (.bunny, 2): r("companion_colour_bunny_2", "Colour 2")
+        case (.bunny, 3): r("companion_colour_bunny_3", "Colour 3")
+        case (.fox, 1): r("companion_colour_fox_1", "Colour 1")
+        case (.fox, 2): r("companion_colour_fox_2", "Colour 2")
+        case (.fox, 3): r("companion_colour_fox_3", "Colour 3")
+        case (.owl, 1): r("companion_colour_owl_1", "Colour 1")
+        case (.owl, 2): r("companion_colour_owl_2", "Colour 2")
+        case (.owl, 3): r("companion_colour_owl_3", "Colour 3")
+        case (.deer, 1): r("companion_colour_deer_1", "Colour 1")
+        case (.deer, 2): r("companion_colour_deer_2", "Colour 2")
+        case (.deer, 3): r("companion_colour_deer_3", "Colour 3")
+        case (.penguin, 1): r("companion_colour_penguin_1", "Colour 1")
+        case (.penguin, 2): r("companion_colour_penguin_2", "Colour 2")
+        case (.penguin, 3): r("companion_colour_penguin_3", "Colour 3")
+        case (.snowFox, 1): r("companion_colour_snow_fox_1", "Colour 1")
+        case (.snowFox, 2): r("companion_colour_snow_fox_2", "Colour 2")
+        case (.snowFox, 3): r("companion_colour_snow_fox_3", "Colour 3")
+        case (.polarCub, 1): r("companion_colour_polar_cub_1", "Colour 1")
+        case (.polarCub, 2): r("companion_colour_polar_cub_2", "Colour 2")
+        case (.polarCub, 3): r("companion_colour_polar_cub_3", "Colour 3")
+        default: r("companion_colour_generic", "Colour \(colour)")
+        }
+    }
 }

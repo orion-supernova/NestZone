@@ -29,6 +29,10 @@ struct CompanionScene: View {
     /// Holds still while a sheet covers the card: nobody is watching it, and
     /// its frames are the sheet's.
     var paused = false
+    /// The colourway: 0 is the original, 1-3 are the colours a house grows
+    /// after the finale (`Companion.colour ?? 0`). Not read until the
+    /// painters take it.
+    var colourway = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -850,6 +854,9 @@ struct ScenePortrait: View {
     let now: Date
     /// What is out in the scene; none for a portrait in a grid.
     var layout = SceneLayout()
+    /// 0 is the original colours, 1-3 the new ones. Not read until the
+    /// painters take it.
+    var colourway = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 

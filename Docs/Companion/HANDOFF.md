@@ -1176,6 +1176,23 @@ In order — each step can go to testers on its own:
      new art.
 6. **The finale**: "You've grown them all", the crown, growing a favourite
    again in a new colour.
+   - *Done (app half):* the server's `graduated.finale` / `graduate` `finale`
+     holds `State.moment` with `isFinale` (keyed on the graduated companion's
+     id in `finalesHeld`, so a retry never plays it twice) and plays it through
+     `momentReady` and `pendingSheet`. A start that graduates plays it in the
+     same cover after "All grown up!"; the ceremony on Today plays it alone,
+     and the vote or Choose it was heading to opens when it closes
+     (`afterMoment`). `FinaleView` is the album as kept stills in a cascade,
+     the crown, the next-door line and confetti; Reduce Motion fades. Other
+     phones never play it: they only see Choose open up. After it (`finaleAt`
+     or every free species grown) a grown species in Choose asks for a colour
+     (`ColourPickerLayer`), sent as `start`'s `colour` through `writes` with
+     its rollback. Pictures: `Docs/Companion/finale/`. Bench:
+     `-nestieScenario finale -nestieScript finale|finaleStart|finaleChoose`.
+   - *Open:* the painters must take `colourway` (the model, `ScenePortrait`,
+     `SpeciesPortrait` and its still keys already carry it, unread), and
+     `L10n.companionColour` has placeholder names ("Colour 1/2/3") until the
+     table in `art/RULES.md` is written.
 7. **Release:**
    - turn `CompanionFlag` on for Release, and in the same release
      `npx convex env set COMPANION_NOTIFY on` (it is `sandbox` until then, so

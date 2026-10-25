@@ -21,7 +21,11 @@ public struct CompanionClient: Sendable {
     /// Starts growing one. One that is ready graduates first, in the same
     /// write (`graduated` says so); one that is not is let go. `requestID` is
     /// the tap's own, so a retry after a lost answer is the same start.
-    public var start: @Sendable (HomeID, Species, Place, _ requestID: String) async throws -> StartOutcome
+    /// `colour` (1-3) grows a species the house has grown already in a new
+    /// colour, and is allowed only after the finale; `nil` is the original,
+    /// and is left out of the call so a server that predates colours still
+    /// takes it.
+    public var start: @Sendable (HomeID, Species, Place, _ requestID: String, _ colour: Int?) async throws -> StartOutcome
     /// Water or pet it. `true` when it counted as today's care.
     public var care: @Sendable (HomeID) async throws -> Bool
     /// The ceremony's end: the coins the graduation paid (`nil` when it had
@@ -113,11 +117,15 @@ public struct GraduatedCompanion: Equatable, Sendable {
     public var companionID: String
     public var species: Species
     public var paid: Coins?
+    /// This graduation finished every species that costs no Sparkles, the
+    /// first time: "you've grown them all".
+    public var finale: Bool
 
-    public init(companionID: String, species: Species, paid: Coins?) {
+    public init(companionID: String, species: Species, paid: Coins?, finale: Bool = false) {
         self.companionID = companionID
         self.species = species
         self.paid = paid
+        self.finale = finale
     }
 }
 
@@ -130,11 +138,14 @@ public struct GraduateOutcome: Equatable, Sendable {
     /// The answer had no `vote` key at all, as a repeat graduate's has: it
     /// opened nothing, and says nothing about whether the house votes.
     public var isRepeat: Bool
+    /// This graduation finished every free species, the first time.
+    public var finale: Bool
 
-    public init(paid: Coins? = nil, vote: PollID? = nil, isRepeat: Bool = false) {
+    public init(paid: Coins? = nil, vote: PollID? = nil, isRepeat: Bool = false, finale: Bool = false) {
         self.paid = paid
         self.vote = vote
         self.isRepeat = isRepeat
+        self.finale = finale
     }
 }
 
@@ -195,19 +206,11 @@ extension CompanionClient: DependencyKey {
                 "companion:setPlace", args: .setPlace(homeID, place), as: Changed.self
             ).changed
         },
-        start: { homeID, species, place, requestID in
+        start: { homeID, species, place, requestID, colour in
             let started = try await ConvexConnection.shared.mutate(
-                "companion:start", args: .start(homeID, species, place, requestID), as: Started.self
+                "companion:start", args: .start(homeID, species, place, requestID, colour), as: Started.self
             )
-            return StartOutcome(
-                companionID: started.companionId, welcome: started.welcome?.coins,
-                graduated: started.graduated.map {
-                    GraduatedCompanion(
-                        companionID: $0.companionId, species: Species(rawValue: $0.species) ?? .magnolia,
-                        paid: $0.paid?.coins
-                    )
-                }
-            )
+            return try started.outcome()
         },
         care: { homeID in
             try await ConvexConnection.shared.mutate("companion:care", args: ["homeId": homeID], as: Counted.self).counted
@@ -216,7 +219,9 @@ extension CompanionClient: DependencyKey {
             let graduated = try await ConvexConnection.shared.mutate(
                 "companion:graduate", args: ["homeId": homeID, "companionId": companionID], as: Graduated.self
             )
-            return GraduateOutcome(paid: graduated.paid?.coins, vote: graduated.vote, isRepeat: !graduated.hasVoteKey)
+            return GraduateOutcome(
+                paid: graduated.paid?.coins, vote: graduated.vote, isRepeat: !graduated.hasVoteKey, finale: graduated.finale
+            )
         },
         ballot: { pollID, species, answer in
             // Taking an answer back is a different function, with no `vote`.
@@ -290,11 +295,15 @@ extension Dictionary where Key == String, Value == ConvexEncodable? {
         return args
     }
 
-    static func start(_ homeID: HomeID, _ species: Species, _ place: Place, _ requestID: String) -> Self {
+    static func start(
+        _ homeID: HomeID, _ species: Species, _ place: Place, _ requestID: String, _ colour: Int? = nil
+    ) -> Self {
         var args = place.arguments
         args["homeId"] = homeID
         args["species"] = species.rawValue
         args["requestId"] = requestID
+        // Optional on the server and strictly validated: only sent when there is one.
+        if let colour { args["colour"] = colour.convexNumber }
         return args
     }
 
@@ -426,16 +435,41 @@ private struct WireCoins: Decodable, Sendable {
     }
 }
 
+/// The answer to `companion:start`. The server refuses on purpose by
+/// throwing (see `CompanionVoteRefusal`), so an answer is always a start.
 private struct Started: Decodable, Sendable {
     var companionId: String
     var welcome: WireCoins?
     var graduated: WireGraduated?
+
+    func outcome() throws -> StartOutcome {
+        StartOutcome(
+            companionID: companionId, welcome: welcome?.coins,
+            graduated: graduated.map {
+                GraduatedCompanion(
+                    companionID: $0.companionId, species: Species(rawValue: $0.species) ?? .magnolia,
+                    paid: $0.paid?.coins, finale: $0.finale
+                )
+            }
+        )
+    }
 }
 
 private struct WireGraduated: Decodable, Sendable {
     var companionId: String
     var species: String
     var paid: WireCoins?
+    var finale: Bool
+
+    enum CodingKeys: String, CodingKey { case companionId, species, paid, finale }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        companionId = try c.decode(String.self, forKey: .companionId)
+        species = try c.decode(String.self, forKey: .species)
+        paid = (try? c.decodeIfPresent(WireCoins.self, forKey: .paid)) ?? nil
+        finale = (try? c.decodeIfPresent(Bool.self, forKey: .finale)) ?? false
+    }
 }
 
 private struct Graduated: Decodable, Sendable {
@@ -443,14 +477,16 @@ private struct Graduated: Decodable, Sendable {
     /// Absent on a repeat call, `null` for a house that just picks.
     var vote: PollID?
     var hasVoteKey: Bool
+    var finale: Bool
 
-    enum CodingKeys: String, CodingKey { case paid, vote }
+    enum CodingKeys: String, CodingKey { case paid, vote, finale }
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         paid = (try? c.decodeIfPresent(WireCoins.self, forKey: .paid)) ?? nil
         vote = (try? c.decodeIfPresent(PollID.self, forKey: .vote)) ?? nil
         hasVoteKey = c.contains(.vote)
+        finale = (try? c.decodeIfPresent(Bool.self, forKey: .finale)) ?? false
     }
 }
 

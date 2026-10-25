@@ -574,6 +574,8 @@ struct SpeciesPortrait: View, Equatable {
     let seed: String
     var hour = 13
     var mood: Mood = .bright
+    /// 0 is the original colours, 1-3 the colours of the finale.
+    var colourway = 0
     /// A fixed moment, for a portrait that must not be redrawn by every
     /// re-evaluation of its parent (the default is the hour, today).
     var now: Date?
@@ -581,7 +583,8 @@ struct SpeciesPortrait: View, Equatable {
     var body: some View {
         ScenePortrait(
             companion: Companion(species: species, seed: seed, startedAt: .distantPast), mood: mood,
-            now: now ?? Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date()
+            now: now ?? Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date(),
+            colourway: colourway
         )
         .allowsHitTesting(false)
     }
@@ -591,7 +594,7 @@ extension SpeciesPortrait {
     /// The kept bitmap this tile's picture is, and the size it is drawn at.
     func still(big: Bool) -> StillSpec {
         let size = big ? CGSize(width: 320, height: 240) : CGSize(width: 160, height: 120)
-        return StillSpec(name: "s|\(species.rawValue)|\(seed)|\(hour)", size: size, big: big)
+        return StillSpec(name: "s|\(species.rawValue)|\(seed)|\(hour)|c\(colourway)", size: size, big: big)
     }
 
     /// The picture as a tile shows it: the kept bitmap once there is one.

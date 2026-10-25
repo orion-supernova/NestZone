@@ -257,6 +257,13 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
     /// Which species the house has grown all the way: what "grown them all"
     /// is counted from, so it needs no album.
     public var grown: Set<Species> = []
+    /// Which colourways of which species the house has grown, as the server
+    /// keeps them (`"kitten:2"`): a colour grown once is not offered again.
+    public var grownColours: Set<String> = []
+    /// When the house finished every species that costs no Sparkles (the
+    /// finale), if it has. `nil` for a house that has not, and for a server
+    /// that does not say.
+    public var finaleAt: Date?
     /// Where the house is: the region its default holidays and its seasons
     /// come from, and its offset in minutes east of UTC, whose days growth is
     /// counted in. `nil` until somebody's phone says.
@@ -368,6 +375,10 @@ public struct Companion: Codable, Equatable, Sendable {
     /// vote's first option standing in. A seed grows meanwhile (the server
     /// counts what the house does), but it is drawn as a seed and called one.
     public var isUndecided = false
+    /// Its colourway, 1-3, once the house has finished the free species and
+    /// grows a favourite again in a new colour (`Colourway`); `nil` is the
+    /// original. Drawn as `colourway: colour ?? 0`.
+    public var colour: Int?
 
     public init(species: Species, seed: String, startedAt: Date) {
         self.species = species
@@ -394,6 +405,8 @@ public struct Graduate: Codable, Equatable, Identifiable, Sendable {
     public var seed: String
     public var startedAt: Date
     public var graduatedAt: Date
+    /// The colourway it grew in; `nil` is the original.
+    public var colour: Int?
 
     public var days: Int {
         max(Calendar.current.dateComponents([.day], from: startedAt, to: graduatedAt).day ?? 0, 1)
@@ -418,6 +431,49 @@ extension CompanionHouse {
     public mutating func add(_ coins: Coins) {
         leaves += coins.leaves
         sparkles += coins.sparkles
+    }
+}
+
+/// The colourways a house grows once it has grown them all: a species it has
+/// already grown, again, in one of three new colours. The painters take them
+/// as `colourway` (0 is the original).
+public enum Colourway {
+    /// The three new colours; the original is not one of them.
+    public static let range = 1...3
+
+    /// What the server keeps for a grown species in a colour.
+    public static func key(_ species: Species, _ colour: Int) -> String { "\(species.rawValue):\(colour)" }
+
+    /// A colour from the wire: only 1-3 are colours this build knows, and
+    /// anything else (a later build's fourth) is read as the original rather
+    /// than drawn as something it cannot.
+    static func read(_ value: Int?) -> Int? {
+        guard let value, range.contains(value) else { return nil }
+        return value
+    }
+}
+
+extension CompanionHouse {
+    /// The house has finished every species that costs no Sparkles. The
+    /// server's `finaleAt` says so, and so does the list itself, which covers
+    /// a house that finished before the server wrote the date.
+    public var hasFinished: Bool {
+        finaleAt != nil || Species.freeToHave.isSubset(of: grown)
+    }
+
+    /// Whether Choose offers this species in a new colour: after the finale,
+    /// and only for one the house has grown.
+    public func offersColours(for species: Species) -> Bool {
+        hasFinished && grown.contains(species)
+    }
+
+    public func hasGrown(_ species: Species, colour: Int) -> Bool {
+        grownColours.contains(Colourway.key(species, colour))
+    }
+
+    /// The colours of `species` the house has not grown yet.
+    public func colours(for species: Species) -> [Int] {
+        Colourway.range.filter { !hasGrown(species, colour: $0) }
     }
 }
 
