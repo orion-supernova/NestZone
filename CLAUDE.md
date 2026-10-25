@@ -215,6 +215,15 @@ before changing anything here.
   something graduates. Measure before and after any change to the scene:
   `-frameMeter 1` logs late frames (what a person sees as stutter), and
   `-todayScroll 1` / `-companionScroll 1` scroll Today or Choose by themselves.
+- **The finale opens colourways.** Once a house has grown every free species
+  (`finaleAt`, or `grownSpecies` covering `freeToHave` for a house that
+  finished before it existed) it may grow one again in colour 1–3
+  (`companion:start`'s `colour`, refused by message, never by status). Every
+  painter, layer key and still-cache key carries the `colourway` (0 is the
+  original and must stay pixel-identical); a palette is a table, never built
+  per frame, and a pattern is polygons cut from the leaf's own edge points:
+  a boolean `Path.intersection` cost up to ten times the leaf. The names and
+  palettes are RULES.md §17.
 - Holiday dates are computed or come from verified tables, never guessed; the
   sources and disagreements are in `Docs/Companion/HOLIDAYS.md`.
 - **Two currencies, one price per item.** Leaves are progress — earned, never
