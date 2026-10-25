@@ -8345,6 +8345,31 @@ public enum L10n {
         r("plant_stage_bloom", "In bloom")
     }
 
+    /// Filling out
+    public static var plantStageFilling: LocalizedStringResource {
+        r("plant_stage_filling", "Filling out")
+    }
+
+    /// Lush
+    public static var plantStageLush: LocalizedStringResource {
+        r("plant_stage_lush", "Lush")
+    }
+
+    /// Shaping up
+    public static var plantStageShaping: LocalizedStringResource {
+        r("plant_stage_shaping", "Shaping up")
+    }
+
+    /// Fruiting
+    public static var plantStageFruiting: LocalizedStringResource {
+        r("plant_stage_fruiting", "Fruiting")
+    }
+
+    /// Ripe
+    public static var plantStageRipe: LocalizedStringResource {
+        r("plant_stage_ripe", "Ripe")
+    }
+
     /// All grown
     public static var plantStageGrown: LocalizedStringResource {
         r("plant_stage_grown", "All grown")

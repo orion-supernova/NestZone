@@ -563,3 +563,125 @@ recording 1.6 ms against 1.9 (0.83x); olive 32 against 36 (1.12x) with recording
 1.1 ms against 1.3 (0.9x). The Today scroll bench was no worse than the old painter's for either,
 within the noise.
 
+
+
+## 15. Plants (round B)
+
+The eleven plants that were still emoji sketches, and the rose's bloom. Shots in
+`art/plants/` (`<plant>-before-*` is the sketch, `-v1-*` the drawing, the rose's
+round B is `rose-v2-*`; `plants-grid-b-v1.jpg` is all twelve at the shop's size,
+`-artSheet plants-grid-b`), index in `art/plants/index.html`. Everything in
+section 13 holds: one light, cached unit shapes, fills and not strokes, blooms
+merged by layer, a budget of about 0.7 ms of recording.
+
+**Which rule each plant is on.** Six rules were new, because the eight of round A
+could not say them; two plants fit a rule that was already there.
+
+| Plant | Rule | What it is made of | Growth |
+|---|---|---|---|
+| Mint | `bush` | a puckered, toothed leaf (`LeafShape.mint`), a plum stem (`stemTint`), a third branch, two runners that arch over the rim with node pairs of small leaves (`runners`), a short lilac spike | as basil; runners from .5 |
+| Rosemary | `sprig` (new) | seven woody stems dressed in needles: a needle is one thin triangle in three greens by the light with a silver line on the lit ones, pairs alternating between spread and foreshortened; small two-lipped flowers in the axils | stems at .1, .26, .3, .46, .52, .56, .6; needles as each stem reaches them; flowers .8 |
+| Snake plant | `blades` (new) | nine sword blades, each one outline from a sampled spine (`profile`: a sheath, full by a quarter, a long taper), pale chevron bands, a dark rib, a yellow margin, a lit half; two pups; never blooms | a blade at .1, .18, .26, .36, .44, .54, .62; pups .72, .8; a new blade is a spear that unfurls |
+| Fern | `frond` (new) | nine pinnate fronds, centre ones upright and outer ones bowing over the rim, pinnae longest a third of the way up; the young ones are bronze fiddleheads that unroll as they grow; spore dots on the outer fronds when grown | croziers from .1; a frond every .05, each unrolling over .46 |
+| Lavender | `tuft` | a mound of grass-thin leaves (`LeafShape.needle`), seven thin stems each ending in a spike of eight whorls of florets (a hood each side, one facing us, a calyx under each), deep at the base and light at the tip, opening from the bottom up | stems from .28; spikes open .66 to .98 |
+| Orchid | `spray` (new) | four thick broad leaves, silver-green aerial roots with green tips over the rim, one spike that arches over carrying seven blooms: three sepals, two wing petals, a three-lobed magenta lip, a column; the blooms of the whole spike are layers (`BloomField`), so a dozen fills | leaves .1 to .46; roots .3 to .5; spike .52 to .88; blooms from the foot of the spike .76 on |
+| Bonsai | `sculpt` (new) | a thick twisting trunk flaring into roots with fissures and a lit ridge, a jin, moss, three branches and a crown, each ending in a flat cloud of small round leaves | trunk .1 to .72; a branch and its pad from .3; last pads .52 |
+| Maple | `sculpt` | a slender trunk that forks into layered branches with clouds of red and orange palmate leaves; leaves on the soil | as the bonsai |
+| Pine | `sculpt` | a straight trunk, eight whorls of drooping needle sprays that make a cone (a front pad too on the lower six), a leader, two cones | a whorl every .07 from .16 |
+| Pumpkin | `trail` (new) | a vine over the rim with big palmate leaves on long stalks, tendrils, a yellow trumpet flower, and a ribbed fruit built from meridians toned by the sun (the cactus's trick), green and small then orange | vine .12 to .7; flower bud .58, open .72; fruit swells .46 to .97, ripens .8 to .97 |
+| Snowdrop | `tuft` | glaucous strap leaves, three stems that hook over (`Stem.arch`) so that a bell hangs from each: green ovary, three long white outer tepals flaring like a skirt, a short inner cup with a green mark | stems from .3; bells open .74, .84, .93 |
+
+`PlantPlan.overRim` replaces the old "a vine is not cut at the soil line": mint,
+fern, orchid, pumpkin and monstera cross the rim.
+
+**`PadArt`** is the pad of foliage as a cached unit shape, like `LeafShape` is a
+leaf: four paths (the whole, the upper part moved up, the sunward part, a few
+glints), built once per kind and variant, so a pad is four `addPath`s and four
+fills however many leaves it has, and a sculpted plant is two `PadBatch`es (the
+pads behind the trunk and in front of it). A pad needs a solid mass under its
+leaves (an oval in the shade layer) or it is a scatter of leaves, not a cloud.
+
+**The rose's bloom.** The round A rose was four rings of radial petals, which
+reads as a pinwheel (a camellia). Now it is built as a rose is: two rings of
+`LeafShape.rose` petals, the outer five reflexed with a **rolled margin**
+(`rollA/B` is a broad strip along the edge, `foldA/B` a thin line of shade where
+it meets the petal, both cached in the shape; `Ring.detail` 3), the half
+shading of a petal toned down to 40% on those rings because it is what made
+them faceted; then a dark cup (a radial gradient from the heart colour); then
+five discs wound round the heart, each a full oval in the lit-edge colour with
+the petal's own gradient oval shifted away from the light over it, so the edge
+that shows is a crescent where the next petal begins. What the first pass
+threw out was the half-split on every petal (origami) and a heart too small
+to read.
+
+**Mood.** As round A. The ones that are not flowers keep their own tell:
+a thirsty pumpkin's leaves hang from their stalks (the thing everybody knows),
+a thirsty snake plant folds its blades and bows them, a thirsty fern's fronds
+bow further with the pinnae hanging, a bonsai's pads sag and shrink, a pine's
+sprays droop; a dozing one is the same at 55% with blooms shut.
+
+**Stage names** (`CompanionMath.stageTitle(…, species:)`, `Species.stageWords`):
+most plants keep Seed, Sprout, Seedling, Leafing, Budding, In bloom. A fern and a
+snake plant never bloom: …Leafing, **Filling out**, **Lush** (Gürleşiyor,
+Gürleşti). A bonsai, a maple and a pine (now `growsInPot`, so they are no
+longer named as trees): …Sapling, **Shaping up**, All grown (Şekilleniyor). A
+pumpkin: …Leafing, **Fruiting**, **Ripe** (Meyve bağlıyor, Olgunlaştı). Ready
+is "All grown" for every one of them.
+
+**What the two critique passes threw out** (screenshot, reject, fix, again).
+First pass: a mint that was basil with another leaf (a plum stem, runners, a
+puckered tooth, a shorter spike); a rosemary of seven hairs (needle width
+2 to 2.7, step 0.047 to 0.034, two more stems); a fern whose fronds were
+hidden under their own rachises (the rachis is filled before the pinnae) and
+lay flat like a dome (less bend, longer, more of them upright); lavender leaves
+that were broad lances forming a V (a thin needle leaf, none up the stems, 15
+at the foot); an orchid whose leaves were round plates (narrower, longer,
+more upright) and whose blooms were too small; bonsai and maple pads that were
+a scatter of leaves under a grey blob of shadow (a solid mass under them, no
+shadow, 70 leaves); a pine like a feathered skirt with bare trunk (denser
+sprays, pads on the front); a pumpkin whose leaves were square boxes (five
+pointed lobes) and whose flower was hidden (bigger, in the clear, and it
+stays open once the fruit sets). Second pass: a rose with faceted halves on
+every outer petal, and a cup too small to read; a fern still a V (the fronds
+near the middle weighted: `|u|^1.45`); a pine's sixteen branches painted one
+by one (one fill: 1.35 to 0.59 ms).
+
+**Numbers** (iPhone 17 simulator, iOS 27, Debug, `-artSheet redraw
+-artSheetCount 4 -frameMeter 1`, `tree draw` is the recording, mean after the
+first forty). **Read with care:** the Mac was shared and its load average
+swung between 130 and 800 while this was measured, which doubles every
+number. The first column was read in the one quiet window; the second is the
+same build under load, two reads, for how far it moves.
+
+| | recording, quiet | recording, loaded | stress frames per window (quiet) |
+|---|---|---|---|
+| mint | 0.53 ms | 1.02-1.05 | 117-120 |
+| rosemary | 0.55 | 1.19-1.24 | 119-120 |
+| snake plant | 0.47 | 0.83-0.91 | 118-120 |
+| fern | 0.70 | 1.35-1.41 | 119-120 |
+| lavender | 0.57 | 1.09 | 120 |
+| orchid | 0.39 | 0.60-0.62 | 120 |
+| bonsai | 0.38 | 0.57-0.69 | 120 |
+| maple | 0.55 | 0.91-0.98 | 120 |
+| pumpkin | 0.51 | 0.93-1.05 | 120 |
+| pine | 0.59 | 1.20-1.27 | 120 |
+| snowdrop | 0.27 | 0.49-0.55 | 120 |
+| rose (new) | 0.65 | 1.30-1.82 | 96-102 |
+| rose (old, the same window) | 0.61 | 1.33-1.65 | 96-113 |
+
+The rose's recording is about 6% above the old bloom's, not below it: the old
+one was not 0.75 ms in the quiet window but 0.61, and the new cup and wound
+heart cost a few fills more than the pinwheel. It is under 0.7 ms in the quiet
+window and at parity when the machine is loaded. The savings that were found
+were in the leaves, not the bloom (a back tier's shadow was built and never
+drawn). Today's and Choose's flick (`-todayScroll`, `-companionScroll`) were
+not re-measured for round B.
+
+What made the others cheap, in the order of what it bought, and what was not
+(section 12 again): a branch painted with a gradient is two fills and a pine
+has sixteen of them: **merge what shares a colour** (1.35 to 0.59 ms); a
+needle or a pinna at this size has no vein, rim or glint, so `addLite` gives it
+an outline and a lit half only, and the back tier of a fern none (0.96 to
+0.70); a pinna and a needle sampled at three steps a segment and not five,
+with no teeth (a tooth is under a pixel); a pad's spikes are a triangle each
+and 58 are enough where 140 were not.

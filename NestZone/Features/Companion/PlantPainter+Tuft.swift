@@ -6,6 +6,10 @@ import SwiftUI
 // grows and when its bloom opens, the flower says what the bloom is
 // (`PlantPainter+Blooms.swift`), and the leaf says what the rosette is made of.
 //
+// Lavender and snowdrop are tufts too: five thin stems that end in a spike of
+// florets (`lavenderSpike`) and three that hook over so a bell hangs from each
+// (`snowdropBloom`); a stem's `arch` says which.
+//
 // Growth: the seed (to .1), the rosette's leaves one after another (.1 on), the
 // stems rising out of it (each from its `born`), buds swelling at their tips,
 // and the blooms opening one by one (`opens`), the tallest first; the last stem
@@ -34,8 +38,13 @@ extension PlantPainter {
             let base = CGPoint(x: cos(a) * 2.5, y: 1)
             if c != nil {
                 let bend = dir * (strap ? 0.5 + 0.6 * wilt : 0.28 + 0.6 * wilt)
-                tiers[tier].add(.of(plan.leaf, bend: bend), base: base, angle: angle, length: len, light: L,
-                                bright: bright(angle, luck: luck(i + 9), tier: tier), glossy: true)
+                if plan.leaf == .needle {
+                    // A grass-thin leaf has no veins or glint to draw.
+                    tiers[tier].addLite(.of(plan.leaf, bend: bend), base: base, angle: angle, length: len, light: L, bright: bright(angle, luck: luck(i + 9), tier: tier), lightHalf: tier > 0)
+                } else {
+                    tiers[tier].add(.of(plan.leaf, bend: bend), base: base, angle: angle, length: len, light: L,
+                                    bright: bright(angle, luck: luck(i + 9), tier: tier), glossy: true)
+                }
             }
             m.note(CGPoint(x: base.x + cos(angle) * len * 0.85, y: base.y + sin(angle) * len * 0.85))
         }
@@ -49,7 +58,7 @@ extension PlantPainter {
             var rise: Double
         }
         var rises: [Rise] = []
-        let thick = flower.bloom == .peony ? 4.4 : flower.bloom == .tulip ? 3.6 : 2.8
+        let thick = flower.bloom == .peony ? 4.4 : flower.bloom == .tulip ? 3.6 : flower.bloom == .lavender ? 2.3 : flower.bloom == .snowdrop ? 2.1 : 2.8
         for (j, st) in plan.stems.enumerated() {
             let rise = st.height * Ink.smooth((p - st.born) / 0.36) * (1 - 0.06 * M.thirst)
             guard rise > 6 else { continue }
@@ -57,7 +66,16 @@ extension PlantPainter {
             let dir = x0 >= 0 ? 1.0 : -1.0
             let tip = CGPoint(x: x0 * 1.3 + seed.lean * 3 + dir * wilt * 0.36 * rise, y: -rise * (1 - 0.3 * wilt))
             let control = CGPoint(x: x0 * 1.15, y: -rise * 0.72)
-            rises.append(Rise(spine: Self.quad(CGPoint(x: x0 * 0.4, y: 1), control, tip, n: 14), width: thick * (0.8 + 0.2 * st.size) * (1 - 0.15 * wilt), stem: st, index: j, rise: rise))
+            // A stem that hooks over (a snowdrop's) goes up, peaks and curls down
+            // so that its bloom hangs; the others are one quadratic.
+            let spine: [CGPoint]
+            if st.arch > 0 {
+                let hook = CGPoint(x: tip.x + dir * 13 * Ink.smooth((rise / st.height - 0.5) * 2), y: tip.y + (13 + 8 * wilt) * Ink.smooth((rise / st.height - 0.5) * 2))
+                spine = Self.cubic(CGPoint(x: x0 * 0.4, y: 1), CGPoint(x: x0 * 1.1, y: -rise * 0.7), CGPoint(x: tip.x + dir * 4, y: tip.y - 7), hook, n: 16)
+            } else {
+                spine = Self.quad(CGPoint(x: x0 * 0.4, y: 1), control, tip, n: 14)
+            }
+            rises.append(Rise(spine: spine, width: thick * (0.8 + 0.2 * st.size) * (1 - 0.15 * wilt), stem: st, index: j, rise: rise))
         }
 
         if let c { tiers[0].flush(c, inks[0], casting: false) }
@@ -107,6 +125,12 @@ extension PlantPainter {
                 case .daisy:
                     radius = 19 * size
                     daisyBloom(c, at: tip, radius: radius, open: open, turn: (heading + .pi / 2) * 0.5 + nod * 0.5, squash: 0.9 - 0.3 * M.thirst)
+                case .lavender:
+                    radius = 30 * size
+                    lavenderSpike(c, from: CGPoint(x: tip.x, y: tip.y + 2), heading: heading, length: 46 * size * (0.4 + 0.6 * budK), open: open, nod: nod * 0.5)
+                case .snowdrop:
+                    radius = 12 * size
+                    snowdropBloom(c, at: tip, size: size * 1.3, open: open, turn: heading + .pi / 2 + nod * 0.3)
                 case .tulip:
                     radius = 15 * size
                     tulipBloom(c, at: CGPoint(x: tip.x, y: tip.y + 1), size: size * 1.55, open: open, turn: turn)
@@ -115,7 +139,7 @@ extension PlantPainter {
                     peonyBloom(c, at: CGPoint(x: tip.x, y: tip.y - radius * 0.2), radius: radius, open: open, turn: turn * 0.6)
                 }
             } else {
-                radius = flower.bloom == .peony ? 31 * size : flower.bloom == .daisy ? 19 * size : 15 * size
+                radius = flower.bloom == .peony ? 31 * size : flower.bloom == .daisy ? 19 * size : flower.bloom == .lavender ? 30 * size : 15 * size
             }
             m.note(CGPoint(x: tip.x, y: tip.y - radius * 0.5), reach: radius * (flower.bloom == .tulip ? 0.8 : 1.4), hang: false)
         }
@@ -127,7 +151,7 @@ extension PlantPainter {
     private func fallenPetals(_ c: GraphicsContext, flower: PlantPlan.Flower) {
         guard p > 0.82 else { return }
         let tone = bloom(flower.mid, dim: 0.6)
-        let size: Double = flower.bloom == .peony ? 14 : flower.bloom == .tulip ? 14 : 9
+        let size: Double = flower.bloom == .peony ? 14 : flower.bloom == .tulip ? 14 : flower.bloom == .lavender ? 4 : flower.bloom == .snowdrop ? 8 : 9
         onSoil(c, x: -seed.side * 19, length: size, width: size * 0.36, turn: 0.4 * seed.side, tone: tone)
         if M.thirst > 0.3 {
             onSoil(c, x: seed.side * 14, length: size * 0.85, width: size * 0.3, turn: -0.6, tone: tone.mix(RGB(0x9A7A5A), 0.3))

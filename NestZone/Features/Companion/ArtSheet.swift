@@ -34,7 +34,8 @@ struct ArtSheet: View {
             case "pomegranate-fruit": pomegranateFruit
             case "pomegranate-shop": pomegranateShop
             case "gpu": gpuTest
-            case "plants-grid": plantsGrid
+            case "plants-grid": plantsGrid([.sunflower, .basil, .cactus, .monstera, .daisy, .tulip, .rose, .peony])
+            case "plants-grid-b": plantsGrid([.mint, .rosemary, .snakePlant, .fern, .lavender, .orchid, .bonsai, .maple, .pumpkin, .pine, .snowdrop, .rose])
             case "pet-redraw": petRedraw
             case "pet-variants": petVariants
             case "batch-a": batchA
@@ -524,11 +525,11 @@ struct ArtSheet: View {
         .padding(.horizontal, 4)
     }
 
-    /// The eight potted plants at the size the shop shows them.
-    ///   -artSheet plants-grid
-    private var plantsGrid: some View {
-        let species: [Species] = [.sunflower, .basil, .cactus, .monstera, .daisy, .tulip, .rose, .peony]
-        return VStack(alignment: .leading, spacing: 6) {
+    /// The potted plants at the size the shop shows them.
+    ///   -artSheet plants-grid     round A
+    ///   -artSheet plants-grid-b   round B (and the rose again)
+    private func plantsGrid(_ species: [Species]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach([13, 21], id: \.self) { h in
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 4), spacing: 6) {
                     ForEach(species) { s in

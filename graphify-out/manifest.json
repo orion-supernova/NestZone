@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1792920126.8946424,
-    "ast_hash": "85d7df1b6cfbcda19300d41892069679",
+    "mtime": 1792923480.3049228,
+    "ast_hash": "fc1bfdbb8313a3f31594d93f0047944b",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -1255,8 +1255,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionCard.swift": {
-    "mtime": 1792920126.8954408,
-    "ast_hash": "ecda74b4461179bf1a3471d60c8aa8bb",
+    "mtime": 1792923480.3064435,
+    "ast_hash": "37ce530203bbdabf8d6423ce673131a7",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionFeature.swift": {
@@ -1270,8 +1270,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionNames.swift": {
-    "mtime": 1792920126.896664,
-    "ast_hash": "35bb8b02e663d0c297c7f4190752c97e",
+    "mtime": 1792923480.30709,
+    "ast_hash": "19d8c87759104175bc275b7f497190ce",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionScene.swift": {
@@ -1925,8 +1925,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ArtSheet.swift": {
-    "mtime": 1792920140.1967127,
-    "ast_hash": "33b976a9fc899dc3ec88403156fb8ead",
+    "mtime": 1792923480.3056443,
+    "ast_hash": "85fa4c696da1c2502719ad7d8acee518",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPainter.swift": {
@@ -1945,13 +1945,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantLayer.swift": {
-    "mtime": 1792920126.9006937,
-    "ast_hash": "f8737c8630ef5c076ffc3739578a0c90",
+    "mtime": 1792923480.3091412,
+    "ast_hash": "2494af30bcaee77fae94cd1a1dd23ca3",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter+Bush.swift": {
-    "mtime": 1792920126.9013286,
-    "ast_hash": "81e5d2927d759dd952041ee5cd0d2486",
+    "mtime": 1792923480.3111727,
+    "ast_hash": "fb97fb4ed384fb5ba0bc1bce251d10d5",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter+Column.swift": {
@@ -1970,13 +1970,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter.swift": {
-    "mtime": 1792920126.9036489,
-    "ast_hash": "78bcf9557a97121ff7a51ebaae7dc1de",
+    "mtime": 1792923480.3162696,
+    "ast_hash": "480a3118aa342aaa7f98bb159030f03a",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPlan.swift": {
-    "mtime": 1792920126.9039302,
-    "ast_hash": "c9d55f8a77c31633177733ab214feaeb",
+    "mtime": 1792923480.316908,
+    "ast_hash": "71353c653c98e90f53dafea55dd32b51",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/ScenePainter+Party.swift": {
@@ -2055,8 +2055,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/RULES.md": {
-    "mtime": 1792920140.196971,
-    "ast_hash": "95a7ed0856b860de706be922f4bed495",
+    "mtime": 1792923489.9401386,
+    "ast_hash": "5b72cf49dba3303ab0c0a2924c3aa18e",
     "semantic_hash": ""
   },
   "Docs/Companion/art/pass1/index.html": {
@@ -2130,8 +2130,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter+Art.swift": {
-    "mtime": 1792889731.5933695,
-    "ast_hash": "5d1cd713facb90a23ccd419fa01f8ad9",
+    "mtime": 1792920568.847953,
+    "ast_hash": "697a951b715b32820fd2b81153589181",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter+Split.swift": {
@@ -2325,18 +2325,18 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantArt.swift": {
-    "mtime": 1792920126.9003303,
-    "ast_hash": "2c8c11f02ea026ec2e9330d7f97da124",
+    "mtime": 1792923480.3084438,
+    "ast_hash": "e0591da3b2c6a0e55337307a77892af1",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter+Blooms.swift": {
-    "mtime": 1792920126.9009466,
-    "ast_hash": "89a71c4a44b4546a78be88ab83b61615",
+    "mtime": 1792923480.3105507,
+    "ast_hash": "f233add1c54d9bfa5729de4d20002cfb",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter+Cane.swift": {
-    "mtime": 1792920126.9015975,
-    "ast_hash": "3c80a59f766a349a8fb2a5ae5c12997c",
+    "mtime": 1792923480.3120592,
+    "ast_hash": "f89b6b8dc1fd4fd3f4b6da124c7ac292",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter+Sunflower.swift": {
@@ -2345,13 +2345,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PlantPainter+Tuft.swift": {
-    "mtime": 1792920126.9027386,
-    "ast_hash": "6561955f932acf40d844df6681443f82",
+    "mtime": 1792923480.3149476,
+    "ast_hash": "577fd047f715e5bd9ee690541e97557c",
     "semantic_hash": ""
   },
   "Docs/Companion/art/plants/index.html": {
-    "mtime": 1792920126.8392282,
-    "ast_hash": "c73531f3a1458e618ae709258223aef1",
+    "mtime": 1792923480.0371087,
+    "ast_hash": "1469ff7b41489abe357d0463b85b783a",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterGeometry+Duck.swift": {
@@ -2885,13 +2885,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/AzaleaPainter.swift": {
-    "mtime": 1792889731.6293623,
-    "ast_hash": "f8989088ec9f20febb646ddaac1e932c",
+    "mtime": 1792921548.4970832,
+    "ast_hash": "e603a141d4f26948741fd6933b682c59",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/BloomArt.swift": {
-    "mtime": 1792919704.0056875,
-    "ast_hash": "aae39631e7cb310d2853d336e59cfc82",
+    "mtime": 1792921917.328376,
+    "ast_hash": "ce72b24da57d752b4475ce46f3d4ede6",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CherryPainter+Bloom.swift": {
@@ -2900,13 +2900,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CherryPainter.swift": {
-    "mtime": 1792888946.837038,
-    "ast_hash": "c868d85eb3443aa5e4a4102ac2b220f2",
+    "mtime": 1792920568.8416743,
+    "ast_hash": "d74ae0a018f4b3a374f6a3d6789a509b",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/LeafSpec.swift": {
-    "mtime": 1792889731.592871,
-    "ast_hash": "48150cd471a756746239402b2338cfa6",
+    "mtime": 1792920568.84372,
+    "ast_hash": "7a2a2810c869a3ff53e6b8ae6f79f9bd",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/LemonPainter+Cut.swift": {
@@ -2960,8 +2960,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/TreeCore.swift": {
-    "mtime": 1792888946.8374286,
-    "ast_hash": "ce1f460c5c177f935c2ddefe3686664f",
+    "mtime": 1792920568.8511498,
+    "ast_hash": "1f75d23e6e418e82e8fd8d5f368f2ee5",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/TreeInk.swift": {
@@ -2970,13 +2970,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/TreeWood.swift": {
-    "mtime": 1792887367.488227,
-    "ast_hash": "b2c969bfffea0da0fe3822c2c15e6a65",
+    "mtime": 1792921152.1240826,
+    "ast_hash": "691467d11a2523db7391b74d00f6c9da",
     "semantic_hash": ""
   },
   "Docs/Companion/art/trees/index.html": {
-    "mtime": 1792920112.1873038,
-    "ast_hash": "bb511fa4733fb44ad4d1ec940ffafa56",
+    "mtime": 1792923459.613944,
+    "ast_hash": "e1913651701f01f7c151a22dab9782a6",
     "semantic_hash": ""
   },
   "Docs/Companion/art/trees/azalea-before-crown.jpg": {
@@ -3297,6 +3297,546 @@
   "Docs/Companion/art/trees/pomegranate-v1-night.jpg": {
     "mtime": 1792920072.6709735,
     "ast_hash": "f226dcd872d89478183f656d9d815872",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PadArt.swift": {
+    "mtime": 1792923480.3074875,
+    "ast_hash": "d4bfce085a1d8e32c46f027e78d5cb5d",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Bells.swift": {
+    "mtime": 1792923480.309492,
+    "ast_hash": "dcd099eaecd81997789df4ad176e130d",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Blades.swift": {
+    "mtime": 1792923480.3098998,
+    "ast_hash": "6e89ba0474410fa53cd659bcc78c6018",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Frond.swift": {
+    "mtime": 1792923480.3124006,
+    "ast_hash": "be049014d1117b24d01feceb43291c45",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Orchid.swift": {
+    "mtime": 1792923480.3127375,
+    "ast_hash": "ca12f01b73d3551de25291b1b541a3e4",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Sculpt.swift": {
+    "mtime": 1792923480.3130867,
+    "ast_hash": "47bcb0b85c5560bbdd0ef02659ac1324",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Spray.swift": {
+    "mtime": 1792923480.313404,
+    "ast_hash": "3fe2a36503dd2f94b629ac88f31b1c04",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Sprig.swift": {
+    "mtime": 1792923480.313896,
+    "ast_hash": "3823e71fab980eb62245ff4e473d0c30",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Companion/PlantPainter+Trail.swift": {
+    "mtime": 1792923480.3142507,
+    "ast_hash": "2d9bbb26de7d8f0506203acdd3400d2d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/bonsai-before-card.jpg": {
+    "mtime": 1792923479.92088,
+    "ast_hash": "c2e1539221bcf3a099eddcf8c44f2aea",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/bonsai-before-close.jpg": {
+    "mtime": 1792923479.9260273,
+    "ast_hash": "994fa848dfd8335b8447a4018213b1a5",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/bonsai-before-sheet.jpg": {
+    "mtime": 1792923479.931508,
+    "ast_hash": "f438533a5a68552822c5186faafc6802",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/bonsai-v1-card.jpg": {
+    "mtime": 1792923479.9346309,
+    "ast_hash": "e7152505f48cc2609744a4190443d77c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/bonsai-v1-close.jpg": {
+    "mtime": 1792923479.9393218,
+    "ast_hash": "48bcf5fcf0fbfac4db3e65c9140de91d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/bonsai-v1-sheet.jpg": {
+    "mtime": 1792923479.9470744,
+    "ast_hash": "a4cef32c2e02d89010b5e90552681482",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/fern-before-card.jpg": {
+    "mtime": 1792923479.9505627,
+    "ast_hash": "368db3803234bab94c4c04edc8cda429",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/fern-before-close.jpg": {
+    "mtime": 1792923479.9549046,
+    "ast_hash": "a22f2597dbb2abea81ce3f1724a17f51",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/fern-before-sheet.jpg": {
+    "mtime": 1792923479.9584973,
+    "ast_hash": "8d3f03fbf17d9c56bc11ba5aba260e5e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/fern-v1-card.jpg": {
+    "mtime": 1792923479.9625058,
+    "ast_hash": "a2fa71a0f85a9bf6f7d5a25e7eaa887f",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/fern-v1-close.jpg": {
+    "mtime": 1792923479.9672368,
+    "ast_hash": "f9519a04b80e61f253050a513aa0f831",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/fern-v1-sheet.jpg": {
+    "mtime": 1792923479.9982977,
+    "ast_hash": "7facb79c770235584d8e0fbf50c6135a",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/lavender-before-card.jpg": {
+    "mtime": 1792923480.050936,
+    "ast_hash": "65bdbf24a702a57af4727799fe8ece11",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/lavender-before-close.jpg": {
+    "mtime": 1792923480.0625043,
+    "ast_hash": "d3a8f34101648db09567d2d48459f225",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/lavender-before-sheet.jpg": {
+    "mtime": 1792923480.0706377,
+    "ast_hash": "bfc720bf29626f66262e5ab8da07643e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/lavender-v1-card.jpg": {
+    "mtime": 1792923480.07574,
+    "ast_hash": "b1cff528b4b2d3e96f794549d441af23",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/lavender-v1-close.jpg": {
+    "mtime": 1792923480.080781,
+    "ast_hash": "af57525f5187bbdb7401d6405ae4c7ff",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/lavender-v1-sheet.jpg": {
+    "mtime": 1792923480.0845828,
+    "ast_hash": "7fbb1af2f1bbf6e033bbcbc80a74c1dd",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/maple-before-card.jpg": {
+    "mtime": 1792923480.0873346,
+    "ast_hash": "c2936028dee4e6e67ba607a5301a59e3",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/maple-before-close.jpg": {
+    "mtime": 1792923480.0902126,
+    "ast_hash": "618e4483f7d122c84f7d412a434b9934",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/maple-before-sheet.jpg": {
+    "mtime": 1792923480.0938702,
+    "ast_hash": "6138cd276a3ab93cd7b9d397dfa89d98",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/maple-v1-card.jpg": {
+    "mtime": 1792923480.098939,
+    "ast_hash": "8c88f5180ee14a1a1f5120cd736c0781",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/maple-v1-close.jpg": {
+    "mtime": 1792923480.1023629,
+    "ast_hash": "4db1e5a50ab19498f7658f6fe4a80e74",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/maple-v1-sheet.jpg": {
+    "mtime": 1792923480.106172,
+    "ast_hash": "73b55832aed85c06b19a5d8d0c316011",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/mint-before-card.jpg": {
+    "mtime": 1792923480.1066597,
+    "ast_hash": "e21e2ff833a2de896aef8f388b5afb2e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/mint-before-close.jpg": {
+    "mtime": 1792923480.110141,
+    "ast_hash": "78edc01387c1b24489c95ea3500c004b",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/mint-before-sheet.jpg": {
+    "mtime": 1792923480.1156116,
+    "ast_hash": "85d993c43624be7b2fb355e8213db535",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/mint-v1-card.jpg": {
+    "mtime": 1792923480.1201184,
+    "ast_hash": "bd4c990908a0867cdac596a747f72205",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/mint-v1-close.jpg": {
+    "mtime": 1792923480.126042,
+    "ast_hash": "bd7179a62da4a1e6ed52df0d081ea591",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/mint-v1-sheet.jpg": {
+    "mtime": 1792923480.1329305,
+    "ast_hash": "92efa1db1d77d25b2296b9980ee07d06",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/orchid-before-card.jpg": {
+    "mtime": 1792923480.138381,
+    "ast_hash": "5dc535a8af99e40afda7f179edf7e5a3",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/orchid-before-close.jpg": {
+    "mtime": 1792923480.1469975,
+    "ast_hash": "aaaa3640b51667dcc53b0fc17819a73e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/orchid-before-sheet.jpg": {
+    "mtime": 1792923480.1520975,
+    "ast_hash": "e3ff3f132233d2f8d35f80409c469b1e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/orchid-v1-card.jpg": {
+    "mtime": 1792923480.1547568,
+    "ast_hash": "e38cee0fa84874904e9be28839a21170",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/orchid-v1-close.jpg": {
+    "mtime": 1792923480.1593633,
+    "ast_hash": "bf9a5b3fd3b2417d8b480e381bcaf475",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/orchid-v1-sheet.jpg": {
+    "mtime": 1792923480.1630647,
+    "ast_hash": "0f893fbb94a9b4f7e826acd7c60b29cd",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pine-before-card.jpg": {
+    "mtime": 1792923480.1676676,
+    "ast_hash": "519a581a1b0d279f51e45b0f0cf913ca",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pine-before-close.jpg": {
+    "mtime": 1792923480.1730802,
+    "ast_hash": "33a6e182f04af503894792aac6e6e450",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pine-before-sheet.jpg": {
+    "mtime": 1792923480.1812055,
+    "ast_hash": "acfb90da20895223519f2f6599942743",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pine-v1-card.jpg": {
+    "mtime": 1792923480.183966,
+    "ast_hash": "7fb81ad723345fcda4756dd4a7c03a8d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pine-v1-close.jpg": {
+    "mtime": 1792923480.1916814,
+    "ast_hash": "76399871609dedca210d4c17c976e745",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pine-v1-sheet.jpg": {
+    "mtime": 1792923480.195151,
+    "ast_hash": "626791c0bf206931668c32217a0f2d01",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pumpkin-before-card.jpg": {
+    "mtime": 1792923480.1984015,
+    "ast_hash": "a7c8256d222fdf3c0939311d46ad1237",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pumpkin-before-close.jpg": {
+    "mtime": 1792923480.2014596,
+    "ast_hash": "1f7d751a6779becd06a8e42fd04353c5",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pumpkin-before-sheet.jpg": {
+    "mtime": 1792923480.204244,
+    "ast_hash": "d588282ea64386fbf2fe6465ceaded60",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pumpkin-v1-card.jpg": {
+    "mtime": 1792923480.2083442,
+    "ast_hash": "65d53cb42962c079525c58c1ec885581",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pumpkin-v1-close.jpg": {
+    "mtime": 1792923480.2183022,
+    "ast_hash": "b289f86f8e3d307bebbcac34fc7be0c4",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/pumpkin-v1-sheet.jpg": {
+    "mtime": 1792923480.2213202,
+    "ast_hash": "fca2ab27439659600c2c16b87ecc375d",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rose-v2-card.jpg": {
+    "mtime": 1792923480.2255538,
+    "ast_hash": "6e590cfbd98346f153dfc74122a64786",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rose-v2-close.jpg": {
+    "mtime": 1792923480.2315965,
+    "ast_hash": "c5d252f70c11074c05f3dfdd3c70abbc",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rose-v2-sheet.jpg": {
+    "mtime": 1792923480.2343907,
+    "ast_hash": "9d0e9c40e1eac377d5efef1d185c2908",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rosemary-before-card.jpg": {
+    "mtime": 1792923480.2349572,
+    "ast_hash": "a61a732ab734832f969bbdea965ed38e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rosemary-before-close.jpg": {
+    "mtime": 1792923480.2383904,
+    "ast_hash": "554cd01f154ef1e1b87c68f48a3504a7",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rosemary-before-sheet.jpg": {
+    "mtime": 1792923480.238909,
+    "ast_hash": "a61a732ab734832f969bbdea965ed38e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rosemary-v1-card.jpg": {
+    "mtime": 1792923480.2424066,
+    "ast_hash": "c85d8cd309b99280eddb221f4c368b80",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rosemary-v1-close.jpg": {
+    "mtime": 1792923480.2507865,
+    "ast_hash": "50b8d99f274b5b2c2b6067aedd8b1ea2",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/rosemary-v1-sheet.jpg": {
+    "mtime": 1792923480.258366,
+    "ast_hash": "a4367121e799850b4a8c88866e4641cc",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snakePlant-before-card.jpg": {
+    "mtime": 1792923480.2616556,
+    "ast_hash": "dfa1bea28d04d18dbb65a1411ab4da47",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snakePlant-before-close.jpg": {
+    "mtime": 1792923480.2649748,
+    "ast_hash": "955f307fb79b86a2809adb23e73280c5",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snakePlant-before-sheet.jpg": {
+    "mtime": 1792923480.2678387,
+    "ast_hash": "15be1ea7c0ebc329772f4ef0238f9629",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snakePlant-v1-card.jpg": {
+    "mtime": 1792923480.2706857,
+    "ast_hash": "44d921b2298703acd84745d5685e2ad4",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snakePlant-v1-close.jpg": {
+    "mtime": 1792923480.2746153,
+    "ast_hash": "98349fde646061d62607297a2cbc1384",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snakePlant-v1-sheet.jpg": {
+    "mtime": 1792923480.279698,
+    "ast_hash": "ffd48b7a762557ef821c141a50f00bfa",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snowdrop-before-card.jpg": {
+    "mtime": 1792923480.2849388,
+    "ast_hash": "19db988d257bbef0f3978390352bb137",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snowdrop-before-close.jpg": {
+    "mtime": 1792923480.2882571,
+    "ast_hash": "c5299510852d8ae2a1b26b62ae52d1e7",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snowdrop-before-sheet.jpg": {
+    "mtime": 1792923480.2912574,
+    "ast_hash": "448e7cd68f9b864c5c788144468ef739",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snowdrop-v1-card.jpg": {
+    "mtime": 1792923480.2944024,
+    "ast_hash": "890c7607ce47e213a5a2b0420928a89f",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snowdrop-v1-close.jpg": {
+    "mtime": 1792923480.3001516,
+    "ast_hash": "2c3c25deaa41faa337bf849f893a62fb",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/plants/snowdrop-v1-sheet.jpg": {
+    "mtime": 1792923480.302466,
+    "ast_hash": "0081eeb40f23d0e8d7c4404d60907d91",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/azalea-v2-crown.jpg": {
+    "mtime": 1792923457.224508,
+    "ast_hash": "91c3bbe5f4dd36d3aa473e16ceaaf20c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/azalea-v2-detail.jpg": {
+    "mtime": 1792923457.280046,
+    "ast_hash": "905d35ef8368a27d34b6ca4e1c1ae3f3",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/azalea-v2-night.jpg": {
+    "mtime": 1792923457.331946,
+    "ast_hash": "05d38191ab7a25e5d82e615f459ccdf7",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/azalea-v2-shop.jpg": {
+    "mtime": 1792923457.386995,
+    "ast_hash": "cc5b9d67799a1932bac5fbbc16e73255",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/azalea-v2-stages.jpg": {
+    "mtime": 1792923457.4413505,
+    "ast_hash": "0890fc96c447465abdc88f50a1d12aa4",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/azalea-v2-young.jpg": {
+    "mtime": 1792923457.4943955,
+    "ast_hash": "01a5fc3225d7270a3872632a5c803a46",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/cherry-v2-crown.jpg": {
+    "mtime": 1792923457.5631955,
+    "ast_hash": "f2e1967f26bcfc9fcba5b56f94f0ad82",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/cherry-v2-detail.jpg": {
+    "mtime": 1792923457.6464784,
+    "ast_hash": "5c7ce4baa7d00e8e7daa364b48d16764",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/cherry-v2-night.jpg": {
+    "mtime": 1792923457.732338,
+    "ast_hash": "b8c9dfa632782c0aa2ebce0a0773931b",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/cherry-v2-shop.jpg": {
+    "mtime": 1792923457.8077645,
+    "ast_hash": "d00e87582f341eeee7bb73e2f0a0013c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/cherry-v2-stages.jpg": {
+    "mtime": 1792923457.8976724,
+    "ast_hash": "4ae3eaa2850b53c1d87d89c9ed5b51c5",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/cherry-v2-young.jpg": {
+    "mtime": 1792923457.9828258,
+    "ast_hash": "d089a397aaf60960249fead38affc2a6",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/lemon-v2-crown.jpg": {
+    "mtime": 1792923458.07658,
+    "ast_hash": "34b151de1179ff9261907937ef5a9a26",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/lemon-v2-detail.jpg": {
+    "mtime": 1792923458.1734357,
+    "ast_hash": "e10a6bff1e252f02068dda066c7dda03",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/lemon-v2-night.jpg": {
+    "mtime": 1792923458.2607737,
+    "ast_hash": "216ac684ff35126f0459d6463b68de1c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/lemon-v2-shop.jpg": {
+    "mtime": 1792923458.324469,
+    "ast_hash": "9db975af79ab7dc674ca1f4f8302e145",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/lemon-v2-stages.jpg": {
+    "mtime": 1792923458.404612,
+    "ast_hash": "e663263d95b66c41c656e6aba888e093",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/lemon-v2-young.jpg": {
+    "mtime": 1792923458.4890718,
+    "ast_hash": "bb029d0db067eaf11f86be8e90d94f9f",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/magnolia-v2-crown.jpg": {
+    "mtime": 1792923458.5813234,
+    "ast_hash": "59dd7c3dbf4671e22488dd076c0d6a15",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/magnolia-v2-detail.jpg": {
+    "mtime": 1792923458.6755152,
+    "ast_hash": "c5dd3d676cf9ed829d65fe62f715e09e",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/magnolia-v2-night.jpg": {
+    "mtime": 1792923458.7721987,
+    "ast_hash": "d4719b0268e4e1af94eb3b98057eccf3",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/magnolia-v2-shop.jpg": {
+    "mtime": 1792923458.840698,
+    "ast_hash": "323ef2af5d3f07a66b52e4c320ccf4e9",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/magnolia-v2-stages.jpg": {
+    "mtime": 1792923458.9238682,
+    "ast_hash": "8c527d41ad4cd179e956f447b7755a64",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/magnolia-v2-young.jpg": {
+    "mtime": 1792923459.009415,
+    "ast_hash": "f08fcc99e803409eda69da75cac1e5ce",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/olive-v2-crown.jpg": {
+    "mtime": 1792923459.112044,
+    "ast_hash": "8c27c9101c2faf29e83ca35d99d36d74",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/olive-v2-detail.jpg": {
+    "mtime": 1792923459.2231195,
+    "ast_hash": "14dc196828641c11b07151bda566e5e6",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/olive-v2-night.jpg": {
+    "mtime": 1792923459.3223302,
+    "ast_hash": "c117a54cc5e8800ba049d87b151c3e0c",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/olive-v2-shop.jpg": {
+    "mtime": 1792923459.3875985,
+    "ast_hash": "bb75115cac47e831a72d3bc720e45d6f",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/olive-v2-stages.jpg": {
+    "mtime": 1792923459.4688795,
+    "ast_hash": "ef43700043b5440ebf1494fa0bc9370b",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/trees/olive-v2-young.jpg": {
+    "mtime": 1792923459.5541477,
+    "ast_hash": "72e66ef4fef791fc2115263f920f31ab",
     "semantic_hash": ""
   }
 }
