@@ -539,12 +539,12 @@ could not say them; two plants fit a rule that was already there.
 | Mint | `bush` | a puckered, toothed leaf (`LeafShape.mint`), a plum stem (`stemTint`), a third branch, two runners that arch over the rim with node pairs of small leaves (`runners`), a short lilac spike | as basil; runners from .5 |
 | Rosemary | `sprig` (new) | seven woody stems dressed in needles: a needle is one thin triangle in three greens by the light with a silver line on the lit ones, pairs alternating between spread and foreshortened; small two-lipped flowers in the axils | stems at .1, .26, .3, .46, .52, .56, .6; needles as each stem reaches them; flowers .8 |
 | Snake plant | `blades` (new) | nine sword blades, each one outline from a sampled spine (`profile`: a sheath, full by a quarter, a long taper), pale chevron bands, a dark rib, a yellow margin, a lit half; two pups; never blooms | a blade at .1, .18, .26, .36, .44, .54, .62; pups .72, .8; a new blade is a spear that unfurls |
-| Fern | `frond` (new) | nine pinnate fronds, centre ones upright and outer ones bowing over the rim, pinnae longest a third of the way up; the young ones are bronze fiddleheads that unroll as they grow; spore dots on the outer fronds when grown | croziers from .1; a frond every .05, each unrolling over .46 |
+| Fern | `frond` (new) | nine fronds, each one cached shape (`FrondShape`: a rachis and 24 closely packed, narrow, lobed pinnae a side, longest a third of the way up and shortening to a fine tip) placed by a transform and drawn in four fills; centre ones upright, outer ones bowing over the rim; the upper side of each arch lit and its underside dark; bronze fiddleheads that unroll as a frond grows, and two always uncurling at the heart | croziers from .1; a frond every .05, each unrolling over .46; the two heart fiddleheads from .3 |
 | Lavender | `tuft` | a mound of grass-thin leaves (`LeafShape.needle`), seven thin stems each ending in a spike of eight whorls of florets (a hood each side, one facing us, a calyx under each), deep at the base and light at the tip, opening from the bottom up | stems from .28; spikes open .66 to .98 |
 | Orchid | `spray` (new) | four thick broad leaves, silver-green aerial roots with green tips over the rim, one spike that arches over carrying seven blooms: three sepals, two wing petals, a three-lobed magenta lip, a column; the blooms of the whole spike are layers (`BloomField`), so a dozen fills | leaves .1 to .46; roots .3 to .5; spike .52 to .88; blooms from the foot of the spike .76 on |
-| Bonsai | `sculpt` (new) | a thick twisting trunk flaring into roots with fissures and a lit ridge, a jin, moss, three branches and a crown, each ending in a flat cloud of small round leaves | trunk .1 to .72; a branch and its pad from .3; last pads .52 |
+| Bonsai | `sculpt` (new) | a thick twisting trunk flaring into roots with bark flecks scattered across it and two slivers of sun on its edge that swell and taper away, a jin, moss, three branches and a crown, each ending in a flat cloud of small round leaves | trunk .1 to .72; a branch and its pad from .3; last pads .52 |
 | Maple | `sculpt` | a slender trunk that forks into layered branches with clouds of red and orange palmate leaves; leaves on the soil | as the bonsai |
-| Pine | `sculpt` | a straight trunk, eight whorls of drooping needle sprays that make a cone (a front pad too on the lower six), a leader, two cones | a whorl every .07 from .16 |
+| Pine | `sculpt` | a straight trunk, eight whorls of pads, each pad a row of six tufts (a burst of thin needles radiating from a point along a drooping branch) so the layers are clear; a front pad on the lower six; a leader, two cones | a whorl every .07 from .16 |
 | Pumpkin | `trail` (new) | a vine over the rim with big palmate leaves on long stalks, tendrils, a yellow trumpet flower, and a ribbed fruit built from meridians toned by the sun (the cactus's trick), green and small then orange | vine .12 to .7; flower bud .58, open .72; fruit swells .46 to .97, ripens .8 to .97 |
 | Snowdrop | `tuft` | glaucous strap leaves, three stems that hook over (`Stem.arch`) so that a bell hangs from each: green ovary, three long white outer tepals flaring like a skirt, a short inner cup with a green mark | stems from .3; bells open .74, .84, .93 |
 
@@ -642,3 +642,42 @@ an outline and a lit half only, and the back tier of a fern none (0.96 to
 0.70); a pinna and a needle sampled at three steps a segment and not five,
 with no teeth (a tooth is under a pixel); a pad's spikes are a triangle each
 and 58 are enough where 140 were not.
+
+### Fix round: fern, pine, bonsai
+
+The owner's first look at round B sent three things back.
+
+- **Fern, redone.** The leaflets were separate ovals spaced along a rib, which
+  reads as eucalyptus. A fern is a fountain of long arching fronds from one
+  crown, each with a midrib and many narrow pinnae packed close and tapering to
+  a fine tip. So a frond is now one cached shape, `FrondArt.swift`: a rachis
+  (a thin tapering ribbon, curved by a `bend` in steps of 0.2) and 24 pairs of
+  pinnae along it, each a lance of seven points with its teeth smoothed to a
+  lobed edge and swept forward, built once per bend and per how much has
+  unrolled (six steps of reach, so a young frond is a short one). A frond in
+  the plant is a transform and four `addPath`s: the whole, the pinnae on the lit
+  side, the pinnae on the other, the rachis. The lit side is the outer side of
+  the arch when it bows (the upper surface) and the side towards the sun when
+  it stands. The coil at a young frond's tip is the one dynamic piece, and
+  two fiddleheads (a stalk and a spiral with fuzz on it) stay at the heart of
+  a grown fern. First try: pinnae of 0.2 with five teeth read as a saw, an
+  aloe; fewer, longer, narrower pinnae with a smoother edge and longer, more
+  arching fronds fixed it. The recording went from 0.70 to 0.51 ms (quiet
+  window), because a frond is a handful of paths and not 44 leaflets.
+- **Pine, crisper.** The sprays were drooping fans of 58 thick needles, which
+  is shaggy. A pad is now six tufts along a drooping branch, each a burst of
+  eleven thin needles over the upper half-circle and three hanging, in three
+  tones, so the pad is a row of stars and the layers of the tree stay clear.
+  0.59 to 0.68 ms.
+- **Bonsai, no seam.** The pale vertical strip was `paint(stem:)`'s lit-edge
+  streak plus a ridge, one running the length of the trunk. The trunk has its
+  own painter now (`PlantPainter.trunk`): the shaded wood, 26 short fissures
+  and flecks across its width (dark ones everywhere, light ones on the lit side
+  only), and the sun's edge as two slivers, set in from the edge, that start at
+  nothing, swell and end. 0.38 to 0.49 ms.
+
+Numbers, iPhone 17 simulator, Debug, the first reads at a load average of about
+30 (the earlier numbers in this section were read under hundreds, and the
+fern and pine read again under load at 0.96 and 1.29 ms; compare
+those to the loaded column above): fern 0.51 ms, pine 0.68, bonsai 0.49; the
+stress page held 104 to 120 frames per window.

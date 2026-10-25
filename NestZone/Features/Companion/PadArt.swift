@@ -63,22 +63,38 @@ enum PadArt {
                 if item.y < -0.28, item.x > -0.1, r.next() < 0.7 { add(&shape.top, kind, item.x + 0.05, item.y - 0.09, item.a, size * 0.5) }
             }
         case .conifer:
-            // A branch along the middle with needles that sweep down and out,
-            // and a shorter row standing up along its top.
-            let count = 58
-            for i in 0..<count {
-                let x = (Double(i) / Double(count - 1) * 2 - 1) * 0.96 + (r.next() - 0.5) * 0.04
-                let upper = r.next() < 0.28
-                let axisY = -0.06 + 0.1 * abs(x)
-                let lean = x * (upper ? 0.5 : 0.9) + (r.next() - 0.5) * 0.4
-                let len = (upper ? 0.26 : 0.46 + 0.3 * (1 - abs(x))) * (0.8 + 0.4 * r.next())
-                let dy = upper ? -1.0 : 1.0
-                let tip = CGPoint(x: x + lean * len, y: axisY + dy * len * 0.95)
-                let from = CGPoint(x: x, y: axisY)
-                shape.shade.spike(from: from, to: tip, width: 0.22)
-                if upper || x > -0.3 { shape.mid.spike(from: CGPoint(x: x, y: axisY - 0.03), to: CGPoint(x: tip.x, y: tip.y - 0.05), width: 0.12) }
-                if upper && x > -0.4 { shape.lit.spike(from: CGPoint(x: x + 0.02, y: axisY - 0.04), to: CGPoint(x: tip.x + 0.02, y: tip.y - 0.06), width: 0.045) }
-                if !upper, x > 0, r.next() < 0.3 { shape.top.spike(from: CGPoint(x: x + 0.02, y: axisY - 0.02), to: CGPoint(x: tip.x * 0.98 + 0.03, y: axisY + len * 0.5), width: 0.035) }
+            // Tufts of fine needles along a drooping branch: at each tuft a
+            // burst of thin needles radiating over the upper half-circle and
+            // a few below, so a pad is a row of clear stars, not a shag.
+            let tufts = 6
+            for i in 0..<tufts {
+                let x = (Double(i) / Double(tufts - 1) * 2 - 1) * 0.84
+                // The branch droops towards its tip; the middle tuft is the fullest.
+                let centre = CGPoint(x: x, y: -0.02 + 0.2 * pow(abs(x), 1.5))
+                let reach = (0.34 + 0.12 * (1 - abs(x))) * (0.9 + 0.2 * r.next())
+                let needles = 11
+                for k in 0..<needles {
+                    // Over the upper half-circle, turned outward with the droop.
+                    let f = Double(k) / Double(needles - 1)
+                    let a = -.pi * 0.96 + f * .pi * 0.92 + x * 0.42 + (r.next() - 0.5) * 0.12
+                    let len = reach * (0.78 + 0.22 * sin(f * .pi)) * (0.92 + 0.16 * r.next())
+                    let tip = CGPoint(x: centre.x + cos(a) * len, y: centre.y + sin(a) * len * 0.9)
+                    shape.shade.spike(from: centre, to: tip, width: 0.072)
+                    // The sunward half of the burst, thinner, a little shorter and higher.
+                    if f > 0.25 && f < 0.95 && x > -0.5 {
+                        shape.mid.spike(from: CGPoint(x: centre.x, y: centre.y - 0.02), to: CGPoint(x: centre.x + (tip.x - centre.x) * 0.92, y: centre.y + (tip.y - centre.y) * 0.92 - 0.02), width: 0.048)
+                    }
+                    if f > 0.45 && f < 0.9 && x > -0.2 {
+                        shape.lit.spike(from: CGPoint(x: centre.x + 0.01, y: centre.y - 0.03), to: CGPoint(x: centre.x + (tip.x - centre.x) * 0.84, y: centre.y + (tip.y - centre.y) * 0.84 - 0.03), width: 0.03)
+                    }
+                }
+                // A few needles hanging below the branch.
+                for k in 0..<3 {
+                    let a = .pi * (0.3 + 0.2 * Double(k)) + x * 0.3
+                    let len = reach * 0.7
+                    shape.shade.spike(from: centre, to: CGPoint(x: centre.x + cos(a) * len, y: centre.y + sin(a) * len), width: 0.09)
+                }
+                if x > -0.2 { shape.top.spike(from: CGPoint(x: centre.x, y: centre.y - 0.05), to: CGPoint(x: centre.x + 0.1, y: centre.y - reach * 0.88), width: 0.034) }
             }
         }
         return shape

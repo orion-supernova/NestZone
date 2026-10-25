@@ -58,10 +58,10 @@ extension PlantPainter {
                 let sag = wilt * 5
                 for s in [-1.0, 1.0] {
                     limbs.append(Limb(a: v(0, 0), c1: v(s * half * 0.3, -1), c2: v(s * half * 0.6, 4), b: v(s * half * 0.8, 9 + sag), born: born, span: 0.14, w0: 3, w1: 1.4, z: 0, from: -y / Double(plan.height - 24)))
-                    pads.append(PadSpec(limb: limbs.count - 1, t: 1, size: half * 0.66, squash: 1, born: born + 0.03, variant: k + Int(s + 1), z: s > 0 ? 0 : 0))
+                    pads.append(PadSpec(limb: limbs.count - 1, t: 1, size: half * 0.8, squash: 1, born: born + 0.03, variant: k + Int(s + 1), z: s > 0 ? 0 : 0))
                 }
                 if k < 6 {
-                    pads.append(PadSpec(limb: 0, t: -y / Double(plan.height - 24), size: half * 0.56, squash: 0.9, born: born + 0.05, variant: k + 1, z: 1))
+                    pads.append(PadSpec(limb: 0, t: -y / Double(plan.height - 24), size: half * 0.62, squash: 0.9, born: born + 0.05, variant: k + 1, z: 1))
                 }
             }
             pads.append(PadSpec(limb: 0, t: 1, size: 11, squash: 1, born: 0.7, variant: 2, z: 1))
@@ -153,8 +153,9 @@ extension PlantPainter {
         for i in 1..<limbs.count where limbs[i].z == 0 && reach(i) > 0.02 && kind != .conifer { limb(c, i, limbs, paths, reach(i)) }
         back.flush(c, ink: inks[0], top: inks[1].l, glow: glow, night: night)
         if reach(0) > 0.02 {
-            limb(c, 0, limbs, paths, reach(0))
-            bark(c, trunkPath, width: trunk.w0 * Ink.lerp(0.4, 1, Ink.smooth(p / 0.7)))
+            let grow = Ink.lerp(0.55, 1, Ink.smooth(p / 0.7))
+            self.trunk(c, trunkPath, w0: limbs[0].w0 * grow, w1: limbs[0].w1 * grow)
+            roots(c, width: limbs[0].w0 * grow)
         }
         for i in 1..<limbs.count where limbs[i].z == 1 && reach(i) > 0.02 { limb(c, i, limbs, paths, reach(i)) }
         front.flush(c, ink: inks[1], top: inks[2].l, glow: glow, night: night)
@@ -175,26 +176,58 @@ extension PlantPainter {
 
     private var barkTint: UInt32 { plan.pad == .conifer ? 0x7A4A36 : plan.pad == .maple ? 0x6E4A3C : 0x6C5442 }
 
-    /// The trunk's bark: a few dark fissures down its length, a lit ridge, and
-    /// for a thick trunk a flare of roots across the soil.
-    private func bark(_ c: GraphicsContext, _ path: [CGPoint], width w: Double) {
+    /// The trunk: a tapered ribbon in wood, shaded across, with bark worked into
+    /// it: short dark fissures and lighter flecks scattered across its width (not
+    /// a line down its length, which reads as a seam), and the sun's edge as
+    /// two slivers that swell and taper away, set in from the edge.
+    private func trunk(_ c: GraphicsContext, _ path: [CGPoint], w0: Double, w1: Double) {
         guard path.count > 3 else { return }
-        var fissures = Path(), ridge = Path()
-        for k in 0..<5 {
-            let t0 = 0.04 + 0.16 * Double(k) + seed.between(k, 0, 0.05), t1 = t0 + 0.12 + seed.between(k + 5, 0, 0.08)
-            guard t1 < 0.96 else { continue }
-            let off = (seed.between(k + 9, -0.35, 0.35)) * w
-            let a = Self.along(path, t0), b = Self.along(path, t1)
-            fissures.lens(from: CGPoint(x: a.x + off, y: a.y), to: CGPoint(x: b.x + off * 0.8, y: b.y), width: 0.9)
-            if k.isMultiple(of: 2) {
-                let side = L.x >= 0 ? 1.0 : -1.0
-                ridge.lens(from: CGPoint(x: a.x + side * w * 0.26, y: a.y), to: CGPoint(x: b.x + side * w * 0.2, y: b.y), width: 0.8)
-            }
+        let outline = Self.ribbon(path, w0, w1, flat: false)
+        let box = outline.boundingRect
+        let side = L.x >= 0 ? 1.0 : -1.0
+        let wood = RGB.tone(barkTint, day: day, dim: 0.85)
+        func toned(_ i: Int, _ amount: Double) -> RGB { ramp[i].mix(wood, amount) }
+        c.fill(outline, with: .linearGradient(
+            Gradient(colors: [toned(3, 0.4).mix(glow, 0.08 * (1 - night)).color(), toned(2, 0.6).color(), toned(1, 0.72).shifted(-3).color()]),
+            startPoint: CGPoint(x: box.midX + side * box.width * 0.5, y: box.midY), endPoint: CGPoint(x: box.midX - side * box.width * 0.5, y: box.midY)))
+        func width(_ s: Double) -> Double { Ink.lerp(w0, w1, s) }
+        var dark = Path(), light = Path()
+        for k in 0..<26 {
+            let s = 0.03 + 0.93 * (Double(k) + seed.between(k, 0, 0.9)) / 26
+            let at = Self.along(path, s), w = width(s)
+            let off = seed.between(k + 3, -0.4, 0.4) * w
+            let len = 2.5 + 6 * seed.between(k + 11, 0, 1)
+            let tilt = seed.between(k + 17, -0.25, 0.25)
+            let from = CGPoint(x: at.x + off, y: at.y + len * 0.5), to = CGPoint(x: at.x + off + tilt * len, y: at.y - len * 0.5)
+            if (off * side) > 0.1 * w, k % 2 == 0 { light.lens(from: from, to: to, width: 0.8) }
+            else { dark.lens(from: from, to: to, width: 0.9) }
         }
-        c.fill(fissures, with: .color(ramp[0].mix(RGB(0x2A1A14), 0.7).color(0.55)))
-        c.fill(ridge, with: .color(rimTone.mix(RGB(0xB89A7C), 0.4).color(0.4 + 0.2 * dusk)))
+        c.fill(dark, with: .color(ramp[0].mix(RGB(0x2A1A14), 0.7).color(0.5)))
+        c.fill(light, with: .color(rimTone.mix(RGB(0xB89A7C), 0.4).color(0.34 + 0.2 * dusk)))
+        // The sun's edge: slivers that start at nothing, widen and end, in two lengths.
+        var edge = Path()
+        for (from, to) in [(0.1, 0.4), (0.5, 0.82)] {
+            var outer: [CGPoint] = [], inner: [CGPoint] = []
+            let steps = 8
+            for i in 0...steps {
+                let u = Double(i) / Double(steps), s = Ink.lerp(from, to, u)
+                let q = Self.along(path, s), h = Self.heading(path, s)
+                // The normal that faces the sun.
+                let f = (-sin(h) * side >= 0) ? 1.0 : -1.0
+                let n = CGPoint(x: -sin(h) * f, y: cos(h) * f)
+                let centre = width(s) * 0.32, bulge = 1.1 * sin(u * .pi)
+                outer.append(CGPoint(x: q.x + n.x * (centre + bulge * 0.5), y: q.y + n.y * (centre + bulge * 0.5)))
+                inner.append(CGPoint(x: q.x + n.x * (centre - bulge * 0.5), y: q.y + n.y * (centre - bulge * 0.5)))
+            }
+            edge.addLines(outer + inner.reversed())
+            edge.closeSubpath()
+        }
+        c.fill(edge, with: .color(rimTone.mix(RGB(0xD8B898), 0.35).color(0.42 + 0.2 * dusk + 0.15 * moon)))
+    }
+
+    /// A bonsai's roots over the soil, flaring from the foot of the trunk.
+    private func roots(_ c: GraphicsContext, width w: Double) {
         guard plan.pad == .leafy, w > 8 else { return }
-        // Roots over the soil.
         var roots = Path()
         for (dx, len) in [(-1.0, 17.0), (-0.45, 12.0), (0.5, 13.0), (1.0, 18.0)] {
             roots.addPath(Self.ribbon([CGPoint(x: dx * 3, y: -5), CGPoint(x: dx * len * 0.7, y: -1), CGPoint(x: dx * len, y: 2)], 5, 1.6))
