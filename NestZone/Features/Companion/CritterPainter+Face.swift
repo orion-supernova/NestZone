@@ -13,8 +13,17 @@ extension CritterPainter {
         let w = g.w
         let m = motion
         let wt = m.weights
-        let coat = look.coat, light = look.light, dark = look.dark, belly = look.belly, mark = look.mark
+        let species = plan.species
+        // A hedgehog's face is pale; only its crown is spines and dark.
+        let faced = species == .hedgehog
+        let belly = look.belly, mark = look.mark
+        let coat = faced ? belly.mix(look.coat, 0.12) : look.coat
+        let light = faced ? look.lifted(belly, 0.12) : look.light
+        let dark = faced ? belly.shifted(-14, 2).mix(look.dark, 0.25) : look.dark
         let L = look.L
+        // The ears' own colour, where the plan has one: a puppy's darker
+        // ones, the fox's black backs.
+        let earTone = plan.earColour.map { look.tone($0, dim: 0.5) }
 
         // MARK: Ears. They stand up when it is bright, sit easy when it is
         // content, go flat and sideways when it wants something, and fall
@@ -25,17 +34,52 @@ extension CritterPainter {
             for s in (plan.ears == .none ? [] : [-1.0, 1]) {
                 var e = h
                 let hang = plan.ears == .drop
-                let spread = (m.by(0.46, 1.04, 0.12, -0.03) + (s > 0 ? 0.1 * wt.thirst : 0)) * (hang ? 0.3 : 1) + (hang ? 0.25 : 0)
-                let flick = (s > 0) == twitchRight ? twitch * 0.3 : 0
-                e.translateBy(x: s * (hang ? 15.5 : 13.2), y: (hang ? -9 : -11) + 1.8 * wt.thirst)
+                let long = plan.ears == .long
+                var spread = (m.by(0.46, 1.04, 0.12, -0.03) + (s > 0 ? 0.1 * wt.thirst : 0)) * (hang ? 0.3 : 1) + (hang ? 0.25 : 0)
+                if long { spread = m.by(0.7, 0.55, 0.1, -0.04) + (s > 0 ? 0.12 * wt.thirst : 0) + (s > 0 ? 0.05 : 0) }
+                if hang {
+                    // A pup's ears lift at the root when it is bright and flap a little.
+                    let flap = frame.reduceMotion ? 0 : sin(m.time * 9 + (s > 0 ? 0.8 : 0)) * 0.1 * wt.bright
+                    spread = 0.28 + m.by(0.12, 0.04, 0, -0.2) + flap
+                }
+                let flick = (s > 0) == twitchRight ? twitch * (long ? 0.18 : 0.3) : 0
+                e.translateBy(x: s * (hang ? 15.5 : (long ? 8.6 : 13.2)), y: (hang ? -9 : (long ? -14 : -11)) + 1.8 * wt.thirst)
                 e.rotate(by: .radians(s * spread + s * flick))
-                e.scaleBy(x: s * (1 + 0.1 * babyness), y: (hang ? 1 : m.by(0.9, 0.82, 1, 1.07)) * (1 + 0.18 * babyness))
+                e.scaleBy(x: s * (1 + 0.1 * babyness), y: (hang || long ? 1 : m.by(0.9, 0.82, 1, 1.07)) * (1 + 0.18 * babyness))
                 let eL = CGPoint(x: L.x * s, y: L.y)
+                if long {
+                    // Fully up when bright, a lazy lean when content, flopped
+                    // when it wants water, laid back asleep: the two nearest
+                    // of the five built bends, faded into one another.
+                    let bend = min(4, max(0, m.by(4, 3, 1, 0)))
+                    let lo = min(3, Int(bend)), f = bend - Double(lo)
+                    for (i, weight) in [(lo, 1 - f), (lo + 1, f)] where weight > 0.02 {
+                        var p = e
+                        if weight < 0.98 { p.opacity = weight }
+                        form(p, g.earBends[i], centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, light, coat, dark, highlight: 0.4, core: 0.9, L: eL)
+                        p.fill(g.earInnerBends[i], with: .radialGradient(Gradient(colors: [look.accent.shifted(7).color(), look.accent.color(), look.accent.shifted(-12, -4).color()]),
+                                                                          center: CGPoint(x: 0.4, y: -g.earHeight * 0.45), startRadius: 0, endRadius: g.earHeight * 0.55))
+                    }
+                    continue
+                }
+                if hang, let tone = earTone {
+                    // The pup's ear: its own, darker colour, furred at the edge, with the fold lit.
+                    form(e, g.earFur, centre: CGPoint(x: 6, y: 10), radius: 17, tone.mix(light, 0.35), tone, tone.shifted(-10, 2), highlight: 0.3, core: 0.9, L: eL)
+                    // The fold: a soft light along the inner edge, no line.
+                    glow(e, g.ear, look.lifted(tone, 0.4), centre: CGPoint(x: 4, y: 8), radius: 8, alpha: 0.35)
+                    continue
+                }
                 form(e, g.ear, centre: CGPoint(x: 0, y: -g.earHeight * 0.4), radius: g.earHeight * 0.6, light, coat, dark, highlight: 0.4, core: 0.9, L: eL)
+                if let tone = earTone, !hang {
+                    // The back of the ear shows dark at its tip.
+                    e.fill(g.earTip, with: .linearGradient(Gradient(stops: [.init(color: tone.color(0.96), location: 0), .init(color: tone.color(0.9), location: 0.55),
+                                                                            .init(color: tone.color(0), location: 1)]),
+                                                           startPoint: CGPoint(x: 0, y: -g.earHeight * 1.05), endPoint: CGPoint(x: 0, y: -g.earHeight * 0.5)))
+                }
                 // The inner ear: pink, deepest at the base, with the cream hairs.
                 e.fill(g.earInner, with: .radialGradient(Gradient(colors: [look.accent.shifted(7).color(), look.accent.color(), look.accent.shifted(-12, -4).color()]),
                                                           center: CGPoint(x: 0.4, y: -g.earHeight * 0.45), startRadius: 0, endRadius: g.earHeight * 0.55))
-                if !hang { e.fill(g.earHairs, with: .color(belly.color(0.75))) }
+                if !hang { e.fill(g.earHairs, with: .color(belly.color(species == .fox ? 0.95 : 0.75))) }
             }
         }
         if plan.ears != .drop { ears() }
@@ -47,25 +91,50 @@ extension CritterPainter {
             h.fill(g.liner, with: .color(mark.color(0.55)))
             h.fill(g.cheekStripes, with: .color(mark.color(0.5)))
         }
+        if plan.cheek > 0 {
+            // Pouches: two round puffs of cream, soft at the rim.
+            h.fill(g.pouches, with: .radialGradient(Gradient(stops: [.init(color: look.lifted(belly, 0.25).color(0.95), location: 0), .init(color: belly.color(0.75), location: 0.55),
+                                                                       .init(color: belly.color(0), location: 1)]),
+                                                     center: CGPoint(x: 0, y: 7.5), startRadius: 0, endRadius: w * 0.95))
+        }
+        if plan.marks == .mask {
+            // White from the eyes down, the ruff included; the dark tear lines from the eyes to the nose.
+            h.fill(g.cheekWhite, with: .radialGradient(Gradient(stops: [.init(color: look.lifted(belly, 0.3).color(), location: 0), .init(color: belly.color(), location: 0.7),
+                                                                         .init(color: belly.shifted(-6, 3).color(), location: 1)]),
+                                                       center: CGPoint(x: L.x * 3, y: 8), startRadius: 0, endRadius: w * 1.1))
+        }
+
+        if plan.species == .puppy {
+            // The blaze, fading in from the crown.
+            h.fill(g.blaze, with: .linearGradient(Gradient(stops: [.init(color: belly.color(0), location: 0), .init(color: belly.color(0.85), location: 0.55),
+                                                                    .init(color: look.lifted(belly, 0.2).color(0.95), location: 1)]),
+                                                  startPoint: CGPoint(x: 0, y: -17), endPoint: CGPoint(x: 0, y: 4)))
+        }
 
         // Floppy ears hang in front of the head, not behind it.
         if plan.ears == .drop { ears() }
 
         // MARK: The muzzle: pale puffs with their whisker dots, the nose
-        // leather with a glint, the little mouth.
+        // leather with a glint, the little mouth. A long muzzle carries the
+        // nose and the mouth down to its end (`drop`).
+        let nz = species == .bunny ? noseJig() : 0
         h.fill(g.muzzle, with: .radialGradient(Gradient(colors: [look.lifted(belly, 0.35).color(), belly.color(), belly.shifted(-6, 3).color()]),
-                                                center: CGPoint(x: L.x * 3, y: 4), startRadius: 0, endRadius: 12))
+                                                center: CGPoint(x: L.x * 3, y: 4 + g.drop * 0.5), startRadius: 0, endRadius: 12 + g.drop))
+        if plan.marks == .mask { h.fill(g.tears, with: .color(look.tone(plan.earColour ?? plan.mark, dim: 0.5).color(0.55))) }
         h.fill(g.whiskerDots, with: .color(dark.color(0.4)))
-        h.fill(g.nose, with: .linearGradient(Gradient(colors: [look.lifted(look.nose, 0.3).color(), look.nose.color(), look.nose.shifted(-12).color()]),
-                                              startPoint: CGPoint(x: L.x * 2.5, y: 1.5), endPoint: CGPoint(x: -L.x * 2.5, y: 6.5)))
-        h.fill(Path(ellipseIn: CGRect(x: L.x * 1.1 - 1.2, y: 2.5, width: 2.2, height: 1.1)), with: .color(Color.white.opacity(0.62)))
-        mouth(h, weights: wt, babyness: babyness)
+        var face = h
+        face.translateBy(x: 0, y: nz)
+        let ns = plan.noseSize
+        face.fill(g.nose, with: .linearGradient(Gradient(colors: [look.lifted(look.nose, 0.3).color(), look.nose.color(), look.nose.shifted(-12).color()]),
+                                                 startPoint: CGPoint(x: L.x * 2.5, y: 1.5 + g.drop), endPoint: CGPoint(x: -L.x * 2.5, y: 6.5 + g.drop + 2 * ns)))
+        face.fill(Path(ellipseIn: CGRect(x: L.x * 1.1 * ns - 1.2 * ns, y: 2.5 + g.drop, width: 2.2 * ns, height: 1.1 * ns)), with: .color(Color.white.opacity(0.62)))
+        mouth(face, weights: wt, babyness: babyness)
 
         // Blush, only when it is happy.
-        let blush = Ink.lerp(0.12, 0.8, Ink.smooth((frame.mood - 0.3) / 0.7)) * (1 - 0.7 * wt.thirst)
+        let blush = Ink.lerp(0.12, 0.8, Ink.smooth((frame.mood - 0.3) / 0.7)) * (1 - 0.7 * wt.thirst) * (plan.marks == .mask ? 0.4 : 1)
         for s in [-1.0, 1] {
-            h.fill(Path(ellipseIn: CGRect(x: s * 14.5 - 4, y: 4.5, width: 8, height: 5.2)), with: .radialGradient(
-                Gradient(colors: [look.tone(0xFF8FA3).color(blush), look.tone(0xFF8FA3).color(0)]), center: CGPoint(x: s * 14.5, y: 7), startRadius: 0, endRadius: 4.4))
+            h.fill(Path(ellipseIn: CGRect(x: s * 14.5 * plan.headWidth / 1.08 - 4, y: 4.5, width: 8, height: 5.2)), with: .radialGradient(
+                Gradient(colors: [look.tone(0xFF8FA3).color(blush), look.tone(0xFF8FA3).color(0)]), center: CGPoint(x: s * 14.5 * plan.headWidth / 1.08, y: 7), startRadius: 0, endRadius: 4.4))
         }
 
         // MARK: Eyes. They look at the bowl when it wants water, and at you
@@ -77,9 +146,20 @@ extension CritterPainter {
         let droop = m.by(1, 0.05, 0.05, 0)
         let size = (1 + 0.32 * babyness)
         let spread = 9.6 * plan.eyeSpread * (1 + 0.08 * babyness)
-        for s in [-1.0, 1] {
-            eye(h, at: CGPoint(x: s * spread, y: -1.5), side: s, rx: 4.9 * plan.eyeSize * size, ry: 5.45 * plan.eyeSize * size, gaze: gaze, droop: droop)
+        let eyeY = species == .hedgehog ? -0.5 : -1.5
+        if faced {
+            // The dark of a hedgehog's mask, round each eye.
+            for s in [-1.0, 1] {
+                h.fill(Path(ellipseIn: CGRect(x: s * spread - 10, y: eyeY - 9, width: 20, height: 18)),
+                       with: .radialGradient(Gradient(colors: [look.dark.color(0.7), look.dark.color(0.0)]), center: CGPoint(x: s * spread, y: eyeY), startRadius: 3, endRadius: 10))
+            }
         }
+        for s in [-1.0, 1] {
+            eye(h, at: CGPoint(x: s * spread, y: eyeY), side: s, rx: 4.9 * plan.eyeSize * size, ry: 5.45 * plan.eyeSize * size, gaze: gaze, droop: droop)
+        }
+
+        // The hedgehog's spines come over the crown, in front of the ears.
+        if species == .hedgehog { hood(h) }
 
         // Worried brows, only when it is wanting something: the inner ends raised.
         if wt.thirst > 0.05 {
@@ -90,13 +170,29 @@ extension CritterPainter {
             }
             h.stroke(brows, with: .color(mark.color(0.5 * wt.thirst)), style: StrokeStyle(lineWidth: 1.0, lineCap: .round))
         }
-        whiskers(h, weights: wt)
+        var wh = h
+        wh.translateBy(x: 0, y: g.drop * 0.55 + nz * 0.5)
+        if plan.whiskers { whiskers(wh, weights: wt) }
         cap(h, wt)
+    }
+
+    /// A rabbit's nose never quite stops: a small quick shiver all the time,
+    /// and now and then a short burst of it.
+    private func noseJig() -> Double {
+        guard !frame.reduceMotion else { return 0 }
+        let burst = max(0.3, motion.beat(every: 3.1, lasting: 1.2, offset: 0.4))
+        return sin(time * 21) * 0.5 * burst * motion.awake
     }
 
     // MARK: Mouth
 
-    private func mouth(_ h: GraphicsContext, weights wt: PetMotion.Weights, babyness: Double) {
+    private func mouth(_ face: GraphicsContext, weights wt: PetMotion.Weights, babyness: Double) {
+        var h = face
+        h.translateBy(x: 0, y: CritterGeometry.head(plan).drop + 1.2 * (plan.noseSize - 1))
+        defer {
+            if plan.species == .puppy { pantingTongue(h, wt) }
+            if plan.species == .hamster || plan.species == .bunny { buckTeeth(h, wt) }
+        }
         let ink = look.dark.shifted(-16)
         var line = Path()
         line.move(to: CGPoint(x: 0, y: 6.3)); line.addLine(to: CGPoint(x: 0, y: 8.1))
@@ -127,6 +223,45 @@ extension CritterPainter {
             if lick > 0.05 {
                 h.fill(Path(ellipseIn: CGRect(x: -1.6, y: 9.6, width: 3.2, height: 1.4 + 2.4 * lick)), with: .color(look.tone(0xF08A9A).color(Double(lick))))
             }
+        }
+    }
+
+    /// A pup's tongue: out and panting when it wants water (it pulses), a
+    /// bigger one in the happy smile.
+    private func pantingTongue(_ h: GraphicsContext, _ wt: PetMotion.Weights) {
+        let amount = max(wt.thirst, wt.bright * 0.9)
+        guard amount > 0.05 else { return }
+        let pant = frame.reduceMotion ? 0 : sin(time * 7.5) * 0.9 * wt.thirst
+        let len = (4.5 + 4.5 * wt.thirst) * amount + pant
+        let rim = look.dark.shifted(-26)
+        h.fill(Path(ellipseIn: CGRect(x: -5, y: 8, width: 10, height: 3.6 + 2.4 * amount)), with: .color(Color(red: 0.32, green: 0.12, blue: 0.14, opacity: Ink.clamp(amount * 1.3))))
+        var tongue = Path()
+        tongue.move(to: CGPoint(x: -3, y: 8.8))
+        tongue.addLine(to: CGPoint(x: -3, y: 9 + len))
+        tongue.addQuadCurve(to: CGPoint(x: 3, y: 9 + len), control: CGPoint(x: 0, y: 9 + len + 4.6))
+        tongue.addLine(to: CGPoint(x: 3, y: 8.8))
+        tongue.closeSubpath()
+        let pink = look.tone(0xF2808F)
+        var t = h
+        t.opacity = Ink.clamp(amount * 1.5)
+        t.fill(tongue.offsetBy(dx: 0, dy: 0.5), with: .color(rim.color(0.35)))
+        t.fill(tongue, with: .linearGradient(Gradient(colors: [pink.shifted(-4).color(), pink.color(), look.lifted(pink, 0.22).color()]),
+                                              startPoint: CGPoint(x: 0, y: 9), endPoint: CGPoint(x: 0, y: 9 + len + 3)))
+        var mid = Path()
+        mid.move(to: CGPoint(x: 0, y: 9.4)); mid.addLine(to: CGPoint(x: 0, y: 9 + len * 0.8))
+        t.stroke(mid, with: .color(pink.shifted(-16).color(0.6)), style: StrokeStyle(lineWidth: 0.6, lineCap: .round))
+    }
+
+    /// The two front teeth of a hamster or a rabbit, under the nose, which
+    /// show when the mouth is closed.
+    private func buckTeeth(_ h: GraphicsContext, _ wt: PetMotion.Weights) {
+        let a = (1 - wt.bright) * (1 - 0.8 * wt.doze)
+        guard a > 0.05 else { return }
+        let len = plan.species == .hamster ? 2.8 : 2.4
+        for s in [-1.0, 1] {
+            let tooth = Path(roundedRect: CGRect(x: s > 0 ? 0.15 : -1.85, y: 8.6, width: 1.7, height: len), cornerRadius: 0.7)
+            h.fill(tooth, with: .color(look.lifted(look.belly, 0.4).color(a)))
+            h.stroke(tooth, with: .color(look.dark.shifted(-10).color(0.35 * a)), lineWidth: 0.35)
         }
     }
 
@@ -167,7 +302,7 @@ extension CritterPainter {
         let L = look.L
         var e = c
         e.translateBy(x: p.x, y: p.y)
-        e.rotate(by: .radians(s * m.by(0, 0.2, 0.05, -0.1)))
+        e.rotate(by: .radians(s * (m.by(0, 0.2, 0.05, -0.1) - plan.eyeTilt)))
 
         if closed > 0.9 {
             // Shut: a soft curve, the lid's own light above it, a lash.

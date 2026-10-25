@@ -1,25 +1,31 @@
 import Foundation
 
-/// What a drawn pet is: one of two body plans and the numbers that make a
+/// What a drawn pet is: one of three body plans and the numbers that make a
 /// species of it, as `PlantPlan` does for the plants. The plan says how it is
 /// built and moves; the numbers say what it looks like.
 ///
 /// - `sitter`: a small mammal sitting, seen from the front-left, with a head
-///   that faces us. A kitten now. The hamster, bunny, puppy, fox, hedgehog,
-///   deer and the two bears are rows here: ears (`Ears`), tail (`Tail`),
-///   markings, a longer muzzle for a dog or a fox, the coat's colours.
+///   that faces us. A kitten, and as rows of it the hamster, bunny, puppy,
+///   fox and hedgehog (deer and the two bears are still to come): ears
+///   (`Ears`), tail (`Tail`), markings, a longer or pointed muzzle, a
+///   chubby cheek, socks, a bib, the coat's colours. What only one species
+///   does (the hamster's seed, the hedgehog's spines) is a function for it in
+///   `CritterPainter+Species`.
 /// - `perched`: a bird standing upright, face on, with wings folded. An owl
 ///   now; the penguin is the same plan with a flat beak, flippers and no
-///   tufts. The duckling keeps its own painter, `PetPainter`.
+///   tufts.
+/// - `waddler`: a bird seen from the side, round and downy, a bill that
+///   opens, webbed feet: the duckling (`CritterPainter+Duck`). `PetPainter`
+///   is its old, flat painter, kept to compare against.
 ///
-/// Both share the duckling's seven stages (`origin` says what comes before
+/// All share the duckling's seven stages (`origin` says what comes before
 /// the animal: a blanket bundle for a mammal, an egg for a bird), its motion
 /// (`PetMotion`) and its moods.
 struct CritterPlan: Equatable, Sendable {
-    enum Body: Sendable { case sitter, perched }
+    enum Body: Sendable { case sitter, perched, waddler }
     enum Origin: Sendable { case blanket, egg }
     enum Ears: Sendable { case point, round, long, drop, tuft, none }
-    enum Tail: Sendable { case curl, stub, plume, none }
+    enum Tail: Sendable { case curl, stub, plume, wag, cotton, none }
     enum Marks: Sendable { case tabby, plain, mask, chevron }
     /// How a pupil answers the light: a cat's is a slit by day and opens
     /// round at night; a bird's is always round.
@@ -61,6 +67,23 @@ struct CritterPlan: Equatable, Sendable {
     /// How long the muzzle is, against the kitten's (1): a dog or a fox is
     /// longer, a hamster shorter.
     var muzzle = 1.0
+
+    /// The lower face: 0 is the kitten's round chin, 1 a pointed muzzle (a fox, a
+    /// hedgehog); and how far the cheeks bulge (a hamster's pouches).
+    var chin = 0.0
+    var cheek = 0.0
+    /// The nose leather against the kitten's (a puppy's is big).
+    var noseSize = 1.0
+    /// How much bigger the pale chest is (a fox's bib).
+    var bib = 1.0
+    /// How far the outer eye corner is turned up (a fox's slant), in radians.
+    var eyeTilt = 0.0
+    /// What the ends of things are coloured: the legs from the ankle down
+    /// (a fox's black socks), the ears (a puppy's darker ones, the fox's
+    /// black backs), the tail's tip (a fox's white one).
+    var socks: UInt32?
+    var earColour: UInt32?
+    var tailTip: UInt32?
 
     /// Which species this is, and the key under which what is built from the
     /// plan once is kept (`CritterGeometry`): the species' name, unless a
@@ -131,6 +154,51 @@ struct CritterPlan: Equatable, Sendable {
             iris = 0xFFC53D
             pupil = .round
             eyeSize = 1.0
+        case .duckling:
+            self.init(body: .waddler, origin: .egg,
+                      light: 0xFFE98A, coat: 0xFFD447, shade: 0xE5A21E, belly: 0xFFF0B0, mark: 0xF0B52A,
+                      nose: 0xFF9F43, accent: 0xFF9F43, wrap: 0xFFF3DC, ears: .none, tail: .stub, marks: .plain,
+                      species: species, whiskers: false)
+            iris = 0x3B2812
+            pupil = .round
+            eyeSize = 1.0
+            fur = 1.3
+        case .hamster:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xF6D8A6, coat: 0xDFA864, shade: 0xA8733C, belly: 0xFFF2DC, mark: 0x93602E,
+                      nose: 0xE98FA0, accent: 0xF3A9A0, wrap: 0xBFE3CF, ears: .round, tail: .none, marks: .plain, species: species)
+            (earHeight, headWidth, bodyWidth) = (0.5, 1.26, 1.08)
+            (eyeSize, eyeSpread, fur, muzzle, cheek, bib) = (0.95, 1.08, 0.8, 0.62, 1.7, 1.4)
+            (pupil, iris) = (.round, 0x33211A)
+        case .bunny:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xF1EAE0, coat: 0xD3C7BA, shade: 0x9A8D86, belly: 0xFFFBF4, mark: 0x8E8078,
+                      nose: 0xEFA1AC, accent: 0xF4B6BF, wrap: 0xF4C7D3, ears: .long, tail: .cotton, marks: .plain, species: species)
+            (earHeight, headWidth, bodyWidth) = (1.7, 1.0, 1.0)
+            (eyeSize, eyeSpread, fur, muzzle) = (0.94, 1.08, 1.15, 0.78)
+            (pupil, iris) = (.round, 0x6A4034)
+        case .puppy:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xEECE9E, coat: 0xD9A767, shade: 0x94642F, belly: 0xFFF1DA, mark: 0x7A4F26,
+                      nose: 0x2F2424, accent: 0xF08A9A, wrap: 0xB7D3F2, ears: .drop, tail: .wag, marks: .plain, species: species, whiskers: false)
+            (headWidth, bodyWidth) = (1.08, 1.05)
+            (eyeSize, fur, muzzle, noseSize) = (1.0, 1.1, 1.3, 1.7)
+            (pupil, iris, earColour) = (.round, 0x5B3A22, 0xA46F38)
+        case .fox:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xF8B070, coat: 0xE8782C, shade: 0xA24A1A, belly: 0xFFF5E8, mark: 0x6A3216,
+                      nose: 0x2A201E, accent: 0xF4A9A0, wrap: 0xF2D3A6, ears: .point, tail: .plume, marks: .mask, species: species)
+            (earHeight, headWidth, bodyWidth) = (1.3, 1.0, 0.95)
+            (eyeSize, eyeSpread, fur, muzzle, chin, bib, eyeTilt) = (0.86, 1.0, 1.0, 1.35, 1.0, 1.6, 0.14)
+            (pupil, iris) = (.slit, 0xD89A22)
+            (socks, earColour, tailTip) = (0x3A2724, 0x3A2724, 0xFFF6EA)
+        case .hedgehog:
+            self.init(body: .sitter, origin: .blanket,
+                      light: 0xC9A47C, coat: 0x8F6D4D, shade: 0x543E2D, belly: 0xEBCFA9, mark: 0x3E2C20,
+                      nose: 0x3B2A2A, accent: 0xF0B2A6, wrap: 0xCFE0B4, ears: .round, tail: .none, marks: .plain, species: species, whiskers: false)
+            (earHeight, headWidth, bodyWidth) = (0.42, 0.98, 1.0)
+            (eyeSize, eyeSpread, fur, muzzle, chin, noseSize) = (0.8, 1.12, 0.6, 1.3, 1.0, 1.4)
+            (pupil, iris) = (.round, 0x2A1C14)
         default:
             return nil
         }

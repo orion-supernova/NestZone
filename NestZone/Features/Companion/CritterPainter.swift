@@ -41,7 +41,7 @@ struct CritterPainter {
 
     /// Draws the pet standing on the floor at `x`, `size` points tall.
     func draw(_ context: GraphicsContext, x: Double, floor: Double, size: Double) {
-        PetTiming.measure(plan.body == .sitter ? "critter" : "bird") { paint(context, x: x, floor: floor, size: size) }
+        PetTiming.measure(plan.body == .sitter ? "critter" : plan.body == .waddler ? "duckling" : "bird") { paint(context, x: x, floor: floor, size: size) }
     }
 
     private func paint(_ context: GraphicsContext, x: Double, floor: Double, size: Double) {
@@ -59,7 +59,7 @@ struct CritterPainter {
         var body = c
         // Everything moves about the feet.
         body.translateBy(x: 60, y: 108)
-        let (dx, dy, sx, sy, turn) = motion.offsets(calm: true)
+        let (dx, dy, sx, sy, turn) = motion.offsets(calm: plan.body != .waddler)
         body.translateBy(x: dx, y: dy)
         body.rotate(by: .radians(turn))
         body.scaleBy(x: sx, y: sy)
@@ -72,14 +72,15 @@ struct CritterPainter {
         switch plan.body {
         case .sitter: sitter(body)
         case .perched: perched(body)
+        case .waddler: waddler(body)
         }
     }
 
     /// Where a hat sits and where a bow or scarf is tied, in the box, for
     /// this stage: the head's top between the ears, and under the chin.
     static func wearing(_ plan: CritterPlan, stage: Int) -> (top: CGPoint, neck: CGPoint) {
-        var top = plan.body == .sitter ? CGPoint(x: 47, y: 31) : CGPoint(x: 60, y: 33)
-        var neck = plan.body == .sitter ? CGPoint(x: 47, y: 67) : CGPoint(x: 60, y: 72)
+        var top = plan.body == .sitter ? CGPoint(x: 47, y: 31) : plan.body == .waddler ? CGPoint(x: 46, y: 33) : CGPoint(x: 60, y: 33)
+        var neck = plan.body == .sitter ? CGPoint(x: 47, y: 67) : plan.body == .waddler ? CGPoint(x: 47, y: 70) : CGPoint(x: 60, y: 72)
         if stage < 2 {
             top = CGPoint(x: 60, y: 46)
             neck = CGPoint(x: 60, y: 90)
@@ -139,7 +140,7 @@ struct CritterPainter {
     }
 
     private func shadow(_ c: GraphicsContext) {
-        let wide = plan.body == .sitter ? 38.0 : 30
+        let wide = plan.body == .sitter ? 38.0 : plan.body == .waddler ? 35 : 30
         let L = look.L
         let lean = -L.x * 5
         let w = stage < 2 ? 24.0 : wide
@@ -288,10 +289,11 @@ struct CritterPainter {
     /// folded back round it, with two little paws over the edge.
     private func hatchling(_ c: GraphicsContext) {
         var h = c
-        h.translateBy(x: plan.body == .sitter ? 14 : 0, y: plan.body == .sitter ? 34 : 0)
+        h.translateBy(x: plan.body == .perched ? 0 : 14, y: plan.body == .perched ? 0 : 34)
         switch plan.body {
         case .sitter: sitterHead(h, babyness: 1, local: false)
         case .perched: perchedHead(h, babyness: 1, drop: 18)
+        case .waddler: duckHead(h, babyness: 1)
         }
         let wrap = look.tone(plan.wrap, dim: 0.7)
         let L = look.L

@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// The duckling, drawn from five parts — body, head, wing, eye, beak — the way
+/// The duckling's old, flat painter, kept so `-ducklingLegacy 1` (Debug) can
+/// draw it beside the new one (`CritterPainter+Duck`, body plan `waddler`),
+/// which is what the app draws. It was drawn from five parts — body, head, wing, eye, beak — the way
 /// a pet is built without an animation tool: the parts are drawn once and
 /// code moves them. It shares the plant's seven-stage growth and its moods:
 /// a bright duck bounces with sparkly eyes, a sleepy one fades and droops,

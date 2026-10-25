@@ -36,6 +36,10 @@ struct ArtSheet: View {
             case "gpu": gpuTest
             case "pet-redraw": petRedraw
             case "pet-variants": petVariants
+            case "batch-a": batchA
+            case "batch-a-faces": batchAFaces(0)
+            case "batch-a-faces2": batchAFaces(1)
+            case "batch-a-night": batchANight
             default:
                 if let species = Species(rawValue: page) { speciesPage(species) }
                 else if page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petClose(species) }
@@ -279,6 +283,70 @@ struct ArtSheet: View {
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    // MARK: Batch A
+
+    private static let batchA: [Species] = [.duckling, .hamster, .bunny, .puppy, .fox, .hedgehog]
+
+    /// The six pets of batch A side by side, grown, in the four moods by day.
+    ///   -artSheet batch-a
+    private var batchA: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: "batch A - bright, content, thirsty, dozing").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ForEach(Self.batchA) { species in
+                let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+                HStack(spacing: 3) {
+                    ForEach(Mood.allCases, id: \.self) { mood in
+                        cell(ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 6, now: hour(13)), "\(species.rawValue) \(mood.rawValue)")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 3)
+    }
+
+    /// Each pet's face cropped out of an 800-point drawing, content and thirsty.
+    ///   -artSheet batch-a-faces
+    private func batchAFaces(_ half: Int) -> some View {
+        func face(_ species: Species, _ mood: Mood, _ hourOfDay: Int) -> some View {
+            let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+            let head = CritterPlan.of(species)?.body == .perched ? CGPoint(x: 60, y: 50) : CGPoint(x: 47, y: 49)
+            let k = 190.0 / 120, big = 800.0 / SceneSpace.height
+            let hx = 400 + (head.x - 60) * k * big, hy = (SceneSpace.floor - 4 + (head.y - 108) * k) * big
+            return ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 6, now: hour(hourOfDay))
+                .frame(width: 800, height: 800)
+                .offset(x: -(hx - 98) + (mood == .thirsty ? 34 : 0), y: -(hy - 98) + (mood == .thirsty ? -42 : 0))
+                .frame(width: 196, height: 196, alignment: .topLeading)
+                .clipShape(.rect(cornerRadius: 8))
+                .overlay(alignment: .topLeading) { Text(verbatim: "\(species.rawValue) \(mood.rawValue)").font(.system(size: 9, design: .monospaced)).foregroundStyle(.white.opacity(0.7)).padding(3) }
+        }
+        return VStack(alignment: .leading, spacing: 3) {
+            ForEach(Array(Self.batchA.dropFirst(half * 3).prefix(3))) { species in
+                HStack(spacing: 3) {
+                    face(species, .bright, 13)
+                    face(species, .thirsty, 13)
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// The light: each pet in the morning, at dusk, by night and by the moon.
+    ///   -artSheet batch-a-night
+    private var batchANight: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: "batch A - morning, evening, night, moon").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ForEach(Self.batchA) { species in
+                let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+                HStack(spacing: 3) {
+                    ForEach([("morning", 8), ("evening", 18), ("night", 22), ("moon", 1)], id: \.0) { name, h in
+                        cell(ScenePortrait(companion: companion, progress: 0.97, mood: .content, stage: 6, now: hour(h)), "\(species.rawValue) \(name)")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 3)
     }
 
     /// Four pets drawn every frame, which is what a pet always is: the worst

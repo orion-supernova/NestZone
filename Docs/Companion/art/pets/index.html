@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nestie pets: the kitten, before and after</title>
+<title>Nestie pets: the kitten, before and after, and Batch A</title>
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #121116; color: #d8d4e6; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
@@ -78,5 +78,91 @@
 <div class="row">
   <figure class="after"><img src="pets-v2-variants.png" alt="four plan variants"><figcaption>after (v2), <code>-artSheet pet-variants</code></figcaption></figure>
 </div>
+
+<h1 style="font-size:22px;font-weight:600;margin:64px 32px 6px;color:#fff">Batch A: six pets at the kitten's level</h1>
+<p>The duckling, hamster, bunny, puppy, fox and hedgehog, each with its own character, through <code>CritterPlan</code> and the sitter's painter, plus one new body plan (<code>waddler</code>, the duckling's) and one new fur kind (<code>SpineField</code>, the hedgehog's spines). Every pet has all seven stages (a bundle or egg first, big-headed babies), the four moods as <a href="../RULES-pets.md">RULES-pets.md</a> specifies, the sky's light, and idle motion. Each pet had two art-director passes: a screenshot, a list of rejections, a fix. <em>Before</em> is the app as it was (the hamster, bunny, puppy, fox and hedgehog were emoji sketches), <em>pass 1</em> is the first complete drawing, <em>v1</em> is after both passes.</p>
+<p>All six together: <code>-artSheet batch-a</code> (grown, four moods), <code>batch-a-faces</code> and <code>batch-a-faces2</code> (faces from an 800-point drawing), <code>batch-a-night</code> (morning, evening, night, moon). Each pet also has <code>-artSheet &lt;pet&gt;</code>, <code>&lt;pet&gt;-moods</code>, <code>&lt;pet&gt;-close</code> and <code>&lt;pet&gt;-stages</code>.</p>
+
+<h2>All six, grown, in the four moods</h2>
+<div class="row">
+  <figure class="after"><img src="batch-a-v1-moods.jpg" alt="batch A: all six pets, four moods"><figcaption>v1, <code>-artSheet batch-a</code></figcaption></figure>
+  <figure class="after"><img src="batch-a-v1-faces.jpg" alt="batch A faces, first three"><figcaption>v1, faces (1)</figcaption></figure>
+  <figure class="after"><img src="batch-a-v1-faces2.jpg" alt="batch A faces, last three"><figcaption>v1, faces (2)</figcaption></figure>
+  <figure class="after"><img src="batch-a-v1-light.jpg" alt="batch A: the light across the day"><figcaption>v1, the light</figcaption></figure>
+</div>
+
+<h2>Duckling</h2>
+<p><strong>Pass 1 rejected:</strong> the old painter was flat, with no light, no fur edge and a bead eye. Now a downy edge (<code>FurEdge</code> on body and head), a tuft, a bill in two halves that opens, webbed feet, a wing with feather scallops, the kitten's layered eye with a round pupil. It bounces rather than breathes. Dozing is its own pose: the head comes down onto the chest and the body squashes round. <strong>Pass 2 rejected:</strong> the white collar read as a hook across the face (thinner, shorter, lower); the down edge was spiky on the rump (shorter, wider tufts); the lower bill vanished (darker, so the closed bill reads as two halves).</p>
+<div class="row">
+  <figure><img src="duckling-before-moods.jpg" alt="duckling before"><figcaption>before</figcaption></figure>
+  <figure><img src="duckling-pass1-moods.jpg" alt="duckling pass 1"><figcaption>pass 1</figcaption></figure>
+  <figure class="after"><img src="duckling-v1-moods.jpg" alt="duckling v1 moods"><figcaption>v1, moods</figcaption></figure>
+  <figure class="after"><img src="duckling-v1-stages.jpg" alt="duckling v1 stages"><figcaption>v1, stages</figcaption></figure>
+  <figure class="after"><img src="duckling-v1-close.jpg" alt="duckling v1 card and faces"><figcaption>v1, card and faces</figcaption></figure>
+</div>
+
+<h2>Hamster</h2>
+<p><strong>Pass 1 rejected:</strong> it read as a kitten with round ears: the coat's edge was spiky (fur 1.25, now .8), the cheeks did not bulge (<code>cheek</code> 1.7 widens the lower head and a cream pouch sits on each), the paws were two sticks, the seed was invisible, and the three big cream feet looked like slippers. Now it has no standing legs: short arms and two paws held up under the chin, a sunflower seed when bright, small feet, two buck teeth, a cream belly. <strong>Pass 2:</strong> the seed bigger and higher, nibbling.</p>
+<div class="row">
+  <figure><img src="hamster-before-moods.jpg" alt="hamster before"><figcaption>before (the emoji sketch)</figcaption></figure>
+  <figure><img src="hamster-pass1-moods.jpg" alt="hamster pass 1"><figcaption>pass 1</figcaption></figure>
+  <figure class="after"><img src="hamster-v1-moods.jpg" alt="hamster v1 moods"><figcaption>v1, moods</figcaption></figure>
+  <figure class="after"><img src="hamster-v1-stages.jpg" alt="hamster v1 stages"><figcaption>v1, stages</figcaption></figure>
+  <figure class="after"><img src="hamster-v1-close.jpg" alt="hamster v1 card and faces"><figcaption>v1, card and faces</figcaption></figure>
+</div>
+
+<h2>Bunny</h2>
+<p><strong>Pass 1 rejected:</strong> the ears ghosted (two bends faded into one another at rest) and the cotton tail was a star. Ears are built at five steps of flop (<code>HeadGeometry.bunnyEar</code>), standing when bright, easy when content, flopped sideways when thirsty and laid back asleep; the painter draws one bend at rest and fades two only while the mood moves. The cotton tail is a ball of fine fur that twitches. The nose shivers all the time and bursts now and then. <strong>Pass 2:</strong> integer ear levels for each mood, finer tail fur.</p>
+<div class="row">
+  <figure><img src="bunny-before-moods.jpg" alt="bunny before"><figcaption>before (the emoji sketch)</figcaption></figure>
+  <figure><img src="bunny-pass1-moods.jpg" alt="bunny pass 1"><figcaption>pass 1</figcaption></figure>
+  <figure class="after"><img src="bunny-v1-moods.jpg" alt="bunny v1 moods"><figcaption>v1, moods</figcaption></figure>
+  <figure class="after"><img src="bunny-v1-stages.jpg" alt="bunny v1 stages"><figcaption>v1, stages</figcaption></figure>
+  <figure class="after"><img src="bunny-v1-close.jpg" alt="bunny v1 card and faces"><figcaption>v1, card and faces</figcaption></figure>
+</div>
+
+<h2>Puppy</h2>
+<p><strong>Pass 1 rejected:</strong> kitten whiskers on a dog, ears that were flat flaps with a ring drawn on them, a thin dark-tipped tail. Now: whiskers off (the dots stay), darker furred floppy ears that lift at the root and flap when bright, a pale blaze, a big glossy nose, a thick tail that wags about its root when bright (a slow swish when content) with a pale tip, and a tongue that pants when thirsty.</p>
+<div class="row">
+  <figure><img src="puppy-before-moods.jpg" alt="puppy before"><figcaption>before (the emoji sketch)</figcaption></figure>
+  <figure><img src="puppy-pass1-moods.jpg" alt="puppy pass 1"><figcaption>pass 1</figcaption></figure>
+  <figure class="after"><img src="puppy-v1-moods.jpg" alt="puppy v1 moods"><figcaption>v1, moods</figcaption></figure>
+  <figure class="after"><img src="puppy-v1-stages.jpg" alt="puppy v1 stages"><figcaption>v1, stages</figcaption></figure>
+  <figure class="after"><img src="puppy-v1-close.jpg" alt="puppy v1 card and faces"><figcaption>v1, card and faces</figcaption></figure>
+</div>
+
+<h2>Fox</h2>
+<p><strong>Pass 1 rejected:</strong> the plume was a thin tail with a flame on the end (it is now fuller in the middle, <code>bulge</code>), the white bib smeared left of the leg, the hind foot was a black slipper, a stray fleck of fur on the back (fur 1.4 to 1.0), the tear lines were too heavy, and the sleeping tip merged with the white muzzle. Now: black socks and ear tips, a white bib and white cheek ruff cut from the furred outline, tear lines from the eyes, slanted amber eyes with slit pupils, a plume with a white tip, and a dozing fox that curls into its tail, the tail across its nose.</p>
+<div class="row">
+  <figure><img src="fox-before-moods.jpg" alt="fox before"><figcaption>before (the emoji sketch)</figcaption></figure>
+  <figure><img src="fox-pass1-moods.jpg" alt="fox pass 1"><figcaption>pass 1</figcaption></figure>
+  <figure class="after"><img src="fox-v1-moods.jpg" alt="fox v1 moods"><figcaption>v1, moods</figcaption></figure>
+  <figure class="after"><img src="fox-v1-stages.jpg" alt="fox v1 stages"><figcaption>v1, stages</figcaption></figure>
+  <figure class="after"><img src="fox-v1-close.jpg" alt="fox v1 card and faces"><figcaption>v1, card and faces</figcaption></figure>
+</div>
+
+<h2>Hedgehog</h2>
+<p><strong>Pass 1 rejected:</strong> a brown bear in a spiky hat: the face took the coat's dark brown (now pale, with a dark mask round the eyes), the spines were wide cut-paper shards (now narrow and shorter, six rows, tips only a little paler than the blade), a cream pillow of a belly and a long pink foot read as a tail (small feet, a small belly), and the hood had a hard edge (it fades). It curls into a ball when dozing, rings of spines from the rim in, a snout and one shut eye in the gap.</p>
+<div class="row">
+  <figure><img src="hedgehog-before-moods.jpg" alt="hedgehog before"><figcaption>before (the emoji sketch)</figcaption></figure>
+  <figure><img src="hedgehog-pass1-moods.jpg" alt="hedgehog pass 1"><figcaption>pass 1</figcaption></figure>
+  <figure class="after"><img src="hedgehog-v1-moods.jpg" alt="hedgehog v1 moods"><figcaption>v1, moods</figcaption></figure>
+  <figure class="after"><img src="hedgehog-v1-stages.jpg" alt="hedgehog v1 stages"><figcaption>v1, stages</figcaption></figure>
+  <figure class="after"><img src="hedgehog-v1-close.jpg" alt="hedgehog v1 card and faces"><figcaption>v1, card and faces</figcaption></figure>
+</div>
+
+<h2>What it costs</h2>
+<p><code>-artSheet pet-redraw -frameMeter 1 -artSheetCount 1 -artSheetSpecies &lt;pet&gt; -artSheetMood &lt;mood&gt;</code>, <code>pet draw</code> in the Frames log, median of the per-second means, the kitten run in the same session as the reference (the Mac was shared with other builds, so the absolute numbers are higher than the quiet-machine ones in RULES-pets.md, the ratios are what counts). Milliseconds per frame, content / bright / thirsty / dozing:</p>
+<table style="margin:0 32px;border-collapse:collapse;font:13px ui-monospace,monospace;color:#cfcbe0">
+  <tr><th align="left" style="padding:2px 14px 2px 0">pet</th><th>content</th><th>bright</th><th>thirsty</th><th>dozing</th></tr>
+  <tr><td>kitten (reference)</td><td>0.43</td><td>0.48</td><td>0.58</td><td>0.58</td></tr>
+  <tr><td>duckling</td><td>0.24</td><td>0.26</td><td>0.35</td><td>0.27</td></tr>
+  <tr><td>hamster</td><td>0.35</td><td>0.42</td><td>0.47</td><td>0.39</td></tr>
+  <tr><td>bunny</td><td>0.44</td><td>0.37</td><td>0.52</td><td>0.40</td></tr>
+  <tr><td>puppy</td><td>0.41</td><td>0.47</td><td>0.48</td><td>0.45</td></tr>
+  <tr><td>fox</td><td>0.42</td><td>0.44</td><td>0.56</td><td>0.45</td></tr>
+  <tr><td>hedgehog</td><td>0.35</td><td>0.34</td><td>0.43</td><td>0.23</td></tr>
+</table>
+<p style="margin-top:12px">Scrolling, <code>-nestieBench 1 -nestieSpecies &lt;pet&gt; -todayScroll 1 -frameMeter 1</code>, 45 s: late frames kitten 3, duckling 2, hamster 2, bunny 4, puppy 6, fox 2, hedgehog 2, all in the cold-start windows. <code>-companionScroll 1</code> on Choose: 1 to 6 late frames in 45 s for the fox and the hedgehog on a quiet machine (an earlier set of runs with the Mac under a load average of 400 or more showed 13 to 70 for every pet, the kitten included, and means nothing).</p>
 </body>
 </html>
