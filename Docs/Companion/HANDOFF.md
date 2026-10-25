@@ -1244,7 +1244,10 @@ In order — each step can go to testers on its own:
      `npx convex env set COMPANION_NOTIFY on` (it is `sandbox` until then, so
      only Xcode installs hear Nestie and the feed stays clean);
    - an accessibility pass (VoiceOver on the shop and the store) and one more
-     read of the Turkish;
+     read of the Turkish (**done**, 25 October: screenshots at the largest
+     text size, before and after, in `Docs/Companion/a11y/index.html`; still
+     worth a try with VoiceOver on a real phone: the purchase card's focus and
+     the ceremony's announcement);
    - a feature-tier changelog entry for the version, written for the household;
    - bump `MARKETING_VERSION`; `./deploy.sh` (backend first).
 

@@ -53,6 +53,8 @@ struct CoinFlightLayer: View {
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
+        // Symbols have names VoiceOver would read: these are only motion.
+        .accessibilityHidden(true)
     }
 }
 
@@ -370,7 +372,7 @@ private struct ShelfSwitch: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(isOn ? Color.white : Color.primary)
                     .padding(.horizontal, 6)
-                    .frame(maxWidth: .infinity, minHeight: 40)
+                    .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget)
                     .background {
                         if isOn {
                             Capsule().fill(theme.accent).matchedGeometryEffect(id: "thumb", in: thumb)
@@ -380,10 +382,14 @@ private struct ShelfSwitch: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(isOn ? .isSelected : [])
+                .accessibilityShowsLargeContentViewer()
             }
         }
         .padding(4)
         .glassEffect(.regular, in: .capsule)
+        // A bar control stays one line: past this size its words are shown
+        // by the large content viewer instead, as the tab bar's are.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .animation(Motion.spring, value: selection)
         .sensoryFeedback(.selection, trigger: selection)
     }
@@ -475,8 +481,17 @@ struct ShopTile<Art: View>: View {
         .animation(Motion.pop, value: standing)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(title))
-        .accessibilityValue(Text(verbatim: spokenStanding(standing, item: item, southern: southern, now: now)))
+        .accessibilityValue(Text(verbatim: spoken))
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// What VoiceOver says after the name: the price or the story, and, on
+    /// sale, the last day (the badge that shows it is not read on its own).
+    private var spoken: String {
+        let line = spokenStanding(standing, item: item, southern: southern, now: now)
+        guard case .sale = standing, let saleEnds else { return line }
+        let day = saleEnds.formatted(Date.FormatStyle().day().month(.abbreviated).locale(L10n.locale))
+        return "\(line), \(String(localized: L10n.saleUntil(day)))"
     }
 
     /// On sale while its holiday lasts: the plain last day, never a countdown.
@@ -497,7 +512,6 @@ struct ShopTile<Art: View>: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
             .background(.ultraThinMaterial, in: .capsule)
-            .accessibilityLabel(Text(L10n.saleUntil(day)))
         }
     }
 }
@@ -530,6 +544,7 @@ struct StandingFoot: View {
     let standing: Standing
     let southern: Bool
     let now: Date
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Group {
@@ -551,7 +566,7 @@ struct StandingFoot: View {
                 .foregroundStyle(.secondary)
             }
         }
-        .lineLimit(1)
+        .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
         .frame(minHeight: 28, alignment: .leading)
     }
 
@@ -637,23 +652,42 @@ private struct PurchaseCard: View {
     @Environment(\.shopGeometry) private var geometry
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.shopStage) private var stage
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var contentHeight: CGFloat = .infinity
     @State private var jarFrame: CGRect = .zero
     @State private var artFrame: CGRect = .zero
     /// The coins have landed: the words of the moment may show.
     @State private var landed = false
     @State private var squash = 0
     @State private var fill: Double = 0
+    /// VoiceOver lands on the words when the card comes up and when they
+    /// change, so the card is read without a hunt for it.
+    @AccessibilityFocusState private var wordsFocused: Bool
 
     private static let cardShape = UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
 
     var body: some View {
         let step = store.state.step(of: card)
-        VStack(spacing: 12) {
+        let stack = VStack(spacing: 12) {
             header(step)
             art(step)
             words(step)
             content(step)
             buttons(step)
+        }
+        // At the accessibility sizes the card is taller than the screen:
+        // it scrolls, and is only as tall as it needs to be.
+        Group {
+            if typeSize.isAccessibilitySize {
+                ScrollView {
+                    stack.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+                .frame(maxHeight: contentHeight)
+            } else {
+                stack
+            }
         }
         .padding(.horizontal, Metrics.screenPadding)
         .padding(.top, 14)
@@ -669,6 +703,12 @@ private struct PurchaseCard: View {
         .tint(.primary)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
+        // The scrim is hidden from VoiceOver, so the two-finger Z closes the card.
+        .accessibilityAction(.escape) { store.send(.cardDismissed, animation: Motion.exit) }
+        .onAppear { focusWords() }
+        // A bought card says nothing until the coins have landed.
+        .onChange(of: step) { _, next in if next != .bought { focusWords() } }
+        .onChange(of: landed) { _, now in if now { focusWords() } }
         .onChange(of: card.isBought) { _, bought in
             if bought { pay() } else { landed = false }
         }
@@ -724,7 +764,7 @@ private struct PurchaseCard: View {
                 HaveBadge()
                     .font(.title)
                     .offset(x: 8, y: -8)
-                    .transition(.symbolEffect(.drawOn).combined(with: .scale))
+                    .transition(.symbolEffect(.drawOn).combined(with: .scale(reduceMotion ? 1 : 0)))
             } else if locked {
                 LockBadge().offset(x: 6, y: -6)
             }
@@ -763,6 +803,7 @@ private struct PurchaseCard: View {
             Text(heading)
                 .font(.title3.weight(.semibold))
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.opacity)
                 .accessibilityAddTraits(.isHeader)
             Text(verbatim: line)
@@ -772,6 +813,19 @@ private struct PurchaseCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .opacity(step == .bought && !landed ? 0 : 1)
+        .accessibilityElement(children: .combine)
+        .accessibilityHidden(step == .bought && !landed)
+        .accessibilityFocused($wordsFocused)
+    }
+
+    /// Moves VoiceOver to the words: off and on again, after the card has
+    /// settled, so a change of step reads even though the focus was there.
+    private func focusWords() {
+        Task { @MainActor in
+            wordsFocused = false
+            try? await Task.sleep(for: .milliseconds(400))
+            wordsFocused = true
+        }
     }
 
     /// "Kilim is 250 Leaves. The jar has 60 Leaves and 120 Sparkles: 70
@@ -825,6 +879,7 @@ private struct PurchaseCard: View {
             .background(Palette.inset, in: .rect(cornerRadius: Metrics.tightRadius, style: .continuous))
         case .short:
             let (have, total, currency) = shortProgress
+            let target: Price = currency == .leaves ? .leaves(total) : .sparkles(total)
             VStack(spacing: 6) {
                 ProgressView(value: Double(have) * fill, total: Double(max(total, 1)))
                     .tint(currency == .leaves ? Palette.leaf : Palette.sparkle)
@@ -834,6 +889,10 @@ private struct PurchaseCard: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
+            // One sentence ("300 of 500 Sparkles") instead of a percentage
+            // and a slash.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(L10n.cardOfSpoken(have, target.spoken)))
         case .bought, .about, .notice:
             EmptyView()
         }
@@ -913,6 +972,7 @@ private struct PurchaseCard: View {
                     }
                 }
                 .opacity(landed ? 1 : 0)
+                .accessibilityHidden(!landed)
             }
         case .notice(.unavailable):
             PrimaryButton(L10n.commonDone) { store.send(.cardDismissed, animation: Motion.exit) }
@@ -1043,6 +1103,7 @@ struct SparkleStoreView: View {
     @Environment(\.shopStage) private var stage
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var counterFrame: CGRect = .zero
     @State private var packFrames: [SparklePack.ID: CGRect] = [:]
     @State private var lastTapped: SparklePack.ID?
@@ -1081,6 +1142,10 @@ struct SparkleStoreView: View {
         // Every arrival, the same pack twice included: the count of them
         // changes even when the amount doesn't.
         .onChange(of: store.landedTick) { _, _ in
+            // Said once per arrival; the counter itself is never re-read.
+            if let landed = store.landed {
+                AccessibilityNotification.Announcement(String(localized: L10n.storeLanded(landed))).post()
+            }
             guard !reduceMotion, let id = lastTapped, let from = packFrames[id] else {
                 arrivals += 1
                 return
@@ -1102,8 +1167,9 @@ struct SparkleStoreView: View {
                     .font(.title.weight(.semibold))
                     .foregroundStyle(Palette.sparkle)
                     .symbolColorRenderingMode(.gradient)
-                    .symbolEffect(.bounce.up.byLayer, value: arrivals)
+                    .symbolEffect(.bounce.up.byLayer, value: reduceMotion ? 0 : arrivals)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { counterFrame = $0 }
+                    .accessibilityHidden(true)
                 Text(store.house.sparkles, format: .number)
                     .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .monospacedDigit()
@@ -1124,7 +1190,7 @@ struct SparkleStoreView: View {
                         .transition(.opacity.combined(with: .offset(y: 4)))
                 }
             }
-            .frame(height: 20)
+            .frame(minHeight: 20)
             .animation(reduceMotion ? Motion.fade : Motion.arrive.delay(0.45), value: store.landedTick)
         }
         .frame(maxWidth: .infinity)
@@ -1149,6 +1215,7 @@ struct SparkleStoreView: View {
                     pendingArt(pending.item)
                 }
                 .frame(width: 44, height: 44)
+                .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 8) {
                     Text(short > 0
                          ? L10n.storeGoal(String(localized: pending.item.title), short)
@@ -1163,6 +1230,7 @@ struct SparkleStoreView: View {
             .padding(14)
             .glassCard()
             .animation(reduceMotion ? Motion.fade : Motion.settle.delay(0.35), value: short)
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -1221,7 +1289,9 @@ struct SparkleStoreView: View {
         let isBuying = store.buyingPack == pack.id
         let note = store.packNote?.id == pack.id ? store.packNote : nil
         let glyphs: [Font] = [.body, .title3, .title2, .title]
-        return HStack(spacing: 12) {
+        let stacked = typeSize.isAccessibilitySize
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(spacing: 12))
+        return layout {
             // Bigger packs, a bigger sparkle: size shown, never shouted.
             Image(systemName: Amount.Currency.sparkles.symbol)
                 .font(glyphs[min(size, 3)].weight(.semibold))
@@ -1230,13 +1300,18 @@ struct SparkleStoreView: View {
                 .frame(width: 44, height: 44)
                 .background(Palette.sparkleWash, in: .circle)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { packFrames[pack.id] = $0 }
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
+                // The buy button says the amount and the price; what is left
+                // here for VoiceOver is only what the button does not say.
                 Text(pack.sparkles, format: .number)
                     .font(.system(.title3, design: .rounded, weight: .semibold))
                     .monospacedDigit()
+                    .accessibilityHidden(true)
                 Text(L10n.storePackUnit)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
                 if isBest || enoughPack == pack.id {
                     FlowLayout(spacing: 6) {
                         if isBest {
@@ -1273,34 +1348,39 @@ struct SparkleStoreView: View {
                         Image(systemName: note.kind == .failed || note.kind == .unverified ? "exclamationmark.circle" : "clock")
                     }
                     .font(.footnote)
-                    .foregroundStyle(note.kind == .failed || note.kind == .unverified ? Palette.danger : Color.secondary)
+                    .foregroundStyle(note.kind == .failed || note.kind == .unverified ? Palette.dangerText : Color.secondary)
                 }
             }
-            Spacer(minLength: 8)
-            Button {
-                lastTapped = pack.id
-                store.send(.packTapped(pack))
-            } label: {
-                ZStack {
-                    // Holds the button's width while it waits.
-                    priceLabel(pack).opacity(isBuying ? 0 : 1)
-                    if isBuying { ProgressView().tint(.white) }
-                }
-            }
-            .buttonStyle(.depthCompact)
-            // The pack being bought keeps its colour under its spinner; the
-            // others wait their turn.
-            .disabled(store.buyingPack != nil && !isBuying)
-            .allowsHitTesting(!isBuying)
-            .shake(on: note.map { $0.kind == .failed || $0.kind == .unverified ? 1 : 0 } ?? 0)
-            .accessibilityLabel(Text(verbatim: "\(Price.sparkles(pack.sparkles).spoken), \(pack.displayPrice ?? String(localized: L10n.storeTestPrice))\(isBest ? ", \(String(localized: L10n.storeBestValue))" : "")"))
-            .accessibilityIdentifier("Pack.\(pack.sparkles)")
+            if !stacked { Spacer(minLength: 8) }
+            buyButton(pack, isBuying: isBuying, stacked: stacked)
+                // The pack being bought keeps its colour under its spinner; the
+                // others wait their turn.
+                .disabled(store.buyingPack != nil && !isBuying)
+                .allowsHitTesting(!isBuying)
+                .shake(on: note.map { $0.kind == .failed || $0.kind == .unverified ? 1 : 0 } ?? 0)
+                .accessibilityLabel(Text(verbatim: "\(Price.sparkles(pack.sparkles).spoken), \(pack.displayPrice ?? String(localized: L10n.storeTestPrice))"))
+                .accessibilityIdentifier("Pack.\(pack.sparkles)")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .frame(minHeight: 64)
         .opacity(store.buyingPack != nil && !isBuying ? 0.5 : 1)
         .animation(Motion.fade, value: store.buyingPack)
+    }
+
+    @ViewBuilder
+    private func buyButton(_ pack: SparklePack, isBuying: Bool, stacked: Bool) -> some View {
+        let button = Button {
+            lastTapped = pack.id
+            store.send(.packTapped(pack))
+        } label: {
+            ZStack {
+                // Holds the button's width while it waits.
+                priceLabel(pack).opacity(isBuying ? 0 : 1)
+                if isBuying { ProgressView().tint(.white) }
+            }
+        }
+        if stacked { button.buttonStyle(.depth) } else { button.buttonStyle(.depthCompact) }
     }
 
     @ViewBuilder

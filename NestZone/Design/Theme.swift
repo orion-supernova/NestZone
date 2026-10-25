@@ -139,6 +139,17 @@ public enum Palette {
     public static let leafWash = currency(light: "05966924", dark: "34D39924", lightHigh: "04785729", darkHigh: "6EE7B729")
     public static let sparkleWash = currency(light: "C2780324", dark: "FBBF2424", lightHigh: "A1620729", darkHigh: "FCD34D29")
 
+    /// The vote's yes and no as fills under white text: the system green and
+    /// red are 2.3:1 and 3.6:1 against white, these are 5:1 and 6.5:1.
+    public static let answerYes = Color(hex: "15803D")
+    public static let answerNo = Color(hex: "B91C1C")
+
+    /// Red as the colour of a sentence ("Didn't go through"), where the
+    /// system red on a white card is 3.6:1.
+    public static let dangerText = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor(Color(hex: "FCA5A5")) : UIColor(Color(hex: "B91C1C"))
+    })
+
     private static func currency(light: String, dark: String, lightHigh: String, darkHigh: String) -> Color {
         let colors = [light, dark, lightHigh, darkHigh].map { UIColor(Color(hex: $0)) }
         return Color(uiColor: UIColor { traits in

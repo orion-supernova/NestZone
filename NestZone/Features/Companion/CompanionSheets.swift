@@ -137,12 +137,14 @@ private struct ChooseView: View {
     /// over the title it squeezed "Meet Nestie" to "Meet Ne…".
     private func group(_ title: LocalizedStringResource, _ species: [Species], _ shop: ShopContext, jar: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
+            // The jar goes under the heading at the accessibility sizes: beside
+            // it, "Plants" broke in the middle of the word.
+            (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout())) {
                 Text(title)
                     .font(.title3.weight(.bold))
                     .foregroundStyle(.primary)
                     .accessibilityAddTraits(.isHeader)
-                Spacer(minLength: 8)
+                if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
                 if jar {
                     Button { store.send(.storeTapped) } label: {
                         JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles)
@@ -180,32 +182,24 @@ private struct DecorateView: View {
     @Environment(\.theme) private var theme
     @Environment(\.shopStage) private var stage
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var dash: CGFloat = 0
+    /// A tray tile and its picture grow with the text, so a name that needs
+    /// the room has it.
+    @ScaledMetric(relativeTo: .footnote) private var trayWidth = 92.0
+    @ScaledMetric(relativeTo: .footnote) private var trayArt = 60.0
 
     private var spots: [Spot] { store.isPet ? Spot.forPets : Spot.allCases }
 
     var body: some View {
-        VStack(spacing: 0) {
-            GeometryReader { geometry in
-                ZStack {
-                    if let current = store.current {
-                        CompanionScene(
-                            companion: current, progress: store.progress, mood: store.mood, stage: store.stage,
-                            layout: store.draft, southern: store.southern, now: store.clock,
-                            choreTick: store.choreTick, careTick: store.careTick,
-                            colourway: current.colour ?? 0
-                        )
-                        .allowsHitTesting(false)
-                    }
-                    ForEach(spots) { spot in
-                        outline(spot, in: geometry.size)
-                    }
-                }
+        // At the accessibility sizes the tray is taller than what is left
+        // under the scene: the whole screen scrolls.
+        Group {
+            if typeSize.isAccessibilitySize {
+                ScrollView { content }
+            } else {
+                content
             }
-            .frame(height: 360)
-            .clipShape(.rect(cornerRadius: Metrics.cardRadius, style: .continuous))
-            .padding(.horizontal, 12)
-            tray
         }
         .navigationTitle(Text(L10n.decorateTitle))
         .navigationBarTitleDisplayMode(.inline)
@@ -221,6 +215,33 @@ private struct DecorateView: View {
         .onAppear {
             guard !reduceMotion else { return }
             withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) { dash = -18 }
+        }
+    }
+
+    private var content: some View {
+        VStack(spacing: 0) {
+            GeometryReader { geometry in
+                ZStack {
+                    if let current = store.current {
+                        CompanionScene(
+                            companion: current, progress: store.progress, mood: store.mood, stage: store.stage,
+                            layout: store.draft, southern: store.southern, now: store.clock,
+                            choreTick: store.choreTick, careTick: store.careTick,
+                            colourway: current.colour ?? 0
+                        )
+                        .allowsHitTesting(false)
+                        // The spots below say what is where.
+                        .accessibilityHidden(true)
+                    }
+                    ForEach(spots) { spot in
+                        outline(spot, in: geometry.size)
+                    }
+                }
+            }
+            .frame(height: 360)
+            .clipShape(.rect(cornerRadius: Metrics.cardRadius, style: .continuous))
+            .padding(.horizontal, 12)
+            tray
         }
     }
 
@@ -278,12 +299,18 @@ private struct DecorateView: View {
                     .padding(.vertical, 2)
                     .background(Capsule().fill(SheetInk.label))
                     .offset(y: spot == .left || spot == .right ? -18 : 4)
+                    // Labels on a drawing of a fixed size: they stop growing
+                    // here, and VoiceOver says the full name.
+                    .dynamicTypeSize(...DynamicTypeSize.xLarge)
             }
+            // The outline keeps its size; the hit area is at least a finger.
+            .frame(width: rect.width * scale, height: rect.height * scale)
+            .frame(minWidth: Metrics.minTapTarget, minHeight: Metrics.minTapTarget)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .frame(width: rect.width * scale, height: rect.height * scale)
         .position(x: rect.midX * scale, y: rect.midY * scale)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
         .accessibilityLabel(Text(spot.title))
         .accessibilityValue(Text(store.draft[spot].flatMap(Decor.init(rawValue:)).map(\.title) ?? L10n.decorateEmpty))
         .accessibilityIdentifier("Spot.\(spot.rawValue)")
@@ -293,24 +320,23 @@ private struct DecorateView: View {
 
     private var tray: some View {
         let shop = store.shop
+        let big = typeSize.isAccessibilitySize
         return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .center, spacing: 8) {
+            (big ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(alignment: .center, spacing: 8))) {
                 if let spot = store.decorateSpot {
                     Text(spot.title)
                         .font(.headline)
-                        .lineLimit(1)
+                        .oneLineUnlessAccessibility(shrinking: 1)
                     Text(spot == .tree ? L10n.decorateTreeLimit : L10n.decorateOneThing)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.9)
+                        .oneLineUnlessAccessibility(shrinking: 0.9)
                 } else {
                     Text(L10n.decoratePickSpot)
                         .font(.headline)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.9)
+                        .oneLineUnlessAccessibility(shrinking: 0.9)
                 }
-                Spacer(minLength: 8)
+                if !big { Spacer(minLength: 8) }
                 Button { store.send(.storeTapped) } label: {
                     JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles)
                         .padding(.horizontal, 12)
@@ -384,22 +410,22 @@ private struct DecorateView: View {
                 StageWell(cornerRadius: 12, shadow: false) {
                     DecorPortrait(decor: decor, hour: stage.portraitHour, fallbackSize: 32).equatable()
                 }
-                .frame(width: 92, height: 60)
+                .frame(width: trayWidth, height: trayArt)
                 .overlay(alignment: .topTrailing) {
                     if isOn { HaveBadge().padding(4).transition(.scale.combined(with: .opacity)) }
                 }
                 Text(decor.title)
                     .font(.footnote.weight(.semibold))
-                    .lineLimit(1)
-                    .frame(maxWidth: 92, alignment: .leading)
+                    .oneLineUnlessAccessibility(shrinking: 0.85)
+                    .frame(maxWidth: trayWidth, alignment: .leading)
                 if let price = standing.price, !standing.isUsable, !isOn {
                     PriceTag(price: price)
                 } else {
                     Text(isOn ? L10n.decoratePlaced : standing == .have || standing == .free ? L10n.decorateYours : L10n.decorateFree)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .frame(height: 28)
+                        .oneLineUnlessAccessibility(shrinking: 0.85)
+                        .frame(minHeight: 28)
                 }
             }
             .padding(6)
@@ -450,7 +476,10 @@ private struct DecorateView: View {
 
 private struct AlbumView: View {
     let store: StoreOf<CompanionFeature>
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 14)]
+    /// A card is wider as the text is, so its words keep their room.
+    @ScaledMetric(relativeTo: .body) private var cardWidth = 150.0
+
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: cardWidth), spacing: 14)] }
 
     var body: some View {
         ScrollView {
@@ -458,7 +487,8 @@ private struct AlbumView: View {
                 Text(L10n.albumEmpty)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .oneLine()
+                    .multilineTextAlignment(.center)
+                    .oneLineUnlessAccessibility()
                     .frame(maxWidth: .infinity)
                     .padding(.top, 40)
             } else if store.house.album.isEmpty {
@@ -473,16 +503,19 @@ private struct AlbumView: View {
                             SpeciesPortrait(species: graduate.species, seed: graduate.seed, mood: .content, colourway: graduate.colour ?? 0)
                                 .frame(height: 150)
                                 .clipShape(.rect(cornerRadius: 6))
+                                .accessibilityHidden(true)
                             (graduate.colour.map { Text(L10n.companionColoured(String(localized: graduate.species.title), String(localized: graduate.species.colourName($0)))) } ?? Text(graduate.species.title))
                                 .font(.subheadline.weight(.semibold))
-                                .oneLine()
+                                .oneLineUnlessAccessibility()
                             Text(verbatim: "\(String(localized: L10n.albumDays(graduate.days))) · \(graduate.graduatedAt.formatted(Date.FormatStyle().month(.abbreviated).year().locale(L10n.locale)))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                                .oneLine()
+                                .oneLineUnlessAccessibility()
                         }
                         .padding(8)
                         .background(RoundedRectangle(cornerRadius: 10).fill(Palette.inset))
+                        // "Magnolia, 14 days · Oct 2026": one card, one stop.
+                        .accessibilityElement(children: .combine)
                     }
                 }
                 .padding(Metrics.screenPadding)
@@ -511,8 +544,8 @@ private struct HolidaysView: View {
                 Text(L10n.holidaysHint)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-                    .oneLine()
-                Button { store.send(.holidaysReset) } label: { Text(L10n.holidaysSuggested).oneLine() }
+                    .oneLineUnlessAccessibility()
+                Button { store.send(.holidaysReset) } label: { Text(L10n.holidaysSuggested).oneLineUnlessAccessibility() }
             }
             ForEach(Holiday.Family.allCases) { family in
                 Section {
@@ -520,7 +553,7 @@ private struct HolidaysView: View {
                         row(holiday)
                     }
                 } header: {
-                    Text(family.title).oneLine()
+                    Text(family.title).oneLineUnlessAccessibility()
                 }
             }
         }
@@ -539,14 +572,15 @@ private struct HolidaysView: View {
             set: { _ in store.send(.holidayToggled(holiday.id)) }
         )) {
             HStack(spacing: 10) {
-                Text(verbatim: holiday.symbol).font(.title3)
+                // The emoji would be read as its own description.
+                Text(verbatim: holiday.symbol).font(.title3).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(holiday.id.title)
-                        .oneLine()
+                        .oneLineUnlessAccessibility()
                     Text(when(holiday))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .oneLine()
+                        .oneLineUnlessAccessibility()
                 }
             }
         }
@@ -663,6 +697,7 @@ struct CeremonyView: View {
                 FinaleView(store: store, moment: moment)
                     .transition(.opacity)
             } else {
+            ScrollsAtAccessibilitySizes {
             VStack(spacing: 18) {
                 Spacer()
                 if let subject {
@@ -678,23 +713,32 @@ struct CeremonyView: View {
                     .rotationEffect(.degrees(beat >= 1 ? -3 : 0))
                     .scaleEffect(beat >= 1 ? 1 : 0.85)
                     .opacity(beat >= 1 ? 1 : 0)
+                    // The words under it name the one that grew up.
+                    .accessibilityHidden(true)
                     Text(L10n.companionReady)
                         .font(.system(.largeTitle, design: .rounded, weight: .bold))
                         .foregroundStyle(.white)
-                        .oneLine()
+                        .multilineTextAlignment(.center)
+                        .oneLineUnlessAccessibility()
                         .opacity(beat >= 2 ? 1 : 0)
+                        .accessibilityHidden(beat < 2)
+                        .accessibilityAddTraits(.isHeader)
                     Text(L10n.ceremonyGrownIn(String(localized: subject.companion.species.title), subject.days))
                         .font(.body)
                         .foregroundStyle(SheetInk.caption)
-                        .oneLine()
+                        .multilineTextAlignment(.center)
+                        .oneLineUnlessAccessibility()
                         .opacity(beat >= 2 ? 1 : 0)
+                        .accessibilityHidden(beat < 2)
                     if let paid = subject.paid {
                         Text(L10n.ceremonyCoins(paid.leaves, paid.sparkles))
                             .font(.headline)
                             .foregroundStyle(Palette.lemon)
-                            .oneLine()
+                            .multilineTextAlignment(.center)
+                            .oneLineUnlessAccessibility()
                             .opacity(beat >= 3 ? 1 : 0)
                             .scaleEffect(beat >= 3 ? 1 : 0.6)
+                            .accessibilityHidden(beat < 3)
                     }
                 }
                 Spacer()
@@ -705,11 +749,13 @@ struct CeremonyView: View {
                 }
                 .opacity(beat >= 3 && !leadsToFinale ? 1 : 0)
                 .allowsHitTesting(!leadsToFinale)
+                .accessibilityHidden(beat < 3 || leadsToFinale)
                 .padding(.horizontal, Metrics.screenPadding)
                 .padding(.bottom, 24)
                 .accessibilityIdentifier("CeremonyAlbum")
             }
             .padding(.horizontal, Metrics.screenPadding)
+            }
             }
         }
         .sensoryFeedback(.success, trigger: beat) { _, now in now == 3 && store.moment?.isFinaleOnly != true }
@@ -719,6 +765,12 @@ struct CeremonyView: View {
             for step in 1...3 {
                 try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 700))
                 withAnimation(reduceMotion ? Motion.fade : Motion.celebrate) { beat = step }
+                // Said once, when the words arrive: the picture and the
+                // confetti cannot tell anyone what happened.
+                if step == 2, let subject {
+                    let line = "\(String(localized: L10n.companionReady)) \(String(localized: L10n.ceremonyGrownIn(String(localized: subject.companion.species.title), subject.days)))"
+                    AccessibilityNotification.Announcement(line).post()
+                }
             }
             // One sequence: after a beat with the coins, the same cover goes
             // on to "You've grown them all".
@@ -736,41 +788,53 @@ struct WelcomeGiftView: View {
     let store: StoreOf<CompanionFeature>
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var shown = 0.0
 
     var body: some View {
         ZStack {
             SheetInk.backdrop.ignoresSafeArea()
             if !reduceMotion { Petals().ignoresSafeArea().allowsHitTesting(false) }
+            ScrollsAtAccessibilitySizes {
             VStack(spacing: 22) {
                 Spacer()
                 Text(verbatim: "🎁")
                     .font(.system(size: 72))
                     .scaleEffect(0.6 + 0.4 * shown)
+                    .accessibilityHidden(true)
                 Text(L10n.welcomeTitle)
                     .font(.system(.title, design: .rounded, weight: .bold))
                     .foregroundStyle(.white)
-                    .oneLine()
-                HStack(spacing: 28) {
+                    .multilineTextAlignment(.center)
+                    .oneLineUnlessAccessibility()
+                    .accessibilityAddTraits(.isHeader)
+                (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 28))) {
                     amount("🍃", Rewards.welcome.leaves)
                     amount("✨", Rewards.welcome.sparkles)
                 }
+                // The emoji and a number that counts up, said as the sum.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(L10n.ceremonyCoins(Rewards.welcome.leaves, Rewards.welcome.sparkles)))
                 Text(L10n.welcomeBody)
                     .font(.body)
                     .foregroundStyle(SheetInk.caption)
-                    .oneLine()
+                    .multilineTextAlignment(.center)
+                    .oneLineUnlessAccessibility()
                 Spacer()
                 PrimaryButton(L10n.welcomeDecorate, symbol: "paintbrush.pointed.fill") {
                     store.send(.welcomeDecorateTapped, animation: Motion.arrive)
                 }
                 .accessibilityIdentifier("WelcomeDecorate")
                 Button { store.send(.sheetDismissed) } label: {
-                    Text(L10n.welcomeLater).font(.body.weight(.semibold)).oneLine()
+                    Text(L10n.welcomeLater).font(.body.weight(.semibold)).oneLineUnlessAccessibility()
+                        .frame(minHeight: Metrics.minTapTarget)
+                        .contentShape(.rect)
                 }
                 .foregroundStyle(SheetInk.caption)
                 .padding(.bottom, 20)
             }
             .padding(.horizontal, Metrics.screenPadding)
+            }
         }
         .sensoryFeedback(.success, trigger: shown) { _, now in now == 1 }
         .task {
@@ -792,11 +856,32 @@ struct WelcomeGiftView: View {
     }
 }
 
+/// A full-screen column that is centred as it is at the usual sizes, and
+/// scrolls once the text is so large that it would not fit.
+private struct ScrollsAtAccessibilitySizes<Content: View>: View {
+    @ViewBuilder let content: Content
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        if typeSize.isAccessibilitySize {
+            ScrollView { content }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+        } else {
+            content
+        }
+    }
+}
+
 /// Petals drifting down over the ceremony.
 private struct Petals: View {
     @State private var start = Date()
 
     var body: some View {
+        petals.accessibilityHidden(true)
+    }
+
+    private var petals: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30)) { timeline in
             Canvas { context, size in
                 let t = timeline.date.timeIntervalSince(start)

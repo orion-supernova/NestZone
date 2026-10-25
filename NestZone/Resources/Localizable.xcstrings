@@ -5169,7 +5169,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İş yaptıkça büyür · iki haftaya kocaman olur"
+            "value": "İş yaptıkça büyür · iki haftada kocaman olur"
           }
         }
       }
@@ -5628,7 +5628,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her telefondan günde bir kere sayılıyor"
+            "value": "Her telefondan günde bir kere sayılıyor."
           }
         }
       }
@@ -17199,7 +17199,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bedava bitki ve hayvanların hepsini büyütünce."
+            "value": "Bedava bitki ve minik dostların hepsini büyütünce."
           }
         }
       }
@@ -21305,7 +21305,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keyfi yerinde"
+            "value": "Bol işli bir gün"
           }
         }
       }
@@ -32738,7 +32738,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evcil hayvan"
+            "value": "Minik dost"
           }
         }
       }
@@ -33656,7 +33656,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hepsini büyüttünüz!"
+            "value": "Hepsini büyüttün!"
           }
         }
       }
@@ -33673,7 +33673,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Minik taç artık sizin!"
+            "value": "Minik taç artık senin!"
           }
         }
       }
@@ -33690,7 +33690,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sevdiğiniz birini bu sefer yeni bir renkte büyütün"
+            "value": "Sevdiğin birini bu sefer yeni bir renkte büyüt"
           }
         }
       }
@@ -33809,7 +33809,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "O renk henüz açık değil ya da zaten büyüttünüz."
+            "value": "O renk henüz açık değil ya da zaten büyüttün."
           }
         }
       }
@@ -35837,7 +35837,58 @@
         }
       }
     },
-    "·": {}
+    "·": {},
+    "companion_care_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün tamam"
+          }
+        }
+      }
+    },
+    "companion_jar_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the shop"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dükkanı açar"
+          }
+        }
+      }
+    },
+    "card_of_spoken": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ lazım, %1$lld var"
+          }
+        }
+      }
+    }
   },
   "version": "1.1"
 }

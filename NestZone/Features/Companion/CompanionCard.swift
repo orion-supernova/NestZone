@@ -326,7 +326,8 @@ private struct CardScene: View {
                 Int((store.progress * 100).rounded()),
                 String(localized: store.mood.title(isPet: store.isPet))
             )))
-            .accessibilityHint(Text(L10n.companionSceneHint))
+            // No hint: tapping the picture is only a wiggle. The care that
+            // counts is the Water / Pet button, which VoiceOver finds itself.
         }
     }
 
@@ -454,7 +455,7 @@ private struct CardJar: View {
         Button { store.send(.shopTapped) } label: {
             JarAmounts(leaves: jar.leaves, sparkles: jar.sparkles, opensStore: false)
                 .padding(.horizontal, 12)
-                .frame(minHeight: 40)
+                .frame(minHeight: Metrics.minTapTarget)
                 .glassControl()
         }
         .buttonStyle(.plain)
@@ -479,12 +480,14 @@ private struct CardJar: View {
                         }
                     }
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
         }
         .animation(Motion.spring, value: jar.leaves)
         .animation(Motion.spring, value: jar.sparkles)
         .accessibilityLabel(Text(L10n.companionJar))
         .accessibilityValue(Text(L10n.companionJarBoth(jar.leaves, jar.sparkles)))
+        .accessibilityHint(Text(L10n.companionJarHint))
         .accessibilityIdentifier("CardJar")
     }
 
@@ -525,6 +528,8 @@ private struct HolidayChip: View {
                 .padding(.horizontal, large ? 18 : 10)
                 .padding(.vertical, large ? 12 : 7)
                 .glassControl()
+                .frame(minHeight: Metrics.minTapTarget)
+                .contentShape(.rect)
             }
             .buttonStyle(.plain)
         } else if let holiday = store.activeHolidays.first {
@@ -550,6 +555,7 @@ private struct CareButton: View {
     let small: Bool
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Taps on Water in a row, for a reaction that grows with them.
     @State private var careCombo = 0
     @State private var lastCare = Date.distantPast
@@ -569,7 +575,7 @@ private struct CareButton: View {
                     .fixedSize()
             } icon: {
                 Image(systemName: symbol)
-                    .symbolEffect(.bounce.down.byLayer, value: store.careTick)
+                    .symbolEffect(.bounce.down.byLayer, value: reduceMotion ? 0 : store.careTick)
                     .overlay(alignment: .bottomTrailing) {
                         if cared {
                             Image(systemName: "checkmark.circle.fill")
@@ -587,10 +593,15 @@ private struct CareButton: View {
             .glassControl(tinted: cared ? nil : theme.accent.opacity(0.35))
             .overlay(alignment: .top) { CareRise(symbol: symbol, tick: store.careTick) }
             .animation(Motion.pop, value: cared)
+            // The glass is smaller than a finger: the hit area is not.
+            .frame(minWidth: Metrics.minTapTarget, minHeight: Metrics.minTapTarget)
+            .contentShape(.rect)
         }
         .buttonStyle(PressableButtonStyle(scale: 0.92))
         .sensoryFeedback(.impact(weight: .light, intensity: min(0.5 + 0.12 * Double(careCombo), 1)), trigger: store.careTick)
         .accessibilityHint(Text(L10n.companionCareHint))
+        // The small check on the glyph is a picture; this is its word.
+        .accessibilityValue(cared ? Text(L10n.companionCareDone) : Text(verbatim: ""))
         .accessibilityIdentifier("CompanionCare")
     }
 }
@@ -616,6 +627,8 @@ private struct StripAction: View {
                 Image(systemName: voting ? "hand.raised.fill" : "sparkles")
                     .padding(8)
                     .glassControl(tinted: theme.accent.opacity(0.35))
+                    .frame(minWidth: Metrics.minTapTarget, minHeight: Metrics.minTapTarget)
+                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text(voting ? L10n.voteVote : L10n.companionChoose))
@@ -628,6 +641,8 @@ private struct StripAction: View {
                 Image(systemName: "party.popper.fill")
                     .padding(8)
                     .glassControl(tinted: theme.accent.opacity(0.35))
+                    .frame(minWidth: Metrics.minTapTarget, minHeight: Metrics.minTapTarget)
+                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text(L10n.companionCelebrate))

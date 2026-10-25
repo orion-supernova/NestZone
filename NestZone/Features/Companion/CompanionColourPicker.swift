@@ -39,7 +39,7 @@ private struct ColourPickerCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.colourPickTitle(String(localized: species.title)))
                         .font(.title3.weight(.bold))
-                        .oneLine()
+                        .oneLineUnlessAccessibility()
                         .accessibilityAddTraits(.isHeader)
                     Text(L10n.colourPickHint)
                         .font(.footnote)
@@ -73,6 +73,8 @@ private struct ColourPickerCard: View {
         .tint(.primary)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
+        // The scrim is hidden from VoiceOver, so the two-finger Z closes it.
+        .accessibilityAction(.escape) { store.send(.colourDismissed, animation: Motion.exit) }
         .task {
             // The three stills, drawn once and kept, so the swatches are not
             // three canvases recorded in the frame the card comes up.
@@ -107,16 +109,17 @@ private struct ColourPickerCard: View {
                                 .symbolRenderingMode(.palette)
                                 .foregroundStyle(.white, Palette.success)
                                 .padding(6)
+                                .accessibilityHidden(true)
                         }
                     }
                 Text(verbatim: name)
                     .font(.subheadline.weight(.semibold))
-                    .oneLine()
+                    .oneLineUnlessAccessibility()
                 if grown {
                     Text(L10n.colourGrown)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .oneLine()
+                        .oneLineUnlessAccessibility()
                 }
             }
             .frame(maxWidth: .infinity)

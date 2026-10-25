@@ -7752,6 +7752,16 @@ public enum L10n {
         r("companion_care_hint", "Counts once a day from each phone.")
     }
 
+    /// Done today
+    public static var companionCareDone: LocalizedStringResource {
+        r("companion_care_done", "Done today")
+    }
+
+    /// Opens the shop
+    public static var companionJarHint: LocalizedStringResource {
+        r("companion_jar_hint", "Opens the shop")
+    }
+
     /// Decorate
     public static var companionDecorate: LocalizedStringResource {
         r("companion_decorate", "Decorate")
@@ -9187,6 +9197,11 @@ public enum L10n {
     /// %1$lld of %2$lld
     public static func cardOf(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
         r("card_of", "\(a0) of \(a1)")
+    }
+
+    /// %1$lld of %2$@ (spoken: "300 of 500 Sparkles")
+    public static func cardOfSpoken(_ a0: Int, _ a1: String) -> LocalizedStringResource {
+        r("card_of_spoken", "\(a0) of \(a1)")
     }
 
     /// See Sparkle packs
