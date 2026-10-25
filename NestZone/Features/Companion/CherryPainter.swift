@@ -45,7 +45,7 @@ struct CherryPainter: TreeArt {
     /// How open the flowers are: they open from about .6 and thin a little as
     /// the fruit sets; a tree that is thirsty keeps them shut.
     var open: Double {
-        Ink.smooth((core.p - 0.6) / 0.22) * (1 - 0.32 * Ink.smooth((core.p - 0.93) / 0.07)) * Ink.smooth((core.M.open - 0.12) / 0.5)
+        Ink.smooth((core.p - 0.6) / 0.22) * (1 - 0.32 * Ink.smooth((core.p - 0.93) / 0.07))
     }
 
     /// How much of a clump's leaves are out: the blossom comes first.

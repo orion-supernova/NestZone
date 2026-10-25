@@ -44,9 +44,17 @@ struct LeafSpec: Sendable {
     /// Leaves that are mostly hidden behind flowers keep fewer classes: two behind,
     /// three in front, and none of the glints.
     var flat = false
+    /// Olive: the back clumps keep fewer tones (two behind, three in the middle), and the
+    /// silver undersides are a fill of their own.
+    var merge = false
+    /// How much of the pomegranate's thirst and doze thinning a species takes: leaves dropped,
+    /// leaves curled short, the dark body behind them. The pomegranate takes all of it; the
+    /// others stay the same tree, drooping and paling.
+    var calm = 1.0
 
     static func of(_ species: Species) -> LeafSpec {
         var s = LeafSpec()
+        if species != .pomegranate { s.calm = 0.45 }
         switch species {
         case .lemon:
             s.shape = .glossy
@@ -62,7 +70,8 @@ struct LeafSpec: Sendable {
             s.hw = 0.085
             s.size = 0.44
             s.body = 0.55
-            s.sprigs = (2, 5, 5)
+            s.merge = true
+            s.sprigs = (2, 4, 4)
             s.pairs = 3
             s.spread = (0.4, 0.8)
             s.reach = (0.6, 0.92)

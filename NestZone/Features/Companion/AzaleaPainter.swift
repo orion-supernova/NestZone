@@ -33,9 +33,10 @@ struct AzaleaPainter: TreeArt {
 
     func blossoms(_ tree: GraphicsContext, _ tier: Int) {}
 
-    /// How open the flowers are: from about .55, all through the budding stage;
-    /// a thirsty shrub keeps them shut.
-    var open: Double { Ink.smooth((core.p - 0.55) / 0.28) * Ink.smooth((core.M.open - 0.12) / 0.5) }
+    /// How open the flowers are: from about .55, all through the budding stage.
+    /// A tired shrub is the same shrub: fewer flowers (`BloomArt`) and paler ones
+    /// (`Tones`), not bare.
+    var open: Double { Ink.smooth((core.p - 0.55) / 0.28) }
 
     func clump(_ tree: GraphicsContext, _ i: Int) {
         core.clump(tree, i)
@@ -76,8 +77,8 @@ struct AzaleaPainter: TreeArt {
         if !art.m.isEmpty { g.fill(art.m, with: .color(tint(t.ba.mix(t.bc, 0.1)).color(open))) }
         if !art.l.isEmpty { g.fill(art.l, with: .color(tint(t.ba.mix(t.bb, 0.5)).color(open))) }
         if !art.s.isEmpty { g.fill(art.s, with: .color(tint(t.bb).color(open))) }
-        if !art.hearts.isEmpty { g.fill(art.hearts, with: .color(tint(t.bb.mix(RGB(0xFFFFFF), 0.35)).color(0.38 * open))) }
-        if !art.heartsLit.isEmpty { g.fill(art.heartsLit, with: .color(tint(t.bc.mix(t.ba, 0.3)).color(0.5 * open))) }
+        // The throat is a deeper pink than the lobes round it, and spotted.
+        if !art.hearts.isEmpty { g.fill(art.hearts, with: .color(tint(t.bc.mix(t.ba, 0.3)).color(0.5 * open))) }
         if !art.spots.isEmpty { g.fill(art.spots, with: .color(tint(t.bc.mix(RGB(0x5A0F34), 0.35)).color(0.9 * open))) }
         if !art.fine.isEmpty { g.fill(art.fine, with: .color(t.anther.mix(t.bb, 0.25).color(0.92 * open))) }
     }

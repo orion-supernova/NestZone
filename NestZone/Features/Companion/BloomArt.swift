@@ -35,11 +35,14 @@ struct BloomSpec: Sendable {
     var spread: Double
     /// Added to every flower's light: a shrub whose sunlit side should not be most of it.
     var bias = 0.0
+    /// Flowers grow in trusses: a few large flowers round a middle one, a gap of leaves between
+    /// one truss and the next, and the light on a truss falls on its own sunny side.
+    var truss = false
 
     static func of(_ species: Species) -> BloomSpec? {
         switch species {
         case .cherry: BloomSpec(shape: .sakura, counts: (16, 22, 26), radius: 0.15, cluster: 6, spread: 0.26)
-        case .azalea: BloomSpec(shape: .azalea, counts: (18, 24, 30), radius: 0.15, cluster: 8, spread: 0.4, bias: -0.3)
+        case .azalea: BloomSpec(shape: .azalea, counts: (7, 7, 14), radius: 0.22, cluster: 7, spread: 0.28, truss: true)
         default: nil
         }
     }
@@ -79,6 +82,8 @@ final class BloomArt: @unchecked Sendable {
     private let spec: BloomSpec
     private let seed: UInt32
     private let L: (x: Double, y: Double)
+    /// The share of flowers a tired tree has let go of.
+    private let thin: Double
     private let built: Mutex<[ClumpBloom?]>
 
     private init(_ canopy: Canopy, _ leaves: LeafArt, _ spec: BloomSpec, _ key: Key) {
@@ -87,6 +92,8 @@ final class BloomArt: @unchecked Sendable {
         self.spec = spec
         seed = key.seed
         L = LeafArt.sun(light: Double(key.light) / 10, day: Double(key.day) / 4)
+        let M = Canopy.Mood(Double(key.mood) / 40)
+        thin = 0.25 * M.thirst + 0.3 * M.doze
         built = Mutex(Array(repeating: nil, count: canopy.clumps.count))
     }
 
@@ -104,31 +111,55 @@ final class BloomArt: @unchecked Sendable {
         let gx = spot?.x ?? crown.cx, gy = spot?.y ?? crown.cy - crown.hh * 0.3, gR = spot?.R ?? c.R
         let n = tier == 2 ? spec.counts.2 : tier == 1 ? spec.counts.1 : spec.counts.0
         let bias = (tier == 0 ? -0.15 : tier == 1 ? 0.2 : 0.4) + spec.bias
-        let clusters = max(2, n / spec.cluster)
+        let clusters = spec.truss ? max(1, n / spec.cluster) : max(2, n / spec.cluster)
         var centres: [CGPoint] = []
-        for _ in 0..<clusters {
-            let a = r.next() * .pi * 2, d = r.next().squareRoot() * 0.72
-            centres.append(CGPoint(x: cos(a) * d, y: sin(a) * d * 0.8 - 0.1))
+        for t in 0..<clusters {
+            if spec.truss {
+                // Trusses spread round the dome with gaps between: spaced in angle,
+                // each at its own distance from the middle.
+                let a = (Double(t) + r.next() * 0.6) / Double(clusters) * .pi * 2 - .pi / 2, d = 0.34 + 0.4 * r.next()
+                centres.append(CGPoint(x: cos(a) * d * 1.05, y: sin(a) * d * 0.8 - 0.06))
+            } else {
+                let a = r.next() * .pi * 2, d = r.next().squareRoot() * 0.72
+                centres.append(CGPoint(x: cos(a) * d, y: sin(a) * d * 0.8 - 0.1))
+            }
         }
         let Lx = L.x, Ly = L.y
         for k in 0..<n {
-            let centre = centres[k % clusters]
+            let t = k % clusters, centre = centres[t], slot = k / clusters
+            let gone = r.next()
             // A flower that would fall off the clump's dome is drawn again, and
             // after a few tries comes in towards the middle of its cluster.
             var x = 0.0, y = 0.0, tries = 0
             repeat {
-                x = centre.x + (r.next() - 0.5) * spec.spread * 2
-                y = centre.y + (r.next() - 0.5) * spec.spread * 1.7
+                if spec.truss {
+                    // The first flower is the truss's middle; the rest ring it.
+                    let ring = (Double(slot - 1) + 0.5 * r.next()) / Double(max(1, spec.cluster - 1)) * .pi * 2 + Double(t)
+                    let reach = slot == 0 ? 0.0 : spec.spread * (0.8 + 0.25 * r.next())
+                    x = centre.x + cos(ring) * reach
+                    y = centre.y + sin(ring) * reach * 0.9
+                } else {
+                    x = centre.x + (r.next() - 0.5) * spec.spread * 2
+                    y = centre.y + (r.next() - 0.5) * spec.spread * 1.7
+                }
                 tries += 1
             } while x * x / 0.9 + y * y / 0.64 > 1 && tries < 5
             if x * x / 0.9 + y * y / 0.64 > 1 { (x, y) = (centre.x * 0.8, centre.y * 0.8) }
             let luck = r.next(), rot = r.next() * .pi * 2, size = Ink.lerp(0.85, 1.15, r.next())
+            // A tired tree has let some flowers go.
+            if gone < thin { continue }
             let rad = spec.radius * size * (tier == 2 ? 1 : tier == 1 ? 0.9 : 0.8)
             let local = x * Lx + y * Ly
             let u = (gx + x * gR - crown.cx) / crown.hw, v = (gy + y * gR - crown.cy) / crown.hh
             let dapple = leaves.dapple(u, v)
             let under = max(0, min(1, v + 0.15)), core = max(0, 1 - (x * x + y * y).squareRoot() / 0.75)
-            let light = 0.35 * local + 0.2 * (u * Lx + v * Ly) - 0.7 * under - 0.25 * core + 1.0 * dapple + (luck - 0.5) * 0.6 + bias
+            var light = 0.35 * local + 0.2 * (u * Lx + v * Ly) - 0.7 * under - 0.25 * core + 1.0 * dapple + (luck - 0.5) * 0.6 + bias
+            if spec.truss {
+                // The light is on a truss's sunny side: how far the flower sits towards
+                // the sun from its truss's middle, and a little of where the clump stands.
+                let rel = ((x - centre.x) * Lx + (y - centre.y) * Ly) / spec.spread
+                light = 0.5 + 0.8 * rel + 0.25 * (u * Lx + v * Ly) - 0.35 * under + (luck - 0.5) * 0.3 + (tier == 0 ? -0.35 : tier == 1 ? -0.12 : 0)
+            }
             let raw = light < 0.05 ? 0 : light < 0.5 ? 1 : light < 0.95 ? 2 : 3
             // Behind, fewer classes: two in the back, two in the middle.
             let cls = tier == 0 ? min(raw, 1) : tier == 1 ? (raw < 2 ? 1 : 2) : raw
@@ -157,7 +188,7 @@ final class BloomArt: @unchecked Sendable {
                 }
                 file(blob, cls)
                 if spec.shape == .azalea && tier == 1 {
-                    if cls >= 2 { art.heartsLit.oval(x, y, rad * 0.3, rad * 0.3) } else { art.hearts.oval(x, y, rad * 0.3, rad * 0.3) }
+                    art.hearts.oval(x, y, rad * 0.3, rad * 0.3)
                 }
                 continue
             }
@@ -189,7 +220,7 @@ final class BloomArt: @unchecked Sendable {
                 var corolla = Path()
                 corolla.lobed(x, y, rad, rot)
                 file(corolla, cls)
-                if cls >= 2 { art.heartsLit.oval(x, y, rad * 0.32, rad * 0.32) } else { art.hearts.oval(x, y, rad * 0.32, rad * 0.32) }
+                art.hearts.oval(x, y, rad * 0.32, rad * 0.32)
                 if cls >= 1 {
                     // The spots of the throat, on the three petals that face up.
                     let up = -Double.pi / 2
