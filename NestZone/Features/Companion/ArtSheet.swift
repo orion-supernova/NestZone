@@ -45,7 +45,8 @@ struct ArtSheet: View {
             case "batch-b": batchB
             case "batch-b-night": batchBNight
             default:
-                if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
+                if page.hasPrefix("decor-") { decorSheet(page) }
+                else if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
                 else if let species = Species(rawValue: page) { speciesPage(species) }
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
                 else if page.hasPrefix("plant-"), let species = Species(rawValue: String(page.dropFirst(6))) { plantCard(species) }

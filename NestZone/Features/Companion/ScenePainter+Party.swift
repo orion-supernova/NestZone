@@ -1,46 +1,8 @@
 import SwiftUI
 
-/// Decorations drawn in the art pass: the party hat a birthday brings, and the
-/// bird feeder.
+/// Decorations drawn in the art pass: the bird feeder (the party hat is a
+/// `WearArt` now, with the other things worn).
 extension ScenePainter {
-    /// A cone of coloured paper with a pompom, its foot on `top`, tipped a
-    /// little. Lit from the upper left like everything else.
-    func partyHat(_ context: GraphicsContext, at top: CGPoint) {
-        var c = context
-        c.translateBy(x: top.x, y: top.y + 3)
-        c.rotate(by: .radians(-0.12 + (frame.reduceMotion ? 0 : sin(time * 1.6) * 0.03)))
-        let night = 1 - day
-        func dim(_ hex: UInt32) -> Color { Ink.color(hex).opacity(1) }
-        var cone = Path()
-        cone.move(to: CGPoint(x: -11, y: 0))
-        cone.addQuadCurve(to: CGPoint(x: 1, y: -30), control: CGPoint(x: -6, y: -16))
-        cone.addQuadCurve(to: CGPoint(x: 11, y: 0), control: CGPoint(x: 8, y: -15))
-        cone.addQuadCurve(to: CGPoint(x: -11, y: 0), control: CGPoint(x: 0, y: 4))
-        c.fill(cone, with: .linearGradient(
-            Gradient(colors: [Ink.color(0xFF9CC8), Ink.color(0xF25C9B), Ink.color(0xC93A7C)]),
-            startPoint: CGPoint(x: -11, y: -20), endPoint: CGPoint(x: 11, y: 0)))
-        // Stripes and dots, clipped to the cone.
-        var inside = c
-        inside.clip(to: cone)
-        var stripes = Path()
-        for (x0, y0) in [(-12.0, -6.0), (-10, -14), (-6, -22)] {
-            stripes.move(to: CGPoint(x: x0, y: y0 + 3)); stripes.addLine(to: CGPoint(x: x0 + 26, y: y0 - 4))
-        }
-        inside.stroke(stripes, with: .color(Ink.color(0xFFE08A)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
-        inside.fill(Path(ellipseIn: CGRect(x: -9, y: -3, width: 18, height: 6)), with: .color(Ink.color(0xFFE08A, 0.9)))
-        inside.fill(Path(CGRect(x: -14, y: -34, width: 8, height: 40)), with: .color(Color.white.opacity(0.16)))
-        for (x, y) in [(-1.0, -9.0), (3, -16), (-3, -19)] { inside.circle(x, y, 1.3, .color(Color.white.opacity(0.8))) }
-        if night > 0.4 { c.fill(cone, with: .color(Ink.color(0x1B1240, 0.25 * night))) }
-        // The pompom, on a tuft of ribbon.
-        var tuft = Path()
-        for a in stride(from: -2.6, through: -0.5, by: 0.35) {
-            tuft.move(to: CGPoint(x: 1, y: -30)); tuft.addLine(to: CGPoint(x: 1 + cos(a) * 5.5, y: -30 + sin(a) * 5.5))
-        }
-        c.stroke(tuft, with: .color(Ink.color(0xFFE08A)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
-        c.circle(1, -31, 3.4, .color(Ink.color(0xFFE08A)))
-        c.circle(0, -32, 1.3, .color(Color.white.opacity(0.7)))
-    }
-
     /// A feeder on a post: a little wooden house with a seed tray, and a
     /// sparrow that pecks now and then and hops off for a bit.
     func birdFeeder(_ context: GraphicsContext, x: Double, y: Double) {

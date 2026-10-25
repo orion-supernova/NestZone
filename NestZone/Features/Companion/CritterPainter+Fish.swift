@@ -194,6 +194,9 @@ extension CritterPainter {
             cap.scaleBy(x: 0.6, y: 0.6)
             self.cap(cap, w)
         }
+        // A hat on the head, and a collar behind the gill.
+        hat(f, foot: CGPoint(x: -8, y: -9.5), tilt: -0.15, scale: 0.55)
+        neckwear(f, at: CGPoint(x: -5.5, y: 3), span: 10, tilt: .pi / 2 - 0.1, size: 0.55)
 
         // Bubbles: a stream when it is bright, now and then when it is easy.
         guard !frame.reduceMotion else { return }

@@ -553,14 +553,26 @@ public enum DecorItem: String, CaseIterable, Codable, Sendable {
     /// Snow and the like, left out where December is summer.
     var isWintry: Bool { self == .snowfall || self == .winterSky }
 
-    /// Drawn in the scene so far; the rest stand in as their emoji until the
-    /// art pass.
+    /// Drawn in the scene; a decoration still to draw stands in as its emoji
+    /// until its art pass, and is listed here as not drawn. Every one is drawn
+    /// now.
     var isDrawn: Bool {
-        switch self {
-        case .windowsill, .balcony, .starryRooftop, .windChime, .bow, .scarf, .tinyCrown, .watermelon: false
-        default: true
-        }
+#if DEBUG
+        // `-decorBefore 1` draws the eight of the decoration pass as the emoji
+        // they were, to take a "before" picture.
+        if Self.before, Self.passItems.contains(self) { return false }
+#endif
+        return true
     }
+
+#if DEBUG
+    private static let before = UserDefaults.standard.bool(forKey: "decorBefore")
+    private static let passItems: Set<DecorItem> = [.windowsill, .balcony, .starryRooftop, .windChime, .bow, .scarf, .tinyCrown, .watermelon]
+#endif
+
+    /// A scene behind the companion: a window, a balcony, a rooftop. Each is a
+    /// layer drawn again only when the hour's light moves.
+    var isBackdrop: Bool { self == .windowsill || self == .balcony || self == .starryRooftop }
 }
 
 /// What sits in each spot. The tree takes up to four things; every other spot

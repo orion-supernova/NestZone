@@ -110,6 +110,11 @@ extension CritterPainter {
         let grow = 1 + 0.42 * baby
         h.scaleBy(x: grow, y: grow)
         turtleHead(h, babyness: baby)
+        // Round the neck, square to it, while the head is out.
+        if w.doze < 0.5 {
+            let along = atan2(hy - base.y, hx - base.x)
+            neckwear(b, at: CGPoint(x: Ink.lerp(base.x, hx, 0.62), y: Ink.lerp(base.y, hy, 0.62) + 5), span: 8.5, tilt: along + .pi / 2, size: 0.62)
+        }
     }
 
     /// The turtle's head about its own centre, looking left: a rounded wedge
@@ -155,5 +160,6 @@ extension CritterPainter {
             h.stroke(brow, with: .color(mark.color(0.5 * w.thirst)), style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
         }
         _ = L
+        hat(h, foot: CGPoint(x: 1, y: -10.5), tilt: 0.1, scale: 0.6)
     }
 }

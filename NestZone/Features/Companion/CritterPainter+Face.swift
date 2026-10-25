@@ -175,6 +175,8 @@ extension CritterPainter {
         wh.translateBy(x: 0, y: g.drop * 0.55 + nz * 0.5)
         if plan.whiskers { whiskers(wh, weights: wt) }
         cap(h, wt)
+        // A hat stands between the ears on the crown; a bunny's ears come up either side of it.
+        hat(h, foot: CGPoint(x: 0, y: species == .hedgehog ? -15.5 : -15.2), scale: 0.95 * g.w / 22.7)
     }
 
     /// A rabbit's nose never quite stops: a small quick shiver all the time,

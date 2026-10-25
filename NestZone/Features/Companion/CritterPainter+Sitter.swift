@@ -111,6 +111,7 @@ extension CritterPainter {
         let L = look.L
         glow(b, Path(ellipseIn: CGRect(x: 32 - L.x * 3, y: 58 - L.y * 2, width: 36, height: 24)), dark.mix(look.cool, 0.4), centre: CGPoint(x: 50 - L.x * 3, y: 70), radius: 15, alpha: 0.32)
 
+        neckwear(b, at: CGPoint(x: 47, y: 70), span: 15 * plan.headWidth.squareRoot() * (1 + 0.25 * baby), size: 0.9 + 0.15 * baby)
         placedHead(b, w, baby: baby)
     }
 
@@ -170,6 +171,8 @@ extension CritterPainter {
         let grow = 0.96 + babyness * 0.35
         h.scaleBy(x: grow, y: grow)
         sitterHead(h, babyness: babyness, local: true, resting: true)
+        // Asleep, the throat is where the head meets the body: the band turned to run up and down.
+        neckwear(b, at: CGPoint(x: 55.5, y: 93), span: 13, tilt: .pi / 2 - 0.35, size: 0.9)
         if overHead { curledTail(b) }
     }
 

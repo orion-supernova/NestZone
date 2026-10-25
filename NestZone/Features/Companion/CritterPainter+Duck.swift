@@ -70,6 +70,7 @@ extension CritterPainter {
         h.rotate(by: .radians(head))
         h.translateBy(x: -46, y: -68)
         duckHead(h, babyness: baby)
+        neckwear(b, at: CGPoint(x: 49, y: 72), span: 14, size: 0.9)
     }
 
     /// The duckling's head, in the box: down on the cheek and the back, a
@@ -128,5 +129,6 @@ extension CritterPainter {
             h.stroke(brow, with: .color(mark.shifted(-10).color(0.5 * w.thirst)), style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
         }
         motion.nightcap(h)
+        hat(h, foot: CGPoint(x: 47, y: 29.5), tilt: 0.12, scale: 0.9)
     }
 }

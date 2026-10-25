@@ -59,6 +59,7 @@ extension CritterPainter {
         h.rotate(by: .radians(motion.by(0.16, -0.14, 0.01, 0.07) + (frame.reduceMotion ? 0 : 0.05 * sin(time / 3.4 * .pi * 2) * w.bright)))
         h.translateBy(x: -60, y: -70)
         h.translateBy(x: motion.by(0, -2, 0, 0), y: motion.by(5, 3, 0.6, -0.6))
+        neckwear(b, at: CGPoint(x: 60, y: 73), span: 23, size: 1.1)
         perchedHead(h, babyness: babyness)
     }
 
@@ -122,6 +123,8 @@ extension CritterPainter {
         let blush = Ink.lerp(0.18, 0.8, Ink.smooth((frame.mood - 0.3) / 0.7)) * (1 - 0.7 * wt.thirst)
         for s in [-1.0, 1] { h.circle(60 + s * 22, 61, 3, .color(look.tone(0xFF8FA3).color(blush))) }
         owlCap(h)
+        // Between the tufts, on the crown.
+        hat(h, foot: CGPoint(x: 60, y: 31), scale: 1.12)
     }
 
     /// The nightcap on a dozing owl, on the head, between the tufts.
