@@ -12,7 +12,7 @@ Everything is `Canvas`, no shaders, no images.
 
 Round 2 is sections 9-12 below (canopy light, fruit in the foliage, the cutaway,
 and what made it cheap); sections 1-8 are still true where they do not say
-otherwise. Round 3 is section 13: the other five trees (lemon, olive, magnolia,
+otherwise. Round 3 is section 14: the other five trees (lemon, olive, magnolia,
 cherry, azalea) brought to the same level on one shared engine, with the
 before and after in `art/trees/index.html` and the pages `-artSheet <tree>-crown`,
 `-detail`, `-young`, `-night` and `-shop`.
@@ -38,7 +38,7 @@ before and after in `art/trees/index.html` and the pages `-artSheet <tree>-crown
   (`RGB.night`); the lit side by moonlight is a *deeper* green with a pale rim,
   not a paler green. Test a night shot for "ghostly teal": if the lit patch is
   lighter than the day shadow side, it is wrong. Round 3 went further (section
-  13): by moonlight every leaf class is drawn towards one deep blue and pulled
+  14): by moonlight every leaf class is drawn towards one deep blue and pulled
   close to the others, and the rim is a steel blue at low alpha. The pomegranate's
   night crown had been a pale grey-green; it is now a dim blue mass.
 
@@ -311,7 +311,124 @@ spent measuring a stale binary):
 | v2 | 0.72 ms (1.05x) | 42 (1.19x) | 1-2 dropped | 22-34 |
 
 
-## 13. One engine, five more trees (round 3)
+## 13. Plants (round A)
+
+The potted plants (`PlantPainter*.swift`, `PlantArt.swift`, shots in
+`art/plants/`, `<plant>-before-*` and `-v1-*`, index in `art/plants/index.html`)
+follow sections 1-8 and 12 with the plant-sized differences below. Contact
+sheets: `-artSheet <species>` (stages by day and dusk, the four moods),
+`-artSheet plant-<species>` (the card: day, dusk, night, thirsty, dozing) and
+`-artSheet plant-<species>-close` (bloom, foliage, thirsty, foot), and
+`-artSheet plants-grid` (all eight at the shop's size).
+
+**The toolkit, so a ninth plant is a row and a rule, not a painter.**
+
+- **One light.** `PlantPainter.L` is the sky's vector (`LeafArt.sun`, as the
+  pomegranate's); `rimTone` / `glow` are warm white, amber at dusk, cool by the
+  moon. `PlantLayer` now compares `light`, so the plant is drawn again when the
+  sun moves a tenth. Dozing is calm: `wilt` is only 55% of a thirsty plant's, so
+  a dozing plant sags a little and keeps its colour low and its blooms shut.
+- **Leaves and petals are cached unit shapes** (`LeafShape`, 13 kinds, each
+  at steps of 0.15 of bend, built once behind a `Mutex`): outline, the two
+  halves either side of the rib, the veins as thin triangles, a rim strip per
+  edge and a glint, all fills, all wound the same way so that a merged path never
+  has a hole where two overlap (a monstera is the exception, filled even-odd and
+  one leaf to a fill). A leaf in a plant is `addPath(shape, transform:)`.
+- **`LeafBatch` merges a tier**: three greens by how the leaf faces the light
+  (`PlantPainter.bright`, with luck per leaf), the half of each leaf that faces
+  the light as one lighter fill, the veins, the edge light, the glints and one
+  quiet shadow: at most nine fills a tier however many leaves. The shadow is a
+  deep green at 17% and offset a hair: a grey one was a cut-out on the sky.
+- **Blooms are rings** (`PlantPainter.Ring`, `rosette`): each ring of petals is
+  one radial gradient fill, with the lit and shaded halves, the rim strip and
+  the veins merged across the ring where the ring is big enough to show them.
+  A ring comes in at its own point of the way open (`appears`), so a bud
+  swells, a cup opens and the outer petals unfold last, and a half-open
+  (thirsty or dozing) house shows a cup, not a ruin.
+- **Spines, hairs, thorns and stamens are filled triangles** (`Path.spike`),
+  and the cactus's fans of spines, the sunflower's seed spiral and the moss
+  are cached unit paths (`SpineArt`, `DiscArt`, `MossArt`).
+- **The seed is the species' own** (`PlantPlan.SeedLook`): a striped husk, a
+  few black seeds, a bulb, a tuber, a rosehip, a cutting.
+
+**Rules and what each plant does on them.** New rules only where the existing
+four could not say it: `tuft` (a rosette and several flower stems that open
+in turn) and `cane` (woody canes with compound leaves and a bloom at each tip).
+
+| Plant | Rule | What is new | Growth |
+|---|---|---|---|
+| Sunflower | `stalk` | A spiral of 150 seeds and two rings of tiny florets, two rings of 21 ray petals (length, width, curl all different), bracts, a furry stem (lit hairs pale, shaded ones dark), big veined heart leaves, a bee when bright by day, a petal on the soil | seed to .1; seed leaves; a leaf at every hand's width (.15 to .72); bud .6; petals .82; head opens .84 to .98 |
+| Basil | `bush` | Five fuller leaf pairs and two branches, cupped glossy ovals with veins and a glint, a tall white spike of two-lipped florets in green cups that replaces the young tuft | pairs from .12 every tenth; branches .4 and .5; spike .88 |
+| Monstera | `vine` | Fenestrated leaves cut by age (heart, slit, slit and holed), a moss pole put in at .3 and tied with twine, aerial roots out of three nodes, three stems as before | leaves .12 to .8; pole .3; roots .34 to .54 |
+| Cactus | `column` | Ribs tiled as bands lit by their angle to the sun, valleys and crests, a fan of spines on an areole at every crest, a waxy flower | arms .5 and .72; pups .7 and .8; bud .7; flower .86 |
+| Daisy | `tuft` | A rosette of nine spoon leaves, three stems (tall, middle, short) opening at .74, .84 and .92; two rings of rays blushing at the tip around a golden floret disc | rosette from .1; stems from .26 |
+| Tulip | `tuft` | Four clasping strap leaves, three stems: open, half open and a bud; a waxy cup of six tepals flamed with yellow, dark heart and stamens when open | stems from .28; opens .78 and .9; the third stays a bud |
+| Rose | `cane` | Two arching canes and a short third, thorns, compound leaves of five serrated leaflets (bronze while new), a rose, a cup and a bud; four rings of satin petals, a rolled light edge, a wound heart | cane .1 to .55; second .3; third .5; roses open .7 and .8 |
+| Peony | `tuft` | Four low leaves and stems with one cut glossy leaf each, three blooms: ruffled in four rings with a crown of gold stamens, a half-open one, a green bud with a pink slit | stems from .3; opens .8 and .93; the third stays a bud |
+
+**Mood.** Thirsty: leaves hang and curl, stems lean out and sag, heads nod,
+blooms stay half shut, petals on the soil. Dozing: the same posture at 55%,
+blooms shut (a daisy folds, a tulip is a nodding cup, a rose is a bud), tones low.
+
+**What the two critique passes threw out** (screenshot, reject, fix): the first
+pass rejected flat whole-leaf tones (luck swing cut by a third), a grey drop
+shadow on the sky, a monstera whose pole read as a second stem and whose slits
+were saw-teeth (narrower, forward-swept slits, a lighter pole, thicker roots), a
+cactus flower like a lotus with a heavy green wrap (an upright cup, small
+sepals), spines that sparkled (smaller, no pure white), a basil spike that was a
+dark olive cup with a few dots (a spike twice as tall in lighter green, the
+tuft gives way), blooms too small to read (daisy x1.45, tulip x1.55, peony
+x1.4, rose x1.5), a peony that was a cabbage (fewer, flatter leaves, deeper
+cuts) and dozing plants that drooped as thirsty ones. The second pass threw out
+faceted, origami petals on the rose (finer steps, a smooth petal), a pinwheel
+of peony stamens (a burst), a rose that showed only sepals when thirsty
+(shut until it is really opening, sepals only once it spreads), and slits that
+ran at right angles to the rib (they run along the veins).
+
+**Numbers** (iPhone 17 simulator, Debug, `-artSheet redraw -artSheetCount 4
+-frameMeter 1`, `tree draw` is the recording; the machine was shared, the
+baseline of the four old painters was read before any change and the new ones
+three times, not alternating, so the spread is the noise).
+
+| | recording before | recording now | stress frames per window before | now |
+|---|---|---|---|---|
+| sunflower | 0.45 ms | 0.31-0.35 ms | 83 | 115-120 |
+| basil | 1.18 ms | 0.41-0.43 ms | 41 | 104-120 |
+| monstera | 0.52 ms | 0.46-0.55 ms | 82 | 78-105 |
+| cactus | 0.24 ms | 0.23-0.25 ms | 105 | 120 |
+| daisy | sketch | 0.51-0.58 ms | | 89-118 |
+| tulip | sketch | 0.29-0.31 ms | | 119 |
+| rose | sketch | 0.71-0.77 ms | | 74-99 |
+| peony | sketch | 0.42-0.48 ms | | 108-118 |
+
+The budget is section 12's: about 0.7 ms. The rose was 0.99 ms until its path
+copies were cut (merging a compound leaf through a second batch copied every path
+again; adding the leaflets straight into the tier's batch, plain leaves at five
+steps a segment and only monstera, peony and petal shapes at nine, shading on
+the outer two rings of a rose only) and is the heaviest.
+
+Today's flick (`-nestieBench 1 -nestieScenario ready -nestieSpecies <raw>
+-todayScroll 1 -frameMeter 1`, late frames per two-second window, the first two
+windows dropped) and Choose's (`-nestieScript choose -companionScroll 1`), the
+magnolia in the same minutes as the control. The machine was loaded to a load
+average of hundreds (another agent, a full disk), so read it as "the same band
+as a tree", not as absolute numbers:
+
+| Today flick | late per window | | Choose flick | late per window |
+|---|---|---|---|---|
+| magnolia (control) | 16.5, 23.3 | | monstera | 17.8 |
+| sunflower | 10.3 | | peony | 9.7 |
+| daisy | 10.0 | | | |
+| tulip | 14.0 | | | |
+| peony | 17.3 | | | |
+| monstera | 16.9 | | | |
+| rose | 16.8 | | | |
+| basil | 21.6 | | | |
+
+No plant stands out from the tree on either screen; the redraw happens only when
+a mood or the growth eases in, and the wind is a shear of the cached layer.
+
+## 14. One engine, five more trees (round 3)
 
 Lemon, olive, magnolia, cherry and azalea are painted the pomegranate's way,
 from the same skeleton as before (a household's tree keeps its limbs, clumps,
@@ -403,4 +520,3 @@ Numbers, iPhone 17 simulator (iOS 27), Debug, alternating runs, three rounds eac
 (Choose) late and dropped frames per window were no worse than the old painter's
 for any of the five, within the noise (for example lemon 1.0 late against 5.8,
 azalea 0.5 against 6.8, Choose 4.2 dropped against 15.1).
-

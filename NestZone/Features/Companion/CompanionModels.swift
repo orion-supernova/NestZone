@@ -42,10 +42,20 @@ public enum Species: String, CaseIterable, Codable, Identifiable, Sendable {
     /// growing.
     public enum Art: Sendable { case tree, plant, duckling, critter, sketch }
 
+#if DEBUG
+    private static let ducklingLegacy = UserDefaults.standard.bool(forKey: "ducklingLegacy")
+#endif
+
     public var art: Art {
         switch self {
         case .magnolia, .cherry, .pomegranate, .azalea, .lemon, .olive: .tree
-        case .duckling: .duckling
+        case .duckling:
+#if DEBUG
+            // `-ducklingLegacy 1` draws the old, flat painter, to compare against.
+            Self.ducklingLegacy ? .duckling : .critter
+#else
+            .critter
+#endif
         default:
             if PlantPlan.of(self) != nil { .plant }
             else if CritterPlan.of(self) != nil { .critter }

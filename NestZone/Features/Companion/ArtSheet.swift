@@ -34,11 +34,18 @@ struct ArtSheet: View {
             case "pomegranate-fruit": pomegranateFruit
             case "pomegranate-shop": pomegranateShop
             case "gpu": gpuTest
+            case "plants-grid": plantsGrid
             case "pet-redraw": petRedraw
             case "pet-variants": petVariants
+            case "batch-a": batchA
+            case "batch-a-faces": batchAFaces(0)
+            case "batch-a-faces2": batchAFaces(1)
+            case "batch-a-night": batchANight
             default:
                 if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
                 else if let species = Species(rawValue: page) { speciesPage(species) }
+                else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
+                else if page.hasPrefix("plant-"), let species = Species(rawValue: String(page.dropFirst(6))) { plantCard(species) }
                 else if page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petClose(species) }
                 else if page.hasSuffix("-stages"), let species = Species(rawValue: String(page.dropLast(7))), species.isPet { petStagesLarge(species) }
                 else if page.hasSuffix("-moods"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petMoods(species) }
@@ -282,6 +289,70 @@ struct ArtSheet: View {
         .padding(.horizontal, 4)
     }
 
+    // MARK: Batch A
+
+    private static let batchA: [Species] = [.duckling, .hamster, .bunny, .puppy, .fox, .hedgehog]
+
+    /// The six pets of batch A side by side, grown, in the four moods by day.
+    ///   -artSheet batch-a
+    private var batchA: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: "batch A - bright, content, thirsty, dozing").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ForEach(Self.batchA) { species in
+                let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+                HStack(spacing: 3) {
+                    ForEach(Mood.allCases, id: \.self) { mood in
+                        cell(ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 6, now: hour(13)), "\(species.rawValue) \(mood.rawValue)")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 3)
+    }
+
+    /// Each pet's face cropped out of an 800-point drawing, content and thirsty.
+    ///   -artSheet batch-a-faces
+    private func batchAFaces(_ half: Int) -> some View {
+        func face(_ species: Species, _ mood: Mood, _ hourOfDay: Int) -> some View {
+            let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+            let head = CritterPlan.of(species)?.body == .perched ? CGPoint(x: 60, y: 50) : CGPoint(x: 47, y: 49)
+            let k = 190.0 / 120, big = 800.0 / SceneSpace.height
+            let hx = 400 + (head.x - 60) * k * big, hy = (SceneSpace.floor - 4 + (head.y - 108) * k) * big
+            return ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 6, now: hour(hourOfDay))
+                .frame(width: 800, height: 800)
+                .offset(x: -(hx - 98) + (mood == .thirsty ? 34 : 0), y: -(hy - 98) + (mood == .thirsty ? -42 : 0))
+                .frame(width: 196, height: 196, alignment: .topLeading)
+                .clipShape(.rect(cornerRadius: 8))
+                .overlay(alignment: .topLeading) { Text(verbatim: "\(species.rawValue) \(mood.rawValue)").font(.system(size: 9, design: .monospaced)).foregroundStyle(.white.opacity(0.7)).padding(3) }
+        }
+        return VStack(alignment: .leading, spacing: 3) {
+            ForEach(Array(Self.batchA.dropFirst(half * 3).prefix(3))) { species in
+                HStack(spacing: 3) {
+                    face(species, .bright, 13)
+                    face(species, .thirsty, 13)
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// The light: each pet in the morning, at dusk, by night and by the moon.
+    ///   -artSheet batch-a-night
+    private var batchANight: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: "batch A - morning, evening, night, moon").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ForEach(Self.batchA) { species in
+                let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+                HStack(spacing: 3) {
+                    ForEach([("morning", 8), ("evening", 18), ("night", 22), ("moon", 1)], id: \.0) { name, h in
+                        cell(ScenePortrait(companion: companion, progress: 0.97, mood: .content, stage: 6, now: hour(h)), "\(species.rawValue) \(name)")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 3)
+    }
+
     /// Four pets drawn every frame, which is what a pet always is: the worst
     /// the app asks of a painter, with the cost logged by `PetTiming`.
     ///   -artSheet pet-redraw -frameMeter 1 [-artSheetSpecies owl] [-artSheetCount 1]
@@ -387,6 +458,89 @@ struct ArtSheet: View {
                 zoom(0.97, 13, mood: .thirsty, x: 0, y: 62, width: 110, cell: CGSize(width: 195, height: 195), "thirsty")
             }
         }
+    }
+
+
+    // MARK: The potted plants
+
+    /// A crop of a plant's scene, drawn large (not scaled up), centred on a
+    /// point in scene units from the plant's foot (x right, y up).
+    private func plantZoom(_ species: Species, _ progress: Double, _ h: Int, mood: Mood = .content, x: Double, y: Double, width: Double,
+                           cell: CGSize, _ label: String) -> some View {
+        let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+        let f = 360 * cell.width / width
+        let px = f / 2 + x * f / 360, py = f * 282 / 360 - y * f / 360
+        return ScenePortrait(companion: companion, progress: progress, mood: mood, stage: 5, now: hour(h))
+            .frame(width: f, height: f)
+            .offset(x: cell.width / 2 - px, y: cell.height / 2 - py)
+            .frame(width: cell.width, height: cell.height, alignment: .topLeading)
+            .clipShape(.rect(cornerRadius: 8))
+            .overlay(alignment: .topLeading) { Text(verbatim: label).font(.system(size: 9, design: .monospaced)).foregroundStyle(.white.opacity(0.7)).padding(3) }
+    }
+
+    /// One plant grown, at the size of the card by day, then dusk, night and
+    /// the two quiet moods.
+    ///   -artSheet plant-sunflower   (any drawn plant)
+    private func plantCard(_ species: Species) -> some View {
+        let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+        func small(_ mood: Mood, _ h: Int, _ label: String) -> some View {
+            cell(ScenePortrait(companion: companion, progress: 0.97, mood: mood, stage: 5, now: hour(h)), label)
+        }
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: "\(species.rawValue) - the card, day, dusk, night, moods").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            ScenePortrait(companion: companion, progress: 0.97, mood: .content, stage: 5, now: hour(13)).frame(height: 330).clipShape(.rect(cornerRadius: 8))
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 2), spacing: 4) {
+                small(.content, 19, "dusk")
+                small(.content, 22, "night")
+                small(.thirsty, 13, "thirsty")
+                small(.dozing, 13, "dozing")
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// Close crops of a plant's bloom and its leaves, drawn large.
+    ///   -artSheet plant-sunflower-close
+    private func plantClose(_ species: Species) -> some View {
+        let anchors = PlantPlan.of(species).map { PlantPainter(plan: $0, seed: Self.seed, growth: 0.97, mood: 0.62, day: 1, light: -0.5).anchors() }
+        let top = anchors?.crownTop ?? CGPoint(x: 0, y: -100)
+        let wide = max(60, ((anchors?.right ?? 40) - (anchors?.left ?? -40)) * 0.5)
+        let cell = CGSize(width: 195, height: 195)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: "\(species.rawValue) - close").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+            HStack(spacing: 4) {
+                plantZoom(species, 0.97, 13, x: top.x, y: -top.y - 26, width: 100, cell: cell, "bloom, day")
+                plantZoom(species, 0.97, 19, x: top.x, y: -top.y - 26, width: 100, cell: cell, "bloom, dusk")
+            }
+            HStack(spacing: 4) {
+                plantZoom(species, 0.97, 13, x: wide * 0.25, y: -top.y * 0.5, width: 120, cell: cell, "foliage, day")
+                plantZoom(species, 0.97, 22, x: wide * 0.25, y: -top.y * 0.5, width: 120, cell: cell, "foliage, night")
+            }
+            HStack(spacing: 4) {
+                plantZoom(species, 0.97, 13, mood: .thirsty, x: 0, y: 70, width: 170, cell: cell, "thirsty")
+                plantZoom(species, 0.97, 13, x: 0, y: 14, width: 100, cell: cell, "foot, soil")
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// The eight potted plants at the size the shop shows them.
+    ///   -artSheet plants-grid
+    private var plantsGrid: some View {
+        let species: [Species] = [.sunflower, .basil, .cactus, .monstera, .daisy, .tulip, .rose, .peony]
+        return VStack(alignment: .leading, spacing: 6) {
+            ForEach([13, 21], id: \.self) { h in
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 4), spacing: 6) {
+                    ForEach(species) { s in
+                        SpeciesPortrait(species: s, seed: Self.seed, hour: h, mood: .bright)
+                            .aspectRatio(1, contentMode: .fit)
+                            .background(h == 13 ? SceneInk.dayWell : SceneInk.duskWell)
+                            .clipShape(.rect(cornerRadius: 12))
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 12)
     }
 
     // MARK: What the GPU charges for

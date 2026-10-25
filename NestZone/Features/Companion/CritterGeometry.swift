@@ -37,13 +37,27 @@ struct SitGeometry {
     let hindPaw, hindToes: Path
     let nearLeg, nearPaw, nearToes, nearBars: Path
     let farLeg, farPaw: Path
+    /// The legs from the ankle down, for a plan with socks.
+    let nearSock, farSock: Path
+    /// A hamster's forearms and paws, held up at the chest, and the sunflower
+    /// seed they hold when it is bright.
+    let arms, handPaws, handToes, seed, seedStripes: Path
+    /// A rabbit's tail: a ball of white fur about its own origin, edged with
+    /// fur.
+    let cotton: Path
     /// Where the form's centre is, for the gradients.
     let bodyCentre = CGPoint(x: 68, y: 84)
 
     init(_ plan: CritterPlan) {
         let bw = plan.bodyWidth, fur = plan.fur
         func wide(_ x: Double) -> Double { 66 + (x - 66) * bw }
-        let bodyPath = Path.loop([(40, 66), (58, 57), (82, 62), (96, 84), (93, 103), (68, 109), (44, 109), (34, 90)].map { CGPoint(x: wide($0.0), y: $0.1) })
+        let outline: [(Double, Double)]
+        switch plan.species {
+        case .hamster: outline = [(39, 66), (58, 57), (84, 60), (99, 80), (98, 101), (72, 111), (46, 111), (32, 92)]
+        case .bunny: outline = [(42, 66), (58, 58), (82, 60), (98, 80), (98, 100), (70, 110), (46, 110), (35, 90)]
+        default: outline = [(40, 66), (58, 57), (82, 62), (96, 84), (93, 103), (68, 109), (44, 109), (34, 90)]
+        }
+        let bodyPath = Path.loop(outline.map { CGPoint(x: wide($0.0), y: $0.1) })
         body = bodyPath
 
         var s = Path()
@@ -77,8 +91,11 @@ struct SitGeometry {
         bodyFur = [furred(-1), furred(1)]
         // The chest is narrower than it was: the near leg covers its left edge,
         // so no pale rim shows around the leg.
-        chest = .loop([CGPoint(x: 45, y: 71), CGPoint(x: 57, y: 77), CGPoint(x: 58.5, y: 95), CGPoint(x: 53, y: 107), CGPoint(x: 45, y: 107),
-                       CGPoint(x: 43, y: 94), CGPoint(x: 42, y: 79)])
+        let bib = plan.bib
+        let chestPath = Path.loop([CGPoint(x: 45, y: 71), CGPoint(x: 57, y: 77), CGPoint(x: 58.5, y: 95), CGPoint(x: 53, y: 107), CGPoint(x: 45, y: 107),
+                                   CGPoint(x: 43, y: 94), CGPoint(x: 42, y: 79)])
+        // A bib reaches up to the throat and wider across, about the chest's middle.
+        chest = bib == 1 ? chestPath : chestPath.applying(CGAffineTransform(translationX: 57, y: 92).scaledBy(x: 1 + 0.08 * (bib - 1), y: bib).translatedBy(x: -57, y: -92))
 
         haunch = Path(ellipseIn: CGRect(x: 58, y: 74, width: 38, height: 34))
         var hb = Path()
@@ -111,6 +128,25 @@ struct SitGeometry {
         farLeg = .loop([CGPoint(x: 51, y: 82), CGPoint(x: 62, y: 82), CGPoint(x: 61, y: 95), CGPoint(x: 63, y: 105), CGPoint(x: 50, y: 105), CGPoint(x: 52, y: 94)])
         farPaw = Path(ellipseIn: CGRect(x: 50, y: 102.4, width: 14, height: 7.4))
 
+        let lower = Path(CGRect(x: 0, y: 91, width: 120, height: 30))
+        nearSock = plan.socks == nil ? Path() : nearLeg.intersection(lower)
+        farSock = plan.socks == nil ? Path() : farLeg.intersection(lower)
+
+        var a = Path(), hp = Path(), ht2 = Path(), sd = Path(), ss = Path()
+        if plan.species == .hamster {
+            // Two short arms from the body, two small paws up under the chin.
+            a.addPath(Path.loop([CGPoint(x: 33, y: 98), CGPoint(x: 35, y: 89), CGPoint(x: 39, y: 82), CGPoint(x: 44.5, y: 84), CGPoint(x: 42, y: 93), CGPoint(x: 41.5, y: 100)]))
+            a.addPath(Path.loop([CGPoint(x: 62, y: 100), CGPoint(x: 60, y: 90), CGPoint(x: 55, y: 82), CGPoint(x: 50, y: 85), CGPoint(x: 52.5, y: 93), CGPoint(x: 54, y: 101)]))
+            for x in [40.5, 53.5] { hp.addEllipse(in: CGRect(x: x - 5.8, y: 73, width: 11.6, height: 9)) }
+            for x in [38.6, 40.6, 42.6, 51.6, 53.6, 55.6] { ht2.move(to: CGPoint(x: x, y: 74.6)); ht2.addLine(to: CGPoint(x: x, y: 77.8)) }
+            // A sunflower seed: a pointed teardrop, striped, held across the paws.
+            sd = .loop([CGPoint(x: -6.4, y: 0.2), CGPoint(x: -2.4, y: -3.2), CGPoint(x: 3.6, y: -3), CGPoint(x: 7.4, y: 0.2), CGPoint(x: 3.6, y: 3), CGPoint(x: -2.4, y: 3.2)])
+            for dy in [-1.8, 0.0, 1.8] { ss.move(to: CGPoint(x: -4.4, y: dy * 0.9)); ss.addQuadCurve(to: CGPoint(x: 5.4, y: dy * 0.5), control: CGPoint(x: 0.4, y: dy * 1.1 - 0.4)) }
+        }
+        arms = a; handPaws = hp; handToes = ht2; seed = sd; seedStripes = ss
+        cotton = plan.tail == .cotton
+            ? FurEdge.furry(Path(ellipseIn: CGRect(x: -7.2, y: -7.2, width: 14.4, height: 14.4)), seed: "cotton-\(plan.key)", gap: 1.8...3.2, height: 0.9...2.1, width: 2.4)
+            : Path()
     }
 }
 
@@ -166,6 +202,22 @@ struct HeadGeometry {
     /// One ear, for the side +1, standing up from its own origin; the other is
     /// the same mirrored. The inner ear, and the cream hairs in it.
     let ear, earInner, earHairs: Path
+    /// A bunny's ear at five steps of flop, from standing (0) to laid back (1):
+    /// a bent ear cannot be a transform, so the bends are built once and the
+    /// painter picks (or fades between) two of them.
+    let earBends: [Path], earInnerBends: [Path]
+    /// What the ear's colour (`CritterPlan.earColour`) covers: the top of a
+    /// fox's ear, from the back.
+    let earTip: Path
+    /// A puppy's ear with its fur edge.
+    let earFur: Path
+    /// A hamster's pouches, the fox's white cheeks, the fox's dark tear lines.
+    let pouches, cheekWhite, tears: Path
+    /// A pup's pale blaze, from the crown to the muzzle.
+    let blaze: Path
+    /// How far the nose and the mouth sit below the kitten's: a long muzzle
+    /// carries them to its end.
+    let drop: Double
     let earHeight: Double
     let w: Double
 
@@ -173,13 +225,21 @@ struct HeadGeometry {
         let w = 21 * plan.headWidth
         self.w = w
         let fur = plan.fur
+        let c = plan.chin, k = plan.cheek
+        func lerp(_ a: Double, _ b: Double, _ t: Double) -> Double { a + (b - a) * t }
+        // The lower face, right side: out to the cheek, round to the chin.
+        let toX = w * lerp(0.42, 0.15, c), toY = lerp(16, 19.6, c)
+        let c1 = CGPoint(x: w * (1.02 + 0.1 * k), y: 8 + 2 * k)
+        let c2 = CGPoint(x: w * lerp(0.84, 0.6, c) * (1 + 0.1 * k), y: lerp(14.5, 17.4, c) + 1.5 * k)
+        let chinY = lerp(17.8, 22.5, c)
+        let d1 = CGPoint(x: w * lerp(0.3, 0.08, c), y: lerp(17.2, 21.6, c)), d2 = CGPoint(x: w * lerp(0.12, 0.03, c), y: chinY)
         var h = Path()
         h.move(to: CGPoint(x: 0, y: -17.5))
         h.addCurve(to: CGPoint(x: w, y: 0), control1: CGPoint(x: w * 0.62, y: -17.5), control2: CGPoint(x: w, y: -9.5))
-        h.addCurve(to: CGPoint(x: w * 0.42, y: 16), control1: CGPoint(x: w * 1.02, y: 8), control2: CGPoint(x: w * 0.84, y: 14.5))
-        h.addCurve(to: CGPoint(x: 0, y: 17.8), control1: CGPoint(x: w * 0.3, y: 17.2), control2: CGPoint(x: w * 0.12, y: 17.8))
-        h.addCurve(to: CGPoint(x: -w * 0.42, y: 16), control1: CGPoint(x: -w * 0.12, y: 17.8), control2: CGPoint(x: -w * 0.3, y: 17.2))
-        h.addCurve(to: CGPoint(x: -w, y: 0), control1: CGPoint(x: -w * 0.84, y: 14.5), control2: CGPoint(x: -w * 1.02, y: 8))
+        h.addCurve(to: CGPoint(x: toX, y: toY), control1: c1, control2: c2)
+        h.addCurve(to: CGPoint(x: 0, y: chinY), control1: d1, control2: d2)
+        h.addCurve(to: CGPoint(x: -toX, y: toY), control1: CGPoint(x: -d2.x, y: d2.y), control2: CGPoint(x: -d1.x, y: d1.y))
+        h.addCurve(to: CGPoint(x: -w, y: 0), control1: CGPoint(x: -c2.x, y: c2.y), control2: CGPoint(x: -c1.x, y: c1.y))
         h.addCurve(to: CGPoint(x: 0, y: -17.5), control1: CGPoint(x: -w, y: -9.5), control2: CGPoint(x: -w * 0.62, y: -17.5))
         h.closeSubpath()
         head = h
@@ -188,7 +248,7 @@ struct HeadGeometry {
         // Fur on the cheeks only (and a little under the chin line), from inside the head.
         headFur = FurEdge.furry(headOutline, seed: "head-\(plan.key)", gap: 4...7, height: (1.6 * fur)...(3.2 * fur), width: 3.4) { p in
             let side = abs(p.x) / w
-            return (side > 0.62 && p.y > -4 && p.y < 15) ? 1 : 0
+            return (side > 0.62 && p.y > -4 && p.y < 15 + 4 * c) ? 1 : 0
         }
 
         var b = Path()
@@ -210,26 +270,42 @@ struct HeadGeometry {
         cheekStripes = cs
 
         let mz = plan.muzzle
-        var m = Path(ellipseIn: CGRect(x: -6.4, y: 2.2, width: 12.8, height: 10.5 * mz))
-        m.addEllipse(in: CGRect(x: -10.6, y: 4.6, width: 11.2, height: 8.6 * mz))
-        m.addEllipse(in: CGRect(x: -0.6, y: 4.6, width: 11.2, height: 8.6 * mz))
-        m.addEllipse(in: CGRect(x: -3.1, y: 11 + 5 * (mz - 1), width: 6.2, height: 4.2))
+        let drop = 3 * (mz - 1) + 6 * c
+        self.drop = drop
+        let pad = 1 - 0.3 * c
+        var m = Path(ellipseIn: CGRect(x: -6.4 * pad, y: 2.2, width: 12.8 * pad, height: 10.5 * mz + drop))
+        m.addEllipse(in: CGRect(x: -10.6 * pad, y: 4.6 + drop * 0.5, width: 11.2 * pad, height: 8.6 * mz))
+        m.addEllipse(in: CGRect(x: -0.6 * pad, y: 4.6 + drop * 0.5, width: 11.2 * pad, height: 8.6 * mz))
+        m.addEllipse(in: CGRect(x: -3.1, y: 11 + 5 * (mz - 1) + drop * 0.8, width: 6.2, height: 4.2))
         muzzle = m
         var dots = Path()
         for s in [-1.0, 1] {
             for (x, y) in [(5.2, 7.6), (7.8, 8.6), (5.0, 10.2), (7.6, 11.0)] {
-                dots.addEllipse(in: CGRect(x: s * x - 0.45, y: y - 0.45, width: 0.9, height: 0.9))
+                dots.addEllipse(in: CGRect(x: s * x * pad - 0.45, y: y + drop * 0.5 - 0.45, width: 0.9, height: 0.9))
             }
         }
         whiskerDots = dots
-        let nd = 3.0 * (mz - 1)
-        nose = .loop([CGPoint(x: -3.6, y: 2.3 + nd), CGPoint(x: 0, y: 1.7 + nd), CGPoint(x: 3.6, y: 2.3 + nd), CGPoint(x: 0, y: 6.5 + nd)])
+        let ns = plan.noseSize
+        let nd = drop
+        // Leather: a triangle with a soft top; bigger for a puppy's.
+        nose = .loop([CGPoint(x: -3.6 * ns, y: 2.3 + nd), CGPoint(x: 0, y: 1.7 + nd), CGPoint(x: 3.6 * ns, y: 2.3 + nd),
+                      CGPoint(x: 0, y: 2.3 + nd + 4.2 * (0.6 + 0.4 * ns))])
         var ml = Path()
-        ml.move(to: CGPoint(x: 0, y: 5.8)); ml.addLine(to: CGPoint(x: 0, y: 8))
+        ml.move(to: CGPoint(x: 0, y: 5.8 + nd + 1.2 * (ns - 1))); ml.addLine(to: CGPoint(x: 0, y: 8 + nd + 1.2 * (ns - 1)))
         mouthLine = ml
 
         let eh = 24 * plan.earHeight
         earHeight = eh
+        var bends: [Path] = [], innerBends: [Path] = []
+        if plan.ears == .long {
+            for i in 0..<5 {
+                let (outer, inner) = Self.bunnyEar(eh, bend: Double(i) / 4)
+                bends.append(outer); innerBends.append(inner)
+            }
+        }
+        earBends = bends; earInnerBends = innerBends
+        var tipPath = Path()
+        var earFurPath = Path()
         switch plan.ears {
         case .round:
             ear = .loop([CGPoint(x: -9.4, y: 3), CGPoint(x: -10, y: -eh * 0.4), CGPoint(x: -6, y: -eh * 0.95), CGPoint(x: 0, y: -eh * 1.12),
@@ -237,21 +313,82 @@ struct HeadGeometry {
             earInner = .loop([CGPoint(x: -5.4, y: 1.5), CGPoint(x: -6, y: -eh * 0.4), CGPoint(x: -3, y: -eh * 0.72), CGPoint(x: 0, y: -eh * 0.8),
                               CGPoint(x: 3, y: -eh * 0.72), CGPoint(x: 6, y: -eh * 0.4), CGPoint(x: 5.4, y: 1.5)])
         case .long:
-            ear = .loop([CGPoint(x: -6.4, y: 3), CGPoint(x: -5.6, y: -eh * 0.5), CGPoint(x: 0.4, y: -eh * 1.04), CGPoint(x: 5.6, y: -eh * 0.5), CGPoint(x: 6.6, y: 3)])
-            earInner = .loop([CGPoint(x: -3.2, y: 1.5), CGPoint(x: -2.8, y: -eh * 0.46), CGPoint(x: 0.3, y: -eh * 0.84), CGPoint(x: 3, y: -eh * 0.46), CGPoint(x: 3.4, y: 1.5)])
+            ear = bends[0]; earInner = innerBends[0]
         case .drop:
-            // Hangs from the crown: the same origin, the ear falling outward and down.
-            ear = .loop([CGPoint(x: -5, y: -2), CGPoint(x: 5, y: -3), CGPoint(x: 13, y: 6), CGPoint(x: 13, y: 17), CGPoint(x: 6, y: 21), CGPoint(x: -1, y: 11)])
+            // Hangs from the crown: the same origin, the ear falling outward
+            // and down, broad at the tip like a pup's, with a fur edge.
+            let outline = Path.loop([CGPoint(x: -5, y: -3), CGPoint(x: 4, y: -5), CGPoint(x: 11.5, y: -1), CGPoint(x: 15.5, y: 8), CGPoint(x: 15, y: 18),
+                                     CGPoint(x: 10, y: 25), CGPoint(x: 4.5, y: 24), CGPoint(x: 0.5, y: 14), CGPoint(x: -3, y: 4)])
+            ear = outline
             earInner = Path()
+            earFurPath = FurEdge.furry(outline, seed: "ear-\(plan.key)", gap: 5...8, height: (0.9 * fur)...(1.8 * fur), width: 3.2) { p in p.y > 6 ? 1 : 0.3 }
         default:
             ear = .loop([CGPoint(x: -8.8, y: 3), CGPoint(x: -6.2, y: -eh * 0.5), CGPoint(x: 0.5, y: -eh), CGPoint(x: 6.8, y: -eh * 0.45), CGPoint(x: 9.2, y: 3)])
             earInner = .loop([CGPoint(x: -5, y: 1.5), CGPoint(x: -3.3, y: -eh * 0.42), CGPoint(x: 0.4, y: -eh * 0.74), CGPoint(x: 4, y: -eh * 0.4), CGPoint(x: 5.2, y: 1.5)])
+            if plan.earColour != nil {
+                tipPath = ear.intersection(Path(CGRect(x: -20, y: -eh * 1.2, width: 40, height: eh * 0.7)))
+            }
         }
+        earTip = tipPath
+        earFur = earFurPath
         var eHairs = Path()
         for (x, a, len) in [(-2.4, -1.75, 9.0), (0.2, -1.6, 11.0), (2.6, -1.42, 8.5)] {
             eHairs.fur(x, 1, a, len * plan.earHeight * (plan.ears == .round ? 0.6 : 1), 0.8)
         }
         earHairs = eHairs
+
+        // A hamster's cheeks: two round pouches of cream, soft at the edge.
+        var pp = Path()
+        if k > 0 {
+            for s in [-1.0, 1] { pp.addEllipse(in: CGRect(x: s * w * 0.56 - 9.5, y: 7.5 - 8, width: 19, height: 16)) }
+        }
+        pouches = pp
+        // A fox's cheeks and chin are white: the lower face, cut from the
+        // furred outline so the ruff is white too, from the eyes' level down.
+        var white = Path(), tear = Path()
+        if plan.marks == .mask {
+            var region = Path()
+            for s in [-1.0, 1] {
+                region.addEllipse(in: CGRect(x: s * w * 0.62 - w * 0.64, y: 1.5, width: w * 1.28, height: 24))
+            }
+            region.addEllipse(in: CGRect(x: -w * 0.32, y: -2, width: w * 0.64, height: 28))
+            white = headFur.intersection(region)
+            for s in [-1.0, 1] { tear.fur(s * 5.2, 0.6, s > 0 ? 1.2 : Double.pi - 1.2, 10.5 + drop * 0.4, 0.9, bend: s * -0.6) }
+        }
+        cheekWhite = white
+        tears = tear
+        var bl = Path()
+        if plan.species == .puppy { bl.fur(0, -17.2, .pi / 2, 21 + drop * 0.4, 2.4) }
+        blaze = bl
+    }
+
+    /// A bunny's ear: a leaf that stands up, bent more and more along its
+    /// length as `bend` goes from 0 (straight) to 1 (laid back, tip
+    /// outwards), with the inner ear along the same line.
+    static func bunnyEar(_ eh: Double, bend: Double) -> (Path, Path) {
+        let n = 10
+        func side(_ half: (Double) -> Double, _ from: Double, _ to: Double) -> ([CGPoint], [CGPoint]) {
+            var left: [CGPoint] = [], right: [CGPoint] = []
+            var x = 0.0, y = 3.0, angle = 0.0
+            let step = eh * 1.04 / Double(n)
+            for i in 0...n {
+                let t = Double(i) / Double(n)
+                if i > 0 {
+                    angle = bend * 2.1 * pow(t, 1.25)
+                    x += sin(angle) * step; y -= cos(angle) * step
+                }
+                guard t >= from, t <= to else { continue }
+                let hw = half(t)
+                left.append(CGPoint(x: x - cos(angle) * hw, y: y - sin(angle) * hw))
+                right.append(CGPoint(x: x + cos(angle) * hw, y: y + sin(angle) * hw))
+            }
+            return (left, right)
+        }
+        func outerHalf(_ t: Double) -> Double { 6.2 * (0.7 + 0.3 * sin(min(1, t * 1.05) * .pi * 0.95)) * pow(max(0, 1 - pow(t, 5)), 0.5) + 0.2 }
+        func innerHalf(_ t: Double) -> Double { 3.1 * (0.7 + 0.3 * sin(min(1, t * 1.05) * .pi * 0.95)) * pow(max(0, 1 - pow(t / 0.86, 5)), 0.5) + 0.1 }
+        let (ol, or) = side(outerHalf, 0, 1)
+        let (il, ir) = side(innerHalf, 0.04, 0.86)
+        return (Path.loop(ol + or.reversed()), Path.loop(il + ir.reversed()))
     }
 }
 

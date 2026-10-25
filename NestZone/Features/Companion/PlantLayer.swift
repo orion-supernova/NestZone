@@ -1,4 +1,5 @@
 import SwiftUI
+import QuartzCore
 
 /// A drawn plant on a layer of its own, as `TreeLayer` is the tree's: drawn
 /// again only when what it shows changes (a mood easing in, growth, the light
@@ -11,6 +12,7 @@ struct PlantLayer: View, Equatable {
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.state.seed == rhs.state.seed && lhs.state.species == rhs.state.species && lhs.state.mood == rhs.state.mood
             && lhs.state.progress == rhs.state.progress && lhs.state.day == rhs.state.day
+            && lhs.state.light == rhs.state.light
     }
 
     var body: some View {
@@ -30,6 +32,10 @@ struct PlantLayer: View, Equatable {
             above.addEllipse(in: SceneSpace.soilSurface)
             plant.clip(to: above)
         }
-        PlantPainter(plan: plan, seed: state.seed, growth: state.progress, mood: state.mood, day: state.day).draw(plant)
+        #if DEBUG
+        let started = CACurrentMediaTime()
+        defer { TreeTiming.note(state.species, light: state.light, since: started) }
+        #endif
+        PlantPainter(plan: plan, seed: state.seed, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(plant)
     }
 }

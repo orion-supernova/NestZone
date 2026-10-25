@@ -14,7 +14,11 @@ drawing. Contact sheets, all Debug (`xcrun simctl launch <udid> com.walhallaa.Ne
 | `-artSheet kitten-moods` | the four moods large, then the light (morning, evening, night, moon) |
 | `-artSheet kitten-stages` | the seven stages large, two to a row, and the grown pet at dusk |
 | `-artSheet pet-variants` | four more rows of the plan (hamster, bunny, puppy, fox), content and thirsty; Debug only, none is in the app |
+| `-artSheet batch-a` | the six pets of batch A (duckling, hamster, bunny, puppy, fox, hedgehog), grown, in the four moods |
+| `-artSheet batch-a-faces`, `batch-a-faces2` | their faces, bright and thirsty, cropped from an 800-point drawing |
+| `-artSheet batch-a-night` | the same six in the morning, at dusk, by night and by the moon |
 | `-artSheet pet-redraw -frameMeter 1` | the cost bench (below); `-artSheetSpecies owl`, `-artSheetCount 1`, `-artSheetMood thirsty` |
+| `-ducklingLegacy 1` | (any launch) draws the duckling with its old, flat painter (`PetPainter`), to compare |
 
 Any pet species works in place of `kitten`. The shots from the pass are in
 `art/pets/` (`index.html` lays before and after side by side).
@@ -192,6 +196,24 @@ So:
   duckling 0.08 ms (0.22 ms while thirsty, which draws the bowl; it builds a small
   `CritterPainter` for it). The attached fur is fewer fills than the leaf dabs
   were, so v2 is cheaper than v1.
+- **Batch A** (duckling, hamster, bunny, puppy, fox, hedgehog), the same bench,
+  medians of the per-second means, the kitten run in the same session as the
+  reference (the Mac was shared, so the absolute numbers run higher than the
+  quiet-machine ones above; the ratios are what counts). Content / bright /
+  thirsty / dozing, in ms: kitten .43 / .48 / .58 / .58; duckling .24 / .26 /
+  .35 / .27 (the old flat painter was .05-.22); hamster .35 / .42 / .47 / .39;
+  bunny .44 / .37 / .52 / .40; puppy .41 / .47 / .48 / .45; fox .42 / .44 /
+  .56 / .45; hedgehog .35 / .34 / .43 / .23. None is dearer than the kitten in
+  the same session. The first draw of a species (it builds its geometry) is
+  1-2 ms worst frame for the fox and hedgehog and under 1 ms for the rest.
+  A plain `Canvas` portrait in the Choose grid was tried inside a
+  `drawingGroup` and was no better in an interleaved A/B on a quiet machine
+  (1-6 late frames in 45 s either way, all at the cold start), so it is not
+  there. `-nestieBench 1 -nestieSpecies <pet> -todayScroll 1 -frameMeter 1`
+  for 45 s: late frames kitten 3, duckling 2, hamster 2, bunny 4, puppy 6, fox
+  2, hedgehog 2, every one of them in the cold-start windows. `-companionScroll
+  1` on Choose, 45 s, quiet machine, six runs each of the fox and the
+  hedgehog: 1-6 late frames.
 - **Scrolling is untouched**: `-nestieBench 1 -nestieSpecies kitten -todayScroll 1
   -frameMeter 1` for 75 s: 0-1 late frames in the steady state both before and
   after (the one run that showed 29 before and 4 after was the first-draw hitch
@@ -210,22 +232,68 @@ nose and the inner ear, the iris, and these numbers (kitten = 1):
 
 | Parameter | Does |
 |---|---|
-| `ears` | `.point`, `.round`, `.long`, `.drop`, `.tuft`, `.none` (the shape) |
+| `ears` | `.point`, `.round`, `.long` (a bunny's, bent at five steps), `.drop` (a pup's, furred and in `earColour`), `.tuft`, `.none` (the shape) |
 | `earHeight` | how tall they stand (1) |
 | `headWidth`, `bodyWidth` | the proportions |
 | `eyeSize`, `eyeSpread` | how big, how far apart (the eyes carry the soul: raise `eyeSize` for a hamster, lower it for a fox) |
 | `pupil` | `.slit` (cat, fox) or `.round` (everything else) |
 | `fur` | scales every edge dab: 0 sleek, 1 kitten, 1.6 fluffy |
 | `muzzle` | muzzle length (a dog or a fox 1.3-1.5, a hamster .7) |
-| `marks` | tabby stripes, plain, mask, chevron |
-| `tail` | `.curl`, `.stub`, `.plume`, `.none` |
-| `whiskers` | off for birds |
+| `marks` | tabby stripes, plain, `.mask` (a fox's white lower face and dark tear lines), chevron |
+| `tail` | `.curl`, `.stub`, `.plume` (a brush, fuller in the middle, with `tailTip`), `.wag` (a pup's), `.cotton` (a rabbit's ball), `.none` |
+| `whiskers` | off for birds, a dog and a hedgehog (the dots stay) |
+| `chin`, `cheek` | the lower face: 0 is the kitten's round chin, 1 a pointed muzzle (fox, hedgehog); `cheek` bulges it (a hamster's pouches, 1.7). A long muzzle carries the nose and mouth down to its end (`HeadGeometry.drop`) |
+| `noseSize`, `bib`, `eyeTilt` | the nose leather (a pup's is 1.7), how much bigger the pale chest is (a fox's bib 1.6), how far the outer eye corner is turned up (a fox's slant, radians) |
+| `socks`, `earColour`, `tailTip` | what the ends are coloured: legs from the ankle down, the ears (a pup's darker ones, a fox's black tips), the tail's tip |
 | `species` | the key under which `CritterGeometry` keeps what was built from the plan |
 
 Eyes, light, fur, the bowl, the nightcap, the five idle motions and all four
-moods are inherited as they are. The body plan (`sitter`, `perched`) decides
-which painter runs; a new plan that does not fit either is a new painter, and
-should come with its own section here.
+moods are inherited as they are. The body plan (`sitter`, `perched`,
+`waddler`) decides which painter runs; a new plan that does not fit any is a
+new painter, and should come with its own section here.
+
+### Batch A: what the plan could not say
+
+Five of the six pets of batch A are rows of the sitter, and the sixth, the
+duckling, a bird seen from the side, is the one body plan added (`waddler`,
+`CritterPainter+Duck.swift`, with the same `form`, `eye`, bowl, nightcap and
+moods; it bounces rather than breathes). What is only one species' is a
+function for that species in `CritterPainter+Species.swift`, switched on
+`plan.species` and kept short: the hamster's hands and seed, the hedgehog's
+sit, hood and ball. Rules the batch wrote:
+
+- **A bent part is built at steps, not bent per frame.** A rabbit's ear at
+  five bends (`HeadGeometry.bunnyEar`). At rest the painter draws one;
+  between two moods it draws the two nearest at their weights. The numbers
+  for each mood must therefore be whole steps (`by(4, 3, 1, 0)`), or the
+  resting ear is two faint ears (the pass-1 ghost).
+- **A coloured end is cut at build time.** The fox's black ear tips, white
+  cheeks and socks are `Path.intersection` of the form's own outline with a
+  region, so the ruff and the notches come out the right colour with no
+  extra shape. Never a second shape laid over an edge.
+- **A wag is a rotation about the root**, not a new tail: the spine's three
+  free points turned by `sin(time * 13) * .34 * bright` about the first. A
+  twitch is a small offset on the nose and the whiskers, not a redraw.
+- **Spines are the new fur kind** (`SpineField`, `CritterSpines.swift`):
+  narrow pointed blades laid in rows from the rim in, the outermost row first
+  so each row covers the roots of the last, every blade with a pale tip (its
+  last 42%). Two fills a row (blades, then tips) and a lit copy of the tips
+  moved toward `L`. The animal's outline is the spines' own points, so it needs
+  no fuzz. Keep a blade under 10 units and about 1 unit of half-width: at 12
+  and 1.7 they read as cut paper.
+- **A pale face is a palette swap on the same head.** The hedgehog's face is
+  `belly`, only the crown is dark: `sitterHead` takes its light, coat and dark
+  from the belly for it. A hedgehog drawn with the coat's colour on the face
+  was a bear in a hat.
+- **Dozing can be a ball or a tail.** The hedgehog's is rings of spines
+  round the whole circle with a gap low on the left for the snout, one shut
+  eye and an ear; the fox's tail comes round over its nose (so the head is
+  drawn first), and ends in the white tip, shortened so the tip does not
+  disappear into the white muzzle.
+- A duckling's mood is posture too: bright holds the head up and flutters
+  the wing, thirsty bows the head to the bowl (rotation about the neck), and
+  dozing brings the head down onto the chest, squashes the body and folds
+  the wing.
 
 ## 9. What the art-direction passes rejected
 
@@ -260,3 +328,23 @@ Each pass was a screenshot, a list of rejections, a fix:
    acting: eyes open, a ring of white and the dark shifted toward the bowl, the
    head dipped toward it, the beak a little open, the same bowl; its eyes shut
    only when properly asleep (`PetMotion.sleep`).
+
+Batch A's passes (each a screenshot, a list of rejections, a fix; the shots
+are in `art/pets/index.html`):
+
+9. **Ears that ghost.** Two bends faded together at rest are two faint ears.
+   A resting mood is a whole step of the five (`by(4, 3, 1, 0)`).
+10. **A bear in a hat.** The hedgehog's face in the coat's brown. A pale face,
+    a dark mask round the eyes, only the crown in spines; and spines of 12 by
+    1.7 are cut paper (under 10 by about 1).
+11. **A pillow and a tail that are feet and a belly.** A long pale foot read
+    as a tongue or a tail, a big pale belly as a cushion; small feet, a small
+    belly, fading into the spines.
+12. **Kitten whiskers on a dog and a thin flame for a brush.** Whiskers off for
+    a pup, the fox's plume fuller in the middle (`bulge`) with its tip cut from
+    the same outline.
+13. **A hook across a duckling's face.** The old scarf as a thick, short
+    white arc under the bill; thinner, longer and lower.
+14. **Sticks for hands.** The hamster's paws as two thin arms and a seed nobody
+    could see; short arms, paws held up under the chin, the seed 1.75 times
+    its size and nibbled.

@@ -309,7 +309,7 @@ private struct CardScene: View {
     }
 
     private var stageTitle: LocalizedStringResource {
-        CompanionMath.stageTitle(store.stage, isPet: store.isPet, isReady: store.isReady)
+        CompanionMath.stageTitle(store.stage, isPet: store.isPet, isReady: store.isReady, potted: store.isPotted)
     }
 }
 
@@ -345,7 +345,7 @@ private struct CardTitle: View {
             return [String(localized: L10n.voteSeedSubtitle), String(localized: L10n.companionDay(store.day))]
                 .joined(separator: " · ")
         }
-        return [String(localized: CompanionMath.stageTitle(store.stage, isPet: store.isPet, isReady: store.isReady)),
+        return [String(localized: CompanionMath.stageTitle(store.stage, isPet: store.isPet, isReady: store.isReady, potted: store.isPotted)),
          String(localized: store.mood.title(isPet: store.isPet)),
          String(localized: L10n.companionDay(store.day))].joined(separator: " · ")
     }
@@ -401,7 +401,7 @@ private struct CardProgress: View {
             }
             .frame(height: 6)
             .animation(Motion.arrive, value: share)
-            Text(caption(next: next, isPet: isPet))
+            Text(caption(next: next, isPet: isPet, potted: store.isPotted))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .oneLine()
@@ -411,12 +411,12 @@ private struct CardProgress: View {
 
     /// What comes next — or, when the points are all there and only the days
     /// are not, when it will be ready (the server's `readyAt`).
-    private func caption(next: Int, isPet: Bool) -> LocalizedStringResource {
+    private func caption(next: Int, isPet: Bool, potted: Bool) -> LocalizedStringResource {
         if let current = store.current, current.pointsReady, !current.isReady, let readyAt = current.readyAt {
             return L10n.companionReadyOn(readyAt.formatted(Date.FormatStyle().day().month(.abbreviated).locale(L10n.locale)))
         }
         return L10n.companionNext(String(localized: CompanionMath.stageTitle(
-            next, isPet: isPet, isReady: next >= CompanionMath.stageCount(isPet: isPet)
+            next, isPet: isPet, isReady: next >= CompanionMath.stageCount(isPet: isPet), potted: potted
         )))
     }
 }

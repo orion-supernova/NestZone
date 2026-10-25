@@ -8310,6 +8310,21 @@ public enum L10n {
         r("plant_stage_sprout", "Sprout")
     }
 
+    /// Seedling
+    public static var plantStageSeedling: LocalizedStringResource {
+        r("plant_stage_seedling", "Seedling")
+    }
+
+    /// Leafing
+    public static var plantStageLeafing: LocalizedStringResource {
+        r("plant_stage_leafing", "Leafing")
+    }
+
+    /// Budding
+    public static var plantStageBudding: LocalizedStringResource {
+        r("plant_stage_budding", "Budding")
+    }
+
     /// Sapling
     public static var plantStageSapling: LocalizedStringResource {
         r("plant_stage_sapling", "Sapling")

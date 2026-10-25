@@ -2,18 +2,22 @@ import SwiftUI
 
 // The bush: a stem that grows by pairs of leaves, each pair turned a quarter
 // from the one below, two branches that start low and make the plant wide, a
-// tuft of young leaves at the top, and a spike of small flowers once it is
-// grown. Basil is this rule; mint and rosemary change the leaf, lavender the
-// spike.
+// tuft of young leaves at the top, and a spike of small white flowers once it
+// is grown. Basil is this rule; mint and rosemary change the leaf, lavender
+// the spike.
+//
+// Fewer and fuller than the first drawing: five pairs and two short branches,
+// each leaf a cupped, glossy oval with its veins (`LeafShape.ovate`), the half
+// that faces the light a tone lighter and a glint beside the rib.
 //
 // Growth: the seed, two seed leaves (.1), the first pair (.12), a new pair
-// about every tenth, the branches (.4 and .5), the spike (.9). A thirsty one
+// about every tenth, the branches (.4 and .5), the spike (.88). A thirsty one
 // shows it first: its leaves roll and hang from the node and its tip nods; a
 // dozing one is folded down.
 extension PlantPainter {
     /// Pairs up the main stem: height, birth.
     private static let pairs: [(height: Double, born: Double)] = [
-        (14, 0.12), (27, 0.2), (40, 0.28), (53, 0.36), (66, 0.45), (79, 0.55), (92, 0.65),
+        (15, 0.12), (30, 0.22), (45, 0.34), (60, 0.48), (75, 0.62),
     ]
 
     private struct Branch {
@@ -28,13 +32,36 @@ extension PlantPainter {
         let rise = grown([(0.09, 0), (0.12, 10), (0.3, 44), (0.52, 84), (0.76, 108), (1, 118)]) * (plan.height - 26) / 118
         let tip = CGPoint(x: seed.lean * 6 + side * wilt * 0.2 * rise, y: -rise * (1 - 0.08 * wilt))
         let spine = Self.quad(CGPoint(x: 0, y: 1), CGPoint(x: seed.lean * 2, y: -rise * 0.55), tip, n: 16)
-        let width = Ink.lerp(2.6, 4.2, Ink.smooth(p / 0.7))
+        let width = Ink.lerp(2.8, 4.6, Ink.smooth(p / 0.7))
+        var tiers = [LeafBatch(), LeafBatch(), LeafBatch()]
+        var young = LeafBatch()
+
+        /// One leaf on a short stalk from `base`, pointing out to one `side` and
+        /// `lift` radians above level. It hangs and curls as the house goes quiet.
+        func leaf(_ base: CGPoint, side s: Double, lift: Double, length: Double, tier: Int, n: Int, petiole: Double = 5,
+                  curl: Double = 0.3, hang: Double = 1.4, fresh: Bool = false) {
+            let angle = (s > 0 ? -lift : -.pi + lift) + s * wilt * hang
+            let direction = CGPoint(x: cos(angle), y: sin(angle))
+            let start = CGPoint(x: base.x + direction.x * petiole, y: base.y + direction.y * petiole)
+            if c != nil {
+                let shape = LeafShape.of(.ovate, bend: s * (curl + 0.8 * wilt))
+                let b = bright(angle, luck: luck(n), tier: tier)
+                if fresh {
+                    young.add(shape, base: start, angle: angle, length: length, light: L, bright: b, glossy: true)
+                    young.stalks.addPath(Self.ribbon([base, start], 2, 1.6))
+                } else {
+                    tiers[tier].add(shape, base: start, angle: angle, length: length, light: L, bright: b, glossy: true)
+                    if petiole > 0.5 { tiers[tier].stalks.addPath(Self.ribbon([base, start], 2.2, 1.8)) }
+                }
+            }
+            m.note(CGPoint(x: start.x + direction.x * length * 0.9, y: start.y + direction.y * length * 0.9))
+        }
 
         // The seed leaves, which the first pairs outgrow.
         let seedLeaf = pop(0.1, over: 0.06) * (1 - Ink.smooth((p - 0.34) / 0.12))
         if seedLeaf > 0.02 {
             for s in [-1.0, 1] {
-                place(c, &m, at: CGPoint(x: 0, y: -3), side: s, lift: 0.3, length: 15 * seedLeaf, tier: 1, petiole: 0, curl: 0.2, slim: 1.2, hang: 0.9)
+                leaf(CGPoint(x: 0, y: -3), side: s, lift: 0.3, length: 17 * seedLeaf, tier: 1, n: 30 + Int(s + 1), petiole: 0, curl: 0.2, hang: 0.9)
             }
         }
 
@@ -60,94 +87,105 @@ extension PlantPainter {
             guard k > 0.02 else { return }
             let l = length * k * seed.between(index + 3, 0.92, 1.08)
             for s in [-1.0, 1] {
+                let n = index * 2 + (s > 0 ? 1 : 0)
                 if front {
-                    place(c, &m, at: base, side: s, lift: 1.12, length: l * 0.82, tier: 2, petiole: 2, curl: 0.1, slim: 1.1, hang: 1.2)
+                    leaf(base, side: s, lift: 1.12, length: l * 0.84, tier: 2, n: n, petiole: 2, curl: 0.12, hang: 1.2)
                 } else {
-                    place(c, &m, at: base, side: s, lift: 0.72 + seed.between(index, -0.1, 0.1), length: l, tier: s == side ? 1 : 0)
+                    leaf(base, side: s, lift: 0.72 + seed.between(index, -0.1, 0.1), length: l, tier: s == side ? 1 : 0, n: n)
                 }
             }
         }
 
         let nodes = Self.pairs.enumerated().filter { rise > $0.element.height + 4 }
         // Behind the stem: the branches and the pairs seen side on.
+        var branchStems = Path()
         for branch in branches {
-            if let c {
-                let w = width * 0.8
-                paint(c, stem: Self.ribbon(branch.spine, w, w * 0.7), along: branch.spine, width: w, tier: 1)
-            }
-            for (n, t) in [0.55, 1.0].enumerated() where p > branch.born + 0.1 * Double(n + 1) {
-                pair(Self.along(branch.spine, t), n + 1, born: branch.born + 0.1 * Double(n + 1), length: 27 - Double(n) * 5, front: false)
+            let w = width * 0.8
+            branchStems.addPath(Self.ribbon(branch.spine, w, w * 0.7))
+            for (n, t) in [0.6, 1.0].enumerated() where p > branch.born + 0.1 * Double(n + 1) {
+                pair(Self.along(branch.spine, t), n + 11 + (branch.side > 0 ? 3 : 0), born: branch.born + 0.1 * Double(n + 1), length: 31 - Double(n) * 6, front: false)
             }
         }
         for (i, node) in nodes where i.isMultiple(of: 2) {
-            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(40, 25, Double(i) / 6), front: false)
+            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(46, 30, Double(i) / 4), front: false)
         }
-        if let c { paint(c, stem: Self.ribbon(spine, width, width * 0.62), along: spine, width: width) }
+        if let c {
+            for tier in 0..<2 {
+                if tier == 1 {
+                    if !branchStems.isEmpty { c.fill(branchStems, with: .linearGradient(Gradient(colors: [ramp[2].color(), ramp[1].color()]), startPoint: CGPoint(x: -20, y: 0), endPoint: CGPoint(x: 20, y: 0))) }
+                }
+                tiers[tier].flush(c, inks[tier], casting: tier > 0)
+            }
+            paint(c, stem: Self.ribbon(spine, width, width * 0.62), along: spine, width: width)
+        }
         for (i, node) in nodes where !i.isMultiple(of: 2) {
-            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(40, 25, Double(i) / 6), front: true)
+            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(46, 30, Double(i) / 4), front: true)
         }
 
         // The tuft at the top, lighter, and then the spike that replaces it.
-        let tuft = pop(0.3, over: 0.1)
+        let tuft = pop(0.3, over: 0.1) * (1 - Ink.smooth((p - 0.84) / 0.1))
         if tuft > 0.02, rise > 60 {
-            for s in [-1.0, 1] {
-                place(c, &m, at: tip, side: s, lift: 1.2, length: Ink.lerp(9, 15, Ink.smooth((p - 0.3) / 0.5)) * tuft, tier: 2,
-                      petiole: 1, curl: 0.15, slim: 1.15, hang: 1.2, young: 1)
+            for (n, s) in [-1.0, 1.0].enumerated() {
+                leaf(tip, side: s, lift: 1.2, length: Ink.lerp(11, 18, Ink.smooth((p - 0.3) / 0.5)) * tuft, tier: 2, n: 20 + n,
+                     petiole: 1, curl: 0.15, hang: 1.2, fresh: true)
             }
         }
+        if let c {
+            tiers[2].flush(c, inks[2])
+            young.flush(c, fresh)
+        }
         let spikeK = Ink.smooth((p - 0.88) / 0.1)
-        if spikeK > 0.02, let flower = plan.flower {
-            let height = 26 * spikeK
-            let base = CGPoint(x: tip.x, y: tip.y - 2)
-            let top = CGPoint(x: tip.x + seed.lean * 1.5 + side * wilt * 6, y: tip.y - height - wilt * 4)
-            if let c {
-                let stalk = Self.quad(base, CGPoint(x: tip.x, y: (base.y + top.y) / 2), top, n: 6)
-                c.fill(Self.ribbon(stalk, 2.4, 1.6), with: .color(ramp[2].color()))
-                let open = M.open * (1 - 0.3 * M.doze)
-                let petal = bloom(flower.mid, dim: 0.4), deep = bloom(flower.deep, dim: 0.4)
-                let green = ramp[3].mix(ramp[4], 0.3)
-                var calyx = Path(), florets = Path(), marks = Path()
-                for w in 0..<4 {
-                    let t = (Double(w) + 0.6) / 4.4
-                    let y = Ink.lerp(base.y, top.y, t)
-                    let x = Ink.lerp(base.x, top.x, t)
-                    let k = Ink.smooth(spikeK * 2 - t) * (1 - 0.18 * Double(w))
-                    guard k > 0.05 else { continue }
-                    for s in [-1.0, 1] {
-                        let a = s > 0 ? -0.35 : -.pi + 0.35
-                        let len = 7.5 * k
-                        calyx.leaf(x, y + 1.6, cos(a), sin(a), len * 0.6, len * 0.26, 0)
-                        // Closed buds are green and small; open florets are pale with a dab of lilac.
-                        florets.leaf(x + s * 0.6, y, cos(a), sin(a), len * (0.5 + 0.55 * open), len * (0.2 + 0.18 * open), 0.5)
-                        marks.addEllipse(in: CGRect(x: x + s * len * 0.55 - 0.9, y: y - len * 0.2 - 0.9, width: 1.8, height: 1.8))
-                    }
-                }
-                c.fill(calyx, with: .color(green.color()))
-                c.fill(florets, with: .color(green.mix(petal, open).color()))
-                c.fill(marks, with: .color(deep.color(0.8 * open)))
-                c.fill(Path(ellipseIn: CGRect(x: top.x - 1.7, y: top.y - 3.4, width: 3.4, height: 4.6)), with: .color(green.mix(petal, open * 0.6).color()))
-            }
+        if spikeK > 0.02, plan.flower != nil {
+            let top = CGPoint(x: tip.x + seed.lean * 1.5 + side * wilt * 6, y: tip.y - 50 * spikeK - wilt * 5)
+            if let c { spike(c, from: CGPoint(x: tip.x, y: tip.y - 2), to: top, grow: spikeK) }
             m.note(top, reach: 6, hang: false)
         }
         m.note(tip, reach: 4, hang: false)
     }
-}
 
-extension PlantPainter {
-    /// The point on a sampled stem at a share of its way along.
-    static func along(_ points: [CGPoint], _ t: Double) -> CGPoint {
-        let f = Ink.clamp(t) * Double(points.count - 1)
-        let i = min(Int(f), points.count - 2), u = f - Double(i)
-        return CGPoint(x: Ink.lerp(points[i].x, points[i + 1].x, u), y: Ink.lerp(points[i].y, points[i + 1].y, u))
-    }
-
-    /// The point on a sampled stem at a height above its first point.
-    static func height(_ points: [CGPoint], _ height: Double) -> CGPoint {
-        for i in 1..<points.count where points[0].y - points[i].y >= height {
-            let a = points[i - 1], b = points[i]
-            let t = (height - (points[0].y - a.y)) / max(0.001, a.y - b.y)
-            return CGPoint(x: Ink.lerp(a.x, b.x, t), y: Ink.lerp(a.y, b.y, t))
+    /// The flower spike: whorls of small white flowers up a green stalk, each
+    /// two-lipped with a dab of lilac, in a green cup, a pair of small leaves
+    /// under it, and a cluster of buds at the top. Pale by the sun's side and
+    /// lilac-grey in its own shade.
+    private func spike(_ c: GraphicsContext, from base: CGPoint, to top: CGPoint, grow: Double) {
+        guard let flower = plan.flower else { return }
+        let stalk = Self.quad(base, CGPoint(x: base.x, y: (base.y + top.y) / 2), top, n: 6)
+        c.fill(Self.ribbon(stalk, 2.6, 1.8), with: .color(ramp[2].color()))
+        let open = M.open * (1 - 0.3 * M.doze)
+        let white = bloom(flower.pale, dim: 0.4), tone = bloom(flower.mid, dim: 0.4), dab = bloom(flower.deep, dim: 0.4)
+        let green = ramp[3].mix(ramp[4], 0.3)
+        var calyx = Path(), bracts = Path(), lit = Path(), shaded = Path(), marks = Path()
+        let toLit = L.x >= 0 ? 1.0 : -1.0
+        for w in 0..<6 {
+            let t = (Double(w) + 0.6) / 6.4
+            let at = CGPoint(x: Ink.lerp(base.x, top.x, t), y: Ink.lerp(base.y, top.y, t))
+            let k = Ink.smooth(grow * 2.2 - t * 1.1) * (1 - 0.12 * Double(w))
+            guard k > 0.05 else { continue }
+            for s in [-1.0, 1] {
+                let a = s > 0 ? -0.35 : -.pi + 0.35
+                let len = 12.5 * k
+                // The little leaves under a whorl, then the cup, then the flower.
+                bracts.leaf(at.x, at.y + 2.4, cos(a + s * 0.5), sin(a + s * 0.5), len * 0.7, len * 0.2, 0)
+                calyx.leaf(at.x, at.y + 1.6, cos(a), sin(a), len * 0.55, len * 0.26, 0)
+                let flowerLen = len * (0.5 + 0.55 * open)
+                var floret = Path()
+                // The upper hood and the lower lip.
+                floret.leaf(at.x + s * 0.6, at.y, cos(a - s * 0.18), sin(a - s * 0.18), flowerLen, len * (0.2 + 0.18 * open), 0.5)
+                floret.leaf(at.x + s * 0.6, at.y + 0.6, cos(a + s * 0.4), sin(a + s * 0.4), flowerLen * 0.62, len * 0.16 * (0.5 + open), 0.5)
+                if s == toLit { lit.addPath(floret) } else { shaded.addPath(floret) }
+                marks.addEllipse(in: CGRect(x: at.x + s * len * 0.55 - 0.9, y: at.y - len * 0.18 - 0.9, width: 1.8, height: 1.8))
+            }
         }
-        return points[points.count - 1]
+        c.fill(bracts, with: .color(ramp[3].color()))
+        c.fill(calyx, with: .color(green.mix(ramp[4], 0.3).color()))
+        // Closed buds are green and small; open florets are white.
+        c.fill(shaded, with: .color(green.mix(tone.mix(dab, 0.25), open).color()))
+        c.fill(lit, with: .color(green.mix(white, open).color()))
+        c.fill(marks, with: .color(dab.color(0.8 * open)))
+        var buds = Path()
+        buds.leaf(top.x, top.y + 1, 0, -1, 5 * grow, 1.8 * grow, 0.4)
+        buds.leaf(top.x - 1.2, top.y + 1.6, -0.4, -0.9, 3.8 * grow, 1.4 * grow, 0.4)
+        buds.leaf(top.x + 1.2, top.y + 1.6, 0.4, -0.9, 3.8 * grow, 1.4 * grow, 0.4)
+        c.fill(buds, with: .color(green.mix(white, open * 0.5).color()))
     }
 }
