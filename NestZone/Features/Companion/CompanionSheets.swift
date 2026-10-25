@@ -656,7 +656,9 @@ struct CeremonyView: View {
     var body: some View {
         ZStack {
             SheetInk.backdrop.ignoresSafeArea()
-            if !reduceMotion { Petals().ignoresSafeArea().allowsHitTesting(false) }
+            // The finale has its own confetti; petals over it would be a second
+            // continuous canvas for nothing.
+            if !reduceMotion, store.moment?.isFinaleOnly != true { Petals().ignoresSafeArea().allowsHitTesting(false) }
             if let moment = store.moment, moment.isFinale, showsFinale || moment.isFinaleOnly {
                 FinaleView(store: store, moment: moment)
                     .transition(.opacity)

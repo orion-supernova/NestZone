@@ -19,9 +19,14 @@ struct FinaleView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// 1 the title, 2 the crown, 3 the door and the way out.
     @State private var beat = 0
-    /// How many of the album's tiles have arrived.
-    @State private var revealed = 0
+    /// The cascade has been set going: every tile arrives on its own delay,
+    /// by one change of this value, so the grid is not rebuilt per tile.
+    @State private var cascading = false
     @State private var burst = 0
+    /// The grid and the crown are made a frame after the title, so the cover
+    /// opens on a first frame that is only its backdrop and its title.
+    @State private var builtTiles = 0
+    @State private var builtCrown = false
 
     private enum Ink {
         /// The finale's confetti: the crown's gold, the jar's Sparkles and Leaves, and violet.
@@ -45,7 +50,7 @@ struct FinaleView: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             .scrollIndicators(.hidden)
-            crown(big: big)
+            if builtCrown { crown(big: big) } else { Color.clear.frame(height: 64) }
             Text(L10n.finaleDoor)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(SheetInk.caption)
@@ -72,13 +77,16 @@ struct FinaleView: View {
     private func grid(big: Bool) -> some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: big ? 3 : 4)
         return LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(Array(moment.grown.enumerated()), id: \.element) { index, species in
+            // A row a frame, so no one frame builds twenty-eight tiles.
+            ForEach(Array(moment.grown.enumerated()).prefix(builtTiles), id: \.element) { index, species in
                 portrait(species, big: big)
                     .aspectRatio(4 / 3, contentMode: .fit)
                     .background(RoundedRectangle(cornerRadius: 8).fill(SheetInk.spotFill))
                     .clipShape(.rect(cornerRadius: 8))
-                    .opacity(index < revealed ? 1 : 0)
-                    .scaleEffect(index < revealed || reduceMotion ? 1 : 0.7)
+                    .opacity(cascading ? 1 : 0)
+                    .scaleEffect(cascading || reduceMotion ? 1 : 0.7)
+                    // Reduce Motion: one fade, all together, no travel.
+                    .animation(reduceMotion ? Motion.fade : Motion.arrive.delay(Double(index) * 0.04), value: cascading)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -91,6 +99,28 @@ struct FinaleView: View {
 
     private static func portrait(_ species: Species, home: HomeID) -> SpeciesPortrait {
         SpeciesPortrait(species: species, seed: "\(home.rawValue)-\(species.rawValue)")
+    }
+
+    /// Draws them into the cache: the pets' shapes first, built off the main
+    /// thread (the first still of each costs a frame otherwise), then the
+    /// stills one at a time between frames.
+    static func warm(_ album: [Species], home: HomeID, big: Bool) async {
+        let plans = album.filter(\.isPet).compactMap(CritterPlan.of)
+        await Task.detached(priority: .utility) { plans.forEach(CritterGeometry.prepare) }.value
+        await StillCache.warm(warmJobs(album, home: home, big: big))
+    }
+
+    /// The pictures the finale shows, as the cache keeps them: the grown
+    /// species' stills and the crown's. The card draws them while the finale
+    /// is on its way (`CompanionCard`), so the cover opens on ready bitmaps.
+    static func warmJobs(_ album: [Species], home: HomeID, big: Bool) -> [(StillSpec, AnyView)] {
+        var jobs: [(StillSpec, AnyView)] = album.map { species in
+            let portrait = portrait(species, home: home)
+            return (portrait.still(big: big), AnyView(portrait))
+        }
+        let crown = DecorPortrait(decor: .item(.tinyCrown))
+        jobs.append((crown.still(big: big), AnyView(crown)))
+        return jobs
     }
 
     // MARK: The crown
@@ -114,28 +144,28 @@ struct FinaleView: View {
 
     private func play(big: Bool) async {
         let beatIn: Animation = reduceMotion ? Motion.fade : Motion.celebrate
-        try? await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 300))
+        // A frame for the cover to open on, then the grid, then the crown:
+        // each is made in a frame of its own.
+        await FrameTick.next()
         withAnimation(beatIn) { beat = 1 }
         burst += 1
-        // The stills are drawn once, off the scroll, and kept; the cascade
-        // starts when they are there to arrive.
-        var jobs: [(StillSpec, AnyView)] = moment.grown.map { species in
-            let portrait = Self.portrait(species, home: store.homeID)
-            return (portrait.still(big: big), AnyView(portrait))
+        let perRow = big ? 3 : 4
+        while builtTiles < moment.grown.count {
+            await FrameTick.next()
+            if Task.isCancelled { return }
+            builtTiles += perRow
         }
-        let crown = DecorPortrait(decor: .item(.tinyCrown))
-        jobs.append((crown.still(big: big), AnyView(crown)))
-        await StillCache.warm(jobs)
+        await FrameTick.next()
+        builtCrown = true
+        // The stills were drawn ahead and kept (`warmJobs`); this finds them
+        // there and draws nothing, unless a house got here without the card
+        // having seen it coming, in which case the cascade waits for them.
+        await Self.warm(moment.grown, home: store.homeID, big: big)
         if Task.isCancelled { return }
-        if reduceMotion {
-            withAnimation(Motion.fade) { revealed = moment.grown.count }
-        } else {
-            for index in 1...max(moment.grown.count, 1) {
-                try? await Task.sleep(for: .milliseconds(40))
-                withAnimation(Motion.arrive) { revealed = index }
-            }
-        }
-        try? await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 450))
+        cascading = true
+        // The last tile lands 40 ms after the one before it.
+        let cascade = reduceMotion ? 200 : 450 + 40 * moment.grown.count
+        try? await Task.sleep(for: .milliseconds(cascade))
         withAnimation(reduceMotion ? Motion.fade : Motion.pop) { beat = 2 }
         burst += 1
         try? await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 600))

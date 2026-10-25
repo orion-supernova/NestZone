@@ -178,6 +178,12 @@ public struct CompanionFeature: Sendable {
         public var species: Species?
         /// The colourway of the one growing; `nil` is the original.
         public var colour: Int?
+        /// The species the finale will show, once it is held or can be
+        /// predicted (the one growing is ready and is the last free species
+        /// to grow), so its stills are drawn before the cover opens. Empty
+        /// otherwise. The server decides whether there is a finale; this only
+        /// decides what is worth drawing ahead.
+        public var finaleAlbum: [Species] = []
         /// The companion as the scene draws it — species, seed and when it
         /// arrived — without its points or its care, which change more often
         /// than anything the scene shows.
@@ -674,6 +680,7 @@ public struct CompanionFeature: Sendable {
         /// container when its clock or the household moves.
         public mutating func refresh() {
             let shown = served
+            let served0 = served
             writes.settle(against: shown, now: now)
             let house = self.house
             let clock = self.clock
@@ -704,6 +711,7 @@ public struct CompanionFeature: Sendable {
             set(\.vote, house.vote)
             set(\.species, undecided ? nil : current?.species)
             set(\.colour, undecided ? nil : current?.colour)
+            set(\.finaleAlbum, Self.finaleAlbum(moment: moment, served: served0, current: served0.current, undecided: served0.current?.isUndecided == true))
             set(\.look, current.map {
                 var look = Companion(
                     species: $0.isUndecided ? Self.seedStandIn : $0.species, seed: $0.seed, startedAt: $0.startedAt
@@ -761,6 +769,20 @@ public struct CompanionFeature: Sendable {
                 return dressed != layout
             }
             set(\.holidayToDress, toDress)
+        }
+
+        /// What the finale would show: the held moment's album, or the grown
+        /// species plus the one about to graduate when that completes the
+        /// free ones for a house that has not had its finale.
+        static func finaleAlbum(
+            moment: Moment?, served: CompanionHouse, current: Companion?, undecided: Bool
+        ) -> [Species] {
+            if let moment, moment.isFinale { return moment.grown }
+            guard !served.hasFinished, !undecided, let current, current.isReady, current.id != nil else { return [] }
+            var grown = served.grown
+            grown.insert(current.species)
+            guard Species.freeToHave.isSubset(of: grown) else { return [] }
+            return Species.allCases.filter(grown.contains)
         }
 
         private mutating func set<Value: Equatable>(_ keyPath: WritableKeyPath<State, Value>, _ value: Value) {

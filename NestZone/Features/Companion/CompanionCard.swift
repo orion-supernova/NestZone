@@ -45,6 +45,12 @@ struct CompanionCard: View {
             CompanionSheet(store: store, sheet: sheet, detent: $detent)
         }
         .onChange(of: store.sheet == nil) { _, closed in if closed { detent = .medium } }
+        // The finale's stills are drawn while it is on its way, one at a time
+        // between frames, so its cover opens on bitmaps that are already there.
+        .task(id: FinaleWarm(album: store.finaleAlbum, big: typeSize.isAccessibilitySize)) {
+            guard !store.finaleAlbum.isEmpty else { return }
+            await FinaleView.warm(store.finaleAlbum, home: store.homeID, big: typeSize.isAccessibilitySize)
+        }
         .fullScreenCover(isPresented: Binding(
             get: { store.sheet?.isMoment == true },
             set: { if !$0 { store.send(.sheetDismissed) } }
@@ -689,4 +695,10 @@ private struct CareRise: View {
                 .accessibilityHidden(true)
         }
     }
+}
+
+/// What the finale's pictures are drawn for: the album and the size.
+private struct FinaleWarm: Equatable {
+    let album: [Species]
+    let big: Bool
 }

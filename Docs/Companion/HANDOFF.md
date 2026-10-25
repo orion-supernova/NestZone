@@ -1187,7 +1187,12 @@ In order — each step can go to testers on its own:
      phones never play it: they only see Choose open up. After it (`finaleAt`
      or every free species grown) a grown species in Choose asks for a colour
      (`ColourPickerLayer`), sent as `start`'s `colour` through `writes` with
-     its rollback. Pictures: `Docs/Companion/finale/`. Bench:
+     its rollback. The finale's stills are drawn while it is on its way
+     (`State.finaleAlbum`, from the held moment or the prediction that the
+     ready one completes the free species; `CompanionCard` warms them), the
+     cover builds a row of tiles a frame, and the cascade is one animated
+     value with a delay per tile. Numbers in `Docs/Companion/finale/index.html`.
+     Pictures: `Docs/Companion/finale/`. Bench:
      `-nestieScenario finale -nestieScript finale|finaleStart|finaleChoose`.
    - *Open:* the painters must take `colourway` (the model, `ScenePortrait`,
      `SpeciesPortrait` and its still keys already carry it, unread), and
