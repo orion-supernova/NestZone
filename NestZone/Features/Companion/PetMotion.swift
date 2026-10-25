@@ -66,9 +66,11 @@ struct PetMotion {
 
     /// Offsets, scale and turn for this instant: the idle bob, and any hop,
     /// wiggle or stretch under way. About the feet.
-    func offsets(calm: Bool = false) -> (dx: Double, dy: Double, sx: Double, sy: Double, turn: Double) {
+    func offsets(calm: Bool = false, waddle: Bool = false, still: Bool = false) -> (dx: Double, dy: Double, sx: Double, sy: Double, turn: Double) {
         var dy = 0.0, dx = 0.0, sx = 1.0, sy = 1.0, turn = 0.0
-        if !frame.reduceMotion, calm {
+        if still {
+            // A bowl sits: only a hop or a pat moves it.
+        } else if !frame.reduceMotion, calm {
             // A mammal sitting: it does not bob, it breathes (the chest a
             // little wider and taller on the in-breath), and a bright one
             // rocks up on its paws now and then.
@@ -79,6 +81,20 @@ struct PetMotion {
             if frame.mood > 0.82 {
                 let t = (time / 1.5).truncatingRemainder(dividingBy: 1)
                 dy = -3 * max(0, sin(t * .pi)) * Ink.smooth((frame.mood - 0.82) / 0.18)
+            }
+            if stage == 1 { turn = sin(time / 1.3 * .pi * 2) * 0.16 }
+        } else if !frame.reduceMotion, waddle {
+            // A penguin does not bounce: it rocks from foot to foot, leaning
+            // over the one it stands on, and bobs a hair as each foot lands.
+            if frame.mood > 0.82 {
+                let p = time * 2 * .pi / 0.9
+                turn = sin(p) * 0.075 * Ink.smooth((frame.mood - 0.82) / 0.18)
+                dy = -1.4 * abs(cos(p)) * Ink.smooth((frame.mood - 0.82) / 0.18)
+            } else if frame.mood < 0.15 {
+                let b = sin(time / 5 * .pi * 2)
+                sx = 1 + 0.015 * b; sy = 1 - 0.02 * b
+            } else if frame.mood > 0.42 {
+                turn = sin(time / 2.8 * .pi * 2) * 0.014
             }
             if stage == 1 { turn = sin(time / 1.3 * .pi * 2) * 0.16 }
         } else if !frame.reduceMotion {

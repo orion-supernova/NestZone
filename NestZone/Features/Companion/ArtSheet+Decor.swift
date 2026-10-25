@@ -44,6 +44,11 @@ extension ArtSheet {
     private func decorGrid(_ item: DecorItem, kind: String) -> some View {
         let cells: [(String, ScenePortrait)] = switch kind {
         case "pets": Self.pets.map { ($0.rawValue, portrait($0, item, hour: 13)) }
+        case "pets2": [Species.turtle, .goldfish, .penguin, .deer, .snowFox, .polarCub].map { ($0.rawValue, portrait($0, item, hour: 13)) }
+        case "night2": [Species.turtle, .goldfish, .penguin, .deer, .snowFox, .polarCub].map { ($0.rawValue + " 22h", portrait($0, item, hour: 22)) }
+        case "moods2": [Species.turtle, .goldfish].flatMap { species in
+            Mood.allCases.map { (species.rawValue + " " + $0.rawValue, portrait(species, item, hour: 13, mood: $0)) }
+        }
         case "night": Self.pets.map { ($0.rawValue + " 22h", portrait($0, item, hour: 22)) }
         case "dusk": Self.pets.map { ($0.rawValue + " 19h", portrait($0, item, hour: 19)) }
         case "moods": [Species.kitten, .owl].flatMap { species in

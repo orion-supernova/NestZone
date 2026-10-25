@@ -17,7 +17,6 @@ struct DuckGeometry {
     let upperBill, lowerBill: Path
     let feet: [Path]
     let toes: Path
-    let collar: Path
     static let bodyCentre = CGPoint(x: 62, y: 80)
     static let headCentre = CGPoint(x: 46, y: 50)
 
@@ -116,11 +115,6 @@ struct DuckGeometry {
             }
         }
         toes = tp
-
-        var c = Path()
-        c.move(to: CGPoint(x: 37, y: 63))
-        c.addQuadCurve(to: CGPoint(x: 59.5, y: 62.5), control: CGPoint(x: 48, y: 69.5))
-        collar = c
     }
 }
 

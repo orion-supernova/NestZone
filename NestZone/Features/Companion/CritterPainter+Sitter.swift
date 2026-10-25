@@ -59,6 +59,7 @@ extension CritterPainter {
         form(b, g.bodyFur[side], centre: g.bodyCentre, radius: 32, light, coat, dark, highlight: 0.62)
         hairs(b, g.hairs, dark: mark, light: look.lifted(light, 0.25), alpha: 0.28)
         if plan.marks == .tabby { hairs(b, g.stripes, dark: mark, light: light, alpha: 0.48) }
+        if plan.marks == .spots { hairs(b, g.spots, dark: belly.shifted(-5), light: look.lifted(belly, 0.3), alpha: 0.9) }
 
         // The chest, pale, where the head sits.
         // Soft all round: it fades to the coat at its rim, so no edge shows.
@@ -70,6 +71,7 @@ extension CritterPainter {
         form(b, g.haunch, centre: CGPoint(x: 77, y: 91), radius: 20, light, coat, dark.shifted(2), highlight: 0.5)
         hairs(b, g.haunchHairs, dark: mark, light: look.lifted(light, 0.25), alpha: 0.28)
         if plan.marks == .tabby { hairs(b, g.haunchBars, dark: mark, light: light, alpha: 0.5) }
+        if plan.marks == .spots { hairs(b, g.haunchSpots, dark: belly.shifted(-5), light: look.lifted(belly, 0.3), alpha: 0.9) }
         if species == .hamster {
             // Small round feet, the colour of the coat's underside.
             let foot = Path(ellipseIn: CGRect(x: 66, y: 102.8, width: 19, height: 7.6))
@@ -151,11 +153,12 @@ extension CritterPainter {
         if plan.marks == .tabby { hairs(b, g.stripes, dark: mark, light: light, alpha: 0.55) }
         form(b, g.haunch, centre: CGPoint(x: 82, y: 95), radius: 18, light, coat, dark.shifted(2), highlight: 0.5)
         if plan.marks == .tabby { hairs(b, g.haunchBars, dark: mark, light: light, alpha: 0.5) }
+        if plan.marks == .spots { hairs(b, g.spots, dark: belly.shifted(-5), light: look.lifted(belly, 0.3), alpha: 0.9) }
         let overHead = plan.tail == .plume
         // The tail goes round the front, over the paws; a fox's goes over its
         // nose as well, so its head is laid down first.
         if !overHead { curledTail(b) }
-        if plan.tail == .cotton { cottonTail(b, at: CGPoint(x: 104, y: 99), size: 1, tuck: true) }
+        if plan.tail == .cotton { cottonTail(b, at: CGPoint(x: 104, y: 99), size: plan.tailSize, tuck: true) }
         // The front paws, tucked under the chin.
         for (x, y) in [(27.5, 106.2), (41, 108.6)] {
             let pawPath = Path(ellipseIn: CGRect(x: x - 8.2, y: y - 4.2, width: 16.4, height: 8.4))
@@ -200,7 +203,7 @@ extension CritterPainter {
     /// wants something. A pup's wags; a rabbit's is a cotton ball.
     private func tail(_ c: GraphicsContext, _ w: PetMotion.Weights) {
         guard plan.tail != .none, plan.tail != .stub else { return }
-        if plan.tail == .cotton { cottonTail(c, at: CGPoint(x: 95, y: 95), size: 1, tuck: false); return }
+        if plan.tail == .cotton { cottonTail(c, at: CGPoint(x: 95, y: 95), size: plan.tailSize, tuck: false); return }
         let coat = look.coat, light = look.light, mark = look.mark, dark = look.dark, belly = look.belly
         let kind = plan.tail
         let bright: [CGPoint], content: [CGPoint], thirst: [CGPoint]
@@ -251,8 +254,9 @@ extension CritterPainter {
         let spine = PlantPainter.cubic(p[0], p[1], p[2], p[3], n: 16)
         let baby = babyness
         let plume = kind == .plume
-        let (w0, w1) = plume ? (15.0 + 2 * baby, 7.0 + 1.4 * baby) : kind == .wag ? (11.5 + 2 * baby, 7.5 + 1.4 * baby) : (9.8 + 2 * baby, 6.4 + 1.4 * baby)
-        let parts = furRibbonParts(spine, w0, w1, fur: plan.fur, tipFrom: plume ? 11 : nil, bulge: plume ? 6 : 0)
+        let fluff = plume ? plan.tailFluff : 1
+        let (w0, w1) = plume ? ((15.0 + 2 * baby) * fluff, (7.0 + 1.4 * baby) * fluff) : kind == .wag ? (11.5 + 2 * baby, 7.5 + 1.4 * baby) : (9.8 + 2 * baby, 6.4 + 1.4 * baby)
+        let parts = furRibbonParts(spine, w0, w1, fur: plan.fur, tipFrom: plume ? 11 : nil, bulge: plume ? 6 * fluff : 0)
         form(c, parts.body, centre: CGPoint(x: (p[0].x + p[3].x) / 2, y: (p[0].y + p[3].y) / 2), radius: 20, light, coat, coat.shifted(-10, 4), highlight: 0.35, core: 0.7)
         if plan.marks == .tabby {
             c.fill(ringBands(spine, indices: [4, 7, 10, 13], width: 1.9, wide: w0, narrow: w1), with: .color(mark.color(0.62)))

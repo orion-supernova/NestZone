@@ -10,6 +10,7 @@ extension CritterPainter {
     /// down and turned to the bowl when thirsty, and when it dozes the head
     /// comes down onto the chest and the whole bird squashes into a round.
     func waddler(_ c: GraphicsContext) {
+        if plan.species == .penguin { penguin(c); return }
         let g = CritterGeometry.duck(plan)
         let w = motion.weights
         let coat = look.coat, light = look.light, dark = look.dark, belly = look.belly, mark = look.mark
@@ -69,20 +70,13 @@ extension CritterPainter {
         h.rotate(by: .radians(head))
         h.translateBy(x: -46, y: -68)
         duckHead(h, babyness: baby)
-
-        if stage == 6 {
-            // A white collar of down at the neck, the duckling's scarf.
-            var col = h
-            col.stroke(g.collar, with: .color(look.lifted(belly, 0.4).color(0.8)), style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
-            col.translateBy(x: look.L.x * 0.4, y: look.L.y * 0.6)
-            col.stroke(g.collar, with: .color(Color.white.opacity(0.55)), style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
-        }
         neckwear(b, at: CGPoint(x: 49, y: 72), span: 14, size: 0.9)
     }
 
     /// The duckling's head, in the box: down on the cheek and the back, a
     /// tuft, a bill in two halves, the cheek's blush, the eye.
     func duckHead(_ c: GraphicsContext, babyness: Double) {
+        if plan.species == .penguin { penguinHead(c, babyness: babyness); return }
         let g = CritterGeometry.duck(plan)
         let w = motion.weights
         let coat = look.coat, light = look.light, dark = look.dark, mark = look.mark

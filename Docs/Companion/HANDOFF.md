@@ -1148,6 +1148,23 @@ In order — each step can go to testers on its own:
    for the plants, a few body plans for the pets — and the 10 sketched
    decorations; scenes as real backdrops; things to wear drawn on. Measure
    again.
+   - *Done (25 October), every species:* the pomegranate and kitten heroes set
+     the bar (`Docs/Companion/art/RULES.md`, `RULES-pets.md`); then the trees
+     (lemon, olive, magnolia, cherry, azalea), all 19 potted plants (rules
+     `stalk`, `bush`, `column`, `vine`, `tuft`, `cane`, `sprig`, `blades`,
+     `frond`, `spray`, `sculpt`, `trail`; their own stage names) and all
+     pets (`sitter`, `waddler`, `shelled`, `swimmer`, `SpineField`). Each
+     went through two critique passes and a fix round from me, and is
+     measured in its RULES section: plants at or under ~0.7 ms recording,
+     trees within 1.3x the old GPU cost, no pet above the kitten (the dozing
+     goldfish, 0.42 ms against 0.35, is the one exception, accepted).
+     Before and after sheets: `Docs/Companion/art/{trees,plants,pets}/index.html`.
+     A reviewer pass on the integration (caches, concurrency, Reduce Motion,
+     Release flags, strings) found nothing blocking.
+   - *Running:* the decorations, scene backdrops and things to wear
+     (`Docs/Companion/art/decor/` when it lands).
+   - *Open:* the Nestie card's overflow at the largest accessibility sizes;
+     re-measure Today and Choose on the phone with the new art.
 6. **The finale**: "You've grown them all", the crown, growing a favourite
    again in a new colour.
 7. **Release:**
