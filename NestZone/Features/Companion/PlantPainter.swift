@@ -56,6 +56,7 @@ struct PlantPainter {
         var d, m, l, half, vein, rim, gloss, shadow, stalk: Color
         /// The pale of a variegated leaf; unused (clear) when the plant has none.
         var pale = Color.clear
+        var paleSoft = Color.clear
     }
 
     init(plan: PlantPlan, seed: String, growth: Double, mood: Double, day: Double, light: Double = -0.5) {
@@ -110,6 +111,10 @@ struct PlantPainter {
                 l = l.mix(b.mix(RGB(0xE9A265), 0.4), bronze)
             }
             let half = l.mix(ramp[4], 0.5).mix(glow, 0.2 * (1 - night))
+            // The pale is a leaf tone like the greens: it goes olive when thirsty and dim at night.
+            let palest = plan.variegation.map { v in
+                Canopy.leafTone(RGB(v.tone), 3, M, day: day).mix(ramp[1], tier == 0 ? 0.3 : tier == 1 ? 0.12 : 0)
+            }
             return LeafInk(d: d.color(), m: m.color(), l: l.color(),
                            half: half.color(0.5 * (1 - 0.4 * M.doze)),
                            vein: l.mix(ramp[4], 0.6).color(0.42),
@@ -117,10 +122,8 @@ struct PlantPainter {
                            gloss: RGB(0xFFFFFF).mix(glow, 0.3).color(0.5 * (1 - 0.5 * night) * (1 - 0.5 * M.thirst)),
                            shadow: ramp[0].mix(RGB(0x061A10), 0.6).shifted(-8).color((0.17 + 0.04 * M.glow) * (1 - 0.35 * M.thirst - 0.3 * M.doze) * (1 - 0.25 * night)),
                            stalk: ramp[1].mix(ramp[2], 0.4).color(),
-                           pale: plan.variegation.map { v in
-                               // The pale is a leaf tone like the greens: it goes olive when thirsty and dim at night.
-                               Canopy.leafTone(RGB(v.tone), 3, M, day: day).mix(ramp[1], tier == 0 ? 0.3 : tier == 1 ? 0.12 : 0).color()
-                           } ?? .clear)
+                           pale: palest?.color() ?? .clear,
+                           paleSoft: palest?.color(0.5) ?? .clear)
         }
         inks = (0..<3).map { ink($0) }
         fresh = ink(2, bronze: 0.42)

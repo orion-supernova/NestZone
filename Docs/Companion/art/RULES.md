@@ -861,8 +861,17 @@ painters read it; nothing is a `switch` in a loop body.
 - *Plants* (`PlantColours.swift`): `PlantPlan.coloured` patches the plan's ramp,
   flower, spine and wood. A pattern is `PlantPlan.variegation`: one more cached
   fill a tier (`LeafBatch.pale`), cut once from each leaf shape and kept
-  (`PlantVariegation.swift`): an *albo* half-moon or splash, *flecks*, a cream
-  *margin*. It is empty for every plant without one, so those cost nothing. Its
+  (`PlantVariegation.swift`): an *albo* sector, *flecks*, a cream *margin*. It is
+  empty for every plant without one, so those cost nothing. An albo's white is
+  sectoral and marbled, not a cut: one side of the leaf (or its tip) from the
+  leaf's own edge points, and the boundary on the rib side runs forward-swept
+  wedges of green into it along the veins, of different depths, with the white
+  reaching the rib between them; a few green flecks lie in the white and a few
+  white ones in the green, the monstera's holes inside the white stay open, and
+  about one leaf in five is only marbled. A margin is a neat rim of one width all
+  round the leaf: the edge is smoothed, then offset inwards along its own normal
+  by a constant inset, and a second, narrower band inside it is drawn at half
+  strength so the inner boundary is soft (`LeafBatch.paleSoft`). Its
   colour is a leaf tone, so thirsty browns it and a dozing plant dims it. A
   Rembrandt tulip's flames are one more fill over the front tepals
   (`PlantPlan.Flower.streak`).
@@ -871,7 +880,10 @@ painters read it; nothing is a `switch` in a loop body.
   (`patches`, body, haunch, head and ears, in each pose), dark points (`earColour`
   now also on rabbits' and pandas' ears), spots in their own colour (`spotTone`),
   eye rings (`eyePatch`), a duckling's face (`face`), a goldfish's patches and its
-  oranda's cap, a penguin's gold (`gold`). The geometry key is the species' own
+  oranda's cap, a penguin's gold (`gold`), a cross fox's dark (`cross`: a stripe
+  down the spine crossed by one over the shoulders, both tapering and cut to the
+  body, a dark underside and chest, and the legs fading to black from the
+  shoulder, in the sitting and the curled pose). The geometry key is the species' own
   unless a marking changes what is built (`needsOwnShapes`), so a recolour shares
   the original's cached shapes.
 - *Caches and keys.* `TreeState.colourway` is in `TreeLayer`'s and `PlantLayer`'s
@@ -955,8 +967,8 @@ calico fantail; a white oranda with a red cap; a black moor.
 | snowdrop | Yellow / *Sarı* | Green-tipped / *Yeşil uçlu* | Glaucous / *Mavi yapraklı* |
 | tulip | Rembrandt / *Çizgili* | Queen of Night / *Gece kraliçesi* | Apricot / *Kayısı* |
 
-Variegation: monstera 1 albo variegata (a white half-moon or splash on about
-three leaves in five), monstera 2 Thai constellation (forty small cream flecks),
+Variegation: monstera 1 albo variegata (a feathered white sector on four leaves in
+five, as above), monstera 2 Thai constellation (sixteen small cream flecks a leaf),
 basil 3 and mint 2 (a cream margin). Tulip 1 is a flamed Rembrandt. Pumpkin's three
 are the skin (`fruitTones`), snake plant's the margin as well as the greens
 (`spine`), the sculpted three the leaf ramp (maple 3 also a darker wood).
@@ -1005,16 +1017,24 @@ reads each).
 
 Pets and the plants without a pattern cost the same in every colour: the shapes
 are the original's and the fills are the same fills. The marked plants cost about
-the same to within the noise (monstera +4 to +10 percent, basil +3 percent); the
-trees' spread across two reads of the same colour is wider than the spread between
-colours. Today's flick (`-nestieBench 1 -nestieScenario ready -nestieSpecies <raw>
+the same to within the noise; the trees' spread across two reads of the same colour
+is wider than the spread between colours. A pattern is geometry and fills the
+original does not have, so it is not free: in the quietest reads (fix round, a quiet
+Mac, interleaved) the albo recorded 0.58 and 0.56 ms against 0.52 and 0.51, the
+flecks 0.55 and 0.51, the basil's margin 0.43 and 0.41 against 0.37 and 0.39 and the
+mint's 0.56 and 0.56 against 0.49 and 0.49, which is +10 to +15 percent on a plant
+that records in about half a millisecond, under section 13's 0.7 ms. The later reads
+of the same builds, after the margin was cut to every third edge point and the albo
+to three flecks a side, were taken while other work loaded the Mac (the same colour
+varied by 2x between runs) and cannot say how much that took off. The fox's
+cross and the other markings: 0.36 to 0.37 ms in every colour, as the original. Today's flick (`-nestieBench 1 -nestieScenario ready -nestieSpecies <raw>
 -nestieColour <n> -todayScroll 1 -frameMeter 1`, launch arguments, the bench
 reads the argument list and not the defaults) for the kitten (0 and 3, the
 calico), the monstera (0 and 1, the albo), a panda polar cub and the variegated
 lemon: every window after the cold start of the first (3 or 4 late frames in the
 first window, in all of them, the original too) was 120 frames and none late.
 
-**Colourway 0 is pixel-identical to the build before.** Twenty-three contact
+**Colourway 0 is pixel-identical to the build before.** Twenty-two contact
 sheets (`batch-a`, `batch-b`, `kitten-moods`, `pet-variants`, `plants-grid`,
 `plants-grid-b`, `grid`, `pomegranate`, the five trees' crowns, the kitten's,
 fox's, owl's and duckling's faces, the monstera, mint, tulip, rose and sunflower
@@ -1029,3 +1049,33 @@ leaf and a plant that is redrawn while it grows transforms every one every frame
 The patterns are now polygons from the leaf's own edge points (a half, a tip, a band
 of every other edge point, sixteen hexagons wholly inside the leaf): a few dozen
 points each. **A pattern is cut from the edge, never from a boolean of the outline.**
+
+**Fix round (round 5b).** Four things the first pass got wrong, and what holds now.
+
+- *The albo was a straight wedge.* A real albo variegata is sectoral and marbled,
+  and the first sector was a polygon from the edge to the rib with a straight inner
+  line (the tip splash a hard triangle). The boundary is now broken the way the
+  leaf is: wedges of green run into the white along the veins, forward-swept, each
+  to its own depth (never past what the lobe and its slits leave), the white
+  reaches the rib between them, a tip sector starts on a ragged line, and the
+  monstera's holes that lie in the white are cut out of it again (the pattern's
+  fill is even-odd, so the holes and the green flecks are subpaths). Still
+  polygons from the edge, a hundred or so points a leaf, cached by shape, bend and
+  variant.
+- *The margins were uneven.* The first band was the edge and the edge scaled to
+  two thirds of its width, which is thick where the leaf is broad and nothing
+  where it is narrow, and toothed leaves made it ragged. Now one inset all round,
+  along the smoothed edge's normal, ending where the leaf is too narrow to hold
+  it, with the half-strength band inside it.
+- *The cross fox had no cross.* It was a brown fox with black socks and ears. The
+  dark stripe, the shoulder bar, the dark underside and chest and the legs are
+  built at build time like the other markings (`SitGeometry.crossMark`,
+  `underside`), and part of the plan's key (`needsOwnShapes`).
+- *The tuxedo's nose was lost on the black.* A slate-pink leather (`9C7884`) with
+  the kitten's small highlight, as on a real black cat.
+
+**Colourway 0 and the fix round.** A plan with no `cross`, no variegation and no soft
+band draws the same fills as before (the new fields are empty or `nil`); the 22-sheet
+pixel comparison above was taken before this round and was not repeated, but the five
+species re-shot after it (monstera, basil, mint, fox, kitten) came back with their
+colourway-0 cells byte-identical, day and night, to the shots of the round before.

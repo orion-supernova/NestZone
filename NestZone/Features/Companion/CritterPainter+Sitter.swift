@@ -52,6 +52,7 @@ extension CritterPainter {
         if species != .hamster {
             form(b, g.farLeg, centre: CGPoint(x: 56, y: 94), radius: 14, dark.shifted(4), dark, dark.shifted(-6), highlight: 0, core: 0, rim: false)
             if socks { b.fill(g.farSock, with: .color(paw.shifted(-4).color())) }
+            if let t = crossTone { b.fill(g.farLeg, with: legFade(t, from: 82, to: 105)) }
             b.fill(g.farPaw, with: .color((socks ? paw : belly.shifted(-10)).color()))
         }
 
@@ -59,6 +60,7 @@ extension CritterPainter {
         form(b, g.bodyFur[side], centre: g.bodyCentre, radius: 32, light, coat, dark, highlight: 0.62)
         hairs(b, g.hairs, dark: mark, light: look.lifted(light, 0.25), alpha: 0.28)
         patches(b, g.patchA, g.patchB, centre: g.bodyCentre, radius: 32)
+        if let t = crossTone { crossMarks(b, g, t) }
         if plan.marks == .tabby { hairs(b, g.stripes, dark: mark, light: light, alpha: 0.48) }
         if plan.marks == .spots { hairs(b, g.spots, dark: spotDark, light: spotLight, alpha: 0.9) }
 
@@ -67,6 +69,11 @@ extension CritterPainter {
         b.fill(g.chest, with: .radialGradient(Gradient(stops: [.init(color: look.lifted(belly, 0.3).color(0.95), location: 0), .init(color: belly.color(0.8), location: 0.45),
                                                                 .init(color: belly.color(0), location: 1)]),
                                               center: CGPoint(x: 51, y: 92), startRadius: 0, endRadius: 17 * (1 + 0.35 * (plan.bib - 1))))
+        // A cross fox's chest is dark.
+        if let t = crossTone {
+            b.fill(g.chest, with: .radialGradient(Gradient(stops: [.init(color: t.color(0.9), location: 0), .init(color: t.color(0.7), location: 0.5), .init(color: t.color(0), location: 1)]),
+                                                  center: CGPoint(x: 51, y: 92), startRadius: 0, endRadius: 17 * (1 + 0.35 * (plan.bib - 1))))
+        }
 
         // The haunch, a round of its own, and the foot under it.
         form(b, g.haunch, centre: CGPoint(x: 77, y: 91), radius: 20, light, coat, dark.shifted(2), highlight: 0.5)
@@ -105,6 +112,7 @@ extension CritterPainter {
                                                     startPoint: CGPoint(x: 43, y: 79), endPoint: CGPoint(x: 43, y: 104)))
             // Where the leg meets the body it melts into the coat, with no seam.
             glow(b, Path(ellipseIn: CGRect(x: 33, y: 72, width: 24, height: 16)), coat, centre: CGPoint(x: 44, y: 80), radius: 10, alpha: 0.85)
+            if let t = crossTone { b.fill(g.nearLeg, with: legFade(t, from: 79, to: 104)) }
             form(b, g.nearPaw, centre: CGPoint(x: 43.5, y: 106), radius: 9, look.lifted(paw, 0.3), paw, paw.shifted(-9, 3), highlight: 0.4, core: 0.5)
             b.stroke(g.nearToes, with: .color((socks ? look.lifted(paw, 0.35) : dark).color(socks ? 0.35 : 0.5)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
         }
@@ -153,6 +161,7 @@ extension CritterPainter {
         form(b, g.bodyFur[look.L.x > 0 ? 0 : 1], centre: CGPoint(x: 62, y: 94), radius: 36, light, coat, dark, highlight: 0.6)
         hairs(b, g.hairs, dark: mark, light: look.lifted(light, 0.25), alpha: 0.28)
         patches(b, g.patchA, g.patchB, centre: CGPoint(x: 62, y: 94), radius: 36)
+        if let t = crossTone { b.fill(g.crossMark, with: .color(t.color(0.9))) }
         if plan.marks == .tabby { hairs(b, g.stripes, dark: mark, light: light, alpha: 0.55) }
         form(b, g.haunch, centre: CGPoint(x: 82, y: 95), radius: 18, light, coat, dark.shifted(2), highlight: 0.5)
         patches(b, g.haunchPatchA, g.haunchPatchB, centre: CGPoint(x: 82, y: 95), radius: 18)

@@ -113,6 +113,9 @@ struct CritterPlan: Equatable, Sendable {
     /// A duckling's face: the colour of the cheek and the eye's surround,
     /// where the head is another colour (a mallard duckling's buff, a runner's white).
     var face: UInt32?
+    /// A cross fox's dark: a stripe down the spine crossed by one over the shoulders,
+    /// the chest and belly, and the legs.
+    var cross: UInt32?
     /// A penguin's gold at the neck.
     var gold: UInt32 = 0xFFC857
 

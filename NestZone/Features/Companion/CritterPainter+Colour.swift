@@ -19,6 +19,26 @@ extension CritterPainter {
         }
     }
 
+    /// A cross fox's dark, as this mood and light leave it.
+    var crossTone: RGB? { plan.cross.map { look.tone($0, dim: 0.45) } }
+
+    /// A leg that goes dark from `from` down to `to`.
+    func legFade(_ tone: RGB, from: Double, to: Double) -> GraphicsContext.Shading {
+        .linearGradient(Gradient(stops: [.init(color: tone.color(0), location: 0), .init(color: tone.color(0.82), location: 0.3), .init(color: tone.color(0.96), location: 0.6)]),
+                        startPoint: CGPoint(x: 43, y: from), endPoint: CGPoint(x: 43, y: to))
+    }
+
+    /// The stripe down the spine, the bar over the shoulders and the dark underside.
+    func crossMarks(_ b: GraphicsContext, _ g: SitGeometry, _ tone: RGB) {
+        b.fill(g.underside, with: .linearGradient(Gradient(stops: [.init(color: tone.color(0), location: 0), .init(color: tone.color(0.85), location: 1)]),
+                                                  startPoint: CGPoint(x: 66, y: 93), endPoint: CGPoint(x: 66, y: 109)))
+        b.fill(g.crossMark, with: .color(tone.color(0.92)))
+        // The light on the sunny edge of the stripe, as the fur's lit copy.
+        var lit = b
+        lit.translateBy(x: look.L.x * 0.6, y: look.L.y * 0.6)
+        lit.fill(g.crossMark, with: .color(look.lifted(tone, 0.25).color(0.25)))
+    }
+
     /// The spots of a spotted coat: the plan's own colour, or the belly's
     /// (a fawn's white spots).
     var spotDark: RGB { plan.spotTone.map { look.tone($0, dim: 0.5) } ?? look.belly.shifted(-5) }

@@ -25,7 +25,7 @@ extension CritterPlan {
             face(0xE4909C, 0xF1B6BC, 0x8DBF5E)
         case (.kitten, 2): // a black cat with a white bib and socks
             coat(0x5C5662, 0x2F2B35, 0x14121A, 0xFFFFFF, 0x2F2B35)
-            face(0x7A5560, 0xEDA9B0, 0xE6B422)
+            face(0x9C7884, 0xEDA9B0, 0xE6B422)
             (p.marks, p.bib, p.socks) = (.plain, 1.7, 0xF5F2EE)
         case (.kitten, 3): // a calico
             coat(0xFFFDF8, 0xF3EDE4, 0xC8BDB0, 0xFFFFFF, 0xD9CFC4)
@@ -103,6 +103,7 @@ extension CritterPlan {
             coat(0xD9A56A, 0xB96B36, 0x6E3B1C, 0xEBD6B4, 0x2E1C12)
             face(0x2A201E, 0xE9A99A, 0xC8902A)
             (p.socks, p.earColour, p.tailTip) = (0x24191A, 0x24191A, 0xF6EBD8)
+            p.cross = 0x1E1514
         case (.fox, 3): // a golden fox
             coat(0xFBDDA0, 0xEFB765, 0xB87D2C, 0xFFF8EA, 0x8A5A22)
             face(0x3A2A22, 0xF1B4A0, 0xD9A030)
@@ -209,6 +210,6 @@ extension CritterPlan {
     private func needsOwnShapes(than original: CritterPlan, _ p: CritterPlan) -> Bool {
         p.patches != original.patches || p.eyePatch != original.eyePatch || p.face != original.face || p.bib != original.bib
             || (p.socks == nil) != (original.socks == nil) || (p.earColour == nil) != (original.earColour == nil)
-            || p.marks != original.marks
+            || p.marks != original.marks || p.cross != original.cross
     }
 }

@@ -49,6 +49,8 @@ struct SitGeometry {
     let spots, haunchSpots: Path
     /// A calico's patches on the body and on the haunch, cut to each.
     let patchA, patchB, haunchPatchA, haunchPatchB: Path
+    /// A cross fox's stripe and shoulder bar, and the underside of its body.
+    let crossMark, underside: Path
     /// Where the form's centre is, for the gradients.
     let bodyCentre = CGPoint(x: 68, y: 84)
 
@@ -181,6 +183,15 @@ struct SitGeometry {
             hpb = haunch.intersection(.loop([CGPoint(x: 80, y: 78), CGPoint(x: 98, y: 80), CGPoint(x: 98, y: 106), CGPoint(x: 84, y: 112), CGPoint(x: 78, y: 98), CGPoint(x: 84, y: 88)]))
         }
         patchA = pa; patchB = pb; haunchPatchA = hpa; haunchPatchB = hpb
+        var cross = Path(), under = Path()
+        if plan.cross != nil {
+            // A stripe along the back from the neck to the rump, and one down over the shoulders, both tapering.
+            var marks = PlantPainter.ribbon(PlantPainter.cubic(CGPoint(x: 49, y: 62), CGPoint(x: 62, y: 55), CGPoint(x: 84, y: 59), CGPoint(x: 95, y: 88), n: 14), 7, 2.6)
+            marks.addPath(PlantPainter.ribbon(PlantPainter.cubic(CGPoint(x: 58, y: 56), CGPoint(x: 56, y: 66), CGPoint(x: 52, y: 78), CGPoint(x: 49, y: 92), n: 10), 6.5, 2.6))
+            cross = bodyPath.intersection(marks)
+            under = bodyPath.intersection(Path(CGRect(x: 0, y: 97, width: 120, height: 20)))
+        }
+        crossMark = cross; underside = under
         arms = a; handPaws = hp; handToes = ht2; seed = sd; seedStripes = ss
         cotton = plan.tail == .cotton
             ? FurEdge.furry(Path(ellipseIn: CGRect(x: -7.2, y: -7.2, width: 14.4, height: 14.4)), seed: "cotton-\(plan.key)", gap: 1.8...3.2, height: 0.9...2.1, width: 2.4)
@@ -194,6 +205,8 @@ struct CurlGeometry {
     let spots: Path
     /// A calico's patches on the round and on the haunch.
     let patchA, patchB, haunchPatchA, haunchPatchB: Path
+    /// A cross fox's stripe and shoulder bar along the round.
+    let crossMark: Path
     let bodyFur: [Path]
 
     init(_ plan: CritterPlan) {
@@ -247,6 +260,13 @@ struct CurlGeometry {
             hpb = haunch.intersection(.loop([CGPoint(x: 84, y: 76), CGPoint(x: 106, y: 82), CGPoint(x: 104, y: 112), CGPoint(x: 86, y: 114), CGPoint(x: 82, y: 94)]))
         }
         patchA = pa; patchB = pb; haunchPatchA = hpa; haunchPatchB = hpb
+        var cross = Path()
+        if plan.cross != nil {
+            var marks = PlantPainter.ribbon(PlantPainter.cubic(CGPoint(x: 30, y: 84), CGPoint(x: 50, y: 74), CGPoint(x: 88, y: 74), CGPoint(x: 106, y: 92), n: 14), 6, 2.4)
+            marks.addPath(PlantPainter.ribbon(PlantPainter.cubic(CGPoint(x: 62, y: 74), CGPoint(x: 62, y: 84), CGPoint(x: 58, y: 96), CGPoint(x: 56, y: 108), n: 8), 5.5, 2.2))
+            cross = bodyPath.intersection(marks)
+        }
+        crossMark = cross
     }
 }
 

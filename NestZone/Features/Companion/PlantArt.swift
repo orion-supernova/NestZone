@@ -30,6 +30,9 @@ struct LeafShape: Sendable {
     /// The edge of the upper half, base to tip, before it is bent: what a pattern
     /// is built from (`variegation`).
     var edgePts: [CGPoint] = []
+    /// A monstera's holes, each placed, and which half it is in: a pattern that
+    /// covers a hole has to leave it open.
+    var holeParts: [(path: Path, side: Double)] = []
     var outline = Path()
     /// The two halves either side of the midrib, both wound the same way so
     /// that merging them never leaves a hole where two overlap.
@@ -256,6 +259,7 @@ struct LeafShape: Sendable {
                     let c = place(h.u, sign * h.v)
                     let t = CGAffineTransform(translationX: c.x, y: c.y).rotated(by: rot)
                     out.addPath(hole, transform: t)
+                    holeParts.append((hole.applying(t), sign))
                     if sign > 0 { sideA.addPath(hole, transform: t) } else { sideB.addPath(hole, transform: t) }
                 }
             }
@@ -337,6 +341,8 @@ struct LeafBatch {
     /// The pale pattern of a variegated leaf (`PlantPlan.variegation`): empty
     /// for every plant that has none, so it costs those nothing.
     var pale = Path()
+    /// The soft inner edge of a margin: the same pale, half as strong.
+    var paleSoft = Path()
 
     /// A leaf with its base at `base`, pointing along `angle` and `length` long.
     /// `bright` 0...1 says which class of green it is; `L` is the light.
@@ -348,7 +354,10 @@ struct LeafBatch {
         else { lit.addPath(shape.outline, transform: t) }
         // Which leaf is marked how is decided by where it points and how long it is,
         // so the same plant is marked the same way every time it is drawn.
-        if let vary, let marks = shape.variegation(vary.pattern, variant: Int((abs(angle) * 997 + length * 13).rounded()) % 5) { pale.addPath(marks, transform: t) }
+        if let vary, let marks = shape.variegation(vary.pattern, variant: Int((abs(angle) * 997 + length * 13).rounded()) % 5) {
+            pale.addPath(marks.hard, transform: t)
+            if !marks.soft.isEmpty { paleSoft.addPath(marks.soft, transform: t) }
+        }
         // The half whose side of the midrib looks at the light.
         let across = -sin(angle) * L.x + cos(angle) * L.y
         let litA = across >= 0
@@ -384,6 +393,7 @@ struct LeafBatch {
         if !shade.isEmpty { c.fill(shade, with: .color(ink.d), style: rule) }
         if !mid.isEmpty { c.fill(mid, with: .color(ink.m), style: rule) }
         if !lit.isEmpty { c.fill(lit, with: .color(ink.l), style: rule) }
+        if !paleSoft.isEmpty { c.fill(paleSoft, with: .color(ink.paleSoft)) }
         if !pale.isEmpty { c.fill(pale, with: .color(ink.pale), style: rule) }
         if !halves.isEmpty { c.fill(halves, with: .color(ink.half), style: rule) }
         if !veins.isEmpty { c.fill(veins, with: .color(ink.vein)) }
