@@ -469,3 +469,10 @@ Batch B's passes:
     height; the bowl is drawn 12% larger, the turtle 18%, the fish 20% larger
     inside the bowl.
 21. **A sun of thorns on the owl.** See the owl above.
+22. **A fin through the glass.** The goldfish's dorsal fin and tail crossed the
+    bowl's rim and wall when it swam high or to the side. Nothing crosses the
+    glass: the dorsal is lower, the fish never rises above 21 units (times its
+    scale) below the surface (thirsty alone may break it, on purpose), the tail
+    is shorter (14 units), and the fish's x is clamped so its tail and nose stay
+    inside the wall, whichever way it faces, blended through the turn so nothing
+    jumps.

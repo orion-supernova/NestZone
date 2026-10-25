@@ -97,13 +97,21 @@ extension CritterPainter {
         let baby = babyness
         let t = time
         // How big: the fry is a speck, and it grows into the bowl.
-        let fs = (stage == 2 ? 0.4 : PetMotion.scales[stage]) * 1.2
+        let fs = (stage == 2 ? 0.4 : PetMotion.scales[stage]) * 1.1
 
         // Where it is: the four moods are four places.
         let swimB = 19.0, swimC = 10.0
-        let fx = 60 + motion.by(-2, -4 + 3 * sin(t * 0.5), -swimC * sin(t * 0.35), -swimB * sin(t * 0.8))
-        let fy = motion.by(99 - 11 * fs, top + 8 + 1.2 * sin(t * 1.3), 69 + 2.6 * sin(t * 0.7), 63 + 6 * sin(t * 1.6))
+        var fx = 60 + motion.by(-2, -4 + 3 * sin(t * 0.5), -swimC * sin(t * 0.35), -swimB * sin(t * 0.8))
+        var fy = motion.by(99 - 11 * fs, top + 8 + 1.2 * sin(t * 1.3), 69 + 2.6 * sin(t * 0.7), 66 + 6 * sin(t * 1.6))
+        // Nothing crosses the glass: the dorsal fin is the highest thing on the fish,
+        // so below the surface it keeps that far under it. Thirsty may break it, on purpose.
+        fy = max(fy, top + 3 + 21 * fs * (1 - w.thirst))
         let face = motion.by(1, 1, max(-1, min(1, 5 * cos(t * 0.35))), max(-1, min(1, 5 * cos(t * 0.8))))
+        // Nor does the tail or the nose: keep both ends inside the glass, whichever
+        // way it faces (blended through the turn, so nothing jumps).
+        let k = (face + 1) / 2
+        let leftReach = (17 * k + 29 * (1 - k)) * fs, rightReach = (29 * k + 17 * (1 - k)) * fs
+        fx = min(max(fx, 27 + leftReach), 93.5 - rightReach)
         let angle = motion.by(0.1, 0.62, 0.05 * sin(t * 0.7), 0.16 + 0.12 * sin(t * 1.6))
         // Close to the curved side it is seen foreshortened.
         let wall = 1 - 0.26 * Ink.smooth((abs(fx - 60) - 12) / 8)
@@ -122,7 +130,7 @@ extension CritterPainter {
             var pts: [CGPoint] = []
             for j in 0...7 {
                 let u = Double(j) / 7
-                pts.append(CGPoint(x: 11.5 + 17 * u * (lobe == 0 ? 1 : 0.9), y: Double(lobe) * (9.6 + 3.2 * w.bright) * u + amp * sin(ph - 2.4 * u) * u))
+                pts.append(CGPoint(x: 11.5 + 14 * u * (lobe == 0 ? 1 : 0.9), y: Double(lobe) * (9.6 + 3.2 * w.bright) * u + amp * sin(ph - 2.4 * u) * u))
             }
             veil.addPath(PlantPainter.ribbon(pts, 5, 10))
             veins.addLines(Array(pts.dropFirst(1)))
@@ -134,7 +142,7 @@ extension CritterPainter {
         var dorsal: [CGPoint] = []
         for j in 0...6 {
             let u = Double(j) / 6
-            dorsal.append(CGPoint(x: -4 + 19 * u, y: -10.4 - (10.5 + 3 * w.bright) * sin(.pi * (0.12 + 0.7 * u)) + amp * 0.5 * sin(ph - 2 * u) * u))
+            dorsal.append(CGPoint(x: -4 + 19 * u, y: -10.4 - (5.6 + 1.6 * w.bright) * sin(.pi * (0.12 + 0.7 * u)) + amp * 0.35 * sin(ph - 2 * u) * u))
         }
         f.fill(PlantPainter.ribbon(dorsal, 8, 2.4), with: .color(fin.color(0.92)))
 
