@@ -12,7 +12,10 @@ Everything is `Canvas`, no shaders, no images.
 
 Round 2 is sections 9-12 below (canopy light, fruit in the foliage, the cutaway,
 and what made it cheap); sections 1-8 are still true where they do not say
-otherwise.
+otherwise. Round 3 is section 14: the other five trees (lemon, olive, magnolia,
+cherry, azalea) brought to the same level on one shared engine, with the
+before and after in `art/trees/index.html` and the pages `-artSheet <tree>-crown`,
+`-detail`, `-young`, `-night` and `-shop`.
 
 ## 1. Light
 
@@ -34,7 +37,10 @@ otherwise.
 - **Night is cool, not grey.** Reds and greens drop more than blue
   (`RGB.night`); the lit side by moonlight is a *deeper* green with a pale rim,
   not a paler green. Test a night shot for "ghostly teal": if the lit patch is
-  lighter than the day shadow side, it is wrong.
+  lighter than the day shadow side, it is wrong. Round 3 went further (section
+  14): by moonlight every leaf class is drawn towards one deep blue and pulled
+  close to the others, and the rim is a steel blue at low alpha. The pomegranate's
+  night crown had been a pale grey-green; it is now a dim blue mass.
 
 ## 2. Palette ramps
 
@@ -422,8 +428,101 @@ as a tree", not as absolute numbers:
 No plant stands out from the tree on either screen; the redraw happens only when
 a mood or the growth eases in, and the wind is a shear of the cached layer.
 
+## 14. One engine, five more trees (round 3)
 
-## 14. Plants (round B)
+Lemon, olive, magnolia, cherry and azalea are painted the pomegranate's way,
+from the same skeleton as before (a household's tree keeps its limbs, clumps,
+blossom and fruit places), each with its own painter and extensions
+(`LemonPainter*.swift` and so on). What they share is written once:
+
+- **`TreeCore`** is the pose, the light, the four leaf classes and one clump
+  painted back to front, with *hooks* between the classes (`Between.deep`, `.mid`,
+  `.over`) for the species' own fruit; `TreeArt` is the order every tree is
+  drawn in (ground, clumps by tier, wood, young leaves, pools of sun, the cut
+  fruit, blossoms, seed leaves, a last pass). `LeafSpec` is what a species' leaves
+  are (shape, width, how many sprigs, alternate or opposite, a share turned over
+  to show another colour, whether the dark body behind them is wanted).
+  `LeafArt` builds any of them; the pomegranate's spec is its defaults, so its
+  crown did not move (checked pixel for pixel by day; only its bark and its night colours changed, on purpose).
+- **`TreeInk`** is the moonlight rule and the leaf colours, used by the
+  pomegranate too: at night the four classes are mixed towards one deep blue and
+  the rim to a steel blue (section 1).
+- **`TreeWood`** is the stems, with a `BarkStyle` per species: shredded,
+  smooth, gnarled (burls in the outline, ridges that twist, an arched hollow
+  in the trunk and not the limbs), lenticel, fine.
+- **`BloomArt`** is a flower-covered crown: each clump's blossoms built once in
+  the clump's units, sorted by the same light into classes, one fill per class.
+
+What was learned, and holds for the next tree:
+
+1. **Bark goes with the grain, never across it.** Every mark is a thin lens along
+   the stem, in broken lengths; a short stroke across the stem, tilted, is what
+   made the pomegranate read as crisscross X marks. A limb's own marks start
+   a quarter of the way out so they do not cross the stem it leaves, a limb's lit
+   edge and core shadow start thin at the fork, and the stems of a tree are painted
+   one after another (each stem's bark over the last) so one stem's light is never
+   laid across another where they cross low down.
+2. **Two-tone leaves are two colours, not one with a glint.** The olive's tops
+   are the dark half of its ramp and its undersides the silver half; about two
+   leaves in five are turned over (`LeafArt.u`, a fill of its own). The silver
+   is kept for the undersides, so a leaf turned over is the brightest thing in the
+   crown. Narrow leaves need almost no dark body behind them (`LeafSpec.body`), or
+   it shows as a balloon.
+3. **A flowering tree is told in the order it grows.** Magnolia: bare wood and silver
+   buds (the young leaves are gone from its canes by .6), goblets on bare wood,
+   leaves only after (`leafy`, applied to the tufts too), and a few flowers stay.
+   Cherry: blossom before leaf, thinning as the fruit sets. Azalea: the buds
+   first, then flowers over everything.
+4. **Flowers cover; they do not decorate.** Cherry and azalea paint every clump's
+   flowers last, back to front over the whole crown (a front tier's leaves over a
+   back tier's flowers left the shrub green with flowers in a band). Behind, a
+   flower is a scalloped dot; in front it is the whole flower (five petals and a red
+   eye with notches and stamens, or a corolla with a throat, spots and long
+   stamens). Flowers of one class merge into one blob, so one extra fill under
+   them, the union of every flower moved a hair away from the light in a darker
+   tone, parts each from the next. Never push positions onto the clump's
+   edge to keep them in (it draws a string of beads): draw again.
+5. **No fruit in the model means derive it from what is there.** The cherry's
+   pairs hang from about half its blossom sites (hashed from the blossom's own
+   numbers), because giving the cherry a `crop` would change every household's
+   seed draws and with them its skeleton.
+6. **Fills are the cost, again.** Behind a flower-covered crown the leaf classes
+   are merged (`LeafSpec.flat`: two classes behind, three in front, no glints)
+   and the flowers keep two or three classes; a front clump is about 14 fills, a
+   back one 5. A flower shape with fewer curves is cheaper on this GPU too
+   (a back flower is ten quads, not twenty). Soft pools of sun are off on trees
+   whose flowers are the light (`TreeArt.dappled`): a wash over them is a haze.
+7. **Story details** stayed at four: the species' own seed (a pale pointed lemon
+   seed, an olive stone, a red magnolia seed, a cherry stone, a dark speck), a
+   fallen leaf, the fallen flower (a white petal, a curled magnolia petal browning
+   at the edge, pink petals and others still in the air, a whole azalea corolla)
+   and a dropped fruit when thirsty.
+8. **The cutaway need not be the pomegranate's.** The lemon is cut across: a wheel
+   of nine segments in a pale rind and thick pith, vesicles, seeds in two of them,
+   a gleam of juice and a drop, with the rest of the lemon behind as a crescent
+   of dimpled skin and its nipple. It hangs from a limb in the open, not over the
+   trunk, so it is chosen well out to one side.
+
+Numbers, iPhone 17 simulator (iOS 27), Debug, alternating runs, three rounds each
+(`-artSheet redraw -artSheetCount 4 -artSheetSpecies <tree> -frameMeter 1`, old is
+`-treeLegacy <tree>`). The machine was shared and noisy: recording is the mean of
+`tree draw` over a run, frames per two-second window is the stress page.
+
+| | recording old | recording new | stress page old | stress page new |
+|---|---|---|---|---|
+| lemon | 0.52 ms | 0.47 ms (0.9x) | 61 | 53 |
+| olive | 0.63 ms | 0.59 ms (0.94x) | 56 | 44 |
+| magnolia | 0.44 ms | 0.43 ms (1.0x) | 71 | 68 |
+| cherry | 0.92 ms | 0.84 ms (0.9x) | 44 | 43 |
+| azalea | 1.97 ms | 1.67 ms (0.85x) | 23 | 17 |
+
+`-nestieBench 1 -nestieSpecies <tree> -todayScroll 1` and `-companionScroll 1`
+(Choose) late and dropped frames per window were no worse than the old painter's
+for any of the five, within the noise (for example lemon 1.0 late against 5.8,
+azalea 0.5 against 6.8, Choose 4.2 dropped against 15.1).
+
+
+## 15. Plants (round B)
 
 The eleven plants that were still emoji sketches, and the rose's bloom. Shots in
 `art/plants/` (`<plant>-before-*` is the sketch, `-v1-*` the drawing, the rose's

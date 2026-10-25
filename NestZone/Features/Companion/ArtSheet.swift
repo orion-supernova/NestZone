@@ -15,8 +15,8 @@ import SwiftUI
 struct ArtSheet: View {
     let page: String
 
-    private static let seed = "bench-home-0"
-    private func hour(_ h: Int) -> Date { Calendar.current.date(bySettingHour: h, minute: 0, second: 0, of: Date()) ?? Date() }
+    static let seed = "bench-home-0"
+    func hour(_ h: Int) -> Date { Calendar.current.date(bySettingHour: h, minute: 0, second: 0, of: Date()) ?? Date() }
 
     var body: some View {
         ZStack {
@@ -43,7 +43,8 @@ struct ArtSheet: View {
             case "batch-a-faces2": batchAFaces(1)
             case "batch-a-night": batchANight
             default:
-                if let species = Species(rawValue: page) { speciesPage(species) }
+                if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
+                else if let species = Species(rawValue: page) { speciesPage(species) }
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
                 else if page.hasPrefix("plant-"), let species = Species(rawValue: String(page.dropFirst(6))) { plantCard(species) }
                 else if page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petClose(species) }
@@ -57,7 +58,7 @@ struct ArtSheet: View {
 
     // MARK: One species
 
-    private static let plantStages: [(String, Double)] = [("seed", 0.04), ("sprout", 0.16), ("young", 0.38), ("growing", 0.62), ("budding", 0.8), ("grown", 0.97)]
+    static let plantStages: [(String, Double)] = [("seed", 0.04), ("sprout", 0.16), ("young", 0.38), ("growing", 0.62), ("budding", 0.8), ("grown", 0.97)]
     private static let petStages: [(String, Double)] = [("egg", 0.02), ("wobbly", 0.12), ("hatchling", 0.28), ("baby", 0.47), ("little", 0.66), ("young", 0.85), ("grown", 0.97)]
 
     private func speciesPage(_ species: Species) -> some View {
@@ -85,7 +86,7 @@ struct ArtSheet: View {
         .padding(.horizontal, 8)
     }
 
-    private func cell(_ portrait: ScenePortrait, _ label: String) -> some View {
+    func cell(_ portrait: ScenePortrait, _ label: String) -> some View {
         portrait
             .aspectRatio(1, contentMode: .fit)
             .clipShape(.rect(cornerRadius: 8))
