@@ -1,11 +1,30 @@
 import SwiftUI
 
+/// The moss pole's texture in its own units (x across, -1 to 1; y up the pole,
+/// 0 to -1), built once: clumps of darker and lighter moss, small and wide.
+enum MossArt {
+    static let (dark, light): (Path, Path) = {
+        var dark = Path(), light = Path()
+        var r = Ink.Random(seed: 11)
+        for i in 0..<150 {
+            let x = (r.next() * 2 - 1) * 0.94, y = -r.next()
+            let rx = 0.12 + 0.2 * r.next(), ry = 0.006 + 0.012 * r.next()
+            let rot = (r.next() - 0.5) * 0.6
+            if i % 5 < 2 { dark.oval(x, y, rx, ry, rot) } else { light.oval(x - 0.04, y - 0.004, rx * 0.8, ry * 0.7, rot) }
+        }
+        return (dark, light)
+    }()
+}
+
 // The vine: stems that climb, arch and trail, each with its leaves at fixed
 // places along it and a young leaf unrolling at its tip. A monstera is this
-// rule. Its leaves are whole when they are young and cut themselves into lobes
-// as they age (`split`), which is what makes the growth readable: the first
-// leaf is a heart, the last is a hand. A pothos or an ivy is the same stems
-// with `heart` leaves that stay whole.
+// rule. Its leaves are whole when they are young and cut themselves into
+// slits and holes as they age (`LeafShape.Kind.monstera0…3`), which is what
+// makes the growth readable: the first leaf is a heart, the last is a hand.
+// A pothos or an ivy is the same stems with `heart` leaves that stay whole.
+//
+// The main stem climbs a moss pole (put in at .3, tied with twine, its moss
+// lit from the sun's side) and sends aerial roots down it from its nodes.
 //
 // Growth: the seed, one small whole leaf (.12), the main stem climbing and
 // putting out leaves on alternate sides (.3 to .56), a second stem arching out
@@ -28,7 +47,7 @@ extension PlantPainter {
         /// 0 points out along the stem's own heading, otherwise to one side.
         var side: Double
         var lift: Double
-        /// How far it can cut itself into lobes, 0…1.
+        /// How far it can cut itself into slits, 0…1.
         var split: Double
         var tier: Int
         var petiole: Double
@@ -39,7 +58,7 @@ extension PlantPainter {
         func v(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: x * sx, y: y) }
         let sag = 1 + 0.2 * wilt
         let stems: [Stem] = [
-            Stem(a: v(0, 1), c1: v(-4, -52), c2: v(-14 + 12 * wilt, -108), b: v(2 + 26 * wilt, -148 * (1 - 0.16 * wilt)), born: 0.09, span: 0.5, width: 5.4),
+            Stem(a: v(0, 1), c1: v(-2, -52), c2: v(-4 + 8 * wilt, -108), b: v(1 + 24 * wilt, -148 * (1 - 0.16 * wilt)), born: 0.09, span: 0.5, width: 5.4),
             Stem(a: v(5, 1), c1: v(24, -26), c2: v(54, -46 * sag), b: v(82, -64 * sag), born: 0.3, span: 0.46, width: 4.4),
             Stem(a: v(-4, 0), c1: v(-34, -54), c2: v(-76, -46), b: v(-64, 58), born: 0.5, span: 0.4, width: 3.4),
         ]
@@ -71,15 +90,16 @@ extension PlantPainter {
             paint(c, stem: Self.ribbon(paths[i], w, w * 0.6), along: paths[i], width: w, tier: i == 0 ? 1 : 0)
         }
 
-        /// One leaf, at its place on its stem.
-        func leaf(_ f: Foliage) {
+        /// One leaf, at its place on its stem: a cut and holed heart on its
+        /// stalk, drawn on its own because its holes want an even-odd fill.
+        func leaf(_ f: Foliage, _ n: Int) {
             let k = pop(f.born, over: 0.1)
-            guard k > 0.02, reach(stems[f.stem], f.stem) >= f.t - 0.001 else { return }
+            let r = reach(stems[f.stem], f.stem)
+            guard k > 0.02, r >= f.t - 0.001 else { return }
             let path = paths[f.stem]
-            let anchor = Self.along(path, f.t / max(0.001, reach(stems[f.stem], f.stem)))
-            let ahead = Self.along(path, min(1, f.t / max(0.001, reach(stems[f.stem], f.stem)) + 0.04))
-            let behind = Self.along(path, max(0, f.t / max(0.001, reach(stems[f.stem], f.stem)) - 0.04))
-            let heading = atan2(ahead.y - behind.y, ahead.x - behind.x)
+            let t = f.t / max(0.001, r)
+            let anchor = Self.along(path, t)
+            let heading = Self.heading(path, t)
             var angle = f.side == 0 ? heading : (f.side > 0 ? -f.lift : -.pi + f.lift)
             // A leaf at the tip carries on the way its stem goes, but not so
             // far over that it faces the ground: tired, it hangs from its stalk.
@@ -87,73 +107,113 @@ extension PlantPainter {
             let down = f.side == 0 ? sx : (f.side > 0 ? 1.0 : -1.0)
             angle += down * wilt * 1.25
             let split = f.split * Ink.smooth((p - f.born) / 0.32)
-            let length = f.length * 1.2 * k * (1 - 0.14 * wilt) * seed.between(f.stem * 3 + Int(f.t * 9), 0.93, 1.07)
+            let length = f.length * 1.12 * k * (1 - 0.14 * wilt) * seed.between(f.stem * 3 + Int(f.t * 9), 0.93, 1.07)
             let direction = CGPoint(x: cos(angle), y: sin(angle))
             let start = CGPoint(x: anchor.x + direction.x * f.petiole * k, y: anchor.y + direction.y * f.petiole * k)
-            let blade = splitLeaf(at: start, angle: angle, length: length, split: split)
             if let c {
+                let kind: LeafShape.Kind = split < 0.22 ? .monstera0 : split < 0.5 ? .monstera1 : split < 0.8 ? .monstera2 : .monstera3
+                let shape = LeafShape.of(kind, bend: down * (0.3 + 0.5 * wilt))
+                var batch = LeafBatch()
+                batch.add(shape, base: start, angle: angle, length: length, light: L, bright: bright(angle, luck: luck(n + 5), tier: f.tier), glossy: true)
                 let stalk = Self.quad(anchor, CGPoint(x: (anchor.x + start.x) / 2, y: min(anchor.y, start.y) - 3), start, n: 4)
-                c.fill(Self.ribbon(stalk, 2.6, 2), with: .color(ramp[1].color()))
-                paint(c, leaf: blade, tier: f.tier)
+                batch.stalks.addPath(Self.ribbon(stalk, 2.8, 2.1))
+                batch.flush(c, inks[f.tier], holes: shape.holes)
             }
-            m.note(blade.tip)
-            m.note(CGPoint(x: (start.x + blade.tip.x) / 2, y: (start.y + blade.tip.y) / 2), reach: length * 0.3, hang: false)
+            let end = CGPoint(x: start.x + direction.x * length * 0.9, y: start.y + direction.y * length * 0.9)
+            m.note(end)
+            m.note(CGPoint(x: (start.x + end.x) / 2, y: (start.y + end.y) / 2), reach: length * 0.3, hang: false)
         }
 
-        // Back to front: the second stem, the main stem's low leaves, the main
-        // stem, then its leaves in front and the leaf unrolling at its tip.
+        // Back to front: the second stem, the main stem's low leaves, the pole
+        // and its roots, the main stem, then its leaves in front and the leaf
+        // unrolling at its tip.
         stem(1)
-        for f in foliage where f.stem == 1 { leaf(f) }
-        for f in foliage where f.stem == 0 && f.tier == 0 { leaf(f) }
+        for (n, f) in foliage.enumerated() where f.stem == 1 { leaf(f, n) }
+        for (n, f) in foliage.enumerated() where f.stem == 0 && f.tier == 0 { leaf(f, n) }
+        let pole = since(0.3, over: 0.12)
+        if pole > 0.02, let c {
+            mossPole(c, x: -3.5 * sx, height: 126 * Ink.back(pole))
+            roots(c, stemPath: paths[0], reach: reach(stems[0], 0), pole: -3.5 * sx)
+        }
         stem(0)
-        for f in foliage where f.stem == 0 && f.tier > 0 { leaf(f) }
+        for (n, f) in foliage.enumerated() where f.stem == 0 && f.tier > 0 { leaf(f, n) }
         if let c, p > 0.1, p < 0.6 {
             let end = paths[0][paths[0].count - 1], before = paths[0][paths[0].count - 3]
             let heading = atan2(end.y - before.y, end.x - before.x)
             let unroll = pop(0.12, over: 0.06) * (1 - Ink.smooth((p - 0.46) / 0.14))
-            let furl = Self.blade(at: end, angle: heading + wilt * sx, length: 20 * unroll, halfWidth: 3.6 * unroll, widest: 0.4, bend: -0.2 * sx)
-            paint(c, leaf: furl, tier: 2, shadow: false)
-            c.fill(furl.outline, with: .color(ramp[4].color(0.35)))
-            m.note(furl.tip, reach: 4, hang: false)
+            var furl = LeafBatch()
+            furl.add(.of(.ovate, bend: -0.2 * sx), base: end, angle: heading + wilt * sx, length: 22 * unroll, light: L, bright: 0.8, glossy: true, shadowed: false)
+            furl.flush(c, fresh, casting: false)
+            m.note(CGPoint(x: end.x + cos(heading) * 20 * unroll, y: end.y + sin(heading) * 20 * unroll), reach: 4, hang: false)
         }
         // In front of the pot's rim: the trailing stem and its leaves.
         stem(2)
-        for f in foliage where f.stem == 2 { leaf(f) }
+        for (n, f) in foliage.enumerated() where f.stem == 2 { leaf(f, n) }
         m.note(whole[0][whole[0].count - 1], reach: 3, hang: false)
     }
 
-    /// A monstera leaf: lobes radiating from the midrib, fat and overlapping
-    /// while it is young, a heart; slim with the sky showing between them once
-    /// it has split. All the lobes are one path, the lit copy and the ribs
-    /// are the same shapes again, so it is cheap however cut it is.
-    private func splitLeaf(at base: CGPoint, angle a: Double, length L: Double, split s: Double) -> (outline: Path, rib: Path, tip: CGPoint) {
-        let ca = cos(a), sa = sin(a)
-        func loc(_ u: Double, _ v: Double) -> CGPoint { CGPoint(x: base.x + ca * u - sa * v, y: base.y + sa * u + ca * v) }
-        var outline = Path(), ribs = Path()
-        // Rows of lobes down the midrib, nearest the stalk first. The first
-        // pair point back, which makes the heart's rounded base.
-        let rows: [(u: Double, psi: Double, len: Double)] = [
-            (0.1, 1.85, 0.42), (0.27, 1.38, 0.6), (0.45, 1.18, 0.58), (0.63, 0.98, 0.42),
-        ]
-        for side in [-1.0, 1] {
-            for row in rows {
-                let len = L * row.len * Ink.lerp(0.9, 1.04, s)
-                let hw = len * Ink.lerp(0.85, 0.25, pow(s, 1.3))
-                let ux = cos(row.psi), vy = side * sin(row.psi)
-                let dx = ca * ux - sa * vy, dy = sa * ux + ca * vy
-                let origin = loc(row.u * L, 0)
-                outline.leaf(origin.x, origin.y, dx, dy, len, hw, 0.55)
-                ribs.move(to: origin)
-                ribs.addLine(to: CGPoint(x: origin.x + dx * len * 0.78, y: origin.y + dy * len * 0.78))
-            }
+    /// A pole of sphagnum moss the main stem climbs, tied with twine: a lit and a
+    /// shaded side, clumps of darker and lighter moss, two ties, a mound of
+    /// earth at its foot and a tuft of moss at its top. Seven fills.
+    private func mossPole(_ c: GraphicsContext, x: Double, height h: Double) {
+        guard h > 4 else { return }
+        let w = 17.0
+        let side = L.x >= 0 ? 1.0 : -1.0
+        let body = Path(roundedRect: CGRect(x: x - w / 2, y: -h, width: w, height: h + 2), cornerSize: CGSize(width: w / 2, height: w * 0.45))
+        let lit = ramp[3].mix(RGB(0xC2B068), 0.6).mix(glow, 0.1 * (1 - night)), mid = ramp[2].mix(RGB(0x8A7440), 0.42)
+        let shade = ramp[0].mix(RGB(0x3A3220), 0.3)
+        c.fill(body, with: .linearGradient(Gradient(colors: [lit.color(), mid.color(), shade.color()]),
+                                           startPoint: CGPoint(x: x + side * w / 2, y: -h / 2), endPoint: CGPoint(x: x - side * w / 2, y: -h / 2)))
+        var moss = c
+        moss.translateBy(x: x, y: 0)
+        moss.scaleBy(x: w / 2, y: h)
+        moss.fill(MossArt.dark, with: .color(ramp[1].mix(shade, 0.3).color(0.8)))
+        moss.fill(MossArt.light, with: .color(ramp[4].mix(lit, 0.4).mix(glow, 0.1 * (1 - night)).color(0.6)))
+        // A line of light down the sun's edge.
+        var edge = Path()
+        edge.lens(from: CGPoint(x: x + side * w * 0.36, y: -2), to: CGPoint(x: x + side * w * 0.36, y: -h + w * 0.4), width: 0.9)
+        c.fill(edge, with: .color(rimTone.color(0.2 + 0.25 * dusk + 0.2 * moon)))
+        // Twine: two ties, each with its own little shadow.
+        let twine = RGB.night(38, 38, 62, day: day, dim: 0.85)
+        var ties = Path(), tieShade = Path()
+        for y in [30.0, 74.0] where y < h - 8 {
+            ties.addRoundedRect(in: CGRect(x: x - w / 2 - 0.4, y: -y - 1.1, width: w + 0.8, height: 2.2), cornerSize: CGSize(width: 1, height: 1))
+            tieShade.addRect(CGRect(x: x - w / 2, y: -y + 1.2, width: w, height: 1.6))
         }
-        // The tip lobe, down the middle.
-        let start = loc(0.3 * L, 0)
-        outline.leaf(start.x, start.y, ca, sa, L * 0.7, L * Ink.lerp(0.34, 0.2, s), 0.5)
-        ribs.move(to: base)
-        let tip = loc(L * 0.98, 0)
-        ribs.addLine(to: tip)
-        // A young leaf is one fat heart: a lobe on each side of the stalk and a point.
-        return (outline, ribs, loc(L, 0))
+        c.fill(tieShade, with: .color(shade.mix(RGB(0x000000), 0.3).color(0.5)))
+        c.fill(ties, with: .color(twine.color()))
+        // A tuft of moss at the top, and the earth heaped round the foot.
+        var tuft = Path()
+        for (i, dx) in [-4.0, -1.5, 1.5, 4.0].enumerated() {
+            tuft.leaf(x + dx, -h + 2, Double(dx) * 0.08, -1, 4 + Double(i % 2) * 1.6, 1.1, 0.2)
+        }
+        c.fill(tuft, with: .color(ramp[3].mix(lit, 0.4).color(0.9)))
+        let earth = RGB.night(28, 34, 24, day: day, dim: 0.9)
+        c.ellipse(x, 0.6, 11, 3.2, .color(earth.color()))
+        c.ellipse(x - 1.4, -0.4, 8, 2.2, .color(RGB.night(30, 34, 36, day: day, dim: 0.9).color()))
+    }
+
+    /// Aerial roots: stiff brown cords out of the main stem's nodes that run
+    /// down the pole, one hanging free, each with a green growing tip.
+    private func roots(_ c: GraphicsContext, stemPath: [CGPoint], reach: Double, pole: Double) {
+        let sx = seed.side
+        let specs: [(t: Double, born: Double, dx: Double, drop: Double)] = [(0.2, 0.34, 6, 40), (0.34, 0.44, -9, 54), (0.5, 0.54, 15, 46)]
+        var cords = Path(), shine = Path(), tips = Path()
+        for spec in specs {
+            let grow = Ink.smooth((p - spec.born) / 0.2)
+            guard grow > 0.03, reach >= spec.t else { continue }
+            let a = Self.along(stemPath, spec.t / max(0.001, reach))
+            let dx = spec.dx * sx
+            let end = CGPoint(x: pole + dx * 0.6, y: min(-5, a.y + spec.drop))
+            let c1 = CGPoint(x: a.x + dx * 0.9, y: a.y + spec.drop * 0.25), c2 = CGPoint(x: end.x + dx * 0.3, y: end.y - spec.drop * 0.35)
+            let line = Self.cubic(a, c1, c2, end, upTo: grow, n: 8)
+            cords.addPath(Self.ribbon(line, 3.0, 1.2))
+            let lit = line.map { CGPoint(x: $0.x + (L.x >= 0 ? -0.5 : 0.5), y: $0.y) }
+            shine.addPath(Self.ribbon(lit, 1.1, 0.5))
+            if let tip = line.last, grow > 0.5 { tips.addEllipse(in: CGRect(x: tip.x - 1.1, y: tip.y - 1, width: 2.2, height: 2.6)) }
+        }
+        c.fill(cords, with: .color(RGB.night(26, 42, 40, day: day, dim: 0.85).color()))
+        c.fill(shine, with: .color(RGB.night(28, 44, 58, day: day, dim: 0.85).mix(rimTone, 0.15).color(0.7)))
+        c.fill(tips, with: .color(ramp[4].mix(RGB(0xDDE8A0), 0.4).color(0.9)))
     }
 }

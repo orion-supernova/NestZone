@@ -617,6 +617,8 @@ public struct CompanionFeature: Sendable {
         }
 
         public var isPet: Bool { species?.isPet ?? false }
+        /// A plant in a pot, which names its stages as a plant does.
+        public var isPotted: Bool { species?.growsInPot ?? false }
 
         /// Whether ending the ceremony is a real graduation: the server says
         /// it can. Otherwise it is the Lab's preview.
