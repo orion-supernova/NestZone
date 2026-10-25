@@ -14,7 +14,12 @@ struct CompanionCard: View {
 
     @Environment(\.theme) private var theme
     @Environment(\.dynamicTypeSize) private var typeSize
+    #if DEBUG
+    /// `-labLarge 1` opens the Lab pulled all the way up, to photograph it.
+    @State private var detent = UserDefaults.standard.bool(forKey: "labLarge") ? PresentationDetent.large : .medium
+    #else
     @State private var detent = PresentationDetent.medium
+    #endif
     /// Icons differ in height, and the labels under them have to share a
     /// line: "Holidays" sat higher than the rest under its shorter calendar.
     @ScaledMetric(relativeTo: .body) private var actionIcon = 24.0
@@ -71,7 +76,10 @@ struct CompanionCard: View {
     /// screenshots of states that otherwise need a finger:
     /// `simctl launch … -companionDemo care` (or decorate, album, holidays,
     /// lab, choose, pick, celebrate, dress, shop, store, buy, makeup, short,
-    /// topup, pay, info).
+    /// topup, pay, info). The ones that need a jar or growth of their own
+    /// (`grow`, `labgrow`, `pick`, `buy`, `makeup`, `short`, `topup`) set the
+    /// pretend house up first, so they only do anything on the bench or with
+    /// the Lab's pretend house on.
     private func demo() async {
         guard !compact, let demo = UserDefaults.standard.string(forKey: "companionDemo") else { return }
         try? await Task.sleep(for: .seconds(2.5))
@@ -90,19 +98,23 @@ struct CompanionCard: View {
             }
         case "album": store.send(.albumTapped)
         case "holidays": store.send(.holidaysTapped)
+        #if DEBUG
         case "lab": store.send(.labTapped)
-        case "grow": store.send(.labPoints(12))
+        case "grow": store.send(.lab(.command(.addPoints(12))))
         case "labgrow":
             // With the lab open at half height, the card must still play it.
             store.send(.labTapped)
             try? await Task.sleep(for: .seconds(1.5))
-            store.send(.labPoints(12))
+            store.send(.lab(.command(.addPoints(12))))
+        #endif
         case "choose": store.send(.chooseTapped)
+        #if DEBUG
         case "pick":
-            // Choose again and grow it in the Lab: with the old seed kept, this
-            // once left the previous species' tree on screen.
+            // Choose again and grow it: with the old seed kept, this once left
+            // the previous species' tree on screen.
             store.send(.chose(.magnolia))
-            store.send(.labPoints(60))
+            store.send(.lab(.command(.addPoints(60))))
+        #endif
         case "celebrate": store.send(.celebrateTapped)
         case "shop": store.send(.shopTapped)
         case "store":
@@ -115,10 +127,12 @@ struct CompanionCard: View {
             // 60 Leaves and none — and then off to the store and back.
             store.send(.decorateTapped)
             store.send(.spotPicked(.ground))
+            #if DEBUG
             if demo != "buy" {
-                let sparkles = demo == "makeup" ? 300 : 0
-                store.send(.labCoins(Coins(leaves: 60 - store.house.leaves, sparkles: sparkles - store.house.sparkles)))
+                store.send(.lab(.command(.setLeaves(60))))
+                store.send(.lab(.command(.setSparkles(demo == "makeup" ? 300 : 0))))
             }
+            #endif
             try? await Task.sleep(for: .seconds(1))
             store.send(.itemTapped(.decor(.kilim)), animation: ShopMotion.cardIn)
             guard demo == "topup" else { return }
@@ -170,6 +184,9 @@ struct CompanionCard: View {
                 PointsStepper(store: store)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                     .padding(10)
+                LabChip(store: store)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .padding(10)
                 #endif
             }
             .clipShape(.rect(topLeadingRadius: Metrics.cardRadius, topTrailingRadius: Metrics.cardRadius, style: .continuous))
@@ -209,11 +226,34 @@ struct CompanionCard: View {
             action(L10n.companionDecorate, "paintbrush.pointed.fill") { store.send(.decorateTapped) }
             action(L10n.companionAlbum, "book.closed.fill") { store.send(.albumTapped) }
             action(L10n.companionHolidays, "calendar") { store.send(.holidaysTapped) }
-            if CompanionFlag.isEnabled {
-                action(L10n.companionLab, "flask.fill") { store.send(.labTapped) }
-            }
+            #if DEBUG
+            labAction
+            #endif
         }
     }
+
+    #if DEBUG
+    /// The Lab's tile: Debug builds only, so it is a plain-English one.
+    private var labAction: some View {
+        let listed = typeSize.isAccessibilitySize
+        return Button { store.send(.labTapped) } label: {
+            (listed ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 4))) {
+                Image(systemName: store.isPretend ? "theatermasks.fill" : "flask.fill")
+                    .font(.body.weight(.semibold))
+                    .frame(width: listed ? actionIcon : nil, height: actionIcon)
+                Text(verbatim: "Lab")
+                    .font(listed ? .body.weight(.semibold) : .caption.weight(.semibold))
+                    .oneLineUnlessAccessibility()
+                if listed { Spacer(minLength: 0) }
+            }
+            .foregroundStyle(theme.accent)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: listed ? .leading : .center)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+        .accessibilityIdentifier("CompanionLab")
+    }
+    #endif
 
     private func action(_ title: LocalizedStringResource, _ symbol: String, _ perform: @escaping () -> Void) -> some View {
         let listed = typeSize.isAccessibilitySize
@@ -249,6 +289,7 @@ struct CompanionCard: View {
         }
         .padding(8)
         .glassCard()
+        .labBadge(store)
     }
 
     // MARK: - Nothing growing yet
@@ -282,6 +323,7 @@ struct CompanionCard: View {
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
+        .labBadge(store)
     }
 
     /// The last delivery could not be read, so there is no honest card to
@@ -299,6 +341,7 @@ struct CompanionCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
         .accessibilityIdentifier("CompanionUnreadable")
+        .labBadge(store)
     }
 }
 
@@ -306,7 +349,7 @@ struct CompanionCard: View {
 
 /// The scene: the plant or pet, its sky and what is put out. Reads what it
 /// draws and nothing else.
-private struct CardScene: View {
+struct CardScene: View {
     let store: StoreOf<CompanionFeature>
     let compact: Bool
     let covered: Bool
@@ -653,35 +696,36 @@ private struct StripAction: View {
 }
 
 #if DEBUG
-/// Development builds: points off and on right under the tree, to watch it
-/// shrink and grow through its stages without a sheet in the way. A stage
-/// is about eleven points; this steps four at a time. A local preview, like
-/// the whole Lab: the points are laid over the server's count on this phone
-/// and are never sent.
+/// Debug builds, in the pretend house only: points off and on right under the
+/// tree, to watch it shrink and grow through its stages without a sheet in the
+/// way. A stage is about eleven points; this steps four at a time. They are
+/// the pretend server's points, so the real house has no stepper at all.
 private struct PointsStepper: View {
     let store: StoreOf<CompanionFeature>
 
     var body: some View {
-        HStack(spacing: 2) {
-            Button { store.send(.labPoints(-4)) } label: {
-                Image(systemName: "minus").frame(width: 30, height: 26)
+        if store.isPretend {
+            HStack(spacing: 2) {
+                Button { store.send(.lab(.command(.addPoints(-4)))) } label: {
+                    Image(systemName: "minus").frame(width: 30, height: 26)
+                }
+                .accessibilityLabel(Text(verbatim: "4 fewer points"))
+                Text(verbatim: "\(Int(store.points.rounded())) / \(Int(CompanionMath.graduateAt))")
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .animation(Motion.spring, value: Int(store.points.rounded()))
+                Button { store.send(.lab(.command(.addPoints(4)))) } label: {
+                    Image(systemName: "plus").frame(width: 30, height: 26)
+                }
+                .accessibilityLabel(Text(verbatim: "4 more points"))
             }
-            .accessibilityLabel(Text(L10n.labPointsLess(4)))
-            Text(verbatim: "\(Int(store.points.rounded())) / \(Int(CompanionMath.graduateAt))")
-                .monospacedDigit()
-                .contentTransition(.numericText())
-                .animation(Motion.spring, value: Int(store.points.rounded()))
-            Button { store.send(.labPoints(4)) } label: {
-                Image(systemName: "plus").frame(width: 30, height: 26)
-            }
-            .accessibilityLabel(Text(L10n.labPoints(4)))
+            .font(.caption.weight(.semibold))
+            .buttonStyle(.plain)
+            .padding(.horizontal, 4)
+            .glassControl()
+            .dynamicTypeSize(...DynamicTypeSize.xLarge)
+            .accessibilityIdentifier("CompanionPoints")
         }
-        .font(.caption.weight(.semibold))
-        .buttonStyle(.plain)
-        .padding(.horizontal, 4)
-        .glassControl()
-        .dynamicTypeSize(...DynamicTypeSize.xLarge)
-        .accessibilityIdentifier("CompanionPoints")
     }
 }
 #endif

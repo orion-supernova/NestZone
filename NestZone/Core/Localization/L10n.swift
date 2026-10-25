@@ -7777,11 +7777,6 @@ public enum L10n {
         r("companion_holidays", "Holidays")
     }
 
-    /// Lab
-    public static var companionLab: LocalizedStringResource {
-        r("companion_lab", "Lab")
-    }
-
     /// House jar
     public static var companionJar: LocalizedStringResource {
         r("companion_jar", "House jar")
@@ -8220,71 +8215,6 @@ public enum L10n {
         r("holiday_independence_m_x", "Mexican Independence Day")
     }
 
-    /// Lab
-    public static var labTitle: LocalizedStringResource {
-        r("lab_title", "Lab")
-    }
-
-    /// Local preview · nothing is saved to the house
-    public static var labNote: LocalizedStringResource {
-        r("lab_note", "Local preview · nothing is saved to the house")
-    }
-
-    /// Grow
-    public static var labGrow: LocalizedStringResource {
-        r("lab_grow", "Grow")
-    }
-
-    /// +%lld points
-    public static func labPoints(_ a0: Int) -> LocalizedStringResource {
-        r("lab_points", "+\(a0) points")
-    }
-
-    /// Ready to graduate
-    public static var labReady: LocalizedStringResource {
-        r("lab_ready", "Ready to graduate")
-    }
-
-    /// Mood
-    public static var labMood: LocalizedStringResource {
-        r("lab_mood", "Mood")
-    }
-
-    /// From real chores
-    public static var labReal: LocalizedStringResource {
-        r("lab_real", "From real chores")
-    }
-
-    /// Three quiet days
-    public static var labThirsty: LocalizedStringResource {
-        r("lab_thirsty", "Three quiet days")
-    }
-
-    /// A week away
-    public static var labDozing: LocalizedStringResource {
-        r("lab_dozing", "A week away")
-    }
-
-    /// Pretend it's
-    public static var labDay: LocalizedStringResource {
-        r("lab_day", "Pretend it's")
-    }
-
-    /// Today
-    public static var labToday: LocalizedStringResource {
-        r("lab_today", "Today")
-    }
-
-    /// +%lld Leaves in the jar
-    public static func labLeaves(_ a0: Int) -> LocalizedStringResource {
-        r("lab_leaves", "+\(a0) Leaves in the jar")
-    }
-
-    /// Start over
-    public static var labReset: LocalizedStringResource {
-        r("lab_reset", "Start over")
-    }
-
     /// bright
     public static var moodBright: LocalizedStringResource {
         r("mood_bright", "bright")
@@ -8702,11 +8632,6 @@ public enum L10n {
 
     // MARK: - Companion (Nestie)
 
-    /// A busy day together
-    public static var labBright: LocalizedStringResource {
-        r("lab_bright", "A busy day together")
-    }
-
     // MARK: - Companion (Nestie)
 
     /// %1$@ grew up in %2$lld days
@@ -8727,11 +8652,6 @@ public enum L10n {
     }
 
 
-
-    /// +%lld Sparkles in the jar
-    public static func labSparkles(_ a0: Int) -> LocalizedStringResource {
-        r("lab_sparkles", "+\(a0) Sparkles in the jar")
-    }
 
     /// +%1$lld Leaves · +%2$lld Sparkles
     public static func ceremonyCoins(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
@@ -8759,11 +8679,6 @@ public enum L10n {
     }
 
     // MARK: - Companion (Nestie)
-
-    /// −%lld points
-    public static func labPointsLess(_ a0: Int) -> LocalizedStringResource {
-        r("lab_points_less", "−\(a0) points")
-    }
 
     // MARK: - Companion · the catalog, the shop and Sparkles
 
@@ -9105,11 +9020,6 @@ public enum L10n {
     }
 
 
-    /// A birthday today
-    public static var labBirthday: LocalizedStringResource {
-        r("lab_birthday", "A birthday today")
-    }
-
     // MARK: - Companion · not enough Leaves
 
     // MARK: - Companion · the purchase card and the store
@@ -9397,11 +9307,6 @@ public enum L10n {
     /// Sparkles
     public static var storePackUnit: LocalizedStringResource {
         r("store_pack_unit", "Sparkles")
-    }
-
-    /// Dusk stage in the shop
-    public static var labDusk: LocalizedStringResource {
-        r("lab_dusk", "Dusk stage in the shop")
     }
 
     // MARK: - Companion · best value

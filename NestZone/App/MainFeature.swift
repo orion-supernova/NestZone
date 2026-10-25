@@ -190,7 +190,13 @@ public struct MainFeature: Sendable {
         Scope(state: \.house, action: \.house) { RouteStack() }
         Scope(state: \.messages, action: \.messages) { MessagesFeature() }
         Scope(state: \.now, action: \.now) { NowFeature() }
+        // Debug builds host Nestie so the Lab can run it against a pretend
+        // house; a Release build has the feature and nothing else.
+        #if DEBUG
+        Scope(state: \.companion, action: \.companion) { CompanionHost() }
+        #else
         Scope(state: \.companion, action: \.companion) { CompanionFeature() }
+        #endif
         Scope(state: \.settings, action: \.settings) { SettingsFeature() }
         Scope(state: \.inbox, action: \.inbox) { InboxFeature() }
 

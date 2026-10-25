@@ -169,19 +169,34 @@ before changing anything here.
 
 - **An MVP on Debug builds only** (`CompanionFlag`). Release builds compile it and
   never draw it; turning it on is part of shipping it, with its changelog entry.
+- **The Lab (Debug only, `Features/Companion/Lab/`) has a master switch,
+  "Pretend house", off by default.** Off, the card is the real house and the
+  Lab only changes how it looks (`LabLook`: mood, hour and day, birthday,
+  hemisphere, colourway), never written; while a pretend day or hemisphere is
+  on, the writes drawn from the scene (decorate, holidays) are refused. On,
+  `CompanionHost` reduces the feature inside a dependency scope whose
+  `CompanionClient` and `SparkleStoreClient` are the stand-in server's
+  (`FakeNestieServer`, the same one `NestieBench` runs, kept in
+  `pretendHouse.json`), so every flow, ceremony and purchase card is the real
+  one and no code path reaches `ConvexConnection`; the live client also
+  refuses and logs any call made while the switch is on (`PretendRoute`), and
+  turning the switch resets the card. The Lab's labels are plain English
+  (`Text(verbatim:)`) on purpose, so a hundred developer strings stay out of
+  the shipped catalog; what it shows of the app (card, ceremonies) stays
+  localized. Release builds carry none of it (`LabSlot` is an empty stand-in).
 - **The companion is the house's, on the server** (`CompanionClient`: live
   `companion:forHome`, `companion:album` while its sheet is open, writes and
   `shop:buy`; all through `ConvexConnection`). Growth and "ready" are the
   server's; the client counts nothing. `State.house` is computed: `served` plus
-  the writes in flight (`writes`) plus the Lab. **An entry shows only while
+  the writes in flight (`writes`). **An entry shows only while
   `served` does not already show it**, and on the answer its result is folded
   into `served` before it goes (a start's and a graduation's wait for the
   push), so the answer and the push can come in either order; a write is
   raced against 15 s and a timeout is a failure. A buy debits locally, sends a
   request id per tap and the card's price, and handles `bought`, `owned`,
   `short`, `unavailable` and `priceChanged`; the server's prices win. The Lab
-  is a local preview and nothing it influences is sent (`serverShop` is built
-  from `served` and `now` only). What the card draws is stored and assigned
+  never writes the real house (`serverShop` is built from `served` and `now`
+  only, and a pretend day blocks the writes drawn from the scene). What the card draws is stored and assigned
   only on change (`refresh`), and the card is small views that read their own
   part. The MVP's one-phone file is offered once per person and home to
   `importLocal` and kept. `-nestieBench 1` runs it signed out against a
@@ -800,7 +815,8 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   taken back; a refund for a transaction never credited leaves a tombstone so
   its pre-refund JWS can't be credited later. Every other type and every
   unknown transaction is a 200. The phone's test store (`SparkleStoreClient`
-  while `isTestStore`) never reaches the server: its Sparkles land in the Lab.
+  while `isTestStore`) never reaches the server: its Sparkles are credited
+  nowhere in the real house, and the pretend house's store credits its own jar.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

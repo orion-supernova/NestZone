@@ -22,7 +22,9 @@ struct CompanionSheet: View {
                 case .shop: ShopView(store: store)
                 case .album: AlbumView(store: store)
                 case .holidays: HolidaysView(store: store)
+                #if DEBUG
                 case .lab: LabView(store: store)
+                #endif
                 case .ceremony, .welcome: EmptyView()
                 }
             }
@@ -43,16 +45,33 @@ struct CompanionSheet: View {
         .interactiveDismissDisabled(sheet == .shop)
         .environment(\.shopGeometry, geometry)
         .environment(\.shopStage, stage)
-        .presentationDetents(isTall ? [.large] : [.medium, .large],
+        #if DEBUG
+        .environment(\.labSheetIsFull, detent == .large)
+        #endif
+        .presentationDetents(isTall ? [.large] : isLab ? [Self.peek, .medium, .large] : [.medium, .large],
                              selection: isTall ? .constant(.large) : $detent)
+        // The Lab is for watching the card while it changes: the screen behind
+        // it stays live (Today scrolls) up to half height.
+        .presentationBackgroundInteraction(isLab ? .enabled(upThrough: .medium) : .automatic)
+    }
+
+    /// The Lab's lowest stop: the card above it is nearly all of the screen.
+    static let peek = PresentationDetent.fraction(0.34)
+
+    private var isLab: Bool {
+        #if DEBUG
+        sheet == .lab
+        #else
+        false
+        #endif
     }
 
     /// Decorating and shopping need the whole screen.
     private var isTall: Bool { sheet == .decorate || sheet == .shop }
 
-    /// The shop in the light of the house's hour, or held at dusk by the Lab.
+    /// The shop in the light of the house's hour (the Lab's pretend one too).
     private var stage: ShopStage {
-        store.house.lab.dusk ? .night : ShopStage(hour: Calendar.current.component(.hour, from: store.clock))
+        ShopStage(hour: Calendar.current.component(.hour, from: store.clock))
     }
 }
 
@@ -590,61 +609,6 @@ private struct HolidaysView: View {
         if holiday.isUnderway(on: store.clock, region: store.placeRegion) { return String(localized: L10n.holidayNow) }
         guard let next = holiday.next(after: store.clock, region: store.placeRegion) else { return "" }
         return String(localized: L10n.holidayNext(next.formatted(Date.FormatStyle().day().month(.wide).year().locale(L10n.locale))))
-    }
-}
-
-// MARK: - Lab
-
-/// Development builds only: grow it, make it thirsty, pretend it is
-/// Halloween. Nothing here reaches the server.
-private struct LabView: View {
-    let store: StoreOf<CompanionFeature>
-
-    var body: some View {
-        Form {
-            Section {
-                Text(L10n.labNote).font(.footnote).foregroundStyle(.secondary).oneLine()
-            }
-            Section(header: Text(L10n.labGrow)) {
-                Button { store.send(.labPoints(5)) } label: { Text(L10n.labPoints(5)).oneLine() }
-                Button { store.send(.labPoints(20)) } label: { Text(L10n.labPoints(20)).oneLine() }
-                Button { store.send(.labPoints(CompanionMath.graduateAt)) } label: { Text(L10n.labReady).oneLine() }
-            }
-            Section(header: Text(L10n.labMood)) {
-                Button { store.send(.labMood(nil)) } label: { Text(L10n.labReal).oneLine() }
-                Button { store.send(.labMood(.bright)) } label: { Text(L10n.labBright).oneLine() }
-                Button { store.send(.labMood(.thirsty)) } label: { Text(L10n.labThirsty).oneLine() }
-                Button { store.send(.labMood(.dozing)) } label: { Text(L10n.labDozing).oneLine() }
-            }
-            Section(header: Text(L10n.labDay)) {
-                Button { store.send(.labDate(nil)) } label: { Text(L10n.labToday).oneLine() }
-                ForEach(Holiday.all) { holiday in
-                    if let start = holiday.next(after: Date(), region: store.placeRegion) {
-                        Button { store.send(.labDate(Calendar.current.date(bySettingHour: 20, minute: 0, second: 0, of: start))) } label: {
-                            Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))").oneLine()
-                        }
-                    }
-                }
-            }
-            Section {
-                Button { store.send(.labCoins(Coins(leaves: 200, sparkles: 0))) } label: { Text(L10n.labLeaves(200)).oneLine() }
-                Button { store.send(.labCoins(Coins(leaves: 0, sparkles: 200))) } label: { Text(L10n.labSparkles(200)).oneLine() }
-                Toggle(isOn: Binding(get: { store.house.lab.birthday }, set: { store.send(.labBirthday($0)) })) {
-                    Text(L10n.labBirthday).oneLine()
-                }
-                Toggle(isOn: Binding(get: { store.house.lab.dusk }, set: { store.send(.labDusk($0)) })) {
-                    Text(L10n.labDusk).oneLine()
-                }
-                Button(role: .destructive) { store.send(.labReset) } label: { Text(L10n.labReset).oneLine() }
-            }
-        }
-        .navigationTitle(Text(L10n.labTitle))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button { store.send(.sheetDismissed) } label: { Text(L10n.commonDone) }
-            }
-        }
     }
 }
 

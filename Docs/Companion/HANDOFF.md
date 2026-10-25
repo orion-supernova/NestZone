@@ -1427,3 +1427,18 @@ as the bump. Draft, to be read once more:
 The raw session transcript stays on the original Mac, under
 `~/.claude/projects/`. It isn't committed: it's large, full of tool output, and
 holds household data. This file is the portable version.
+
+## The Lab and the pretend house (Debug builds only)
+
+The Lab was rebuilt around a master switch, **Pretend house**, off by default.
+Off, it only changes how the real house looks (mood, hour, day, birthday,
+hemisphere, colourway) and writes nothing. On, the card runs against
+`FakeNestieServer` (the bench's stand-in, promoted, kept in
+`Documents/pretendHouse.json`) through the same `CompanionClient` dependency,
+swapped in by `CompanionHost`; no path reaches `ConvexConnection`. The old
+Lab overlaid coins, points and purchases on the real house, which could not
+stay true once growth, the jar and graduations became the server's (see the
+guide in `Docs/Companion/lab/index.html`). `-nestieLabDo "species=fox,fill"`
+drives its controls from the command line on the bench; `-labSection jar
+-labLarge 1 -companionDemo lab` opens the sheet scrolled to a section.
+Tests: `NestZoneTests/CompanionLabTests.swift` (built, not run: no `xcodebuild test`).

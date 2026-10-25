@@ -190,7 +190,21 @@ public enum ImportOutcome: Equatable, Sendable {
 }
 
 extension CompanionClient: DependencyKey {
-    public static let liveValue = CompanionClient(
+    /// The server's, and on a Debug build one that refuses to be called while
+    /// the Lab's pretend house is on (`PretendRoute`): the pretend house is
+    /// swapped in at the feature (`CompanionHost`), and this is the second
+    /// lock, for an effect that was already running when it was.
+    public static var liveValue: CompanionClient { convex }
+
+    private static let convex: CompanionClient = {
+        #if DEBUG
+        live.refusingWhilePretending()
+        #else
+        live
+        #endif
+    }()
+
+    private static let live = CompanionClient(
         forHome: { homeID in
             ConvexConnection.shared.subscribe(
                 to: "companion:forHome", args: ["homeId": homeID], as: CompanionPayload.self

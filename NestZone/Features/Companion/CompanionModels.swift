@@ -8,7 +8,7 @@ import Foundation
 // by every phone in the house: these types are what it is drawn from. The
 // MVP kept all of it in one file per phone (`companion-<home>.json`); that
 // file's shape is still decoded, once, to be offered to the server
-// (`LocalCompanion`), and the Lab keeps its own small file.
+// (`LocalCompanion`).
 
 // MARK: - Species
 
@@ -245,9 +245,6 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
     public var holidays: [String]?
     /// The highest stage already paid into the jar, so a stage pays once.
     public var paidStage = 0
-    /// Overrides for trying things out on a development build: a local
-    /// preview, laid over the house when it is drawn and never sent anywhere.
-    public var lab = Lab()
 
     // What only the server version has. Not in the old file's keys.
     /// How many the house has graduated. The album's cards load with the
@@ -277,53 +274,9 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
 
     public static let empty = CompanionHouse()
 
-    /// The Lab: a LOCAL PREVIEW for development builds. It is laid over the
-    /// house when it is drawn (`CompanionFeature.State.house`) and lives in its
-    /// own file on this phone (`SharedKey.companionLab`). Nothing in it is ever
-    /// sent to the server, and a purchase made while it holds coins stays in it
-    /// too, so the house's jar cannot be spent on what only the Lab gave.
-    public struct Lab: Codable, Equatable, Sendable {
-        /// Pretend the house has been like this, whatever it has done.
-        public var mood: Mood?
-        /// Pretend it is this day — to see a holiday arrive.
-        public var date: Date?
-        /// Pretend somebody's birthday is today — to see the party hat.
-        public var birthday = false
-        /// The shop's stages at dusk rather than lit, to compare the two.
-        public var dusk = false
-        /// Points added (or taken away) by hand, over the server's.
-        public var bonus = 0.0
-        /// Coins added to (or taken from) the jar as it is drawn. The test
-        /// store's Sparkles land here too: there is no top-up on the server yet.
-        public var leaves = 0
-        public var sparkles = 0
-        /// What was bought with those coins.
-        public var owned: Set<String> = []
-        public var ownedSpecies: Set<String> = []
-        public init() {}
-
-        /// Whether the jar being drawn is not the house's real one.
-        public var touchesJar: Bool { leaves != 0 || sparkles != 0 }
-
-        enum CodingKeys: String, CodingKey { case mood, date, birthday, dusk, bonus, leaves, sparkles, owned, ownedSpecies }
-
-        public init(from decoder: any Decoder) throws {
-            let c = try decoder.container(keyedBy: CodingKeys.self)
-            mood = try? c.decodeIfPresent(Mood.self, forKey: .mood)
-            date = try? c.decodeIfPresent(Date.self, forKey: .date)
-            birthday = (try? c.decodeIfPresent(Bool.self, forKey: .birthday)) ?? false
-            dusk = (try? c.decodeIfPresent(Bool.self, forKey: .dusk)) ?? false
-            bonus = (try? c.decodeIfPresent(Double.self, forKey: .bonus)) ?? 0
-            leaves = (try? c.decodeIfPresent(Int.self, forKey: .leaves)) ?? 0
-            sparkles = (try? c.decodeIfPresent(Int.self, forKey: .sparkles)) ?? 0
-            owned = (try? c.decodeIfPresent(Set<String>.self, forKey: .owned)) ?? []
-            ownedSpecies = (try? c.decodeIfPresent(Set<String>.self, forKey: .ownedSpecies)) ?? []
-        }
-    }
-
     enum CodingKeys: String, CodingKey {
         // Leaves were the jar's only coin when the file first held it.
-        case current, album, leaves = "jar", sparkles, welcomed, owned, ownedSpecies, layout, holidays, paidStage, lab
+        case current, album, leaves = "jar", sparkles, welcomed, owned, ownedSpecies, layout, holidays, paidStage
     }
 
     /// Lenient: a field a later build adds must not make an older file
@@ -342,7 +295,6 @@ public struct CompanionHouse: Codable, Equatable, Sendable {
         layout = (try? c.decodeIfPresent(SceneLayout.self, forKey: .layout)) ?? SceneLayout()
         holidays = try? c.decodeIfPresent([String].self, forKey: .holidays)
         paidStage = (try? c.decodeIfPresent(Int.self, forKey: .paidStage)) ?? 0
-        lab = (try? c.decodeIfPresent(Lab.self, forKey: .lab)) ?? Lab()
     }
 }
 

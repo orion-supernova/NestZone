@@ -205,17 +205,18 @@ struct SparkleStoreFeatureTests {
         #expect(store.state.landed == 300)
         #expect(store.state.landedTick == 1)
         #expect(store.state.buyingPack == nil)
-        #expect(store.state.lab.sparkles == 0)
+        #expect(store.state.served.sparkles == 10)
     }
 
-    @Test("the test store's Sparkles go to the Lab, which is not the server")
+    @Test("the test store's Sparkles are said and credited nowhere: no jar takes them")
     func preview() async {
         var client = SparkleStoreClient()
         client.purchase = { _, _, _ in .preview(300) }
         let store = store(client: client)
         await store.send(.packTapped(Self.pack))
         await store.receive(\.packBought)
-        #expect(store.state.lab.sparkles == 300)
+        #expect(store.state.served.sparkles == 10)
+        #expect(store.state.house.sparkles == 10)
         #expect(store.state.landed == 300)
     }
 

@@ -570,21 +570,28 @@ struct CompanionServerTests {
         #expect(state.isReady)
     }
 
-    @Test("The server's view of the shop ignores the Lab's day and purchases")
+    @Test("On the real house the server's view of the shop ignores the Lab's day and hemisphere")
     func serverShopIgnoresLab() {
-        var state = CompanionFeature.State(homeID: HomeID("h-\(UUID().uuidString)"), now: Self.now)
+        var state = CompanionFeature.State(homeID: HomeID("h-\(UUID().uuidString)"), now: Self.now, region: "TR")
         state.served = house()
-        state.$lab.withLock {
-            $0.date = Self.now.addingTimeInterval(200 * 86_400)
-            $0.owned = ["kilim"]
-            $0.leaves = 10_000
+        state.withLab {
+            $0.look.date = Self.now.addingTimeInterval(200 * 86_400)
+            $0.look.region = "AU"
         }
-        #expect(state.shop.standing(of: DecorItem.kilim) == .have)
-        #expect(state.serverShop.standing(of: DecorItem.kilim) != .have)
-        #expect(!state.serverAvailable.contains("kilim"))
-        var draft = SceneLayout()
-        draft.ground = "kilim"
-        #expect(state.serverSafe(draft).ground == nil)
+        #expect(state.clock != Self.now)
+        #expect(state.shop.clock == state.clock)
+        #expect(state.shop.southern)
+        #expect(state.serverShop.clock == Self.now)
+        #expect(!state.serverShop.southern)
+    }
+
+    @Test("A pretend day on the real house stops the writes worked out from the drawn house")
+    func pretendDayBlocksWrites() async {
+        let store = store(house())
+        store.state.labSlot.$lab.withLock { $0.look.date = Self.now.addingTimeInterval(30 * 86_400) }
+        await store.send(.holidayToggled(.christmas))
+        #expect(store.state.writes.holidays == nil)
+        #expect(store.state.alert != nil)
     }
 
     // MARK: The vote for the next one

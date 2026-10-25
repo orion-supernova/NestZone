@@ -30,8 +30,11 @@ import os
 /// a timeout, and a timeout is a failure: the request ids make a late arrival
 /// harmless.
 ///
-/// The Lab (development builds) is laid over the same way, from its own file,
-/// and is a local preview: it never writes, and nothing it influences is sent.
+/// The Lab (Debug builds only, `Lab/`) has two modes. On the real house it
+/// changes only how the card looks (`LabLook`, read in `refresh`), and nothing
+/// it influences is sent. With its master switch on, the card runs against a
+/// pretend house on the phone, through the same client dependency
+/// (`CompanionHost` swaps it), and every flow is the real one.
 @Reducer
 public struct CompanionFeature: Sendable {
     @ObservableState
@@ -75,8 +78,9 @@ public struct CompanionFeature: Sendable {
         public var isUnreadable = false
         /// Writes that are on their way, and what they show meanwhile.
         var writes = Writes()
-        /// The Lab: a local preview laid over the house, never sent anywhere.
-        @Shared public var lab: CompanionHouse.Lab
+        /// The Lab's settings: what the card pretends, and whether it runs
+        /// against the pretend house. Empty in a Release build.
+        public var labSlot: LabSlot
         var placeTold = false
         var importTried = false
         var streamRetries = 0
@@ -220,7 +224,10 @@ public struct CompanionFeature: Sendable {
         }
 
         public enum Sheet: String, Equatable, Identifiable, Sendable {
-            case choose, decorate, album, holidays, lab, ceremony, welcome, shop, vote
+            case choose, decorate, album, holidays, ceremony, welcome, shop, vote
+            #if DEBUG
+            case lab
+            #endif
             public var id: String { rawValue }
             /// Shown over everything rather than as a sheet: the moments.
             var isMoment: Bool { self == .ceremony || self == .welcome }
@@ -486,25 +493,23 @@ public struct CompanionFeature: Sendable {
             self.homeID = homeID
             self.now = now
             self.region = region
-            // Release builds draw none of this, so they do not even open the
-            // Lab's file.
-            _lab = CompanionFlag.isEnabled
-                ? Shared(wrappedValue: CompanionHouse.Lab(), .companionLab(homeID))
-                : Shared(value: CompanionHouse.Lab())
+            // A Release build has no Lab: the slot is empty and opens no file.
+            labSlot = LabSlot(homeID: homeID)
         }
 
         // MARK: The house, as drawn
 
         /// The house as it is drawn: what the server said, with the writes
-        /// that are on their way laid over it, and the Lab over those.
+        /// that are on their way laid over it.
         ///
         /// Computed, so there is one copy of the truth and no overlay to
         /// forget to take off. Most of the time nothing is laid over it and
-        /// this is `served`.
+        /// this is `served`. The Lab lays nothing over it: what it pretends
+        /// about the look is read where it is drawn (`refresh`), and the
+        /// pretend house is a whole other `served`.
         public var house: CompanionHouse {
             var house = served
             if !writes.isEmpty { overlay(writes, on: &house) }
-            if lab != CompanionHouse.Lab() { overlay(lab, on: &house) }
             return house
         }
 
@@ -568,52 +573,62 @@ public struct CompanionFeature: Sendable {
             if let holidays = writes.holidays { house.holidays = holidays.value }
         }
 
-        private func overlay(_ lab: CompanionHouse.Lab, on house: inout CompanionHouse) {
-            house.lab = lab
-            house.leaves += lab.leaves
-            house.sparkles += lab.sparkles
-            house.owned.formUnion(lab.owned)
-            house.ownedSpecies.formUnion(lab.ownedSpecies)
-        }
-
         // MARK: Clock and calendar
 
-        /// The day the scene thinks it is: the lab's pretend day on a
-        /// development build, today otherwise. For drawing only; nothing sent
-        /// to the server is judged by it (`serverShop` uses `now`).
-        public var clock: Date { lab.date ?? now }
+        /// What the Lab pretends about the look of the house, if anything.
+        var labLook: LabLook { labSlot.look }
 
-        /// Where the house is. Its own region once it has one — the server
-        /// prices its seasons by it — and this phone's until then.
-        public var placeRegion: String? { served.region ?? region }
+        /// The day the scene thinks it is: the Lab's pretend day and hour on a
+        /// Debug build, now otherwise. For drawing; on the real house nothing
+        /// sent to the server is judged by it (`serverShop` uses `now`).
+        public var clock: Date { labSlot.look.date ?? now }
+
+        /// Where the house is, as the server judges it: its own region once
+        /// it has one — it prices its seasons by it — and this phone's until
+        /// then.
+        var serverRegion: String? { served.region ?? region }
+
+        /// Where the house is, as it is drawn: the Lab's pretend hemisphere
+        /// on the real house, the server's otherwise.
+        public var placeRegion: String? { labSlot.look.region ?? serverRegion }
+
+        /// How many people live here. A pretend house says so itself.
+        var members: Int { labSlot.members ?? memberCount }
+
+        /// Whether the card runs against the pretend house. Always false in a
+        /// Release build.
+        public var isPretend: Bool { labSlot.isPretend }
 
         public var celebrated: Set<Holiday.ID> {
             house.holidays.map { Set($0.compactMap(Holiday.ID.init(rawValue:))) } ?? Holiday.defaults(for: placeRegion)
         }
 
         /// Everything that decides what the house can have today, as it is
-        /// drawn — the Lab's day and purchases included — worked out once for
-        /// a whole shelf.
-        public var shop: ShopContext { shop(for: house, at: clock, birthday: lab.birthday) }
+        /// drawn — the Lab's pretend day included — worked out once for a
+        /// whole shelf.
+        public var shop: ShopContext { shop(for: house, at: clock, birthday: labLook.birthday, region: placeRegion) }
 
         private func shop(
-            for house: CompanionHouse, at date: Date, birthday: Bool, holidays known: [Holiday]? = nil
+            for house: CompanionHouse, at date: Date, birthday: Bool, region: String?, holidays known: [Holiday]? = nil
         ) -> ShopContext {
             let celebrated = house.holidays.map { Set($0.compactMap(Holiday.ID.init(rawValue:))) }
-                ?? Holiday.defaults(for: placeRegion)
+                ?? Holiday.defaults(for: region)
             return ShopContext(
-                clock: date, southern: Holiday.isSouthern(placeRegion), owned: house.owned,
+                clock: date, southern: Holiday.isSouthern(region), owned: house.owned,
                 ownedSpecies: house.ownedSpecies, albumCount: house.albumCount, grown: house.grown,
-                holidays: known ?? Holiday.active(on: date, among: celebrated, region: placeRegion),
-                isBirthday: birthday || birthdays.contains(CalendarDay(date)), region: placeRegion
+                holidays: known ?? Holiday.active(on: date, among: celebrated, region: region),
+                isBirthday: birthday || birthdays.contains(CalendarDay(date)), region: region
             )
         }
 
         /// What the server could do, for everything that is sent to it: from
         /// what it said (`served`) and the container's clock (`now`) alone —
-        /// never the Lab's pretend day, coins or purchases, which it knows
-        /// nothing of and must never be asked about.
-        var serverShop: ShopContext { shop(for: served, at: now, birthday: false) }
+        /// never the Lab's pretend day, which the real server knows nothing
+        /// of and must never be asked about. The pretend house is the one
+        /// server that follows it, so that a season can be bought in.
+        var serverShop: ShopContext {
+            shop(for: served, at: isPretend ? clock : now, birthday: false, region: serverRegion)
+        }
 
         /// What can be in the scene on the server's terms.
         var serverAvailable: Set<String> { available(in: serverShop, house: served) }
@@ -652,8 +667,7 @@ public struct CompanionFeature: Sendable {
         /// A plant in a pot, which names its stages as a plant does.
         public var isPotted: Bool { species?.growsInPot ?? false }
 
-        /// Whether ending the ceremony is a real graduation: the server says
-        /// it can. Otherwise it is the Lab's preview.
+        /// Whether ending the ceremony is a graduation: the server says it can.
         var canGraduate: Bool { served.current?.isReady == true && served.current?.id != nil }
 
         /// `yyyy-MM-dd`, in the house's offset when it has one: the server
@@ -696,7 +710,7 @@ public struct CompanionFeature: Sendable {
                 holidays = Holiday.active(on: clock, among: celebrated, region: placeRegion)
                 holidayCache = HolidayCache(day: today, region: placeRegion, celebrated: celebrated, holidays: holidays)
             }
-            let context = shop(for: house, at: clock, birthday: lab.birthday, holidays: holidays)
+            let context = shop(for: house, at: clock, birthday: labLook.birthday, region: placeRegion, holidays: holidays)
             let current = house.current
             // A seed nobody has named yet is a plant's sprout, never the pet
             // or the plant the vote happens to list first.
@@ -710,31 +724,31 @@ public struct CompanionFeature: Sendable {
             set(\.isOpeningVote, writes.graduating.map { $0.predictsSeed && !$0.noVote } ?? false)
             set(\.vote, house.vote)
             set(\.species, undecided ? nil : current?.species)
-            set(\.colour, undecided ? nil : current?.colour)
+            // The colourway drawn: the Lab can preview another on the real house.
+            let colour = undecided ? nil : (labLook.colour ?? current?.colour)
+            set(\.colour, colour)
             set(\.finaleAlbum, Self.finaleAlbum(moment: moment, served: served0, current: served0.current, undecided: served0.current?.isUndecided == true))
             set(\.look, current.map {
                 var look = Companion(
                     species: $0.isUndecided ? Self.seedStandIn : $0.species, seed: $0.seed, startedAt: $0.startedAt
                 )
-                look.colour = $0.isUndecided ? nil : $0.colour
+                look.colour = $0.isUndecided ? nil : (labLook.colour ?? $0.colour)
                 return look
             })
-            let points = current.map { max(($0.points ?? 0) + lab.bonus, 0) } ?? 0
+            let points = current.map { max($0.points ?? 0, 0) } ?? 0
             set(\.points, points)
             // A seed holds still as a seed while the house decides: it grows
             // (the server counts it) but is not drawn as anything yet.
             let progress = undecided ? 0 : min(points / CompanionMath.graduateAt, 1)
             set(\.progress, progress)
-            // The server's word on its stage and on being ready, unless the
-            // Lab has moved the points: it can pretend, for the ceremony.
-            let stage = undecided ? 0 : (lab.bonus == 0 ? current?.serverStage : nil)
-                ?? CompanionMath.stage(progress: progress, isPet: isPet)
+            // The server's word on its stage and on being ready.
+            let stage = undecided ? 0 : current?.serverStage ?? CompanionMath.stage(progress: progress, isPet: isPet)
             set(\.stage, stage)
-            set(\.isReady, !undecided && (current.map { $0.isReady || (lab.bonus > 0 && progress >= 1 && !$0.pointsReady) } ?? false))
+            set(\.isReady, !undecided && (current?.isReady ?? false))
             let mood: Mood = if let current {
-                lab.mood ?? CompanionMath.mood(
+                labLook.mood ?? CompanionMath.mood(
                     now: clock, completions: activity, lastCare: current.lastCareAt,
-                    startedAt: current.startedAt, memberCount: memberCount
+                    startedAt: current.startedAt, memberCount: members
                 )
             } else {
                 .content
@@ -874,14 +888,11 @@ public struct CompanionFeature: Sendable {
         case storeReturned
         case birthdaysUpdated(Set<CalendarDay>)
 
+        #if DEBUG
+        /// The Lab (Debug builds only): its sheet, and everything it does.
         case labTapped
-        case labPoints(Double)
-        case labMood(Mood?)
-        case labDate(Date?)
-        case labCoins(Coins)
-        case labBirthday(Bool)
-        case labDusk(Bool)
-        case labReset
+        case lab(LabAction)
+        #endif
 
         case sheetDismissed
 
@@ -902,7 +913,7 @@ public struct CompanionFeature: Sendable {
         public enum Alert: Equatable {}
     }
 
-    enum CancelID { case served, album, grow, retry, moment, purchases }
+    enum CancelID { case served, album, grow, retry, moment, purchases, lab }
 
     /// How long a write waits for the server before it is taken as failed.
     static let writeTimeout: Duration = .seconds(15)
@@ -912,6 +923,9 @@ public struct CompanionFeature: Sendable {
     @Dependency(\.sparkleStore) var sparkleStore
     @Dependency(\.uuid) var uuid
     @Dependency(\.date.now) var currentDate
+    #if DEBUG
+    @Dependency(\.pretendHouse) var pretendHouse
+    #endif
 
     static let log = Logger(subsystem: "com.walhallaa.NestZone", category: "Companion")
 
@@ -973,11 +987,10 @@ public struct CompanionFeature: Sendable {
                 // Every tap gets a reaction; the server hears about the first
                 // care of the day, and about a later one a minute on, not
                 // about every tap of a happy burst.
-                let wakes = state.lab.mood?.isQuiet == true
                 let isNew = !current.careDays.contains(key)
                 let isStale = current.lastCareAt.map { at.timeIntervalSince($0) > 60 } ?? true
-                // Caring is coming back: it wakes up whatever the lab said.
-                if wakes { state.$lab.withLock { $0.mood = nil } }
+                // Caring is coming back: it wakes up whatever the Lab said.
+                state.wakeFromLab()
                 guard isNew || isStale, state.writes.care == nil, state.served.current != nil else { return .none }
                 state.writes.care = State.Writes.Care(day: key, at: at)
                 let homeID = state.homeID
@@ -1245,11 +1258,11 @@ public struct CompanionFeature: Sendable {
                     // read, so nothing is added here.
                     return landed(sparkles, isInJar: false, state: &state)
                 case let .preview(sparkles):
-                    // The test store's Sparkles are not money, and the server
-                    // never hears of them: they land in the Lab's local
-                    // preview, and what they buy stays there too.
-                    state.$lab.withLock { $0.sparkles += sparkles }
-                    return landed(sparkles, isInJar: true, state: &state)
+                    // The test store's Sparkles are not money, and no jar
+                    // takes them: the real house never hears of them, and the
+                    // pretend house's store credits its own (`added`). Said
+                    // in the store, and nothing more.
+                    return landed(sparkles, isInJar: false, state: &state)
                 }
 
             case let .packFailed(id, error):
@@ -1298,17 +1311,14 @@ public struct CompanionFeature: Sendable {
                     state.sheet = nil
                     return .none
                 }
-                // The Lab can pretend it is ready, for the ceremony's sake:
-                // that ends with the pretence, and the server is not asked.
                 guard state.canGraduate, let id = state.served.current?.id else {
-                    state.$lab.withLock { $0.bonus = 0 }
                     state.sheet = nil
                     return .none
                 }
                 let floater = (state.lastPay?.id ?? 0) + 1
                 // A house of two or more votes on the next one, and the server
                 // opens it in this very write; a house of one picks.
-                let votes = state.memberCount > 1
+                let votes = state.members > 1
                 state.writes.graduating = State.Writes.Graduating(
                     companionID: id, companion: state.served.current, floater: floater, previousPay: state.lastPay, since: state.now, predictsSeed: votes
                 )
@@ -1405,10 +1415,12 @@ public struct CompanionFeature: Sendable {
 
             case let .holidayToggled(id):
                 var ids = state.celebrated
+                if blockedByLab(&state) { return .none }
                 if ids.contains(id) { ids.remove(id) } else { ids.insert(id) }
                 return setHolidays(Holiday.all.map(\.id).filter(ids.contains).map(\.rawValue), state: &state)
 
             case .holidaysReset:
+                if blockedByLab(&state) { return .none }
                 return setHolidays(nil, state: &state)
 
             case let .holidaysAnswered(token, result):
@@ -1422,6 +1434,7 @@ public struct CompanionFeature: Sendable {
 
             case let .dressTapped(id):
                 guard let holiday = Holiday.with(id) else { return .none }
+                if blockedByLab(&state) { return .none }
                 var layout = state.house.layout
                 layout.dress(for: holiday, southern: state.southern, isPet: state.isPet)
                 return setLayout(layout, state: &state)
@@ -1457,11 +1470,14 @@ public struct CompanionFeature: Sendable {
             case .decorateDone:
                 // Previews that were never bought go back on the shelf: nothing
                 // is bought by closing a sheet. What is kept is what the server
-                // would let stand, so a preview the Lab made possible (its day,
-                // its coins) is not sent.
-                let layout = state.serverSafe(state.draft)
+                // would let stand, so a preview the Lab made possible (its
+                // day) is not sent. And on a pretend day the draft was made
+                // from a scene that hides some of what is really out, so it
+                // is not sent at all.
                 state.sheet = nil
                 state.decorateSpot = nil
+                if blockedByLab(&state) { return .none }
+                let layout = state.serverSafe(state.draft)
                 return setLayout(layout, state: &state)
 
             case .decorateCancelled:
@@ -1481,43 +1497,15 @@ public struct CompanionFeature: Sendable {
             case let .startAnswered(result):
                 return startAnswered(result, state: &state)
 
+            #if DEBUG
             case .labTapped:
+                state.pendingSheet = nil
                 state.sheet = .lab
                 return .none
 
-            case let .labPoints(points):
-                // Taking points away stops at a seed, never below nothing grown.
-                let earned = state.served.current?.points ?? 0
-                state.$lab.withLock { $0.bonus = max($0.bonus + points, -earned) }
-                return .none
-
-            case let .labMood(mood):
-                state.$lab.withLock { $0.mood = mood }
-                return .none
-
-            case let .labDate(date):
-                state.$lab.withLock { $0.date = date }
-                return .none
-
-            case let .labCoins(coins):
-                state.$lab.withLock {
-                    $0.leaves += coins.leaves
-                    $0.sparkles += coins.sparkles
-                }
-                return .none
-
-            case let .labBirthday(on):
-                state.$lab.withLock { $0.birthday = on }
-                return .none
-
-            case let .labDusk(on):
-                state.$lab.withLock { $0.dusk = on }
-                return .none
-
-            case .labReset:
-                state.$lab.withLock { $0 = CompanionHouse.Lab() }
-                state.sheet = nil
-                return .none
+            case let .lab(action):
+                return reduceLab(action, state: &state)
+            #endif
 
             case .sheetDismissed:
                 // Closing the ceremony ends its moment; closing anything else
@@ -1681,7 +1669,9 @@ public struct CompanionFeature: Sendable {
         }
         // A test phone's MVP file, offered once by each person who has it; the
         // file stays either way. Waits for the person to be known.
-        if !state.importTried, let userID = state.userID {
+        // Never in the pretend house: the file belongs to the real one, and
+        // "offered" is a mark kept against the real home.
+        if !state.importTried, !state.isPretend, let userID = state.userID {
             state.importTried = true
             effects.append(.run { send in
                 guard let local = LocalCompanion.pending(for: homeID, userID: userID) else { return }
@@ -1911,9 +1901,8 @@ public struct CompanionFeature: Sendable {
         guard var card = state.card, !card.isBought, let purchase = card.purchase,
               let price = purchase.price
         else { return .none }
-        let lab = state.lab.touchesJar
         // What the server would say about the sale, not the Lab's day.
-        guard (lab ? state.shop : state.serverShop).standing(of: purchase.item).price != nil else { return .none }
+        guard state.serverShop.standing(of: purchase.item).price != nil else { return .none }
         let coins: Coins
         switch state.house.checkout(price) {
         case let .pay(paying), let .makeUp(paying, _): coins = paying
@@ -1922,19 +1911,6 @@ public struct CompanionFeature: Sendable {
         }
         card.notice = nil
         card.shortNote = nil
-
-        // Coins from the Lab are not the house's: what they buy stays in the
-        // Lab, and the server is not asked.
-        if lab {
-            state.$lab.withLock {
-                $0.leaves -= coins.leaves
-                $0.sparkles -= coins.sparkles
-                $0.receive(purchase.item)
-            }
-            card.paid = coins
-            state.card = card
-            return growAfterBuying(purchase.grow, delay: .milliseconds(1400))
-        }
 
         let tap = state.retry.flatMap { $0.item == purchase.item && $0.price == price ? $0 : nil }
             ?? State.BuyAttempt(item: purchase.item, price: price, requestID: uuid().uuidString)
@@ -1956,6 +1932,7 @@ public struct CompanionFeature: Sendable {
     private func buyAnswered(_ requestID: String, _ result: Result<BuyOutcome, AppError>, state: inout State) -> Effect<Action> {
         let buy = state.writes.buys.removeValue(forKey: requestID)
         let tap = state.retry?.requestID == requestID ? state.retry : nil
+        state.labBuyAnswered()
         // The card this answer is for, if it is still the one on screen.
         let isCurrent = state.card?.purchase?.item == buy?.item
 
@@ -2064,6 +2041,27 @@ public struct CompanionFeature: Sendable {
         }
     }
 
+    /// Whether the Lab's pretend day or hemisphere stops a write that is
+    /// worked out from the drawn house. On the real house the drawn house is
+    /// not the real one then — the scene hides what is really out, the
+    /// holidays are another region's — so writing it would write that. Says
+    /// so. The pretend house has no real house to protect and is never blocked.
+    private func blockedByLab(_ state: inout State) -> Bool {
+        #if DEBUG
+        guard !state.isPretend, state.labLook.changesTheWorld else { return false }
+        state.alert = AlertState {
+            TextState(verbatim: "Lab: a pretend day is on")
+        } actions: {
+            ButtonState(role: .cancel) { TextState(verbatim: "OK") }
+        } message: {
+            TextState(verbatim: "Decorating and holidays are not saved while the Lab pretends another day or hemisphere. Reset the Lab's day first.")
+        }
+        return true
+        #else
+        return false
+        #endif
+    }
+
     /// A write the server did not take. Its entry is already off, so the
     /// screen is back as it was; this says so.
     private func failed(_ error: AppError, _ name: String, state: inout State) -> Effect<Action> {
@@ -2072,6 +2070,14 @@ public struct CompanionFeature: Sendable {
         state.alert = .failure(error)
         return .none
     }
+}
+
+extension CompanionFeature.State {
+    /// Caring is coming back: it wakes up whatever mood the Lab pretended.
+    mutating func wakeFromLab() { labSlot.wake() }
+
+    /// A purchase was answered: the answer the Lab armed for it is spent.
+    mutating func labBuyAnswered() { labSlot.buyAnswered() }
 }
 
 extension Result {
@@ -2099,17 +2105,6 @@ extension CompanionHouse {
         case let .decor(decor): owned.contains(decor.rawValue)
         case let .species(species): ownedSpecies.contains(species.rawValue)
         case let .pack(pack): pack.species.allSatisfy { ownedSpecies.contains($0.rawValue) }
-        }
-    }
-}
-
-extension CompanionHouse.Lab {
-    /// A thing bought with the Lab's coins, kept in the Lab.
-    mutating func receive(_ item: ShopItem) {
-        switch item {
-        case let .decor(decor): owned.insert(decor.rawValue)
-        case let .species(species): ownedSpecies.insert(species.rawValue)
-        case let .pack(pack): ownedSpecies.formUnion(pack.species.map(\.rawValue))
         }
     }
 }
