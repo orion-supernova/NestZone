@@ -204,7 +204,11 @@ before changing anything here.
   stuttered while it scrolled. Do not put SwiftUI shader effects
   (`layerEffect`, `distortionEffect`) over the scene either: two of them held
   Today to ~25 fps on the simulator, the main thread waiting on the GPU every
-  frame — a wait no CPU profile shows. The scene also holds still while Today scrolls
+  frame — a wait no CPU profile shows. The two per-frame canvases (`back`,
+  `front`) render asynchronously (`Canvas(rendersAsynchronously: true)`): drawn
+  into the parent layer, every scene frame re-encoded the whole screen on the
+  main thread, and a full set of decorations dropped a frame every few seconds
+  (RULES.md §16). The scene also holds still while Today scrolls
   (`isScrolling`) and when a sheet covers it (`paused`; not at half height), and a grid of portraits uses
   `ScenePortrait` — one still canvas each, never a live `CompanionScene`. The
   tree is keyed on seed *and* species: a new companion keeps the old seed until
