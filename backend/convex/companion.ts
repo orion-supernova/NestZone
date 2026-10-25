@@ -1152,8 +1152,8 @@ export const start = mutation({
      * the house's current, returns the first answer and starts nothing.
      */
     requestId: v.optional(v.string()),
-    /** The colourway, an integer 1–3, after the finale. Absent is the original. */
-    colour: v.optional(v.number()),
+    /** The colourway, an integer 1–3, after the finale. Absent or null is the original. */
+    colour: v.optional(v.union(v.number(), v.null())),
     ...placeArgs,
   },
   returns: v.object({
@@ -1177,7 +1177,9 @@ export const start = mutation({
       v.null(),
     ),
   }),
-  handler: async (ctx, { homeId, species, requestId, colour, tzOffset, region }) => {
+  handler: async (ctx, { homeId, species, requestId, colour: sent, tzOffset, region }) => {
+    // A client that writes "no colour" as null means the original, as absent does.
+    const colour = sent ?? undefined;
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, homeId);
     if (!SPECIES.has(species)) throw new Error("There's no such companion");
@@ -1258,7 +1260,9 @@ export const start = mutation({
     if (
       previous?.status === "growing" &&
       previous.species === species &&
-      previous.colour === colour &&
+      // An older build knows nothing of colours: its tap on the same species
+      // is the same tap, and must not let go of a colour just chosen.
+      (previous.colour === colour || colour === undefined) &&
       now - (previous.chosen_at ?? previous.created) < 10_000
     ) {
       return { companionId: previous._id, welcome: null, graduated: null };
@@ -1355,8 +1359,8 @@ export const graduate = mutation({
     vote: v.optional(v.union(v.id("polls"), v.null())),
     /**
      * This graduation was the house's finale (the first time every
-     * `freeToHave` species had been grown): true on that one call, absent
-     * otherwise and from a repeat call.
+     * `freeToHave` species had been grown): true on that one call and on a
+     * repeat of it (its first answer may have been lost), absent otherwise.
      */
     finale: v.optional(v.boolean()),
   }),
@@ -1366,7 +1370,13 @@ export const graduate = mutation({
     const companion = await ctx.db.get(companionId);
     if (!companion || companion.home_id !== homeId) throw new Error("Companion not found");
     await requireDocHome(ctx, companion, "Companion");
-    if (companion.status === "graduated") return { paid: null };
+    if (companion.status === "graduated") {
+      // A retry after a lost answer: the finale is told again, as a retried
+      // `start` tells it, or the phone that grew it would never hear.
+      const done = await houseFor(ctx, homeId);
+      const wasFinale = done?.finale_at !== undefined && done.finale_at === companion.graduated_at;
+      return wasFinale ? { paid: null, finale: true } : { paid: null };
+    }
     const house = await ensureHouse(ctx, homeId);
     const now = Date.now();
     // The points, the six-day floor, and only the one growing: one let go

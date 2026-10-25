@@ -226,7 +226,11 @@ export function colourKey(species: string, colour: number): string {
 export function colourOpen(house: Doc<"companion_homes">, species: string, colour: number): boolean {
   if (!isColour(colour)) return false;
   const grown = house.grown_species ?? [];
-  if (!grownAllFree(grown) || !grown.includes(species)) return false;
+  // A house that reached the finale keeps its colours if the catalog later
+  // adds a free species; one that finished before `finale_at` existed is
+  // read from what it grew.
+  const reached = house.finale_at !== undefined || grownAllFree(grown);
+  if (!reached || !grown.includes(species)) return false;
   return !(house.grown_colours ?? []).includes(colourKey(species, colour));
 }
 
