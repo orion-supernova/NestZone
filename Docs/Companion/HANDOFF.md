@@ -1161,10 +1161,19 @@ In order — each step can go to testers on its own:
      Before and after sheets: `Docs/Companion/art/{trees,plants,pets}/index.html`.
      A reviewer pass on the integration (caches, concurrency, Reduce Motion,
      Release flags, strings) found nothing blocking.
-   - *Running:* the decorations, scene backdrops and things to wear
-     (`Docs/Companion/art/decor/` when it lands).
-   - *Open:* the Nestie card's overflow at the largest accessibility sizes;
-     re-measure Today and Choose on the phone with the new art.
+   - *Done:* the decorations, the three scene backdrops (cached, with the
+     sky) and the things to wear, which follow each pet's head and body in
+     every mood (`Docs/Companion/art/decor/`, RULES.md §16). The shop draws
+     every tile from a cached still (`ShopStill`, `DecorPortrait`; let go on
+     a memory warning and in the background), Choose went from 113 to about
+     11 late frames, and the card stacks at the accessibility sizes
+     (`Docs/Companion/art/shop/`). A full set of decorations used to drop
+     a frame every few seconds: the per-frame canvases now render
+     asynchronously (CLAUDE.md). A crash is fixed on the way: a tree's
+     crown cache was keyed on its seed alone, so a new tree with the old
+     seed indexed off the end of the old tree's layout.
+   - *Open:* re-measure Today, Choose and the shop on the phone with the
+     new art.
 6. **The finale**: "You've grown them all", the crown, growing a favourite
    again in a new colour.
 7. **Release:**
