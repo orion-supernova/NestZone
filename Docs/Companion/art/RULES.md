@@ -685,3 +685,79 @@ an outline and a lit half only, and the back tier of a fern none (0.96 to
 0.70); a pinna and a needle sampled at three steps a segment and not five,
 with no teeth (a tooth is under a pixel); a pad's spikes are a triangle each
 and 58 are enough where 140 were not.
+
+## 16. Decorations, scenes and things to wear (round 4)
+
+The eight shop items that were still emoji: three scenes (windowsill, balcony,
+starry rooftop), the wind chime, the watermelon, and the four things worn
+(bow, scarf, tiny crown; the party hat moved into the same system). Shots in
+`art/decor/` (`<page>-before` is the emoji, `-v1` the drawing), index in
+`art/decor/index.html`. Pages: `-artSheet decor-<item>-<pets|moods|stages|plants|night|scene>`
+and `decor-shop` (the size of a shop tile). `-decorBefore 1` draws the eight as
+emoji again. Everything in sections 1 and 8 holds: one light from the sky, fills
+and not strokes, merged by colour, no `Color` or gradient built in a loop.
+
+- **Worn things are drawn by the body that wears them, in that body's frame.**
+  The old way drew a hat at a fixed point in the scene, so it stood still while
+  the pet nodded, slept or hopped. Now `WearArt` draws each thing about its own
+  origin and the caller places it: a hat in the head's frame
+  (`sitterHead`, `perchedHead`, `duckHead`, the hedgehog's ball, the egg), a bow
+  or scarf at the throat in the body's frame before the head, so the chin
+  overlaps it. A sleeping pet's neck piece is turned to run between head and
+  body. A dozing pet wears its nightcap and the hat fades out as the cap goes on
+  and back in as it flies off (`hatShown`).
+- **A plant's hat rides in the tree's layer** (`DecorLayer`, under the same
+  wind), not in front of it; its bow or scarf goes round the pot, drawn right
+  after the pot so a vine hangs in front of it. Sketched pets keep a still emoji
+  position (their art is still an emoji).
+- **No clips in anything drawn every frame.** A clip is an offscreen pass in a
+  `Canvas`. The party hat's stripes, the scarf's stripes and ribs and the
+  watermelon's meridians are cut to their shape once (`Path.intersection`,
+  cached; the scarf by span and size) and filled plain.
+- **A backdrop is a cached layer, and it includes the sky.** `SceneryLayer`
+  draws the sky, the backdrop and the quiet house's dimming as one opaque
+  picture, redrawn when the clock moves a minute or the mood eases a fiftieth
+  (one recording was 1.8 ms; it was drawn once in a 30 s run). So nothing
+  behind a backdrop twinkles; the rooftop's one moving thing, a shooting star
+  every eleven seconds, is drawn per frame in front of it, in clear sky.
+  Backdrops are designed for the card (about 560 units wide by 360) and the
+  portrait (360 square): props such as the sill's books and candle and the
+  rooftop's telescope appear only where there is room (width 440 and up).
+  The pot's and the pet's feet stand on the sill's top, the balcony's tiles and
+  the deck, at y 340 to 350.
+- **The wind chime moves, so it is per frame**: the whole chime swings as the
+  trees lean, each tube a little behind, the wind catcher turns, one glint
+  runs down a tube every 4.7 s; still under Reduce Motion.
+- **Night.** Every colour goes through `WearLook.tone` (the same dimming as a
+  pet's coat) and a backdrop's through `hue`, warmed a little at dusk;
+  lit windows, the bulbs and the candle come on with the dark.
+
+**Numbers** (iPhone 17 simulator, iOS 27, Debug, `-nestieBench 1 -todayScroll 1
+-frameMeter 1`, 30 s, `SceneTiming`: the median of the per-second means of the
+two scene canvases). `full` is eleven decorations at once (`-nestieDecor full`);
+`roof` is rooftop, chime, scarf and watermelon.
+
+| | back ms, none | back, full | front, full | late frames / 1680, none | full | roof |
+|---|---|---|---|---|---|---|
+| kitten | 0.41 | 0.49 | 0.23 | 0 | 15 | 9 |
+| magnolia | 0.18 | 0.20 | 0.17 | 0 | 1 | 5 |
+| sunflower | 0.19 | 0.24 | 0.22 | 0 | 4 | 4 |
+
+Before the pass the same set (old emoji) cost 0.97 / 1.08 / 1.14 ms back and
+0.5 to 0.8 front, with 0, 72 and 92 late frames, on a loaded Mac; so the
+decorated scene is cheaper to record than before. A late frame here is one
+33 ms frame: with decorations there is about one every two to four seconds,
+none without. Each added cached layer seems to cost that on the simulator
+(windowsill 1, balcony 2, rooftop 4 in 1080 frames alone); recording cost does
+not explain it (a layer drew once), and `rendersAsynchronously`, `opaque` and
+a plain `drawingGroup` made no difference. Not measured on a device.
+
+What the critique passes threw out: a hat floating at a fixed point; a
+watermelon with a clip per frame (5 late frames, 1 to 2 after); a scarf with
+two clips per frame (22 late frames in the four-item set, 11 to 15 after);
+a second canvas for the sky (no gain, folded into the layer); more twinkling
+stars for the rooftop (static ones in the layer instead).
+
+Known and not mine: a bright grown cherry, lemon or pomegranate, or two tree
+species on one art sheet, crashes in `LeafArt.build` (index out of range), so
+the plants sheets use one tree.

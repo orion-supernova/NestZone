@@ -82,7 +82,18 @@ struct CompanionScene: View {
         TimelineView(.animation(minimumInterval: frameInterval, paused: isPaused)) { timeline in
             let date = timeline.date
             ZStack {
-                Canvas { context, size in snapshot.drawBack(context, size: size, at: date) }
+                if let scenery = snapshot.scenery(at: date) {
+                    // A backdrop and the sky behind it are one picture, drawn
+                    // again only when the light moves (a minute of the clock, a
+                    // fiftieth of the mood easing in); the companion is drawn
+                    // over it every frame. Its stars do not twinkle: nothing
+                    // that moves is behind a backdrop.
+                    SceneryLayer(state: scenery)
+                        .equatable()
+                    Canvas { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date, layered: true) } }
+                } else {
+                    Canvas { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date) } }
+                }
                 if let canopy, companion.species.art == .tree {
                     let wind = snapshot.wind(viewSize, at: date)
                     let state = snapshot.treeState(at: date)
@@ -119,7 +130,7 @@ struct CompanionScene: View {
                             .equatable()
                     }
                 }
-                Canvas { context, size in snapshot.drawFront(context, size: size, at: date) }
+                Canvas { context, size in SceneTiming.measure("front") { snapshot.drawFront(context, size: size, at: date) } }
             }
         }
         .contentShape(.rect)
@@ -214,7 +225,7 @@ struct CompanionScene: View {
             progressFrom: progressFrom, progressTo: progressTo, progressAt: progressAt,
             revivedAt: revivedAt, revivedFromDozing: revivedFromDozing, stageUpAt: stageUpAt,
             dropAt: dropAt, landedAt: landedAt, pettedAt: pettedAt, pours: pours, petSide: petSide, bursts: bursts,
-            crowns: crowns
+            crowns: crowns, hatsOnLayer: true
         )
     }
 
@@ -266,6 +277,9 @@ struct SceneSnapshot {
     let petSide: Double
     let bursts: [CompanionScene.Burst]
     let crowns: CrownCache
+    /// Whether a hat on a plant is drawn by the tree's layer, under its wind
+    /// (the live scene), and not in front of it (a portrait, one canvas).
+    var hatsOnLayer = false
 
     /// How long the mood takes to change on screen. Waking up is slower and
     /// overshoots — leaves lifting past where they rest, then settling.
@@ -331,14 +345,28 @@ struct SceneSnapshot {
         return TreeState(
             seed: companion.seed, species: companion.species, mood: shownMood(at: date), progress: shownProgress(at: date),
             day: (SceneFrame.dayness(hour) * 50).rounded() / 50, light: (SceneFrame.skySide(hour) * 10).rounded() / 10,
-            decor: compact ? [] : layout.tree, reduceMotion: reduceMotion
+            decor: compact ? [] : layout.tree + (hatsOnLayer ? hatRaw.map { [$0] } ?? [] : []), reduceMotion: reduceMotion
         )
+    }
+
+    /// A hat worn by a plant or a tree, which rides on its layer.
+    private var hatRaw: String? {
+        guard !companion.species.isPet, let raw = layout.wearing, let item = DecorItem(rawValue: raw),
+              item == .partyHat || item == .tinyCrown else { return nil }
+        return raw
+    }
+
+    /// The backdrop in the sky's spot, and the light it is drawn in.
+    func scenery(at date: Date) -> SceneryState? {
+        guard !compact, let raw = layout.sky, let item = DecorItem(rawValue: raw), item.isBackdrop, item.isDrawn else { return nil }
+        let hour = Double(Calendar.current.component(.hour, from: now)) + Double(Calendar.current.component(.minute, from: now)) / 60
+        return SceneryState(item: item, seed: companion.seed, hour: hour, mood: (shownMood(at: date) * 50).rounded() / 50)
     }
 
     /// Steps a few times a second while lights or a star are out after dark,
     /// so they twinkle; otherwise 0, and they are drawn once.
     func twinkle(_ state: TreeState, at date: Date) -> Int {
-        let glows = state.decor.contains { $0 == DecorItem.fairyLights.rawValue || $0 == DecorItem.treeStar.rawValue }
+        let glows = state.decor.contains { $0 == DecorItem.fairyLights.rawValue || $0 == DecorItem.treeStar.rawValue || $0 == DecorItem.tinyCrown.rawValue }
         return !reduceMotion && state.day < 0.85 && glows ? Int(date.timeIntervalSince(epoch) * 4) : 0
     }
 
@@ -408,14 +436,19 @@ struct SceneSnapshot {
     }
 
     /// Behind the tree: the sky, what hangs above, the rug, the pot — or the
-    /// pet, which is drawn whole every frame.
-    func drawBack(_ context: GraphicsContext, size: CGSize, at date: Date) {
+    /// pet, which is drawn whole every frame. `layered` is a scene whose sky
+    /// and backdrop are drawn already (`SceneryLayer`).
+    func drawBack(_ context: GraphicsContext, size: CGSize, at date: Date, layered: Bool = false) {
         let moment = moment(size, at: date)
         let frame = moment.frame, center = moment.center
         let painter = ScenePainter(frame: frame, width: moment.width, seed: companion.seed)
         var c = context
         c.scaleBy(x: moment.scale, y: moment.scale)
-        painter.sky(c)
+        if !layered {
+            painter.sky(c)
+            painter.backdrop(c)
+        }
+        if layered { painter.shootingStar(c) }
         painter.above(c)
         painter.rug(c)
         switch companion.species.art {
@@ -438,34 +471,32 @@ struct SceneSnapshot {
             }
         case .tree, .plant:
             painter.pot(c, style: PotStyle(seed: companion.seed))
+            painter.potWear(c)
         case .sketch:
-            if !companion.species.isPet { painter.pot(c, style: PotStyle(seed: companion.seed)) }
+            if !companion.species.isPet {
+                painter.pot(c, style: PotStyle(seed: companion.seed))
+                painter.potWear(c)
+            }
             sketch(c, moment)
         }
     }
 
-    /// Where a hat sits and where a bow or scarf is tied, each the point its
-    /// foot stands on: the crown's top and the pot's front for a plant; the
-    /// head and the chin for a pet — the duckling's from its drawing, grown.
+    /// Where a hat sits and where a bow or scarf is tied for a body that draws
+    /// nothing of its own: a sketched pet's emoji, and the flat duckling. A
+    /// drawn pet wears its things itself (`CritterPainter+Wear`).
     func wearingPoints(_ moment: Moment, crown: CGRect) -> (top: CGPoint, neck: CGPoint) {
         let center = moment.center
         let pot = CGPoint(x: center, y: SceneSpace.soil + 32)
         switch (companion.species.art, companion.species.isPet) {
         case (.duckling, _):
             return (CGPoint(x: center - 22, y: SceneSpace.floor - 120), CGPoint(x: center - 18, y: SceneSpace.floor - 62))
-        case (.critter, _):
-            guard let plan = CritterPlan.of(companion.species) else { return (CGPoint(x: center, y: SceneSpace.floor - 140), CGPoint(x: center, y: SceneSpace.floor - 80)) }
-            let w = CritterPainter.wearing(plan, stage: stage), k = 190.0 / 120
-            let floor = SceneSpace.floor - 4
-            func scene(_ p: CGPoint) -> CGPoint { CGPoint(x: center + (p.x - 60) * k, y: floor + (p.y - 108) * k) }
-            return (scene(w.top), scene(w.neck))
         case (.sketch, true):
             let box = sketchBox(progress: moment.frame.progress, center: center)
             return (CGPoint(x: box.midX, y: box.minY + 8), CGPoint(x: box.midX, y: box.maxY - box.height * 0.04))
         case (.sketch, false):
             let box = sketchBox(progress: moment.frame.progress, center: center)
             return (CGPoint(x: box.midX, y: box.minY + 8), pot)
-        case (.tree, _), (.plant, _):
+        default:
             return (CGPoint(x: crown.midX, y: crown.minY + 12), pot)
         }
     }
@@ -542,10 +573,7 @@ struct SceneSnapshot {
             painter.weather(c)
         }
         painter.glints(c, in: crown)
-        if !compact {
-            let (top, neck) = wearingPoints(moment, crown: crown)
-            painter.wearing(c, top: top, neck: neck)
-        }
+        if !compact { wornInFront(c, painter, moment: moment, crown: crown, at: date) }
 
         // Ready to graduate: a slow golden breath around it.
         if progress >= 1 {
@@ -565,6 +593,35 @@ struct SceneSnapshot {
         waking(c, at: date, revive: moment.revive, center: center)
         stageUp(c, at: date, crown: crown)
         drawBursts(c, at: date, center: center)
+    }
+
+    /// What no body draws for itself. A drawn pet wears its own hat and bow
+    /// (`CritterPainter`, on its head and throat, so they nod and tilt with
+    /// it); a plant's neck piece is on its pot (`ScenePainter.potWear`) and its
+    /// hat rides in the tree's layer, so what is left here is a sketched
+    /// pet's, the flat duckling's, and a plant's hat in a portrait.
+    private func wornInFront(_ c: GraphicsContext, _ painter: ScenePainter, moment: Moment, crown: CGRect, at date: Date) {
+        guard let item = painter.worn else { return }
+        switch (companion.species.art, companion.species.isPet) {
+        case (.critter, _):
+#if DEBUG
+            // The "before" picture: the emoji where a drawn pet's old, still anchors had it.
+            if !item.isDrawn, let plan = CritterPlan.of(companion.species) {
+                let w = CritterPainter.legacyWearing(plan, stage: stage), k = 190.0 / 120, floor = SceneSpace.floor - 4
+                func scene(_ p: CGPoint) -> CGPoint { CGPoint(x: moment.center + (p.x - 60) * k, y: floor + (p.y - 108) * k) }
+                painter.wearing(c, top: scene(w.top), neck: scene(w.neck))
+            }
+#endif
+            return
+        case (.duckling, _), (.sketch, true):
+            let (top, neck) = wearingPoints(moment, crown: crown)
+            painter.wearing(c, top: top, neck: neck)
+        default:
+            guard !hatsOnLayer, item == .partyHat || item == .tinyCrown else { return }
+            let anchors = companion.species.art == .sketch ? sketchAnchors(at: date) : anchors(at: date)
+            let top = CGPoint(x: moment.center + anchors.crownTop.x, y: SceneSpace.soil + anchors.crownTop.y)
+            painter.hat(c, item, at: top, scale: ScenePainter.hatScale(crownWidth: anchors.right - anchors.left))
+        }
     }
 
     /// A chore's drop arcing in from the corner; a care's water from the can.
@@ -827,13 +884,49 @@ struct DecorLayer: View, Equatable {
             layout.tree = state.decor
             let frame = SceneFrame(
                 time: Double(twinkle) * 0.25, day: state.day, hour: 12, mood: state.mood, progress: state.progress,
-                wind: 0, reduceMotion: state.reduceMotion, layout: layout, southern: false
+                wind: 0, reduceMotion: state.reduceMotion, layout: layout, southern: false, side: state.light
             )
             ScenePainter(frame: frame, width: width, seed: state.seed).treeDecor(tree, anchors: anchors)
         }
     }
 }
 
+
+/// What a backdrop is drawn from: which one, and the light it is in.
+struct SceneryState: Equatable, Sendable {
+    var item: DecorItem
+    var seed: String
+    /// The clock to the minute, and the mood to a fiftieth, so the layer is
+    /// drawn again when the light has moved and not every frame.
+    var hour: Double
+    var mood: Double
+}
+
+/// A backdrop on a layer of its own: nothing in it moves, so it is drawn again
+/// only when the light does (the sun crossing a tenth of the sky, the day
+/// brightening a fiftieth), and between those the same picture is reused.
+struct SceneryLayer: View, Equatable {
+    let state: SceneryState
+
+    var body: some View {
+        Canvas { context, size in
+            SceneTiming.measure("scenery") {
+                let scale = size.height / SceneSpace.height
+                var c = context
+                c.scaleBy(x: scale, y: scale)
+                var layout = SceneLayout()
+                layout.sky = state.item.rawValue
+                let frame = SceneFrame(time: 0, day: SceneFrame.dayness(state.hour), hour: state.hour, mood: state.mood, progress: 1,
+                                       reduceMotion: true, layout: layout, southern: false)
+                let painter = ScenePainter(frame: frame, width: size.width / scale, seed: state.seed)
+                painter.sky(c)
+                painter.backdrop(c)
+                painter.gloomWash(c)
+            }
+        }
+        .drawingGroup(opaque: true)
+    }
+}
 
 /// The crown's anchors by mood and growth. They change only while one of the
 /// two eases in, and then in small steps — a fortieth of a mood, a two

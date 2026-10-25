@@ -24,6 +24,9 @@ struct SceneFrame {
     var southern: Bool
     /// 0…1 while the glass dome lifts off a dozing companion.
     var domeLift = 0.0
+    /// Where the sun or the moon stands across the scene, when the hour is not
+    /// known (a cached layer is handed the light, not the clock).
+    var side: Double?
 
     static func dayness(_ hour: Double) -> Double {
         Ink.clamp((cos((hour - 13) / 24 * .pi * 2) + 0.4) / 1.1)
@@ -76,7 +79,9 @@ struct ScenePainter {
     let frame: SceneFrame
     let width: Double
     let seed: Ink.Random
-    private var center: Double { width / 2 }
+    /// The sky's one light and the hour's colour, for what is worn, hung or set on the floor.
+    let lamp: WearLook
+    var center: Double { width / 2 }
     var day: Double { frame.day }
     var time: Double { frame.reduceMotion ? 0 : frame.time }
 
@@ -84,6 +89,14 @@ struct ScenePainter {
         self.frame = frame
         self.width = width
         self.seed = Ink.Random(seed + "-scene")
+        lamp = WearLook(L: WearLook.light(side: frame.side ?? SceneFrame.skySide(frame.hour), day: frame.day), day: frame.day)
+    }
+
+    /// The backdrop put out in the sky's spot, if that is what is there: it is
+    /// a layer of its own, drawn again only when the hour's light moves.
+    var scenery: DecorItem? {
+        guard let raw = frame.layout.sky, let item = DecorItem(rawValue: raw), item.isBackdrop, item.isDrawn else { return nil }
+        return item
     }
 
     // MARK: Sky
@@ -124,6 +137,7 @@ struct ScenePainter {
         }
         // Stars, after dark.
         var r = seed
+        // (A rooftop's dusting of fixed stars is in its layer, not twinkled here.)
         for _ in 0..<22 {
             let x = r.next() * width, y = 12 + r.next() * SceneSpace.height * 0.3
             let size = r.between(0.6, 1.6), rate = r.between(0.6, 2), phase = r.next() * 6
@@ -135,12 +149,40 @@ struct ScenePainter {
         // A quiet house: the light goes flat and a cloud sits over the sun.
         let gloom = Ink.clamp((0.5 - frame.mood) / 0.5)
         if gloom > 0 {
-            context.fill(Path(rect), with: .color(Ink.color(0x201E30, gloom * 0.5)))
+            // With a backdrop the wash goes over it too (`gloomWash`, after it).
+            if scenery == nil { gloomWash(context) }
             let (x, y) = sunPosition
             for (dx, dy, rr) in [(-14.0, 4.0, 13.0), (0, -4, 16), (16, 3, 12), (30, 6, 9)] {
                 context.circle(x + dx - 6, y + dy + 6, rr, .color(Ink.color(0x9696AA, gloom * 0.55)))
             }
         }
+    }
+
+    /// Every eleven seconds, after dark, a streak across the upper sky.
+    func shootingStar(_ context: GraphicsContext) {
+        guard scenery == .starryRooftop else { return }
+        let night = 1 - day
+        guard night > 0.4, !frame.reduceMotion else { return }
+        let cycle = (time / 11).rounded(.down), t = (time - cycle * 11) / 0.9
+        guard t >= 0, t < 1 else { return }
+        var r = Ink.Random(seed: UInt32(truncatingIfNeeded: Int(cycle) &* 2_654_435_761) ^ 77)
+        let x0 = width * r.between(0.15, 0.7), y0 = r.between(14, 60)
+        let dx = 120.0 * (r.next() < 0.5 ? 1 : -1), dy = 46.0
+        let head = CGPoint(x: x0 + dx * Ink.ease(t), y: y0 + dy * Ink.ease(t))
+        let tail = CGPoint(x: x0 + dx * Ink.ease(max(0, t - 0.22)), y: y0 + dy * Ink.ease(max(0, t - 0.22)))
+        var streak = Path()
+        streak.move(to: tail); streak.addLine(to: head)
+        let fade = sin(t * .pi) * night
+        context.stroke(streak, with: .linearGradient(Gradient(colors: [Color.white.opacity(0), Color.white.opacity(0.9 * fade)]), startPoint: tail, endPoint: head),
+                       style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+        context.glow(head.x, head.y, 6, Color.white.opacity(0.5 * fade))
+    }
+
+    /// The dimming of a quiet house, over everything behind the companion.
+    func gloomWash(_ context: GraphicsContext) {
+        let gloom = Ink.clamp((0.5 - frame.mood) / 0.5)
+        guard gloom > 0 else { return }
+        context.fill(Path(CGRect(x: 0, y: 0, width: width, height: SceneSpace.height)), with: .color(Ink.color(0x201E30, gloom * 0.5)))
     }
 
     private var isDaytime: Bool { frame.hour >= 6 && frame.hour < 20 }
@@ -352,6 +394,8 @@ struct ScenePainter {
             kites(context)
         case .item(.bats):
             bats(context)
+        case let .item(item) where item == .windChime && item.isDrawn:
+            windChime(context)
         case let .item(item) where !item.isDrawn:
             context.sketch(item.symbol, center, 54, size: 30)
         default:
@@ -466,6 +510,11 @@ struct ScenePainter {
     /// clumps are — drawn in the tree's own space, after it, so they sway
     /// with it.
     func treeDecor(_ context: GraphicsContext, anchors: CanopyAnchors) {
+        // A hat is worn at any size of plant, and moves with it.
+        for raw in frame.layout.tree {
+            guard let item = DecorItem(rawValue: raw), item == .partyHat || item == .tinyCrown else { continue }
+            hat(context, item, at: anchors.crownTop, scale: Self.hatScale(crownWidth: anchors.right - anchors.left))
+        }
         guard frame.progress > 0.25 else { return }
         for raw in frame.layout.tree {
             switch DecorItem(rawValue: raw) {
@@ -566,19 +615,6 @@ struct ScenePainter {
             lines.move(to: CGPoint(x: -2.4, y: 8.5)); lines.addLine(to: CGPoint(x: 2.4, y: 8.5))
             lines.move(to: CGPoint(x: -2.4, y: 11)); lines.addLine(to: CGPoint(x: 2, y: 11))
             c.stroke(lines, with: .color(SceneInk.ink), lineWidth: 0.6)
-        }
-    }
-
-    // MARK: Wearing
-
-    /// What it wears: a hat or a crown on `top`, a bow or a scarf at `neck` —
-    /// a pet's chin, a plant's pot. Sketched until drawn.
-    func wearing(_ context: GraphicsContext, top: CGPoint, neck: CGPoint) {
-        guard let raw = frame.layout.wearing, let item = DecorItem(rawValue: raw) else { return }
-        switch item {
-        case .partyHat: partyHat(context, at: top)
-        case .tinyCrown: context.sketch(item.symbol, top.x, top.y, size: 30)
-        default: context.sketch(item.symbol, neck.x, neck.y, size: 26)
         }
     }
 
@@ -753,6 +789,8 @@ struct ScenePainter {
             }
         case .birdFeeder:
             birdFeeder(context, x: x, y: y)
+        case .watermelon where item.isDrawn:
+            watermelon(context, x: x, y: y)
         case .sabzeh:
             shadow(22)
             // Sprouted wheatgrass in a dish, tied with a red ribbon.

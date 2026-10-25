@@ -77,6 +77,7 @@ extension CritterPainter {
             col.translateBy(x: look.L.x * 0.4, y: look.L.y * 0.6)
             col.stroke(g.collar, with: .color(Color.white.opacity(0.55)), style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
         }
+        neckwear(b, at: CGPoint(x: 49, y: 72), span: 14, size: 0.9)
     }
 
     /// The duckling's head, in the box: down on the cheek and the back, a
@@ -134,5 +135,6 @@ extension CritterPainter {
             h.stroke(brow, with: .color(mark.shifted(-10).color(0.5 * w.thirst)), style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
         }
         motion.nightcap(h)
+        hat(h, foot: CGPoint(x: 47, y: 29.5), tilt: 0.12, scale: 0.9)
     }
 }

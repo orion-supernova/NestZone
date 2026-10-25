@@ -74,6 +74,7 @@ extension CritterPainter {
         b.stroke(toes, with: .color(dark.color(0.4)), style: StrokeStyle(lineWidth: 0.6, lineCap: .round))
         glow(b, Path(ellipseIn: CGRect(x: 32 - L.x * 3, y: 58 - L.y * 2, width: 36, height: 24)), dark.mix(look.cool, 0.4), centre: CGPoint(x: 50 - L.x * 3, y: 70), radius: 15, alpha: 0.3)
 
+        neckwear(b, at: CGPoint(x: 48, y: 72), span: 14, size: 0.9)
         placedHead(b, w, baby: baby)
     }
 
@@ -145,5 +146,9 @@ extension CritterPainter {
         cap.translateBy(x: 54, y: 66)
         cap.rotate(by: .radians(-0.2))
         self.cap(cap, motion.weights)
+        // The hat takes the cap's place on top of the ball, and the neck piece goes round the
+        // gap the face looks out of.
+        hat(b, foot: CGPoint(x: 56, y: 53), tilt: -0.2, scale: 0.95)
+        neckwear(b, at: CGPoint(x: 49, y: 94), span: 13, tilt: -0.9, size: 0.85)
     }
 }

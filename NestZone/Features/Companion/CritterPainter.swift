@@ -64,7 +64,13 @@ struct CritterPainter {
         body.rotate(by: .radians(turn))
         body.scaleBy(x: sx, y: sy)
         body.translateBy(x: -60, y: -108)
-        if stage < 2 { wrapped(body); return }
+        if stage < 2 {
+            wrapped(body)
+            // An egg wears its hat on top and its ribbon round the middle.
+            neckwear(body, at: CGPoint(x: 60, y: plan.origin == .egg ? 82 : 86), span: plan.origin == .egg ? 20 : 25, size: 1.1)
+            hat(body, foot: CGPoint(x: 60, y: plan.origin == .egg ? 42 : 50), scale: 1)
+            return
+        }
         body.translateBy(x: 60, y: 108)
         body.scaleBy(x: scale, y: scale)
         body.translateBy(x: -60, y: -108)
@@ -74,23 +80,6 @@ struct CritterPainter {
         case .perched: perched(body)
         case .waddler: waddler(body)
         }
-    }
-
-    /// Where a hat sits and where a bow or scarf is tied, in the box, for
-    /// this stage: the head's top between the ears, and under the chin.
-    static func wearing(_ plan: CritterPlan, stage: Int) -> (top: CGPoint, neck: CGPoint) {
-        var top = plan.body == .sitter ? CGPoint(x: 47, y: 31) : plan.body == .waddler ? CGPoint(x: 46, y: 33) : CGPoint(x: 60, y: 33)
-        var neck = plan.body == .sitter ? CGPoint(x: 47, y: 67) : plan.body == .waddler ? CGPoint(x: 47, y: 70) : CGPoint(x: 60, y: 72)
-        if stage < 2 {
-            top = CGPoint(x: 60, y: 46)
-            neck = CGPoint(x: 60, y: 90)
-        } else if stage == 2 {
-            top = CGPoint(x: 60, y: 66)
-            neck = CGPoint(x: 60, y: 90)
-        }
-        let scale = stage < 2 ? 1 : PetMotion.scales[stage]
-        func scaled(_ p: CGPoint) -> CGPoint { CGPoint(x: 60 + (p.x - 60) * scale, y: 108 + (p.y - 108) * scale) }
-        return (scaled(top), scaled(neck))
     }
 
     // MARK: Brushes

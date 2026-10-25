@@ -363,7 +363,23 @@ actor FakeNestieServer {
         jarFeed = [["id": "j1", "kind": "welcome", "leaves": 150, "sparkles": 180, "item": NSNull(), "userId": "u1", "at": now.addingTimeInterval(-startedAgo).timeIntervalSince1970 * 1000],
                    ["id": "j2", "kind": "gift", "leaves": 1, "sparkles": 0, "item": NSNull(), "userId": NSNull(), "at": now.timeIntervalSince1970 * 1000]]
         album = []
+        // `-nestieDecor full` (or a list of raw values, `windChime,bow`) owns
+        // those decorations and puts them out, to measure what a scene full of
+        // them costs against an empty one.
+        if let list = UserDefaults.standard.string(forKey: "nestieDecor") {
+            let raws = list == "full" ? Self.fullSet : list.split(separator: ",").map(String.init)
+            layout = SceneLayout()
+            for raw in raws {
+                guard let item = DecorItem(rawValue: raw) else { continue }
+                owned.insert(raw)
+                layout.place(.item(item))
+            }
+        }
     }
+
+    /// One of everything that is drawn each frame or lit at night, a spot each.
+    private static let fullSet = ["windChime", "starryRooftop", "fairyLights", "ornaments", "treeStar", "tinyCrown", "glazedPot",
+                                  "watermelon", "paperLantern", "kilim", "petals"]
 
     // MARK: Reads
 
