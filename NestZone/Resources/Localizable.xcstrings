@@ -24921,6 +24921,23 @@
         }
       }
     },
+    "plant_stage_budding": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budding"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomurcuklanıyor"
+          }
+        }
+      }
+    },
     "plant_stage_grown": {
       "extractionState": "manual",
       "localizations": {
@@ -24934,6 +24951,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yetişti"
+          }
+        }
+      }
+    },
+    "plant_stage_leafing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leafing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapraklanıyor"
           }
         }
       }
@@ -24968,6 +25002,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tohum"
+          }
+        }
+      }
+    },
+    "plant_stage_seedling": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seedling"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fide"
           }
         }
       }

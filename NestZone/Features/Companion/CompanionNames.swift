@@ -161,9 +161,20 @@ extension Price {
 }
 
 extension CompanionMath {
-    /// "Sapling", "Little one" — or "Grown" once it is ready.
-    static func stageTitle(_ stage: Int, isPet: Bool, isReady: Bool) -> LocalizedStringResource {
+    /// "Sapling", "Little one" — or "Grown" once it is ready. A plant in a pot
+    /// (`Species.growsInPot`) has stages of its own: it was never a tree.
+    static func stageTitle(_ stage: Int, isPet: Bool, isReady: Bool, potted: Bool = false) -> LocalizedStringResource {
         if isReady { return isPet ? L10n.petStageGrown : L10n.plantStageGrown }
+        if potted, !isPet {
+            return switch stage {
+            case 0: L10n.plantStageSeed
+            case 1: L10n.plantStageSprout
+            case 2: L10n.plantStageSeedling
+            case 3: L10n.plantStageLeafing
+            case 4: L10n.plantStageBudding
+            default: L10n.plantStageBloom
+            }
+        }
         if isPet {
             return switch stage {
             case 0: L10n.petStageEgg
@@ -428,5 +439,18 @@ extension View {
         lineLimit(1)
             .minimumScaleFactor(minimum)
             .allowsTightening(true)
+    }
+}
+
+extension Species {
+    /// Whether it is a plant in a pot and not a tree or a pet, which is what
+    /// says how its stages are named: seed, sprout, seedling, leafing, budding,
+    /// in bloom.
+    var growsInPot: Bool {
+        switch self {
+        case .basil, .sunflower, .cactus, .daisy, .mint, .rosemary, .snakePlant, .fern, .lavender, .peony, .monstera,
+             .rose, .orchid, .tulip, .pumpkin, .snowdrop: true
+        default: false
+        }
     }
 }

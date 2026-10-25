@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// A drawn plant in layered gouache, the way `CanopyPainter` draws a tree:
-/// every leaf is a shade shape, a lit copy of it up and left, a rib; the plant
-/// is built back to front in three depth tiers, cool and dark behind, warm and
-/// light in front, with one light from the upper left on every part.
+/// A drawn plant in layered gouache, the way `PomegranatePainter` draws a tree:
+/// leaves are sorted by the light into classes and merged into a few fills per
+/// depth tier (`LeafBatch`), their shapes are worked out once and kept
+/// (`LeafShape`), and every bit of light, the lit half of a leaf, the rim, a
+/// highlight on a bloom, comes from one vector towards the sun (or at night the
+/// moon). See `Docs/Companion/art/RULES.md`.
 ///
 /// It is one still picture, drawn only when what it shows changes (the mood or
 /// the growth easing in, the light moving), on a layer of its own (`PlantLayer`);
@@ -22,27 +24,41 @@ struct PlantPainter {
     var growth: Double
     var mood: Double
     var day: Double
+    /// Where the sun (or at night the moon) stands across the scene, -1 to 1.
+    var light = -0.5
 
     let M: Canopy.Mood
     let night: Double
+    /// Towards the light, a unit vector, y up negative.
+    let L: (x: Double, y: Double)
+    /// How low the sun is (it peaks at dusk) and how far into moonlight we are.
+    let dusk: Double
+    let moon: Double
+    /// The warm white of a rim by day, amber at dusk, cool by the moon; and the
+    /// glow of a patch of light.
+    let rimTone: RGB
+    let glow: RGB
     /// The plan's five greens as this mood and light leave them.
     let ramp: [RGB]
-    let tiers: [Tier]
+    /// What a leaf is painted with, back tier to front, and the front tier's
+    /// new growth.
+    let inks: [LeafInk]
+    let fresh: LeafInk
     /// The shadow a leaf casts on what is behind it, in the plant's own
     /// deepest green.
     let cast: Color
 
     var p: Double { growth }
 
-    /// One depth tier's paint, as a tree's clumps have: the shade runs light to
-    /// dark along the light, the lit copy is radial from its upper left.
-    struct Tier {
-        let shade, lit: Gradient
-        let vein: Color
+    /// A tier's paint: three classes of green, the half of a leaf that faces
+    /// the light, its veins, the light on its edge and a glint, and the stalks.
+    struct LeafInk {
+        var d, m, l, half, vein, rim, gloss, shadow, stalk: Color
     }
 
-    init(plan: PlantPlan, seed: String, growth: Double, mood: Double, day: Double) {
+    init(plan: PlantPlan, seed: String, growth: Double, mood: Double, day: Double, light: Double = -0.5) {
         self.plan = plan
+        self.light = light
         self.seed = PlantSeed(seed)
         self.growth = growth
         self.mood = mood
@@ -51,22 +67,57 @@ struct PlantPainter {
         let night = 1 - day
         self.M = M
         self.night = night
+        L = LeafArt.sun(light: light, day: day)
+        let dusk = 4 * day * (1 - day)
+        self.dusk = dusk
+        let moon = Ink.smooth((0.3 - day) / 0.3)
+        self.moon = moon
+        let rimTone = RGB(0xFFF3C4).mix(RGB(0xFF9A5C), Ink.clamp(dusk * 1.4)).mix(RGB(0xC4D2FF), moon)
+        let glow = RGB(0xFFE9A8).mix(RGB(0xFFB070), Ink.clamp(dusk * 1.4)).mix(RGB(0xB8C8FF), moon)
+        self.rimTone = rimTone
+        self.glow = glow
         var ramp = (0..<5).map { Canopy.leafTone(RGB(plan.ramp[$0]), $0, M, day: day) }
         // Moonlight on the lit rim.
         ramp[4] = ramp[4].mix(RGB(0xCDD6FF), 0.3 * night)
         self.ramp = ramp
-        tiers = (0..<3).map { k in
-            let base = ramp[k], lit = ramp[k + 1], sun = ramp[k + 2]
-            let sh0 = base.shifted(4, -4), sh1 = base.shifted(-4, 6)
-            let li0 = lit.mix(sun, (0.34 + 0.18 * M.glow) * (1 - 0.45 * night) * (1 - 0.35 * M.doze))
-            let li2 = lit.shifted(-4, 5)
-            return Tier(
-                shade: Gradient(colors: [sh0.color(), sh1.color()]),
-                lit: Gradient(stops: [.init(color: li0.color(), location: 0), .init(color: lit.color(), location: 0.55),
-                                      .init(color: li2.color(), location: 1)]),
-                vein: lit.mix(base, 0.38).color(0.85)
-            )
+        let rimAlpha = (0.26 + 0.3 * Ink.clamp(dusk * 1.6) + 0.22 * moon) * (1 - 0.45 * M.doze) * (1 - 0.3 * M.thirst)
+        let deepTeal = RGB(0x143A44)
+        func ink(_ tier: Int, bronze: Double = 0) -> LeafInk {
+            var d, m, l: RGB
+            switch tier {
+            case 0:
+                d = ramp[0].mix(ramp[1], 0.6)
+                m = ramp[1].mix(ramp[2], 0.3)
+                l = ramp[1].mix(ramp[2], 0.7)
+            case 1:
+                d = ramp[1].mix(ramp[2], 0.1)
+                m = ramp[1].mix(ramp[2], 0.7)
+                l = ramp[2].mix(ramp[3], 0.45)
+            default:
+                d = ramp[1].mix(ramp[2], 0.55)
+                m = ramp[2].mix(ramp[3], 0.55)
+                l = ramp[3].mix(ramp[4], 0.15)
+            }
+            // The shade leans cool and the light warm, as it does in paint.
+            d = d.mix(deepTeal, 0.2)
+            l = l.mix(glow, 0.1 * (1 - night))
+            if bronze > 0 {
+                let b = RGB.night(12, 52, 44, day: day, dim: 0.9)
+                d = d.mix(b, bronze * 0.5)
+                m = m.mix(b, bronze)
+                l = l.mix(b.mix(RGB(0xE9A265), 0.4), bronze)
+            }
+            let half = l.mix(ramp[4], 0.5).mix(glow, 0.2 * (1 - night))
+            return LeafInk(d: d.color(), m: m.color(), l: l.color(),
+                           half: half.color(0.5 * (1 - 0.4 * M.doze)),
+                           vein: l.mix(ramp[4], 0.6).color(0.42),
+                           rim: rimTone.color(rimAlpha),
+                           gloss: RGB(0xFFFFFF).mix(glow, 0.3).color(0.5 * (1 - 0.5 * night) * (1 - 0.5 * M.thirst)),
+                           shadow: ramp[0].mix(RGB(0x061A10), 0.6).shifted(-8).color((0.17 + 0.04 * M.glow) * (1 - 0.35 * M.thirst - 0.3 * M.doze) * (1 - 0.25 * night)),
+                           stalk: ramp[1].mix(ramp[2], 0.4).color())
         }
+        inks = (0..<3).map { ink($0) }
+        fresh = ink(2, bronze: 0.42)
         cast = ramp[0].mix(RGB(0x122027), 0.35).shifted(-10)
             .color((0.3 + 0.05 * M.glow) * (1 - 0.35 * M.thirst - 0.3 * M.doze) * (1 - 0.25 * night))
     }
@@ -102,6 +153,8 @@ struct PlantPainter {
         case .bush: bush(context, &marks)
         case .column: column(context, &marks)
         case .vine: vine(context, &marks)
+        case .tuft: tuft(context, &marks)
+        case .cane: cane(context, &marks)
         }
         return marks
     }
@@ -152,18 +205,28 @@ extension PlantPainter {
     func pop(_ at: Double, over span: Double = 0.07) -> Double { Ink.back((p - at) / span) }
 
     /// Which way things hang as the house goes quiet: 0 upright, 1 limp.
-    var wilt: Double { M.wilt }
+    var wilt: Double { M.wilt * (1 - 0.45 * M.doze) }
 
     /// The light, as a unit step towards it.
-    var toLight: CGPoint { CGPoint(x: Canopy.light.x, y: Canopy.light.y) }
+    var toLight: CGPoint { CGPoint(x: L.x, y: L.y) }
+
+    /// A draw in 0…1 for whatever wants a little difference.
+    func luck(_ n: Int) -> Double { seed.between(n, 0, 1) }
+
+    /// Which class of green a leaf pointing along `angle` falls in, 0…1: leaves
+    /// that point at the light are brighter, and every leaf has luck of its own.
+    func bright(_ angle: Double, luck: Double, tier: Int) -> Double {
+        let toward = cos(angle) * L.x + sin(angle) * L.y
+        return 0.5 + 0.22 * toward + 0.4 * (luck - 0.5) + (tier == 2 ? 0.1 : tier == 0 ? -0.14 : 0) - 0.1 * M.doze
+    }
 }
 
 // MARK: - The seed
 
 extension PlantPainter {
-    /// Before it sprouts: a little mound of loose earth and the seed on it,
-    /// with a crack in the mound as the sprout comes. Put down unscaled on the
-    /// soil, as the trees' seeds are.
+    /// Before it sprouts: a little mound of loose earth and the species' own
+    /// seed on it, with a crack in the mound as the sprout comes. Put down
+    /// unscaled on the soil, as the trees' seeds are.
     func seedAndSoil(_ c: GraphicsContext) {
         let k = 1 - Ink.smooth((p - 0.1) / 0.06)
         guard k > 0.01 else { return }
@@ -172,53 +235,74 @@ extension PlantPainter {
         let earth = RGB.night(28, 34, 24, day: day, dim: 0.9), loose = RGB.night(30, 34, 36, day: day, dim: 0.9)
         c.ellipse(0, 0.5, 14, 4.4, .color(earth.color()))
         c.ellipse(-1.2, -0.6, 11, 3.4, .color(loose.color()))
-        let pale = RGB.night(38, 52, 68, day: day, dim: 0.8), seedShade = RGB.night(30, 40, 42, day: day, dim: 0.8)
         let wobble = Ink.smooth((p - 0.04) / 0.05)
         var kernel = c
         kernel.translateBy(x: 1, y: -2.4 - 1.6 * wobble)
         kernel.rotate(by: .radians(-0.3 + 0.5 * wobble))
-        kernel.ellipse(0, 0, 4.6, 3, .color(seedShade.color()))
-        kernel.ellipse(-0.5, -0.5, 3.8, 2.3, .color(pale.color()))
-        kernel.ellipse(-1.2, -1.1, 1.5, 0.8, .color(Color.white.opacity(0.55)))
+        let pale = RGB.night(38, 52, 68, day: day, dim: 0.8), shade = RGB.night(30, 40, 42, day: day, dim: 0.8)
+        switch plan.seedLook {
+        case .husk:
+            // A sunflower's: a pointed teardrop, charcoal with pale stripes.
+            var body = Path(), stripes = Path()
+            body.leaf(-4.6, 0, 1, 0, 9.4, 3.1, 0)
+            for off in [-1.1, 1.1] { stripes.lens(from: CGPoint(x: -3, y: off), to: CGPoint(x: 3.4, y: off * 0.5), width: 0.5) }
+            kernel.fill(body, with: .color(RGB.night(220, 18, 22, day: day, dim: 0.8).color()))
+            kernel.fill(stripes, with: .color(RGB.night(40, 24, 78, day: day, dim: 0.8).color(0.85)))
+            kernel.ellipse(-1.2, -1.2, 1.6, 0.7, .color(Color.white.opacity(0.4)))
+        case .dot:
+            // A few small dark seeds.
+            var seeds = Path()
+            for (x, y, r) in [(-2.4, 0.2, 1.5), (0.4, -0.5, 1.7), (2.8, 0.3, 1.4)] { seeds.addEllipse(in: CGRect(x: x - r, y: y - r * 0.7, width: r * 2, height: r * 1.4)) }
+            kernel.fill(seeds, with: .color(RGB.night(24, 30, 18, day: day, dim: 0.8).color()))
+            kernel.ellipse(0, -1, 0.7, 0.4, .color(Color.white.opacity(0.4)))
+        case .bulb:
+            // A tulip bulb: brown onion with a papery tip and a pink nub of shoot.
+            var body = Path(), tip = Path()
+            body.oval(0, 0.6, 5.2, 4.2)
+            tip.addLines([CGPoint(x: -1.8, y: -2.6), CGPoint(x: 0.3, y: -7.4), CGPoint(x: 1.8, y: -2.6)])
+            kernel.fill(tip, with: .color(RGB.night(34, 40, 52, day: day, dim: 0.8).color()))
+            kernel.fill(body, with: .color(RGB.night(30, 46, 38, day: day, dim: 0.8).color()))
+            kernel.ellipse(-1.4, -0.6, 2.2, 1.6, .color(RGB.night(34, 40, 56, day: day, dim: 0.8).color(0.8)))
+            kernel.ellipse(0.2, -7, 0.9, 1.3, .color(RGB.night(346, 70, 60, day: day, dim: 0.8).color()))
+        case .tuber:
+            // A peony's: two knobs with pink eyes.
+            for (x, r) in [(-2.8, 3.0), (2.8, 2.6)] {
+                kernel.ellipse(x, 0.2, r, r * 0.75, .color(RGB.night(24, 36, 40, day: day, dim: 0.8).color()))
+                kernel.ellipse(x - 0.5, -0.6, r * 0.5, r * 0.28, .color(RGB.night(30, 40, 62, day: day, dim: 0.8).color(0.8)))
+                kernel.ellipse(x + 0.5, -2.2, 0.8, 1.0, .color(RGB.night(340, 66, 62, day: day, dim: 0.8).color()))
+            }
+        case .hip:
+            // A rosehip: a small red berry with a dark crown.
+            kernel.ellipse(0, 0, 3.6, 3.2, .color(RGB.night(354, 70, 34, day: day, dim: 0.9).color()))
+            kernel.ellipse(-0.6, -0.8, 2.4, 1.8, .color(RGB.night(358, 72, 48, day: day, dim: 0.9).color()))
+            kernel.ellipse(-1.1, -1.3, 1.0, 0.6, .color(Color.white.opacity(0.55)))
+            kernel.ellipse(0, -3, 0.9, 0.6, .color(RGB.night(24, 30, 16, day: day, dim: 0.8).color()))
+        case .cutting:
+            // A monstera starts as a cutting: a node with a stub of aerial root.
+            kernel.ellipse(0, 0, 4.4, 2.6, .color(RGB.night(28, 38, 36, day: day, dim: 0.8).color()))
+            kernel.ellipse(-0.6, -0.5, 3, 1.5, .color(RGB.night(100, 34, 54, day: day, dim: 0.8).color()))
+            kernel.ellipse(-3.8, 1.2, 1.2, 0.8, .color(RGB.night(24, 40, 50, day: day, dim: 0.8).color()))
+            kernel.ellipse(-1.2, -1.1, 1.3, 0.6, .color(Color.white.opacity(0.4)))
+        }
+        _ = (pale, shade)
+    }
+
+    /// Something small lying on the soil: a fallen petal, a leaf. Drawn flat on
+    /// the ground, `x` along it, turned `turn`.
+    func onSoil(_ c: GraphicsContext, x: Double, length: Double, width: Double, turn: Double, tone: RGB, tip: RGB? = nil) {
+        var a = Path(), b = Path()
+        let ca = cos(turn), sa = sin(turn) * 0.34
+        a.leaf(x, 1.8, ca, sa, length, width, 0.5)
+        c.fill(a.offsetBy(dx: 0.6, dy: 0.9), with: .color(cast))
+        c.fill(a, with: .color(tone.color()))
+        b.leaf(x + ca * length * 0.1, 1.5, ca, sa, length * 0.7, width * 0.45, 0.4)
+        c.fill(b, with: .color((tip ?? tone.mix(RGB(0xFFFFFF), 0.3)).color(0.6)))
     }
 }
 
 // MARK: - Shapes
 
 extension PlantPainter {
-    /// A leaf from its base at `at`, pointing along `angle` (0 is right, up is
-    /// -π/2), `length` long and `halfWidth` out either side at its widest,
-    /// which is `widest` of the way along; `bend` turns the tip clockwise (down,
-    /// for a leaf pointing right) by that many radians over its length. The
-    /// outline and the midrib both.
-    static func blade(at: CGPoint, angle: Double, length: Double, halfWidth: Double, widest: Double = 0.4,
-                      bend: Double = 0, fullness: Double = 0.8) -> (outline: Path, rib: Path, tip: CGPoint) {
-        let n = 10
-        let a = log(0.5) / log(max(0.1, min(0.9, widest)))
-        var mid = [at]
-        var heading: [Double] = [angle]
-        for i in 0..<n {
-            let phi = angle + bend * (Double(i) + 0.5) / Double(n)
-            let last = mid[i]
-            mid.append(CGPoint(x: last.x + cos(phi) * length / Double(n), y: last.y + sin(phi) * length / Double(n)))
-            heading.append(angle + bend * Double(i + 1) / Double(n))
-        }
-        var left: [CGPoint] = [], right: [CGPoint] = []
-        for i in 0...n {
-            let t = Double(i) / Double(n)
-            let w = halfWidth * pow(max(0, sin(.pi * pow(t, a))), fullness)
-            let nx = -sin(heading[i]), ny = cos(heading[i])
-            left.append(CGPoint(x: mid[i].x + nx * w, y: mid[i].y + ny * w))
-            right.append(CGPoint(x: mid[i].x - nx * w, y: mid[i].y - ny * w))
-        }
-        var outline = Path.smooth(left + right.reversed())
-        outline.closeSubpath()
-        var rib = Path()
-        rib.move(to: mid[0])
-        for point in mid.dropFirst().dropLast(2) { rib.addLine(to: point) }
-        return (outline, rib, mid[n])
-    }
-
     /// A stem that tapers from `w0` to `w1` along `points`, round at the tip
     /// and, unless `flat`, at the base.
     static func ribbon(_ points: [CGPoint], _ w0: Double, _ w1: Double, flat: Bool = true) -> Path {
@@ -261,6 +345,29 @@ extension PlantPainter {
             return CGPoint(x: k0 * a.x + k1 * c1.x + k2 * c2.x + k3 * b.x, y: k0 * a.y + k1 * c1.y + k2 * c2.y + k3 * b.y)
         }
     }
+
+    /// The point on a sampled stem at a share of its way along.
+    static func along(_ points: [CGPoint], _ t: Double) -> CGPoint {
+        let f = Ink.clamp(t) * Double(points.count - 1)
+        let i = min(Int(f), points.count - 2), u = f - Double(i)
+        return CGPoint(x: Ink.lerp(points[i].x, points[i + 1].x, u), y: Ink.lerp(points[i].y, points[i + 1].y, u))
+    }
+
+    /// The heading of a sampled stem a share of the way along it.
+    static func heading(_ points: [CGPoint], _ t: Double) -> Double {
+        let a = along(points, max(0, t - 0.04)), b = along(points, min(1, t + 0.04))
+        return atan2(b.y - a.y, b.x - a.x)
+    }
+
+    /// The point on a sampled stem at a height above its first point.
+    static func height(_ points: [CGPoint], _ height: Double) -> CGPoint {
+        for i in 1..<points.count where points[0].y - points[i].y >= height {
+            let a = points[i - 1], b = points[i]
+            let t = (height - (points[0].y - a.y)) / max(0.001, a.y - b.y)
+            return CGPoint(x: Ink.lerp(a.x, b.x, t), y: Ink.lerp(a.y, b.y, t))
+        }
+        return points[points.count - 1]
+    }
 }
 
 extension Path {
@@ -281,43 +388,18 @@ extension Path {
 // MARK: - Painting
 
 extension PlantPainter {
-    /// A leaf in its depth tier: a shadow on what is behind it, its shade
-    /// shape, the lit copy up and left of it, and its rib.
-    func paint(_ c: GraphicsContext, leaf: (outline: Path, rib: Path, tip: CGPoint), tier: Int, shadow: Bool = true,
-               litScale: Double = 0.7) {
-        let box = leaf.outline.boundingRect
-        let r = max(box.width, box.height) / 2
-        let centre = CGPoint(x: box.midX, y: box.midY)
-        if shadow && tier > 0 {
-            c.fill(leaf.outline.offsetBy(dx: 1.4, dy: 2), with: .color(cast))
-        }
-        let paint = tiers[tier]
-        c.fill(leaf.outline, with: .linearGradient(
-            paint.shade,
-            startPoint: CGPoint(x: centre.x + toLight.x * r, y: centre.y + toLight.y * r),
-            endPoint: CGPoint(x: centre.x - toLight.x * r * 0.8, y: centre.y - toLight.y * r * 0.8)))
-        let lit = leaf.outline.applying(
-            CGAffineTransform(translationX: centre.x + toLight.x * r * 0.14, y: centre.y + toLight.y * r * 0.14)
-                .scaledBy(x: litScale, y: litScale).translatedBy(x: -centre.x, y: -centre.y))
-        c.fill(lit, with: .radialGradient(paint.lit, center: CGPoint(x: centre.x + toLight.x * r * 0.35, y: centre.y + toLight.y * r * 0.35),
-                                          startRadius: 0, endRadius: r * 0.95))
-        if tier > 0 { c.stroke(leaf.rib, with: .color(paint.vein), style: StrokeStyle(lineWidth: 0.9, lineCap: .round)) }
-    }
-
-    /// A stem: its shade, the lit edge, and the soft shadow of what is above.
+    /// A stem: its shade, the lit edge towards the light, and a thin bright
+    /// streak of the sun's colour on it.
     func paint(_ c: GraphicsContext, stem outline: Path, along points: [CGPoint], width: Double, tier: Int = 1) {
         let box = outline.boundingRect
+        let side = L.x >= 0 ? 1.0 : -1.0
         c.fill(outline, with: .linearGradient(
-            Gradient(colors: [ramp[tier + 1].color(), ramp[tier].shifted(-3).color()]),
-            startPoint: CGPoint(x: box.minX, y: box.midY), endPoint: CGPoint(x: box.maxX, y: box.midY)))
+            Gradient(colors: [ramp[tier + 2].mix(glow, 0.08 * (1 - night)).color(), ramp[tier + 1].color(), ramp[tier].shifted(-3).color()]),
+            startPoint: CGPoint(x: box.midX + side * box.width * 0.5, y: box.midY), endPoint: CGPoint(x: box.midX - side * box.width * 0.5, y: box.midY)))
         guard points.count > 2 else { return }
-        var edge = Path()
-        let shift = width * 0.2
-        for (i, point) in points.enumerated() {
-            let q = CGPoint(x: point.x - shift, y: point.y)
-            i == 0 ? edge.move(to: q) : edge.addLine(to: q)
-        }
-        c.stroke(edge, with: .color(ramp[tier + 2].color(0.7)), style: StrokeStyle(lineWidth: max(0.8, width * 0.22), lineCap: .round, lineJoin: .round))
+        let shift = side * width * 0.2
+        let edge = points.map { CGPoint(x: $0.x + shift, y: $0.y) }
+        c.fill(Self.ribbon(edge, max(0.8, width * 0.2), max(0.5, width * 0.12)), with: .color(rimTone.mix(ramp[4], 0.4).color(0.5 + 0.2 * dusk)))
     }
 
     /// Bloom colours: they open, glow and drain with the mood as a tree's do.
@@ -325,31 +407,5 @@ extension PlantPainter {
         let open = (0.5 + 0.5 * M.open) * (1 + 0.12 * M.glow) * (1 - 0.4 * M.doze)
         let (h, s, l) = RGB(hex).hsl
         return RGB.night(h, s * open, l, day: day, dim: dim)
-    }
-}
-
-// MARK: - Leaves
-
-extension PlantPainter {
-    /// A leaf on a short petiole from `base`, pointing out to one `side` and
-    /// `lift` radians above level. It hangs and curls as the house goes quiet.
-    /// Returns where its tip is, for whatever hangs from the plant.
-    @discardableResult
-    func place(_ c: GraphicsContext?, _ m: inout Marks, at base: CGPoint, side s: Double, lift: Double, length: Double,
-               tier: Int, petiole: Double = 5, curl: Double = 0.25, slim: Double = 1, hang: Double = 1.4,
-               young: Double = 0, hangs: Bool = true) -> CGPoint {
-        let angle = (s > 0 ? -lift : -.pi + lift) + s * wilt * hang
-        let direction = CGPoint(x: cos(angle), y: sin(angle))
-        let start = CGPoint(x: base.x + direction.x * petiole, y: base.y + direction.y * petiole)
-        let leaf = Self.blade(at: start, angle: angle, length: length, halfWidth: length * plan.leafWidth * slim,
-                              widest: plan.widest, bend: s * (curl + 0.8 * wilt))
-        if let c {
-            if petiole > 0.5 { c.fill(Self.ribbon([base, start], 2.2, 1.8), with: .color(ramp[1].color())) }
-            paint(c, leaf: leaf, tier: tier)
-            // A young leaf is lighter, and a glossy one has its shine along the rib.
-            if young > 0 { c.fill(leaf.outline, with: .color(ramp[4].color(0.34 * young))) }
-        }
-        m.note(leaf.tip, hang: hangs)
-        return leaf.tip
     }
 }
