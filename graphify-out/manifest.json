@@ -2130,8 +2130,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter+Art.swift": {
-    "mtime": 1792924470.4167337,
-    "ast_hash": "697a951b715b32820fd2b81153589181",
+    "mtime": 1792925276.844736,
+    "ast_hash": "2cf984845d040ee0538ff73d191e9e69",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/PomegranatePainter+Split.swift": {
@@ -2145,8 +2145,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/RULES-pets.md": {
-    "mtime": 1792924463.073432,
-    "ast_hash": "d05bf552d2cb28bd090235beba07355a",
+    "mtime": 1792925276.747634,
+    "ast_hash": "8d8a65ab54bf396b8c7a263c31693aa6",
     "semantic_hash": ""
   },
   "Docs/Companion/art/hero/index.html": {
@@ -2155,8 +2155,8 @@
     "semantic_hash": ""
   },
   "Docs/Companion/art/pets/index.html": {
-    "mtime": 1792924456.8217754,
-    "ast_hash": "8882cacdd4218ba936e035c5cda89dd1",
+    "mtime": 1792925276.7473009,
+    "ast_hash": "981c51c9aaa315a982a8f4b9dc7a7262",
     "semantic_hash": ""
   },
   "Docs/Companion/art/pets/kitten-before-close.png": {
@@ -3910,8 +3910,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPainter+Fish.swift": {
-    "mtime": 1792922208.4920392,
-    "ast_hash": "83531d3c6206883a49a87f0674e025ad",
+    "mtime": 1792925209.375133,
+    "ast_hash": "596bbac064a5d16b9d009e107ed37551",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CritterPainter+Penguin.swift": {
@@ -4082,6 +4082,11 @@
   "Docs/Companion/art/pets/turtle-v1-stages.jpg": {
     "mtime": 1792923822.2868853,
     "ast_hash": "e5b8ca793e0e99b52b3bebca9d5d143a",
+    "semantic_hash": ""
+  },
+  "Docs/Companion/art/pets/goldfish-v2-moods.jpg": {
+    "mtime": 1792925269.7961657,
+    "ast_hash": "e1ee2e0964507f6c827f494366cba93d",
     "semantic_hash": ""
   }
 }

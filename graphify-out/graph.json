@@ -2714,7 +2714,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "viewmodifier",
-      "community": 393,
+      "community": 139,
       "norm_label": "viewmodifier"
     },
     {
@@ -7436,7 +7436,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind",
-      "community": 163,
+      "community": 255,
       "norm_label": "eventkind"
     },
     {
@@ -7446,7 +7446,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_general",
-      "community": 163,
+      "community": 255,
       "norm_label": "general"
     },
     {
@@ -7456,7 +7456,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_houseparty",
-      "community": 163,
+      "community": 255,
       "norm_label": "houseparty"
     },
     {
@@ -7466,7 +7466,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_dinnerparty",
-      "community": 163,
+      "community": 255,
       "norm_label": "dinnerparty"
     },
     {
@@ -7476,7 +7476,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_movienight",
-      "community": 163,
+      "community": 255,
       "norm_label": "movienight"
     },
     {
@@ -7486,7 +7486,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_gamenight",
-      "community": 163,
+      "community": 255,
       "norm_label": "gamenight"
     },
     {
@@ -7496,7 +7496,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_visit",
-      "community": 163,
+      "community": 255,
       "norm_label": "visit"
     },
     {
@@ -7506,7 +7506,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_chore",
-      "community": 163,
+      "community": 255,
       "norm_label": "chore"
     },
     {
@@ -7516,7 +7516,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_dining",
-      "community": 163,
+      "community": 255,
       "norm_label": "dining"
     },
     {
@@ -7526,7 +7526,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_concert",
-      "community": 163,
+      "community": 255,
       "norm_label": "concert"
     },
     {
@@ -7536,7 +7536,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_cinema",
-      "community": 163,
+      "community": 255,
       "norm_label": "cinema"
     },
     {
@@ -7546,7 +7546,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_theatre",
-      "community": 163,
+      "community": 255,
       "norm_label": "theatre"
     },
     {
@@ -7556,7 +7556,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_sports",
-      "community": 163,
+      "community": 255,
       "norm_label": "sports"
     },
     {
@@ -7566,7 +7566,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_picnic",
-      "community": 163,
+      "community": 255,
       "norm_label": "picnic"
     },
     {
@@ -7576,7 +7576,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_trip",
-      "community": 163,
+      "community": 255,
       "norm_label": "trip"
     },
     {
@@ -7586,7 +7586,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_birthday",
-      "community": 163,
+      "community": 255,
       "norm_label": "birthday"
     },
     {
@@ -7596,7 +7596,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_anniversary",
-      "community": 163,
+      "community": 255,
       "norm_label": "anniversary"
     },
     {
@@ -7606,7 +7606,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_holiday",
-      "community": 163,
+      "community": 255,
       "norm_label": "holiday"
     },
     {
@@ -7616,7 +7616,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_appointment",
-      "community": 163,
+      "community": 255,
       "norm_label": "appointment"
     },
     {
@@ -7626,7 +7626,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "models_calendarevent_eventkind_deadline",
-      "community": 163,
+      "community": 255,
       "norm_label": "deadline"
     },
     {
@@ -7636,7 +7636,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "models_calendarevent_group",
-      "community": 163,
+      "community": 255,
       "norm_label": "group"
     },
     {
@@ -7646,7 +7646,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "models_calendarevent_group_athome",
-      "community": 163,
+      "community": 255,
       "norm_label": "athome"
     },
     {
@@ -7656,7 +7656,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "models_calendarevent_group_goingout",
-      "community": 163,
+      "community": 255,
       "norm_label": "goingout"
     },
     {
@@ -7666,7 +7666,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "models_calendarevent_group_occasions",
-      "community": 163,
+      "community": 255,
       "norm_label": "occasions"
     },
     {
@@ -7676,7 +7676,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "models_calendarevent_group_admin",
-      "community": 163,
+      "community": 255,
       "norm_label": "admin"
     },
     {
@@ -7686,7 +7686,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "nestzone_core_models_calendarevent_swift_localizedstringresource",
-      "community": 163,
+      "community": 255,
       "norm_label": "localizedstringresource"
     },
     {
@@ -7696,7 +7696,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "nestzone_core_models_calendarevent_swift_color",
-      "community": 163,
+      "community": 255,
       "norm_label": "color"
     },
     {
@@ -7706,7 +7706,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "nestzone_core_models_calendarevent_swift_set",
-      "community": 163,
+      "community": 255,
       "norm_label": "set"
     },
     {
@@ -7716,7 +7716,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "nestzone_core_models_calendarevent_swift_plansection",
-      "community": 163,
+      "community": 255,
       "norm_label": "plansection"
     },
     {
@@ -7736,7 +7736,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "nestzone_core_models_calendarevent_swift_timeinterval",
-      "community": 163,
+      "community": 255,
       "norm_label": "timeinterval"
     },
     {
@@ -7746,7 +7746,7 @@
       "source_location": "L196",
       "_origin": "ast",
       "id": "nestzone_core_models_calendarevent_swift_recurrence",
-      "community": 163,
+      "community": 255,
       "norm_label": "recurrence"
     },
     {
@@ -7756,7 +7756,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "models_calendarevent_plansection",
-      "community": 163,
+      "community": 255,
       "norm_label": "plansection"
     },
     {
@@ -7766,7 +7766,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "models_calendarevent_plansection_budget",
-      "community": 163,
+      "community": 255,
       "norm_label": "budget"
     },
     {
@@ -7776,7 +7776,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "models_calendarevent_plansection_shopping",
-      "community": 163,
+      "community": 255,
       "norm_label": "shopping"
     },
     {
@@ -7786,7 +7786,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "models_calendarevent_plansection_menu",
-      "community": 163,
+      "community": 255,
       "norm_label": "menu"
     },
     {
@@ -7796,7 +7796,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "models_calendarevent_plansection_tickets",
-      "community": 163,
+      "community": 255,
       "norm_label": "tickets"
     },
     {
@@ -19166,7 +19166,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_pushregistration",
-      "community": 218,
+      "community": 406,
       "norm_label": "pushregistration.swift"
     },
     {
@@ -19176,7 +19176,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "models_pushregistration_pushregistration",
-      "community": 218,
+      "community": 406,
       "norm_label": "pushregistration"
     },
     {
@@ -19186,7 +19186,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "models_pushregistration_pushregistration_none",
-      "community": 218,
+      "community": 406,
       "norm_label": "none"
     },
     {
@@ -19196,7 +19196,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "models_pushregistration_pushregistration_pending",
-      "community": 218,
+      "community": 406,
       "norm_label": "pending"
     },
     {
@@ -19206,7 +19206,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "models_pushregistration_pushregistration_registered",
-      "community": 218,
+      "community": 406,
       "norm_label": "registered"
     },
     {
@@ -19216,7 +19216,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "models_pushregistration_pushregistration_failed",
-      "community": 218,
+      "community": 406,
       "norm_label": "failed"
     },
     {
@@ -19226,7 +19226,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "nestzone_core_models_pushregistration_swift_string",
-      "community": 218,
+      "community": 406,
       "norm_label": "string"
     },
     {
@@ -19236,7 +19236,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "nestzone_core_models_pushregistration_swift_bool",
-      "community": 218,
+      "community": 406,
       "norm_label": "bool"
     },
     {
@@ -24257,7 +24257,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "clients_pollsclient_pollcandidate",
-      "community": 440,
+      "community": 218,
       "norm_label": "pollcandidate"
     },
     {
@@ -24267,7 +24267,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_pollsclient_swift_string",
-      "community": 440,
+      "community": 218,
       "norm_label": "string"
     },
     {
@@ -24277,7 +24277,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "clients_pollsclient_pollcandidate_init",
-      "community": 440,
+      "community": 218,
       "norm_label": ".init()"
     },
     {
@@ -24287,7 +24287,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_pollsclient_swift_movie",
-      "community": 440,
+      "community": 218,
       "norm_label": "movie"
     },
     {
@@ -24297,7 +24297,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "nestzone_core_network_clients_pollsclient_swift_convexencodable",
-      "community": 440,
+      "community": 218,
       "norm_label": "convexencodable"
     },
     {
@@ -26401,7 +26401,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "design_appsettings",
-      "community": 297,
+      "community": 260,
       "norm_label": "appsettings.swift"
     },
     {
@@ -26411,7 +26411,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "design_appsettings_sharedkey",
-      "community": 297,
+      "community": 260,
       "norm_label": "sharedkey"
     },
     {
@@ -26421,7 +26421,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "nestzone_design_appsettings_swift_self",
-      "community": 297,
+      "community": 260,
       "norm_label": "self"
     },
     {
@@ -26431,7 +26431,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "design_appsettings_sharedkey_companionlab",
-      "community": 297,
+      "community": 260,
       "norm_label": ".companionlab()"
     },
     {
@@ -26441,7 +26441,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "nestzone_design_appsettings_swift_homeid",
-      "community": 297,
+      "community": 260,
       "norm_label": "homeid"
     },
     {
@@ -26451,7 +26451,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "design_appsettings_shared_string",
-      "community": 297,
+      "community": 260,
       "norm_label": "shared<string?>"
     },
     {
@@ -26461,7 +26461,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "design_appsettings_currencydefaults",
-      "community": 297,
+      "community": 260,
       "norm_label": "currencydefaults"
     },
     {
@@ -26471,7 +26471,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "nestzone_design_appsettings_swift_string",
-      "community": 297,
+      "community": 260,
       "norm_label": "string"
     },
     {
@@ -26481,7 +26481,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "design_appsettings_currencydefaults_remember",
-      "community": 297,
+      "community": 260,
       "norm_label": ".remember()"
     },
     {
@@ -27624,7 +27624,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "avatar_avatarsourcesheet",
-      "community": 458,
+      "community": 93,
       "norm_label": "avatarsourcesheet.swift"
     },
     {
@@ -27634,7 +27634,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "avatar_avatarsourcesheet_avatarsourcesheet",
-      "community": 458,
+      "community": 93,
       "norm_label": "avatarsourcesheet"
     },
     {
@@ -27644,7 +27644,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "nestzone_design_avatar_avatarsourcesheet_swift_bool",
-      "community": 458,
+      "community": 93,
       "norm_label": "bool"
     },
     {
@@ -27654,7 +27654,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "nestzone_design_avatar_avatarsourcesheet_swift_avatarsource",
-      "community": 458,
+      "community": 93,
       "norm_label": "avatarsource"
     },
     {
@@ -27664,7 +27664,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "nestzone_design_avatar_avatarsourcesheet_swift_void",
-      "community": 458,
+      "community": 93,
       "norm_label": "void"
     },
     {
@@ -29314,7 +29314,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "anyshapestyle",
-      "community": 213,
+      "community": 87,
       "norm_label": "anyshapestyle"
     },
     {
@@ -32266,7 +32266,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "components_swipetodelete",
-      "community": 336,
+      "community": 213,
       "norm_label": "swipetodelete.swift"
     },
     {
@@ -32276,7 +32276,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "components_swipetodelete_swipetodelete",
-      "community": 336,
+      "community": 213,
       "norm_label": "swipetodelete"
     },
     {
@@ -32286,7 +32286,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_cgfloat",
-      "community": 336,
+      "community": 213,
       "norm_label": "cgfloat"
     },
     {
@@ -32296,7 +32296,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_localizedstringresource",
-      "community": 336,
+      "community": 213,
       "norm_label": "localizedstringresource"
     },
     {
@@ -32306,7 +32306,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_void",
-      "community": 336,
+      "community": 213,
       "norm_label": "void"
     },
     {
@@ -32316,7 +32316,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_bool",
-      "community": 336,
+      "community": 213,
       "norm_label": "bool"
     },
     {
@@ -32326,7 +32326,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_content",
-      "community": 336,
+      "community": 213,
       "norm_label": "content"
     },
     {
@@ -32336,7 +32336,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "components_swipetodelete_swipetodelete_init",
-      "community": 336,
+      "community": 213,
       "norm_label": ".init()"
     },
     {
@@ -32346,7 +32346,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_binding",
-      "community": 336,
+      "community": 213,
       "norm_label": "binding"
     },
     {
@@ -32356,7 +32356,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_anytransition",
-      "community": 336,
+      "community": 213,
       "norm_label": "anytransition"
     },
     {
@@ -32366,7 +32366,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "nestzone_design_components_swipetodelete_swift_gesture",
-      "community": 336,
+      "community": 213,
       "norm_label": "gesture"
     },
     {
@@ -32376,7 +32376,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "components_swipetodelete_swipetodelete_setrevealed",
-      "community": 336,
+      "community": 213,
       "norm_label": ".setrevealed()"
     },
     {
@@ -32386,7 +32386,7 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "components_swipetodelete_swipetodelete_commit",
-      "community": 336,
+      "community": 213,
       "norm_label": ".commit()"
     },
     {
@@ -32766,7 +32766,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "design_glasslist_restingtilt",
-      "community": 139,
+      "community": 336,
       "norm_label": "restingtilt()"
     },
     {
@@ -32776,7 +32776,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "nestzone_design_glasslist_swift_string",
-      "community": 139,
+      "community": 336,
       "norm_label": "string"
     },
     {
@@ -32786,7 +32786,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "nestzone_design_glasslist_swift_double",
-      "community": 139,
+      "community": 336,
       "norm_label": "double"
     },
     {
@@ -32946,7 +32946,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "design_glasslistlab_glasslistlab_rowstack",
-      "community": 393,
+      "community": 139,
       "norm_label": ".rowstack()"
     },
     {
@@ -33046,7 +33046,7 @@
       "source_location": "L396",
       "_origin": "ast",
       "id": "design_glasslistlab_stage",
-      "community": 393,
+      "community": 139,
       "norm_label": "stage"
     },
     {
@@ -33056,7 +33056,7 @@
       "source_location": "L397",
       "_origin": "ast",
       "id": "design_glasslistlab_stage_plain",
-      "community": 393,
+      "community": 139,
       "norm_label": "plain"
     },
     {
@@ -33066,7 +33066,7 @@
       "source_location": "L397",
       "_origin": "ast",
       "id": "design_glasslistlab_stage_wash",
-      "community": 393,
+      "community": 139,
       "norm_label": "wash"
     },
     {
@@ -33076,7 +33076,7 @@
       "source_location": "L397",
       "_origin": "ast",
       "id": "design_glasslistlab_stage_busy",
-      "community": 393,
+      "community": 139,
       "norm_label": "busy"
     },
     {
@@ -33086,7 +33086,7 @@
       "source_location": "L414",
       "_origin": "ast",
       "id": "design_glasslistlab_stage_view",
-      "community": 393,
+      "community": 139,
       "norm_label": ".view()"
     },
     {
@@ -33096,7 +33096,7 @@
       "source_location": "L414",
       "_origin": "ast",
       "id": "nestzone_design_glasslistlab_swift_color",
-      "community": 393,
+      "community": 139,
       "norm_label": "color"
     },
     {
@@ -33106,7 +33106,7 @@
       "source_location": "L447",
       "_origin": "ast",
       "id": "design_glasslistlab_labrow",
-      "community": 393,
+      "community": 139,
       "norm_label": "labrow"
     },
     {
@@ -33116,7 +33116,7 @@
       "source_location": "L448",
       "_origin": "ast",
       "id": "design_glasslistlab_model",
-      "community": 393,
+      "community": 139,
       "norm_label": "model"
     },
     {
@@ -33126,7 +33126,7 @@
       "source_location": "L456",
       "_origin": "ast",
       "id": "nestzone_design_glasslistlab_swift_bool",
-      "community": 393,
+      "community": 139,
       "norm_label": "bool"
     },
     {
@@ -33136,7 +33136,7 @@
       "source_location": "L561",
       "_origin": "ast",
       "id": "design_glasslistlab_tiltmode",
-      "community": 139,
+      "community": 336,
       "norm_label": "tiltmode"
     },
     {
@@ -33146,7 +33146,7 @@
       "source_location": "L563",
       "_origin": "ast",
       "id": "design_glasslistlab_tiltmode_uniform",
-      "community": 139,
+      "community": 336,
       "norm_label": "uniform"
     },
     {
@@ -33156,7 +33156,7 @@
       "source_location": "L565",
       "_origin": "ast",
       "id": "design_glasslistlab_tiltmode_alternate",
-      "community": 139,
+      "community": 336,
       "norm_label": "alternate"
     },
     {
@@ -33166,7 +33166,7 @@
       "source_location": "L568",
       "_origin": "ast",
       "id": "design_glasslistlab_tiltmode_scattered",
-      "community": 139,
+      "community": 336,
       "norm_label": "scattered"
     },
     {
@@ -33176,7 +33176,7 @@
       "source_location": "L578",
       "_origin": "ast",
       "id": "design_glasslistlab_tiltmode_angle",
-      "community": 139,
+      "community": 336,
       "norm_label": ".angle()"
     },
     {
@@ -33186,7 +33186,7 @@
       "source_location": "L596",
       "_origin": "ast",
       "id": "design_glasslistlab_labsurface",
-      "community": 393,
+      "community": 139,
       "norm_label": "labsurface"
     },
     {
@@ -33196,7 +33196,7 @@
       "source_location": "L597",
       "_origin": "ast",
       "id": "nestzone_design_glasslistlab_swift_cgfloat",
-      "community": 393,
+      "community": 139,
       "norm_label": "cgfloat"
     },
     {
@@ -33206,7 +33206,7 @@
       "source_location": "L602",
       "_origin": "ast",
       "id": "glass",
-      "community": 393,
+      "community": 139,
       "norm_label": "glass"
     },
     {
@@ -33246,7 +33246,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "design_keyboarddismiss",
-      "community": 260,
+      "community": 297,
       "norm_label": "keyboarddismiss.swift"
     },
     {
@@ -33256,7 +33256,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "design_keyboarddismiss_keyboarddismisser",
-      "community": 260,
+      "community": 297,
       "norm_label": "keyboarddismisser"
     },
     {
@@ -33266,7 +33266,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "design_keyboarddismiss_keyboarddismisser_install",
-      "community": 260,
+      "community": 297,
       "norm_label": ".install()"
     },
     {
@@ -33276,7 +33276,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "design_keyboarddismiss_keyboarddismisser_endediting",
-      "community": 260,
+      "community": 297,
       "norm_label": ".endediting()"
     },
     {
@@ -33286,7 +33286,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "uigesturerecognizerdelegate",
-      "community": 260,
+      "community": 297,
       "norm_label": "uigesturerecognizerdelegate"
     },
     {
@@ -33296,7 +33296,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "design_keyboarddismiss_keyboarddismisser_gesturerecognizer",
-      "community": 260,
+      "community": 297,
       "norm_label": ".gesturerecognizer()"
     },
     {
@@ -33306,7 +33306,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "uigesturerecognizer",
-      "community": 260,
+      "community": 297,
       "norm_label": "uigesturerecognizer"
     },
     {
@@ -33316,7 +33316,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "nestzone_design_keyboarddismiss_swift_bool",
-      "community": 260,
+      "community": 297,
       "norm_label": "bool"
     },
     {
@@ -33326,7 +33326,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "uitouch",
-      "community": 260,
+      "community": 297,
       "norm_label": "uitouch"
     },
     {
@@ -34977,7 +34977,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "calendar_calendarfeature_calendarfeature",
-      "community": 191,
+      "community": 169,
       "norm_label": "calendarfeature"
     },
     {
@@ -35007,7 +35007,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "nestzone_features_calendar_calendarfeature_swift_userid",
-      "community": 436,
+      "community": 269,
       "norm_label": "userid"
     },
     {
@@ -35027,7 +35027,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "nestzone_features_calendar_calendarfeature_swift_user",
-      "community": 436,
+      "community": 269,
       "norm_label": "user"
     },
     {
@@ -35047,7 +35047,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "nestzone_features_calendar_calendarfeature_swift_calendarmonth",
-      "community": 269,
+      "community": 169,
       "norm_label": "calendarmonth"
     },
     {
@@ -35327,7 +35327,7 @@
       "source_location": "L360",
       "_origin": "ast",
       "id": "calendar_calendarfeature_state_member",
-      "community": 436,
+      "community": 269,
       "norm_label": ".member()"
     },
     {
@@ -35337,7 +35337,7 @@
       "source_location": "L362",
       "_origin": "ast",
       "id": "calendar_calendarfeature_state_name",
-      "community": 436,
+      "community": 269,
       "norm_label": ".name()"
     },
     {
@@ -35727,7 +35727,7 @@
       "source_location": "L439",
       "_origin": "ast",
       "id": "calendar_calendarfeature_cancelid_members",
-      "community": 436,
+      "community": 269,
       "norm_label": "members"
     },
     {
@@ -35747,7 +35747,7 @@
       "source_location": "L443",
       "_origin": "ast",
       "id": "nestzone_features_calendar_calendarfeature_swift_duration",
-      "community": 191,
+      "community": 169,
       "norm_label": "duration"
     },
     {
@@ -35757,7 +35757,7 @@
       "source_location": "L449",
       "_origin": "ast",
       "id": "calendar_calendarfeature_calendarfeature_init",
-      "community": 191,
+      "community": 169,
       "norm_label": ".init()"
     },
     {
@@ -35767,7 +35767,7 @@
       "source_location": "L451",
       "_origin": "ast",
       "id": "nestzone_features_calendar_calendarfeature_swift_reducerof",
-      "community": 191,
+      "community": 169,
       "norm_label": "reducerof"
     },
     {
@@ -35777,7 +35777,7 @@
       "source_location": "L451",
       "_origin": "ast",
       "id": "nestzone_features_calendar_calendarfeature_swift_self",
-      "community": 191,
+      "community": 169,
       "norm_label": "self"
     },
     {
@@ -35787,7 +35787,7 @@
       "source_location": "L790",
       "_origin": "ast",
       "id": "calendar_calendarfeature_calendarfeature_move",
-      "community": 269,
+      "community": 169,
       "norm_label": ".move()"
     },
     {
@@ -35797,7 +35797,7 @@
       "source_location": "L790",
       "_origin": "ast",
       "id": "nestzone_features_calendar_calendarfeature_swift_effect",
-      "community": 269,
+      "community": 169,
       "norm_label": "effect"
     },
     {
@@ -35807,7 +35807,7 @@
       "source_location": "L818",
       "_origin": "ast",
       "id": "calendar_calendarfeature_calendarfeature_subscribe",
-      "community": 269,
+      "community": 169,
       "norm_label": ".subscribe()"
     },
     {
@@ -35897,7 +35897,7 @@
       "source_location": "L947",
       "_origin": "ast",
       "id": "calendar_calendarfeature_calendarfeature_commit",
-      "community": 191,
+      "community": 169,
       "norm_label": ".commit()"
     },
     {
@@ -36887,7 +36887,7 @@
       "source_location": "L372",
       "_origin": "ast",
       "id": "calendar_eventcomposerfeature_scope",
-      "community": 437,
+      "community": 218,
       "norm_label": "scope"
     },
     {
@@ -36897,7 +36897,7 @@
       "source_location": "L373",
       "_origin": "ast",
       "id": "calendar_eventcomposerfeature_scope_savethisone",
-      "community": 437,
+      "community": 218,
       "norm_label": "savethisone"
     },
     {
@@ -36907,7 +36907,7 @@
       "source_location": "L374",
       "_origin": "ast",
       "id": "calendar_eventcomposerfeature_scope_saveall",
-      "community": 437,
+      "community": 218,
       "norm_label": "saveall"
     },
     {
@@ -36917,7 +36917,7 @@
       "source_location": "L375",
       "_origin": "ast",
       "id": "calendar_eventcomposerfeature_scope_deletethisone",
-      "community": 437,
+      "community": 218,
       "norm_label": "deletethisone"
     },
     {
@@ -36927,7 +36927,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "calendar_eventcomposerfeature_scope_deleteall",
-      "community": 437,
+      "community": 218,
       "norm_label": "deleteall"
     },
     {
@@ -37657,7 +37657,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "calendar_eventdetailfeature_scope",
-      "community": 218,
+      "community": 410,
       "norm_label": "scope"
     },
     {
@@ -37667,7 +37667,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "calendar_eventdetailfeature_scope_editthisone",
-      "community": 218,
+      "community": 410,
       "norm_label": "editthisone"
     },
     {
@@ -37677,7 +37677,7 @@
       "source_location": "L271",
       "_origin": "ast",
       "id": "calendar_eventdetailfeature_scope_editall",
-      "community": 218,
+      "community": 410,
       "norm_label": "editall"
     },
     {
@@ -37687,7 +37687,7 @@
       "source_location": "L272",
       "_origin": "ast",
       "id": "calendar_eventdetailfeature_scope_deletethisone",
-      "community": 218,
+      "community": 410,
       "norm_label": "deletethisone"
     },
     {
@@ -37697,7 +37697,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "calendar_eventdetailfeature_scope_deleteall",
-      "community": 218,
+      "community": 410,
       "norm_label": "deleteall"
     },
     {
@@ -38337,7 +38337,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "calendar_eventsheets_eventcomposersheet_kindchip",
-      "community": 213,
+      "community": 87,
       "norm_label": ".kindchip()"
     },
     {
@@ -38347,7 +38347,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "nestzone_features_calendar_eventsheets_swift_eventkind",
-      "community": 213,
+      "community": 87,
       "norm_label": "eventkind"
     },
     {
@@ -43018,7 +43018,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "companion_companioncatalog",
-      "community": 276,
+      "community": 299,
       "norm_label": "companioncatalog.swift"
     },
     {
@@ -43508,7 +43508,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "companion_companioncatalog_lock",
-      "community": 276,
+      "community": 299,
       "norm_label": "lock"
     },
     {
@@ -43518,7 +43518,7 @@
       "source_location": "L308",
       "_origin": "ast",
       "id": "companion_companioncatalog_lock_season",
-      "community": 276,
+      "community": 299,
       "norm_label": "season"
     },
     {
@@ -43528,7 +43528,7 @@
       "source_location": "L309",
       "_origin": "ast",
       "id": "companion_companioncatalog_lock_holiday",
-      "community": 276,
+      "community": 299,
       "norm_label": "holiday"
     },
     {
@@ -43538,7 +43538,7 @@
       "source_location": "L310",
       "_origin": "ast",
       "id": "companion_companioncatalog_lock_reward",
-      "community": 276,
+      "community": 299,
       "norm_label": "reward"
     },
     {
@@ -43708,7 +43708,7 @@
       "source_location": "L475",
       "_origin": "ast",
       "id": "companion_companioncatalog_catalogversion",
-      "community": 276,
+      "community": 299,
       "norm_label": "catalogversion"
     },
     {
@@ -44058,7 +44058,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet",
-      "community": 218,
+      "community": 196,
       "norm_label": "sheet"
     },
     {
@@ -44068,7 +44068,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_choose",
-      "community": 218,
+      "community": 196,
       "norm_label": "choose"
     },
     {
@@ -44078,7 +44078,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_decorate",
-      "community": 218,
+      "community": 196,
       "norm_label": "decorate"
     },
     {
@@ -44088,7 +44088,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_album",
-      "community": 218,
+      "community": 196,
       "norm_label": "album"
     },
     {
@@ -44098,7 +44098,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_holidays",
-      "community": 218,
+      "community": 196,
       "norm_label": "holidays"
     },
     {
@@ -44108,7 +44108,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_lab",
-      "community": 218,
+      "community": 196,
       "norm_label": "lab"
     },
     {
@@ -44118,7 +44118,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_ceremony",
-      "community": 218,
+      "community": 196,
       "norm_label": "ceremony"
     },
     {
@@ -44128,7 +44128,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_welcome",
-      "community": 218,
+      "community": 196,
       "norm_label": "welcome"
     },
     {
@@ -44138,7 +44138,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_shop",
-      "community": 218,
+      "community": 196,
       "norm_label": "shop"
     },
     {
@@ -44148,7 +44148,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "companion_companionfeature_sheet_vote",
-      "community": 218,
+      "community": 196,
       "norm_label": "vote"
     },
     {
@@ -44778,7 +44778,7 @@
       "source_location": "L735",
       "_origin": "ast",
       "id": "companion_companionfeature_state_set",
-      "community": 406,
+      "community": 387,
       "norm_label": ".set()"
     },
     {
@@ -44788,7 +44788,7 @@
       "source_location": "L735",
       "_origin": "ast",
       "id": "writablekeypath",
-      "community": 406,
+      "community": 387,
       "norm_label": "writablekeypath"
     },
     {
@@ -44798,7 +44798,7 @@
       "source_location": "L735",
       "_origin": "ast",
       "id": "nestzone_features_companion_companionfeature_swift_value",
-      "community": 406,
+      "community": 387,
       "norm_label": "value"
     },
     {
@@ -45698,7 +45698,7 @@
       "source_location": "L1665",
       "_origin": "ast",
       "id": "nestzone_features_companion_companionfeature_swift_t",
-      "community": 196,
+      "community": 387,
       "norm_label": "t"
     },
     {
@@ -45718,7 +45718,7 @@
       "source_location": "L1676",
       "_origin": "ast",
       "id": "companion_companionfeature_companionfeature_timed",
-      "community": 196,
+      "community": 387,
       "norm_label": ".timed()"
     },
     {
@@ -45838,7 +45838,7 @@
       "source_location": "L1951",
       "_origin": "ast",
       "id": "companion_companionfeature_result",
-      "community": 196,
+      "community": 387,
       "norm_label": "result"
     },
     {
@@ -45848,7 +45848,7 @@
       "source_location": "L1953",
       "_origin": "ast",
       "id": "failure",
-      "community": 196,
+      "community": 387,
       "norm_label": "failure"
     },
     {
@@ -45918,7 +45918,7 @@
       "source_location": "L2005",
       "_origin": "ast",
       "id": "companion_companionfeature_writerace",
-      "community": 196,
+      "community": 387,
       "norm_label": "writerace"
     },
     {
@@ -45928,7 +45928,7 @@
       "source_location": "L2007",
       "_origin": "ast",
       "id": "nestzone_features_companion_companionfeature_swift_checkedcontinuation",
-      "community": 196,
+      "community": 387,
       "norm_label": "checkedcontinuation"
     },
     {
@@ -45938,7 +45938,7 @@
       "source_location": "L2007",
       "_origin": "ast",
       "id": "nestzone_features_companion_companionfeature_swift_error",
-      "community": 196,
+      "community": 387,
       "norm_label": "error"
     },
     {
@@ -45948,7 +45948,7 @@
       "source_location": "L2010",
       "_origin": "ast",
       "id": "nestzone_features_companion_companionfeature_swift_task",
-      "community": 196,
+      "community": 387,
       "norm_label": "task"
     },
     {
@@ -45958,7 +45958,7 @@
       "source_location": "L2010",
       "_origin": "ast",
       "id": "nestzone_features_companion_companionfeature_swift_void",
-      "community": 196,
+      "community": 387,
       "norm_label": "void"
     },
     {
@@ -45968,7 +45968,7 @@
       "source_location": "L2010",
       "_origin": "ast",
       "id": "nestzone_features_companion_companionfeature_swift_never",
-      "community": 196,
+      "community": 387,
       "norm_label": "never"
     },
     {
@@ -45978,7 +45978,7 @@
       "source_location": "L2012",
       "_origin": "ast",
       "id": "companion_companionfeature_writerace_start",
-      "community": 196,
+      "community": 387,
       "norm_label": ".start()"
     },
     {
@@ -45988,7 +45988,7 @@
       "source_location": "L2021",
       "_origin": "ast",
       "id": "companion_companionfeature_writerace_hold",
-      "community": 196,
+      "community": 387,
       "norm_label": ".hold()"
     },
     {
@@ -45998,7 +45998,7 @@
       "source_location": "L2029",
       "_origin": "ast",
       "id": "companion_companionfeature_writerace_finish",
-      "community": 196,
+      "community": 387,
       "norm_label": ".finish()"
     },
     {
@@ -51765,7 +51765,7 @@
       "label": ".bowlFront()",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
-      "source_location": "L208",
+      "source_location": "L216",
       "_origin": "ast",
       "id": "companion_critterpainter_fish_critterpainter_bowlfront",
       "community": 106,
@@ -60126,7 +60126,7 @@
       "label": ".clump()",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L94",
+      "source_location": "L95",
       "_origin": "ast",
       "id": "companion_pomegranatepainter_art_leafart_clump",
       "community": 114,
@@ -60136,7 +60136,7 @@
       "label": "LeafSpec",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L113",
+      "source_location": "L114",
       "_origin": "ast",
       "id": "nestzone_features_companion_pomegranatepainter_art_swift_leafspec",
       "community": 114,
@@ -60146,7 +60146,7 @@
       "label": "Blob",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L115",
+      "source_location": "L116",
       "_origin": "ast",
       "id": "blob",
       "community": 114,
@@ -60156,7 +60156,7 @@
       "label": "Mutex",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L116",
+      "source_location": "L117",
       "_origin": "ast",
       "id": "nestzone_features_companion_pomegranatepainter_art_swift_mutex",
       "community": 114,
@@ -60166,7 +60166,7 @@
       "label": "CGPoint",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L119",
+      "source_location": "L120",
       "_origin": "ast",
       "id": "nestzone_features_companion_pomegranatepainter_art_swift_cgpoint",
       "community": 114,
@@ -60176,7 +60176,7 @@
       "label": "Blob",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L123",
+      "source_location": "L124",
       "_origin": "ast",
       "id": "companion_pomegranatepainter_art_blob",
       "community": 114,
@@ -60186,7 +60186,7 @@
       "label": ".init()",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L125",
+      "source_location": "L126",
       "_origin": "ast",
       "id": "companion_pomegranatepainter_art_leafart_init",
       "community": 114,
@@ -60196,7 +60196,7 @@
       "label": ".dapple()",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L167",
+      "source_location": "L168",
       "_origin": "ast",
       "id": "companion_pomegranatepainter_art_leafart_dapple",
       "community": 114,
@@ -60206,7 +60206,7 @@
       "label": ".fall()",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L177",
+      "source_location": "L178",
       "_origin": "ast",
       "id": "companion_pomegranatepainter_art_leafart_fall",
       "community": 114,
@@ -60216,7 +60216,7 @@
       "label": ".build()",
       "file_type": "code",
       "source_file": "NestZone/Features/Companion/PomegranatePainter+Art.swift",
-      "source_location": "L189",
+      "source_location": "L190",
       "_origin": "ast",
       "id": "companion_pomegranatepainter_art_leafart_build",
       "community": 114,
@@ -66460,7 +66460,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "nestzone_features_finance_financefeature_swift_string",
-      "community": 222,
+      "community": 413,
       "norm_label": "string"
     },
     {
@@ -66490,7 +66490,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "nestzone_features_finance_financefeature_swift_expense",
-      "community": 222,
+      "community": 413,
       "norm_label": "expense"
     },
     {
@@ -66760,7 +66760,7 @@
       "source_location": "L338",
       "_origin": "ast",
       "id": "finance_financefeature_state_eventlabel",
-      "community": 222,
+      "community": 413,
       "norm_label": ".eventlabel()"
     },
     {
@@ -66770,7 +66770,7 @@
       "source_location": "L350",
       "_origin": "ast",
       "id": "finance_financefeature_state_issuelabel",
-      "community": 222,
+      "community": 413,
       "norm_label": ".issuelabel()"
     },
     {
@@ -67260,7 +67260,7 @@
       "source_location": "L483",
       "_origin": "ast",
       "id": "finance_financefeature_cancelid",
-      "community": 169,
+      "community": 222,
       "norm_label": "cancelid"
     },
     {
@@ -67270,7 +67270,7 @@
       "source_location": "L483",
       "_origin": "ast",
       "id": "finance_financefeature_cancelid_summary",
-      "community": 169,
+      "community": 222,
       "norm_label": "summary"
     },
     {
@@ -67280,7 +67280,7 @@
       "source_location": "L483",
       "_origin": "ast",
       "id": "finance_financefeature_cancelid_expenses",
-      "community": 169,
+      "community": 222,
       "norm_label": "expenses"
     },
     {
@@ -67290,7 +67290,7 @@
       "source_location": "L483",
       "_origin": "ast",
       "id": "finance_financefeature_cancelid_bills",
-      "community": 169,
+      "community": 222,
       "norm_label": "bills"
     },
     {
@@ -67300,7 +67300,7 @@
       "source_location": "L483",
       "_origin": "ast",
       "id": "finance_financefeature_cancelid_budgets",
-      "community": 169,
+      "community": 222,
       "norm_label": "budgets"
     },
     {
@@ -67320,7 +67320,7 @@
       "source_location": "L483",
       "_origin": "ast",
       "id": "finance_financefeature_cancelid_undo",
-      "community": 169,
+      "community": 222,
       "norm_label": "undo"
     },
     {
@@ -67400,7 +67400,7 @@
       "source_location": "L961",
       "_origin": "ast",
       "id": "finance_financefeature_financefeature_commitdelete",
-      "community": 222,
+      "community": 413,
       "norm_label": ".commitdelete()"
     },
     {
@@ -69870,7 +69870,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "home_housestatsfeature_state",
-      "community": 218,
+      "community": 408,
       "norm_label": "state"
     },
     {
@@ -69880,7 +69880,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "nestzone_features_home_housestatsfeature_swift_homeid",
-      "community": 218,
+      "community": 408,
       "norm_label": "homeid"
     },
     {
@@ -69890,7 +69890,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "nestzone_features_home_housestatsfeature_swift_homestats",
-      "community": 218,
+      "community": 408,
       "norm_label": "homestats"
     },
     {
@@ -69900,7 +69900,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "nestzone_features_home_housestatsfeature_swift_eventoccurrence",
-      "community": 218,
+      "community": 408,
       "norm_label": "eventoccurrence"
     },
     {
@@ -69910,7 +69910,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "home_housestatsfeature_state_init",
-      "community": 218,
+      "community": 408,
       "norm_label": ".init()"
     },
     {
@@ -69920,7 +69920,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "nestzone_features_home_housestatsfeature_swift_int",
-      "community": 218,
+      "community": 408,
       "norm_label": "int"
     },
     {
@@ -79780,7 +79780,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "movies_moviesfeature",
-      "community": 325,
+      "community": 218,
       "norm_label": "moviesfeature.swift"
     },
     {
@@ -79880,7 +79880,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "movies_moviesfeature_destination",
-      "community": 325,
+      "community": 218,
       "norm_label": "destination"
     },
     {
@@ -79890,7 +79890,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "movies_moviesfeature_destination_list",
-      "community": 325,
+      "community": 218,
       "norm_label": "list"
     },
     {
@@ -79900,7 +79900,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "movies_moviesfeature_destination_createlist",
-      "community": 325,
+      "community": 218,
       "norm_label": "createlist"
     },
     {
@@ -80030,7 +80030,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "movies_moviesfeature_alert",
-      "community": 325,
+      "community": 218,
       "norm_label": "alert"
     },
     {
@@ -80040,7 +80040,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "movies_moviesfeature_alert_confirmdeletelist",
-      "community": 325,
+      "community": 218,
       "norm_label": "confirmdeletelist"
     },
     {
@@ -80050,7 +80050,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "movies_moviesfeature_delegate",
-      "community": 325,
+      "community": 218,
       "norm_label": "delegate"
     },
     {
@@ -80060,7 +80060,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "movies_moviesfeature_delegate_openmovienight",
-      "community": 325,
+      "community": 218,
       "norm_label": "openmovienight"
     },
     {
@@ -80560,7 +80560,7 @@
       "source_location": "L585",
       "_origin": "ast",
       "id": "movies_moviesfeature_moviesfeature_destination_state",
-      "community": 325,
+      "community": 218,
       "norm_label": "moviesfeature.destination.state"
     },
     {
@@ -102362,9 +102362,9 @@
       "source_file": "Docs/Companion/art/gouache/tools/shot.sh",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tools_shot",
-      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_art_gouache_tools_shot_sh__entry",
-      "confidence_score": 1.0
+      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_art_gouache_tools_shot_sh__entry"
     },
     {
       "relation": "contains",
@@ -103226,9 +103226,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish",
-      "target": "swiftui",
-      "confidence_score": 1.0
+      "target": "swiftui"
     },
     {
       "relation": "imports",
@@ -103237,9 +103237,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Penguin.swift",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin",
-      "target": "swiftui",
-      "confidence_score": 1.0
+      "target": "swiftui"
     },
     {
       "relation": "imports",
@@ -103248,9 +103248,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Turtle.swift",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle",
-      "target": "swiftui",
-      "confidence_score": 1.0
+      "target": "swiftui"
     },
     {
       "relation": "imports",
@@ -103314,9 +103314,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish",
-      "target": "swiftui",
-      "confidence_score": 1.0
+      "target": "swiftui"
     },
     {
       "relation": "imports",
@@ -103325,9 +103325,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Penguin.swift",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_penguin",
-      "target": "swiftui",
-      "confidence_score": 1.0
+      "target": "swiftui"
     },
     {
       "relation": "imports",
@@ -103358,9 +103358,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle",
-      "target": "swiftui",
-      "confidence_score": 1.0
+      "target": "swiftui"
     },
     {
       "relation": "imports",
@@ -109611,9 +109611,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L100",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache",
-      "target": "sendable",
-      "confidence_score": 1.0
+      "target": "sendable"
     },
     {
       "relation": "implements",
@@ -116805,9 +116805,9 @@
       "source_file": "Docs/Companion/art/soft-canopy/render.sh",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "soft_canopy_render",
-      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_art_soft_canopy_render_sh__entry",
-      "confidence_score": 1.0
+      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_art_soft_canopy_render_sh__entry"
     },
     {
       "relation": "contains",
@@ -119307,9 +119307,9 @@
       "source_file": "Docs/Companion/tools/catalog_export/export_catalog.sh",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "catalog_export_export_catalog",
-      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_tools_catalog_export_export_catalog_sh__entry",
-      "confidence_score": 1.0
+      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_tools_catalog_export_export_catalog_sh__entry"
     },
     {
       "relation": "contains",
@@ -121404,9 +121404,9 @@
       "source_file": "Docs/Companion/tools/scenario.sh",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tools_scenario",
-      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_tools_scenario_sh__entry",
-      "confidence_score": 1.0
+      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_docs_companion_tools_scenario_sh__entry"
     },
     {
       "relation": "contains",
@@ -236826,9 +236826,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L145",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish",
-      "target": "companion_crittergeometry_crittergeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_crittergeometry"
     },
     {
       "relation": "contains",
@@ -236836,9 +236836,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish",
-      "target": "companion_crittergeometry_fish_bowlgeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_bowlgeometry"
     },
     {
       "relation": "contains",
@@ -236846,9 +236846,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L117",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish",
-      "target": "companion_crittergeometry_fish_fishgeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_fishgeometry"
     },
     {
       "relation": "contains",
@@ -236856,9 +236856,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L100",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish",
-      "target": "companion_crittergeometry_fish_watercache",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_watercache"
     },
     {
       "relation": "references",
@@ -236867,9 +236867,9 @@
       "source_location": "L150",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "companion_crittergeometry_fish_bowlgeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_bowlgeometry"
     },
     {
       "relation": "method",
@@ -236877,9 +236877,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry",
-      "target": "companion_crittergeometry_fish_bowlgeometry_init",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_bowlgeometry_init"
     },
     {
       "relation": "method",
@@ -236887,9 +236887,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry",
-      "target": "companion_crittergeometry_fish_bowlgeometry_water",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_bowlgeometry_water"
     },
     {
       "relation": "references",
@@ -236898,9 +236898,9 @@
       "source_location": "L19",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_double",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_double"
     },
     {
       "relation": "references",
@@ -236909,9 +236909,9 @@
       "source_location": "L26",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "references",
@@ -236920,9 +236920,9 @@
       "source_location": "L13",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry",
-      "target": "watercache",
-      "confidence_score": 1.0
+      "target": "watercache"
     },
     {
       "relation": "references",
@@ -236975,9 +236975,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry_init",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "references",
@@ -236986,9 +236986,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "context": "return_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry_water",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "references",
@@ -236997,9 +236997,9 @@
       "source_location": "L118",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_fishgeometry",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "calls",
@@ -237008,9 +237008,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_fishgeometry_init",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "references",
@@ -237019,9 +237019,9 @@
       "source_location": "L103",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "references",
@@ -237030,9 +237030,9 @@
       "source_location": "L104",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache_init",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "references",
@@ -237041,9 +237041,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L106",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache_water",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_path"
     },
     {
       "relation": "calls",
@@ -237052,9 +237052,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry_water",
-      "target": "companion_crittergeometry_fish_watercache_water",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_watercache_water"
     },
     {
       "relation": "references",
@@ -237063,9 +237063,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry_water",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_int",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_int"
     },
     {
       "relation": "calls",
@@ -237096,9 +237096,9 @@
       "source_location": "L103",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_int",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_int"
     },
     {
       "relation": "references",
@@ -237107,9 +237107,9 @@
       "source_location": "L106",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache_water",
-      "target": "nestzone_features_companion_crittergeometry_fish_swift_int",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_fish_swift_int"
     },
     {
       "relation": "calls",
@@ -237118,9 +237118,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_bowlgeometry_init",
-      "target": "companion_crittergeometry_fish_watercache",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_watercache"
     },
     {
       "relation": "references",
@@ -237139,9 +237139,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache",
-      "target": "companion_crittergeometry_fish_watercache_init",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_watercache_init"
     },
     {
       "relation": "method",
@@ -237149,9 +237149,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L106",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_watercache",
-      "target": "companion_crittergeometry_fish_watercache_water",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_watercache_water"
     },
     {
       "relation": "references",
@@ -237160,9 +237160,9 @@
       "source_location": "L158",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "companion_crittergeometry_fish_fishgeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_fishgeometry"
     },
     {
       "relation": "method",
@@ -237170,9 +237170,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Fish.swift",
       "source_location": "L120",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_fish_fishgeometry",
-      "target": "companion_crittergeometry_fish_fishgeometry_init",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_fish_fishgeometry_init"
     },
     {
       "relation": "contains",
@@ -237180,9 +237180,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Penguin.swift",
       "source_location": "L84",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin",
-      "target": "companion_crittergeometry_crittergeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_crittergeometry"
     },
     {
       "relation": "contains",
@@ -237190,9 +237190,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Penguin.swift",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin",
-      "target": "companion_crittergeometry_penguin_penguingeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_penguin_penguingeometry"
     },
     {
       "relation": "references",
@@ -237201,9 +237201,9 @@
       "source_location": "L85",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "companion_crittergeometry_penguin_penguingeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_penguin_penguingeometry"
     },
     {
       "relation": "references",
@@ -237212,9 +237212,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Penguin.swift",
       "source_location": "L88",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin_crittergeometry_penguin",
-      "target": "companion_crittergeometry_penguin_penguingeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_penguin_penguingeometry"
     },
     {
       "relation": "method",
@@ -237222,9 +237222,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Penguin.swift",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin_penguingeometry",
-      "target": "companion_crittergeometry_penguin_penguingeometry_init",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_penguin_penguingeometry_init"
     },
     {
       "relation": "references",
@@ -237233,9 +237233,9 @@
       "source_location": "L16",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin_penguingeometry",
-      "target": "nestzone_features_companion_crittergeometry_penguin_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_penguin_swift_path"
     },
     {
       "relation": "calls",
@@ -237244,9 +237244,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Penguin.swift",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin_penguingeometry_init",
-      "target": "nestzone_features_companion_crittergeometry_penguin_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_penguin_swift_path"
     },
     {
       "relation": "references",
@@ -237255,9 +237255,9 @@
       "source_location": "L20",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin_penguingeometry_init",
-      "target": "nestzone_features_companion_crittergeometry_penguin_swift_critterplan",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_penguin_swift_critterplan"
     },
     {
       "relation": "references",
@@ -237266,9 +237266,9 @@
       "source_location": "L88",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_penguin_crittergeometry_penguin",
-      "target": "nestzone_features_companion_crittergeometry_penguin_swift_critterplan",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_penguin_swift_critterplan"
     },
     {
       "relation": "references",
@@ -237277,9 +237277,9 @@
       "source_location": "L85",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "nestzone_features_companion_crittergeometry_penguin_swift_string",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_penguin_swift_string"
     },
     {
       "relation": "method",
@@ -237287,9 +237287,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Penguin.swift",
       "source_location": "L88",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "companion_crittergeometry_penguin_crittergeometry_penguin",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_penguin_crittergeometry_penguin"
     },
     {
       "relation": "contains",
@@ -237297,9 +237297,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Turtle.swift",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle",
-      "target": "companion_crittergeometry_crittergeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_crittergeometry"
     },
     {
       "relation": "contains",
@@ -237307,9 +237307,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Turtle.swift",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle",
-      "target": "companion_crittergeometry_turtle_turtlegeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_turtle_turtlegeometry"
     },
     {
       "relation": "references",
@@ -237318,9 +237318,9 @@
       "source_location": "L71",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "companion_crittergeometry_turtle_turtlegeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_turtle_turtlegeometry"
     },
     {
       "relation": "references",
@@ -237329,9 +237329,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Turtle.swift",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle_crittergeometry_turtle",
-      "target": "companion_crittergeometry_turtle_turtlegeometry",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_turtle_turtlegeometry"
     },
     {
       "relation": "method",
@@ -237339,9 +237339,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Turtle.swift",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle_turtlegeometry",
-      "target": "companion_crittergeometry_turtle_turtlegeometry_init",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_turtle_turtlegeometry_init"
     },
     {
       "relation": "references",
@@ -237350,9 +237350,9 @@
       "source_location": "L17",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle_turtlegeometry",
-      "target": "nestzone_features_companion_crittergeometry_turtle_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_turtle_swift_path"
     },
     {
       "relation": "calls",
@@ -237361,9 +237361,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Turtle.swift",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle_turtlegeometry_init",
-      "target": "nestzone_features_companion_crittergeometry_turtle_swift_path",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_turtle_swift_path"
     },
     {
       "relation": "references",
@@ -237372,9 +237372,9 @@
       "source_location": "L20",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle_turtlegeometry_init",
-      "target": "nestzone_features_companion_crittergeometry_turtle_swift_critterplan",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_turtle_swift_critterplan"
     },
     {
       "relation": "references",
@@ -237383,9 +237383,9 @@
       "source_location": "L74",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_turtle_crittergeometry_turtle",
-      "target": "nestzone_features_companion_crittergeometry_turtle_swift_critterplan",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_turtle_swift_critterplan"
     },
     {
       "relation": "references",
@@ -237394,9 +237394,9 @@
       "source_location": "L71",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "nestzone_features_companion_crittergeometry_turtle_swift_string",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_turtle_swift_string"
     },
     {
       "relation": "method",
@@ -237404,9 +237404,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry+Turtle.swift",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "companion_crittergeometry_turtle_crittergeometry_turtle",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_turtle_crittergeometry_turtle"
     },
     {
       "relation": "contains",
@@ -237837,9 +237837,9 @@
       "source_location": "L449",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry_prepare",
-      "target": "nestzone_features_companion_crittergeometry_swift_critterplan",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_crittergeometry_swift_critterplan"
     },
     {
       "relation": "references",
@@ -238007,9 +238007,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry.swift",
       "source_location": "L449",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry",
-      "target": "companion_crittergeometry_crittergeometry_prepare",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_crittergeometry_prepare"
     },
     {
       "relation": "method",
@@ -238144,9 +238144,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry.swift",
       "source_location": "L452",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry_prepare",
-      "target": "companion_crittergeometry_crittergeometry_curl",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_crittergeometry_curl"
     },
     {
       "relation": "calls",
@@ -238155,9 +238155,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry.swift",
       "source_location": "L452",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry_prepare",
-      "target": "companion_crittergeometry_crittergeometry_head",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_crittergeometry_head"
     },
     {
       "relation": "calls",
@@ -238166,9 +238166,9 @@
       "source_file": "NestZone/Features/Companion/CritterGeometry.swift",
       "source_location": "L452",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_crittergeometry_crittergeometry_prepare",
-      "target": "companion_crittergeometry_crittergeometry_sit",
-      "confidence_score": 1.0
+      "target": "companion_crittergeometry_crittergeometry_sit"
     },
     {
       "relation": "calls",
@@ -238709,9 +238709,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Bird.swift",
       "source_location": "L91",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_bird_critterpainter_perchedhead",
-      "target": "companion_critterpainter_bird_crittergeometry_bird",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_bird_crittergeometry_bird"
     },
     {
       "relation": "calls",
@@ -238840,9 +238840,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Bird.swift",
       "source_location": "L209",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_bird_birdgeometry_init",
-      "target": "nestzone_features_companion_critterpainter_bird_swift_double",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_bird_swift_double"
     },
     {
       "relation": "references",
@@ -239738,9 +239738,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish",
-      "target": "companion_critterpainter_critterpainter",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_critterpainter"
     },
     {
       "relation": "method",
@@ -239748,9 +239748,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_fish_critterpainter_fish",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_fish"
     },
     {
       "relation": "calls",
@@ -239770,9 +239770,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_fish",
-      "target": "companion_critterpainter_fish_critterpainter_bowlback",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_bowlback"
     },
     {
       "relation": "calls",
@@ -239781,9 +239781,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_fish",
-      "target": "companion_critterpainter_fish_critterpainter_bowlfront",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_bowlfront"
     },
     {
       "relation": "calls",
@@ -239792,9 +239792,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_fish",
-      "target": "companion_critterpainter_fish_critterpainter_swimmer",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_swimmer"
     },
     {
       "relation": "references",
@@ -239803,9 +239803,9 @@
       "source_location": "L19",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_fish",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext"
     },
     {
       "relation": "references",
@@ -239814,9 +239814,9 @@
       "source_location": "L51",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_bowlback",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext"
     },
     {
       "relation": "references",
@@ -239825,9 +239825,9 @@
       "source_location": "L208",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_bowlfront",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext"
     },
     {
       "relation": "references",
@@ -239836,9 +239836,9 @@
       "source_location": "L28",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_fishegg",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext"
     },
     {
       "relation": "references",
@@ -239847,9 +239847,9 @@
       "source_location": "L90",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_swimmer",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_graphicscontext"
     },
     {
       "relation": "method",
@@ -239857,9 +239857,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_fish_critterpainter_fishegg",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_fishegg"
     },
     {
       "relation": "calls",
@@ -239879,9 +239879,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_fishegg",
-      "target": "companion_critterpainter_fish_critterpainter_bowlback",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_bowlback"
     },
     {
       "relation": "calls",
@@ -239890,9 +239890,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_fishegg",
-      "target": "companion_critterpainter_fish_critterpainter_bowlfront",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_bowlfront"
     },
     {
       "relation": "references",
@@ -239912,9 +239912,9 @@
       "source_location": "L44",
       "weight": 1.0,
       "context": "field",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_int",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_int"
     },
     {
       "relation": "references",
@@ -239923,9 +239923,9 @@
       "source_location": "L51",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_bowlback",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_int",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_int"
     },
     {
       "relation": "references",
@@ -239934,9 +239934,9 @@
       "source_location": "L208",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_bowlfront",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_int",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_int"
     },
     {
       "relation": "references",
@@ -239945,9 +239945,9 @@
       "source_location": "L90",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_swimmer",
-      "target": "nestzone_features_companion_critterpainter_fish_swift_int",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_fish_swift_int"
     },
     {
       "relation": "method",
@@ -239955,9 +239955,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_fish_critterpainter_bowlback",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_bowlback"
     },
     {
       "relation": "references",
@@ -239966,9 +239966,9 @@
       "source_location": "L51",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_bowlback",
-      "target": "bowlgeometry",
-      "confidence_score": 1.0
+      "target": "bowlgeometry"
     },
     {
       "relation": "references",
@@ -239988,9 +239988,9 @@
       "source_location": "L208",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_bowlfront",
-      "target": "bowlgeometry",
-      "confidence_score": 1.0
+      "target": "bowlgeometry"
     },
     {
       "relation": "references",
@@ -239999,9 +239999,9 @@
       "source_location": "L90",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_fish_critterpainter_swimmer",
-      "target": "bowlgeometry",
-      "confidence_score": 1.0
+      "target": "bowlgeometry"
     },
     {
       "relation": "method",
@@ -240009,9 +240009,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_fish_critterpainter_swimmer",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_swimmer"
     },
     {
       "relation": "references",
@@ -240063,9 +240063,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Fish.swift",
       "source_location": "L208",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_fish_critterpainter_bowlfront",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_fish_critterpainter_bowlfront"
     },
     {
       "relation": "references",
@@ -240084,9 +240084,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Penguin.swift",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_penguin",
-      "target": "companion_critterpainter_critterpainter",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_critterpainter"
     },
     {
       "relation": "method",
@@ -240094,9 +240094,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Penguin.swift",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_penguin_critterpainter_penguin",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_penguin_critterpainter_penguin"
     },
     {
       "relation": "calls",
@@ -240105,9 +240105,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Penguin.swift",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_penguin_critterpainter_penguin",
-      "target": "companion_critterpainter_penguin_critterpainter_penguinhead",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_penguin_critterpainter_penguinhead"
     },
     {
       "relation": "references",
@@ -240116,9 +240116,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_penguin_critterpainter_penguin",
-      "target": "nestzone_features_companion_critterpainter_penguin_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_penguin_swift_graphicscontext"
     },
     {
       "relation": "references",
@@ -240127,9 +240127,9 @@
       "source_location": "L67",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_penguin_critterpainter_penguinhead",
-      "target": "nestzone_features_companion_critterpainter_penguin_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_penguin_swift_graphicscontext"
     },
     {
       "relation": "method",
@@ -240137,9 +240137,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Penguin.swift",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_penguin_critterpainter_penguinhead",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_penguin_critterpainter_penguinhead"
     },
     {
       "relation": "calls",
@@ -240181,9 +240181,9 @@
       "source_location": "L67",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_penguin_critterpainter_penguinhead",
-      "target": "nestzone_features_companion_critterpainter_penguin_swift_double",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_penguin_swift_double"
     },
     {
       "relation": "contains",
@@ -241394,9 +241394,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle",
-      "target": "companion_critterpainter_critterpainter",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_critterpainter"
     },
     {
       "relation": "method",
@@ -241404,9 +241404,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_turtle_critterpainter_turtle",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_turtle_critterpainter_turtle"
     },
     {
       "relation": "calls",
@@ -241426,9 +241426,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_turtle",
-      "target": "companion_critterpainter_turtle_critterpainter_neckandhead",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_turtle_critterpainter_neckandhead"
     },
     {
       "relation": "references",
@@ -241448,9 +241448,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_turtle",
-      "target": "nestzone_features_companion_critterpainter_turtle_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_turtle_swift_graphicscontext"
     },
     {
       "relation": "calls",
@@ -241459,9 +241459,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L119",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_turtlehead",
-      "target": "companion_critterpainter_turtle_critterpainter_turtle",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_turtle_critterpainter_turtle"
     },
     {
       "relation": "references",
@@ -241470,9 +241470,9 @@
       "source_location": "L83",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_neckandhead",
-      "target": "nestzone_features_companion_critterpainter_turtle_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_turtle_swift_graphicscontext"
     },
     {
       "relation": "references",
@@ -241481,9 +241481,9 @@
       "source_location": "L118",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_turtlehead",
-      "target": "nestzone_features_companion_critterpainter_turtle_swift_graphicscontext",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_turtle_swift_graphicscontext"
     },
     {
       "relation": "method",
@@ -241491,9 +241491,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_turtle_critterpainter_neckandhead",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_turtle_critterpainter_neckandhead"
     },
     {
       "relation": "calls",
@@ -241502,9 +241502,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_neckandhead",
-      "target": "companion_critterpainter_turtle_critterpainter_turtlehead",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_turtle_critterpainter_turtlehead"
     },
     {
       "relation": "calls",
@@ -241535,9 +241535,9 @@
       "source_location": "L83",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_neckandhead",
-      "target": "nestzone_features_companion_critterpainter_turtle_swift_double",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_turtle_swift_double"
     },
     {
       "relation": "references",
@@ -241546,9 +241546,9 @@
       "source_location": "L83",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_neckandhead",
-      "target": "turtlegeometry",
-      "confidence_score": 1.0
+      "target": "turtlegeometry"
     },
     {
       "relation": "references",
@@ -241557,9 +241557,9 @@
       "source_location": "L118",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_turtle_critterpainter_turtlehead",
-      "target": "nestzone_features_companion_critterpainter_turtle_swift_double",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_turtle_swift_double"
     },
     {
       "relation": "method",
@@ -241567,9 +241567,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter+Turtle.swift",
       "source_location": "L118",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_turtle_critterpainter_turtlehead",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_turtle_critterpainter_turtlehead"
     },
     {
       "relation": "calls",
@@ -241661,9 +241661,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter.swift",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter",
-      "target": "companion_critterpainter_critterpainter_facespot",
-      "confidence_score": 1.0
+      "target": "companion_critterpainter_critterpainter_facespot"
     },
     {
       "relation": "method",
@@ -241859,9 +241859,9 @@
       "source_location": "L102",
       "weight": 1.0,
       "context": "parameter_type",
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter_facespot",
-      "target": "nestzone_features_companion_critterpainter_swift_critterplan",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_swift_critterplan"
     },
     {
       "relation": "references",
@@ -242354,9 +242354,9 @@
       "source_file": "NestZone/Features/Companion/CritterPainter.swift",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterpainter_critterpainter_facespot",
-      "target": "nestzone_features_companion_critterpainter_swift_cgpoint",
-      "confidence_score": 1.0
+      "target": "nestzone_features_companion_critterpainter_swift_cgpoint"
     },
     {
       "relation": "references",
@@ -243443,9 +243443,9 @@
       "source_file": "NestZone/Features/Companion/CritterPlan.swift",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterplan_body",
-      "target": "companion_critterplan_body_shelled",
-      "confidence_score": 1.0
+      "target": "companion_critterplan_body_shelled"
     },
     {
       "relation": "case_of",
@@ -243463,9 +243463,9 @@
       "source_file": "NestZone/Features/Companion/CritterPlan.swift",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterplan_body",
-      "target": "companion_critterplan_body_swimmer",
-      "confidence_score": 1.0
+      "target": "companion_critterplan_body_swimmer"
     },
     {
       "relation": "case_of",
@@ -243546,9 +243546,9 @@
       "source_file": "NestZone/Features/Companion/CritterPlan.swift",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterplan_ears",
-      "target": "companion_critterplan_ears_leaf",
-      "confidence_score": 1.0
+      "target": "companion_critterplan_ears_leaf"
     },
     {
       "relation": "case_of",
@@ -243718,9 +243718,9 @@
       "source_file": "NestZone/Features/Companion/CritterPlan.swift",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "companion_critterplan_marks",
-      "target": "companion_critterplan_marks_spots",
-      "confidence_score": 1.0
+      "target": "companion_critterplan_marks_spots"
     },
     {
       "relation": "case_of",
@@ -333965,9 +333965,9 @@
       "source_file": "ci_scripts/ci_post_clone.sh",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "ci_scripts_ci_post_clone",
-      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_ci_scripts_ci_post_clone_sh__entry",
-      "confidence_score": 1.0
+      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_ci_scripts_ci_post_clone_sh__entry"
     },
     {
       "relation": "defines",
@@ -334107,9 +334107,9 @@
       "source_file": "deploy.sh",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "deploy",
-      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "confidence_score": 1.0
+      "target": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry"
     },
     {
       "relation": "calls",
@@ -334118,9 +334118,9 @@
       "source_location": "L203",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_bold",
-      "confidence_score": 1.0
+      "target": "deploy_bold"
     },
     {
       "relation": "calls",
@@ -334129,9 +334129,9 @@
       "source_location": "L116",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_die",
-      "confidence_score": 1.0
+      "target": "deploy_die"
     },
     {
       "relation": "calls",
@@ -334140,9 +334140,9 @@
       "source_location": "L175",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_info",
-      "confidence_score": 1.0
+      "target": "deploy_info"
     },
     {
       "relation": "calls",
@@ -334151,9 +334151,9 @@
       "source_location": "L267",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_run",
-      "confidence_score": 1.0
+      "target": "deploy_run"
     },
     {
       "relation": "calls",
@@ -334162,9 +334162,9 @@
       "source_location": "L298",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_set_build_number",
-      "confidence_score": 1.0
+      "target": "deploy_set_build_number"
     },
     {
       "relation": "calls",
@@ -334173,9 +334173,9 @@
       "source_location": "L198",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_set_marketing_version",
-      "confidence_score": 1.0
+      "target": "deploy_set_marketing_version"
     },
     {
       "relation": "calls",
@@ -334184,9 +334184,9 @@
       "source_location": "L165",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_step",
-      "confidence_score": 1.0
+      "target": "deploy_step"
     },
     {
       "relation": "calls",
@@ -334195,9 +334195,9 @@
       "source_location": "L191",
       "weight": 1.0,
       "context": "call",
+      "confidence_score": 1.0,
       "source": "users_muratcankoc_documents_projects_nestzone_claude_worktrees_agent_ad16f8f5570cd5b2a_deploy_sh__entry",
-      "target": "deploy_warn",
-      "confidence_score": 1.0
+      "target": "deploy_warn"
     },
     {
       "relation": "calls",
@@ -334748,9 +334748,9 @@
       "source_file": "Docs/Companion/art/RULES-pets.md",
       "source_location": "L321",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "art_rules_pets_8_a_new_pet_is_a_row",
-      "target": "art_rules_pets_batch_b_what_the_plans_could_not_say",
-      "confidence_score": 1.0
+      "target": "art_rules_pets_batch_b_what_the_plans_could_not_say"
     },
     {
       "relation": "contains",
@@ -336369,5 +336369,5 @@
       "source_file": "Docs/PocketBase/README.md"
     }
   ],
-  "built_at_commit": "efd6a99b4f215795619e4ffdb3ad868028b3f7e1"
+  "built_at_commit": "3ca067e0e6f4f06001b50648529a9b96b7a6b49d"
 }
