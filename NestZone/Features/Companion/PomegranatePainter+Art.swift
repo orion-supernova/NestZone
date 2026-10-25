@@ -55,9 +55,13 @@ struct PomegranateCrown: Sendable {
 /// 10 across their range, the day in quarters) so the picture is the same
 /// to the eye and a tree easing in does not build it again every frame.
 final class LeafArt: @unchecked Sendable {
-    private struct Key: Hashable { var seed: UInt32, species: String, mood: Int, light: Int, day: Int }
+    private struct Key: Hashable { var seed: UInt32, species: String, clumps: Int, mood: Int, light: Int, day: Int }
     private static let entries = Mutex<[Key: LeafArt]>([:])
-    private static let crowns = Mutex<[UInt32: PomegranateCrown]>([:])
+    /// Keyed on the species and the clump count as well as the seed: a new
+    /// companion keeps the old seed until something graduates, and a crown
+    /// laid out for another tree's clumps indexes off the end of this one's.
+    private struct CrownKey: Hashable { var seed: UInt32, species: String, clumps: Int }
+    private static let crowns = Mutex<[CrownKey: PomegranateCrown]>([:])
 
     /// Towards the light, a unit vector, y up negative. Overhead noon would
     /// light a tree flat, so the light is never quite above it: at least a
@@ -71,17 +75,18 @@ final class LeafArt: @unchecked Sendable {
 
     static func of(_ canopy: Canopy, mood: Double, light: Double, day: Double) -> LeafArt {
         let seed = Ink.hash(canopy.seed)
-        let key = Key(seed: seed, species: canopy.species.rawValue, mood: Int((mood * 40).rounded()),
+        let key = Key(seed: seed, species: canopy.species.rawValue, clumps: canopy.clumps.count, mood: Int((mood * 40).rounded()),
                       light: Int((light * 10).rounded()), day: Int((day * 4).rounded()))
         return entries.withLock { entries in
             if let found = entries[key] { return found }
             // A scene holds a few trees at most; a day's light is a dozen more.
             if entries.count >= 8 { entries.removeAll() }
+            let crownKey = CrownKey(seed: seed, species: canopy.species.rawValue, clumps: canopy.clumps.count)
             let crown = crowns.withLock { crowns in
-                if let found = crowns[seed] { return found }
+                if let found = crowns[crownKey] { return found }
                 if crowns.count >= 8 { crowns.removeAll() }
                 let made = PomegranateCrown(canopy)
-                crowns[seed] = made
+                crowns[crownKey] = made
                 return made
             }
             let made = LeafArt(canopy, crown, key)
