@@ -62,8 +62,16 @@ enum StillCache {
         forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main
     ) { _ in MainActor.assumeIsolated { dropAll() } }
 
+    /// The shop is visited, not lived in: its pictures are let go when the app
+    /// leaves the screen, so they never sit in memory behind the rest of the
+    /// app. The next visit warms them again, off the scroll, as the first did.
+    private static let background = NotificationCenter.default.addObserver(
+        forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main
+    ) { _ in MainActor.assumeIsolated { dropAll() } }
+
     static func slot(_ key: String) -> StillSlot {
         _ = memoryWarning
+        _ = background
         if let slot = slots[key] { return slot }
         let slot = StillSlot()
         slots[key] = slot
