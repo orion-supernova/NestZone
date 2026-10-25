@@ -521,6 +521,49 @@ Numbers, iPhone 17 simulator (iOS 27), Debug, alternating runs, three rounds eac
 for any of the five, within the noise (for example lemon 1.0 late against 5.8,
 azalea 0.5 against 6.8, Choose 4.2 dropped against 15.1).
 
+### Fix round (v2)
+
+Four things the first round got wrong, and what holds now:
+
+9. **Flowers that cover are read as flowers only if they are few and large, in
+   clusters with gaps.** The azalea's first bloom was 18 to 38 small flowers on every
+   clump, which at card size was one pink blob with a pale smear where the sun was
+   (a light class that spans the crown is a stain on flowers). Now each clump has one or two
+   *trusses* (`BloomSpec.truss`): a middle flower and a ring of six, each about a fifth
+   of the clump across, spaced round the dome so leaves show between, and the
+   outer ones standing out of the leaves for a bumpy silhouette. **The light is
+   on the truss's own sunny side**: a flower's class comes from how far it sits towards the
+   sun from its truss's middle (and a little from where the clump stands), so every
+   truss has a lit side and a shaded one, and no patch spans the crown. Each flower
+   keeps its throat (a deeper pink disc), its three spots and its long stamens. Back
+   clumps carry one small truss; the front ones two. This was also the cost: fewer, larger
+   flowers are fewer curves.
+10. **A tired tree is the same tree.** The shared pose shrinks a clump by a fifth and sinks
+   and slides it, and the pomegranate's dense whorls survive that; a crown of few leaves (a lemon,
+   an olive, a cherry) was left as bare limbs, a Y fork with leaves at its tips. For every
+   tree but the pomegranate, `TreeCore.calmed` takes back three fifths of the pose's
+   shrink and sink (the limbs still droop, because that is posture), and
+   `LeafSpec.calm` (0.45) takes that share of the dropped leaves, the curled-short leaves and
+   the shrunken dark body behind them. A flower-covered crown keeps its flowers when it is
+   thirsty or dozing: `BloomArt` thins them (a quarter, a third) and `Tones` pales them, and
+   they are not shut into buds. Thirsty is the same tree drooping and paling with a few leaves
+   on the soil; dozing is the same tree, calm and dimmed under the dome.
+11. **No marks at a fork.** A limb's bark stops short of the fork at its end (84 percent)
+   and starts after the fork it leaves (a quarter out, a sixth on a trunk's segments); its lit edge
+   and core shadow are drawn from 30 percent of the way along it (`TreeWood.from`),
+   because a lens that starts at the fork is a white thread across the stem it leaves
+   (starting thin was the first attempt, and drew a thread).
+12. **Merge fills by tone.** The olive keeps two tones in the back (dark and middle, plus the
+   silver undersides) and three in the middle, and all of them in front (`LeafSpec.merge`), with
+   four sprigs instead of five. The silver two-tone is kept.
+
+Numbers, same method, three rounds each of old against new on the loaded machine
+(the stress page is frames per two seconds): azalea 17 against 22 (1.26x) with
+recording 1.6 ms against 1.9 (0.83x); olive 32 against 36 (1.12x) with recording
+1.1 ms against 1.3 (0.9x). The Today scroll bench was no worse than the old painter's for either,
+within the noise.
+
+
 
 ## 15. Plants (round B)
 

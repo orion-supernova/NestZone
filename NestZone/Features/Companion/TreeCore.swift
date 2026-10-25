@@ -36,7 +36,7 @@ struct TreeCore {
         self.day = day
         night = 1 - day
         self.M = M
-        let pose = Canopy.Pose(canopy, growth: growth, mood: M)
+        let pose = Self.calmed(Canopy.Pose(canopy, growth: growth, mood: M), canopy, M)
         self.pose = canopy.kind.form.stems > 1 ? PomegranatePainter.Look.splayed(pose, growth: growth) : pose
         self.tones = tones
         light = TreeInk.Light(light: lightSide, day: day)
@@ -44,6 +44,26 @@ struct TreeCore {
         inks = TreeInk.leafInks(tones, M, day: day, light: light, fresh: fresh, rimBase: rimBase, rimK: rimK)
         art = LeafArt.of(canopy, mood: mood, light: lightSide, day: day)
         spec = art.spec
+    }
+
+    /// A thirsty or sleepy tree is the same tree: the limbs droop and the leaves pale, but the
+    /// crown keeps most of its size and its place. The shared pose shrinks a clump by a fifth and
+    /// lets it sink and slide, which for a crown of few leaves left bare limbs; this takes back
+    /// three fifths of that.
+    static func calmed(_ pose: Canopy.Pose, _ canopy: Canopy, _ M: Canopy.Mood) -> Canopy.Pose {
+        guard canopy.species != .pomegranate, M.thirst + M.doze > 0.01 else { return pose }
+        var pose = pose
+        let was = 1 + 0.07 * M.glow - 0.2 * M.thirst - 0.16 * M.doze, now = 1 + 0.07 * M.glow - 0.08 * M.thirst - 0.064 * M.doze
+        let sag = 0.26 * M.wilt + 0.1 * M.thirst + 0.22 * M.doze - 0.1 * M.glow, sideways = 0.2 * M.wilt + 0.08 * M.doze
+        for (i, c) in canopy.clumps.enumerated() {
+            guard var q = pose.clumps[i], let limb = pose.limbs[c.node] else { continue }
+            let lean = limb.x1 + c.ox, side = lean > 0 ? 1.0 : lean < 0 ? -1 : 1
+            q.R *= now / was
+            q.y -= 0.6 * c.R * max(0, sag)
+            q.x -= side * 0.6 * c.R * sideways
+            pose.clumps[i] = q
+        }
+        return pose
     }
 
     /// The clumps showing, back to front: by tier, and within a tier top

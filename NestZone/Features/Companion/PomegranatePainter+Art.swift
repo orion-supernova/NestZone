@@ -130,12 +130,12 @@ final class LeafArt: @unchecked Sendable {
         let M = Canopy.Mood(Double(key.mood) / 40)
         let sun = Self.sun(light: Double(key.light) / 10, day: Double(key.day) / 4)
         L = sun
-        drop = 0.12 * M.thirst + 0.18 * M.doze
-        curl = 0.5 * M.thirst + 0.3 * M.doze
+        drop = (0.12 * M.thirst + 0.18 * M.doze) * spec.calm
+        curl = (0.5 * M.thirst + 0.3 * M.doze) * spec.calm
         lenK = 1 - 0.1 * M.wilt
         wK = 1 - 0.22 * M.wilt
         pull = 0.1 + 0.2 * M.wilt + 0.07 * M.doze - 0.05 * M.glow
-        bodyK = 1 - 0.45 * (M.thirst + M.doze)
+        bodyK = 1 - 0.45 * (M.thirst + M.doze) * spec.calm
         built = Mutex(Array(repeating: nil, count: canopy.clumps.count))
 
         // Five patches of sun, on the light's side of the crown and a little
@@ -223,7 +223,7 @@ final class LeafArt: @unchecked Sendable {
             let light = 0.35 * local + 0.25 * face + 0.2 * (u * Lx + v * Ly) - 0.75 * under - 0.3 * core
                 + 1.2 * dapple + (luck - 0.5) * 0.7 + (flip - 0.5) * 0.36 + bias
             let raw = light < 0.05 ? 0 : light < 0.5 ? 1 : light < 0.98 ? 2 : 3
-            let cls = spec.flat ? min(raw, tier < 2 ? 1 : 2) : raw
+            let cls = spec.flat ? min(raw, tier < 2 ? 1 : 2) : spec.merge ? (tier == 0 ? min(raw, 1) : tier == 1 ? min(raw, 2) : raw) : raw
 
             let side = (-sa * Lx + ca * Ly) >= 0 ? 1.0 : -1
             art.leaves += 1

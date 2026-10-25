@@ -31,6 +31,18 @@ struct TreeWood {
     let M: Canopy.Mood
     let style: BarkStyle
 
+    /// The part of a limb from a share `t` of the way along it to its end.
+    static func from(_ q: Canopy.Pose.Span, _ t: Double) -> Canopy.Pose.Span {
+        var r = q
+        let p = along(q, t)
+        r.x = p.x
+        r.y = p.y
+        r.cx = (1 - t) * q.cx + t * q.x1
+        r.cy = (1 - t) * q.cy + t * q.y1
+        r.w0 = Ink.lerp(q.w0, q.w1, t)
+        return r
+    }
+
     /// A point a share `u` of the way along a limb's centre line.
     static func along(_ q: Canopy.Pose.Span, _ u: Double) -> CGPoint {
         let v = 1 - u
@@ -57,6 +69,9 @@ struct TreeWood {
         var stems: [Stem] = []
         var owner = Array(repeating: 0, count: canopy.limbs.count)
         var shade = Path(), union = Path()
+        // A limb whose end another leaves from keeps its grain short of that end.
+        var forks = Set<Int>()
+        for nd in canopy.limbs where nd.parent >= 0 { forks.insert(nd.parent) }
         var flare = 0.0, any = false
         for (i, nd) in canopy.limbs.enumerated() {
             guard let q = pose.limbs[i] else { continue }
@@ -73,14 +88,14 @@ struct TreeWood {
             stems[k].outline.limb(q, q.w0, q.w1, 0, flat: root)
             let am = atan2(q.y1 - q.y, q.x1 - q.x)
             let side: Double = sin(am) * L.x - cos(am) * L.y > 0 ? -1 : 1
-            // A limb's own light and shade start thin at the fork, so they do not
-            // lie across the stem it leaves in a cross.
-            let fork = nd.depth >= 1 ? 0.12 : 1.0
-            stems[k].edge.limb(q, q.w0 * 0.26 * fork, q.w1 * 0.2, side * 0.34, flat: root)
-            stems[k].core.limb(q, q.w0 * 0.34 * fork, q.w1 * 0.3, -side * 0.3, flat: root)
+            // A limb's own light and shade start a little way out from the fork, so they
+            // do not lie across the stem it leaves in a cross or a thread.
+            let lit = nd.depth >= 1 ? Self.from(q, 0.3) : q
+            stems[k].edge.limb(lit, lit.w0 * 0.26, lit.w1 * 0.2, side * 0.34, flat: root)
+            stems[k].core.limb(lit, lit.w0 * 0.34, lit.w1 * 0.3, -side * 0.3, flat: root)
             if style == .gnarled && nd.depth == 0 && q.g > 0.5 { burls(&stems[k].outline, q, i, am) }
             guard nd.depth <= 1 && q.w0 > 2.2 else { continue }
-            grain(&stems[k].marks, q, nd, i, am, side, root: root)
+            grain(&stems[k].marks, q, nd, i, am, side, root: root, forks: forks.contains(i))
         }
         guard any else { return }
         stems[0].outline.flare(flare)
@@ -128,10 +143,10 @@ struct TreeWood {
 
     /// A thin lens along the grain from `u0` to `u1`, at `f0` across at the
     /// start and `f1` at the end, `half` of a unit thick at its belly.
-    private func strand(_ lo: Double, _ into: inout Path, _ q: Canopy.Pose.Span, _ n: CGPoint, _ u0: Double, _ u1: Double, _ f0: Double, _ f1: Double, _ half: Double) {
+    private func strand(_ span: ClosedRange<Double>, _ into: inout Path, _ q: Canopy.Pose.Span, _ n: CGPoint, _ u0: Double, _ u1: Double, _ f0: Double, _ f1: Double, _ half: Double) {
         // Where a limb leaves its parent the two sets of grain would cross, and a
         // cross is what the eye reads: a limb's own marks start a little way out.
-        let u0 = max(u0, lo)
+        let u0 = max(u0, span.lowerBound), u1 = min(u1, span.upperBound)
         guard u1 - u0 > 0.05 else { return }
         let a = spot(q, u0, f0, n), b = spot(q, u1, f1, n), m = spot(q, (u0 + u1) / 2, (f0 + f1) / 2, n)
         let dx = b.x - a.x, dy = b.y - a.y, d = max(1e-6, (dx * dx + dy * dy).squareRoot())
@@ -142,10 +157,11 @@ struct TreeWood {
         into.closeSubpath()
     }
 
-    private func grain(_ m: inout Marks, _ q: Canopy.Pose.Span, _ nd: Canopy.Limb, _ i: Int, _ am: Double, _ side: Double, root: Bool) {
+    private func grain(_ m: inout Marks, _ q: Canopy.Pose.Span, _ nd: Canopy.Limb, _ i: Int, _ am: Double, _ side: Double, root: Bool, forks: Bool) {
         let n = CGPoint(x: -sin(am), y: cos(am))
         let thick = q.w0 > 4
-        let lo = nd.depth >= 1 ? 0.28 : 0.0
+        // Where grain may run along this limb: not up to the fork it leaves, nor into the one at its end.
+        let lo = (root ? 0.0 : nd.depth >= 1 ? 0.28 : 0.16)...(forks ? 0.84 : 0.97)
         // Every limb is marked a little differently, from its own number.
         let h = Double((i * 37 + 11) % 17) / 17
         func into(_ f: Double) -> WritableKeyPath<Marks, Path> { (f < 0) == (side < 0) ? \.pale : \.dark }
@@ -221,9 +237,9 @@ struct TreeWood {
         case .lenticel:
             // Short pale marks that wrap round the stem, a few at a time and
             // never all at one height.
-            var u = max(lo, 0.1 + 0.05 * h)
+            var u = max(lo.lowerBound, 0.1 + 0.05 * h)
             var j = 0
-            while u < 0.92 {
+            while u < min(0.92, lo.upperBound) {
                 let w = Ink.lerp(q.w0, q.w1, u), half = 0.28 + 0.12 * Double(j % 2)
                 let c = Self.along(q, u), off = (j % 2 == 0 ? -0.12 : 0.14)
                 let a = CGPoint(x: c.x + n.x * w * (off - half) , y: c.y + n.y * w * (off - half))
