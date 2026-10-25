@@ -7,7 +7,7 @@ import Testing
 /// The Lab's pretend house: that it is kept apart from the real one, and that
 /// the stand-in server keeps the rules the card depends on.
 @MainActor
-@Suite("The Lab's pretend house")
+@Suite("The Lab's pretend house", .serialized)
 struct CompanionLabTests {
     private static let now = Date(timeIntervalSince1970: 1_800_000_000)
 
@@ -150,6 +150,91 @@ struct CompanionLabTests {
         #expect(store.state.served.leaves == 150)
         #expect(calls.value.isEmpty)
         await store.skipInFlightEffects()
+    }
+
+    @Test("The live client's lock is right from the action that flips the switch")
+    func lockFollowsTheFlip() async {
+        let calls = LockIsolated<[String]>([])
+        let store = hosted(pretend: false, calls: calls, server: quickServer())
+        await store.send(.lab(.pretend(true)))
+        #expect(PretendRoute.isOn, "the flipping action must leave the lock on")
+        await store.skipReceivedActions()
+        await store.send(.lab(.pretend(false)))
+        #expect(!PretendRoute.isOn, "and off again when it is flipped back")
+        await store.skipReceivedActions()
+        await store.skipInFlightEffects()
+    }
+
+    @Test("A real write's request ids and the write tokens survive a round trip through the pretend house")
+    func roundTrip() async {
+        let calls = LockIsolated<[String]>([])
+        let attempt = CompanionFeature.State.BuyAttempt(item: .decor(.bow), price: .leaves(60), requestID: "real-rid")
+        let start = CompanionFeature.State.StartAttempt(species: .kitten, colour: nil, requestID: "real-start")
+        let store = hosted(pretend: false, calls: calls, server: quickServer()) { state in
+            state.retry = attempt
+            state.startAttempt = start
+            state.writeToken = 7
+        }
+        await store.send(.lab(.pretend(true)))
+        await store.skipReceivedActions()
+        #expect(store.state.retry == nil, "the pretend house starts with no request ids of the real one")
+        #expect(store.state.startAttempt == nil)
+        #expect(store.state.writeToken == 7, "tokens never go back to zero")
+        // A preset resets the card again; what was set aside stays aside.
+        await store.send(.lab(.preset(.brokeJar)))
+        await store.skipReceivedActions()
+        #expect(store.state.realHold?.retry == attempt)
+        await store.send(.lab(.pretend(false)))
+        await store.skipReceivedActions()
+        #expect(store.state.retry == attempt, "the same purchase, on a retry")
+        #expect(store.state.startAttempt == start)
+        #expect(store.state.realHold == nil)
+        #expect(store.state.writeToken == 7)
+        await store.skipInFlightEffects()
+    }
+
+    @Test("An answer from the other house touches nothing: a purchase or a settle this card did not make")
+    func strayAnswers() async {
+        let calls = LockIsolated<[String]>([])
+        let store = hosted(pretend: false, calls: calls, server: quickServer()) { state in
+            state.withLab { $0.nextBuy = "short" }
+            state.served.vote = CompanionVote(
+                pollID: "p", openedAt: Self.now, closesAt: Self.now.addingTimeInterval(3_600),
+                options: [.init(id: "cherry")], members: 2
+            )
+        }
+        // No write entry, no card: this answer is not for anything here.
+        await store.send(.buyAnswered("stray", .success(.owned)))
+        #expect(store.state.labSlot.lab.nextBuy == "short", "the armed answer is not spent by a stray one")
+        #expect(store.state.card == nil)
+        // No settle was asked: the vote stays open and no note appears.
+        await store.send(.decideAnswered(.success(.chosen(winner: "cherry"))))
+        #expect(store.state.served.vote?.isOpen == true)
+        #expect(store.state.voteNote == nil)
+        #expect(!store.state.isDeciding)
+    }
+
+    @Test("The stand-in follows the real rule for where the house is")
+    func placeRule() {
+        var house = PretendState.scenario("growing", now: Self.now)
+        house.region = nil
+        house.tzOffset = nil
+        let filled = house.settle(Place(tzOffset: 60, region: "DE"), now: Self.now)
+        #expect(filled)
+        #expect(house.region == "DE" && house.tzOffset == 60)
+        // The same place again changes nothing, and so does a phone that is travelling soon after.
+        let same = house.settle(Place(tzOffset: 60, region: "DE"), now: Self.now)
+        #expect(!same)
+        house.regionMovedAt = Self.now
+        let early = house.settle(Place(tzOffset: 180, region: "TR"), now: Self.now.addingTimeInterval(10 * 86_400))
+        #expect(!early)
+        #expect(house.region == "DE")
+        // Thirty days on, it moves, once.
+        let moved = house.settle(Place(tzOffset: 180, region: "TR"), now: Self.now.addingTimeInterval(31 * 86_400))
+        #expect(moved)
+        #expect(house.region == "TR" && house.tzOffset == 180)
+        let again = house.settle(Place(tzOffset: 60, region: "DE"), now: Self.now.addingTimeInterval(32 * 86_400))
+        #expect(!again)
     }
 
     @Test("The pretend house defaults to off")

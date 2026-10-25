@@ -19,6 +19,14 @@ import os
 /// And turning the switch resets the card (`resetForSource`), so nothing the
 /// real house said is ever shown as the pretend one's, or the other way round.
 ///
+/// One thing is let through by design: a real write that was already past the
+/// guard when the switch flipped (a care, a purchase the owner tapped just
+/// before) completes on the real house. It is the owner's own earlier tap, and
+/// refusing it would lose it. Its answer, arriving in the other house, finds no
+/// entry in `writes` and is dropped, and the real house's request ids
+/// (`retry`, `startAttempt`) are kept aside and restored when the switch comes
+/// back (`resetForSource`), so such a write is still idempotent on a retry.
+///
 /// Release builds do not compile this: `MainFeature` scopes `CompanionFeature`
 /// itself.
 struct CompanionHost: Reducer {
@@ -28,9 +36,12 @@ struct CompanionHost: Reducer {
     @Dependency(\.pretendHouse) var pretendHouse
 
     func reduce(into state: inout State, action: Action) -> Effect<Action> {
-        let pretending = state.isPretend
-        PretendRoute.isOn = pretending
-        guard pretending else { return CompanionFeature().reduce(into: &state, action: action) }
+        // Set before the feature runs, for the effects it starts, and again
+        // after, because the action that flips the switch changes it: the
+        // lock is right from that action on, not from the next one.
+        PretendRoute.isOn = state.isPretend
+        defer { PretendRoute.isOn = state.isPretend }
+        guard state.isPretend else { return CompanionFeature().reduce(into: &state, action: action) }
         let server = pretendHouse
         return withDependencies {
             $0.companion = server.client

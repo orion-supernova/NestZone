@@ -231,10 +231,9 @@ actor FakeNestieServer {
 
     private func setPlace(_ place: Place) async throws -> Bool {
         try await wait("setPlace")
-        state.tzOffset = place.tzOffset
-        state.region = place.region
-        publish()
-        return true
+        let changed = state.settle(place, now: clock())
+        if changed { publish() }
+        return changed
     }
 
     /// The write's effect reaches the phone as the live push. On a real server

@@ -477,6 +477,15 @@ public struct CompanionFeature: Sendable {
 
         var writeToken = 0
 
+        /// The real house's request ids, kept aside while the Lab's pretend
+        /// house is on, so a write of the real house whose answer was lost is
+        /// still the same request when the switch comes back.
+        struct RealHold: Equatable, Sendable {
+            var retry: BuyAttempt?
+            var startAttempt: StartAttempt?
+        }
+        var realHold: RealHold?
+
         public func step(of card: Card) -> CardStep {
             if card.isBought { return .bought }
             if let notice = card.notice { return .notice(notice) }
@@ -1083,6 +1092,9 @@ public struct CompanionFeature: Sendable {
                 }
 
             case let .decideAnswered(result):
+                // Only the answer to a settle this card made: one from the
+                // other house (the Lab's switch was flipped meanwhile) is not.
+                guard state.isDeciding else { return .none }
                 state.isDeciding = false
                 switch result {
                 case let .success(outcome):
@@ -1932,6 +1944,14 @@ public struct CompanionFeature: Sendable {
     private func buyAnswered(_ requestID: String, _ result: Result<BuyOutcome, AppError>, state: inout State) -> Effect<Action> {
         let buy = state.writes.buys.removeValue(forKey: requestID)
         let tap = state.retry?.requestID == requestID ? state.retry : nil
+        // An answer with no entry in `writes` is not for a purchase this card
+        // is making (it came from the other house, after the Lab's switch was
+        // flipped): it touches nothing, but a lost answer's request id is
+        // still kept, so a retry of it is the same purchase.
+        guard buy != nil else {
+            if case .failure = result { state.retry = tap } else if tap != nil { state.retry = nil }
+            return .none
+        }
         state.labBuyAnswered()
         // The card this answer is for, if it is still the one on screen.
         let isCurrent = state.card?.purchase?.item == buy?.item

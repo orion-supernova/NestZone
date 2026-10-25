@@ -278,6 +278,21 @@ extension CompanionFeature.State {
         fresh.completions = completions
         fresh.seen = seen
         fresh.hasLoaded = hasLoaded
+        // Never back to zero: an answer to a write of the other house that
+        // arrives late must not match a token of this one.
+        fresh.writeToken = writeToken
+        // The real house's request ids go aside when the pretend house takes
+        // over and come back with it; the pretend house starts with none, and
+        // a pretend-to-pretend reset (a preset) keeps what was set aside.
+        if isPretend {
+            fresh.realHold = realHold ?? RealHold(retry: retry, startAttempt: startAttempt)
+        } else if let held = realHold {
+            fresh.retry = held.retry
+            fresh.startAttempt = held.startAttempt
+        } else {
+            fresh.retry = retry
+            fresh.startAttempt = startAttempt
+        }
         // The switch is in the Lab, and the Lab stays open.
         fresh.sheet = sheet == .lab ? .lab : nil
         self = fresh

@@ -30,6 +30,9 @@ struct PretendState: Codable, Equatable, Sendable {
     var finaleAt: Date?
     var jarFeed: [JarRow] = []
     var vote: Vote?
+    /// When a phone last moved the house's region: it moves at most once in
+    /// thirty days, as the server has it.
+    var regionMovedAt: Date?
     /// People in the house. The reducer keeps the same number (`lab.members`)
     /// and tells the server whenever it changes; the vote needs them.
     var members = 1
@@ -236,6 +239,26 @@ extension PretendState {
     }
 
     // MARK: What a write does to the house
+
+    /// Where a phone says the house is: fills what the house lacks, and moves
+    /// the region (with the time zone) only when it differs and the last move
+    /// was more than thirty days ago. A phone travelling is not the house
+    /// moving. `true` when something changed.
+    mutating func settle(_ place: Place, now: Date) -> Bool {
+        var changed = false
+        if tzOffset == nil { tzOffset = place.tzOffset; changed = true }
+        if region == nil {
+            region = place.region
+            changed = changed || place.region != nil
+        } else if let moved = place.region, moved != region,
+                  now.timeIntervalSince(regionMovedAt ?? .distantPast) > 30 * PretendRules.day {
+            region = moved
+            tzOffset = place.tzOffset
+            regionMovedAt = now
+            changed = true
+        }
+        return changed
+    }
 
     mutating func addJar(_ kind: String, leaves: Int, sparkles: Int, item: String? = nil, at now: Date) {
         jarFeed.insert(
