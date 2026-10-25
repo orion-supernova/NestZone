@@ -800,3 +800,19 @@ stars for the rooftop (static ones in the layer instead).
 Known and not mine: a bright grown cherry, lemon or pomegranate, or two tree
 species on one art sheet, crashes in `LeafArt.build` (index out of range), so
 the plants sheets use one tree.
+
+**The periodic dropped frame: cause and fix.** Cause: the scene's two per-frame
+canvases (`back`, `front`) were drawn into the parent layer, so every scene frame
+the main thread re-encoded the screen's display list in `-[RBLayer display]` and
+blocked in `waitUntilScheduled` (a `sample` showed about 25% of main-thread time
+there, half of it waiting). Each per-frame decoration (chime, lantern, melon) added
+gradients to that work; main-thread turns of about 10 ms with a tail past 14 ms
+missed the deadline. It was never the cached layers, which cost nothing per frame.
+Fix: `Canvas(rendersAsynchronously: true)` on both, so encoding and the wait leave
+the main thread; the picture is identical (screenshots compared). Main-thread busy
+per 2 s, kitten full: 418 ms to 186 ms. Late frames per 30 s run
+(`-nestieBench 1 -todayScroll 1 -frameMeter 1`, quiet Mac; before / after):
+kitten none 0/0, full 8/0, rooftop 1/0; magnolia none 0/0, full 1/0, rooftop 3/0;
+sunflower none 0/0, full 4/1, rooftop 6/0. `-companionScroll 1` (Choose): 0 late
+before and after, main-thread busy 471 to 168 ms per 2 s. Measure on a quiet
+machine: another simulator booting swamps every number.

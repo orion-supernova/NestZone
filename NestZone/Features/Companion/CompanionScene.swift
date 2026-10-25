@@ -77,6 +77,10 @@ struct CompanionScene: View {
         var seed: UInt32
     }
 
+    // The two per-frame canvases render asynchronously: drawn in the parent's
+    // layer, every scene frame re-encoded the whole screen's display list on
+    // the main thread and waited for the GPU to schedule it, and a scene full
+    // of decorations tipped that over a frame now and then (RULES.md, 16).
     var body: some View {
         let snapshot = self.snapshot
         TimelineView(.animation(minimumInterval: frameInterval, paused: isPaused)) { timeline in
@@ -90,9 +94,9 @@ struct CompanionScene: View {
                     // that moves is behind a backdrop.
                     SceneryLayer(state: scenery)
                         .equatable()
-                    Canvas { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date, layered: true) } }
+                    Canvas(rendersAsynchronously: true) { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date, layered: true) } }
                 } else {
-                    Canvas { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date) } }
+                    Canvas(rendersAsynchronously: true) { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date) } }
                 }
                 if let canopy, companion.species.art == .tree {
                     let wind = snapshot.wind(viewSize, at: date)
@@ -130,7 +134,7 @@ struct CompanionScene: View {
                             .equatable()
                     }
                 }
-                Canvas { context, size in SceneTiming.measure("front") { snapshot.drawFront(context, size: size, at: date) } }
+                Canvas(rendersAsynchronously: true) { context, size in SceneTiming.measure("front") { snapshot.drawFront(context, size: size, at: date) } }
             }
         }
         .contentShape(.rect)
