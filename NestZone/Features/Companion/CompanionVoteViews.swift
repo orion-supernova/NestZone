@@ -91,7 +91,8 @@ struct VoteCloses: View, Equatable {
                 Text(L10n.voteCloses)
                 Text(date, format: Self.format)
             }
-            .oneLine()
+            .oneLineUnlessAccessibility()
+            .accessibilityElement(children: .combine)
         }
     }
 }
@@ -168,7 +169,7 @@ private struct AnswerBadge: View {
         Image(systemName: yes ? "checkmark.circle.fill" : "xmark.circle.fill")
             .font(.system(size: 20, weight: .bold))
             .symbolRenderingMode(.palette)
-            .foregroundStyle(.white, yes ? Palette.success : Palette.danger)
+            .foregroundStyle(.white, yes ? Palette.answerYes : Palette.answerNo)
             .accessibilityHidden(true)
     }
 }
@@ -256,7 +257,7 @@ private struct VoteOpen: View {
         }
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(L10n.voteAnswered(vote.answered, vote.members))
-                .oneLine()
+                .oneLineUnlessAccessibility()
             Spacer(minLength: 4)
             VoteCloses(date: vote.closesAt)
         }
@@ -274,6 +275,7 @@ private struct VoteOptionRow: View, Equatable {
 
     @ScaledMetric(relativeTo: .body) private var scaled = 92.0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var side: CGFloat { min(scaled, 132) }
 
@@ -282,7 +284,8 @@ private struct VoteOptionRow: View, Equatable {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        let stacked = typeSize.isAccessibilitySize
+        (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))) {
             Portrait(species: option.species, seed: seed)
                 .frame(width: side, height: side)
                 .clipShape(.rect(cornerRadius: 12, style: .continuous))
@@ -290,11 +293,11 @@ private struct VoteOptionRow: View, Equatable {
             VStack(alignment: .leading, spacing: 6) {
                 Text(name)
                     .font(.headline)
-                    .oneLine()
+                    .oneLineUnlessAccessibility()
                 Text(kind)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .oneLine()
+                    .oneLineUnlessAccessibility()
                 Text(L10n.voteCounts(option.yes, option.no))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -302,8 +305,8 @@ private struct VoteOptionRow: View, Equatable {
                     .contentTransition(reduceMotion ? .identity : .numericText())
                     .animation(reduceMotion ? nil : Motion.dataDraw, value: option.yes)
                     .animation(reduceMotion ? nil : Motion.dataDraw, value: option.no)
-                    .oneLine()
-                HStack(spacing: 8) {
+                    .oneLineUnlessAccessibility()
+                (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))) {
                     AnswerButton(yes: true, selected: answer == true, name: name) {
                         store.send(.ballotTapped(option.id, yes: true))
                     }
@@ -342,7 +345,7 @@ private struct AnswerButton: View {
         Button(action: action) {
             Label {
                 Text(yes ? L10n.voteYes : L10n.voteNo)
-                    .oneLine()
+                    .oneLineUnlessAccessibility()
             } icon: {
                 Image(systemName: symbol)
             }
@@ -351,7 +354,7 @@ private struct AnswerButton: View {
             .padding(.horizontal, 12)
             .frame(minHeight: Metrics.minTapTarget)
             .background {
-                Capsule().fill(selected ? (yes ? Palette.success : Palette.danger) : Palette.inset)
+                Capsule().fill(selected ? (yes ? Palette.answerYes : Palette.answerNo) : Palette.inset)
             }
             .overlay { Capsule().strokeBorder(Color.secondary.opacity(selected ? 0 : 0.35), lineWidth: 1) }
             .contentShape(.capsule)

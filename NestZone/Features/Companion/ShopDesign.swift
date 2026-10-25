@@ -97,7 +97,7 @@ struct PriceTag: View {
         Amount(price.currency, price.amount)
             .font(.system(.subheadline, design: .rounded, weight: .semibold))
             .padding(.horizontal, 10)
-            .frame(height: 28)
+            .frame(minHeight: 28)
             .background(Capsule().fill(price.currency.wash))
     }
 }
@@ -116,12 +116,13 @@ struct HaveBadge: View {
 /// What can't be had yet: a lock that wiggles when it's tapped anyway.
 struct LockBadge: View {
     var wiggle = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Image(systemName: "lock.fill")
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
-            .symbolEffect(.wiggle, value: wiggle)
+            .symbolEffect(.wiggle, value: reduceMotion ? 0 : wiggle)
             .frame(width: 24, height: 24)
             .background(.ultraThinMaterial, in: .circle)
             .accessibilityHidden(true)

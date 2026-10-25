@@ -39,7 +39,8 @@ struct FinaleView: View {
             Text(L10n.finaleTitle)
                 .font(.system(.title, design: .rounded, weight: .bold))
                 .foregroundStyle(.white)
-                .oneLine()
+                .multilineTextAlignment(.center)
+                .oneLineUnlessAccessibility()
                 .scaleEffect(beat >= 1 || reduceMotion ? 1 : 0.85)
                 .opacity(beat >= 1 ? 1 : 0)
                 .accessibilityAddTraits(.isHeader)
@@ -55,7 +56,9 @@ struct FinaleView: View {
                 .font(.body.weight(.semibold))
                 .foregroundStyle(SheetInk.caption)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .opacity(beat >= 3 ? 1 : 0)
+                .accessibilityHidden(beat < 3)
             PrimaryButton(L10n.finaleDone, symbol: "sparkles") {
                 store.send(.momentDismissed, animation: Motion.arrive)
             }
@@ -69,6 +72,11 @@ struct FinaleView: View {
         .overlay { ConfettiBurst(trigger: burst, tints: Ink.tints) }
         .sensoryFeedback(.impact(flexibility: .soft), trigger: beat) { _, now in now == 1 }
         .sensoryFeedback(.success, trigger: beat) { _, now in now == 2 }
+        // The crown is the news; said once, when it lands, not on every beat.
+        .onChange(of: beat) { _, now in
+            guard now == 2 else { return }
+            AccessibilityNotification.Announcement("\(String(localized: L10n.finaleTitle)) \(String(localized: L10n.finaleCrown))").post()
+        }
         .task { await play(big: big) }
     }
 
@@ -131,13 +139,16 @@ struct FinaleView: View {
                 .frame(width: 64, height: 64)
                 .background(RoundedRectangle(cornerRadius: 12).fill(SheetInk.spotOn))
                 .clipShape(.rect(cornerRadius: 12))
+                .accessibilityHidden(true)
             Text(L10n.finaleCrown)
                 .font(.headline)
                 .foregroundStyle(Palette.lemon)
                 .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .scaleEffect(beat >= 2 || reduceMotion ? 1 : 0.6)
         .opacity(beat >= 2 ? 1 : 0)
+        .accessibilityHidden(beat < 2)
     }
 
     // MARK: The beats

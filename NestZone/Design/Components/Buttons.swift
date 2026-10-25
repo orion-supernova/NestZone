@@ -40,7 +40,9 @@ public struct PrimaryButton: View {
                 Text(title).font(.body.weight(.semibold))
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 26)
+            // A minimum, so a label that wraps at an accessibility size grows
+            // the button instead of being cut.
+            .frame(minHeight: 26)
             .contentTransition(.opacity)
         }
         .buttonStyle(.glassProminent)
@@ -76,7 +78,7 @@ public struct SecondaryButton: View {
             }
             .font(.body.weight(.medium))
             .frame(maxWidth: .infinity)
-            .frame(height: 26)
+            .frame(minHeight: 26)
         }
         .buttonStyle(.glass)
         .controlSize(.large)

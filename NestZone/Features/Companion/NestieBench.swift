@@ -326,6 +326,20 @@ enum Bench {
             report("decorated", store)
             try? await Task.sleep(for: .seconds(2))
             report("decorate settled", store)
+        // The screens left open, for the accessibility pass (screenshots at
+        // the accessibility sizes, `Docs/Companion/a11y`).
+        case "decorateOpen":
+            store.send(.decorateTapped)
+            try? await Task.sleep(for: .seconds(0.6))
+            store.send(.spotPicked(.ground))
+        case "ceremonyOpen":
+            store.send(.celebrateTapped)
+        case "albumOpen":
+            store.send(.albumTapped)
+        case "storeOpen":
+            store.send(.shopTapped)
+            try? await Task.sleep(for: .seconds(1))
+            store.send(.storeTapped)
         default:
             break
         }
