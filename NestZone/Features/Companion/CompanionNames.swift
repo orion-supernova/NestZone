@@ -474,6 +474,26 @@ extension View {
             .minimumScaleFactor(minimum)
             .allowsTightening(true)
     }
+
+    /// `oneLine`, until the text is at an accessibility size: there a line
+    /// that shrinks to fit is a line nobody can read, so it takes as many as
+    /// it needs.
+    func oneLineUnlessAccessibility(shrinking minimum: CGFloat = 0.75) -> some View {
+        modifier(OneLineUnlessAccessibility(minimum: minimum))
+    }
+}
+
+private struct OneLineUnlessAccessibility: ViewModifier {
+    let minimum: CGFloat
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func body(content: Content) -> some View {
+        if typeSize.isAccessibilitySize {
+            content.fixedSize(horizontal: false, vertical: true)
+        } else {
+            content.oneLine(shrinking: minimum)
+        }
+    }
 }
 
 extension Species {

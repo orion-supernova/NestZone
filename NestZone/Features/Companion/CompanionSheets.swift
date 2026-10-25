@@ -72,6 +72,8 @@ private struct ChooseView: View {
     let store: StoreOf<CompanionFeature>
 
     @State private var position = ScrollPosition(edge: .top)
+    @Environment(\.shopStage) private var stage
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let shop = store.shop
@@ -88,6 +90,18 @@ private struct ChooseView: View {
         }
         .scrollPosition($position)
         .scrollIndicators(.hidden)
+        // The pets' shapes, built off the main thread before their tiles
+        // scroll in.
+        .task {
+            let plans = Species.allCases.filter(\.isPet).compactMap(CritterPlan.of)
+            await Task.detached(priority: .utility) { plans.forEach(CritterGeometry.prepare) }.value
+            let seed = "\(store.homeID.rawValue)-\(store.house.albumCount)"
+            let big = typeSize.isAccessibilitySize
+            await StillCache.warm(Species.allCases.map { kind in
+                let portrait = SpeciesPortrait(species: kind, seed: seed, hour: stage.portraitHour)
+                return (portrait.still(big: big), AnyView(portrait))
+            })
+        }
         #if DEBUG || MEASURE
         .task { await scrollForever() }
         #endif
@@ -161,6 +175,7 @@ private struct ChooseView: View {
 private struct DecorateView: View {
     @Bindable var store: StoreOf<CompanionFeature>
     @Environment(\.theme) private var theme
+    @Environment(\.shopStage) private var stage
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dash: CGFloat = 0
 
@@ -363,7 +378,7 @@ private struct DecorateView: View {
         return Button { store.send(.decorToggled(decor.rawValue), animation: Motion.spring) } label: {
             VStack(alignment: .leading, spacing: 6) {
                 StageWell(cornerRadius: 12, shadow: false) {
-                    Text(verbatim: decor.symbol).font(.system(size: 32))
+                    DecorPortrait(decor: decor, hour: stage.portraitHour, fallbackSize: 32).equatable()
                 }
                 .frame(width: 92, height: 60)
                 .overlay(alignment: .topTrailing) {

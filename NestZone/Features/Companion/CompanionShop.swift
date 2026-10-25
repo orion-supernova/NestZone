@@ -125,6 +125,8 @@ struct ShopView: View {
     @State private var shelf = Shelf.decor
     #endif
     @Environment(\.theme) private var theme
+    @Environment(\.shopStage) private var stage
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     enum Shelf: String, CaseIterable, Identifiable {
@@ -146,6 +148,15 @@ struct ShopView: View {
             page { pets(shop) }.tag(Shelf.pets)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
+        // What a shelf's tiles draw their pets from, built off the main
+        // thread before they scroll in: a first build in a scroll was a
+        // dropped frame.
+        .task(id: shelf) {
+            let stills = stills(on: shelf)
+            let pets: [Species] = shelf == .pets ? Species.allCases.filter(\.isPet) : shelf == .decor ? DecorPortrait.pets : []
+            await Task.detached(priority: .utility) { pets.compactMap(CritterPlan.of).forEach(CritterGeometry.prepare) }.value
+            await StillCache.warm(stills)
+        }
         #if DEBUG || MEASURE
         .task {
             // `-companionShelfCycle 1` switches shelves on its own, to watch
@@ -184,15 +195,30 @@ struct ShopView: View {
         }
     }
 
+    /// The pictures a shelf's tiles show, to be kept before they scroll in.
+    private func stills(on shelf: Shelf) -> [(StillSpec, AnyView)] {
+        let big = typeSize.isAccessibilitySize
+        let seed = "\(store.homeID.rawValue)-\(store.house.albumCount)"
+        func species(_ list: [Species]) -> [(StillSpec, AnyView)] {
+            list.map { kind in
+                let portrait = SpeciesPortrait(species: kind, seed: seed, hour: stage.portraitHour)
+                return (portrait.still(big: big), AnyView(portrait))
+            }
+        }
+        switch shelf {
+        case .decor:
+            return DecorItem.allCases.map { item in
+                let portrait = DecorPortrait(decor: .item(item), hour: stage.portraitHour)
+                return (portrait.still(big: big), AnyView(portrait))
+            }
+        case .plants: return species(Species.allCases.filter { !$0.isPet })
+        case .pets: return species(Species.allCases.filter(\.isPet))
+        }
+    }
+
     /// One shelf's own scroll.
     private func page<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: Metrics.sectionSpacing) { content() }
-                .padding(.horizontal, Metrics.screenPadding)
-                .padding(.top, 8)
-                .padding(.bottom, 32)
-        }
-        .scrollIndicators(.hidden)
+        ShelfPage(content: content())
     }
 
     // MARK: Decorations
@@ -226,7 +252,7 @@ struct ShopView: View {
                         item: .decor(item), title: item.title, standing: shop.standing(of: item),
                         saleEnds: shop.saleEnds(item), southern: store.southern, now: store.clock, wellAspect: 1
                     ) {
-                        Text(verbatim: item.symbol).font(.system(size: 40)).padding(.bottom, 8)
+                        DecorPortrait(decor: .item(item), hour: stage.portraitHour).tile(big: typeSize.isAccessibilitySize)
                     } tap: {
                         store.send(.itemTapped(.decor(item)), animation: ShopMotion.cardIn)
                     }
@@ -266,6 +292,40 @@ struct ShopView: View {
             }
         }
     }
+}
+
+/// One shelf's scroll. `-companionScroll 1` scrolls it down and up on its
+/// own, as it does Choose, so a shelf can be profiled on a simulator nobody
+/// can touch.
+private struct ShelfPage<Content: View>: View {
+    let content: Content
+    @State private var position = ScrollPosition(edge: .top)
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: Metrics.sectionSpacing) { content }
+                .padding(.horizontal, Metrics.screenPadding)
+                .padding(.top, 8)
+                .padding(.bottom, 32)
+        }
+        .scrollPosition($position)
+        .scrollIndicators(.hidden)
+        #if DEBUG || MEASURE
+        .task { await scrollForever() }
+        #endif
+    }
+
+    #if DEBUG || MEASURE
+    private func scrollForever() async {
+        guard UserDefaults.standard.bool(forKey: "companionScroll") else { return }
+        var down = true
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(2.2))
+            withAnimation(.easeInOut(duration: 1.8)) { position.scrollTo(edge: down ? .bottom : .top) }
+            down.toggle()
+        }
+    }
+    #endif
 }
 
 /// Usable first, then for sale, then what can't be had today; the catalog's
@@ -448,10 +508,11 @@ struct SpeciesTile: View {
     let now: Date
     let tap: () -> Void
     @Environment(\.shopStage) private var stage
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ShopTile(item: .species(species), title: species.title, standing: standing, southern: southern, now: now, wellAspect: 4 / 3) {
-            SpeciesPortrait(species: species, seed: seed, hour: stage.portraitHour)
+            SpeciesPortrait(species: species, seed: seed, hour: stage.portraitHour).tile(big: typeSize.isAccessibilitySize)
         } tap: {
             tap()
         }
@@ -505,7 +566,7 @@ func spokenStanding(_ standing: Standing, item: ShopItem, southern: Bool, now: D
 
 /// A companion drawn still, for a tile or a card: its own scene at an hour
 /// that matches the window it stands in.
-struct SpeciesPortrait: View {
+struct SpeciesPortrait: View, Equatable {
     let species: Species
     let seed: String
     var hour = 13
@@ -521,6 +582,17 @@ struct SpeciesPortrait: View {
         )
         .allowsHitTesting(false)
     }
+}
+
+extension SpeciesPortrait {
+    /// The kept bitmap this tile's picture is, and the size it is drawn at.
+    func still(big: Bool) -> StillSpec {
+        let size = big ? CGSize(width: 320, height: 240) : CGSize(width: 160, height: 120)
+        return StillSpec(key: "s|\(species.rawValue)|\(seed)|\(hour)|\(Int(size.width))", size: size)
+    }
+
+    /// The picture as a tile shows it: the kept bitmap once there is one.
+    func tile(big: Bool) -> some View { Still(spec: still(big: big), live: self).equatable() }
 }
 
 // MARK: - The card
@@ -617,7 +689,7 @@ private struct PurchaseCard: View {
         return StageWell(cornerRadius: Metrics.cardRadius, faded: locked) {
             switch card.item {
             case let .decor(decor):
-                Text(verbatim: decor.symbol).font(.system(size: 58)).padding(.bottom, 10)
+                DecorPortrait(decor: .item(decor), hour: stage.portraitHour, fallbackSize: 58).equatable()
             case let .species(species):
                 SpeciesPortrait(species: species, seed: "\(store.homeID.rawValue)-\(store.house.albumCount)", hour: stage.portraitHour)
             case let .pack(pack):
@@ -962,6 +1034,7 @@ struct SparkleStoreView: View {
     let store: StoreOf<CompanionFeature>
 
     @Environment(\.shopGeometry) private var geometry
+    @Environment(\.shopStage) private var stage
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var counterFrame: CGRect = .zero
@@ -1067,7 +1140,7 @@ struct SparkleStoreView: View {
             let short: Int = if case let .short(more) = store.house.checkout(price) { more } else { 0 }
             HStack(spacing: 12) {
                 StageWell(cornerRadius: 12, shadow: false) {
-                    Text(verbatim: symbol(of: pending.item)).font(.system(size: 26))
+                    pendingArt(pending.item)
                 }
                 .frame(width: 44, height: 44)
                 VStack(alignment: .leading, spacing: 8) {
@@ -1087,11 +1160,14 @@ struct SparkleStoreView: View {
         }
     }
 
-    private func symbol(of item: ShopItem) -> String {
+    /// What the house came for, in its small window: the drawing, or its emoji.
+    @ViewBuilder
+    private func pendingArt(_ item: ShopItem) -> some View {
         switch item {
-        case let .decor(decor): decor.symbol
-        case let .species(species): species.symbol
-        case let .pack(pack): pack.species.first?.symbol ?? ""
+        case let .decor(decor): DecorPortrait(decor: .item(decor), hour: stage.portraitHour, fallbackSize: 26).equatable()
+        case let .species(species): SpeciesPortrait(species: species, seed: "store", hour: stage.portraitHour).equatable()
+        case let .pack(pack):
+            if let first = pack.species.first { SpeciesPortrait(species: first, seed: "store", hour: stage.portraitHour).equatable() }
         }
     }
 

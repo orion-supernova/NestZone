@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Nestie shop drawings and the card at accessibility sizes</title>
+<style>
+  body { background: #151218; color: #e8e4ee; font: 15px/1.5 -apple-system, system-ui, sans-serif; margin: 0; padding: 32px 24px 80px; }
+  h1 { font-weight: 600; margin: 0 0 6px; }
+  h2 { font-weight: 600; margin: 64px 0 4px; border-top: 1px solid #3a3444; padding-top: 28px; }
+  h3 { font-weight: 500; margin: 28px 0 8px; color: #b9b2c6; font-size: 14px; }
+  p { max-width: 70ch; color: #b9b2c6; margin: 4px 0; }
+  .row { display: flex; gap: 20px; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
+  figure { margin: 0; flex: none; }
+  figcaption { font: 12px ui-monospace, monospace; color: #8d859b; margin: 0 0 6px; }
+  img { height: 82vh; width: auto; display: block; border-radius: 10px; background: #000; }
+  nav a { color: #c9a8ff; margin-right: 14px; }
+</style>
+<h1>Nestie shop drawings, and the card at accessibility sizes</h1>
+<p>Screenshots of the bench (<code>-nestieBench 1</code>) on an iPhone 17 simulator, iOS 27. Before is the commit this work started from.</p>
+<nav>
+<a href="#shop">The shop</a>
+<a href="#card">The card at AX sizes</a></nav>
+
+<h2 id="shop">The shop shows the drawings</h2>
+<p>Every decoration tile is its drawing in its window: a wearable on a kitten, a scene as a small window with a kitten in front, a pot on a monstera, a tree ornament on a magnolia, an ornament on the ground line beside a sunflower. Moons and bats are drawn at night, dusk at dusk. Plant and pet tiles were already drawn; their stills are now kept as bitmaps, and the card, the goal tile and the decorate tray use the same drawings.</p>
+<h3>Decor shelf</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="before-decor.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="after-decor.jpg"></figure></div>
+<h3>Plants shelf</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="before-plants.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="after-plants.jpg"></figure></div>
+<h3>Pets shelf</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="before-pets.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="after-pets.jpg"></figure></div>
+<h3>Choose</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="before-choose.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="after-choose.jpg"></figure></div>
+<h3>The purchase card (the kilim) and the decorate tray (wearing)</h3><div class="row">
+<figure><figcaption>card, after</figcaption><img loading="lazy" src="after-card.jpg"></figure>
+<figure><figcaption>tray, after</figcaption><img loading="lazy" src="after-tray.jpg"></figure></div>
+
+<h2 id="card">The Nestie card at accessibility sizes</h2>
+<p>Before: the holiday chip and Water sat over the scene, the title and jar shared a row, and the four ways in shared one, so at the largest sizes the card was wider than the screen and words were cut to "Hall…", "Deco…" and "Sapling · cont…". After: from the accessibility sizes up the chip and Water go under the scene, the title and jar stack, the ways in are a list, and every label takes the lines it needs. At the default size the card is unchanged (the text area is pixel-identical, 0 pixels differing by more than 8 of 844,200).</p>
+<h3>Default (large)</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="ax-before-large.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="ax-after-large.jpg"></figure></div>
+<h3>Accessibility medium</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="ax-before-accessibility-medium.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="ax-after-accessibility-medium.jpg"></figure></div>
+<h3>Accessibility large</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="ax-before-accessibility-large.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="ax-after-accessibility-large.jpg"></figure></div>
+<h3>Accessibility extra large</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="ax-before-accessibility-extra-large.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="ax-after-accessibility-extra-large.jpg"></figure></div>
+<h3>Accessibility extra extra large</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="ax-before-accessibility-extra-extra-large.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="ax-after-accessibility-extra-extra-large.jpg"></figure></div>
+<h3>Accessibility extra extra extra large (top, then the lower half)</h3><div class="row">
+<figure><figcaption>before</figcaption><img loading="lazy" src="ax-before-accessibility-extra-extra-extra-large.jpg"></figure>
+<figure><figcaption>after</figcaption><img loading="lazy" src="ax-after-accessibility-extra-extra-extra-large.jpg"></figure>
+<figure><figcaption>after, scrolled</figcaption><img loading="lazy" src="ax-after-xxxl-lower.jpg"></figure></div>

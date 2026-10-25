@@ -48,6 +48,7 @@ struct CardVote: View {
 private struct VoteSummary: View {
     let store: StoreOf<CompanionFeature>
     let vote: CompanionVote
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -57,10 +58,10 @@ private struct VoteSummary: View {
                         .equatable()
                 }
             }
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
+            (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 6))) {
                 Text(L10n.voteAnswered(vote.answered, vote.members))
-                    .oneLine()
-                Spacer(minLength: 4)
+                    .oneLineUnlessAccessibility()
+                if !typeSize.isAccessibilitySize { Spacer(minLength: 4) }
                 VoteCloses(date: vote.closesAt)
             }
             .font(.caption)

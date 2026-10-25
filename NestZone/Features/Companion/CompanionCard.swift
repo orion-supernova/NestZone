@@ -13,6 +13,7 @@ struct CompanionCard: View {
     var compact = false
 
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var detent = PresentationDetent.medium
     /// Icons differ in height, and the labels under them have to share a
     /// line: "Holidays" sat higher than the rest under its shorter calendar.
@@ -143,16 +144,22 @@ struct CompanionCard: View {
     // This body reads only whether there is a companion, and the sheet.
 
     private func card() -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        // At the accessibility sizes nothing sits over the scene and nothing
+        // shares a row: the chip and the Water button go under it, the title
+        // and the jar stack, and the ways in become a list.
+        let stacked = typeSize.isAccessibilitySize
+        return VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .top) {
                 CardScene(store: store, compact: false, covered: isCovered)
                     .frame(height: 236)
-                HStack(alignment: .top) {
-                    HolidayChip(store: store)
-                    Spacer(minLength: 8)
-                    CareButton(store: store, small: false)
+                if !stacked {
+                    HStack(alignment: .top) {
+                        HolidayChip(store: store)
+                        Spacer(minLength: 8)
+                        CareButton(store: store, small: false)
+                    }
+                    .padding(10)
                 }
-                .padding(10)
                 #if DEBUG
                 PointsStepper(store: store)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
@@ -162,9 +169,13 @@ struct CompanionCard: View {
             .clipShape(.rect(topLeadingRadius: Metrics.cardRadius, topTrailingRadius: Metrics.cardRadius, style: .continuous))
 
             VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .center, spacing: 10) {
+                if stacked {
+                    HolidayChip(store: store)
+                    CareButton(store: store, small: false)
+                }
+                (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 10))) {
                     CardTitle(store: store, font: .headline, detail: .footnote)
-                    Spacer(minLength: 0)
+                    if !stacked { Spacer(minLength: 0) }
                     CardJar(store: store, covered: isCovered)
                 }
                 CardFooter(store: store)
@@ -188,7 +199,7 @@ struct CompanionCard: View {
     /// Equal tiles, the icon over a one-line label, so a long word in one
     /// language ("Özel günler") never wraps or pushes the others aside.
     private var actions: some View {
-        HStack(spacing: 4) {
+        (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 4))) {
             action(L10n.companionDecorate, "paintbrush.pointed.fill") { store.send(.decorateTapped) }
             action(L10n.companionAlbum, "book.closed.fill") { store.send(.albumTapped) }
             action(L10n.companionHolidays, "calendar") { store.send(.holidaysTapped) }
@@ -199,17 +210,19 @@ struct CompanionCard: View {
     }
 
     private func action(_ title: LocalizedStringResource, _ symbol: String, _ perform: @escaping () -> Void) -> some View {
-        Button(action: perform) {
-            VStack(spacing: 4) {
+        let listed = typeSize.isAccessibilitySize
+        return Button(action: perform) {
+            (listed ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 4))) {
                 Image(systemName: symbol)
                     .font(.body.weight(.semibold))
-                    .frame(height: actionIcon)
+                    .frame(width: listed ? actionIcon : nil, height: actionIcon)
                 Text(title)
-                    .font(.caption.weight(.semibold))
-                    .oneLine()
+                    .font(listed ? .body.weight(.semibold) : .caption.weight(.semibold))
+                    .oneLineUnlessAccessibility()
+                if listed { Spacer(minLength: 0) }
             }
             .foregroundStyle(theme.accent)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: listed ? .leading : .center)
             .contentShape(.rect)
         }
         .buttonStyle(.pressable)
@@ -218,12 +231,14 @@ struct CompanionCard: View {
     // MARK: - A busy day
 
     private func strip() -> some View {
-        HStack(spacing: 12) {
+        // The title and its button do not fit beside the picture once the
+        // text is large: the button goes on its own line under them.
+        (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 12))) {
             CardScene(store: store, compact: true, covered: isCovered)
                 .frame(width: 56, height: 56)
                 .clipShape(.rect(cornerRadius: 16, style: .continuous))
             CardTitle(store: store, font: .subheadline.weight(.semibold), detail: .caption)
-            Spacer(minLength: 0)
+            if typeSize.isAccessibilitySize == false { Spacer(minLength: 0) }
             StripAction(store: store)
         }
         .padding(8)
@@ -241,17 +256,17 @@ struct CompanionCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(first ? L10n.companionMeetTitle(String(localized: L10n.companionBrand)) : L10n.companionNextTitle)
                         .font(.headline)
-                        .oneLine()
+                        .oneLineUnlessAccessibility()
                     Text(first ? L10n.companionMeetBody : L10n.companionNextBody)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                        .oneLine()
+                        .oneLineUnlessAccessibility()
                 }
             }
             Button { store.send(.chooseTapped) } label: {
                 Text(L10n.companionChoose)
                     .font(.subheadline.weight(.semibold))
-                    .oneLine()
+                    .oneLineUnlessAccessibility()
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.glassProminent)
@@ -272,7 +287,7 @@ struct CompanionCard: View {
             Text(L10n.companionUnreadable)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-                .oneLine()
+                .oneLineUnlessAccessibility()
         }
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -324,19 +339,19 @@ private struct CardTitle: View {
             if let species = store.species {
                 Text(species.title)
                     .font(font)
-                    .oneLine()
+                    .oneLineUnlessAccessibility()
             } else if store.isUndecided {
                 // The house has not chosen: it is a seed, whatever the vote
                 // lists first.
                 Text(L10n.voteSeedTitle)
                     .font(font)
-                    .oneLine()
+                    .oneLineUnlessAccessibility()
             }
             Text(subtitle)
                 .font(detail)
                 .foregroundStyle(.secondary)
                 .contentTransition(.numericText())
-                .oneLine()
+                .oneLineUnlessAccessibility()
         }
     }
 
@@ -373,7 +388,7 @@ private struct CardProgress: View {
         Group {
             if store.isReady {
                 Button { store.send(.celebrateTapped) } label: {
-                    Label { Text(L10n.companionCelebrate).oneLine() } icon: { Image(systemName: "party.popper.fill") }
+                    Label { Text(L10n.companionCelebrate).oneLineUnlessAccessibility() } icon: { Image(systemName: "party.popper.fill") }
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                 }
@@ -404,7 +419,7 @@ private struct CardProgress: View {
             Text(caption(next: next, isPet: isPet, potted: store.isPotted, species: store.species))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .oneLine()
+                .oneLineUnlessAccessibility()
         }
         .accessibilityElement(children: .combine)
     }
@@ -485,28 +500,30 @@ private struct CardJar: View {
 private struct HolidayChip: View {
     let store: StoreOf<CompanionFeature>
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        let large = typeSize.isAccessibilitySize
         if let holiday = store.holidayToDress {
             Button { store.send(.dressTapped(holiday.id), animation: Motion.celebrate) } label: {
-                HStack(spacing: 6) {
+                (large ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout(spacing: 6))) {
                     Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
-                        .lineLimit(1)
+                        .lineLimit(large ? nil : 1)
                         .truncationMode(.tail)
                     Text(L10n.companionDecorate)
                         .foregroundStyle(theme.accent)
                         .fixedSize()
                 }
                 .font(.caption.weight(.semibold))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
+                .padding(.horizontal, large ? 18 : 10)
+                .padding(.vertical, large ? 12 : 7)
                 .glassControl()
             }
             .buttonStyle(.plain)
         } else if let holiday = store.activeHolidays.first {
             Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
                 .font(.caption.weight(.semibold))
-                .lineLimit(1)
+                .lineLimit(large ? nil : 1)
                 .truncationMode(.tail)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 7)
@@ -641,6 +658,7 @@ private struct PointsStepper: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 4)
         .glassControl()
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
         .accessibilityIdentifier("CompanionPoints")
     }
 }

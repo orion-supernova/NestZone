@@ -74,6 +74,14 @@ struct NestieBench: View {
 
     /// Today's own flick (`HomeView.flickForever`).
     private func flick() async {
+        // `-nestieScrollY 900` puts the bench that far down once, to see the
+        // lower half of a card at a size where it is taller than the screen.
+        let offset = UserDefaults.standard.double(forKey: "nestieScrollY")
+        if offset > 0 {
+            try? await Task.sleep(for: .seconds(2))
+            position.scrollTo(y: offset)
+            return
+        }
         guard UserDefaults.standard.bool(forKey: "todayScroll") else { return }
         var down = true
         while !Task.isCancelled {
@@ -175,6 +183,16 @@ enum Bench {
                 try? await Task.sleep(for: .seconds(2.5))
                 report("retry settled", store)
             }
+        case "shop":
+            // The shop left open on `-companionShelf`, to scroll (`-companionScroll 1`) and measure.
+            store.send(.shopTapped)
+            try? await Task.sleep(for: .seconds(1.2))
+            report("shop open", store)
+        case "chooseOpen":
+            // Choose left open, to scroll (`-companionScroll 1`) and measure.
+            store.send(.chooseTapped)
+            try? await Task.sleep(for: .seconds(1.2))
+            report("choose open", store)
         case "choose":
             store.send(.chooseTapped)
             try? await Task.sleep(for: .seconds(1.5))
