@@ -15,8 +15,8 @@ import SwiftUI
 struct ArtSheet: View {
     let page: String
 
-    private static let seed = "bench-home-0"
-    private func hour(_ h: Int) -> Date { Calendar.current.date(bySettingHour: h, minute: 0, second: 0, of: Date()) ?? Date() }
+    static let seed = "bench-home-0"
+    func hour(_ h: Int) -> Date { Calendar.current.date(bySettingHour: h, minute: 0, second: 0, of: Date()) ?? Date() }
 
     var body: some View {
         ZStack {
@@ -34,7 +34,8 @@ struct ArtSheet: View {
             case "pomegranate-fruit": pomegranateFruit
             case "pomegranate-shop": pomegranateShop
             case "gpu": gpuTest
-            case "plants-grid": plantsGrid
+            case "plants-grid": plantsGrid([.sunflower, .basil, .cactus, .monstera, .daisy, .tulip, .rose, .peony])
+            case "plants-grid-b": plantsGrid([.mint, .rosemary, .snakePlant, .fern, .lavender, .orchid, .bonsai, .maple, .pumpkin, .pine, .snowdrop, .rose])
             case "pet-redraw": petRedraw
             case "pet-variants": petVariants
             case "batch-a": batchA
@@ -44,7 +45,8 @@ struct ArtSheet: View {
             case "batch-b": batchB
             case "batch-b-night": batchBNight
             default:
-                if let species = Species(rawValue: page) { speciesPage(species) }
+                if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
+                else if let species = Species(rawValue: page) { speciesPage(species) }
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
                 else if page.hasPrefix("plant-"), let species = Species(rawValue: String(page.dropFirst(6))) { plantCard(species) }
                 else if page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petClose(species) }
@@ -58,7 +60,7 @@ struct ArtSheet: View {
 
     // MARK: One species
 
-    private static let plantStages: [(String, Double)] = [("seed", 0.04), ("sprout", 0.16), ("young", 0.38), ("growing", 0.62), ("budding", 0.8), ("grown", 0.97)]
+    static let plantStages: [(String, Double)] = [("seed", 0.04), ("sprout", 0.16), ("young", 0.38), ("growing", 0.62), ("budding", 0.8), ("grown", 0.97)]
     private static let petStages: [(String, Double)] = [("egg", 0.02), ("wobbly", 0.12), ("hatchling", 0.28), ("baby", 0.47), ("little", 0.66), ("young", 0.85), ("grown", 0.97)]
 
     private func speciesPage(_ species: Species) -> some View {
@@ -86,7 +88,7 @@ struct ArtSheet: View {
         .padding(.horizontal, 8)
     }
 
-    private func cell(_ portrait: ScenePortrait, _ label: String) -> some View {
+    func cell(_ portrait: ScenePortrait, _ label: String) -> some View {
         portrait
             .aspectRatio(1, contentMode: .fit)
             .clipShape(.rect(cornerRadius: 8))
@@ -563,11 +565,11 @@ struct ArtSheet: View {
         .padding(.horizontal, 4)
     }
 
-    /// The eight potted plants at the size the shop shows them.
-    ///   -artSheet plants-grid
-    private var plantsGrid: some View {
-        let species: [Species] = [.sunflower, .basil, .cactus, .monstera, .daisy, .tulip, .rose, .peony]
-        return VStack(alignment: .leading, spacing: 6) {
+    /// The potted plants at the size the shop shows them.
+    ///   -artSheet plants-grid     round A
+    ///   -artSheet plants-grid-b   round B (and the rose again)
+    private func plantsGrid(_ species: [Species]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach([13, 21], id: \.self) { h in
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 4), spacing: 6) {
                     ForEach(species) { s in

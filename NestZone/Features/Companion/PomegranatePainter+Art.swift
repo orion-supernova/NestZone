@@ -11,6 +11,9 @@ struct ClumpArt: Sendable {
     var d = Path(), m = Path(), l = Path(), s = Path()
     /// The light on the edge of the sunstruck leaves, and their midribs and glints.
     var rim = Path()
+    /// The undersides of the leaves that have turned over, for a tree whose
+    /// leaves are another colour below (an olive's silver).
+    var u = Path()
     /// Whether the clump has leaves and wood behind it for its shadow to fall on,
     /// and not sky: the ones low and at the edge of the crown do not.
     var casts = false
@@ -52,7 +55,7 @@ struct PomegranateCrown: Sendable {
 /// 10 across their range, the day in quarters) so the picture is the same
 /// to the eye and a tree easing in does not build it again every frame.
 final class LeafArt: @unchecked Sendable {
-    private struct Key: Hashable { var seed: UInt32, mood: Int, light: Int, day: Int }
+    private struct Key: Hashable { var seed: UInt32, species: String, mood: Int, light: Int, day: Int }
     private static let entries = Mutex<[Key: LeafArt]>([:])
     private static let crowns = Mutex<[UInt32: PomegranateCrown]>([:])
 
@@ -68,7 +71,8 @@ final class LeafArt: @unchecked Sendable {
 
     static func of(_ canopy: Canopy, mood: Double, light: Double, day: Double) -> LeafArt {
         let seed = Ink.hash(canopy.seed)
-        let key = Key(seed: seed, mood: Int((mood * 40).rounded()), light: Int((light * 10).rounded()), day: Int((day * 4).rounded()))
+        let key = Key(seed: seed, species: canopy.species.rawValue, mood: Int((mood * 40).rounded()),
+                      light: Int((light * 10).rounded()), day: Int((day * 4).rounded()))
         return entries.withLock { entries in
             if let found = entries[key] { return found }
             // A scene holds a few trees at most; a day's light is a dozen more.
@@ -106,6 +110,7 @@ final class LeafArt: @unchecked Sendable {
     let crown: PomegranateCrown
     private let seed: UInt32
     private let L: (x: Double, y: Double)
+    let spec: LeafSpec
     private let drop, curl, lenK, wK, pull, bodyK: Double
     private let blobs: [Blob]
     private let built: Mutex<[ClumpArt?]>
@@ -121,15 +126,16 @@ final class LeafArt: @unchecked Sendable {
         self.canopy = canopy
         self.crown = crown
         seed = key.seed
+        spec = LeafSpec.of(canopy.species)
         let M = Canopy.Mood(Double(key.mood) / 40)
         let sun = Self.sun(light: Double(key.light) / 10, day: Double(key.day) / 4)
         L = sun
-        drop = 0.12 * M.thirst + 0.18 * M.doze
-        curl = 0.5 * M.thirst + 0.3 * M.doze
+        drop = (0.12 * M.thirst + 0.18 * M.doze) * spec.calm
+        curl = (0.5 * M.thirst + 0.3 * M.doze) * spec.calm
         lenK = 1 - 0.1 * M.wilt
         wK = 1 - 0.22 * M.wilt
         pull = 0.1 + 0.2 * M.wilt + 0.07 * M.doze - 0.05 * M.glow
-        bodyK = 1 - 0.45 * (M.thirst + M.doze)
+        bodyK = 1 - 0.45 * (M.thirst + M.doze) * spec.calm
         built = Mutex(Array(repeating: nil, count: canopy.clumps.count))
 
         // Five patches of sun, on the light's side of the crown and a little
@@ -155,6 +161,18 @@ final class LeafArt: @unchecked Sendable {
         pools = best.prefix(2).map { ($0.i, CGPoint(x: (r.next() - 0.5) * 0.3, y: (r.next() - 0.5) * 0.2)) }
     }
 
+    /// How much of a patch of sun a point on the grown crown is in: `u` and `v`
+    /// are across and up it, -1 to 1. For arts that are not leaves but are lit
+    /// the same way (the blossoms of a cherry and an azalea).
+    func dapple(_ u: Double, _ v: Double) -> Double {
+        var sum = 0.0
+        for b in blobs {
+            let du = u - b.u, dv = v - b.v
+            sum += b.s * exp(-(du * du + dv * dv) * b.k)
+        }
+        return sum
+    }
+
     /// Which way a heading sags under its own weight: towards the side it points.
     private func fall(_ h: Double) -> Double { cos(h) >= 0 ? 1 : -1 }
 
@@ -174,9 +192,9 @@ final class LeafArt: @unchecked Sendable {
         var art = ClumpArt()
         // A young tip's whorl of leaves is drawn broader than its small clump.
         let k = c.tuft ? 1.3 : 1.0
-        let sprigs = c.tuft ? 2 : (tier == 2 ? 4 : 3)
-        let total = c.tuft ? sprigs : sprigs + (tier == 2 ? 1 : 0)
-        let pairs = 2
+        let sprigs = c.tuft ? spec.sprigs.tuft : (tier == 2 ? spec.sprigs.front : spec.sprigs.back)
+        let total = c.tuft ? sprigs : sprigs + (tier == 2 && spec.underSprig ? 1 : 0)
+        let pairs = spec.pairs
         let spot = crown.spot[i]
         let gx = spot?.x ?? crown.cx, gy = spot?.y ?? crown.cy - crown.hh * 0.3, gR = spot?.R ?? c.R
         let bias = c.tuft ? 0.1 : tier == 0 ? -0.45 : tier == 1 ? -0.1 : 0.12
@@ -184,12 +202,13 @@ final class LeafArt: @unchecked Sendable {
 
         func leaf(_ x: Double, _ y: Double, _ a0: Double, _ len0: Double, _ luck: Double) {
             let keep = r.next(), curlR = r.next(), glossR = r.next(), lenJ = r.next(), flip = r.next()
+            let over = spec.silver > 0 ? r.next() : 1
             // No two leaves quite parallel: a sprig is a fan, a crown should not be.
             let a = a0 + (flip - 0.5) * 0.5
             if keep < drop { return }
             let curled = curlR < curl
-            let len = len0 * Ink.lerp(0.78, 1.2, lenJ) * lenK * (curled ? 0.62 : 1)
-            let hw = len * 0.17 * wK * (curled ? 0.8 : 1)
+            let len = len0 * Ink.lerp(spec.lens.0, spec.lens.1, lenJ) * lenK * (curled ? 0.62 : 1)
+            let hw = len * spec.hw * wK * (curled ? 0.8 : 1)
             let ca = cos(a), sa = sin(a)
             let bend = fall(a) * (0.08 + pull - 0.1 + (curled ? 0.2 : 0))
 
@@ -203,22 +222,28 @@ final class LeafArt: @unchecked Sendable {
             let under = max(0, min(1, v + 0.15)), core = max(0, 1 - (x * x + y * y).squareRoot() / 0.75)
             let light = 0.35 * local + 0.25 * face + 0.2 * (u * Lx + v * Ly) - 0.75 * under - 0.3 * core
                 + 1.2 * dapple + (luck - 0.5) * 0.7 + (flip - 0.5) * 0.36 + bias
-            let cls = light < 0.05 ? 0 : light < 0.5 ? 1 : light < 0.98 ? 2 : 3
+            let raw = light < 0.05 ? 0 : light < 0.5 ? 1 : light < 0.98 ? 2 : 3
+            let cls = spec.flat ? min(raw, tier < 2 ? 1 : 2) : spec.merge ? (tier == 0 ? min(raw, 1) : tier == 1 ? min(raw, 2) : raw) : raw
 
             let side = (-sa * Lx + ca * Ly) >= 0 ? 1.0 : -1
             art.leaves += 1
+            // Some leaves are turned over and show their other side.
+            if over < spec.silver * (cls == 0 ? 0.3 : 1) && !(cls == 3 && tier == 2) {
+                art.u.blade(spec.shape, x, y, ca, sa, len, hw, bend)
+                return
+            }
             switch cls {
-            case 0: art.d.lance(x, y, ca, sa, len, hw, bend, 0)
-            case 1: art.m.lance(x, y, ca, sa, len, hw, bend, 0)
-            case 2: art.l.lance(x, y, ca, sa, len, hw, bend, 0)
+            case 0: art.d.blade(spec.shape, x, y, ca, sa, len, hw, bend)
+            case 1: art.m.blade(spec.shape, x, y, ca, sa, len, hw, bend)
+            case 2: art.l.blade(spec.shape, x, y, ca, sa, len, hw, bend)
             default:
                 if tier == 2 && !c.tuft {
-                    art.s.lance(x, y, ca, sa, len, hw, bend, 0)
+                    art.s.blade(spec.shape, x, y, ca, sa, len, hw, bend)
                     art.rim.lanceVein(x, y, ca, sa, len, hw, bend)
-                } else { art.l.lance(x, y, ca, sa, len, hw, bend, 0) }
+                } else { art.l.blade(spec.shape, x, y, ca, sa, len, hw, bend) }
             }
             if cls == 3 { art.rim.lanceEdge(x, y, ca, sa, len, hw, bend, side) }
-            if cls == 3 && glossR < 0.35 && !curled { art.rim.lanceGloss(x, y, ca, sa, len, hw, bend, side) }
+            if cls == 3 && glossR < spec.gloss && !curled { art.rim.lanceGloss(x, y, ca, sa, len, hw, bend, side) }
         }
 
         for s in 0..<total {
@@ -228,7 +253,7 @@ final class LeafArt: @unchecked Sendable {
             // A tuft is a whorl of leaves, so its sprigs spread wide.
             let arc = c.tuft ? 0.18 : 0.1
             var h = under ? 0.5 * .pi + jitter * 2.5 : Ink.lerp(.pi * (1 + arc), .pi * (2 - arc), f) + jitter
-            let reach = k * Ink.lerp(0.58, 0.86, r.next()) * (under ? 0.8 : 1)
+            let reach = k * Ink.lerp(spec.reach.0, spec.reach.1, r.next()) * (under ? 0.8 : 1)
             let step = reach / 4, lean = (r.next() - 0.5) * 0.3
             let ob = under ? 0.12 : 0.1
             let luck = r.next()
@@ -239,11 +264,15 @@ final class LeafArt: @unchecked Sendable {
                 x += cos(h) * step
                 y += sin(h) * step
                 if tier == 2 { art.body.twig(from, CGPoint(x: x, y: y), 0.03 - 0.005 * Double(n), 0.03 - 0.005 * Double(n + 1)) }
-                let size = k * 0.72 * (1 - 0.07 * Double(n))
+                let size = k * spec.size * (1 - 0.07 * Double(n))
                 if n < 4 && n <= pairs {
-                    let spread = Ink.lerp(0.62, 0.95, r.next())
-                    leaf(x, y, h - spread, size, luck)
-                    leaf(x, y, h + spread, size, luck)
+                    let spread = Ink.lerp(spec.spread.0, spec.spread.1, r.next())
+                    if spec.alternate {
+                        leaf(x, y, h + (n % 2 == 0 ? spread : -spread), size, luck)
+                    } else {
+                        leaf(x, y, h - spread, size, luck)
+                        leaf(x, y, h + spread, size, luck)
+                    }
                 } else if n == 4 {
                     leaf(x, y, h, size * 1.05, luck)
                 }
@@ -271,7 +300,7 @@ final class LeafArt: @unchecked Sendable {
             }
         }
 
-        if !c.tuft { art.body.oval(0, 0.08, 0.56 * bodyK, 0.44 * bodyK) }
+        if !c.tuft { art.body.oval(0, 0.08, 0.56 * bodyK * spec.body, 0.44 * bodyK * spec.body) }
         art.casts = tier == 2 && !c.tuft && abs(gx - crown.cx) / crown.hw < 0.6 && (gy - crown.cy) / crown.hh < 0.2
         return art
     }

@@ -12,7 +12,10 @@ Everything is `Canvas`, no shaders, no images.
 
 Round 2 is sections 9-12 below (canopy light, fruit in the foliage, the cutaway,
 and what made it cheap); sections 1-8 are still true where they do not say
-otherwise.
+otherwise. Round 3 is section 14: the other five trees (lemon, olive, magnolia,
+cherry, azalea) brought to the same level on one shared engine, with the
+before and after in `art/trees/index.html` and the pages `-artSheet <tree>-crown`,
+`-detail`, `-young`, `-night` and `-shop`.
 
 ## 1. Light
 
@@ -34,7 +37,10 @@ otherwise.
 - **Night is cool, not grey.** Reds and greens drop more than blue
   (`RGB.night`); the lit side by moonlight is a *deeper* green with a pale rim,
   not a paler green. Test a night shot for "ghostly teal": if the lit patch is
-  lighter than the day shadow side, it is wrong.
+  lighter than the day shadow side, it is wrong. Round 3 went further (section
+  14): by moonlight every leaf class is drawn towards one deep blue and pulled
+  close to the others, and the rim is a steel blue at low alpha. The pomegranate's
+  night crown had been a pale grey-green; it is now a dim blue mass.
 
 ## 2. Palette ramps
 
@@ -421,3 +427,300 @@ as a tree", not as absolute numbers:
 
 No plant stands out from the tree on either screen; the redraw happens only when
 a mood or the growth eases in, and the wind is a shear of the cached layer.
+
+## 14. One engine, five more trees (round 3)
+
+Lemon, olive, magnolia, cherry and azalea are painted the pomegranate's way,
+from the same skeleton as before (a household's tree keeps its limbs, clumps,
+blossom and fruit places), each with its own painter and extensions
+(`LemonPainter*.swift` and so on). What they share is written once:
+
+- **`TreeCore`** is the pose, the light, the four leaf classes and one clump
+  painted back to front, with *hooks* between the classes (`Between.deep`, `.mid`,
+  `.over`) for the species' own fruit; `TreeArt` is the order every tree is
+  drawn in (ground, clumps by tier, wood, young leaves, pools of sun, the cut
+  fruit, blossoms, seed leaves, a last pass). `LeafSpec` is what a species' leaves
+  are (shape, width, how many sprigs, alternate or opposite, a share turned over
+  to show another colour, whether the dark body behind them is wanted).
+  `LeafArt` builds any of them; the pomegranate's spec is its defaults, so its
+  crown did not move (checked pixel for pixel by day; only its bark and its night colours changed, on purpose).
+- **`TreeInk`** is the moonlight rule and the leaf colours, used by the
+  pomegranate too: at night the four classes are mixed towards one deep blue and
+  the rim to a steel blue (section 1).
+- **`TreeWood`** is the stems, with a `BarkStyle` per species: shredded,
+  smooth, gnarled (burls in the outline, ridges that twist, an arched hollow
+  in the trunk and not the limbs), lenticel, fine.
+- **`BloomArt`** is a flower-covered crown: each clump's blossoms built once in
+  the clump's units, sorted by the same light into classes, one fill per class.
+
+What was learned, and holds for the next tree:
+
+1. **Bark goes with the grain, never across it.** Every mark is a thin lens along
+   the stem, in broken lengths; a short stroke across the stem, tilted, is what
+   made the pomegranate read as crisscross X marks. A limb's own marks start
+   a quarter of the way out so they do not cross the stem it leaves, a limb's lit
+   edge and core shadow start thin at the fork, and the stems of a tree are painted
+   one after another (each stem's bark over the last) so one stem's light is never
+   laid across another where they cross low down.
+2. **Two-tone leaves are two colours, not one with a glint.** The olive's tops
+   are the dark half of its ramp and its undersides the silver half; about two
+   leaves in five are turned over (`LeafArt.u`, a fill of its own). The silver
+   is kept for the undersides, so a leaf turned over is the brightest thing in the
+   crown. Narrow leaves need almost no dark body behind them (`LeafSpec.body`), or
+   it shows as a balloon.
+3. **A flowering tree is told in the order it grows.** Magnolia: bare wood and silver
+   buds (the young leaves are gone from its canes by .6), goblets on bare wood,
+   leaves only after (`leafy`, applied to the tufts too), and a few flowers stay.
+   Cherry: blossom before leaf, thinning as the fruit sets. Azalea: the buds
+   first, then flowers over everything.
+4. **Flowers cover; they do not decorate.** Cherry and azalea paint every clump's
+   flowers last, back to front over the whole crown (a front tier's leaves over a
+   back tier's flowers left the shrub green with flowers in a band). Behind, a
+   flower is a scalloped dot; in front it is the whole flower (five petals and a red
+   eye with notches and stamens, or a corolla with a throat, spots and long
+   stamens). Flowers of one class merge into one blob, so one extra fill under
+   them, the union of every flower moved a hair away from the light in a darker
+   tone, parts each from the next. Never push positions onto the clump's
+   edge to keep them in (it draws a string of beads): draw again.
+5. **No fruit in the model means derive it from what is there.** The cherry's
+   pairs hang from about half its blossom sites (hashed from the blossom's own
+   numbers), because giving the cherry a `crop` would change every household's
+   seed draws and with them its skeleton.
+6. **Fills are the cost, again.** Behind a flower-covered crown the leaf classes
+   are merged (`LeafSpec.flat`: two classes behind, three in front, no glints)
+   and the flowers keep two or three classes; a front clump is about 14 fills, a
+   back one 5. A flower shape with fewer curves is cheaper on this GPU too
+   (a back flower is ten quads, not twenty). Soft pools of sun are off on trees
+   whose flowers are the light (`TreeArt.dappled`): a wash over them is a haze.
+7. **Story details** stayed at four: the species' own seed (a pale pointed lemon
+   seed, an olive stone, a red magnolia seed, a cherry stone, a dark speck), a
+   fallen leaf, the fallen flower (a white petal, a curled magnolia petal browning
+   at the edge, pink petals and others still in the air, a whole azalea corolla)
+   and a dropped fruit when thirsty.
+8. **The cutaway need not be the pomegranate's.** The lemon is cut across: a wheel
+   of nine segments in a pale rind and thick pith, vesicles, seeds in two of them,
+   a gleam of juice and a drop, with the rest of the lemon behind as a crescent
+   of dimpled skin and its nipple. It hangs from a limb in the open, not over the
+   trunk, so it is chosen well out to one side.
+
+Numbers, iPhone 17 simulator (iOS 27), Debug, alternating runs, three rounds each
+(`-artSheet redraw -artSheetCount 4 -artSheetSpecies <tree> -frameMeter 1`, old is
+`-treeLegacy <tree>`). The machine was shared and noisy: recording is the mean of
+`tree draw` over a run, frames per two-second window is the stress page.
+
+| | recording old | recording new | stress page old | stress page new |
+|---|---|---|---|---|
+| lemon | 0.52 ms | 0.47 ms (0.9x) | 61 | 53 |
+| olive | 0.63 ms | 0.59 ms (0.94x) | 56 | 44 |
+| magnolia | 0.44 ms | 0.43 ms (1.0x) | 71 | 68 |
+| cherry | 0.92 ms | 0.84 ms (0.9x) | 44 | 43 |
+| azalea | 1.97 ms | 1.67 ms (0.85x) | 23 | 17 |
+
+`-nestieBench 1 -nestieSpecies <tree> -todayScroll 1` and `-companionScroll 1`
+(Choose) late and dropped frames per window were no worse than the old painter's
+for any of the five, within the noise (for example lemon 1.0 late against 5.8,
+azalea 0.5 against 6.8, Choose 4.2 dropped against 15.1).
+
+### Fix round (v2)
+
+Four things the first round got wrong, and what holds now:
+
+9. **Flowers that cover are read as flowers only if they are few and large, in
+   clusters with gaps.** The azalea's first bloom was 18 to 38 small flowers on every
+   clump, which at card size was one pink blob with a pale smear where the sun was
+   (a light class that spans the crown is a stain on flowers). Now each clump has one or two
+   *trusses* (`BloomSpec.truss`): a middle flower and a ring of six, each about a fifth
+   of the clump across, spaced round the dome so leaves show between, and the
+   outer ones standing out of the leaves for a bumpy silhouette. **The light is
+   on the truss's own sunny side**: a flower's class comes from how far it sits towards the
+   sun from its truss's middle (and a little from where the clump stands), so every
+   truss has a lit side and a shaded one, and no patch spans the crown. Each flower
+   keeps its throat (a deeper pink disc), its three spots and its long stamens. Back
+   clumps carry one small truss; the front ones two. This was also the cost: fewer, larger
+   flowers are fewer curves.
+10. **A tired tree is the same tree.** The shared pose shrinks a clump by a fifth and sinks
+   and slides it, and the pomegranate's dense whorls survive that; a crown of few leaves (a lemon,
+   an olive, a cherry) was left as bare limbs, a Y fork with leaves at its tips. For every
+   tree but the pomegranate, `TreeCore.calmed` takes back three fifths of the pose's
+   shrink and sink (the limbs still droop, because that is posture), and
+   `LeafSpec.calm` (0.45) takes that share of the dropped leaves, the curled-short leaves and
+   the shrunken dark body behind them. A flower-covered crown keeps its flowers when it is
+   thirsty or dozing: `BloomArt` thins them (a quarter, a third) and `Tones` pales them, and
+   they are not shut into buds. Thirsty is the same tree drooping and paling with a few leaves
+   on the soil; dozing is the same tree, calm and dimmed under the dome.
+11. **No marks at a fork.** A limb's bark stops short of the fork at its end (84 percent)
+   and starts after the fork it leaves (a quarter out, a sixth on a trunk's segments); its lit edge
+   and core shadow are drawn from 30 percent of the way along it (`TreeWood.from`),
+   because a lens that starts at the fork is a white thread across the stem it leaves
+   (starting thin was the first attempt, and drew a thread).
+12. **Merge fills by tone.** The olive keeps two tones in the back (dark and middle, plus the
+   silver undersides) and three in the middle, and all of them in front (`LeafSpec.merge`), with
+   four sprigs instead of five. The silver two-tone is kept.
+
+Numbers, same method, three rounds each of old against new on the loaded machine
+(the stress page is frames per two seconds): azalea 17 against 22 (1.26x) with
+recording 1.6 ms against 1.9 (0.83x); olive 32 against 36 (1.12x) with recording
+1.1 ms against 1.3 (0.9x). The Today scroll bench was no worse than the old painter's for either,
+within the noise.
+
+
+
+## 15. Plants (round B)
+
+The eleven plants that were still emoji sketches, and the rose's bloom. Shots in
+`art/plants/` (`<plant>-before-*` is the sketch, `-v1-*` the drawing, the rose's
+round B is `rose-v2-*`; `plants-grid-b-v1.jpg` is all twelve at the shop's size,
+`-artSheet plants-grid-b`), index in `art/plants/index.html`. Everything in
+section 13 holds: one light, cached unit shapes, fills and not strokes, blooms
+merged by layer, a budget of about 0.7 ms of recording.
+
+**Which rule each plant is on.** Six rules were new, because the eight of round A
+could not say them; two plants fit a rule that was already there.
+
+| Plant | Rule | What it is made of | Growth |
+|---|---|---|---|
+| Mint | `bush` | a puckered, toothed leaf (`LeafShape.mint`), a plum stem (`stemTint`), a third branch, two runners that arch over the rim with node pairs of small leaves (`runners`), a short lilac spike | as basil; runners from .5 |
+| Rosemary | `sprig` (new) | seven woody stems dressed in needles: a needle is one thin triangle in three greens by the light with a silver line on the lit ones, pairs alternating between spread and foreshortened; small two-lipped flowers in the axils | stems at .1, .26, .3, .46, .52, .56, .6; needles as each stem reaches them; flowers .8 |
+| Snake plant | `blades` (new) | nine sword blades, each one outline from a sampled spine (`profile`: a sheath, full by a quarter, a long taper), pale chevron bands, a dark rib, a yellow margin, a lit half; two pups; never blooms | a blade at .1, .18, .26, .36, .44, .54, .62; pups .72, .8; a new blade is a spear that unfurls |
+| Fern | `frond` (new) | nine fronds, each one cached shape (`FrondShape`: a rachis and 24 closely packed, narrow, lobed pinnae a side, longest a third of the way up and shortening to a fine tip) placed by a transform and drawn in four fills; centre ones upright, outer ones bowing over the rim; the upper side of each arch lit and its underside dark; bronze fiddleheads that unroll as a frond grows, and two always uncurling at the heart | croziers from .1; a frond every .05, each unrolling over .46; the two heart fiddleheads from .3 |
+| Lavender | `tuft` | a mound of grass-thin leaves (`LeafShape.needle`), seven thin stems each ending in a spike of eight whorls of florets (a hood each side, one facing us, a calyx under each), deep at the base and light at the tip, opening from the bottom up | stems from .28; spikes open .66 to .98 |
+| Orchid | `spray` (new) | four thick broad leaves, silver-green aerial roots with green tips over the rim, one spike that arches over carrying seven blooms: three sepals, two wing petals, a three-lobed magenta lip, a column; the blooms of the whole spike are layers (`BloomField`), so a dozen fills | leaves .1 to .46; roots .3 to .5; spike .52 to .88; blooms from the foot of the spike .76 on |
+| Bonsai | `sculpt` (new) | a thick twisting trunk flaring into roots with bark flecks scattered across it and two slivers of sun on its edge that swell and taper away, a jin, moss, three branches and a crown, each ending in a flat cloud of small round leaves | trunk .1 to .72; a branch and its pad from .3; last pads .52 |
+| Maple | `sculpt` | a slender trunk that forks into layered branches with clouds of red and orange palmate leaves; leaves on the soil | as the bonsai |
+| Pine | `sculpt` | a straight trunk, eight whorls of pads, each pad a row of six tufts (a burst of thin needles radiating from a point along a drooping branch) so the layers are clear; a front pad on the lower six; a leader, two cones | a whorl every .07 from .16 |
+| Pumpkin | `trail` (new) | a vine over the rim with big palmate leaves on long stalks, tendrils, a yellow trumpet flower, and a ribbed fruit built from meridians toned by the sun (the cactus's trick), green and small then orange | vine .12 to .7; flower bud .58, open .72; fruit swells .46 to .97, ripens .8 to .97 |
+| Snowdrop | `tuft` | glaucous strap leaves, three stems that hook over (`Stem.arch`) so that a bell hangs from each: green ovary, three long white outer tepals flaring like a skirt, a short inner cup with a green mark | stems from .3; bells open .74, .84, .93 |
+
+`PlantPlan.overRim` replaces the old "a vine is not cut at the soil line": mint,
+fern, orchid, pumpkin and monstera cross the rim.
+
+**`PadArt`** is the pad of foliage as a cached unit shape, like `LeafShape` is a
+leaf: four paths (the whole, the upper part moved up, the sunward part, a few
+glints), built once per kind and variant, so a pad is four `addPath`s and four
+fills however many leaves it has, and a sculpted plant is two `PadBatch`es (the
+pads behind the trunk and in front of it). A pad needs a solid mass under its
+leaves (an oval in the shade layer) or it is a scatter of leaves, not a cloud.
+
+**The rose's bloom.** The round A rose was four rings of radial petals, which
+reads as a pinwheel (a camellia). Now it is built as a rose is: two rings of
+`LeafShape.rose` petals, the outer five reflexed with a **rolled margin**
+(`rollA/B` is a broad strip along the edge, `foldA/B` a thin line of shade where
+it meets the petal, both cached in the shape; `Ring.detail` 3), the half
+shading of a petal toned down to 40% on those rings because it is what made
+them faceted; then a dark cup (a radial gradient from the heart colour); then
+five discs wound round the heart, each a full oval in the lit-edge colour with
+the petal's own gradient oval shifted away from the light over it, so the edge
+that shows is a crescent where the next petal begins. What the first pass
+threw out was the half-split on every petal (origami) and a heart too small
+to read.
+
+**Mood.** As round A. The ones that are not flowers keep their own tell:
+a thirsty pumpkin's leaves hang from their stalks (the thing everybody knows),
+a thirsty snake plant folds its blades and bows them, a thirsty fern's fronds
+bow further with the pinnae hanging, a bonsai's pads sag and shrink, a pine's
+sprays droop; a dozing one is the same at 55% with blooms shut.
+
+**Stage names** (`CompanionMath.stageTitle(…, species:)`, `Species.stageWords`):
+most plants keep Seed, Sprout, Seedling, Leafing, Budding, In bloom. A fern and a
+snake plant never bloom: …Leafing, **Filling out**, **Lush** (Gürleşiyor,
+Gürleşti). A bonsai, a maple and a pine (now `growsInPot`, so they are no
+longer named as trees): …Sapling, **Shaping up**, All grown (Şekilleniyor). A
+pumpkin: …Leafing, **Fruiting**, **Ripe** (Meyve bağlıyor, Olgunlaştı). Ready
+is "All grown" for every one of them.
+
+**What the two critique passes threw out** (screenshot, reject, fix, again).
+First pass: a mint that was basil with another leaf (a plum stem, runners, a
+puckered tooth, a shorter spike); a rosemary of seven hairs (needle width
+2 to 2.7, step 0.047 to 0.034, two more stems); a fern whose fronds were
+hidden under their own rachises (the rachis is filled before the pinnae) and
+lay flat like a dome (less bend, longer, more of them upright); lavender leaves
+that were broad lances forming a V (a thin needle leaf, none up the stems, 15
+at the foot); an orchid whose leaves were round plates (narrower, longer,
+more upright) and whose blooms were too small; bonsai and maple pads that were
+a scatter of leaves under a grey blob of shadow (a solid mass under them, no
+shadow, 70 leaves); a pine like a feathered skirt with bare trunk (denser
+sprays, pads on the front); a pumpkin whose leaves were square boxes (five
+pointed lobes) and whose flower was hidden (bigger, in the clear, and it
+stays open once the fruit sets). Second pass: a rose with faceted halves on
+every outer petal, and a cup too small to read; a fern still a V (the fronds
+near the middle weighted: `|u|^1.45`); a pine's sixteen branches painted one
+by one (one fill: 1.35 to 0.59 ms).
+
+**Numbers** (iPhone 17 simulator, iOS 27, Debug, `-artSheet redraw
+-artSheetCount 4 -frameMeter 1`, `tree draw` is the recording, mean after the
+first forty). **Read with care:** the Mac was shared and its load average
+swung between 130 and 800 while this was measured, which doubles every
+number. The first column was read in the one quiet window; the second is the
+same build under load, two reads, for how far it moves.
+
+| | recording, quiet | recording, loaded | stress frames per window (quiet) |
+|---|---|---|---|
+| mint | 0.53 ms | 1.02-1.05 | 117-120 |
+| rosemary | 0.55 | 1.19-1.24 | 119-120 |
+| snake plant | 0.47 | 0.83-0.91 | 118-120 |
+| fern | 0.70 | 1.35-1.41 | 119-120 |
+| lavender | 0.57 | 1.09 | 120 |
+| orchid | 0.39 | 0.60-0.62 | 120 |
+| bonsai | 0.38 | 0.57-0.69 | 120 |
+| maple | 0.55 | 0.91-0.98 | 120 |
+| pumpkin | 0.51 | 0.93-1.05 | 120 |
+| pine | 0.59 | 1.20-1.27 | 120 |
+| snowdrop | 0.27 | 0.49-0.55 | 120 |
+| rose (new) | 0.65 | 1.30-1.82 | 96-102 |
+| rose (old, the same window) | 0.61 | 1.33-1.65 | 96-113 |
+
+The rose's recording is about 6% above the old bloom's, not below it: the old
+one was not 0.75 ms in the quiet window but 0.61, and the new cup and wound
+heart cost a few fills more than the pinwheel. It is under 0.7 ms in the quiet
+window and at parity when the machine is loaded. The savings that were found
+were in the leaves, not the bloom (a back tier's shadow was built and never
+drawn). Today's and Choose's flick (`-todayScroll`, `-companionScroll`) were
+not re-measured for round B.
+
+What made the others cheap, in the order of what it bought, and what was not
+(section 12 again): a branch painted with a gradient is two fills and a pine
+has sixteen of them: **merge what shares a colour** (1.35 to 0.59 ms); a
+needle or a pinna at this size has no vein, rim or glint, so `addLite` gives it
+an outline and a lit half only, and the back tier of a fern none (0.96 to
+0.70); a pinna and a needle sampled at three steps a segment and not five,
+with no teeth (a tooth is under a pixel); a pad's spikes are a triangle each
+and 58 are enough where 140 were not.
+
+### Fix round: fern, pine, bonsai
+
+The owner's first look at round B sent three things back.
+
+- **Fern, redone.** The leaflets were separate ovals spaced along a rib, which
+  reads as eucalyptus. A fern is a fountain of long arching fronds from one
+  crown, each with a midrib and many narrow pinnae packed close and tapering to
+  a fine tip. So a frond is now one cached shape, `FrondArt.swift`: a rachis
+  (a thin tapering ribbon, curved by a `bend` in steps of 0.2) and 24 pairs of
+  pinnae along it, each a lance of seven points with its teeth smoothed to a
+  lobed edge and swept forward, built once per bend and per how much has
+  unrolled (six steps of reach, so a young frond is a short one). A frond in
+  the plant is a transform and four `addPath`s: the whole, the pinnae on the lit
+  side, the pinnae on the other, the rachis. The lit side is the outer side of
+  the arch when it bows (the upper surface) and the side towards the sun when
+  it stands. The coil at a young frond's tip is the one dynamic piece, and
+  two fiddleheads (a stalk and a spiral with fuzz on it) stay at the heart of
+  a grown fern. First try: pinnae of 0.2 with five teeth read as a saw, an
+  aloe; fewer, longer, narrower pinnae with a smoother edge and longer, more
+  arching fronds fixed it. The recording went from 0.70 to 0.51 ms (quiet
+  window), because a frond is a handful of paths and not 44 leaflets.
+- **Pine, crisper.** The sprays were drooping fans of 58 thick needles, which
+  is shaggy. A pad is now six tufts along a drooping branch, each a burst of
+  eleven thin needles over the upper half-circle and three hanging, in three
+  tones, so the pad is a row of stars and the layers of the tree stay clear.
+  0.59 to 0.68 ms.
+- **Bonsai, no seam.** The pale vertical strip was `paint(stem:)`'s lit-edge
+  streak plus a ridge, one running the length of the trunk. The trunk has its
+  own painter now (`PlantPainter.trunk`): the shaded wood, 26 short fissures
+  and flecks across its width (dark ones everywhere, light ones on the lit side
+  only), and the sun's edge as two slivers, set in from the edge, that start at
+  nothing, swell and end. 0.38 to 0.49 ms.
+
+Numbers, iPhone 17 simulator, Debug, the first reads at a load average of about
+30 (the earlier numbers in this section were read under hundreds, and the
+fern and pine read again under load at 0.96 and 1.29 ms; compare
+those to the loaded column above): fern 0.51 ms, pine 0.68, bonsai 0.49; the
+stress page held 104 to 120 frames per window.

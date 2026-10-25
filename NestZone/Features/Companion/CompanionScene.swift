@@ -761,8 +761,17 @@ struct TreeLayer: View, Equatable {
         #endif
         if state.species == .pomegranate && !TreeTiming.legacyPomegranate {
             PomegranatePainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(tree)
-        } else {
+        } else if TreeTiming.legacy(state.species) {
             CanopyPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day).draw(tree)
+        } else {
+            switch state.species {
+            case .lemon: LemonPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(tree)
+            case .olive: OlivePainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(tree)
+            case .magnolia: MagnoliaPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(tree)
+            case .cherry: CherryPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(tree)
+            case .azalea: AzaleaPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day, light: state.light).draw(tree)
+            default: CanopyPainter(canopy: canopy, growth: state.progress, mood: state.mood, day: state.day).draw(tree)
+            }
         }
     }
 }

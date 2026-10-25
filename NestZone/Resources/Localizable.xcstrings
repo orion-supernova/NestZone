@@ -24938,6 +24938,40 @@
         }
       }
     },
+    "plant_stage_filling": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filling out"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gürleşiyor"
+          }
+        }
+      }
+    },
+    "plant_stage_fruiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fruiting"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meyve bağlıyor"
+          }
+        }
+      }
+    },
     "plant_stage_grown": {
       "extractionState": "manual",
       "localizations": {
@@ -24968,6 +25002,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yapraklanıyor"
+          }
+        }
+      }
+    },
+    "plant_stage_lush": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lush"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gürleşti"
+          }
+        }
+      }
+    },
+    "plant_stage_ripe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripe"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olgunlaştı"
           }
         }
       }
@@ -25019,6 +25087,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fide"
+          }
+        }
+      }
+    },
+    "plant_stage_shaping": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shaping up"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şekilleniyor"
           }
         }
       }

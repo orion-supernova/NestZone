@@ -15,6 +15,9 @@ import Synchronization
 struct LeafShape: Sendable {
     enum Kind: Int, CaseIterable, Sendable {
         case heart, ovate, strap, spoon, leaflet, lobed
+        /// Round B: a mint leaf (a puckered, toothed oval), an orchid's thick
+        /// broad leaf, a pumpkin's palmate leaf and a fern's pinna.
+        case mint, broad, palmate, pinna, needle
         /// Petals: a long narrow ray, a broad rounded one, a pointed tepal.
         case ray, petal, tepal, rose
         /// A monstera leaf by how grown it is: a whole heart, then slit, then holed.
@@ -28,6 +31,10 @@ struct LeafShape: Sendable {
     var veins = Path()
     var glossA = Path(), glossB = Path()
     var rimA = Path(), rimB = Path()
+    /// The broad margin of a petal that rolls back (a rose's), and the thin
+    /// shade where the roll meets the petal.
+    var rollA = Path(), rollB = Path()
+    var foldA = Path(), foldB = Path()
     var tip = CGPoint(x: 1, y: 0)
     /// Whether the outline has holes in it (a monstera), and wants an even-odd fill.
     var holes = false
@@ -57,6 +64,8 @@ struct LeafShape: Sendable {
         var slits: [(s: Double, depth: Double)] = []
         var holes: [(u: Double, v: Double, rx: Double, ry: Double)] = []
         var ruffle = 0.0
+        /// Veins that fan out from near the base: angle from the rib and length.
+        var fan: [(angle: Double, length: Double)] = []
     }
 
     private static func pts(_ list: [(Double, Double)]) -> [CGPoint] { list.map { CGPoint(x: $0.0, y: $0.1) } }
@@ -91,6 +100,21 @@ struct LeafShape: Sendable {
             return Spec(edge: pts([(0, 0.04), (0.1, 0.28), (0.35, 0.48), (0.7, 0.5), (0.93, 0.34), (1, 0.12), (1.02, 0)]), rib: 0.012)
         case .tepal:
             return Spec(edge: pts([(0, 0.1), (0.14, 0.3), (0.42, 0.4), (0.76, 0.3), (0.95, 0.11), (1, 0)]), rib: 0.012)
+        case .mint:
+            return Spec(edge: pts([(0.03, 0), (-0.01, 0.1), (0.04, 0.26), (0.2, 0.4), (0.42, 0.46), (0.64, 0.38), (0.82, 0.22), (0.94, 0.08), (1, 0)]),
+                        teeth: 0.02, tooth: 2, veinsAt: [0.08, 0.2, 0.32, 0.44, 0.56, 0.68], rib: 0.026)
+        case .broad:
+            return Spec(edge: pts([(0, 0.05), (0.08, 0.15), (0.3, 0.22), (0.6, 0.235), (0.86, 0.18), (0.97, 0.09), (1, 0)]),
+                        parallel: [0.05, 0.1, 0.16], rib: 0.026)
+        case .needle:
+            return Spec(edge: pts([(0, 0.025), (0.2, 0.052), (0.6, 0.05), (0.9, 0.03), (1, 0)]), rib: 0.012)
+        case .palmate:
+            return Spec(edge: pts([(0.14, 0), (0.02, 0.08), (-0.08, 0.24), (-0.05, 0.4), (0.0, 0.46), (0.1, 0.38), (0.14, 0.3), (0.24, 0.42), (0.36, 0.6),
+                                   (0.46, 0.66), (0.56, 0.58), (0.66, 0.36), (0.72, 0.26), (0.82, 0.24), (0.94, 0.1), (1, 0)]),
+                        teeth: 0.01, tooth: 2, rib: 0.026, fan: [(0, 0.88), (1.0, 0.74), (1.9, 0.4)])
+        case .pinna:
+            // Small enough that a tooth is under a pixel: none, and fewer points.
+            return Spec(edge: pts([(0, 0.07), (0.15, 0.17), (0.5, 0.2), (0.8, 0.13), (0.95, 0.05), (1, 0)]), rib: 0.03)
         case .monstera0:
             return monstera(slits: [], holes: [])
         case .monstera1:
@@ -162,10 +186,10 @@ struct LeafShape: Sendable {
         // Slits and ruffles need their points close; a plain leaf at card size does not.
         let fine: Bool
         switch kind {
-        case .monstera0, .monstera1, .monstera2, .monstera3, .lobed, .petal: fine = true
+        case .monstera0, .monstera1, .monstera2, .monstera3, .lobed, .petal, .palmate: fine = true
         default: fine = false
         }
-        var edge = Self.dense(spec.edge, steps: fine ? 9 : 5)
+        var edge = Self.dense(spec.edge, steps: fine ? 9 : (kind == .pinna || kind == .needle ? 3 : 5))
 
         // Serration and ruffle ride the edge, and a monstera's slits cut into it.
         for i in 0..<edge.count {
@@ -248,18 +272,36 @@ struct LeafShape: Sendable {
                 Self.tri(&veins, place(0.04, sign * v), place(0.92, sign * v * 0.35), 0.008)
             }
         }
+        for f in spec.fan {
+            for sign in [1.0, -1.0] {
+                let from = place(0.1, 0)
+                let to = CGPoint(x: 0.1 + cos(f.angle) * f.length, y: sign * sin(f.angle) * f.length)
+                Self.tri(&veins, from, place(to.x, to.y), spec.rib * 0.8)
+            }
+        }
         self.veins = veins
 
         // A strip of light along the edge of each half, and a glint beside the rib.
         let inset: (Double) -> Double = { 0.9 - 0.12 * $0 }
-        func strip(_ sign: Double) -> Path {
-            let lo = edge.filter { $0.s > 0.12 && $0.s < 0.9 }
-            let outer = lo.map { place($0.p.x, sign * $0.p.y) }
+        func strip(_ sign: Double, from: Double = 0.12, to: Double = 0.9, outer scale: (Double) -> Double = { _ in 1 }, _ inset: (Double) -> Double) -> Path {
+            let lo = edge.filter { $0.s > from && $0.s < to }
+            let outer = lo.map { place($0.p.x, sign * $0.p.y * scale($0.s)) }
             let inner = lo.map { place($0.p.x, sign * $0.p.y * inset($0.s)) }
             return Self.poly(outer + inner.reversed())
         }
-        rimA = strip(1)
-        rimB = strip(-1)
+        rimA = strip(1, inset)
+        rimB = strip(-1, inset)
+        if kind == .rose {
+            // A rolled margin: broad, over most of the petal's edge.
+            let roll: (Double) -> Double = { 0.74 - 0.08 * $0 }
+            rollA = strip(1, from: 0.2, to: 0.97, roll)
+            rollB = strip(-1, from: 0.2, to: 0.97, roll)
+            // Where the roll meets the petal: a thin line of shade just inside it.
+            let atRoll: (Double) -> Double = { 0.74 - 0.08 * $0 }
+            let inside: (Double) -> Double = { _ in 0.88 }
+            foldA = strip(1, from: 0.24, to: 0.94, outer: atRoll, inside)
+            foldB = strip(-1, from: 0.24, to: 0.94, outer: atRoll, inside)
+        }
         func glint(_ sign: Double) -> Path {
             var path = Path()
             let p0 = place(0.2, sign * 0.07), p1 = place(0.62, sign * 0.1)
@@ -299,6 +341,22 @@ struct LeafBatch {
         veins.addPath(shape.veins, transform: t)
         if bright > 0.4 { rim.addPath(litA ? shape.rimA : shape.rimB, transform: t) }
         if glossy && bright > 0.5 { gloss.addPath(litA ? shape.glossA : shape.glossB, transform: t) }
+        if shadowed { shadow.addPath(shape.outline, transform: t.concatenating(CGAffineTransform(translationX: 0.8, y: 1.3))) }
+    }
+
+    /// A small leaf (a pinna, a needle cluster): its outline in its class, the
+    /// lit half and, if asked, a shadow; no veins, rim or glint, which at that
+    /// size nobody sees and which cost a path each.
+    mutating func addLite(_ shape: LeafShape, base: CGPoint, angle: Double, length: Double, light L: (x: Double, y: Double),
+                          bright: Double, shadowed: Bool = false, lightHalf: Bool = true) {
+        let t = CGAffineTransform(translationX: base.x, y: base.y).rotated(by: angle).scaledBy(x: length, y: length)
+        if bright < 0.36 { shade.addPath(shape.outline, transform: t) }
+        else if bright < 0.68 { mid.addPath(shape.outline, transform: t) }
+        else { lit.addPath(shape.outline, transform: t) }
+        if lightHalf {
+            let across = -sin(angle) * L.x + cos(angle) * L.y
+            halves.addPath(across >= 0 ? shape.sideA : shape.sideB, transform: t)
+        }
         if shadowed { shadow.addPath(shape.outline, transform: t.concatenating(CGAffineTransform(translationX: 0.8, y: 1.3))) }
     }
 

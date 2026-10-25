@@ -15,6 +15,12 @@ enum TreeTiming {
     /// `-pomegranateLegacy 1` draws the pomegranate with the shared canopy
     /// painter again, to compare the two on the bench.
     static let legacyPomegranate = UserDefaults.standard.bool(forKey: "pomegranateLegacy")
+    /// `-treeLegacy lemon,olive` (or `all`) draws those trees with the shared
+    /// canopy painter, for the same comparison.
+    private static let legacy = Set((UserDefaults.standard.string(forKey: "treeLegacy") ?? "").split(separator: ",").map(String.init))
+    static func legacy(_ species: Species) -> Bool {
+        legacy.contains(species.rawValue) || legacy.contains("all") || legacy.contains("1")
+    }
     private static let on = UserDefaults.standard.integer(forKey: "frameMeter") > 0 || UserDefaults.standard.bool(forKey: "treeTiming")
 
     /// One clump's leaves built for the cache (`LeafArt`): the cost a redraw
@@ -32,6 +38,7 @@ enum TreeTiming {
 #else
 enum TreeTiming {
     static let legacyPomegranate = false
+    static func legacy(_ species: Species) -> Bool { false }
     static func built(_ clump: Int, leaves: Int, since start: Double) {}
 }
 #endif

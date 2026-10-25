@@ -38,11 +38,11 @@ extension PlantPainter {
     /// Petals in rings about the origin of `c`, the outer ring first.
     func rosette(_ c: GraphicsContext, rings: [Ring], radius R: Double, open: Double, light l: (x: Double, y: Double)) {
         guard let flower = plan.flower else { return }
-        let deep = bloom(flower.deep), pale = bloom(flower.pale)
+        let deep = bloom(flower.deep), pale = bloom(flower.pale), mid = bloom(flower.mid)
         for (n, ring) in rings.enumerated() {
             let k = Ink.smooth((open - ring.appears) / 0.28)
             guard k > 0.03 else { continue }
-            var petals = Path(), lit = Path(), shade = Path(), rim = Path(), creases = Path()
+            var petals = Path(), lit = Path(), shade = Path(), rim = Path(), creases = Path(), roll = Path(), fold = Path()
             let reach = R * ring.reach * k
             for i in 0..<ring.count {
                 let a = (Double(i) + ring.twist) / Double(ring.count) * .pi * 2 + seed.between(i + 11 * n, -ring.jitter, ring.jitter)
@@ -59,18 +59,32 @@ extension PlantPainter {
                     if ring.detail >= 2 {
                         rim.addPath(toward >= 0 ? shape.rimA : shape.rimB, transform: t)
                         creases.addPath(shape.veins, transform: t)
+                        if ring.detail >= 3 {
+                            roll.addPath(shape.rollA, transform: t)
+                            roll.addPath(shape.rollB, transform: t)
+                            fold.addPath(shape.foldA, transform: t)
+                            fold.addPath(shape.foldB, transform: t)
+                        }
                     }
                 }
             }
             let tones = ring.tones.map { $0.color() }
             c.fill(petals, with: .radialGradient(Gradient(colors: tones), center: .zero, startRadius: R * ring.base * k * 0.5, endRadius: R * (ring.base + ring.reach) * k))
             if ring.detail >= 1 {
-                c.fill(shade, with: .color(deep.shifted(-10).color(0.3)))
-                c.fill(lit, with: .color(pale.mix(glow, 0.3 * (1 - night)).color(0.3)))
+                // A rolled petal is shaded by its curl, not split down the middle.
+                let soft = ring.detail >= 3 ? 0.4 : 1.0
+                c.fill(shade, with: .color(deep.shifted(-10).color(0.3 * soft)))
+                c.fill(lit, with: .color(pale.mix(glow, 0.3 * (1 - night)).color(0.3 * soft)))
             }
             if ring.detail >= 2 {
                 c.fill(rim, with: .color(pale.mix(rimTone, 0.35).color(0.4 + 0.2 * dusk)))
                 c.fill(creases, with: .color(deep.color(0.26)))
+            }
+            if ring.detail >= 3 {
+                // A rolled margin: the lip turned back catches the light, and a
+                // line of shade lies where it leaves the petal.
+                c.fill(fold, with: .color(deep.shifted(-12).color(0.34)))
+                c.fill(roll, with: .color(pale.mix(mid, 0.2).mix(rimTone, 0.2 * (1 - night)).color(0.72)))
             }
         }
     }
@@ -286,24 +300,38 @@ extension PlantPainter {
             }
             h.fill(sepals, with: .color(ramp[2].color()))
         }
+        // Seen from a little above: the outer petals reflex, spreading wide with
+        // their edges rolled back; a bowl of upright ones; the cup, dark where
+        // it is deep; and tight petals wound round the heart.
         let rings = [
-            Ring(kind: .rose, count: 5, base: 0.3, reach: 0.78, wide: 0.9, appears: 0.55, bend: 0.2, jitter: 0.07,
-                 tones: [deep.mix(mid, 0.4), mid, mid.mix(pale, 0.4)], detail: 2),
-            Ring(kind: .rose, count: 5, base: 0.24, reach: 0.62, wide: 0.88, appears: 0.45, twist: 0.5, bend: 0.22, jitter: 0.08,
-                 tones: [deep, deep.mix(mid, 0.55), mid], detail: 1),
-            Ring(kind: .rose, count: 4, base: 0.14, reach: 0.46, wide: 0.86, appears: 0.3, twist: 0.2, bend: 0.26, jitter: 0.09,
-                 tones: [heart, deep, deep.mix(mid, 0.4)], detail: 0),
-            Ring(kind: .rose, count: 3, base: 0.05, reach: 0.3, wide: 0.82, appears: 0.3, twist: 0.6, bend: 0.3, jitter: 0.1,
-                 tones: [heart.shifted(-6), heart, deep], detail: 0),
+            Ring(kind: .rose, count: 5, base: 0.3, reach: 1.0, wide: 1.12, appears: 0.55, bend: 0.55, jitter: 0.06,
+                 tones: [deep.mix(mid, 0.45), mid, mid.mix(pale, 0.5)], detail: 3),
+            Ring(kind: .rose, count: 5, base: 0.16, reach: 0.84, wide: 1.06, appears: 0.42, twist: 0.5, bend: 0.34, jitter: 0.07,
+                 tones: [deep, deep.mix(mid, 0.55), mid.mix(pale, 0.2)], detail: 3),
         ]
         rosette(h, rings: rings, radius: R, open: open, light: l)
-        // The wound heart: three curled crescents, a little darker than the petals round it.
-        let wk = Ink.smooth((open - 0.4) / 0.4)
-        var wind = Path()
-        for (i, a) in [0.4, 2.5, 4.6].enumerated() {
-            let r = R * (0.2 - 0.04 * Double(i)) * wk
-            wind.lens(from: CGPoint(x: cos(a) * r * 0.2, y: sin(a) * r * 0.2), to: CGPoint(x: cos(a + 1.5) * r, y: sin(a + 1.5) * r), width: r * 0.7, lean: r * 0.3)
+        let wk = Ink.smooth((open - 0.34) / 0.4)
+        // The cup: the dark of looking down into it.
+        h.fill(Path(ellipseIn: CGRect(x: -R * 0.7 * wk, y: -R * 0.72 * wk, width: R * 1.4 * wk, height: R * 1.3 * wk)), with: .radialGradient(
+            Gradient(colors: [heart.shifted(-12).color(0.95), deep.shifted(-6).color(0.8), deep.color(0)]),
+            center: CGPoint(x: 0, y: -R * 0.06 * wk), startRadius: R * 0.1 * wk, endRadius: R * 0.7 * wk))
+        // The wound heart: petals wrapped round one another, each a disc whose
+        // lit edge shows as a crescent where the next one starts.
+        let tones = [mid.mix(pale, 0.2), mid, mid.mix(deep, 0.4), deep.mix(mid, 0.3), deep, heart]
+        for i in 0..<5 {
+            let t = Double(i)
+            let a = 0.6 + t * 2.4
+            let r = R * (0.62 - 0.105 * t) * wk
+            guard r > 0.8 else { continue }
+            let c = CGPoint(x: cos(a) * R * 0.07 * (1 - 0.15 * t), y: sin(a) * R * 0.05 - R * 0.06 - R * 0.015 * t)
+            var disc = Path(), body = Path()
+            disc.oval(c.x, c.y, r, r * 0.9)
+            let back = CGPoint(x: -l.x * r * 0.13, y: -l.y * r * 0.13)
+            body.oval(c.x + back.x, c.y + back.y, r * 0.93, r * 0.84)
+            h.fill(disc, with: .color(pale.mix(mid, 0.3 + 0.1 * t).mix(rimTone, 0.15 * (1 - night)).color(0.9)))
+            let top = tones[i], low = tones[min(5, i + 1)]
+            h.fill(body, with: .linearGradient(Gradient(colors: [top.color(), low.color()]),
+                                               startPoint: CGPoint(x: c.x + l.x * r, y: c.y + l.y * r), endPoint: CGPoint(x: c.x - l.x * r, y: c.y - l.y * r)))
         }
-        h.fill(wind, with: .color(heart.shifted(-6).color(0.55)))
     }
 }

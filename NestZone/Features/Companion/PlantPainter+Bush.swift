@@ -29,6 +29,9 @@ extension PlantPainter {
 
     func bush(_ c: GraphicsContext?, _ m: inout Marks) {
         let side = seed.side, wilt = self.wilt
+        // Every length below is basil's; a species with a bigger or smaller
+        // leaf scales them.
+        let ls = plan.leafLength / 38
         let rise = grown([(0.09, 0), (0.12, 10), (0.3, 44), (0.52, 84), (0.76, 108), (1, 118)]) * (plan.height - 26) / 118
         let tip = CGPoint(x: seed.lean * 6 + side * wilt * 0.2 * rise, y: -rise * (1 - 0.08 * wilt))
         let spine = Self.quad(CGPoint(x: 0, y: 1), CGPoint(x: seed.lean * 2, y: -rise * 0.55), tip, n: 16)
@@ -44,7 +47,7 @@ extension PlantPainter {
             let direction = CGPoint(x: cos(angle), y: sin(angle))
             let start = CGPoint(x: base.x + direction.x * petiole, y: base.y + direction.y * petiole)
             if c != nil {
-                let shape = LeafShape.of(.ovate, bend: s * (curl + 0.8 * wilt))
+                let shape = LeafShape.of(plan.leaf, bend: s * (curl + 0.8 * wilt))
                 let b = bright(angle, luck: luck(n), tier: tier)
                 if fresh {
                     young.add(shape, base: start, angle: angle, length: length, light: L, bright: b, glossy: true)
@@ -61,17 +64,19 @@ extension PlantPainter {
         let seedLeaf = pop(0.1, over: 0.06) * (1 - Ink.smooth((p - 0.34) / 0.12))
         if seedLeaf > 0.02 {
             for s in [-1.0, 1] {
-                leaf(CGPoint(x: 0, y: -3), side: s, lift: 0.3, length: 17 * seedLeaf, tier: 1, n: 30 + Int(s + 1), petiole: 0, curl: 0.2, hang: 0.9)
+                leaf(CGPoint(x: 0, y: -3), side: s, lift: 0.3, length: 17 * ls * seedLeaf, tier: 1, n: 30 + Int(s + 1), petiole: 0, curl: 0.2, hang: 0.9)
             }
         }
 
         // Two branches from low on the stem, one each way, that start out
         // sideways and then climb.
         var branches: [Branch] = []
-        for (k, (height, born, length)) in [(22.0, 0.4, 56.0), (34.0, 0.5, 48.0)].enumerated() {
+        // Mint, which sprawls, has a third.
+        let branchPlan = plan.runners > 0 ? [(22.0, 0.4, 56.0), (34.0, 0.5, 48.0), (46.0, 0.58, 40.0)] : [(22.0, 0.4, 56.0), (34.0, 0.5, 48.0)]
+        for (k, (height, born, length)) in branchPlan.enumerated() {
             let grow = Ink.smooth((p - born) / 0.34)
             guard grow > 0.02, rise > height else { continue }
-            let s = k == 0 ? -side : side
+            let s = k == 1 ? side : -side
             let base = Self.height(spine, height)
             let l = length * grow
             let end = CGPoint(x: base.x + s * l * 0.72, y: base.y - l * 0.82 + wilt * l * 0.5)
@@ -103,11 +108,11 @@ extension PlantPainter {
             let w = width * 0.8
             branchStems.addPath(Self.ribbon(branch.spine, w, w * 0.7))
             for (n, t) in [0.6, 1.0].enumerated() where p > branch.born + 0.1 * Double(n + 1) {
-                pair(Self.along(branch.spine, t), n + 11 + (branch.side > 0 ? 3 : 0), born: branch.born + 0.1 * Double(n + 1), length: 31 - Double(n) * 6, front: false)
+                pair(Self.along(branch.spine, t), n + 11 + (branch.side > 0 ? 3 : 0), born: branch.born + 0.1 * Double(n + 1), length: (31 - Double(n) * 6) * ls, front: false)
             }
         }
         for (i, node) in nodes where i.isMultiple(of: 2) {
-            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(46, 30, Double(i) / 4), front: false)
+            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(46, 30, Double(i) / 4) * ls, front: false)
         }
         if let c {
             for tier in 0..<2 {
@@ -116,17 +121,17 @@ extension PlantPainter {
                 }
                 tiers[tier].flush(c, inks[tier], casting: tier > 0)
             }
-            paint(c, stem: Self.ribbon(spine, width, width * 0.62), along: spine, width: width)
+            paint(c, stem: Self.ribbon(spine, width, width * 0.62), along: spine, width: width, tint: plan.stemTint)
         }
         for (i, node) in nodes where !i.isMultiple(of: 2) {
-            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(46, 30, Double(i) / 4), front: true)
+            pair(Self.height(spine, node.height), i, born: node.born, length: Ink.lerp(46, 30, Double(i) / 4) * ls, front: true)
         }
 
         // The tuft at the top, lighter, and then the spike that replaces it.
         let tuft = pop(0.3, over: 0.1) * (1 - Ink.smooth((p - 0.84) / 0.1))
         if tuft > 0.02, rise > 60 {
             for (n, s) in [-1.0, 1.0].enumerated() {
-                leaf(tip, side: s, lift: 1.2, length: Ink.lerp(11, 18, Ink.smooth((p - 0.3) / 0.5)) * tuft, tier: 2, n: 20 + n,
+                leaf(tip, side: s, lift: 1.2, length: Ink.lerp(11, 18, Ink.smooth((p - 0.3) / 0.5)) * ls * tuft, tier: 2, n: 20 + n,
                      petiole: 1, curl: 0.15, hang: 1.2, fresh: true)
             }
         }
@@ -134,13 +139,51 @@ extension PlantPainter {
             tiers[2].flush(c, inks[2])
             young.flush(c, fresh)
         }
+        let flowerScale = plan.flower?.size ?? 1
         let spikeK = Ink.smooth((p - 0.88) / 0.1)
         if spikeK > 0.02, plan.flower != nil {
-            let top = CGPoint(x: tip.x + seed.lean * 1.5 + side * wilt * 6, y: tip.y - 50 * spikeK - wilt * 5)
+            let top = CGPoint(x: tip.x + seed.lean * 1.5 + side * wilt * 6, y: tip.y - 50 * flowerScale * spikeK - wilt * 5)
             if let c { spike(c, from: CGPoint(x: tip.x, y: tip.y - 2), to: top, grow: spikeK) }
             m.note(top, reach: 6, hang: false)
         }
+        if let c, plan.runners > 0 { runners(c, m: &m) }
         m.note(tip, reach: 4, hang: false)
+    }
+
+    /// Runners: thin stems that leave the foot, arch over the pot's rim and
+    /// hang down its front, with a pair of small leaves at every node and a
+    /// pale root nub at the tip. They come in late, and sag when the house is
+    /// tired.
+    private func runners(_ c: GraphicsContext, m: inout Marks) {
+        let wilt = self.wilt
+        var cords = Path(), batch = LeafBatch(), nubs = Path()
+        for k in 0..<plan.runners {
+            let born = 0.5 + 0.1 * Double(k)
+            let grow = Ink.smooth((p - born) / 0.3)
+            guard grow > 0.03 else { continue }
+            let s = k == 0 ? seed.side : -seed.side
+            let a = CGPoint(x: s * 5, y: -3)
+            let end = CGPoint(x: s * (58 + 8 * Double(k)), y: 16 + 6 * Double(k) + 10 * wilt)
+            let c1 = CGPoint(x: s * 30, y: -30 + 14 * wilt), c2 = CGPoint(x: s * (58 + 4 * Double(k)), y: -12 + 6 * wilt)
+            let path = Self.cubic(a, c1, c2, end, upTo: grow, n: 12)
+            cords.addPath(Self.ribbon(path, 2.2, 1.4))
+            for (n, t) in [0.45, 0.72, 1.0].enumerated() where grow > t * 0.7 {
+                let q = Self.along(path, min(1, t / max(0.01, grow)))
+                let h = Self.heading(path, min(1, t / max(0.01, grow)))
+                let size = (13 - 2.5 * Double(n)) * min(1, (grow - t * 0.7) / 0.25 + 0.2)
+                for side in [-1.0, 1.0] {
+                    let angle = h + side * 1.15 + side * wilt * 0.4
+                    batch.add(LeafShape.of(plan.leaf, bend: side * 0.3), base: q, angle: angle, length: size, light: L,
+                              bright: bright(angle, luck: luck(40 + k * 7 + n * 2), tier: 2), glossy: true, shadowed: false)
+                }
+                m.note(q, hang: false)
+            }
+            if let tip = path.last, grow > 0.9 { nubs.addEllipse(in: CGRect(x: tip.x - 1.3, y: tip.y - 1.1, width: 2.6, height: 3)) }
+        }
+        let tint = plan.stemTint == 0 ? ramp[2] : RGB.tone(plan.stemTint, day: day, dim: 0.85).mix(ramp[2], 0.3)
+        c.fill(cords, with: .color(tint.color()))
+        batch.flush(c, inks[1], casting: false)
+        c.fill(nubs, with: .color(ramp[4].mix(RGB(0xE8EEC0), 0.5).color(0.9)))
     }
 
     /// The flower spike: whorls of small white flowers up a green stalk, each

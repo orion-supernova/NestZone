@@ -104,69 +104,10 @@ extension PomegranatePainter {
             L = LeafArt.sun(light: painter.light, day: painter.day)
             art = LeafArt.of(canopy, mood: painter.mood, light: painter.light, day: painter.day)
 
-            // Light on the leaf edge: a warm white by day, amber when the sun
-            // is low, cool by the moon.
-            let dusk = 4 * painter.day * (1 - painter.day)
-            self.dusk = dusk
-            let moon = Ink.smooth((0.3 - painter.day) / 0.3)
-            let rim = RGB(0xFFF3C4).mix(RGB(0xFF9A5C), Ink.clamp(dusk * 1.4)).mix(RGB(0xC4D2FF), moon)
-            glow = RGB(0xFFE9A8).mix(RGB(0xFFB070), Ink.clamp(dusk * 1.4)).mix(RGB(0xB8C8FF), moon)
-            let bronze = RGB.tone(0xBE5A38, day: painter.day, dim: 0.9)
-            let ramp = tones.ramp, thirst = M.thirst, doze = M.doze
-            var inks: [LeafInk] = []
-            for tier in 0..<3 {
-                for fresh in [false, true] {
-                    // Where the four classes sit on the ramp, tier by tier: the
-                    // back is a step down the ramp from the front.
-                    var d, m, l, s: RGB
-                    switch tier {
-                    case 0:
-                        d = ramp[0].mix(ramp[1], 0.6)
-                        m = ramp[1].mix(ramp[2], 0.3)
-                        l = ramp[1].mix(ramp[2], 0.7)
-                        s = ramp[2].mix(ramp[3], 0.1)
-                    case 1:
-                        d = ramp[1].mix(ramp[2], 0.1)
-                        m = ramp[1].mix(ramp[2], 0.7)
-                        l = ramp[2].mix(ramp[3], 0.45)
-                        s = ramp[2].mix(ramp[3], 0.95)
-                    default:
-                        d = ramp[1].mix(ramp[2], 0.55)
-                        m = ramp[2].mix(ramp[3], 0.55)
-                        l = ramp[3].mix(ramp[4], 0.15)
-                        s = ramp[3].mix(ramp[4], 0.4)
-                    }
-                    // The shade leans cool and the light warm, as it does in paint.
-                    d = d.mix(RGB(0x143A44), 0.22)
-                    if fresh {
-                        let k = 0.3 * (1 - 0.5 * thirst)
-                        d = d.mix(bronze, k * 0.6)
-                        m = m.mix(bronze, k)
-                        l = l.mix(bronze, k)
-                        s = s.mix(bronze, k)
-                    }
-                    // By moonlight the lit side is a cool, deep green, not a
-                    // pale one; by day the sunstruck leaves take the sun's warmth.
-                    d = d.mix(m, 0.3 * moon)
-                    l = l.mix(m, 0.75 * moon)
-                    s = s.mix(m, 0.6 * moon).mix(glow, 0.16 * (1 - moon) * (0.6 + 0.4 * day))
-                    if fresh {
-                        // New leaves are a fresh yellow-green with bronze at the tip.
-                        m = m.mix(ramp[3], 0.25)
-                        l = l.mix(ramp[4], 0.2)
-                    }
-                    let deep = ramp[0].mix(RGB(0x0B1A1C), 0.4)
-                    let edgeA = (0.34 + 0.06 * dusk - 0.16 * moon) * (1 - 0.35 * doze)
-                    inks.append(LeafInk(
-                        d: d.color(), m: m.color(), l: l.color(), s: s.color(),
-                        mLit: m.shifted(2 - 5 * moon, -3).color(), mShade: m.shifted(-5, 6).color(),
-                        rim: ramp[4].mix(rim, 0.65).color(min(1, edgeA)),
-                        body: ramp[tier].mix(deep, 0.35).color(),
-                        shadow: Gradient(colors: [deep.color(0.4 * (1 - 0.3 * doze)), deep.color(0.16), deep.color(0)])
-                    ))
-                }
-            }
-            self.inks = inks
+            let lt = TreeInk.Light(light: painter.light, day: painter.day)
+            dusk = lt.dusk
+            glow = lt.glow
+            inks = TreeInk.leafInks(tones, M, day: painter.day, light: lt)
         }
 
         /// The clumps showing, back to front: by tier, and within a tier top
@@ -240,7 +181,7 @@ extension PomegranatePainter.Look {
     /// over the sunniest of the front clumps, so the lit leaves under it read
     /// as one patch of light and not as a scatter of pale leaves.
     func dapple(_ tree: GraphicsContext) {
-        let alpha = (0.11 * day + 0.1 * dusk + 0.08 * night) * (1 - 0.4 * M.doze) * (1 - 0.5 * M.thirst) * (0.6 + 0.4 * M.glow)
+        let alpha = (0.11 * day + 0.1 * dusk + 0.08 * night * (1 - 0.56 * Ink.smooth((0.3 - day) / 0.3))) * (1 - 0.4 * M.doze) * (1 - 0.5 * M.thirst) * (0.6 + 0.4 * M.glow)
         guard alpha > 0.02, p > 0.85 else { return }
         for (i, off) in art.pools {
             guard let q = pose.clumps[i] else { continue }
@@ -258,7 +199,7 @@ extension PomegranatePainter.Look {
 extension Path {
     /// The point `u` of the way along a leaf and `v` across it, on a midrib
     /// that bends by `bend` of the leaf's length, like a leaf under its own weight.
-    private static func lancePoint(_ x: Double, _ y: Double, _ ca: Double, _ sa: Double, _ len: Double, _ bend: Double,
+    static func lancePoint(_ x: Double, _ y: Double, _ ca: Double, _ sa: Double, _ len: Double, _ bend: Double,
                                    _ u: Double, _ v: Double) -> CGPoint {
         let w = v + bend * len * u * u, l = len * u
         return CGPoint(x: x + ca * l - sa * w, y: y + sa * l + ca * w)
