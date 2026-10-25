@@ -4,7 +4,7 @@ extension PlantPlan {
     /// This species in colourway `n` (1 to 3): the same plant, grown the same
     /// way, in other colours: the five greens, the petals, and where a cultivar
     /// is known for it a pattern (a variegated leaf, a flamed tulip). Shapes are
-    /// never changed here. Names are in `ColourwayNames`; what each was drawn
+    /// never changed here. Names are in `L10n.companionColour`; what each was drawn
     /// from is in `Docs/Companion/art/RULES.md`, section 17.
     func coloured(_ species: Species, _ n: Int) -> PlantPlan {
         var p = self

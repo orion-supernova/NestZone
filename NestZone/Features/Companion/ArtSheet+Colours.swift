@@ -58,7 +58,7 @@ extension ArtSheet {
     }
 
     private func label(_ species: Species, _ n: Int) -> String {
-        n == 0 ? "0 original" : "\(n) \(ColourwayNames.name(species, n).en)"
+        n == 0 ? "0 original" : "\(n) \(String(localized: species.colourName(n)))"
     }
 
     private func stageIndex(_ species: Species) -> Int { species.isPet ? 6 : 5 }
@@ -144,8 +144,7 @@ extension ArtSheet {
         VStack(alignment: .leading, spacing: 8) {
             title("\(species.rawValue) - names")
             ForEach(1...Colourway.count, id: \.self) { n in
-                let name = ColourwayNames.name(species, n)
-                Text(verbatim: "\(n)  \(name.en)  /  \(name.tr)").font(.system(size: 14, design: .monospaced)).foregroundStyle(.white)
+                Text(verbatim: "\(n)  \(String(localized: species.colourName(n)))").font(.system(size: 14, design: .monospaced)).foregroundStyle(.white)
             }
         }
         .padding(8)

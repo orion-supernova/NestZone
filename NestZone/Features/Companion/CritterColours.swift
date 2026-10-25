@@ -4,7 +4,7 @@ extension CritterPlan {
     /// This species in colourway `n` (1 to 3): the same body and the same
     /// numbers with another coat, and a small marking where a breed needs one
     /// (a bib, socks, a calico's patches, a panda's eye rings). Names are in
-    /// `ColourwayNames`; the palettes and what they were drawn from are in
+    /// `L10n.companionColour`; the palettes and what they were drawn from are in
     /// `Docs/Companion/art/RULES.md`, section 17.
     ///
     /// Shapes are shared with the original wherever the colour needs none: the

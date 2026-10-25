@@ -825,8 +825,9 @@ companion (and an album card) carries `colour: Int?`, 1 to 3; `nil` and 0 are th
 original, and a number this build has no colour for is drawn as the original
 (`Colourway.clamp`). Every species has three, so there are 117 palettes. Shots,
 one row a species (0 | 1 | 2 | 3, by day and by night), are in `art/colours/`
-(`index.html`); the names, English and Turkish, are in `ColourwayNames`, beside
-the painters that draw them, and in the tables below. Pages: `-artSheet
+(`index.html`); the names, English and Turkish, are `L10n.companionColour` (the catalog's
+`companion_colour_<species>_<n>`) and are in the tables below, kept short enough
+for the card's one line ("Kitten · Silver tabby"). Pages: `-artSheet
 colours-<species>` (the card by day 2 x 2, then thirsty, dozing, dusk and night,
 0 | 1 | 2 | 3), `colours-<species>-close` (the face or the crown cropped from a
 large drawing, by day and by night), `colours-<species>-stages`,
@@ -901,20 +902,20 @@ would say pointing at it.
 
 | Species | 1 | 2 | 3 |
 |---|---|---|---|
-| kitten | Silver tabby / *Gümüş tekir* | Black with a white bib / *Beyaz önlüklü kara* | Calico / *Üç renkli* |
-| owl | Snowy owl / *Kar baykuşu* | Barn owl / *Peçeli baykuş* | Red screech owl / *Kızıl baykuş* |
-| duckling | Mallard / *Yaban ördeği* | Black and white / *Siyah beyaz* | Blue Swedish / *Mavi ördek* |
+| kitten | Silver tabby / *Gümüş tekir* | Tuxedo / *Smokinli* | Calico / *Üç renkli* |
+| owl | Snowy / *Karlı* | Barn / *Peçeli* | Red screech / *Kızıl* |
+| duckling | Mallard / *Yaban ördeği* | Pied / *Siyah beyaz* | Blue / *Mavi* |
 | hamster | Winter white / *Kar beyazı* | Chocolate / *Çikolata* | Dalmatian / *Benekli* |
 | bunny | Himalayan / *Himalaya* | Chestnut / *Kestane* | Lilac / *Leylak* |
 | puppy | Chocolate lab / *Çikolata* | Border collie / *Siyah beyaz* | Cream / *Krem* |
-| fox | Silver fox / *Gümüş tilki* | Cross fox / *Haçlı tilki* | Golden fox / *Altın tilki* |
-| hedgehog | Albino / *Albino* | Cinnamon / *Tarçın* | Salt and pepper / *Tuz biber* |
-| deer | Sika / *Sika* | Fallow / *Alageyik* | White fallow / *Beyaz geyik* |
-| snowFox | Arctic dusk / *Alacakaranlık* | Summer coat / *Yaz tüyü* | Lilac pearl / *Leylak inci* |
-| polarCub | Cinnamon bear / *Tarçın ayı* | Panda / *Panda* | Black bear / *Kara ayı* |
+| fox | Silver / *Gümüş* | Cross / *Haçlı* | Golden / *Altın* |
+| hedgehog | Albino / *Albino* | Cinnamon / *Tarçın* | Salt & pepper / *Tuz biber* |
+| deer | Sika / *Sika* | Fallow / *Alageyik* | White fallow / *Beyaz* |
+| snowFox | Arctic dusk / *Akşamüstü* | Summer coat / *Yaz tüyü* | Lilac pearl / *Leylak inci* |
+| polarCub | Cinnamon / *Tarçın* | Panda / *Panda* | Black bear / *Kara ayı* |
 | penguin | Little blue / *Minik mavi* | Rockhopper / *Sarı kaşlı* | Isabelline / *Kahverengi* |
-| turtle | Golden tortoise / *Altın kabuk* | Painted turtle / *Boyalı* | Albino / *Albino* |
-| goldfish | Calico fantail / *Üç renkli* | White oranda / *Kırmızı başlı* | Black moor / *Kara* |
+| turtle | Tortoise / *Altın kabuk* | Painted / *Boyalı* | Albino / *Albino* |
+| goldfish | Calico / *Üç renkli* | White oranda / *Kırmızı başlı* | Black moor / *Kara* |
 
 Kitten: a silver tabby; a black cat with a white bib and white socks; a calico
 (orange and black patches on white, ears in the colour of their side). Owl: snowy;
@@ -935,24 +936,24 @@ calico fantail; a white oranda with a red cap; a black moor.
 | Species | 1 | 2 | 3 |
 |---|---|---|---|
 | sunflower | Velvet Queen / *Kadife kraliçe* | Lemon / *Limon sarısı* | Italian white / *Krem beyazı* |
-| basil | Dark Opal / *Mor fesleğen* | Lemon basil / *Limonlu fesleğen* | Variegated / *Alacalı* |
-| cactus | Blue torch / *Mavi sütun* | Golden barrel / *Altın fıçı* | Purple prickly pear / *Mor incir* |
-| daisy | English pink / *Pembe papatya* | Golden marguerite / *Altın papatya* | Blue felicia / *Mavi papatya* |
-| mint | Chocolate mint / *Çikolatalı nane* | Pineapple mint / *Alacalı nane* | Apple mint / *Elmalı nane* |
-| rosemary | Pink flowers / *Pembe çiçekli* | White flowers / *Beyaz çiçekli* | Golden / *Altın yapraklı* |
-| snakePlant | Moonshine / *Ay ışığı* | Black gold / *Kara altın* | Lime hahnii / *Limon yeşili* |
-| fern | Silver lady / *Gümüş eğrelti* | Lemon button / *Limon eğrelti* | Autumn fern / *Bakır eğrelti* |
-| lavender | White / *Beyaz lavanta* | Pink / *Pembe lavanta* | Hidcote / *Koyu lavanta* |
-| peony | White / *Beyaz şakayık* | Coral / *Mercan* | Crimson / *Koyu kırmızı* |
-| monstera | Albo variegata / *Beyaz alacalı* | Thai constellation / *Tayland yıldızı* | Mint / *Nane yeşili* |
-| rose | White / *Beyaz gül* | Peach / *Şeftali gül* | Burgundy / *Bordo gül* |
-| orchid | Butter yellow / *Tereyağı sarısı* | Violet / *Mor orkide* | Pure white / *Saf beyaz* |
+| basil | Dark Opal / *Mor* | Lemon / *Limonlu* | Variegated / *Alacalı* |
+| cactus | Blue torch / *Mavi sütun* | Golden barrel / *Altın fıçı* | Prickly pear / *Mor incir* |
+| daisy | English pink / *Pembe* | Golden / *Altın* | Blue felicia / *Mavi* |
+| mint | Chocolate / *Çikolatalı* | Pineapple / *Ananaslı* | Apple / *Elmalı* |
+| rosemary | Pink flowers / *Pembe çiçekli* | White flowers / *Beyaz çiçekli* | Golden / *Altın* |
+| snakePlant | Moonshine / *Ay ışığı* | Black gold / *Kara altın* | Lime / *Limon yeşili* |
+| fern | Silver lady / *Gümüş* | Lemon button / *Limon* | Autumn / *Bakır* |
+| lavender | White / *Beyaz* | Pink / *Pembe* | Hidcote / *Koyu mor* |
+| peony | White / *Beyaz* | Coral / *Mercan* | Crimson / *Koyu kırmızı* |
+| monstera | Albo variegata / *Beyaz alacalı* | Constellation / *Yıldızlı* | Mint / *Nane yeşili* |
+| rose | White / *Beyaz* | Peach / *Şeftali* | Burgundy / *Bordo* |
+| orchid | Butter yellow / *Tereyağı sarısı* | Violet / *Mor* | Pure white / *Saf beyaz* |
 | bonsai | Autumn gold / *Sonbahar altını* | In blossom / *Çiçek açmış* | Silver olive / *Gümüş zeytin* |
-| maple | Golden / *Altın akçaağaç* | Spring green / *Bahar yeşili* | Bloodgood / *Mor akçaağaç* |
-| pumpkin | White Lumina / *Beyaz kabak* | Blue Jarrahdale / *Mavi kabak* | Red Cinderella / *Kızıl kabak* |
-| pine | Blue spruce / *Mavi ladin* | Golden pine / *Altın çam* | Frosted / *Kırağılı* |
-| snowdrop | Yellow / *Sarı kardelen* | Green-tipped / *Yeşil uçlu* | Glaucous / *Mavi yapraklı* |
-| tulip | Rembrandt / *Çizgili lale* | Queen of Night / *Gece kraliçesi* | Apricot / *Kayısı lale* |
+| maple | Golden / *Altın* | Spring green / *Bahar yeşili* | Bloodgood / *Mor* |
+| pumpkin | Lumina / *Beyaz* | Jarrahdale / *Mavi* | Cinderella / *Kızıl* |
+| pine | Blue spruce / *Mavi ladin* | Golden / *Altın* | Frosted / *Kırağılı* |
+| snowdrop | Yellow / *Sarı* | Green-tipped / *Yeşil uçlu* | Glaucous / *Mavi yapraklı* |
+| tulip | Rembrandt / *Çizgili* | Queen of Night / *Gece kraliçesi* | Apricot / *Kayısı* |
 
 Variegation: monstera 1 albo variegata (a white half-moon or splash on about
 three leaves in five), monstera 2 Thai constellation (forty small cream flecks),
@@ -964,12 +965,12 @@ are the skin (`fruitTones`), snake plant's the margin as well as the greens
 
 | Species | 1 | 2 | 3 |
 |---|---|---|---|
-| magnolia | White / *Beyaz manolya* | Black Tulip / *Mor manolya* | Yellow / *Sarı manolya* |
+| magnolia | White / *Beyaz* | Black Tulip / *Mor* | Yellow / *Sarı* |
 | cherry | White Yoshino / *Beyaz Yoshino* | Weeping pink / *Salkım pembe* | Deep Kanzan / *Koyu Kanzan* |
-| pomegranate | White-flowered / *Beyaz çiçekli* | Dark dwarf / *Kara nar* | Golden / *Altın nar* |
-| azalea | White / *Beyaz açelya* | Flame orange / *Alev turuncusu* | Violet / *Mor açelya* |
-| lemon | Pink variegated / *Pembe alacalı* | Lime / *Misket limonu* | Blood orange / *Kan portakalı* |
-| olive | Green Manzanilla / *Yeşil zeytin* | Golden bronze / *Altın zeytin* | Silver ruby / *Gümüş yakut* |
+| pomegranate | White bloom / *Beyaz çiçekli* | Dark dwarf / *Kara* | Golden / *Altın* |
+| azalea | White / *Beyaz* | Flame orange / *Alev turuncusu* | Violet / *Mor* |
+| lemon | Pink eureka / *Pembe alacalı* | Lime / *Misket* | Blood orange / *Kan portakalı* |
+| olive | Manzanilla / *Yeşil* | Golden bronze / *Altın* | Silver ruby / *Yakut* |
 
 Lemon 1 is a pink variegated eureka: a third of the leaves are cream, the fruit is
 striped green and cream and the cut one is pink (the cut lemon's inside is a set, as
@@ -1013,7 +1014,7 @@ calico), the monstera (0 and 1, the albo), a panda polar cub and the variegated
 lemon: every window after the cold start of the first (3 or 4 late frames in the
 first window, in all of them, the original too) was 120 frames and none late.
 
-**Colourway 0 is pixel-identical to the build before.** Twenty-two contact
+**Colourway 0 is pixel-identical to the build before.** Twenty-three contact
 sheets (`batch-a`, `batch-b`, `kitten-moods`, `pet-variants`, `plants-grid`,
 `plants-grid-b`, `grid`, `pomegranate`, the five trees' crowns, the kitten's,
 fox's, owl's and duckling's faces, the monstera, mint, tulip, rose and sunflower

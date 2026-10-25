@@ -129,7 +129,7 @@ private struct StagedArrival: ViewModifier {
 /// Suspends until the display's next frame, so work that follows begins after
 /// the frame in between has been drawn.
 @MainActor
-private final class FrameTick: NSObject {
+final class FrameTick: NSObject {
     private var link: CADisplayLink?
     private var continuation: CheckedContinuation<Void, Never>?
 

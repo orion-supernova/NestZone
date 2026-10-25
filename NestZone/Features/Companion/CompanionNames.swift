@@ -49,6 +49,14 @@ extension Species {
     }
 }
 
+extension Species {
+    /// The name of one of its new colours (1-3), as the finale's colour
+    /// picker, its card and the album say it.
+    public func colourName(_ colour: Int) -> LocalizedStringResource {
+        L10n.companionColour(self, colour)
+    }
+}
+
 extension SpeciesPack {
     public var title: LocalizedStringResource {
         switch self {

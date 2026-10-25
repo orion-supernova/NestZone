@@ -45,6 +45,12 @@ struct CompanionCard: View {
             CompanionSheet(store: store, sheet: sheet, detent: $detent)
         }
         .onChange(of: store.sheet == nil) { _, closed in if closed { detent = .medium } }
+        // The finale's stills are drawn while it is on its way, one at a time
+        // between frames, so its cover opens on bitmaps that are already there.
+        .task(id: FinaleWarm(album: store.finaleAlbum, big: typeSize.isAccessibilitySize)) {
+            guard !store.finaleAlbum.isEmpty else { return }
+            await FinaleView.warm(store.finaleAlbum, home: store.homeID, big: typeSize.isAccessibilitySize)
+        }
         .fullScreenCover(isPresented: Binding(
             get: { store.sheet?.isMoment == true },
             set: { if !$0 { store.send(.sheetDismissed) } }
@@ -310,7 +316,8 @@ private struct CardScene: View {
             CompanionScene(
                 companion: look, progress: store.progress, mood: store.mood, stage: store.stage,
                 layout: store.visibleLayout, southern: store.southern, now: store.clock,
-                choreTick: store.choreTick, careTick: store.careTick, compact: compact, paused: covered
+                choreTick: store.choreTick, careTick: store.careTick, compact: compact, paused: covered,
+                colourway: look.colour ?? 0
             )
             .accessibilityElement()
             .accessibilityLabel(store.isUndecided ? Text(L10n.voteSeedTitle) : Text(L10n.companionSceneLabel(
@@ -337,7 +344,7 @@ private struct CardTitle: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             if let species = store.species {
-                Text(species.title)
+                (store.colour.map { Text(L10n.companionColoured(String(localized: species.title), String(localized: species.colourName($0)))) } ?? Text(species.title))
                     .font(font)
                     .oneLineUnlessAccessibility()
             } else if store.isUndecided {
@@ -688,4 +695,10 @@ private struct CareRise: View {
                 .accessibilityHidden(true)
         }
     }
+}
+
+/// What the finale's pictures are drawn for: the album and the size.
+private struct FinaleWarm: Equatable {
+    let album: [Species]
+    let big: Bool
 }

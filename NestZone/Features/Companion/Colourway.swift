@@ -2,8 +2,10 @@ import Foundation
 
 /// A favourite species grown again in a new colour. 0 is the original, the
 /// way the species has always looked; 1, 2 and 3 are three curated palettes
-/// for it (the table is each species' own, `ColourwayNames`, and the rules are
+/// for it (the names are `Species.colourName`, and the rules are
 /// `Docs/Companion/art/RULES.md`, section 17).
+///
+/// The type itself (`range`, `key`, `read`) is the finale's, in `CompanionModels`; this is what the painters ask of it.
 ///
 /// The drawing never asks whether a colourway "exists": a number is clamped
 /// to 0...3, and every painter has a row for all four, so a build that is
@@ -13,14 +15,14 @@ import Foundation
 /// as a number to every layer that is cached or compared (`TreeState`,
 /// `Canopy`, `StillSpec`), so a new one redraws what was kept and what was
 /// kept for another colour is never shown for this one.
-enum Colourway {
+extension Colourway {
     /// How many colours a species has besides the original.
-    static let count = 3
+    static var count: Int { range.count }
 
     /// The colourway a stored number means: nothing, or one this build does not
     /// know, is the original.
     static func clamp(_ colour: Int?) -> Int {
-        guard let colour, (1...count).contains(colour) else { return 0 }
+        guard let colour, range.contains(colour) else { return 0 }
         return colour
     }
 

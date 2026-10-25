@@ -93,6 +93,15 @@ public struct CompanionFeature: Sendable {
         public var birthdays: Set<CalendarDay> = []
         /// A graduation that happened under a start, to be shown once.
         public var moment: Moment?
+        /// The graduated companions whose finale has been held, so a retried
+        /// call that reports it again can never play it twice.
+        var finalesHeld: Set<String> = []
+        /// Where the finale's graduation was heading (the vote, or Choose):
+        /// opened once the finale closes, so the person ends up where they
+        /// would have been.
+        var afterMoment: Sheet?
+        /// A grown species whose colours are on offer, after the finale.
+        public var colourChoice: Species?
         /// Bumped when this phone answers an option of the vote: the tap's own
         /// haptic is keyed on it, never on the tally a push can also move.
         public var ballotTick = 0
@@ -167,6 +176,14 @@ public struct CompanionFeature: Sendable {
         /// title need, so they are not redrawn by the points.
         public var hasCompanion = false
         public var species: Species?
+        /// The colourway of the one growing; `nil` is the original.
+        public var colour: Int?
+        /// The species the finale will show, once it is held or can be
+        /// predicted (the one growing is ready and is the last free species
+        /// to grow), so its stills are drawn before the cover opens. Empty
+        /// otherwise. The server decides whether there is a finale; this only
+        /// decides what is worth drawing ahead.
+        public var finaleAlbum: [Species] = []
         /// The companion as the scene draws it — species, seed and when it
         /// arrived — without its points or its care, which change more often
         /// than anything the scene shows.
@@ -221,6 +238,16 @@ public struct CompanionFeature: Sendable {
             public var startedAt: Date
             public var graduatedAt: Date
             public var paid: Coins?
+            public var colour: Int?
+            /// This graduation finished every free species: the ceremony goes
+            /// on to "You've grown them all", in the same cover.
+            public var isFinale = false
+            /// The graduation itself was played already (the ceremony on
+            /// Today ended with its button), so only the finale is.
+            public var isFinaleOnly = false
+            /// Every species grown, the graduating one included, for the
+            /// finale's album.
+            public var grown: [Species] = []
         }
 
         struct HolidayCache: Equatable, Sendable {
@@ -324,6 +351,7 @@ public struct CompanionFeature: Sendable {
         /// One choice of a companion, for a retry to reuse.
         struct StartAttempt: Equatable, Sendable {
             var species: Species
+            var colour: Int?
             var requestID: String
         }
 
@@ -358,6 +386,7 @@ public struct CompanionFeature: Sendable {
             struct Buy: Equatable, Sendable { var item: ShopItem; var coins: Coins }
             struct Start: Equatable, Sendable {
                 var species: Species
+                var colour: Int?
                 var seed: String
                 var startedAt: Date
                 /// The companion that was growing when it was tapped: a push
@@ -400,6 +429,8 @@ public struct CompanionFeature: Sendable {
             }
             struct Graduating: Equatable, Sendable {
                 var companionID: String
+                /// Who is graduating, for a finale that arrives with the answer.
+                var companion: Companion?
                 var floater: Int
                 var previousPay: Payment?
                 var isAnswered = false
@@ -512,6 +543,7 @@ public struct CompanionFeature: Sendable {
                 } else {
                     var started = Companion(species: start.species, seed: start.seed, startedAt: start.startedAt)
                     started.points = 0
+                    started.colour = start.colour
                     house.current = started
                     house.paidStage = 0
                     if start.welcome, !served.welcomed {
@@ -648,6 +680,7 @@ public struct CompanionFeature: Sendable {
         /// container when its clock or the household moves.
         public mutating func refresh() {
             let shown = served
+            let served0 = served
             writes.settle(against: shown, now: now)
             let house = self.house
             let clock = self.clock
@@ -677,8 +710,14 @@ public struct CompanionFeature: Sendable {
             set(\.isOpeningVote, writes.graduating.map { $0.predictsSeed && !$0.noVote } ?? false)
             set(\.vote, house.vote)
             set(\.species, undecided ? nil : current?.species)
+            set(\.colour, undecided ? nil : current?.colour)
+            set(\.finaleAlbum, Self.finaleAlbum(moment: moment, served: served0, current: served0.current, undecided: served0.current?.isUndecided == true))
             set(\.look, current.map {
-                Companion(species: $0.isUndecided ? Self.seedStandIn : $0.species, seed: $0.seed, startedAt: $0.startedAt)
+                var look = Companion(
+                    species: $0.isUndecided ? Self.seedStandIn : $0.species, seed: $0.seed, startedAt: $0.startedAt
+                )
+                look.colour = $0.isUndecided ? nil : $0.colour
+                return look
             })
             let points = current.map { max(($0.points ?? 0) + lab.bonus, 0) } ?? 0
             set(\.points, points)
@@ -732,6 +771,20 @@ public struct CompanionFeature: Sendable {
             set(\.holidayToDress, toDress)
         }
 
+        /// What the finale would show: the held moment's album, or the grown
+        /// species plus the one about to graduate when that completes the
+        /// free ones for a house that has not had its finale.
+        static func finaleAlbum(
+            moment: Moment?, served: CompanionHouse, current: Companion?, undecided: Bool
+        ) -> [Species] {
+            if let moment, moment.isFinale { return moment.grown }
+            guard !served.hasFinished, !undecided, let current, current.isReady, current.id != nil else { return [] }
+            var grown = served.grown
+            grown.insert(current.species)
+            guard Species.freeToHave.isSubset(of: grown) else { return [] }
+            return Species.allCases.filter(grown.contains)
+        }
+
         private mutating func set<Value: Equatable>(_ keyPath: WritableKeyPath<State, Value>, _ value: Value) {
             if self[keyPath: keyPath] != value { self[keyPath: keyPath] = value }
         }
@@ -755,6 +808,10 @@ public struct CompanionFeature: Sendable {
         /// The pause before a sheet that follows a closing presentation is over.
         case presentPending
         case chose(Species)
+        /// A colour of a grown species, in Choose after the finale; `nil` is
+        /// the original.
+        case colourPicked(Species, Int?)
+        case colourDismissed
         /// The card's way into the vote for the next one.
         case voteTapped
         /// One option of the vote, answered: yes, or no; the same answer again
@@ -1043,9 +1100,22 @@ public struct CompanionFeature: Sendable {
             case let .chose(species):
                 return grow(species, state: &state)
 
+            case let .colourPicked(species, colour):
+                state.colourChoice = nil
+                return grow(species, colour: colour, state: &state)
+
+            case .colourDismissed:
+                state.colourChoice = nil
+                return .none
+
             case let .growTapped(species):
                 let standing = state.shop.standing(of: species)
                 if standing.isUsable {
+                    // After the finale a grown one asks which colour first.
+                    if state.house.offersColours(for: species) {
+                        state.colourChoice = species
+                        return .none
+                    }
                     return grow(species, state: &state)
                 } else {
                     state.show(.species(species), grow: standing.price != nil ? species : nil)
@@ -1240,7 +1310,7 @@ public struct CompanionFeature: Sendable {
                 // opens it in this very write; a house of one picks.
                 let votes = state.memberCount > 1
                 state.writes.graduating = State.Writes.Graduating(
-                    companionID: id, floater: floater, previousPay: state.lastPay, since: state.now, predictsSeed: votes
+                    companionID: id, companion: state.served.current, floater: floater, previousPay: state.lastPay, since: state.now, predictsSeed: votes
                 )
                 state.lastPay = State.Payment(coins: Rewards.graduation, id: floater)
                 // Straight on to the next one: nothing done while the house
@@ -1270,6 +1340,18 @@ public struct CompanionFeature: Sendable {
                     state.writes.graduating = graduating
                     let served = state.served
                     state.writes.settle(against: served)
+                    // The finale comes first, and the vote or Choose after it.
+                    if outcome.finale, let who = graduating.companion, !state.finalesHeld.contains(graduating.companionID) {
+                        state.finalesHeld.insert(graduating.companionID)
+                        state.moment = Self.finaleMoment(of: who, served: served, at: state.now, only: true)
+                        var next: State.Sheet?
+                        if outcome.vote != nil, state.sheet == nil || state.sheet == .choose { next = .vote }
+                        else if picks, graduating.predictsSeed, state.sheet == nil || state.sheet == .choose { next = .choose }
+                        else if state.sheet == .choose { next = .choose }
+                        state.afterMoment = next
+                        if state.sheet == .choose || state.sheet == .vote { state.sheet = nil }
+                        return .none
+                    }
                     // The vote it opened is what comes next, not Choose; a
                     // house with nothing to vote on picks as before. Presented
                     // after the pause a closing cover needs, or it is dropped.
@@ -1311,7 +1393,7 @@ public struct CompanionFeature: Sendable {
             case .momentDismissed:
                 state.moment = nil
                 if state.sheet == .ceremony { state.sheet = nil }
-                return .none
+                return openAfterMoment(state: &state)
 
             case .albumTapped:
                 state.sheet = .album
@@ -1440,15 +1522,17 @@ public struct CompanionFeature: Sendable {
             case .sheetDismissed:
                 // Closing the ceremony ends its moment; closing anything else
                 // is what lets a queued one play.
+                let endsMoment = state.sheet == .ceremony && state.moment != nil
                 if state.sheet == .ceremony { state.moment = nil }
                 state.sheet = nil
+                state.colourChoice = nil
                 state.decorateSpot = nil
                 state.card = nil
                 state.storeOpen = false
                 state.pending = nil
                 state.landed = nil
                 state.packNote = nil
-                return .none
+                return endsMoment ? openAfterMoment(state: &state) : .none
 
             case let .importAnswered(result):
                 switch result {
@@ -1694,11 +1778,42 @@ public struct CompanionFeature: Sendable {
         }
     }
 
+    /// The sheet a finale was holding back, opened once the finale has closed.
+    private func openAfterMoment(state: inout State) -> Effect<Action> {
+        guard let next = state.afterMoment else { return .none }
+        state.afterMoment = nil
+        return present(next, afterSheet: true, state: &state)
+    }
+
+    /// The moment of a graduation that finished every free species. The
+    /// album it shows is what the house has grown with this one counted in,
+    /// which the push may not have delivered yet.
+    static func finaleMoment(
+        of who: Companion, served: CompanionHouse, at now: Date, paid: Coins? = nil, only: Bool
+    ) -> State.Moment {
+        var grown = served.grown
+        grown.insert(who.species)
+        var moment = State.Moment(
+            species: who.species, seed: who.seed, startedAt: who.startedAt, graduatedAt: now, paid: paid, colour: who.colour
+        )
+        moment.isFinale = true
+        moment.isFinaleOnly = only
+        moment.grown = Species.allCases.filter(grown.contains)
+        return moment
+    }
+
     /// Starts growing one. The house sees it at once, with the welcome gift if
     /// it is the first; if the server says no, all of that is taken back. Each
     /// choice has its own request id, kept when an answer is lost.
-    private func grow(_ species: Species, state: inout State) -> Effect<Action> {
+    private func grow(_ species: Species, colour: Int? = nil, state: inout State) -> Effect<Action> {
         guard state.writes.start == nil, state.serverShop.standing(of: species).isUsable else { return .none }
+        // A colour is for a grown one, after the finale, and one not grown
+        // in that colour yet; the server is the judge, this only keeps a
+        // doomed request from being made.
+        if let colour {
+            guard Colourway.range.contains(colour), state.served.offersColours(for: species),
+                  !state.served.hasGrown(species, colour: colour) else { return .none }
+        }
         let house = state.house
         let firstTime = !house.welcomed
         // Choosing for a seed the house has not named is the same companion
@@ -1707,20 +1822,20 @@ public struct CompanionFeature: Sendable {
         let seed = undecided?.seed ?? "\(state.homeID.rawValue)-\(house.albumCount)"
         let floater = (state.lastPay?.id ?? 0) + 1
         state.writes.start = State.Writes.Start(
-            species: species, seed: seed, startedAt: undecided?.startedAt ?? state.now, previous: state.served.current,
+            species: species, colour: colour, seed: seed, startedAt: undecided?.startedAt ?? state.now, previous: state.served.current,
             welcome: firstTime, floater: firstTime ? floater : nil, previousPay: state.lastPay, since: state.now,
             seedID: undecided?.id
         )
         state.sheet = firstTime ? .welcome : nil
         if firstTime { state.lastPay = State.Payment(coins: Rewards.welcome, id: floater) }
-        let attempt = state.startAttempt.flatMap { $0.species == species ? $0 : nil }
-            ?? State.StartAttempt(species: species, requestID: uuid().uuidString)
+        let attempt = state.startAttempt.flatMap { $0.species == species && $0.colour == colour ? $0 : nil }
+            ?? State.StartAttempt(species: species, colour: colour, requestID: uuid().uuidString)
         state.startAttempt = attempt
         let homeID = state.homeID
         let place = Place.current(region: state.region)
         return .run { send in
             await send(.startAnswered(await self.attempt {
-                try await companionClient.start(homeID, species, place, attempt.requestID)
+                try await companionClient.start(homeID, species, place, attempt.requestID, colour)
             }))
         }
     }
@@ -1749,10 +1864,21 @@ public struct CompanionFeature: Sendable {
                     state.lastPay = State.Payment(coins: paid, id: (state.lastPay?.id ?? 0) + 1)
                 }
                 if let previous = start.previous, previous.id == graduated.companionID {
-                    state.moment = State.Moment(
-                        species: graduated.species, seed: previous.seed, startedAt: previous.startedAt,
-                        graduatedAt: state.now, paid: graduated.paid
-                    )
+                    if graduated.finale, state.finalesHeld.contains(graduated.companionID) {
+                        // Reported again by a retry: it has played.
+                    } else if graduated.finale {
+                        // Keyed on the graduated companion, so the same
+                        // finale reported again by a retry never plays twice.
+                        state.finalesHeld.insert(graduated.companionID)
+                        state.moment = Self.finaleMoment(
+                            of: previous, served: state.served, at: state.now, paid: graduated.paid, only: false
+                        )
+                    } else {
+                        state.moment = State.Moment(
+                            species: graduated.species, seed: previous.seed, startedAt: previous.startedAt,
+                            graduatedAt: state.now, paid: graduated.paid, colour: previous.colour
+                        )
+                    }
                 }
             }
             let shown = state.served

@@ -382,7 +382,7 @@ struct CompanionServerTests {
     func startFails() async {
         let gate = Gate<StartOutcome>()
         var client = CompanionClient()
-        client.start = { _, _, _, _ in try await gate.wait() }
+        client.start = { _, _, _, _, _ in try await gate.wait() }
         var served = CompanionHouse()
         served.welcomed = false
         let store = store(served, client: client)
@@ -403,7 +403,7 @@ struct CompanionServerTests {
         let ids = LockIsolated<[String]>([])
         let first = Gate<StartOutcome>(), second = Gate<StartOutcome>()
         var client = CompanionClient()
-        client.start = { _, _, _, requestID in
+        client.start = { _, _, _, requestID, _ in
             let call = ids.withValue { ids -> Int in ids.append(requestID); return ids.count }
             return try await (call == 1 ? first : second).wait()
         }
@@ -432,7 +432,7 @@ struct CompanionServerTests {
         let clock = TestClock<Duration>()
         let gate = Gate<StartOutcome>()
         var client = CompanionClient()
-        client.start = { _, _, _, _ in try await gate.wait() }
+        client.start = { _, _, _, _, _ in try await gate.wait() }
         let store = store(house(current: growing(id: "a", ready: true)), client: client, clock: clock)
         await store.send(.chose(.sunflower))
         gate.release(StartOutcome(
@@ -888,7 +888,7 @@ struct CompanionServerTests {
 
     private func pickStore(_ house: CompanionHouse, gate: Gate<StartOutcome>) -> TestStoreOf<CompanionFeature> {
         var client = CompanionClient()
-        client.start = { _, _, _, _ in try await gate.wait() }
+        client.start = { _, _, _, _, _ in try await gate.wait() }
         return store(house, client: client)
     }
 

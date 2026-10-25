@@ -9591,4 +9591,192 @@ public enum L10n {
     public static var voteOpening: LocalizedStringResource {
         r("vote_opening", "Opening the vote")
     }
+
+    // MARK: - Nestie, step 6: the finale
+
+    /// %1$@ · %2$@
+    public static func companionColoured(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("companion_coloured", "\(a0) · \(a1)")
+    }
+
+    /// You've grown them all
+    public static var finaleTitle: LocalizedStringResource {
+        r("finale_title", "You've grown them all")
+    }
+
+    /// The tiny crown is yours now
+    public static var finaleCrown: LocalizedStringResource {
+        r("finale_crown", "The tiny crown is yours now")
+    }
+
+    /// Grow a favourite again, in a new colour
+    public static var finaleDoor: LocalizedStringResource {
+        r("finale_door", "Grow a favourite again, in a new colour")
+    }
+
+    /// On we go
+    public static var finaleDone: LocalizedStringResource {
+        r("finale_done", "On we go")
+    }
+
+    /// %lld grown
+    public static func finaleCount(_ a0: Int) -> LocalizedStringResource {
+        r("finale_count", "\(a0) grown")
+    }
+
+    /// %@, in a new colour
+    public static func colourPickTitle(_ a0: String) -> LocalizedStringResource {
+        r("colour_pick_title", "\(a0), in a new colour")
+    }
+
+    /// Every colour can be grown once
+    public static var colourPickHint: LocalizedStringResource {
+        r("colour_pick_hint", "Every colour can be grown once")
+    }
+
+    /// The usual colours
+    public static var colourPickOriginal: LocalizedStringResource {
+        r("colour_pick_original", "The usual colours")
+    }
+
+    /// Grown
+    public static var colourGrown: LocalizedStringResource {
+        r("colour_grown", "Grown")
+    }
+
+    /// That colour isn't open yet, or you've grown it already.
+    public static var colourRefusedLocked: LocalizedStringResource {
+        r("colour_refused_locked", "That colour isn't open yet, or you've grown it already.")
+    }
+
+    /// There's no such colour.
+    public static var colourRefusedNone: LocalizedStringResource {
+        r("colour_refused_none", "There's no such colour.")
+    }
+
+    // The names are the colourway tables in Docs/Companion/art/RULES.md, section 17
+    // (English here, Turkish in the catalog).
+    /// The name of one species' new colour (1-3), for its card and its swatch.
+    public static func companionColour(_ species: Species, _ colour: Int) -> LocalizedStringResource {
+        switch (species, colour) {
+        case (.magnolia, 1): r("companion_colour_magnolia_1", "White")
+        case (.magnolia, 2): r("companion_colour_magnolia_2", "Black Tulip")
+        case (.magnolia, 3): r("companion_colour_magnolia_3", "Yellow")
+        case (.cherry, 1): r("companion_colour_cherry_1", "White Yoshino")
+        case (.cherry, 2): r("companion_colour_cherry_2", "Weeping pink")
+        case (.cherry, 3): r("companion_colour_cherry_3", "Deep Kanzan")
+        case (.pomegranate, 1): r("companion_colour_pomegranate_1", "White bloom")
+        case (.pomegranate, 2): r("companion_colour_pomegranate_2", "Dark dwarf")
+        case (.pomegranate, 3): r("companion_colour_pomegranate_3", "Golden")
+        case (.azalea, 1): r("companion_colour_azalea_1", "White")
+        case (.azalea, 2): r("companion_colour_azalea_2", "Flame orange")
+        case (.azalea, 3): r("companion_colour_azalea_3", "Violet")
+        case (.lemon, 1): r("companion_colour_lemon_1", "Pink eureka")
+        case (.lemon, 2): r("companion_colour_lemon_2", "Lime")
+        case (.lemon, 3): r("companion_colour_lemon_3", "Blood orange")
+        case (.olive, 1): r("companion_colour_olive_1", "Manzanilla")
+        case (.olive, 2): r("companion_colour_olive_2", "Golden bronze")
+        case (.olive, 3): r("companion_colour_olive_3", "Silver ruby")
+        case (.basil, 1): r("companion_colour_basil_1", "Dark Opal")
+        case (.basil, 2): r("companion_colour_basil_2", "Lemon")
+        case (.basil, 3): r("companion_colour_basil_3", "Variegated")
+        case (.sunflower, 1): r("companion_colour_sunflower_1", "Velvet Queen")
+        case (.sunflower, 2): r("companion_colour_sunflower_2", "Lemon")
+        case (.sunflower, 3): r("companion_colour_sunflower_3", "Italian white")
+        case (.cactus, 1): r("companion_colour_cactus_1", "Blue torch")
+        case (.cactus, 2): r("companion_colour_cactus_2", "Golden barrel")
+        case (.cactus, 3): r("companion_colour_cactus_3", "Prickly pear")
+        case (.daisy, 1): r("companion_colour_daisy_1", "English pink")
+        case (.daisy, 2): r("companion_colour_daisy_2", "Golden")
+        case (.daisy, 3): r("companion_colour_daisy_3", "Blue felicia")
+        case (.mint, 1): r("companion_colour_mint_1", "Chocolate")
+        case (.mint, 2): r("companion_colour_mint_2", "Pineapple")
+        case (.mint, 3): r("companion_colour_mint_3", "Apple")
+        case (.rosemary, 1): r("companion_colour_rosemary_1", "Pink flowers")
+        case (.rosemary, 2): r("companion_colour_rosemary_2", "White flowers")
+        case (.rosemary, 3): r("companion_colour_rosemary_3", "Golden")
+        case (.snakePlant, 1): r("companion_colour_snake_plant_1", "Moonshine")
+        case (.snakePlant, 2): r("companion_colour_snake_plant_2", "Black gold")
+        case (.snakePlant, 3): r("companion_colour_snake_plant_3", "Lime")
+        case (.fern, 1): r("companion_colour_fern_1", "Silver lady")
+        case (.fern, 2): r("companion_colour_fern_2", "Lemon button")
+        case (.fern, 3): r("companion_colour_fern_3", "Autumn")
+        case (.lavender, 1): r("companion_colour_lavender_1", "White")
+        case (.lavender, 2): r("companion_colour_lavender_2", "Pink")
+        case (.lavender, 3): r("companion_colour_lavender_3", "Hidcote")
+        case (.peony, 1): r("companion_colour_peony_1", "White")
+        case (.peony, 2): r("companion_colour_peony_2", "Coral")
+        case (.peony, 3): r("companion_colour_peony_3", "Crimson")
+        case (.monstera, 1): r("companion_colour_monstera_1", "Albo variegata")
+        case (.monstera, 2): r("companion_colour_monstera_2", "Constellation")
+        case (.monstera, 3): r("companion_colour_monstera_3", "Mint")
+        case (.rose, 1): r("companion_colour_rose_1", "White")
+        case (.rose, 2): r("companion_colour_rose_2", "Peach")
+        case (.rose, 3): r("companion_colour_rose_3", "Burgundy")
+        case (.orchid, 1): r("companion_colour_orchid_1", "Butter yellow")
+        case (.orchid, 2): r("companion_colour_orchid_2", "Violet")
+        case (.orchid, 3): r("companion_colour_orchid_3", "Pure white")
+        case (.bonsai, 1): r("companion_colour_bonsai_1", "Autumn gold")
+        case (.bonsai, 2): r("companion_colour_bonsai_2", "In blossom")
+        case (.bonsai, 3): r("companion_colour_bonsai_3", "Silver olive")
+        case (.tulip, 1): r("companion_colour_tulip_1", "Rembrandt")
+        case (.tulip, 2): r("companion_colour_tulip_2", "Queen of Night")
+        case (.tulip, 3): r("companion_colour_tulip_3", "Apricot")
+        case (.maple, 1): r("companion_colour_maple_1", "Golden")
+        case (.maple, 2): r("companion_colour_maple_2", "Spring green")
+        case (.maple, 3): r("companion_colour_maple_3", "Bloodgood")
+        case (.pumpkin, 1): r("companion_colour_pumpkin_1", "Lumina")
+        case (.pumpkin, 2): r("companion_colour_pumpkin_2", "Jarrahdale")
+        case (.pumpkin, 3): r("companion_colour_pumpkin_3", "Cinderella")
+        case (.pine, 1): r("companion_colour_pine_1", "Blue spruce")
+        case (.pine, 2): r("companion_colour_pine_2", "Golden")
+        case (.pine, 3): r("companion_colour_pine_3", "Frosted")
+        case (.snowdrop, 1): r("companion_colour_snowdrop_1", "Yellow")
+        case (.snowdrop, 2): r("companion_colour_snowdrop_2", "Green-tipped")
+        case (.snowdrop, 3): r("companion_colour_snowdrop_3", "Glaucous")
+        case (.duckling, 1): r("companion_colour_duckling_1", "Mallard")
+        case (.duckling, 2): r("companion_colour_duckling_2", "Pied")
+        case (.duckling, 3): r("companion_colour_duckling_3", "Blue")
+        case (.kitten, 1): r("companion_colour_kitten_1", "Silver tabby")
+        case (.kitten, 2): r("companion_colour_kitten_2", "Tuxedo")
+        case (.kitten, 3): r("companion_colour_kitten_3", "Calico")
+        case (.hedgehog, 1): r("companion_colour_hedgehog_1", "Albino")
+        case (.hedgehog, 2): r("companion_colour_hedgehog_2", "Cinnamon")
+        case (.hedgehog, 3): r("companion_colour_hedgehog_3", "Salt & pepper")
+        case (.hamster, 1): r("companion_colour_hamster_1", "Winter white")
+        case (.hamster, 2): r("companion_colour_hamster_2", "Chocolate")
+        case (.hamster, 3): r("companion_colour_hamster_3", "Dalmatian")
+        case (.turtle, 1): r("companion_colour_turtle_1", "Tortoise")
+        case (.turtle, 2): r("companion_colour_turtle_2", "Painted")
+        case (.turtle, 3): r("companion_colour_turtle_3", "Albino")
+        case (.goldfish, 1): r("companion_colour_goldfish_1", "Calico")
+        case (.goldfish, 2): r("companion_colour_goldfish_2", "White oranda")
+        case (.goldfish, 3): r("companion_colour_goldfish_3", "Black moor")
+        case (.puppy, 1): r("companion_colour_puppy_1", "Chocolate lab")
+        case (.puppy, 2): r("companion_colour_puppy_2", "Border collie")
+        case (.puppy, 3): r("companion_colour_puppy_3", "Cream")
+        case (.bunny, 1): r("companion_colour_bunny_1", "Himalayan")
+        case (.bunny, 2): r("companion_colour_bunny_2", "Chestnut")
+        case (.bunny, 3): r("companion_colour_bunny_3", "Lilac")
+        case (.fox, 1): r("companion_colour_fox_1", "Silver")
+        case (.fox, 2): r("companion_colour_fox_2", "Cross")
+        case (.fox, 3): r("companion_colour_fox_3", "Golden")
+        case (.owl, 1): r("companion_colour_owl_1", "Snowy")
+        case (.owl, 2): r("companion_colour_owl_2", "Barn")
+        case (.owl, 3): r("companion_colour_owl_3", "Red screech")
+        case (.deer, 1): r("companion_colour_deer_1", "Sika")
+        case (.deer, 2): r("companion_colour_deer_2", "Fallow")
+        case (.deer, 3): r("companion_colour_deer_3", "White fallow")
+        case (.penguin, 1): r("companion_colour_penguin_1", "Little blue")
+        case (.penguin, 2): r("companion_colour_penguin_2", "Rockhopper")
+        case (.penguin, 3): r("companion_colour_penguin_3", "Isabelline")
+        case (.snowFox, 1): r("companion_colour_snow_fox_1", "Arctic dusk")
+        case (.snowFox, 2): r("companion_colour_snow_fox_2", "Summer coat")
+        case (.snowFox, 3): r("companion_colour_snow_fox_3", "Lilac pearl")
+        case (.polarCub, 1): r("companion_colour_polar_cub_1", "Cinnamon")
+        case (.polarCub, 2): r("companion_colour_polar_cub_2", "Panda")
+        case (.polarCub, 3): r("companion_colour_polar_cub_3", "Black bear")
+        default: r("companion_colour_generic", "Colour \(colour)")
+        }
+    }
 }

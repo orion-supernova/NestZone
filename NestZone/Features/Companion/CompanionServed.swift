@@ -48,6 +48,8 @@ public struct CompanionServed: Equatable, Sendable {
             house.tzOffset = served.tzOffset
             house.albumCount = served.albumCount
             house.grown = Set(served.grownSpecies.compactMap(Species.init(rawValue:)))
+            house.grownColours = Set(served.grownColours)
+            house.finaleAt = served.finaleAt
         }
         if let current = payload.current {
             var companion = Companion(species: current.species, seed: current.seed, startedAt: current.startedAt)
@@ -60,6 +62,7 @@ public struct CompanionServed: Equatable, Sendable {
             companion.pointsReady = current.pointsReady
             companion.readyAt = current.readyAt
             companion.isUndecided = current.undecided
+            companion.colour = current.colour
             house.current = companion
             house.paidStage = current.paidStage
         }
@@ -87,7 +90,8 @@ extension Graduate {
     init(_ card: CompanionPayload.Card) {
         self.init(
             id: UUID(uuidString: card.uuid) ?? .stable(from: card.uuid),
-            species: card.species, seed: card.seed, startedAt: card.startedAt, graduatedAt: card.graduatedAt
+            species: card.species, seed: card.seed, startedAt: card.startedAt, graduatedAt: card.graduatedAt,
+            colour: card.colour
         )
     }
 }

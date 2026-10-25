@@ -27,6 +27,7 @@ struct CompanionSheet: View {
                 }
             }
             .overlay { PurchaseCardLayer(store: store) }
+            .overlay { ColourPickerLayer(store: store) }
         }
         .overlay { CoinFlightLayer(geometry: geometry) }
         // The store covers the whole screen, so the Sparkles landing in the
@@ -56,7 +57,7 @@ struct CompanionSheet: View {
 }
 
 /// The sheets' fixed colours.
-private enum SheetInk {
+enum SheetInk {
     static let spot = Color.white.opacity(0.75)
     static let spotFill = Color.white.opacity(0.04)
     static let spotOn = Palette.lemon.opacity(0.14)
@@ -191,7 +192,8 @@ private struct DecorateView: View {
                         CompanionScene(
                             companion: current, progress: store.progress, mood: store.mood, stage: store.stage,
                             layout: store.draft, southern: store.southern, now: store.clock,
-                            choreTick: store.choreTick, careTick: store.careTick
+                            choreTick: store.choreTick, careTick: store.careTick,
+                            colourway: current.colour ?? 0
                         )
                         .allowsHitTesting(false)
                     }
@@ -468,10 +470,10 @@ private struct AlbumView: View {
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(store.house.album.reversed()) { graduate in
                         VStack(alignment: .leading, spacing: 4) {
-                            SpeciesPortrait(species: graduate.species, seed: graduate.seed, mood: .content, colourway: graduate.colourway)
+                            SpeciesPortrait(species: graduate.species, seed: graduate.seed, mood: .content, colourway: graduate.colour ?? 0)
                                 .frame(height: 150)
                                 .clipShape(.rect(cornerRadius: 6))
-                            Text(graduate.species.title)
+                            (graduate.colour.map { Text(L10n.companionColoured(String(localized: graduate.species.title), String(localized: graduate.species.colourName($0)))) } ?? Text(graduate.species.title))
                                 .font(.subheadline.weight(.semibold))
                                 .oneLine()
                             Text(verbatim: "\(String(localized: L10n.albumDays(graduate.days))) · \(graduate.graduatedAt.formatted(Date.FormatStyle().month(.abbreviated).year().locale(L10n.locale)))")
@@ -644,11 +646,23 @@ struct CeremonyView: View {
     }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var beat = 0
+    /// The finale has taken the cover over from the graduation (or is all of
+    /// it, when the graduation was played already).
+    @State private var showsFinale = false
+
+    /// A graduation that went on to the finale has its own way out, at the end.
+    private var leadsToFinale: Bool { store.moment?.isFinale == true }
 
     var body: some View {
         ZStack {
             SheetInk.backdrop.ignoresSafeArea()
-            if !reduceMotion { Petals().ignoresSafeArea().allowsHitTesting(false) }
+            // The finale has its own confetti; petals over it would be a second
+            // continuous canvas for nothing.
+            if !reduceMotion, store.moment?.isFinaleOnly != true { Petals().ignoresSafeArea().allowsHitTesting(false) }
+            if let moment = store.moment, moment.isFinale, showsFinale || moment.isFinaleOnly {
+                FinaleView(store: store, moment: moment)
+                    .transition(.opacity)
+            } else {
             VStack(spacing: 18) {
                 Spacer()
                 if let subject {
@@ -689,19 +703,28 @@ struct CeremonyView: View {
                     // only closes; the one on Today graduates the companion.
                     store.send(store.moment == nil ? .ceremonyFinished : .momentDismissed, animation: Motion.arrive)
                 }
-                .opacity(beat >= 3 ? 1 : 0)
+                .opacity(beat >= 3 && !leadsToFinale ? 1 : 0)
+                .allowsHitTesting(!leadsToFinale)
                 .padding(.horizontal, Metrics.screenPadding)
                 .padding(.bottom, 24)
                 .accessibilityIdentifier("CeremonyAlbum")
             }
             .padding(.horizontal, Metrics.screenPadding)
+            }
         }
-        .sensoryFeedback(.success, trigger: beat) { _, now in now == 3 }
+        .sensoryFeedback(.success, trigger: beat) { _, now in now == 3 && store.moment?.isFinaleOnly != true }
         .task {
+            // The graduation was played already: only the finale is shown.
+            guard store.moment?.isFinaleOnly != true else { return }
             for step in 1...3 {
                 try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 700))
                 withAnimation(reduceMotion ? Motion.fade : Motion.celebrate) { beat = step }
             }
+            // One sequence: after a beat with the coins, the same cover goes
+            // on to "You've grown them all".
+            guard leadsToFinale else { return }
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 600 : 1600))
+            withAnimation(Motion.fade) { showsFinale = true }
         }
     }
 }

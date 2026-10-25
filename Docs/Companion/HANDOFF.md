@@ -1176,6 +1176,69 @@ In order — each step can go to testers on its own:
      new art.
 6. **The finale**: "You've grown them all", the crown, growing a favourite
    again in a new colour.
+   - *Done (app half):* the server's `graduated.finale` / `graduate` `finale`
+     holds `State.moment` with `isFinale` (keyed on the graduated companion's
+     id in `finalesHeld`, so a retry never plays it twice) and plays it through
+     `momentReady` and `pendingSheet`. A start that graduates plays it in the
+     same cover after "All grown up!"; the ceremony on Today plays it alone,
+     and the vote or Choose it was heading to opens when it closes
+     (`afterMoment`). `FinaleView` is the album as kept stills in a cascade,
+     the crown, the next-door line and confetti; Reduce Motion fades. Other
+     phones never play it: they only see Choose open up. After it (`finaleAt`
+     or every free species grown) a grown species in Choose asks for a colour
+     (`ColourPickerLayer`), sent as `start`'s `colour` through `writes` with
+     its rollback. The finale's stills are drawn while it is on its way
+     (`State.finaleAlbum`, from the held moment or the prediction that the
+     ready one completes the free species; `CompanionCard` warms them), the
+     cover builds a row of tiles a frame, and the cascade is one animated
+     value with a delay per tile. Numbers in `Docs/Companion/finale/index.html`.
+     Pictures: `Docs/Companion/finale/`. Bench:
+     `-nestieScenario finale -nestieScript finale|finaleStart|finaleChoose`.
+   - *Open:* the painters must take `colourway` (the model, `ScenePortrait`,
+     `SpeciesPortrait` and its still keys already carry it, unread), and
+     `L10n.companionColour` has placeholder names ("Colour 1/2/3") until the
+     table in `art/RULES.md` is written.
+   - *Server, built (25 October, not deployed):* the finale is the moment
+     every `freeToHave` species is in `grown_species`, the same condition as
+     the `grownAll` reward (`grownAllFree` in lib/companion.ts, which the
+     reward now asks too). All additive:
+     - Schema: `companions.colour` (1–3, absent is the original),
+       `companion_homes.grown_colours` (`"<species>:<colour>"`, bounded by
+       species × 3) and `companion_homes.finale_at`.
+     - `start` takes an optional `colour`. Not an integer 1–3: throws
+       "There's no such colour". Otherwise it needs the finale reached, the
+       species already grown and that colourway not grown yet
+       (`colourOpen`), or throws "That colour can't be grown yet" — `start`
+       refuses by throwing, never by a status, and the app matches the
+       message as it does "The house already chose". Checked after any
+       graduation in the same write, like the species, so the graduation
+       that completes the finale can be followed by a colour at once. The
+       species must still be growable today, as for any start. Without a
+       colour nothing changed: a species already grown can be grown again
+       in its original colour, as always. A double tap counts as one only
+       with the same colour; after a vote chose, a pick with a colour is
+       "The house already chose" (the vote chose the original); picking an
+       undecided seed may give it a colour.
+     - A graduation adds a coloured one to `grown_colours`. The graduation
+       that first completes `freeToHave` (`finale_at` unset, not complete
+       before, complete after) stamps `finale_at` with its own
+       `graduated_at` and says `finale: true` — on `graduate`'s result and
+       on `start`'s `graduated`. Once: the next finds `finale_at` set, and
+       `graduate` called again finds the companion graduated. A `start`
+       retried with the same `requestId` reports the same graduation again,
+       `finale` included (`follows.graduated_at === finale_at`), because the
+       first answer may never have arrived; the app keys the ceremony on the
+       companion id.
+     - A house complete before this shipped has no `finale_at`, and gets
+       none: `finaleAt` is null and no ceremony is played, but colours are
+       open to it (the rule reads `grown_species`, not `finale_at`). The same
+       for a house completed by `importLocal`, which doesn't stamp it.
+     - Reads: `forHome.house.finaleAt` (number or null) and
+       `.grownColours` (sorted), `forHome.current.colour` and each album
+       entry's `colour` (number or null).
+     - The vote stays species-only and offers nothing coloured; a seed the
+       vote chose grows in the original. Other members' phones learn of the
+       finale from `finaleAt` turning non-null, not from a `finale` flag.
 7. **Release:**
    - turn `CompanionFlag` on for Release, and in the same release
      `npx convex env set COMPANION_NOTIFY on` (it is `sandbox` until then, so
