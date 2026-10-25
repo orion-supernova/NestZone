@@ -7,7 +7,7 @@ import os
 //
 //   xcrun simctl launch <udid> com.walhallaa.NestZone -nestieBench 1 \
 //       [-nestieScenario fresh|growing|ready|young|vote|voteAlone|finale] \
-//       [-nestieScript buy|care|ceremony|decorate|holidays|choose|chooseReady|vote|voteSettle|votePick|finale|finaleStart|finaleChoose] \
+//       [-nestieScript buy|care|ceremony|decorate|holidays|choose|chooseWarm|chooseReady|vote|voteSettle|votePick|finale|finaleStart|finaleChoose] \
 //       [-nestieOrder pushFirst|answerFirst] \
 //       [-nestieBuy honest|owned|short|unavailable|priceChanged] \
 //       [-nestieFail care,start,startAfter,buy,buyAfter,graduate,layout,holidays,ballot,decide,hang] \
@@ -193,6 +193,25 @@ enum Bench {
             store.send(.chooseTapped)
             try? await Task.sleep(for: .seconds(1.2))
             report("choose open", store)
+        case "chooseWarm":
+            // Choose as the app meets it: a sheet (and its navigation stack)
+            // has opened and closed before, so the first open measured is
+            // Choose and not the first sheet of the process. Then Choose
+            // again, which is the warm one.
+            store.send(.holidaysTapped)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.sheetDismissed)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.chooseTapped)
+            try? await Task.sleep(for: .seconds(2.5))
+            report("choose open", store)
+            // And again: the second open is Choose with everything it needs
+            // already looked up, which is how the app meets it after the first.
+            store.send(.sheetDismissed)
+            try? await Task.sleep(for: .seconds(1.5))
+            store.send(.chooseTapped)
+            try? await Task.sleep(for: .seconds(2))
+            report("choose open again", store)
         case "choose":
             store.send(.chooseTapped)
             try? await Task.sleep(for: .seconds(1.5))

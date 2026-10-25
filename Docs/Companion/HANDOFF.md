@@ -1282,6 +1282,57 @@ as the bump. Draft, to be read once more:
   the last commit, built with the same Debug hooks and measured interleaved
   with the new build, showed the segment-switch hitch was already there.
 
+- **Choose's first frame is not its tiles (25 October).** Opening Choose
+  right after a graduation read 0.8–1.1 s in the bench
+  (`-nestieBench 1 -nestieScenario finale -nestieScript finale`) and the
+  guess was the grid: every tile rendering in the first frame. It is not.
+  What was tried, and what each did to the first late frame (iPhone 17
+  simulator, iOS 26.5, Debug, `-frameMeter 2`, medians of 5–8 interleaved
+  runs; CPU is the main thread's own time in that frame):
+  - *The same bench, a quiet Mac and a busy one.* After a graduation the
+    first frame is 260–290 ms with the Mac quiet (load average 3) and
+    430–590 ms, up to 850, with a build running in the next window (load 14–17).
+    The warm second open of Choose went from 110 ms of CPU to 317 for the same
+    work. The 0.8–1.1 s readings were a loaded Mac. CPU time stretches too, so
+    two builds are compared in interleaved runs, never one after the other.
+  - *What a first frame is made of* (quiet Mac, first late frame):
+    a sheet whose body is `Text`: 77 ms. `NavigationStack` with a title and a
+    toolbar button, first one in the process: 208 ms. The Holidays sheet,
+    which has almost nothing in it: 420–460 ms. Choose with no tiles at all
+    (a `Color.clear` in the scroll view): 270 ms; with its tiles: 290–325 ms.
+    The shop, a heavier sheet: 630–700 ms. So the first sheet of a process pays
+    for the sheet, the navigation stack and the types it has never seen, and
+    Choose's own content is the last 10–15 % of it. Once a sheet and Choose
+    have opened before, the open is 110–160 ms (`-nestieScript chooseWarm`,
+    which opens Holidays, then Choose, then Choose again).
+  - *The tiles.* `ChooseView.body` with `store.shop` and both `shelved` sorts:
+    under 1 ms. `LazyVGrid` builds 12 tiles (six rows) because the sheet's
+    scroll view is as tall as the large detent while only the top two rows show
+    at half height. Building two rows first and the rest a frame each, after
+    the slide-in: 150 vs 175 ms of CPU (rows 2 vs all, 8 runs, interleaved),
+    206 vs 215 and 144 vs 162 in two other batches, 259 vs 261 in the ceremony
+    flow, 298 vs 278 cold from the card. Inside the noise, so it is not shipped
+    (the patch is in this commit's message, not the tree). Glass tiles against
+    plain ones: about 45 ms of the first frame, the same picture is kept.
+  - *Warming.* `StillCache.warm` costs 3–15 ms a picture (the first three
+    trees 70–90 ms) and runs after the open; with every one of 39 stills kept
+    before Choose opened (drawn during the ceremony from 600 ms after its
+    cover, the right seed: it moves on by one with each graduation) the first
+    frame and the run of 25–65 ms frames after it were the same, and the
+    ceremony itself gained about 60 ms of late frames and 22 MB held while
+    it ran. Not shipped. The run of late frames after the open in the
+    graduation flow is the first Choose being torn down 0.5 s later when the
+    finale's answer arrives (the finale bench opens Choose twice).
+  - *The ceremony cover's own 138–175 ms frame* is the sheet presentation
+    (`_UIAfterCACommitBlock` into `UISheetPresentationController`, 185 of about
+    1 000 busy samples, and the hosting view's first layout inside it), not
+    something Choose or the finale does; it is the same frame in the
+    graduation cover with or without the finale.
+  - *Left:* an on-device Release number for Choose (`-companionDemo choose`
+    is Debug and `MEASURE` only; the bench is Debug only, so no Release
+    bench exists on the simulator either). `-frameMeter 2` now prints the main
+    thread's CPU time beside each late frame, and the bench has
+    `-nestieScript chooseWarm`.
 - **Measure before fixing a "lag".** Instruments' Time Profiler can attach to
   the simulator (`xctrace record --device <sim UDID> --attach <pid>`), and its
   export summed per function shows where a frame goes. It showed:
