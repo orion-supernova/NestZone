@@ -97,7 +97,9 @@ private struct ChooseView: View {
             await Task.detached(priority: .utility) { plans.forEach(CritterGeometry.prepare) }.value
             let seed = "\(store.homeID.rawValue)-\(store.house.albumCount)"
             let big = typeSize.isAccessibilitySize
-            await StillCache.warm(Species.allCases.map { kind in
+            let shop = store.shop
+            let order = shelved(Species.allCases.filter { !$0.isPet }, shop) + shelved(Species.allCases.filter(\.isPet), shop)
+            await StillCache.warm(order.map { kind in
                 let portrait = SpeciesPortrait(species: kind, seed: seed, hour: stage.portraitHour)
                 return (portrait.still(big: big), AnyView(portrait))
             })

@@ -207,12 +207,15 @@ struct ShopView: View {
         }
         switch shelf {
         case .decor:
-            return DecorItem.allCases.map { item in
+            // In the order the shelf lays them out, so the ones on screen come first.
+            let everyday = DecorItem.allCases.filter { $0.access != .holiday }
+            let ordered = Self.kinds.flatMap { kind, _ in everyday.filter { $0.kind == kind } } + DecorItem.allCases.filter { $0.access == .holiday }
+            return ordered.map { item in
                 let portrait = DecorPortrait(decor: .item(item), hour: stage.portraitHour)
                 return (portrait.still(big: big), AnyView(portrait))
             }
-        case .plants: return species(Species.allCases.filter { !$0.isPet })
-        case .pets: return species(Species.allCases.filter(\.isPet))
+        case .plants: return species(shelved(Species.allCases.filter { !$0.isPet }, store.shop))
+        case .pets: return species(shelved(Species.allCases.filter(\.isPet), store.shop))
         }
     }
 
@@ -588,11 +591,11 @@ extension SpeciesPortrait {
     /// The kept bitmap this tile's picture is, and the size it is drawn at.
     func still(big: Bool) -> StillSpec {
         let size = big ? CGSize(width: 320, height: 240) : CGSize(width: 160, height: 120)
-        return StillSpec(key: "s|\(species.rawValue)|\(seed)|\(hour)|\(Int(size.width))", size: size)
+        return StillSpec(name: "s|\(species.rawValue)|\(seed)|\(hour)", size: size, big: big)
     }
 
     /// The picture as a tile shows it: the kept bitmap once there is one.
-    func tile(big: Bool) -> some View { Still(spec: still(big: big), live: self).equatable() }
+    func tile(big: Bool) -> some View { Still(spec: still(big: big)).equatable() }
 }
 
 // MARK: - The card

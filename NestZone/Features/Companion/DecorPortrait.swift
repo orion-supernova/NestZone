@@ -73,9 +73,9 @@ extension DecorPortrait {
     /// The kept bitmap this tile's picture is, and the size it is drawn at.
     func still(big: Bool) -> StillSpec {
         let size = big ? CGSize(width: 200, height: 200) : CGSize(width: 100, height: 100)
-        return StillSpec(key: "d|\(decor.rawValue)|\(hour)|\(Int(size.width))", size: size)
+        return StillSpec(name: "d|\(decor.rawValue)|\(hour)", size: size, big: big)
     }
 
     /// The picture as a tile shows it: the kept bitmap once there is one.
-    func tile(big: Bool) -> some View { Still(spec: still(big: big), live: self).equatable() }
+    func tile(big: Bool) -> some View { Still(spec: still(big: big)).equatable() }
 }

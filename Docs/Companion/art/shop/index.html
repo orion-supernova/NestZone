@@ -11,12 +11,14 @@
   figure { margin: 0; flex: none; }
   figcaption { font: 12px ui-monospace, monospace; color: #8d859b; margin: 0 0 6px; }
   img { height: 82vh; width: auto; display: block; border-radius: 10px; background: #000; }
+  table { border-collapse: collapse; margin: 12px 0; } td, th { border: 1px solid #3a3444; padding: 4px 10px; text-align: left; font-size: 13px; }
   nav a { color: #c9a8ff; margin-right: 14px; }
 </style>
 <h1>Nestie shop drawings, and the card at accessibility sizes</h1>
 <p>Screenshots of the bench (<code>-nestieBench 1</code>) on an iPhone 17 simulator, iOS 27. Before is the commit this work started from.</p>
 <nav>
 <a href="#shop">The shop</a>
+<a href="#perf">Frame meter</a>
 <a href="#card">The card at AX sizes</a></nav>
 
 <h2 id="shop">The shop shows the drawings</h2>
@@ -37,6 +39,16 @@
 <figure><figcaption>card, after</figcaption><img loading="lazy" src="after-card.jpg"></figure>
 <figure><figcaption>tray, after</figcaption><img loading="lazy" src="after-tray.jpg"></figure></div>
 
+<h2 id="perf">Frame meter, and what the Decor shelf's late frame was</h2>
+<p>Bench, <code>-frameMeter 1 -companionScroll 1</code> (the shelf goes to the bottom and back every 4 s), 7 windows of 2 s after the first 12 s. Late / dropped / worst frame.</p>
+<table>
+<tr><th></th><th>before</th><th>first cut</th><th>final</th></tr>
+<tr><td>Decor</td><td>3 / 4 / 47 ms</td><td>3 / 21 / 134 ms</td><td>4 / 7 / 61, 2 / 5 / 60, 3 / 4 / 46 (three runs)</td></tr>
+<tr><td>Plants</td><td>10 / 22 / 74 ms</td><td>5 / 12 / 77 ms</td><td>4 / 4 / 36 ms</td></tr>
+<tr><td>Pets</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>Choose</td><td>113 / 208 / 188 ms</td><td>12 / 21 / 70 ms</td><td>11 / 22 / 77 ms</td></tr>
+</table>
+<p>The cause of the Decor regression was in the first cut's fallback: a tile built before its bitmap was ready drew the live canvas, and being equatable it never swapped to the bitmap afterwards. The log showed 34 tile bodies built as live canvases at shelf open and one built from a bitmap; those canvases then stayed in the shelf and were composited again every scroll (a <code>sample</code> of the process showed the main thread waiting on the GPU in <code>waitUntilScheduled</code> and no app code running in the late frame). Ablations with the cause removed: decoding for display (<code>byPreparingForDisplay</code>), the saturation and opacity group in the window, and Image from a CGImage against a UIImage each changed nothing measurable. The fix: an unready tile is its window alone and swaps its picture in when it lands (one observable slot per picture), pictures are warmed in the order the shelf lays them out, and the cache is bounded.</p>
 <h2 id="card">The Nestie card at accessibility sizes</h2>
 <p>Before: the holiday chip and Water sat over the scene, the title and jar shared a row, and the four ways in shared one, so at the largest sizes the card was wider than the screen and words were cut to "Hall…", "Deco…" and "Sapling · cont…". After: from the accessibility sizes up the chip and Water go under the scene, the title and jar stack, the ways in are a list, and every label takes the lines it needs. At the default size the card is unchanged (the text area is pixel-identical, 0 pixels differing by more than 8 of 844,200).</p>
 <h3>Default (large)</h3><div class="row">
