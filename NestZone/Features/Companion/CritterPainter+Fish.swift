@@ -2,6 +2,34 @@ import SwiftUI
 
 // MARK: - The goldfish
 
+/// What each of the goldfish's stages is made of. A fry is a glassy tadpole
+/// in a bubble. A juvenile is bronze and slim, with a short forked tail and
+/// short fins; real goldfish are dull brown for the first months. A fish that
+/// is turning has gold breaking through the bronze in blotches, its fins
+/// taking colour; the grown one is its full colour (or its colourway's, and
+/// the colourway's marks come only now) with deep body and long, flowing,
+/// trailing fins. `size` is how big it stands in the bowl, `fin` the length
+/// of tail and fins, `turn` how much gold has come through, `fins` how far
+/// its fins have taken colour.
+struct FishGrowth {
+    var size: Double
+    var body: CGSize
+    var fin: Double, finH: Double
+    var lobes: Int
+    var eye: Double, scales: Double
+    var fleck: Double, turn: Double, fins: Double
+    var sway: Double, flow: Double
+
+    static func of(_ stage: Int) -> FishGrowth {
+        switch stage {
+        case ...3: FishGrowth(size: 0.58, body: CGSize(width: 1.14, height: 0.8), fin: 0.5, finH: 0.55, lobes: 2, eye: 1.45, scales: 0.35, fleck: 0, turn: 0, fins: 0, sway: 0.8, flow: 0)
+        case 4: FishGrowth(size: 0.7, body: CGSize(width: 1.08, height: 0.88), fin: 0.68, finH: 0.72, lobes: 2, eye: 1.3, scales: 0.6, fleck: 1, turn: 0, fins: 0, sway: 0.9, flow: 0)
+        case 5: FishGrowth(size: 0.86, body: CGSize(width: 1.02, height: 0.95), fin: 0.9, finH: 0.92, lobes: 3, eye: 1.12, scales: 0.85, fleck: 0, turn: 0.62, fins: 0.5, sway: 1, flow: 0)
+        default: FishGrowth(size: 1, body: CGSize(width: 1, height: 1), fin: 1.28, finH: 1.12, lobes: 3, eye: 1, scales: 1, fleck: 0, turn: 0, fins: 0, sway: 1.2, flow: 1)
+        }
+    }
+}
+
 extension CritterPainter {
     /// A goldfish in its bowl. The bowl is built once (`BowlGeometry`) and
     /// only filled; the fish and the weed are what move. Bright, the fish
@@ -24,7 +52,10 @@ extension CritterPainter {
         bowlFront(c, bowl, li)
     }
 
-    /// The egg of a goldfish: a jelly bead on the gravel, in the water.
+    /// The eggs of a goldfish: a clutch of clear jelly beads on the gravel,
+    /// each with a golden yolk, a few catching the light. The wobbly one has
+    /// an embryo in its biggest bead, curled round the yolk with two dark
+    /// eyes, that twitches.
     func fishEgg(_ c: GraphicsContext) {
         let bowl = CritterGeometry.bowlArt
         // The bowl stands as large before the fish as after it.
@@ -33,11 +64,36 @@ extension CritterPainter {
         c.scaleBy(x: 1.12, y: 1.12)
         c.translateBy(x: -60, y: -108)
         bowlBack(c, bowl, 0)
-        var e = c
-        e.translateBy(x: 60, y: 103)
-        e.scaleBy(x: 0.5, y: 0.5)
-        e.translateBy(x: -60, y: -104)
-        wrapped(e)
+        let water = look.tone(0xCDEAF0, dim: 0.5), yolk = look.tone(0xF2B65A, dim: 0.6), L = look.L
+        let beads: [(Double, Double, Double)] = [(56, 99.4, 2.9), (62, 100.4, 3.2), (68.4, 99.6, 3.0), (74, 100.6, 2.6), (59, 95.6, 3.0), (65.2, 96.4, 4.6), (71.6, 95.2, 3.0), (62, 91.4, 2.6), (69, 91.2, 2.4)]
+        var discs = Path(), yolks = Path(), shines = Path()
+        let wobble = frame.reduceMotion || stage < 1 ? 0 : sin(time * 5) * 0.5
+        for (i, (x, y, r)) in beads.enumerated() {
+            let big = i == 5
+            let dx = big ? wobble : 0
+            discs.addEllipse(in: CGRect(x: x + dx - r, y: y - r, width: r * 2, height: r * 2))
+            if !(big && stage == 1) { yolks.addEllipse(in: CGRect(x: x - r * 0.34, y: y - r * 0.3, width: r * 0.68, height: r * 0.68)) }
+            shines.addEllipse(in: CGRect(x: x + L.x * r * 0.35 - r * 0.28, y: y - r * 0.5, width: r * 0.55, height: r * 0.4))
+        }
+        c.fill(discs, with: .linearGradient(Gradient(colors: [look.lifted(water, 0.5).color(0.55), water.color(0.3)]), startPoint: CGPoint(x: 60, y: 88), endPoint: CGPoint(x: 70, y: 104)))
+        c.fill(yolks, with: .radialGradient(Gradient(colors: [look.lifted(yolk, 0.35).color(0.95), yolk.color(0.95), yolk.shifted(-10).color(0.9)]), center: CGPoint(x: 66, y: 98), startRadius: 0, endRadius: 14))
+        c.stroke(discs, with: .color(look.lifted(water, 0.7).color(0.7)), lineWidth: 0.6)
+        if stage == 1 {
+            // The embryo: a curl of body round a yolk, two eyes, a flick of tail.
+            let (x, y, r) = beads[5]
+            var e = c
+            e.translateBy(x: x + wobble, y: y)
+            e.rotate(by: .radians(wobble * 0.3))
+            e.fill(Path(ellipseIn: CGRect(x: -r * 0.5, y: -r * 0.1, width: r, height: r * 0.8)), with: .color(yolk.color(0.95)))
+            var body = Path()
+            body.move(to: CGPoint(x: -r * 0.2, y: -r * 0.2))
+            body.addQuadCurve(to: CGPoint(x: r * 0.7, y: r * 0.2), control: CGPoint(x: r * 0.5, y: -r * 0.7))
+            body.addQuadCurve(to: CGPoint(x: r * 0.3, y: r * 0.9), control: CGPoint(x: r * 1.0, y: r * 0.7))
+            e.stroke(body, with: .color(look.tone(0x7A5A3A, dim: 0.6).color(0.9)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+            e.fill(Path(ellipseIn: CGRect(x: -r * 0.55, y: -r * 0.55, width: 1.4, height: 1.4)), with: .color(look.ink))
+            e.fill(Path(ellipseIn: CGRect(x: -r * 0.12, y: -r * 0.62, width: 1.4, height: 1.4)), with: .color(look.ink))
+        }
+        c.fill(shines, with: .color(Color.white.opacity(0.85)))
         bowlFront(c, bowl, 0)
     }
 
@@ -88,16 +144,21 @@ extension CritterPainter {
     // MARK: The fish
 
     private func swimmer(_ c: GraphicsContext, _ bowl: BowlGeometry, _ li: Int) {
-        let geometry = CritterGeometry.fishArt
+        if stage == 2 { fry(c, bowl, li); return }
+        let geometry = CritterGeometry.fishArt, stages = CritterGeometry.fishStages
+        let k = FishGrowth.of(stage)
         let w = motion.weights
         let L = look.L
         let top = BowlGeometry.levels[li]
         let coat = look.coat, light = look.light, dark = look.dark, belly = look.belly, mark = look.mark
-        let fin = coat.mix(light, 0.55)
-        let baby = babyness
+        // What it will be: a juvenile is bronze, and the gold comes through it.
+        let growing = stage < 6
+        let grown = growing ? grownPlan : plan
+        let goldLight = growing ? look.tone(grown.light) : light, gold = growing ? look.tone(grown.coat) : coat, goldDark = growing ? look.tone(grown.shade) : dark
+        let fin = growing ? coat.mix(light, 0.55).mix(gold.mix(goldLight, 0.55), k.fins) : coat.mix(light, 0.55)
         let t = time
-        // How big: the fry is a speck, and it grows into the bowl.
-        let fs = (stage == 2 ? 0.4 : PetMotion.scales[stage]) * 1.1
+        // How big: the fish grows into the bowl, and its shape changes as it does.
+        let fs = k.size * 1.1
 
         // Where it is: the four moods are four places.
         let swimB = 19.0, swimC = 10.0
@@ -105,44 +166,58 @@ extension CritterPainter {
         var fy = motion.by(99 - 11 * fs, top + 8 + 1.2 * sin(t * 1.3), 69 + 2.6 * sin(t * 0.7), 66 + 6 * sin(t * 1.6))
         // Nothing crosses the glass: the dorsal fin is the highest thing on the fish,
         // so below the surface it keeps that far under it. Thirsty may break it, on purpose.
-        fy = max(fy, top + 3 + 21 * fs * (1 - w.thirst))
+        fy = max(fy, top + 3 + 21 * fs * k.finH * (1 - w.thirst))
         let face = motion.by(1, 1, max(-1, min(1, 5 * cos(t * 0.35))), max(-1, min(1, 5 * cos(t * 0.8))))
         // Nor does the tail or the nose: keep both ends inside the glass, whichever
         // way it faces (blended through the turn, so nothing jumps).
-        let k = (face + 1) / 2
-        let leftReach = (17 * k + 29 * (1 - k)) * fs, rightReach = (29 * k + 17 * (1 - k)) * fs
+        let kk = (face + 1) / 2
+        let tailReach = 15.5 + 13.5 * k.fin * (1 + 0.12 * k.flow)
+        let leftReach = (17 * kk + tailReach * (1 - kk)) * fs, rightReach = (tailReach * kk + 17 * (1 - kk)) * fs
         fx = min(max(fx, 27 + leftReach), 93.5 - rightReach)
         let angle = motion.by(0.1, 0.62, 0.05 * sin(t * 0.7), 0.16 + 0.12 * sin(t * 1.6))
         // Close to the curved side it is seen foreshortened.
         let wall = 1 - 0.26 * Ink.smooth((abs(fx - 60) - 12) / 8)
         let ph = t * motion.by(1.4, 2.2, 3.4, 8.5)
-        let amp = motion.by(1.4, 2.4, 3.4, 6.2)
+        let amp = motion.by(1.4, 2.4, 3.4, 6.2) * k.sway
 
         var f = c
         f.translateBy(x: fx, y: fy + (frame.reduceMotion ? 0 : (w.doze * 0.7 * sin(t / 4.2 * .pi * 2))))
         f.scaleBy(x: fs * face * wall, y: fs)
         f.rotate(by: .radians(angle))
+        // A juvenile is long and slim; the deep, round body comes later.
+        f.scaleBy(x: k.body.width, y: k.body.height)
         let eL = CGPoint(x: L.x * (face >= 0 ? 1 : -1), y: L.y)
 
-        // The tail: a veil of three flowing lobes, one fill.
+        // The tail: a veil of flowing lobes, one fill. A juvenile's is a short
+        // fork, a grown fish's long and trailing, with a second, fainter veil
+        // streaming behind it (the same path, stretched: a transform of the
+        // context, not a second drawing).
         var veil = Path(), veins = Path()
-        for lobe in -1...1 {
+        let lobes = k.lobes == 2 ? [-1, 1] : [-1, 0, 1]
+        for lobe in lobes {
             var pts: [CGPoint] = []
             for j in 0...7 {
                 let u = Double(j) / 7
-                pts.append(CGPoint(x: 11.5 + 14 * u * (lobe == 0 ? 1 : 0.9), y: Double(lobe) * (9.6 + 3.2 * w.bright) * u + amp * sin(ph - 2.4 * u) * u))
+                pts.append(CGPoint(x: 11.5 + 14 * k.fin * u * (lobe == 0 ? 1 : 0.9), y: Double(lobe) * (9.6 + 3.2 * w.bright) * u * (0.7 + 0.3 * k.fin) + amp * sin(ph - 2.4 * u) * u))
             }
-            veil.addPath(PlantPainter.ribbon(pts, 5, 10))
+            veil.addPath(PlantPainter.ribbon(pts, 5 * (0.6 + 0.4 * k.fin), 10 * (0.5 + 0.5 * k.fin)))
             veins.addLines(Array(pts.dropFirst(1)))
         }
-        f.fill(veil, with: .linearGradient(Gradient(colors: [fin.color(0.96), light.mix(fin, 0.4).color(0.78)]), startPoint: CGPoint(x: 12, y: 0), endPoint: CGPoint(x: 29, y: 0)))
+        if k.flow > 0.02 {
+            var ghost = f
+            ghost.translateBy(x: 11.5, y: 0)
+            ghost.scaleBy(x: 1 + 0.16 * k.flow, y: 1 + 0.08 * k.flow)
+            ghost.translateBy(x: -11.5, y: 0)
+            ghost.fill(veil, with: .color(light.mix(fin, 0.4).color(0.32)))
+        }
+        f.fill(veil, with: .linearGradient(Gradient(colors: [fin.color(0.96), light.mix(fin, 0.4).color(0.78)]), startPoint: CGPoint(x: 12, y: 0), endPoint: CGPoint(x: 12 + 17 * k.fin, y: 0)))
         f.stroke(veins, with: .color(dark.mix(coat, 0.4).color(0.32)), style: StrokeStyle(lineWidth: 0.6, lineCap: .round, lineJoin: .round))
 
         // The dorsal fin, behind the back.
         var dorsal: [CGPoint] = []
         for j in 0...6 {
             let u = Double(j) / 6
-            dorsal.append(CGPoint(x: -4 + 19 * u, y: -10.4 - (5.6 + 1.6 * w.bright) * sin(.pi * (0.12 + 0.7 * u)) + amp * 0.35 * sin(ph - 2 * u) * u))
+            dorsal.append(CGPoint(x: -4 + 19 * u, y: -10.4 - (5.6 + 1.6 * w.bright) * k.finH * sin(.pi * (0.12 + 0.7 * u)) + amp * 0.35 * sin(ph - 2 * u) * u))
         }
         f.fill(PlantPainter.ribbon(dorsal, 8, 2.4), with: .color(fin.color(0.92)))
 
@@ -150,10 +225,21 @@ extension CritterPainter {
         var pv = f
         pv.translateBy(x: 2, y: 10)
         pv.rotate(by: .radians(0.3 * sin(ph * 0.5)))
+        pv.scaleBy(x: 0.6 + 0.4 * k.fin, y: 0.6 + 0.4 * k.fin)
         pv.fill(geometry.pelvic, with: .color(fin.shifted(-6).color(0.9)))
 
         // The body, lit by the sky, its belly pale, its scales in rows.
         form(f, geometry.body, centre: CGPoint(x: 0, y: 0), radius: 18, light, coat, dark, highlight: 0.55, L: eL)
+        // The gold coming through the bronze: first a few flecks, then
+        // blotches over the back and the flank, never all at once.
+        if k.fleck > 0.02 { f.fill(stages.flecks, with: .color(gold.color(0.85 * k.fleck))) }
+        if k.turn > 0.02 {
+            let index = min(stages.turn.count - 1, max(0, Int((k.turn * Double(stages.turn.count)).rounded(.up)) - 1))
+            f.fill(stages.turn[index], with: ramp(.zero, 18, look.lifted(goldLight, 0.1), gold, goldDark, L: eL))
+            var edge = f
+            edge.translateBy(x: eL.x * 0.5, y: eL.y * 0.5)
+            edge.stroke(stages.turn[index], with: .color(look.lifted(goldLight, 0.4).color(0.4)), style: StrokeStyle(lineWidth: 0.6))
+        }
         patches(f, geometry.patchA, geometry.patchB, centre: .zero, radius: 18, L: eL)
         if let tone = plan.face {
             // An oranda's cap: the head in its own colour, soft where it meets the body.
@@ -165,8 +251,8 @@ extension CritterPainter {
                                                                       .init(color: belly.color(0), location: 1)]), center: CGPoint(x: 0, y: 8.4), startRadius: 0, endRadius: 14))
         var litScales = f
         litScales.translateBy(x: eL.x * 0.6, y: eL.y * 0.6)
-        litScales.stroke(geometry.scales, with: .color(look.lifted(light, 0.35).color(0.4)), style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
-        f.stroke(geometry.scales, with: .color(mark.color(0.3)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+        litScales.stroke(geometry.scales, with: .color(look.lifted(light, 0.35).color(0.4 * k.scales)), style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
+        f.stroke(geometry.scales, with: .color(mark.color(0.3 * k.scales)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
         f.stroke(geometry.gill.offsetBy(dx: eL.x * 0.5, dy: eL.y * 0.5), with: .color(look.lifted(light, 0.4).color(0.4)), style: StrokeStyle(lineWidth: 1, lineCap: .round))
         f.stroke(geometry.gill, with: .color(mark.color(0.32)), style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
 
@@ -174,6 +260,7 @@ extension CritterPainter {
         var pf = f
         pf.translateBy(x: -3.6, y: 4.4)
         pf.rotate(by: .radians(-0.35 + 0.4 * sin(ph * 0.8 + 1) * (0.4 + 0.6 * w.bright)))
+        pf.scaleBy(x: 0.6 + 0.4 * k.fin, y: 0.6 + 0.4 * k.fin)
         form(pf, geometry.pectoral, centre: CGPoint(x: 5, y: 3), radius: 8, look.lifted(fin, 0.2), fin, fin.shifted(-8, 2), highlight: 0.2, core: 0.5, rim: false, L: eL)
 
         // The face: a mouth that gulps when it wants water, a blush, the eye.
@@ -187,11 +274,11 @@ extension CritterPainter {
             Gradient(colors: [look.tone(0xFF8FA3).color(blush), look.tone(0xFF8FA3).color(0)]), center: CGPoint(x: -8.4, y: 4.4), startRadius: 0, endRadius: 4))
         var e = f
         e.translateBy(x: -9.2, y: -2.6)
+        e.scaleBy(x: 1 / k.body.width, y: 1 / k.body.height)
         if face < 0 { e.scaleBy(x: -1, y: 1) }
         let look_ = motion.beat(every: 6.5, lasting: 1.1, offset: 3)
         let gaze = CGPoint(x: Ink.lerp(-0.2 * w.thirst, 0.02, look_ * w.thirst), y: Ink.lerp(-0.7 * w.thirst, 0.02, look_ * w.thirst) - 0.06 * w.bright)
-        let size = 1 + 0.32 * baby
-        eye(e, at: .zero, side: -1, rx: 4.3 * size, ry: 4.5 * size, gaze: gaze, droop: motion.by(1, 0.05, 0.05, 0), lid: coat.mix(light, 0.2))
+        eye(e, at: .zero, side: -1, rx: 4.3 * k.eye, ry: 4.5 * k.eye, gaze: gaze, droop: motion.by(1, 0.05, 0.05, 0), lid: coat.mix(light, 0.2))
 
         // The nightcap, small, on the fish's head.
         if w.doze > 0.02 || frame.domeLift > 0, stage >= 3 {
@@ -219,6 +306,78 @@ extension CritterPainter {
             c.stroke(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)), with: .color(Color.white.opacity(0.7 * a)), lineWidth: 0.6)
             c.fill(Path(ellipseIn: CGRect(x: x - r * 0.1, y: y - r * 0.6, width: r * 0.55, height: r * 0.45)), with: .color(Color.white.opacity(0.8 * a)))
         }
+    }
+
+    // MARK: The fry
+
+    /// A fry: barely a day old, a glassy tadpole that cannot swim yet, so it
+    /// hangs head up in a nursery bubble at the surface, living off the
+    /// golden yolk sac under its throat, its spine and its two huge dark eyes
+    /// showing through. Bright, it wriggles and the bubble bobs; content, it
+    /// hangs and its tail ticks over; thirsty, the water is low and it hangs
+    /// at the surface gulping, looking out; dozing, it hangs limp and still.
+    private func fry(_ c: GraphicsContext, _ bowl: BowlGeometry, _ li: Int) {
+        let s = CritterGeometry.fishStages
+        let w = motion.weights
+        let top = BowlGeometry.levels[li]
+        let t = time
+        let L = look.L
+        let calm = frame.reduceMotion ? 0.0 : 1.0
+        let bx = 48 + calm * motion.by(0, 0.5 * sin(t * 1.1), 1.6 * sin(t * 0.6), 2.4 * sin(t * 1.4))
+        let by = top + 13.5 + calm * motion.by(0, 0.3 * sin(t * 0.9), 0.7 * sin(t * 0.8), -1.4 + 1.4 * sin(t * 2.2))
+        let r = 12.4
+        let water = look.tone(0xCDEAF0, dim: 0.5)
+        // The nursery: a bubble among two smaller ones.
+        let disc = Path(ellipseIn: CGRect(x: bx - r, y: by - r, width: r * 2, height: r * 2))
+        c.fill(disc, with: .radialGradient(Gradient(stops: [.init(color: water.color(0.04), location: 0), .init(color: look.lifted(water, 0.5).color(0.16), location: 0.8),
+                                                            .init(color: look.lifted(water, 0.7).color(0.34), location: 1)]), center: CGPoint(x: bx, y: by), startRadius: 0, endRadius: r))
+
+        let sway = calm * motion.by(0, 0.05 * sin(t * 1.4), 0.1 * sin(t * 1.3), 0.22 * sin(t * 3))
+        let theta = Double.pi / 2 + 0.12 + sway - 0.4 * w.thirst
+        var f = c
+        f.translateBy(x: bx - 1.5, y: by + 1)
+        f.rotate(by: .radians(theta))
+        f.scaleBy(x: 0.74, y: 0.74)
+        f.opacity = 0.7 + 0.2 * (1 - w.doze * 0.3)
+        let skin = look.tone(0xD8C9A4, dim: 0.5), skinLight = look.lifted(skin, 0.4), skinDark = skin.shifted(-18)
+        let amberLight = look.tone(0xF8CF78, dim: 0.5), amber = look.tone(0xE9A24A, dim: 0.5)
+        // The tail beats, quick when it is bright.
+        let beat = calm * motion.by(0.04 * sin(t * 2), 0.14 * sin(t * 6), 0.2 * sin(t * 5), 0.5 * sin(t * 16))
+        var tc = f
+        tc.translateBy(x: 7, y: 0)
+        tc.rotate(by: .radians(beat))
+        tc.translateBy(x: -7, y: 0)
+        tc.fill(s.fryTail, with: .linearGradient(Gradient(colors: [skin.color(0.6), skinLight.color(0.18)]), startPoint: CGPoint(x: 7, y: 0), endPoint: CGPoint(x: 19, y: 0)))
+        f.fill(s.fryFold, with: .color(skinLight.color(0.3)))
+        form(f, s.fryBody, centre: CGPoint(x: -2, y: 0), radius: 11, skinLight, skin, skinDark, highlight: 0.4, core: 0.6, rim: false, L: CGPoint(x: -L.y, y: L.x))
+        // The yolk sac, amber and full, under the throat.
+        f.fill(s.frySac, with: .radialGradient(Gradient(colors: [look.lifted(amberLight, 0.3).color(0.95), amberLight.color(0.9), amber.color(0.88)]), center: CGPoint(x: -4.4, y: 4.4), startRadius: 0, endRadius: 7))
+        f.stroke(s.frySpine, with: .color(skinDark.color(0.55)), style: StrokeStyle(lineWidth: 0.8, lineCap: .round, dash: [1.2, 1.4]))
+        // The eye, huge for its head, kept upright whatever way the fry hangs.
+        var e = f
+        e.translateBy(x: -7.4, y: -1.4)
+        e.rotate(by: .radians(-theta))
+        let look_ = motion.beat(every: 6.5, lasting: 1.1, offset: 3)
+        let gaze = CGPoint(x: Ink.lerp(-0.2 * w.thirst, 0.02, look_ * w.thirst), y: Ink.lerp(-0.7 * w.thirst, 0.02, look_ * w.thirst))
+        eye(e, at: .zero, side: -1, rx: 3.5, ry: 3.7, gaze: gaze, droop: motion.by(1, 0.05, 0.3, 0), lid: skin)
+        // A hat on its head, a collar at its throat: it hangs head up, so
+        // both turn with it.
+        hat(f, foot: CGPoint(x: -12, y: -1), tilt: -.pi / 2, scale: 0.36)
+        neckwear(f, at: CGPoint(x: -5.4, y: 0.4), span: 7, tilt: .pi / 2, size: 0.34)
+        // The two smaller bubbles, and the ring and shine of the big one.
+        for (dx, dy, rr) in [(15.0, -5.0, 4.0), (9.0, 13.0, 3.0)] {
+            let small = Path(ellipseIn: CGRect(x: bx + dx - rr, y: by + dy - rr, width: rr * 2, height: rr * 2))
+            c.fill(small, with: .color(water.color(0.14)))
+            c.stroke(small, with: .color(Color.white.opacity(0.55)), lineWidth: 0.6)
+            c.fill(Path(ellipseIn: CGRect(x: bx + dx - rr * 0.5, y: by + dy - rr * 0.6, width: rr * 0.7, height: rr * 0.5)), with: .color(Color.white.opacity(0.7)))
+        }
+        c.stroke(disc, with: .color(Color.white.opacity(0.55)), lineWidth: 0.8)
+        let side = L.x > 0 ? 1.0 : -1.0
+        var shine = Path()
+        shine.move(to: CGPoint(x: bx + side * 8.6, y: by - 3))
+        shine.addQuadCurve(to: CGPoint(x: bx + side * 3.4, y: by - 9.4), control: CGPoint(x: bx + side * 7.6, y: by - 8))
+        c.stroke(shine, with: .color(Color.white.opacity(0.8)), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
+        c.fill(Path(ellipseIn: CGRect(x: bx - side * 7.4 - 0.8, y: by + 6.2, width: 1.8, height: 1.2)), with: .color(Color.white.opacity(0.5)))
     }
 
     // MARK: The bowl, in front of the fish

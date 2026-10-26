@@ -510,11 +510,11 @@ enum CritterGeometry {
         case .sitter:
             _ = sit(plan); _ = curl(plan); _ = head(plan)
             if plan.species == .hedgehog { _ = hedgehog(plan) }
-        case .perched: _ = bird(plan)
+        case .perched: _ = bird(plan); _ = owlStages(plan)
         case .waddler:
-            if plan.species == .penguin { _ = penguin(plan) } else { _ = duck(plan) }
-        case .shelled: _ = turtle(plan)
-        case .swimmer: _ = bowlArt.water(0); _ = fishArt
+            if plan.species == .penguin { _ = penguin(plan); _ = penguinStages(plan) } else { _ = duck(plan); _ = duckStages(plan) }
+        case .shelled: _ = turtle(plan); _ = turtleStages(plan)
+        case .swimmer: _ = bowlArt.water(0); _ = fishArt; _ = fishStages
         }
     }
 

@@ -49,6 +49,7 @@ struct ArtSheet: View {
                 else if let (species, kind) = Self.coloursPage(page) { colours(species, kind) }
                 else if page.hasPrefix("decor-") { decorSheet(page) }
                 else if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
+                else if page.hasPrefix("stage") { stagesSheet(page) }
                 else if let species = Species(rawValue: page) { speciesPage(species) }
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
                 else if page.hasPrefix("plant-"), let species = Species(rawValue: String(page.dropFirst(6))) { plantCard(species) }
@@ -406,11 +407,13 @@ struct ArtSheet: View {
         let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast, colour: UserDefaults.standard.integer(forKey: "artSheetColour"))
         let count = UserDefaults.standard.integer(forKey: "artSheetCount") == 0 ? 4 : UserDefaults.standard.integer(forKey: "artSheetCount")
         let mood = UserDefaults.standard.string(forKey: "artSheetMood").flatMap(Mood.init(rawValue:)) ?? .content
+        // `-artSheetStage 3` prices another stage (default: grown).
+        let stage = UserDefaults.standard.object(forKey: "artSheetStage") == nil ? 6 : UserDefaults.standard.integer(forKey: "artSheetStage")
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 2), spacing: 4) {
             ForEach(0..<count, id: \.self) { i in
                 TimelineView(.animation(minimumInterval: 1.0 / 30)) { timeline in
                     Canvas { context, size in
-                        let snapshot = SceneSnapshot(still: companion, progress: 0.97, mood: mood, stage: 6, now: hour(13), reduceMotion: false)
+                        let snapshot = SceneSnapshot(still: companion, progress: 0.97, mood: mood, stage: stage, now: hour(13), reduceMotion: false)
                         snapshot.drawBack(context, size: size, at: timeline.date)
                     }
                     .aspectRatio(1, contentMode: .fit)
