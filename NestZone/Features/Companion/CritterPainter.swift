@@ -28,10 +28,11 @@ struct CritterPainter {
     let look: CritterLook
 
     init(plan: CritterPlan, frame: SceneFrame, stage: Int, hop: Double?, wiggle: Double?, waking: Double?) {
-        self.plan = plan; self.frame = frame; self.stage = stage
+        // A mammal's stage is its own plan (`CritterPlan+Stages`), not a scale.
+        self.plan = plan.at(stage: stage); self.frame = frame; self.stage = stage
         self.hop = hop; self.wiggle = wiggle; self.waking = waking
         motion = PetMotion(frame: frame, stage: stage, hop: hop, wiggle: wiggle, waking: waking)
-        look = CritterLook(plan: plan, frame: frame, slump: 1 - motion.awake)
+        look = CritterLook(plan: self.plan, frame: frame, slump: 1 - motion.awake)
     }
 
     var time: Double { motion.time }

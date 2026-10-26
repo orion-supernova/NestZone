@@ -18,6 +18,11 @@ the old conversation.
   Finance now build in beats, 130–155 ms; the `List` screens are still 120–250),
   and a warm switch of about 55–80 ms; the open items are in step 0's "Still
   open".
+- **Mammal life stages (a separate pass, on its own branch):** the nine
+  mammal pets no longer only grow: baby, little one and young have their own
+  silhouette, face, coat and behaviour (`CritterPlan+Stages.swift`,
+  `RULES-pets.md` section 10, screenshots in `art/stages/index.html`). The
+  deer's grown art lost its spots on purpose. Not yet watched on a phone.
 - **To look at on a phone:** the new micro-animations (they build, but the
   simulator here can't be tapped, so they weren't watched one by one);
   whether the check in the "All square" seal draws itself in; the stamp with

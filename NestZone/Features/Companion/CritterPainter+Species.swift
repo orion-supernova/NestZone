@@ -44,12 +44,16 @@ extension CritterPainter {
         let w = motion.weights
         let coat = look.coat, light = look.light, dark = look.dark, belly = look.belly
         let baby = babyness
-        var b = c
+        var b0 = c
         let sink = motion.by(3, 2.4, 1.2, 0)
-        b.translateBy(x: 0, y: sink)
-        b.translateBy(x: 60, y: 108)
-        b.scaleBy(x: 1 + 0.01 * sink, y: 1 - 0.022 * sink - 0.1 * baby)
-        b.translateBy(x: -60, y: -108)
+        b0.translateBy(x: 0, y: sink)
+        b0.translateBy(x: 60, y: 108)
+        b0.scaleBy(x: 1 + 0.01 * sink, y: 1 - 0.022 * sink)
+        b0.translateBy(x: -60, y: -108)
+        // The dome is squashed for a baby; the head is not, it is set down onto it.
+        var b = b0
+        b.translateBy(x: 60, y: 108); b.scaleBy(x: 1, y: plan.bodyHeight); b.translateBy(x: -60, y: -108)
+        let drop = (1 - plan.bodyHeight) * 51 * 0.75
         let L = look.L
         let foot = belly.mix(look.accent, 0.4)
 
@@ -74,8 +78,8 @@ extension CritterPainter {
         b.stroke(toes, with: .color(dark.color(0.4)), style: StrokeStyle(lineWidth: 0.6, lineCap: .round))
         glow(b, Path(ellipseIn: CGRect(x: 32 - L.x * 3, y: 58 - L.y * 2, width: 36, height: 24)), dark.mix(look.cool, 0.4), centre: CGPoint(x: 50 - L.x * 3, y: 70), radius: 15, alpha: 0.3)
 
-        neckwear(b, at: CGPoint(x: 48, y: 72), span: 14, size: 0.9)
-        placedHead(b, w, baby: baby)
+        neckwear(b0, at: CGPoint(x: 48, y: 72 + drop * 0.9), span: 14, size: 0.9)
+        placedHead(b0, w, baby: baby, drop: drop)
     }
 
     /// The rows of a `SpineField`: blades from the darkest outer row to the

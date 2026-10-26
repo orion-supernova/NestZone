@@ -19,6 +19,8 @@ drawing. Contact sheets, all Debug (`xcrun simctl launch <udid> com.walhallaa.Ne
 | `-artSheet batch-a-night` | the same six in the morning, at dusk, by night and by the moon |
 | `-artSheet batch-b`, `batch-b-night` | the seven pets of batch B (deer, snow fox, polar cub, penguin, turtle, goldfish, and the redone owl) grown in the four moods, then in the morning, at dusk, by night and by the moon |
 | `-artSheet pet-redraw -frameMeter 1` | the cost bench (below); `-artSheetSpecies owl`, `-artSheetCount 1`, `-artSheetMood thirsty` |
+| `-artSheet kitten-life` (any mammal pet) | baby, little, young and grown in the four moods; `-life3` / `-life4` / `-life5` / `-life6` one stage large, `-lifedusk` by dusk and moon, `-lifewear` in the four wearables, `-lifecolour` in the original and the three colourways |
+| `-artSheetStage 3` | with `pet-redraw`: the cost bench at that life stage (default 6) |
 | `-ducklingLegacy 1` | (any launch) draws the duckling with its old, flat painter (`PetPainter`), to compare |
 
 Launch arguments given to `xcrun simctl launch` did not reach the app on a simulator that other builds were also launching on; `xcrun simctl spawn <udid> defaults write com.walhallaa.NestZone artSheet <page>` (and `frameMeter`, `artSheetSpecies`, ...) and a plain launch did. Any pet species works in place of `kitten`. The shots from the pass are in
@@ -476,3 +478,166 @@ Batch B's passes:
     is shorter (14 units), and the fish's x is clamped so its tail and nose stay
     inside the wall, whichever way it faces, blended through the turn so nothing
     jumps.
+
+## 10. Life stages (the mammal pets)
+
+*Written with the kitten, the hero; kitten, puppy, fox, snow fox, bunny,
+hamster, deer, polar cub and hedgehog follow it. The other body plans
+(waddler, perched, shelled, swimmer) have their own stages.*
+
+The owner's note: "young and grown up doesn't change much, it only gets
+bigger." A stage that is a scale is a wrong stage. Stages 0 to 2 are the
+blanket (a bundle, a bundle that wobbles, a head out of it) and are the same for
+every mammal; stages **3 (baby), 4 (little one), 5 (young) and 6 (grown)** are
+the animal, and each is a different *silhouette, proportion, feature, coat and
+behaviour*.
+
+### How it is built
+
+- **A stage is a plan.** `CritterPlan.at(stage:)` (`CritterPlan+Stages.swift`)
+  returns the species' plan with numbers changed and `key + "@s<stage>"` as its
+  key, so `CritterGeometry` caches every shape per stage with no new
+  machinery, and `CritterGeometry.prepare` builds the staged plan off the main
+  thread (`CompanionScene`'s `.task` is keyed on the stage too). The grown plan
+  comes back as it is: the grown pet's cost and picture are unchanged. Stages
+  0 to 2 use the baby plan (the head that looks out of the blanket is a newborn's).
+  The "@s" is not "#": a colourway's key is `<species>#<n>`, and a stage key
+  that met one handed a calico the baby's patchless shapes.
+- **The new numbers** (all 1 or 0 for the grown pet): `legLength` (stubs under 1,
+  lanky over it: a body above 1 is *lifted* on longer legs and the thigh and
+  legs reach down to the floor), `pawSize`, `splay` (paws out to the sides),
+  `tailLength`, `tailWidth`, `headScale` (the head, scaled on top of its width),
+  `bodyHeight`, `markStrength`, `lidHeavy` (eyes newly open), `earFold`
+  (forward and down, low and wide), `spotSize`, `tipShown`, `tailTaper`, `carrot` (a tail
+  held straight up), `chestTuft`, `crownFluff`. The existing ones (`headWidth`,
+  `bodyWidth`, `earHeight`, `muzzle`, `eyeSize`, `eyeSpread`, `fur`, `legWidth`,
+  `cheek`) are scaled by the stage's table, `CritterPlan.growth`.
+- **Colour is mixed toward, never replaced** (`wash`, `fade`, `irisAmount`): a
+  fox kit is the plan's coat mixed 78% to chocolate, so a cross or a silver
+  fox is a dark kit of its own colour, and a calico kitten is calico at every
+  age (the patches are cut from the stage's own shapes, so they sit on the
+  smaller body). A baby's iris is mixed toward slate blue, the little one's toward
+  blue-grey-green, and the young one's most of the way back to its own.
+- `PetMotion.mammalScales` (.86, .86, .82, 1) only keeps the card's height
+  roughly even; the growing is in the proportions, not the scale.
+- **What stands on the legs rides on them**: the body, the tail and the head
+  are drawn in one context moved up by `lift`, the legs and paws and the
+  thigh's foot in the unmoved one. The head and neckwear are in the lifted
+  one, so hats, bows and scarves follow every stage with no new anchors.
+
+### The silhouette test (round 2)
+
+Round 1 changed numbers on one pose and a stranger could not tell the baby
+from a small adult. **The test for every stage of every species: cover the label,
+look at the card-size drawing, and name the stage from the outline alone.** A
+different outline means a different body plan, not a different number on the
+same one:
+
+- **A baby is a bean with a head on it.** Belly-down: `bodyHeight` .62 and
+  `legLength` .12, so the body is a low flat bean, the legs are barely paws,
+  and the head (x1.45, as wide as or wider than the body) is *set down onto it*
+  (`drop`), not squashed with it. The tail is a tapering stub (`tailLength` .4,
+  `tailTaper` .4); the ears are tiny, folded forward and set low and wide
+  (`earFold`); the eyes are huge, drift a little apart (it cannot focus yet) and,
+  when content, are shut in a sleepy curve; the coat is visibly fluffier
+  (`fur` 1.9, and the crown is furred too, `crownFluff`); markings are at 25%.
+  Bright is a wobble that is nearly a topple (a .1 rad sway, one period 1.3 s);
+  content is the sleepy shut-eye; thirsty is wide blue eyes and ears flat to the sides.
+- **A little one is the chubby age.** The head is over half the height (x1.32 on
+  a .84 wide, .78 tall body), legs short (.65), a round belly, ears upright
+  but rounded and big, **a fluffy chest tuft** (`chestTuft`, six tufts under the chin),
+  and the kitten's tail held **straight up like a carrot** (`carrot`: thick at
+  the root, `tailTaper` .3). Playful and clumsy: it rocks .08 rad when bright and
+  tilts its head 0.2 rad when content.
+- **A young one is lanky and awkward.** Legs 210% (the body is lifted 24 units
+  and the belly shows daylight), paws 155%, ears 130%, a slim body (.76), a head
+  a little small for it, and **a thin whip of a tail** (width 50%, tapering,
+  130% long). It play-bows when bright and sleeps sprawled with the tail trailing.
+- **A grown pet is as it was.**
+
+A baby is drawn belly-down for every species but those with a body plan of
+their own (the hamster sits up, the hedgehog is a dome, which a baby only
+squashes). The **head is never scaled with the body**: `CritterPainter.sit`
+keeps two contexts, the body's (scaled by `bodyHeight`, lifted by `lift`) and the
+head's (lifted, not squashed), and the head's `drop` is `(1 - bodyHeight) * 38`,
+so a baby's chin rests on the bean.
+
+### The stages (the kitten)
+
+| Stage | Silhouette | Face | Coat | Behaviour |
+|---|---|---|---|---|
+| **3 baby** | a bean with a huge head on it; stub legs, a stub of a tail, belly-down | slate-blue eyes, huge, unfocused, shut when content; tiny ears folded low and wide | pale, downy, a furred crown, stripes at 25% | a wobble that is nearly a topple; sleeps in a ball with the head on the bean |
+| **4 little one** | chubby: a head over half the height, short legs, round belly, a chest tuft | blue-grey-green eyes, big rounded ears | fluffy, stripes at 55% | the tail straight up; rocks and tilts; sleeps in a ball |
+| **5 young** | lanky: long legs, big feet, a lifted body, a whip of a tail | green-gold eyes, oversized ears | sleek, bold stripes | a play-bow; sleeps sprawled |
+| **6 grown** | as before | as before | as before | as before |
+
+Every stage acts every mood (the same four poses, `PetMotion.weights`), in its
+own way: a baby dozes curled into a ball, a young one sprawled.
+
+### Rules the kitten wrote
+
+- **Newly open is not grumpy.** Heavy half-lids on a baby were rule 2 again. A
+  baby's eyes are either wide (bright, thirsty) or shut in the sleepy curve
+  (content); never half. A hamster pup's (`lidHeavy` 2) are sealed in every
+  mood: it is born with them shut.
+- **Round ears are a rodent's on a baby**, but right on a little one: a baby's
+  are small *triangles* folded forward and set low and wide; a little one's are
+  big and round.
+- **A stage key may not meet a colourway's** (`<species>#<n>`): a stage's is
+  `key + "@s<stage>"`. And `CritterLook` is built from the *staged* plan, not the
+  parameter (the baby's eyes were yellow).
+- **Strokes may not cross the coat's edge.** The painted hairs and stripes are
+  cut to the body's outline at build time (`Path.intersection`, once per stage).
+- **Do not squash the head with the body.** The first baby scaled the whole
+  context by `bodyHeight` and the head with it; at .62 that is a pancake.
+- **Long legs are a lift; short legs leave the body on the floor.**
+- **A pose is a rotation about the paws**, small (.05 to .17 rad), because the
+  legs are not in the rotated context and the body is drawn over them. It is
+  the same lean under Reduce Motion, so the pose reads without moving.
+- **Crown tufts at the same height as the cheeks are a mohawk.** The first baby's
+  crown (mask 1, `fur` 2.4) was a row of spikes; mask .5 and `fur` 1.9.
+- **A short leg with a sock is a boot.** The fox's little one, with legs at 50%, had a
+  black block for a foot; legs at 80% for the foxes.
+- **A fox's bib.** The pale chest (`bib` 1.6) was a narrow sliver under the
+  chin that read as a stray white line at young and grown. It is the bib's
+  top edge, behind the head; the bib is now 42% wider per unit of `bib` (it was
+  8%), so it reads as a chest patch under the chin.
+
+### The other species (silhouette first)
+
+| | baby (belly-down bean) | little one (chubby) | young (lanky) | grown |
+|---|---|---|---|---|
+| **puppy** | huge head, soft floppy ears, blue-grey eyes, tiny stub tail | round, ears falling, a tuft | small head, enormous paws, long legs, a thin tail | as before |
+| **fox** | dark chocolate bean, round ears set low, short blunt muzzle, no tip | rusty, big dark round ears, a tuft | red, ears up, the white tip starts, long legs | the full red brush |
+| **snow fox** | grey-cream bean, round ears | whiter, round ears | white, ears pointed | winter coat |
+| **bunny** | a round ball with leaf ears | ears up but short, round belly | ears 95%, gangly legs | long upright ears |
+| **hamster** | pink and nearly hairless, eyes shut | fuzzy ball, big pouches | slim, nearly adult | full coat |
+| **deer** | a fawn lying hidden: big spots (x1.7), huge ears and eyes | wobbly long legs, spots x1.45 | spots fading, lanky | spots gone (the grown plan is `.plain`, on purpose) |
+| **polar cub** | tiny cream bean, sleepy | round and chubby, ears round | lanky | white |
+| **hedgehog** | soft white spines, pale, sleepy | spines greying | darker spines | full dark coat |
+
+**The performance rule held, re-measured after round 2.** Per frame a staged pet
+is drawn from cached shapes like the grown one (two contexts instead of one, a
+tuft and a few more tufts on the crown). Section 7's bench with `-artSheetStage`
+(`-artSheet pet-redraw -frameMeter 1 -artSheetCount 1`, the iPhone 17
+simulator on iOS 27.0, a shared Mac, mean of the per-second means after the
+first two seconds, ms), the grown kitten run first in the same session:
+
+| kitten | content | bright | thirsty | dozing |
+|---|---|---|---|---|
+| grown | .45 | .42 | .48 | .50 |
+| baby | .41 | .45 | .46 | .55 |
+| little one | .46 | .41 | .51 | .48 |
+| young | .48 | .40 | .54 | .45 |
+
+Bright, grown / baby / little / young: puppy .56 / .55 / .57 / .60; fox .61 /
+.58 / .50 / .63; snow fox .47 / .61 / .60 / .60; bunny .46 / .42 / .46 / .37;
+hamster .38 / .38 / .37 / .32; deer .30 / .30 / .33 / .38; polar cub .29 / .32 /
+.29 / .27; hedgehog .33 / .33 / .35 / .31. Every staged pet is within the run-to-run
+noise of the grown kitten (.40 to .55); the snow fox's stages (.60 against its
+grown .47) and the fox's young (.63) are the dearest, and none is over the
+grown kitten's worst mood (.55) by more than .1. Worst frames are under 1.1 ms
+apart from single spikes (bunny young 14, kitten baby dozing 10, grown kitten
+content 4.7) that the grown pets show too: the bench does not `prepare` (the app does,
+off the main thread), and a shared Mac adds its own. Round 1's numbers (the same
+table, a different session) were .47 to .62 for the kitten.

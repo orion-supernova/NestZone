@@ -54,6 +54,7 @@ struct ArtSheet: View {
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
                 else if page.hasPrefix("plant-"), let species = Species(rawValue: String(page.dropFirst(6))) { plantCard(species) }
                 else if page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petClose(species) }
+                else if let species = isLifePage(page) { lifeSheet(species, page: page) }
                 else if page.hasSuffix("-stages"), let species = Species(rawValue: String(page.dropLast(7))), species.isPet { petStagesLarge(species) }
                 else if page.hasSuffix("-moods"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petMoods(species) }
             }
@@ -407,7 +408,7 @@ struct ArtSheet: View {
         let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast, colour: UserDefaults.standard.integer(forKey: "artSheetColour"))
         let count = UserDefaults.standard.integer(forKey: "artSheetCount") == 0 ? 4 : UserDefaults.standard.integer(forKey: "artSheetCount")
         let mood = UserDefaults.standard.string(forKey: "artSheetMood").flatMap(Mood.init(rawValue:)) ?? .content
-        // `-artSheetStage 3` prices another stage (default: grown).
+        // `-artSheetStage 3` draws that life stage (2 hatchling to 6 grown); 6 is the grown pet.
         let stage = UserDefaults.standard.object(forKey: "artSheetStage") == nil ? 6 : UserDefaults.standard.integer(forKey: "artSheetStage")
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 2), spacing: 4) {
             ForEach(0..<count, id: \.self) { i in
