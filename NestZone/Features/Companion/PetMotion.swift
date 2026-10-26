@@ -19,7 +19,7 @@ struct PetMotion {
     static let scales = [1.0, 1, 0.82, 0.62, 0.74, 0.86, 1]
     /// A mammal's stages differ in proportion and silhouette (`CritterPlan+Stages`),
     /// so the scale only keeps the card's height roughly even, not the growing.
-    static let mammalScales = [1.0, 1, 0.82, 0.74, 0.82, 0.9, 1]
+    static let mammalScales = [1.0, 1, 0.82, 0.86, 0.86, 0.82, 1]
 
     var time: Double { frame.reduceMotion ? 0 : frame.time }
     /// 0 when fast asleep, 1 when fully awake and bright.

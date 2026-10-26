@@ -56,11 +56,20 @@ struct SitGeometry {
     /// How far the body stands above where the grown one's does, for legs
     /// longer than the grown pet's (a young one's), in box units.
     let lift: Double
+    /// A little one's fluffy chest: pointed tufts hanging under the chin.
+    let tuft: Path
 
     init(_ plan: CritterPlan) {
         let bw = plan.bodyWidth, fur = plan.fur
         let longLegs = max(0, plan.legLength - 1) * 22
         lift = longLegs
+        var tf = Path()
+        if plan.chestTuft {
+            for (x, y, a, len) in [(44.0, 76.0, 1.85, 8.0), (48, 77, 1.75, 10.5), (52, 77.5, 1.62, 11), (56, 76.5, 1.5, 9), (46, 79, 1.8, 9.5), (51, 80, 1.7, 10)] {
+                tf.fur(x, y, a, len, 1.5, bend: 0.4)
+            }
+        }
+        tuft = tf
         func wide(_ x: Double) -> Double { 66 + (x - 66) * bw }
         let outline: [(Double, Double)]
         switch plan.species {
@@ -108,7 +117,7 @@ struct SitGeometry {
         let chestPath = Path.loop([CGPoint(x: 45, y: 71), CGPoint(x: 57, y: 77), CGPoint(x: 58.5, y: 95), CGPoint(x: 53, y: 107), CGPoint(x: 45, y: 107),
                                    CGPoint(x: 43, y: 94), CGPoint(x: 42, y: 79)])
         // A bib reaches up to the throat and wider across, about the chest's middle.
-        chest = bib == 1 ? chestPath : chestPath.applying(CGAffineTransform(translationX: 57, y: 92).scaledBy(x: 1 + 0.08 * (bib - 1), y: bib).translatedBy(x: -57, y: -92))
+        chest = bib == 1 ? chestPath : chestPath.applying(CGAffineTransform(translationX: 57, y: 92).scaledBy(x: 1 + 0.42 * (bib - 1), y: bib).translatedBy(x: -57, y: -92))
 
         // A young one's thigh reaches down from the lifted body to the floor.
         haunch = Path(ellipseIn: CGRect(x: 58, y: 74 - longLegs, width: 38, height: 34 + longLegs))
@@ -350,6 +359,8 @@ struct HeadGeometry {
         // Fur on the cheeks only (and a little under the chin line), from inside the head.
         headFur = FurEdge.furry(headOutline, seed: "head-\(plan.key)", gap: 4...7, height: (1.6 * fur)...(3.2 * fur), width: 3.4) { p in
             let side = abs(p.x) / w
+            // A baby's and a little one's crown is fluffy too.
+            if plan.crownFluff, p.y < -9, side < 0.8 { return 0.5 }
             return (side > 0.62 && p.y > -4 && p.y < 15 + 4 * c) ? 1 : 0
         }
 

@@ -37,18 +37,28 @@ extension CritterPainter {
         let species = plan.species
         let socks = plan.socks != nil
         let paw = pawTone
-        var b = c
+        var b0 = c
         // A tired or wanting one sits lower and rounder; a bright one tall.
         let sink = motion.by(3, 2.4, 1.2, 0)
-        b.translateBy(x: 0, y: sink)
+        b0.translateBy(x: 0, y: sink)
+        b0.translateBy(x: 60, y: 108)
+        b0.scaleBy(x: 1 + 0.01 * sink, y: 1 - 0.022 * sink)
+        b0.translateBy(x: -60, y: -108)
+        // The body is lower and flatter for a baby (a bean lying belly-down); the head
+        // is not squashed with it, it is set down onto it (`drop`).
+        var b = b0
         b.translateBy(x: 60, y: 108)
-        b.scaleBy(x: 1 + 0.01 * sink, y: (1 - 0.022 * sink) * plan.bodyHeight)
+        b.scaleBy(x: 1, y: plan.bodyHeight)
         b.translateBy(x: -60, y: -108)
+        let drop = (1 - plan.bodyHeight) * 51 * 0.75
         // What stands on the legs (the body, the tail, the head) rides on them:
         // a young one's long legs lift it, a baby's stubs leave it on the floor.
         var u = b
         u.translateBy(x: 0, y: -g.lift)
         agePose(&u, w)
+        var hc = b0
+        hc.translateBy(x: 0, y: -g.lift)
+        agePose(&hc, w)
         let strength = plan.markStrength
 
         // The silhouette is furred from inside, more on the shadow side.
@@ -80,6 +90,9 @@ extension CritterPainter {
             u.fill(g.chest, with: .radialGradient(Gradient(stops: [.init(color: t.color(0.9), location: 0), .init(color: t.color(0.7), location: 0.5), .init(color: t.color(0), location: 1)]),
                                                   center: CGPoint(x: 51, y: 92), startRadius: 0, endRadius: 17 * (1 + 0.35 * (plan.bib - 1))))
         }
+
+        // A little one's fluffy chest, under the chin.
+        if plan.chestTuft { hairs(u, g.tuft, dark: belly.shifted(-8, 2), light: look.lifted(belly, 0.4), alpha: 0.95) }
 
         // The haunch, a round of its own, and the foot under it.
         form(b, g.haunch, centre: CGPoint(x: 77, y: 91), radius: 20, light, coat, dark.shifted(2), highlight: 0.5)
@@ -128,8 +141,8 @@ extension CritterPainter {
         let L = look.L
         glow(u, Path(ellipseIn: CGRect(x: 32 - L.x * 3, y: 58 - L.y * 2, width: 36, height: 24)), dark.mix(look.cool, 0.4), centre: CGPoint(x: 50 - L.x * 3, y: 70), radius: 15, alpha: 0.32)
 
-        neckwear(u, at: CGPoint(x: 47, y: 70), span: 15 * plan.headWidth.squareRoot() * (1 + 0.25 * baby), size: 0.9 + 0.15 * baby)
-        placedHead(u, w, baby: baby)
+        neckwear(hc, at: CGPoint(x: 47, y: 70 + drop * 0.9), span: 15 * plan.headWidth.squareRoot() * (1 + 0.25 * baby), size: 0.9 + 0.15 * baby)
+        placedHead(hc, w, baby: baby, drop: drop)
     }
 
     /// How each age sits and moves, on top of the mood: a baby's sit is a wobble
@@ -143,10 +156,11 @@ extension CritterPainter {
         let t = frame.reduceMotion ? 0 : time
         switch plan.life {
         case 3:
-            let sway = sin(t / 1.9 * .pi * 2) * 0.045 * (1 - 0.6 * w.doze) + sin(t / 0.7 * .pi * 2) * 0.012 * w.bright
+            // Bright: a wobble that is nearly a topple, to one side and back.
+            let sway = sin(t / 1.9 * .pi * 2) * 0.04 * (1 - 0.6 * w.doze) + sin(t / 1.3 * .pi * 2) * 0.1 * w.bright
             u.translateBy(x: 60, y: 108); u.rotate(by: .radians(-0.05 + sway)); u.translateBy(x: -60, y: -108)
         case 4:
-            let rock = sin(t / 1.2 * .pi * 2) * 0.04 * (w.bright + 0.4 * w.content)
+            let rock = sin(t / 1.0 * .pi * 2) * 0.08 * w.bright + sin(t / 2.4 * .pi * 2) * 0.03 * w.content
             u.translateBy(x: 60, y: 108); u.rotate(by: .radians(0.015 + rock)); u.translateBy(x: -60, y: -108)
         case 5:
             let bow = w.bright + 0.25 * w.content
@@ -159,14 +173,16 @@ extension CritterPainter {
 
     /// The head, nodding forward when tired, tilting when it is playful, and
     /// dropping and turning toward the bowl when it wants something.
-    func placedHead(_ b: GraphicsContext, _ w: PetMotion.Weights, baby: Double) {
+    func placedHead(_ b: GraphicsContext, _ w: PetMotion.Weights, baby: Double, drop: Double = 0) {
         var h = b
         let glance = motion.beat(every: 6.5, lasting: 1.1, offset: 3) * w.thirst
-        let tilt = motion.by(0.2, -0.17, 0.025, 0.1) + (frame.reduceMotion ? 0 : 0.045 * sin(time / 3.1 * .pi * 2) * w.bright) + 0.1 * glance
+        // A baby's head is too heavy for it and droops to one side; a little one's tilts, curious.
+        let ageTilt = plan.life == 3 ? 0.1 : plan.life == 4 ? 0.2 * (w.content + 0.6 * w.bright) : 0
+        let tilt = motion.by(0.2, -0.17, 0.025, 0.1) + (frame.reduceMotion ? 0 : 0.045 * sin(time / 3.1 * .pi * 2) * w.bright) + 0.1 * glance + ageTilt
         h.translateBy(x: 46, y: 68)
         h.rotate(by: .radians(tilt))
         h.translateBy(x: -46, y: -68)
-        h.translateBy(x: 47 + motion.by(0, -2.5, 0, 0) + 1.5 * glance, y: 49 + motion.by(2, 4.5, 1.2, -0.5) + 0.07 * baby * 30 * (plan.headScale > 1 ? 1 : 0))
+        h.translateBy(x: 47 + motion.by(0, -2.5, 0, 0) + 1.5 * glance, y: 49 + drop + motion.by(2, 4.5, 1.2, -0.5))
         let grow = plan.headScale
         h.translateBy(x: 0, y: 17)
         h.scaleBy(x: grow, y: grow)
@@ -272,6 +288,11 @@ extension CritterPainter {
             bright = [CGPoint(x: 92, y: 98), CGPoint(x: 108, y: 94), CGPoint(x: 117, y: 82), CGPoint(x: 117, y: 66)]
             content = [CGPoint(x: 93, y: 101), CGPoint(x: 110, y: 102), CGPoint(x: 119, y: 95), CGPoint(x: 120, y: 85)]
             thirst = [CGPoint(x: 93, y: 102), CGPoint(x: 108, y: 106), CGPoint(x: 116, y: 111), CGPoint(x: 119, y: 112)]
+        case .curl where plan.carrot:
+            // A carrot: held straight up, a little forward, thick at the root.
+            bright = [CGPoint(x: 92, y: 100), CGPoint(x: 98, y: 86), CGPoint(x: 100, y: 68), CGPoint(x: 99, y: 50)]
+            content = [CGPoint(x: 92, y: 101), CGPoint(x: 97, y: 88), CGPoint(x: 99, y: 72), CGPoint(x: 98, y: 58)]
+            thirst = [CGPoint(x: 92, y: 102), CGPoint(x: 98, y: 93), CGPoint(x: 102, y: 84), CGPoint(x: 103, y: 76)]
         default:
             bright = [CGPoint(x: 92, y: 100), CGPoint(x: 119, y: 98), CGPoint(x: 126, y: 64), CGPoint(x: 107, y: 55)]
             content = [CGPoint(x: 93, y: 102), CGPoint(x: 115, y: 104), CGPoint(x: 122, y: 92), CGPoint(x: 113, y: 83)]
@@ -314,7 +335,7 @@ extension CritterPainter {
         let plume = kind == .plume
         let fluff = plume ? plan.tailFluff : 1
         let (bw0, bw1) = plume ? ((15.0 + 2 * baby) * fluff, (7.0 + 1.4 * baby) * fluff) : kind == .wag ? (11.5 + 2 * baby, 7.5 + 1.4 * baby) : (9.8 + 2 * baby, 6.4 + 1.4 * baby)
-        let (w0, w1) = (bw0 * plan.tailWidth, bw1 * plan.tailWidth)
+        let (w0, w1) = (bw0 * plan.tailWidth * (plan.carrot ? 1.25 : 1), bw1 * plan.tailWidth * plan.tailTaper)
         let parts = furRibbonParts(spine, w0, w1, fur: plan.fur, tipFrom: plume ? 11 : nil, bulge: plume ? 6 * fluff : 0)
         form(c, parts.body, centre: CGPoint(x: (p[0].x + p[3].x) / 2, y: (p[0].y + p[3].y) / 2), radius: 20, light, coat, coat.shifted(-10, 4), highlight: 0.35, core: 0.7)
         if plan.marks == .tabby {

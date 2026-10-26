@@ -145,6 +145,14 @@ struct CritterPlan: Equatable, Sendable {
     var earFold = 0.0
     /// Whether a brush's pale tip is out yet (a fox kit's is not).
     var tipShown = true
+    /// How much the tail tapers (1 as grown): a baby's is a short tapering stub, a
+    /// young one's a thin whip.
+    var tailTaper = 1.0
+    /// A little one's tail: a carrot, thick at the root, held straight up.
+    var carrot = false
+    /// A fluffy tuft on the chest, and tufts on the crown (a little one's and a baby's).
+    var chestTuft = false
+    var crownFluff = false
     /// How big a fawn's spots are (they fade in size and strength as it grows).
     var spotSize = 1.0
 
