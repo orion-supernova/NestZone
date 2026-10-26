@@ -53,9 +53,14 @@ struct SitGeometry {
     let crossMark, underside: Path
     /// Where the form's centre is, for the gradients.
     let bodyCentre = CGPoint(x: 68, y: 84)
+    /// How far the body stands above where the grown one's does, for legs
+    /// longer than the grown pet's (a young one's), in box units.
+    let lift: Double
 
     init(_ plan: CritterPlan) {
         let bw = plan.bodyWidth, fur = plan.fur
+        let longLegs = max(0, plan.legLength - 1) * 22
+        lift = longLegs
         func wide(_ x: Double) -> Double { 66 + (x - 66) * bw }
         let outline: [(Double, Double)]
         switch plan.species {
@@ -71,7 +76,8 @@ struct SitGeometry {
             (58.5, 60.5, 1.95, 17, 1.6, -3.5), (66, 60, 1.85, 20, 1.7, -3.5), (74, 62, 1.72, 20, 1.7, -3),
             (82, 66, 1.58, 18, 1.7, -2.5), (89.5, 73, 1.42, 14, 1.6, -2), (62, 69, 1.9, 10, 1.1, -2), (72, 70, 1.8, 10, 1.1, -2)]
         for (x, y, a, len, w, bend) in ribs { s.fur(wide(x), y, a, len, w * 0.6, bend: bend) }
-        stripes = s
+        // Stripes stop at the coat's edge: a rib that starts above the outline floated off it.
+        stripes = s.intersection(bodyPath)
 
         // Painted fur: short hair strokes that go round the form, lit on one
         // edge by a shifted copy of the same path.
@@ -86,7 +92,8 @@ struct SitGeometry {
                 h.fur(x, y, a, r.between(4.2, 6.2), 0.7)
             }
         }
-        hairs = h
+        // Strokes that cross the coat's edge float off it, as the stripes did.
+        hairs = h.intersection(bodyPath)
 
         // Fur breaks the body's edge from inside it, more on the shadow side.
         func furred(_ shadowRight: Double) -> Path {
@@ -103,7 +110,8 @@ struct SitGeometry {
         // A bib reaches up to the throat and wider across, about the chest's middle.
         chest = bib == 1 ? chestPath : chestPath.applying(CGAffineTransform(translationX: 57, y: 92).scaledBy(x: 1 + 0.08 * (bib - 1), y: bib).translatedBy(x: -57, y: -92))
 
-        haunch = Path(ellipseIn: CGRect(x: 58, y: 74, width: 38, height: 34))
+        // A young one's thigh reaches down from the lifted body to the floor.
+        haunch = Path(ellipseIn: CGRect(x: 58, y: 74 - longLegs, width: 38, height: 34 + longLegs))
         var hb = Path()
         for (x, y, a, len, bend) in [(92.0, 80.0, 2.55, 11.0, 2.0), (95, 89, 2.85, 11.5, 1.2), (91, 98, 3.15, 10.0, 0.0)] {
             hb.fur(wide(x), y, a, len, 1.3, bend: bend)
@@ -116,7 +124,7 @@ struct SitGeometry {
         }
         haunchHairs = hh
 
-        hindPaw = Path(ellipseIn: CGRect(x: 55, y: 102.4, width: 30, height: 9.2))
+        hindPaw = Path(ellipseIn: CGRect(x: 70 - 15 * plan.pawSize, y: 107 - 4.6 * plan.pawSize, width: 30 * plan.pawSize, height: 9.2 * plan.pawSize))
         var ht = Path()
         for x in [58.6, 61.6, 64.6] { ht.move(to: CGPoint(x: x, y: 105.2)); ht.addLine(to: CGPoint(x: x - 0.8, y: 108.4)) }
         hindToes = ht
@@ -127,20 +135,31 @@ struct SitGeometry {
         func stout(_ p: Path, _ cx: Double) -> Path {
             lw == 1 ? p : p.applying(CGAffineTransform(translationX: cx, y: 0).scaledBy(x: lw, y: 1).translatedBy(x: -cx, y: 0))
         }
-        let nearLegPath = stout(.loop([CGPoint(x: 37, y: 79), CGPoint(x: 49.5, y: 79), CGPoint(x: 48, y: 94), CGPoint(x: 50.2, y: 104), CGPoint(x: 36.5, y: 104), CGPoint(x: 39.5, y: 93)]), 43)
+        // Legs: from the body's underside to the floor, shortened for a baby
+        // (stubs, splayed out) and stretched for a young one (the body is
+        // lifted, `lift`). `along` maps the grown leg's height onto this one.
+        let top = 79 - longLegs + max(0, 1 - plan.legLength) * 25 * 0.95
+        func along(_ y: Double) -> Double { top + (y - 79) / 25 * (104 - top) }
+        func leg(_ pts: [(Double, Double)], _ cx: Double, _ dir: Double) -> Path {
+            stout(.loop(pts.map { CGPoint(x: $0.0 + dir * plan.splay * 3.2 * (along($0.1) - top) / max(1, 104 - top) * 1.4, y: along($0.1)) }), cx)
+        }
+        let nearLegPath = leg([(37, 79), (49.5, 79), (48, 94), (50.2, 104), (36.5, 104), (39.5, 93)], 43, -1)
         nearLeg = nearLegPath
-        nearPaw = stout(Path(ellipseIn: CGRect(x: 35.2, y: 101.6, width: 17, height: 8.6)), 43.7)
+        let ps = plan.pawSize
+        let nearX = 43.7 - plan.splay * 3.2 * 1.4
+        nearPaw = stout(Path(ellipseIn: CGRect(x: nearX - 8.5 * ps, y: 105.9 - 4.3 * ps, width: 17 * ps, height: 8.6 * ps)), nearX)
         var nt = Path()
-        for x in [39.4, 43.6, 47.8] { nt.move(to: CGPoint(x: 43.7 + (x - 43.6) * lw, y: 106.2)); nt.addLine(to: CGPoint(x: 43.7 + (x - 43.6) * lw, y: 109)) }
+        for x in [39.4, 43.6, 47.8] { nt.move(to: CGPoint(x: nearX + (x - 43.6) * lw * ps, y: 106.2 + (1 - ps) * 1.2)); nt.addLine(to: CGPoint(x: nearX + (x - 43.6) * lw * ps, y: 109 - (1 - ps) * 0.4)) }
         nearToes = nt
         var nb = Path()
-        nb.fur(38.5, 86, 0.2, 9, 1.4, bend: 1)
-        nb.fur(39.5, 92, 0.15, 8, 1.3, bend: 1)
+        nb.fur(38.5, 86 - longLegs * 0.5, 0.2, 9, 1.4, bend: 1)
+        nb.fur(39.5, 92 - longLegs * 0.3, 0.15, 8, 1.3, bend: 1)
         nearBars = nb
 
-        let farLegPath = stout(.loop([CGPoint(x: 51, y: 82), CGPoint(x: 62, y: 82), CGPoint(x: 61, y: 95), CGPoint(x: 63, y: 105), CGPoint(x: 50, y: 105), CGPoint(x: 52, y: 94)]), 56.5)
+        let farLegPath = leg([(51, 82), (62, 82), (61, 95), (63, 105), (50, 105), (52, 94)], 56.5, 1)
         farLeg = farLegPath
-        farPaw = stout(Path(ellipseIn: CGRect(x: 50, y: 102.4, width: 14, height: 7.4)), 57)
+        let farX = 57 + plan.splay * 3.2 * 1.4
+        farPaw = stout(Path(ellipseIn: CGRect(x: farX - 7 * ps, y: 106.1 - 3.7 * ps, width: 14 * ps, height: 7.4 * ps)), farX)
 
         let lower = Path(CGRect(x: 0, y: 91, width: 120, height: 30))
         nearSock = plan.socks == nil ? Path() : nearLegPath.intersection(lower)
@@ -161,6 +180,7 @@ struct SitGeometry {
         var sp = Path(), hs = Path()
         if plan.marks == .spots {
             func dot(_ path: inout Path, _ x: Double, _ y: Double, _ rx: Double, _ ry: Double, _ a: Double) {
+                let (rx, ry) = (rx * plan.spotSize, ry * plan.spotSize)
                 path.addPath(Path(ellipseIn: CGRect(x: -rx, y: -ry, width: rx * 2, height: ry * 2)).applying(CGAffineTransform(translationX: x, y: y).rotated(by: a)))
             }
             for (x, y, rx, ry, a) in [(50.0, 66.0, 2.3, 1.6, -0.5), (58, 61.5, 2.6, 1.7, -0.25), (67, 60.6, 2.8, 1.8, -0.05), (76, 62.2, 2.6, 1.7, 0.25),

@@ -119,6 +119,35 @@ struct CritterPlan: Equatable, Sendable {
     /// A penguin's gold at the neck.
     var gold: UInt32 = 0xFFC857
 
+    // Life stages (`CritterPlan+Stages`). A staged plan is the species' plan
+    // with these changed, under a key of its own, so everything built from it
+    // (`CritterGeometry`) is cached per stage with no new machinery. All are
+    // the grown pet's at their defaults.
+    /// Which stage the plan is drawn at (3 baby, 4 little one, 5 young, 6 grown).
+    var life = 6
+    /// How long the legs are against the grown pet's (a baby's are stubs, a
+    /// young one's lanky), how big the paws are, and the tail's length and width.
+    var legLength = 1.0
+    var pawSize = 1.0
+    var tailLength = 1.0
+    var tailWidth = 1.0
+    /// How much the head is scaled on top of its width, and how tall the body
+    /// sits against the grown one's (a baby: a big head on a short, round body).
+    var headScale = 1.0
+    var bodyHeight = 1.0
+    /// How far the paws splay when it sits (a baby's wobble out to the sides).
+    var splay = 0.0
+    /// How strongly the coat's markings show: faint on a baby, bold on a young one.
+    var markStrength = 1.0
+    /// How heavy the lids are when the eyes are first open (0 for grown).
+    var lidHeavy = 0.0
+    /// How far the ears are folded forward and down (a newborn's).
+    var earFold = 0.0
+    /// Whether a brush's pale tip is out yet (a fox kit's is not).
+    var tipShown = true
+    /// How big a fawn's spots are (they fade in size and strength as it grows).
+    var spotSize = 1.0
+
     /// Which species this is, and the key under which what is built from the
     /// plan once is kept (`CritterGeometry`): the species' name, unless a
     /// Debug variant says otherwise.
@@ -251,7 +280,7 @@ struct CritterPlan: Equatable, Sendable {
         case .deer:
             self.init(body: .sitter, origin: .blanket,
                       light: 0xE6B684, coat: 0xCB8C56, shade: 0x8C5632, belly: 0xFFF3E0, mark: 0x6E4429,
-                      nose: 0x2E2321, accent: 0xF2BDB0, wrap: 0xD4E6BE, ears: .leaf, tail: .cotton, marks: .spots, species: species, whiskers: false)
+                      nose: 0x2E2321, accent: 0xF2BDB0, wrap: 0xD4E6BE, ears: .leaf, tail: .cotton, marks: .plain, species: species, whiskers: false)
             (earHeight, headWidth, bodyWidth) = (1.22, 0.9, 0.94)
             (eyeSize, eyeSpread, fur, muzzle, chin, noseSize, cheek) = (1.12, 1.06, 0.3, 1.3, 0.85, 1.3, 0)
             (pupil, iris) = (.round, 0x3A2418)

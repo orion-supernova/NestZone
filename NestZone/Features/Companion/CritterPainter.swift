@@ -28,10 +28,11 @@ struct CritterPainter {
     let look: CritterLook
 
     init(plan: CritterPlan, frame: SceneFrame, stage: Int, hop: Double?, wiggle: Double?, waking: Double?) {
-        self.plan = plan; self.frame = frame; self.stage = stage
+        // A mammal's stage is its own plan (`CritterPlan+Stages`), not a scale.
+        self.plan = plan.at(stage: stage); self.frame = frame; self.stage = stage
         self.hop = hop; self.wiggle = wiggle; self.waking = waking
         motion = PetMotion(frame: frame, stage: stage, hop: hop, wiggle: wiggle, waking: waking)
-        look = CritterLook(plan: plan, frame: frame, slump: 1 - motion.awake)
+        look = CritterLook(plan: self.plan, frame: frame, slump: 1 - motion.awake)
     }
 
     var time: Double { motion.time }
@@ -50,7 +51,7 @@ struct CritterPainter {
         c.translateBy(x: x - 60 * k, y: floor - 108 * k)
         c.scaleBy(x: k, y: k)
         // A turtle is low and wide: it stands a little larger than the rest to fill the card.
-        let scale = stage < 2 ? 1 : (plan.body == .swimmer ? 1.12 : PetMotion.scales[stage]) * (plan.body == .shelled ? 1.18 : 1)
+        let scale = stage < 2 ? 1 : (plan.body == .swimmer ? 1.12 : plan.body == .sitter ? PetMotion.mammalScales[stage] : PetMotion.scales[stage]) * (plan.body == .shelled ? 1.18 : 1)
         var ground = c
         ground.translateBy(x: 60, y: 108)
         ground.scaleBy(x: scale, y: scale)

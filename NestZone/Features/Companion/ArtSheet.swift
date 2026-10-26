@@ -53,6 +53,7 @@ struct ArtSheet: View {
                 else if page.hasPrefix("plant-"), page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropFirst(6).dropLast(6))) { plantClose(species) }
                 else if page.hasPrefix("plant-"), let species = Species(rawValue: String(page.dropFirst(6))) { plantCard(species) }
                 else if page.hasSuffix("-close"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petClose(species) }
+                else if let species = isLifePage(page) { lifeSheet(species, page: page) }
                 else if page.hasSuffix("-stages"), let species = Species(rawValue: String(page.dropLast(7))), species.isPet { petStagesLarge(species) }
                 else if page.hasSuffix("-moods"), let species = Species(rawValue: String(page.dropLast(6))), species.isPet { petMoods(species) }
             }
@@ -406,11 +407,13 @@ struct ArtSheet: View {
         let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast, colour: UserDefaults.standard.integer(forKey: "artSheetColour"))
         let count = UserDefaults.standard.integer(forKey: "artSheetCount") == 0 ? 4 : UserDefaults.standard.integer(forKey: "artSheetCount")
         let mood = UserDefaults.standard.string(forKey: "artSheetMood").flatMap(Mood.init(rawValue:)) ?? .content
+        // `-artSheetStage 3` draws that life stage (3 baby, 4 little, 5 young); 6 is the grown pet.
+        let stage = UserDefaults.standard.object(forKey: "artSheetStage") == nil ? 6 : UserDefaults.standard.integer(forKey: "artSheetStage")
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 2), spacing: 4) {
             ForEach(0..<count, id: \.self) { i in
                 TimelineView(.animation(minimumInterval: 1.0 / 30)) { timeline in
                     Canvas { context, size in
-                        let snapshot = SceneSnapshot(still: companion, progress: 0.97, mood: mood, stage: 6, now: hour(13), reduceMotion: false)
+                        let snapshot = SceneSnapshot(still: companion, progress: 0.97, mood: mood, stage: stage, now: hour(13), reduceMotion: false)
                         snapshot.drawBack(context, size: size, at: timeline.date)
                     }
                     .aspectRatio(1, contentMode: .fit)

@@ -153,9 +153,14 @@ struct CompanionScene: View {
         .onTapGesture(coordinateSpace: .local) { location in pet(at: location) }
         .onScrollVisibilityChange(threshold: 0.05) { isVisible = $0 }
         .onAppear(perform: settle)
-        .task(id: "\(companion.species.rawValue)-\(painted.colourway)") {
+        .task(id: "\(companion.species.rawValue)-\(painted.colourway)-\(stage)") {
             guard let plan = CritterPlan.of(companion.species, colourway: painted.colourway) else { return }
-            await Task.detached(priority: .utility) { CritterGeometry.prepare(plan) }.value
+            // A mammal's life stage has shapes of its own (`CritterPlan+Stages`).
+            let staged = plan.at(stage: stage)
+            await Task.detached(priority: .utility) {
+                CritterGeometry.prepare(plan)
+                if staged.key != plan.key { CritterGeometry.prepare(staged) }
+            }.value
         }
         // A new companion can keep the old one's seed (choosing again before
         // anything graduated), so the tree is grown again for a new species

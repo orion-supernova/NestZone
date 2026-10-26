@@ -43,6 +43,8 @@ extension CritterPainter {
                     spread = 0.28 + m.by(0.12, 0.04, 0, -0.2) + flap
                 }
                 if plan.ears == .leaf { spread += 0.82 * (1 - wt.thirst) - 0.1 * wt.bright }
+                // A newborn's ears are small and folded forward and down, off to the sides.
+                spread += 0.42 * plan.earFold
                 let flick = (s > 0) == twitchRight ? twitch * (long ? 0.18 : 0.3) : 0
                 e.translateBy(x: s * (hang ? 15.5 : (long ? 8.6 : 13.2)), y: (hang ? -9 : (long ? -14 : -11)) + 1.8 * wt.thirst)
                 e.rotate(by: .radians(s * spread + s * flick))
@@ -158,7 +160,8 @@ extension CritterPainter {
         let toBowl = CGPoint(x: -0.62, y: 0.78)
         let drift = frame.reduceMotion ? 0 : sin(m.time * 0.37) * 0.12 * (1 - wt.thirst)
         let gaze = CGPoint(x: Ink.lerp(toBowl.x * wt.thirst, 0.02, glance * wt.thirst) + drift, y: Ink.lerp(toBowl.y * wt.thirst, 0.02, glance * wt.thirst) - 0.06 * wt.bright)
-        let droop = m.by(1, 0.05, 0.05, 0)
+        let lh = plan.lidHeavy
+        let droop = m.by(1, 0.05 + 0.2 * lh, 0.05 + 0.7 * lh, 0.45 * lh)
         let size = (1 + 0.32 * babyness)
         let spread = 9.6 * plan.eyeSpread * (1 + 0.08 * babyness)
         let eyeY = species == .hedgehog ? -0.5 : -1.5

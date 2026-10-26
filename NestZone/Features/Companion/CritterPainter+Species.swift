@@ -48,7 +48,7 @@ extension CritterPainter {
         let sink = motion.by(3, 2.4, 1.2, 0)
         b.translateBy(x: 0, y: sink)
         b.translateBy(x: 60, y: 108)
-        b.scaleBy(x: 1 + 0.01 * sink, y: 1 - 0.022 * sink - 0.1 * baby)
+        b.scaleBy(x: 1 + 0.01 * sink, y: (1 - 0.022 * sink) * plan.bodyHeight)
         b.translateBy(x: -60, y: -108)
         let L = look.L
         let foot = belly.mix(look.accent, 0.4)
