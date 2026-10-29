@@ -20,3 +20,7 @@ graphify-out/20*/
 # Release artefacts from ./deploy.sh — archives, exported ipas and the
 # ExportOptions.plist it writes. All reproducible from a tag; none of it small.
 build/
+
+# Python bytecode from the Docs tools.
+__pycache__/
+*.pyc
