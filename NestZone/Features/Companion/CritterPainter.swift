@@ -51,7 +51,7 @@ struct CritterPainter {
         c.translateBy(x: x - 60 * k, y: floor - 108 * k)
         c.scaleBy(x: k, y: k)
         // A turtle is low and wide: it stands a little larger than the rest to fill the card.
-        let scale = stage < 2 ? 1 : (plan.body == .swimmer ? 1.12 : plan.body == .sitter ? PetMotion.mammalScales[stage] : PetMotion.scales[stage]) * (plan.body == .shelled ? 1.18 : 1)
+        let scale = stage < 2 ? 1 : (plan.body == .swimmer ? 1.12 : Self.stageScale(plan, stage)) * (plan.body == .shelled ? 1.18 : 1)
         var ground = c
         ground.translateBy(x: 60, y: 108)
         ground.scaleBy(x: scale, y: scale)
@@ -206,20 +206,7 @@ struct CritterPainter {
         let wrap = look.tone(plan.wrap, dim: 0.7)
         let L = look.L
         if plan.origin == .egg {
-            let egg = Path(ellipseIn: CGRect(x: 36, y: 40, width: 48, height: 64))
-            form(c, egg, centre: CGPoint(x: 60, y: 72), radius: 32, wrap.mix(RGB(255, 255, 255), 0.35), wrap, wrap.shifted(-13, 6), highlight: 0.4)
-            var speckles = Path()
-            for (x, y, r) in [(50.0, 60.0, 1.8), (66, 52, 1.4), (70, 70, 2.0), (54, 82, 1.6), (62, 94, 1.5), (46, 72, 1.2), (74, 86, 1.3), (60, 66, 1.1)] {
-                speckles.addEllipse(in: CGRect(x: x - r, y: y - r * 0.8, width: r * 2, height: r * 1.6))
-            }
-            c.fill(speckles, with: .color(look.tone(plan.mark, dim: 0.7).color(0.55)))
-            c.ellipse(60 + L.x * 9, 60 + L.y * 8, 5, 9, .color(Color.white.opacity(0.55)))
-            if stage == 1 {
-                var crack = Path()
-                crack.move(to: CGPoint(x: 44, y: 66))
-                for point in [(50.0, 71.0), (55, 65), (61, 71), (67, 66)] { crack.addLine(to: CGPoint(x: point.0, y: point.1)) }
-                c.stroke(crack, with: .color(look.tone(0xD9C39A, dim: 0.7).color()), style: StrokeStyle(lineWidth: 2, lineJoin: .round))
-            }
+            eggArt(c)
             return
         }
         // A bundle: a soft dome, the knit in rows of stitches, a knot at the top.
@@ -292,6 +279,10 @@ struct CritterPainter {
     /// The head out of its wrapping: the egg's cracked shell, or the blanket
     /// folded back round it, with two little paws over the edge.
     private func hatchling(_ c: GraphicsContext) {
+        if plan.species == .duckling { duckHatchling(c); return }
+        if plan.species == .penguin { penguinHatchling(c); return }
+        if plan.species == .owl { owlHatchling(c); return }
+        if plan.species == .turtle { turtleHatchling(c); return }
         var h = c
         h.translateBy(x: plan.body == .perched ? 0 : 14, y: plan.body == .perched ? 0 : 34)
         var turtleHead = c

@@ -34,7 +34,9 @@ extension CritterPlan {
     /// The plan at a stage; 3 and above only (before that it is a bundle). The
     /// grown plan comes back as it is.
     func at(stage: Int) -> CritterPlan {
-        guard body == .sitter, stage < 6 else { return self }
+        // A bird, a turtle or a goldfish has the colours of its age only (`colours(atStage:)`).
+        guard body == .sitter else { return colours(atStage: stage) }
+        guard stage < 6 else { return self }
         let g = Self.growth(species, stage: max(3, stage))
         var p = self
         p.life = max(3, stage)
