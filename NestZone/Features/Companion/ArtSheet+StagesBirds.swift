@@ -12,6 +12,7 @@ import SwiftUI
 ///   -artSheet stagecolour-duckling-1     one colourway, the seven stages large
 ///   -artSheet stagewear-duckling         stages 2 to 6 in a party hat, a bow, a scarf, a crown
 ///   -artSheet stagenight-duckling        stages 2 to 6 at dusk, by night and by the moon
+///   -artSheet stagesil-duckling          the silhouette test: stages 2 to 6 as black outlines at card size, no labels
 extension ArtSheet {
     private static let stageProgress: [Double] = [0.02, 0.12, 0.28, 0.47, 0.66, 0.85, 0.97]
     private static let stageNames = ["egg", "pip", "hatchling", "baby", "little", "young", "grown"]
@@ -27,6 +28,7 @@ extension ArtSheet {
             case "stagecolour": stageColourLarge(species, colour: parts.count > 2 ? Int(parts[2]) ?? 1 : 1)
             case "stagewear": stageWear(species)
             case "stagenight": stageNight(species)
+            case "stagesil": stageSilhouettes(species)
             default: EmptyView()
             }
         }
@@ -108,6 +110,38 @@ extension ArtSheet {
             }
         }
         .padding(.horizontal, 3)
+    }
+
+    /// The silhouette test: can a stranger name each stage from its outline
+    /// alone, at the size of the card, with no label? Every cell is the pet at
+    /// that stage drawn black on white (`colorMultiply` keeps the shape and
+    /// drops every colour, the contact shadow included, which is the same for
+    /// all). A stage that cannot be told from its neighbour by this is a scaled
+    /// one.
+    private func stageSilhouettes(_ species: Species) -> some View {
+        func silhouette(_ stage: Int) -> some View {
+            Canvas { context, size in
+                let companion = Companion(species: species, seed: Self.seed, startedAt: .distantPast)
+                let snapshot = SceneSnapshot(still: companion, progress: Self.stageProgress[stage], mood: .content, stage: stage, now: hour(13), reduceMotion: true)
+                let moment = snapshot.moment(size, at: snapshot.epoch)
+                var c = context
+                c.scaleBy(x: moment.scale, y: moment.scale)
+                guard let plan = CritterPlan.of(species) else { return }
+                CritterPainter(plan: plan, frame: moment.frame, stage: stage, hop: nil, wiggle: nil, waking: nil)
+                    .draw(c, x: moment.center, floor: SceneSpace.floor - 4, size: 190)
+            }
+            .colorMultiply(.black)
+            .background(Color.white)
+            .aspectRatio(1, contentMode: .fit)
+            .clipShape(.rect(cornerRadius: 8))
+        }
+        return VStack(alignment: .leading, spacing: 4) {
+            title("\(species.rawValue) - the silhouette test, stages 2 to 6, no labels")
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
+                ForEach(2...6, id: \.self) { silhouette($0) }
+            }
+        }
+        .padding(.horizontal, 4)
     }
 
     private func stageNight(_ species: Species) -> some View {
