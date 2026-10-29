@@ -43,7 +43,7 @@ things stand, every decision and why, what's next, and what's still open.
 | `CompanionScene.swift` | The live scene in three layers — behind, the tree, in front — with eased mood and growth, wake-up, drops, hearts and stage pops. The tree is drawn only when it changes. |
 | `CanopyPainter.swift` | The tree, grown from a seed: layered gouache, ported call for call from `art/gouache/tree.html`. |
 | `PetPainter.swift` | The duckling. |
-| `ScenePainter.swift` | Sky and clock, pot and soil, the decorations (sketched as emoji where not drawn yet), what it wears, weather, fireflies, the thirst bubble, the dome. |
+| `ScenePainter.swift` | Sky and clock, pot and soil, the decorations (sketched as emoji where not drawn yet), what it wears, weather, fireflies, the thirst bubble, the z's of a sleeper. A dozing plant wears a knitted cozy on its pot (`SleepCozy.swift`). |
 | `SceneInk.swift` | Seeded randomness, easing and colour helpers shared by the painters. |
 | `CompanionCard.swift` | The card on Today, its one-line busy-day form, and the invitation. |
 | `CompanionSheets.swift` | The sheet container, Choose, Decorate, Album, Our holidays, Lab, and the ceremony. |

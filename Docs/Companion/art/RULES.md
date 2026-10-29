@@ -547,7 +547,7 @@ Four things the first round got wrong, and what holds now:
    the shrunken dark body behind them. A flower-covered crown keeps its flowers when it is
    thirsty or dozing: `BloomArt` thins them (a quarter, a third) and `Tones` pales them, and
    they are not shut into buds. Thirsty is the same tree drooping and paling with a few leaves
-   on the soil; dozing is the same tree, calm and dimmed under the dome.
+   on the soil; dozing is the same tree, calm and dimmed (the dome it once sat under is gone: section 18).
 11. **No marks at a fork.** A limb's bark stops short of the fork at its end (84 percent)
    and starts after the fork it leaves (a quarter out, a sixth on a trunk's segments); its lit edge
    and core shadow are drawn from 30 percent of the way along it (`TreeWood.from`),
@@ -1079,3 +1079,104 @@ band draws the same fills as before (the new fields are empty or `nil`); the 22-
 pixel comparison above was taken before this round and was not repeated, but the five
 species re-shot after it (monstera, basil, mint, fox, kitten) came back with their
 colourway-0 cells byte-identical, day and night, to the shots of the round before.
+
+## 18. Everything attached, and sleeping like a plant (round 6)
+
+The owner tested on a phone and found a magnolia at 48/64 with its blossom floating
+above its branch tips, a cherry with clusters of blossom hanging in the air past any
+twig, and a grown cherry asleep under a glass dome it was larger than. Two rules came
+out of it. Before and after: `art/attached/index.html`.
+
+### The attachment rule
+
+**Every clump, leaf, bud, blossom and fruit stands on a branch, twig or stem that
+visibly reaches it, at every growth value from the seed to the grown plant, not only
+at the stages. Foliage grows out of wood; it is never placed beside it.**
+
+*What was wrong.* A clump was always placed at the tip of its limb, but what a clump
+carries (a magnolia's buds, a cherry's clusters of blossom, a spur of cherries) is laid
+out in the clump's own units at the size of the **grown** crown, and the clump's leaves
+are held back while a magnolia or a cherry flowers (`leafy` 0.1 and 0.3). So while the
+leaves were few the blossom stood a clump's radius (30 to 50 points) off the wood, with
+nothing between it and the limb, and the small clump of leaves itself stood a third of a
+radius off the tip. At the stages it was hidden by the picture being nearly grown or
+nearly bare; in between, and under the stepper, it showed.
+
+*What holds now* (`TreeAttach.swift`; the same on every tree, and the grown picture
+is unchanged):
+
+1. **The clump's centre follows its leaves out from the tip** (`Spot.settled`): with
+   few leaves out a clump is a tuft *on* the tip. With all of them out the centre keeps
+   its place except where a drooping crown (`TreeCore.calmed`) had let the tip slip out
+   of the leaf mass (a dozing lemon: up to 8 points), where it is held to the designed
+   reach plus a third of a radius.
+2. **What a clump carries is gathered towards the tip while its leaves are few**
+   (`TreeCore.gather`): half its grown reach with the first leaves, all of it when
+   they are in. Blossoms keep their own size; only where they stand moves.
+3. **What still stands clear of the leaves is held by a twig from the tip** (`Sprigs`):
+   a tapered, slightly bowed lens in the bark's colour, **one fill for the whole crown**,
+   drawn with the wood, so the leaves of its own clump cover its foot. A cherry's or an
+   azalea's cluster has one twig, and its flowers stand on short stalks from the
+   cluster's middle (`ClumpBloom.prongs`, cached in the clump's units, applied as a
+   transform per redraw).
+4. **A sprig has its twig at the back as in front** (`PomegranatePainter+Art`): the
+   twig was drawn only for the front tier, so the outermost leaf of a back or middle
+   sprig stood alone on the edge of the crown.
+
+If a stage is meant to be bare wood (a magnolia's flowers before its leaves) the
+flowers still stand on twig tips.
+
+*How it is checked, twice.* `-artSheet <species>-growth` (twelve growths, day) and
+`-growth-wood` draw the skeleton in cyan, each twig in yellow, each leaf mass as a green
+ring, a green dot on everything held and a **red ring on anything that is not**
+(geometry, `TreeAudit`); the wood sheets of every species also box in red every piece
+that floats in the *picture* (`PixelAudit`: the plant is drawn on a clear ground, the
+drawn pixels are thickened by 3 points, and whatever is not joined to the soil is
+a piece of its own; it knows nothing of the painters, so it holds for every plant
+and tree however they are drawn). `-artSheet <species>-scrub` sweeps growth up and down
+with the wood on, the stepper's scrub but fast; `-artSheet attach-scan` and
+`-artSheet pixel-scan` (`-pixelSpecies`, `-pixelStep`, `-artSheetColour`) run both over
+every species at a hundred growths, four moods and four seeds and log the count
+(category `Attach`). `-attachFix 0` draws every tree the old way on the same build.
+The two checks disagree on purpose: the geometry check cannot see a leaf that has no
+twig; the pixel check cannot tell a blossom held by a leaf from one held by wood.
+
+RESULTS_PLACEHOLDER
+
+*Costs.* The same fills as before except one: the crown's twigs. A redraw adds a
+translate per clump and the twig path; see the numbers below.
+
+### The sleep rule
+
+**A dozing plant or tree sleeps the way real plants do, never under glass.** The dome is
+gone (it was 86 points wide whatever it covered, and a grown tree is 400). What shows
+instead, all from the plant's own shape or from the pot, so it fits any size:
+
+- **The leaves fold** (nyctinasty): a tree's pairs close towards their twig and narrow
+  (`LeafArt.foldK`, in the cache's mood key), and a potted plant settles in towards
+  its stem (`PlantLayer`, 12% narrower and 3% lower at full sleep).
+- **Blossoms close into buds**: a magnolia's, a tulip's and a daisy's did already (their
+  `open` is zero asleep); a cherry's and an azalea's now do (`open` scaled by the doze).
+  A sunflower's head bows (its doze term).
+- **The colours dim, not dry**: asleep leans towards a dim, cool green
+  (`Canopy.dozy`), not the pale straw the dome used to hide; a sleeping tree drops a
+  few leaves (8%, was 18%) and strews none on the soil.
+- **A knitted cozy on the pot** (`SleepCozy`): ribbing, a folded cuff with stitches, a
+  band of cream diamonds, a pompom; coral, mustard or rose by the house's seed, dimmed
+  by the hour. It is its own cached layer between the pot and the plant
+  (`CozyLayer`), drawn again only when the mood, the hour or the seed changes, and not
+  inside the plant's layer: that layer is sheared by the wind and stretched by a
+  bounce about the soil line, and a cozy below that line would slide on its pot.
+- **A few z's** rise from the crown, as a pet's do, from `mood < 0.2`. Under Reduce
+  Motion they stand still (`ScenePainter.zees`).
+
+Only mood "dozing" changes; thirsty is as it was. A pet keeps its nightcap
+(`domeLift` is its lift-off, kept for that).
+
+### The holiday chip at night
+
+"Süsle" was the theme's accent as text on glass: violet text on the night sky measures 2.0 to 3.1 to 1 against the night wells, and the blue theme 1.7 to 2.6.
+It now sits on a capsule filled with the accent and is written in `AppTheme.onAccent`
+(white on violet and blue, a deep ink on pink, magenta and green): 5.7, 5.4, 6.2, 7.6
+and 6.7 to 1 for the five themes, in every sky, because the fill is its own and does
+not depend on what is behind the glass.

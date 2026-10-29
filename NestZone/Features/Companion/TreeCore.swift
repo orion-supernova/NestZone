@@ -103,7 +103,9 @@ struct TreeCore {
     /// clump's leaves are out (1 whole; a magnolia holds its leaves back while
     /// it flowers).
     func clump(_ tree: GraphicsContext, _ i: Int, scale: Double = 1, _ between: (Paint, Canopy.Pose.Spot) -> Between = { _, _ in Between() }) {
-        guard let q = pose.clumps[i] else { return }
+        guard let placed = pose.clumps[i] else { return }
+        // With few leaves out the clump is on its limb's tip, not beside it.
+        let q = settle(placed, leaf: scale)
         let c = canopy.clumps[i], tier = c.tier
         // The first tuft up a young stem would hide the bare cane: leave it out.
         if c.tuft && canopy.limbs[c.node].parent < 0 && canopy.limbs[c.node].depth == 0 && p < 0.55 { return }
@@ -240,7 +242,7 @@ struct TreeCore {
             context.fill(seed, with: .linearGradient(flesh, startPoint: CGPoint(x: -4, y: -6), endPoint: CGPoint(x: 4, y: 0)))
             context.fill(shine, with: .color(RGB.tone(style.hex.2, day: day).color(0.85)))
         }
-        let strewn = Int((10 * Ink.clamp(0.55 * M.thirst + 0.45 * M.doze) + 0.5).rounded(.down))
+        let strewn = Int((10 * Ink.clamp(0.55 * M.thirst + 0.12 * M.doze) + 0.5).rounded(.down))
         let count = max(strewn, p > 0.45 ? 1 : 0)
         var leaves = Path()
         for f in canopy.fallen.prefix(count) {
@@ -287,6 +289,11 @@ protocol TreeArt {
     func late(_ tree: GraphicsContext)
     /// Whether soft pools of sun are poured over the front of the crown.
     var dappled: Bool { get }
+    /// What the species carries away from its leaves, to be held by a twig from
+    /// the limb's tip (`TreeCore.hang`); also what the attach audit checks.
+    func hung(_ s: inout TreeCore.Sprigs)
+    /// How much of a clump's leaves are out (1 is all of them).
+    var leafK: Double { get }
     /// The leaves along a young tree's canes.
     func young(_ tree: GraphicsContext)
     func seedLeaves(_ tree: GraphicsContext)
@@ -296,6 +303,10 @@ protocol TreeArt {
 
 extension TreeArt {
     func late(_ tree: GraphicsContext) {}
+    var leafK: Double { 1 }
+    /// A tree whose leaves are all out when it flowers and fruits (a lemon, an
+    /// olive) hangs them within its leaves; the audit still checks them.
+    func hung(_ s: inout TreeCore.Sprigs) { core.noteCrop(&s) }
     var dappled: Bool { true }
     func young(_ tree: GraphicsContext) { core.youngSprigs(tree) }
     func finish(_ tree: GraphicsContext) {}
@@ -314,6 +325,9 @@ extension TreeArt {
             }
             if tier == 0 {
                 wood(tree)
+                var sprigs = TreeCore.Sprigs()
+                hung(&sprigs)
+                core.twigs(tree, sprigs)
                 young(tree)
             } else {
                 if tier == 2 {
@@ -325,5 +339,8 @@ extension TreeArt {
         }
         seedLeaves(tree)
         finish(tree)
+        #if DEBUG
+        if TreeDebug.wood { TreeAudit.overlay(self, tree) }
+        #endif
     }
 }

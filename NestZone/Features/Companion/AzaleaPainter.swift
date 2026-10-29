@@ -36,7 +36,7 @@ struct AzaleaPainter: TreeArt {
     /// How open the flowers are: from about .55, all through the budding stage.
     /// A tired shrub is the same shrub: fewer flowers (`BloomArt`) and paler ones
     /// (`Tones`), not bare.
-    var open: Double { Ink.smooth((core.p - 0.55) / 0.28) }
+    var open: Double { Ink.smooth((core.p - 0.55) / 0.28) * (1 - Ink.smooth(core.M.doze * 1.5)) }
 
     func clump(_ tree: GraphicsContext, _ i: Int) {
         core.clump(tree, i)
@@ -47,6 +47,23 @@ struct AzaleaPainter: TreeArt {
     func late(_ tree: GraphicsContext) {
         for i in core.order() {
             if let q = core.pose.clumps[i] { flowers(tree, i, q) }
+        }
+    }
+
+    /// Each truss on a twig from the limb's tip, when the leaves do not cover
+    /// it, and its flowers on stalks from its middle.
+    func hung(_ s: inout TreeCore.Sprigs) {
+        guard let bloom, core.p > 0.45 else { return }
+        let open = self.open, buds = Ink.smooth((core.p - 0.45) / 0.1) * (1 - open)
+        guard open > 0.02 || buds > 0.02 else { return }
+        for i in core.order() {
+            guard let q = core.pose.clumps[i] else { continue }
+            let art = bloom.clump(i)
+            guard art.count > 0 else { continue }
+            let t = CGAffineTransform(translationX: q.x, y: q.y).scaledBy(x: q.R, y: q.R)
+            for hub in art.hubs { core.hang(&s, "truss", clump: i, at: hub.applying(t), leaf: 1) }
+            if TreeAttach.on { s.path.addPath(art.prongs.applying(t)) }
+            s.flowers += art.sites.count
         }
     }
 

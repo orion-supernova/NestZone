@@ -22,7 +22,7 @@ struct SceneFrame {
     var layout: SceneLayout
     /// Colours for strings of flags, by the holiday that brought them.
     var southern: Bool
-    /// 0…1 while the glass dome lifts off a dozing companion.
+    /// 0…1 while a dozing pet's nightcap lifts off as it wakes.
     var domeLift = 0.0
     /// Where the sun or the moon stands across the scene, when the hour is not
     /// known (a cached layer is handed the light, not the clock).
@@ -942,33 +942,7 @@ struct ScenePainter {
         c.ellipse(x - 2.5, y + 2, 1.6, 2.6, .color(Color.white.opacity(0.8)))
     }
 
-    /// Dozing: under a glass dome, kept safe until somebody comes back. On
-    /// waking it lifts off and fades.
-    func dome(_ context: GraphicsContext, top: Double, alpha: Double) {
-        guard alpha > 0.01 else { return }
-        let w = 86.0, lift = frame.domeLift * 140
-        var c = context
-        c.opacity = alpha
-        c.translateBy(x: 0, y: -lift)
-        let bx = center, by = SceneSpace.soil
-        var glass = Path()
-        glass.move(to: CGPoint(x: bx - w, y: by + 8))
-        glass.addLine(to: CGPoint(x: bx - w, y: top + 60))
-        glass.addQuadCurve(to: CGPoint(x: bx, y: top), control: CGPoint(x: bx - w, y: top))
-        glass.addQuadCurve(to: CGPoint(x: bx + w, y: top + 60), control: CGPoint(x: bx + w, y: top))
-        glass.addLine(to: CGPoint(x: bx + w, y: by + 8))
-        glass.closeSubpath()
-        c.fill(glass, with: .color(SceneInk.glass))
-        c.stroke(glass, with: .color(SceneInk.glassEdge), lineWidth: 1.6)
-        var shine = Path()
-        shine.move(to: CGPoint(x: bx - w + 12, y: by - 20))
-        shine.addLine(to: CGPoint(x: bx - w + 12, y: top + 62))
-        shine.addQuadCurve(to: CGPoint(x: bx - 30, y: top + 10), control: CGPoint(x: bx - w + 12, y: top + 16))
-        c.stroke(shine, with: .color(Color.white.opacity(0.35)), lineWidth: 3)
-        c.circle(bx, top - 5, 6, .color(Ink.color(0xEBF5FF, 0.6)))
-        zees(c, x: bx + w - 14, y: top + 40)
-    }
-
+    /// The z's of a dozing companion: a pet's, and a plant's rising from its crown.
     func zees(_ context: GraphicsContext, x: Double, y: Double) {
         for i in 0..<3 {
             let k = frame.reduceMotion ? Double(i) / 3 : (time * 0.5 + Double(i) / 3).truncatingRemainder(dividingBy: 1)

@@ -33,6 +33,8 @@ struct ArtSheet: View {
             case "pomegranate-crown": pomegranateCrown
             case "pomegranate-fruit": pomegranateFruit
             case "pomegranate-shop": pomegranateShop
+            case "attach-scan": attachScan
+            case "pixel-scan": pixelScan
             case "gpu": gpuTest
             case "plants-grid": plantsGrid([.sunflower, .basil, .cactus, .monstera, .daisy, .tulip, .rose, .peony])
             case "plants-grid-b": plantsGrid([.mint, .rosemary, .snakePlant, .fern, .lavender, .orchid, .bonsai, .maple, .pumpkin, .pine, .snowdrop, .rose])
@@ -48,6 +50,7 @@ struct ArtSheet: View {
                 if let (family, n) = Self.coloursGrid(page) { coloursGridSheet(family, n) }
                 else if let (species, kind) = Self.coloursPage(page) { colours(species, kind) }
                 else if page.hasPrefix("decor-") { decorSheet(page) }
+                else if let (species, kind) = Self.growthPage(page) { growthSheet(species, kind) }
                 else if let (species, kind) = Self.treePage(page) { treePage(species, kind) }
                 else if page.hasPrefix("stage") { stagesSheet(page) }
                 else if let species = Species(rawValue: page) { speciesPage(species) }

@@ -57,6 +57,9 @@ struct PomegranatePainter {
             }
         }
         look.seedLeaves(tree)
+        #if DEBUG
+        if TreeDebug.wood, let subject = TreeAudit.subject(canopy, growth: growth, mood: mood, day: day, light: light) { TreeAudit.overlay(subject, tree) }
+        #endif
     }
 }
 
@@ -98,7 +101,10 @@ extension PomegranatePainter {
             day = painter.day
             night = 1 - painter.day
             M = Canopy.Mood(painter.mood)
-            pose = Self.splayed(Canopy.Pose(canopy, growth: painter.growth, mood: M), growth: painter.growth)
+            var pose = Self.splayed(Canopy.Pose(canopy, growth: painter.growth, mood: M), growth: painter.growth)
+            // Its leaves are all out: the tip stays inside them however the crown droops.
+            for i in pose.clumps.indices { pose.clumps[i] = pose.clumps[i]?.settled(leaf: 1) }
+            self.pose = pose
             tones = Canopy.Tones(canopy.kind, M, day: painter.day, growth: painter.growth)
             split = Self.splitIndex(canopy, pose)
             L = LeafArt.sun(light: painter.light, day: painter.day)

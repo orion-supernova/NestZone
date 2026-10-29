@@ -45,11 +45,13 @@ struct CherryPainter: TreeArt {
     /// How open the flowers are: they open from about .6 and thin a little as
     /// the fruit sets; a tree that is thirsty keeps them shut.
     var open: Double {
-        Ink.smooth((core.p - 0.6) / 0.22) * (1 - 0.32 * Ink.smooth((core.p - 0.93) / 0.07))
+        // Asleep it closes into buds, as a cherry's flowers do not but a tulip's and a magnolia's do.
+        Ink.smooth((core.p - 0.6) / 0.22) * (1 - 0.32 * Ink.smooth((core.p - 0.93) / 0.07)) * (1 - Ink.smooth(core.M.doze * 1.5))
     }
 
     /// How much of a clump's leaves are out: the blossom comes first.
     var leafy: Double { 0.3 + 0.45 * Ink.smooth((core.p - 0.68) / 0.26) }
+    var leafK: Double { leafy }
 
     func clump(_ tree: GraphicsContext, _ i: Int) {
         core.clump(tree, i, scale: leafy) { ink, q in
@@ -95,6 +97,9 @@ struct CherryPainter: TreeArt {
     /// soil, a few, each turned a different way.
     func finish(_ tree: GraphicsContext) {
         let open = self.open, p = core.p
+        #if DEBUG
+        if TreeDebug.pixel { return }
+        #endif
         guard p > 0.8, open > 0.2, canopy.fallen.count > 9 else { return }
         let pose = core.pose, t = core.tones
         let cx = (pose.left + pose.right) / 2, span = pose.right - pose.left

@@ -117,7 +117,7 @@ final class LeafArt: @unchecked Sendable {
     private let seed: UInt32
     private let L: (x: Double, y: Double)
     let spec: LeafSpec
-    private let drop, curl, lenK, wK, pull, bodyK: Double
+    private let drop, curl, lenK, wK, pull, bodyK, foldK: Double
     private let blobs: [Blob]
     private let built: Mutex<[ClumpArt?]>
     /// The front clumps the sun reaches most, and where on each its pool of
@@ -136,10 +136,12 @@ final class LeafArt: @unchecked Sendable {
         let M = Canopy.Mood(Double(key.mood) / 40)
         let sun = Self.sun(light: Double(key.light) / 10, day: Double(key.day) / 4)
         L = sun
-        drop = (0.12 * M.thirst + 0.18 * M.doze) * spec.calm
+        drop = (0.12 * M.thirst + 0.08 * M.doze) * spec.calm
         curl = (0.5 * M.thirst + 0.3 * M.doze) * spec.calm
         lenK = 1 - 0.1 * M.wilt
-        wK = 1 - 0.22 * M.wilt
+        wK = 1 - 0.22 * M.wilt - 0.12 * M.doze * spec.calm
+        // Asleep a tree's leaves fold up towards their twig, as a mimosa's or a bean's do at night.
+        foldK = 1 - 0.45 * M.doze * spec.calm
         pull = 0.1 + 0.2 * M.wilt + 0.07 * M.doze - 0.05 * M.glow
         bodyK = 1 - 0.45 * (M.thirst + M.doze) * spec.calm
         built = Mutex(Array(repeating: nil, count: canopy.clumps.count))
@@ -272,10 +274,12 @@ final class LeafArt: @unchecked Sendable {
                 let from = CGPoint(x: x, y: y)
                 x += cos(h) * step
                 y += sin(h) * step
-                if tier == 2 { art.body.twig(from, CGPoint(x: x, y: y), 0.03 - 0.005 * Double(n), 0.03 - 0.005 * Double(n + 1)) }
+                // Every sprig has its twig, at the back as in front: a leaf at the end
+                // of one that is not drawn floats clear of the crown.
+                if tier == 2 || TreeAttach.on { art.body.twig(from, CGPoint(x: x, y: y), 0.03 - 0.005 * Double(n), 0.03 - 0.005 * Double(n + 1)) }
                 let size = k * spec.size * (1 - 0.07 * Double(n))
                 if n < 4 && n <= pairs {
-                    let spread = Ink.lerp(spec.spread.0, spec.spread.1, r.next())
+                    let spread = Ink.lerp(spec.spread.0, spec.spread.1, r.next()) * foldK
                     if spec.alternate {
                         leaf(x, y, h + (n % 2 == 0 ? spread : -spread), size, luck)
                     } else {

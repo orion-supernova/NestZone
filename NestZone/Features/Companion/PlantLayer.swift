@@ -27,6 +27,9 @@ struct PlantLayer: View, Equatable {
         var plant = context
         plant.scaleBy(x: scale, y: scale)
         plant.translateBy(x: size.width / scale / 2, y: SceneSpace.soil)
+        // Asleep the leaves fold in towards the stem and the whole plant settles a little.
+        let doze = Canopy.Mood(state.mood).doze
+        if doze > 0.01 { plant.scaleBy(x: 1 - 0.12 * doze, y: 1 - 0.03 * doze) }
         if !plan.overRim {
             var above = Path(CGRect(x: -size.width, y: -SceneSpace.soil, width: size.width * 2, height: SceneSpace.soil))
             above.addEllipse(in: SceneSpace.soilSurface)

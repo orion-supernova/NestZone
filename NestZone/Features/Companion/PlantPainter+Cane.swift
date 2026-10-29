@@ -143,7 +143,13 @@ extension PlantPainter {
             let open = i == 2 ? 0.1 * swell : max(0.05 * swell, raw * (0.3 + 0.7 * M.open))
             let nod = (tip.x >= 0 ? 1.0 : -1.0) * (0.9 * M.thirst + 0.3 * M.doze) * 1.1
             let radius = (i == 0 ? 23.0 : i == 1 ? 19.0 : 14.0) * (0.6 + 0.4 * swell)
-            if let c { roseBloom(c, at: CGPoint(x: tip.x, y: tip.y - radius * 0.35), radius: radius, open: open, turn: (heading + .pi / 2) * 0.5 + nod) }
+            if let c {
+                // The cane runs on to the flower: a bud's sepals sit at the bloom's own centre,
+                // a fifth of a bloom above the cane's end, and a bud with no stalk to it floated.
+                let neck = CGPoint(x: tip.x, y: tip.y - radius * 0.35)
+                if TreeAttach.on { c.fill(Self.ribbon([tip, CGPoint(x: (tip.x + neck.x) / 2, y: (tip.y + neck.y) / 2), neck], max(1.4, canes[i].width * 0.45), 1.3), with: .color(inks[1].stalk)) }
+                roseBloom(c, at: neck, radius: radius, open: open, turn: (heading + .pi / 2) * 0.5 + nod)
+            }
             m.note(CGPoint(x: tip.x, y: tip.y - radius * 0.6), reach: radius * 1.2, hang: false)
         }
         if let c, p > 0.88 { fallenRoses(c) }

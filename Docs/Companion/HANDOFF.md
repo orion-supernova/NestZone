@@ -293,7 +293,7 @@ those until the server version.
 - Debug build, Release build (arm64), test target compiles.
 - v6, on the simulator:
   - the new tree for all six species, by day and at night;
-  - the moods, including the dome when dozing and the bubble when thirsty;
+  - the moods, including the folded leaves, the cozy and the z's when dozing and the bubble when thirsty;
   - the decorations hung on the canopy, the wind, and the pot staying still;
   - the welcome gift and the prices in Turkish;
   - labels on one line.
