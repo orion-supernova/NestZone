@@ -29,6 +29,7 @@ struct MagnoliaPainter: TreeArt {
     /// .74 the crown is bare wood and a few small first leaves, then the broad
     /// ones come in as the blossoms go.
     var leafy: Double { 0.1 + 0.9 * Ink.smooth((core.p - 0.74) / 0.22) }
+    var leafK: Double { leafy }
 
     /// The young tree's leaves are gone from its canes before it flowers.
     func young(_ tree: GraphicsContext) { core.youngSprigs(tree, from: 0.4, span: 0.18) }

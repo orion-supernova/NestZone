@@ -6,7 +6,7 @@ import SwiftUI
 /// The feature hands this view facts — how grown, what mood, what is out —
 /// and the view turns changes in them into motion: a chore sends a drop
 /// flying to the soil, a quiet plant that is cared for lifts its leaves and
-/// opens its buds, a dozing one has its glass dome lifted off, a new stage
+/// opens its buds, a dozing one folds its leaves and puts on its cozy, a new stage
 /// pops with a ring of light. None of that is state the reducer has to keep;
 /// it is how a change looks, so it lives here.
 struct CompanionScene: View {
@@ -108,6 +108,14 @@ struct CompanionScene: View {
                     Canvas(rendersAsynchronously: true) { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date, layered: true) } }
                 } else {
                     Canvas(rendersAsynchronously: true) { context, size in SceneTiming.measure("back") { snapshot.drawBack(context, size: size, at: date) } }
+                }
+                if !companion.species.isPet {
+                    // A dozing plant wears a cozy on its pot (`SleepCozy`).
+                    let asleep = snapshot.treeState(at: date)
+                    if SleepCozy.amount(mood: asleep.mood) > 0.01 {
+                        CozyLayer(seed: asleep.seed, mood: asleep.mood, day: asleep.day)
+                            .equatable()
+                    }
                 }
                 if let canopy, companion.species.art == .tree {
                     let wind = snapshot.wind(viewSize, at: date)
@@ -605,8 +613,8 @@ struct SceneSnapshot {
         } else {
             painter.fallingLeaf(c, from: anchors(at: date).hangs)
             painter.thirstBubble(c, near: crown)
-            let domeAlpha = frame.mood < 0.15 ? 1 : frame.domeLift > 0 ? 1 - frame.domeLift : 0
-            painter.dome(c, top: crown.minY - 14, alpha: domeAlpha)
+            // Asleep, a plant has a few z's rising from its crown, as a pet does.
+            if frame.mood < 0.2, moment.revive == nil, stage > 1 { painter.zees(c, x: crown.maxX - 4, y: crown.minY + 26) }
         }
 
         flights(c, at: date, center: center, width: moment.width)
@@ -867,6 +875,8 @@ struct ScenePortrait: View {
     /// 0 is the original colours, 1-3 the new ones; a companion that holds a
     /// colour of its own (an art sheet's) is drawn in that when this is 0.
     var colourway = 0
+    /// An art sheet's: draw the skeleton and mark what the wood does not hold (Debug only).
+    var debugWood = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -877,7 +887,15 @@ struct ScenePortrait: View {
             let snapshot = SceneSnapshot(still: companion, progress: progress, mood: mood, stage: stage, now: now, reduceMotion: reduceMotion, layout: layout)
             let date = snapshot.epoch
             snapshot.drawBack(context, size: size, at: date)
+            if !companion.species.isPet {
+                let asleep = snapshot.treeState(at: date)
+                CozyLayer.paint(context, size: size, seed: asleep.seed, mood: asleep.mood, day: asleep.day)
+            }
             if let canopy = snapshot.canopy {
+                #if DEBUG
+                TreeDebug.wood = debugWood
+                defer { TreeDebug.wood = false }
+                #endif
                 TreeLayer.paint(context, size: size, canopy: canopy, state: snapshot.treeState(at: date))
             } else if let plan = PlantPlan.of(companion.species, colourway: companion.colourway) {
                 PlantLayer.paint(context, size: size, plan: plan, state: snapshot.treeState(at: date))

@@ -446,7 +446,9 @@ extension Canopy {
     /// parent's end.
     struct Pose {
         struct Span { var x, y, x1, y1, cx, cy, a1, w0, w1, g: Double }
-        struct Spot { var x, y, R, k: Double }
+        /// A clump's place: its centre and size, and `ax, ay`, the tip of the limb
+        /// that carries it, where the foliage is fixed to the wood.
+        struct Spot { var x, y, R, k: Double; var ax = 0.0, ay = 0.0, hold = 0.0 }
 
         var limbs: [Span?]
         var clumps: [Spot?]
@@ -490,7 +492,7 @@ extension Canopy {
                 let side = lean > 0 ? 1.0 : lean < 0 ? -1 : 1
                 let x = q.x1 + c.ox * sc + side * c.R * sideways
                 let y = q.y1 + c.oy * sc + c.R * sag
-                clumps[i] = Spot(x: x, y: y, R: R, k: k)
+                clumps[i] = Spot(x: x, y: y, R: R, k: k, ax: q.x1, ay: q.y1, hold: (c.ox * c.ox + c.oy * c.oy).squareRoot() * sc)
                 top = min(top, y - R * 1.3)
                 left = min(left, x - R * 1.25)
                 right = max(right, x + R * 1.25)
@@ -588,8 +590,9 @@ extension Canopy {
 
     /// Where a thirsty canopy is heading, ramp step by ramp step: olive.
     static let dry: [UInt32] = [0x4D4B31, 0x646039, 0x7F7B44, 0x9D9652, 0xC9C07C]
-    /// Where a dozing one is heading: pale straw, with little contrast.
-    static let dozy: [UInt32] = [0x8B8466, 0xA29A78, 0xBAB08B, 0xCFC59F, 0xE4DBB9]
+    /// Where a dozing one is heading: a dim, cool, quiet green with little
+    /// contrast, the colour of a plant at night and not of one that has dried.
+    static let dozy: [UInt32] = [0x253F45, 0x33544F, 0x476A5E, 0x648673, 0x8AA892]
     /// How much each ramp step dims at night: the highlights hold up least.
     static let dim = [1, 0.96, 0.92, 0.86, 0.74]
 
@@ -597,7 +600,7 @@ extension Canopy {
     /// towards `dry` and `dozy`, so they pass through olive rather than
     /// rotating through odd hues.
     static func leafTone(_ c: RGB, _ i: Int, _ M: Mood, day: Double) -> RGB {
-        let c = c.mix(RGB(dry[i]), M.thirst * (i < 2 ? 0.75 : 0.85)).mix(RGB(dozy[i]), M.doze * 0.8)
+        let c = c.mix(RGB(dry[i]), M.thirst * (i < 2 ? 0.75 : 0.85)).mix(RGB(dozy[i]), M.doze * 0.6)
         var (h, s, l) = c.hsl
         s *= 1 + 0.34 * M.glow
         if i >= 2 {

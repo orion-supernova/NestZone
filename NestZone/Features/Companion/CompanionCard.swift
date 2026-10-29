@@ -563,8 +563,13 @@ private struct HolidayChip: View {
                     Text(verbatim: "\(holiday.symbol) \(String(localized: holiday.id.title))")
                         .lineLimit(large ? nil : 1)
                         .truncationMode(.tail)
+                    // On a fill of its own: the accent as text on glass over a night
+                    // sky was nearly unreadable; this reads at 4.5:1 in every sky.
                     Text(L10n.companionDecorate)
-                        .foregroundStyle(theme.accent)
+                        .foregroundStyle(theme.onAccent)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(theme.accent, in: .capsule)
                         .fixedSize()
                 }
                 .font(.caption.weight(.semibold))

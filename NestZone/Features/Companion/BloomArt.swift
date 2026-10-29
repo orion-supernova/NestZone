@@ -20,6 +20,13 @@ struct ClumpBloom: Sendable {
     /// Every flower, whatever its class: the shade that parts each from the next.
     var all = Path()
     var count = 0
+    /// Where each cluster is centred, where each flower sits, and the thin
+    /// stalks from a cluster's middle to its flowers (a path to fill, and the
+    /// same as segments for the attach audit), all in the clump's units.
+    var hubs: [CGPoint] = []
+    var sites: [CGPoint] = []
+    var prongs = Path()
+    var links: [(CGPoint, CGPoint)] = []
 }
 
 /// How a species' flowers are laid over its crown.
@@ -124,6 +131,7 @@ final class BloomArt: @unchecked Sendable {
                 centres.append(CGPoint(x: cos(a) * d, y: sin(a) * d * 0.8 - 0.1))
             }
         }
+        art.hubs = centres
         let Lx = L.x, Ly = L.y
         for k in 0..<n {
             let t = k % clusters, centre = centres[t], slot = k / clusters
@@ -164,6 +172,11 @@ final class BloomArt: @unchecked Sendable {
             // Behind, fewer classes: two in the back, two in the middle.
             let cls = tier == 0 ? min(raw, 1) : tier == 1 ? (raw < 2 ? 1 : 2) : raw
             art.count += 1
+            art.sites.append(CGPoint(x: x, y: y))
+            if (x - centre.x) * (x - centre.x) + (y - centre.y) * (y - centre.y) > 0.0004 {
+                art.prongs.twig(centre, CGPoint(x: x, y: y), 0.014, 0.01)
+                art.links.append((centre, CGPoint(x: x, y: y)))
+            }
             art.buds.oval(x, y, rad * 0.5, rad * 0.34, rot)
             /// Files a flower's shape under its class.
             func file(_ path: Path, _ cls: Int) {

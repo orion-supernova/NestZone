@@ -25,6 +25,7 @@ extension PomegranatePainter.Look {
         for i in pose.clumps.indices {
             guard var q = pose.clumps[i] else { continue }
             q.x = open(q.x, q.y)
+            q.ax = open(q.ax, q.ay)
             pose.clumps[i] = q
         }
         return pose

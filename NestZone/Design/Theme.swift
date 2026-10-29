@@ -28,6 +28,17 @@ public enum AppTheme: String, CaseIterable, Sendable, Codable, Identifiable {
         }
     }
 
+    /// What is written on a fill of the accent: white or a deep ink, whichever
+    /// reads at 4.5:1 or better on that accent (5.7, 5.4, 6.2, 7.6 and 6.7).
+    /// Text in the accent itself on glass over a night sky does not, so a
+    /// label that has to be read in any sky sits on a fill and uses this.
+    public var onAccent: Color {
+        switch self {
+        case .basic, .deepOcean: Palette.onAccentLight
+        case .cyberpunk, .retroWave, .neonNight: Palette.onAccentDark
+        }
+    }
+
     /// The second hue, for two-stop gradients on hero elements only.
     public var support: Color {
         switch self {
@@ -73,6 +84,10 @@ public enum AppTheme: String, CaseIterable, Sendable, Codable, Identifiable {
 
 /// Every literal colour in the app, allocated exactly once.
 public enum Palette {
+    /// Written on a violet or a blue fill, and on the deep ink fill below.
+    public static let onAccentLight = Color(hex: "FFFFFF")
+    /// Written on a pink, magenta or green fill.
+    public static let onAccentDark = Color(hex: "12091F")
     public static let violet = Color(hex: "7C3AED")
     public static let indigo = Color(hex: "4F46E5")
     public static let magenta = Color(hex: "FF1F8A")

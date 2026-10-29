@@ -17,9 +17,11 @@ extension CherryPainter {
         let t = core.tones, moon = core.light.moon, L = core.L
         let cool = RGB(0xB8A8E0)
         func pink(_ c: RGB) -> RGB { c.mix(cool, 0.25 * moon).mix(RGB(0x2A2150), 0.32 * moon) }
+        // While few leaves are out the blossom is gathered towards the limb's tip.
+        let c = core.settle(q, leaf: leafy), reach = c.R * gather
         var g = tree
-        g.translateBy(x: q.x, y: q.y)
-        g.scaleBy(x: q.R, y: q.R)
+        g.translateBy(x: c.x, y: c.y)
+        g.scaleBy(x: reach, y: reach)
         if buds > 0.02 {
             g.fill(art.buds, with: .color(pink(t.bc.mix(t.ba, 0.25)).color(buds)))
         }
@@ -36,6 +38,38 @@ extension CherryPainter {
         if !art.spots.isEmpty { g.fill(art.spots, with: .color(pink(t.bc).color(0.55 * open))) }
         if !art.hearts.isEmpty && !art.s.isEmpty { g.fill(art.hearts, with: .color(pink(t.bc.mix(RGB(0x8A1F3A), 0.3)).color(open))) }
         if !art.fine.isEmpty { g.fill(art.fine, with: .color(t.anther.color(0.9 * open))) }
+    }
+}
+
+// MARK: - Held on the wood
+
+extension CherryPainter {
+    /// How far the blossom spreads from the limb tips: its grown reach once the
+    /// leaves are in, about half of it when they are few.
+    var gather: Double { core.gather(leafy, from: 0.3, to: 0.75) }
+
+    /// Each cluster of blossom and each pair of cherries, on a twig from the
+    /// tip of the limb that carries it; the flowers of a cluster on stalks
+    /// from its middle.
+    func hung(_ s: inout TreeCore.Sprigs) {
+        let open = self.open
+        guard let bloom, core.p > 0.5 else { return }
+        let buds = Ink.smooth((core.p - 0.52) / 0.1) * (1 - open)
+        for i in core.order() {
+            guard let q = core.pose.clumps[i] else { continue }
+            let c = core.settle(q, leaf: leafy), reach = c.R * gather
+            if open > 0.02 || buds > 0.02 {
+                let art = bloom.clump(i)
+                if art.count > 0 {
+                    let t = CGAffineTransform(translationX: c.x, y: c.y).scaledBy(x: reach, y: reach)
+                    for hub in art.hubs { core.hang(&s, "cluster", clump: i, at: hub.applying(t), leaf: leafy) }
+                    if TreeAttach.on { s.path.addPath(art.prongs.applying(t)) }
+                    // A flower stands at the end of its own stalk, so it is held when its cluster is.
+                    s.flowers += art.sites.count
+                }
+            }
+            for spur in spurs(i, c) { core.hang(&s, "spur", clump: i, at: spur, leaf: leafy) }
+        }
     }
 }
 
@@ -72,6 +106,20 @@ extension CherryPainter {
             return RGB.night(h, sat * k, l, day: day, dim: dim)
         }
         return Skin(hi: tone(s.hi, 0.8), mid: tone(s.mid, 0.7), shade: tone(s.shade, 0.6))
+    }
+
+    /// Where the pairs of cherries on one clump are held, without their colours: the same
+    /// sites as `cherries(_:_:)` (which is the cost), for the twigs that hold them.
+    func spurs(_ i: Int, _ q: Canopy.Pose.Spot) -> [CGPoint] {
+        guard core.p > 0.82 else { return [] }
+        var list: [CGPoint] = []
+        for index in blossomsOf[i] {
+            let b = canopy.blossoms[index]
+            guard Double(Int(abs(b.rot * 1000)) % 10) / 10 < 0.55, Ink.back((core.p - (0.84 + b.born * 0.08)) / 0.1) > 0.02 else { continue }
+            let luck = Double(Int(abs(b.tilt * 1000)) % 7) / 6
+            list.append(CGPoint(x: q.x + b.dx * q.R * 0.72, y: q.y + q.R * (0.2 + 0.18 * luck)))
+        }
+        return list
     }
 
     /// The pairs hanging from one clump: from about half the clump's blossom

@@ -17,6 +17,7 @@ extension MagnoliaPainter {
     /// flowers on bare wood, so the blossoms come before the leaves and a few
     /// stay when they are in.
     func blossoms(_ context: GraphicsContext, _ tier: Int) {
+        let gather = self.gather
         let p = core.p, M = core.M, night = core.night, t = core.tones
         guard p > 0.5 else { return }
         var bloom = Bloom()
@@ -29,7 +30,8 @@ extension MagnoliaPainter {
             let gone = stays ? 1 : 1 - Ink.smooth((p - (0.88 + b.born * 0.06)) / 0.03)
             guard gone > 0.03 else { continue }
 
-            let x = q.x + b.dx * q.R, y = q.y + b.dy * q.R
+            let at = core.site(q, leaf: leafy, gather: gather, b.dx, b.dy)
+            let x = at.x, y = at.y
             let side = b.dx < 0 ? -1.0 : 1
             var a = -Double.pi / 2 + b.tilt * 0.7 + side * 0.12
             a += Canopy.wrap(.pi / 2 - a) * M.wilt * 0.4
@@ -61,6 +63,26 @@ extension MagnoliaPainter {
         context.fill(bloom.veins, with: .color(t.bc.color(0.38)))
         context.fill(bloom.edges, with: .color(t.bb.mix(RGB(0xFFFFFF), 0.5).color(0.6 * (1 - 0.4 * night))))
         context.fill(bloom.centres, with: .color(RGB.tone(0xF4E4B0, day: core.day, dim: 0.5).color()))
+    }
+
+    /// How far the blossoms spread from the limb tips: all of their grown reach
+    /// once the crown is in leaf, half of it on bare wood, where a twig holds
+    /// each (`hung`).
+    var gather: Double { core.gather(leafy) }
+
+    /// The blossoms showing at this growth, each held on its clump's limb.
+    func hung(_ s: inout TreeCore.Sprigs) {
+        let p = core.p, gather = self.gather
+        guard p > 0.5 else { return }
+        for b in canopy.blossoms {
+            guard let q = core.pose.clumps[b.clump] else { continue }
+            let first = 0.5 + b.born * 0.14
+            guard Ink.back((p - first) / 0.06) > 0 else { continue }
+            let stays = b.born < 0.45
+            let gone = stays ? 1 : 1 - Ink.smooth((p - (0.88 + b.born * 0.06)) / 0.03)
+            guard gone > 0.03 else { continue }
+            core.hang(&s, "blossom", clump: b.clump, at: core.site(q, leaf: leafy, gather: gather, b.dx, b.dy), leaf: leafy)
+        }
     }
 
     /// A bud: a pointed silver cup of down, a lit side, and a few brown scales
