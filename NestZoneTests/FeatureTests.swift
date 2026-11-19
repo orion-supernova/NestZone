@@ -1469,6 +1469,26 @@ struct ShoppingTests {
         }
     }
 
+    @Test("A house without Plus is always on the flat list, and its choice is kept")
+    func freeHouseIsFlat() async {
+        @Shared(.pro) var pro = ProStatus.unknown
+        @Shared(.shoppingGrouped) var grouped = true
+        $pro.withLock { $0.isPro = false }
+
+        let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
+            ShoppingFeature()
+        }
+        #expect(store.state.effectiveGrouped == false)
+
+        // Tapping Categories (or List) writes nothing while Plus is off.
+        await store.send(.viewModeToggled(grouped: false))
+        #expect(grouped == true)
+
+        // Plus back: the stored choice is what it was.
+        $pro.withLock { $0.isPro = true }
+        #expect(store.state.effectiveGrouped == true)
+    }
+
     @Test("A refused tick goes back to how it was")
     func failedToggleRestoresTheTick() async {
         let store = TestStore(initialState: ShoppingFeature.State(homeID: "h1")) {
