@@ -1721,4 +1721,37 @@ export default defineSchema({
     // What one environment credited, newest first (`jarStore:credited`):
     // listing a Sandbox round after TestFlight or App Review.
     .index("by_environment_credited", ["environment", "credited_at"]),
+
+  // --- Household Pro ---------------------------------------------------------
+  //
+  // One row per person, mirroring what RevenueCat says about their `pro`
+  // entitlement. A house is Pro while ANY current member has a row that has
+  // not expired (lib/pro.ts) — Apple sells to one Apple ID, the data belongs to
+  // a house, and one subscription covering everyone is the point. No plan
+  // field on the home: if the payer leaves, Pro leaves with them and there is
+  // nothing stale to clean up.
+  //
+  // Written only by `pro:refresh` and `pro:sweep` (convex/pro.ts), from
+  // RevenueCat's answer, never from anything a phone says. A person with no
+  // entitlement at all has no row.
+  pro_entitlements: defineTable({
+    user_id: v.id("users"),
+    /** When access ends, ms. `null` is lifetime. Includes any billing grace. */
+    expires_at: v.union(v.number(), v.null()),
+    product_id: v.optional(v.string()),
+    /** RevenueCat's `store` ("app_store", "promotional", …). */
+    store: v.optional(v.string()),
+    /** Counted only while `PRO_SANDBOX` is "on" (TestFlight and App Review). */
+    is_sandbox: v.boolean(),
+    /** False once a cancellation or a billing problem has been seen. */
+    will_renew: v.boolean(),
+    checked_at: v.number(),
+  })
+    .index("by_user", ["user_id"])
+    // The sweep: rows about to expire, or just expired, re-asked of RevenueCat.
+    .index("by_expires", ["expires_at"])
+    // The sweep's second half: every row, lifetime included, re-asked once a
+    // day, oldest answer first — a restore can move a purchase to another
+    // user, and a refund can end a lifetime one, without any date nearing.
+    .index("by_checked", ["checked_at"]),
 });

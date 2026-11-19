@@ -657,6 +657,28 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
 # CompanionFlag; until then only Debug builds draw Nestie. The "sent" mark is
 # written either way, so switching it on never announces anything stale.
 #   npx convex env set COMPANION_NOTIFY sandbox
+
+# Household Pro (convex/pro.ts, lib/pro.ts).
+#   REVENUECAT_SECRET_KEY  RevenueCat's secret v1 key; pro:refresh and the
+#                          sweep ask RevenueCat with it. Unset: refresh throws
+#                          a clear error, the sweep does nothing.
+#   PRO_ENFORCE=on         the server refuses Pro writes (PRO_REQUIRED) and
+#                          drops finance/calendar notifications for a house
+#                          without Pro. Unset: every gate is a no-op. Turn it
+#                          on only per DEPRECATIONS.md ("Switches that narrow").
+#   PRO_SANDBOX=on         sandbox purchases count (TestFlight, App Review);
+#                          off after, like JAR_ENVIRONMENTS.
+#   PRO_COMP_USER_IDS      comma-separated user ids that are always Pro (the
+#                          owner's testing; never a sales channel).
+#   npx convex env set REVENUECAT_SECRET_KEY sk_...
+#   npx convex env set PRO_SANDBOX on
+
+# Sign in with Apple revocation on account deletion (users:deleteAccount).
+# A Sign in with Apple key (.p8) from the Developer portal. Unset: accounts
+# are still deleted, Apple's token is just not revoked.
+#   npx convex env set SIWA_KEY_ID  <10-char key id>
+#   npx convex env set SIWA_TEAM_ID <10-char team id>
+#   npx convex env set -- SIWA_PRIVATE_KEY "$(cat AuthKey_XXXXXXXXXX.p8)"
 ```
 
 ## Backend notes
@@ -817,6 +839,33 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   unknown transaction is a 200. The phone's test store (`SparkleStoreClient`
   while `isTestStore`) never reaches the server: its Sparkles are credited
   nowhere in the real house, and the pretend house's store credits its own jar.
+- **Household Pro is the house's, carried by a person.** A house is Pro while
+  any current member has an unexpired `pro_entitlements` row (lib/pro.ts);
+  there is no plan field on the home, so a payer who leaves takes Pro with
+  them. Rows are written only from RevenueCat's answer (`pro:refresh`, the
+  6-hourly `pro:sweep`), never from what a phone says; the RevenueCat app
+  user id is the Convex user id. `pro:status` is the app's live read.
+  Every gate goes through `requirePro` (a `ConvexError` with
+  `{ code: "PRO_REQUIRED", feature }`) or `proAllows` (for coercions), and
+  all of it is a no-op until `PRO_ENFORCE=on`. **Pro gates features, never
+  the household's data:** queries never refuse, removes stay open, and
+  `tasks:setArchived(false)` always works. Shopping categories are coerced to
+  the default, never refused, because old builds send one with every item.
+  `push.notifyHome` drops `finance` and `calendar` for a free house, push and
+  feed row both, which is what silences the reminder sweeps. A new Pro gate
+  is one `requirePro` call after the membership check, plus a `ProFeature`.
+- **Leaving, being removed and deleting an account are one code path**
+  (`departHome`, lib/membership.ts). `users:deleteAccount` runs in bounded,
+  self-rescheduling steps (`deleteAccountStep`): sign-in rows and devices,
+  then one home per step, then the person's own rows, then the user. What the
+  person wrote into a shared home stays and points at an id that no longer
+  resolves; every reader must tolerate that, as it already does for a
+  member who left (`finance:summary` keeps a nameless, non-member row for
+  such an id while it carries a balance, and `settle` accepts it on one
+  side). A home whose last member goes loses its document and its members'
+  mirrors at once; its rows then drain in bounded batches
+  (`homes:purgeHomeData`, logged per batch, an error past 200 batches).
+  Removing a member rotates the invite code.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

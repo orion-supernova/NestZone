@@ -95,4 +95,20 @@ crons.interval(
   internal.companion.sweepEvents,
 );
 
+// Household Pro, re-asked of RevenueCat near its end.
+//
+// The app refreshes its own entitlement after a purchase and on every launch,
+// so this is for the house where nobody opens the app: a cancelled
+// subscription has to end on time, and a renewed one must not lapse for a
+// night because nobody looked. Rows expiring within a day or expired within
+// the last three (Apple's billing grace), and every other row — lifetime
+// included — once a day, a hundred a round, chaining rounds while there is
+// more. Quiet until REVENUECAT_SECRET_KEY is set.
+crons.interval(
+  "pro sweep",
+  { hours: 6 },
+  internal.pro.sweep,
+  {},
+);
+
 export default crons;
