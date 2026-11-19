@@ -20,6 +20,10 @@ public enum AppError: Error, Equatable, Sendable {
     /// Local validation failed before anything was sent.
     case validation(String)
     case cancelled
+    /// The server refused because the house has no NestZone Plus. Opens the
+    /// paywall instead of an alert; `nil` is a feature this build has no name
+    /// for.
+    case proRequired(ProFeature?)
     case unknown(String)
 
     public init(_ error: any Error) {
@@ -63,6 +67,8 @@ extension AppError: LocalizedError {
             message
         case .cancelled:
             nil
+        case .proRequired:
+            String(localized: L10n.proRequiredMessage)
         case .unknown:
             String(localized: "error.unknown", defaultValue: "Something went wrong. Try again.")
         }
@@ -78,12 +84,20 @@ extension AppError: LocalizedError {
         case let .decoding(m): "decoding: \(m)"
         case let .validation(m): "validation: \(m)"
         case .cancelled: "cancelled"
+        case let .proRequired(feature): "proRequired: \(feature?.rawValue ?? "?")"
         case let .unknown(m): "unknown: \(m)"
         }
     }
 
-    /// Cancellation is bookkeeping, not something to show anyone.
-    public var isSilent: Bool { self == .cancelled }
+    /// Cancellation is bookkeeping, not something to show anyone. A Plus
+    /// refusal is answered by the paywall, which `ConvexConnection` has already
+    /// asked for, so no alert goes on top of it.
+    public var isSilent: Bool {
+        switch self {
+        case .cancelled, .proRequired: true
+        default: false
+        }
+    }
 }
 
 extension AppError {
@@ -102,7 +116,7 @@ extension AppError {
     public var isTransport: Bool {
         switch self {
         case .offline, .cancelled, .notAuthenticated: true
-        case .noHomeSelected, .server, .decoding, .validation, .unknown: false
+        case .noHomeSelected, .server, .decoding, .validation, .proRequired, .unknown: false
         }
     }
 }

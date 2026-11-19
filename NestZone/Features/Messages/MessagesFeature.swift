@@ -320,7 +320,7 @@ public struct ChatFeature: Sendable {
 
         public func senderName(for message: Message) -> String {
             members[id: message.senderID]?.displayName
-                ?? String(localized: L10n.notesAuthorMember)
+                ?? String(localized: L10n.memberDeleted)
         }
 
         /// Whether this message starts a new run from the same person, which is

@@ -61,6 +61,10 @@ public struct MoviesFeature: Sendable {
     private enum CancelID { case lists }
 
     @Dependency(\.movies) var movies
+    @Dependency(\.paywall) var paywall
+    /// Your own lists are Plus; the presets and what is already in a custom
+    /// list stay free.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -109,6 +113,7 @@ public struct MoviesFeature: Sendable {
                 return .none
 
             case .createListTapped:
+                guard pro.isPro else { return .run { _ in paywall.request(.customMovieLists) } }
                 state.destination = .createList(
                     CreateMovieListFeature.State(homeID: state.homeID)
                 )
@@ -217,6 +222,8 @@ public struct MovieListFeature: Sendable {
     @Dependency(\.movies) var moviesClient
     @Dependency(\.catalog) var catalog
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.paywall) var paywall
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -280,6 +287,9 @@ public struct MovieListFeature: Sendable {
                 return .none
 
             case let .addTapped(movie):
+                guard pro.isPro || state.list.kind != .custom else {
+                    return .run { _ in paywall.request(.customMovieLists) }
+                }
                 return .run { [homeID = state.homeID, listID = state.list.id] send in
                     try await moviesClient.addMovie(homeID, listID, movie)
                 } catch: { error, send in
@@ -294,6 +304,9 @@ public struct MovieListFeature: Sendable {
                 }
 
             case .addMoviesTapped:
+                guard pro.isPro || state.list.kind != .custom else {
+                    return .run { _ in paywall.request(.customMovieLists) }
+                }
                 state.isSearchPresented = true
                 return .none
 
@@ -387,6 +400,8 @@ public struct MovieInfoFeature: Sendable {
 
     @Dependency(\.catalog) var catalog
     @Dependency(\.movies) var movies
+    @Dependency(\.paywall) var paywall
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -451,6 +466,11 @@ public struct MovieInfoFeature: Sendable {
 
             case let .listToggled(list):
                 guard !state.isBusy(list) else { return .none }
+                // Filing into a custom list is Plus; taking a film out of one
+                // is not.
+                if list.kind == .custom, !pro.isPro, state.savedIn[list.id] == nil {
+                    return .run { _ in paywall.request(.customMovieLists) }
+                }
                 state.busy.insert(list.id)
                 let stored = state.savedIn[list.id]
                 return .run { [homeID = state.homeID, movie = state.movie] send in

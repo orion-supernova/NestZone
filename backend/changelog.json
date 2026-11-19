@@ -56,6 +56,36 @@
   ],
   "entries": [
     {
+      "slug": "1.12.0-nestzone-plus",
+      "version": "1.12.0",
+      "kind": "feature",
+      "title": "NestZone Plus: one subscription for the whole house",
+      "body": "Calendar, Money, shopping by aisle, your own movie lists and \"Archive now\" are part of NestZone Plus now. One person subscribes and everyone in the house gets it, with a free first week on the yearly plan. Everything else stays free, and nothing you've already written goes anywhere: if Plus ever stops, you can still read all of it.",
+      "highlights": [
+        "One subscription covers the whole house, whoever pays",
+        "Plus: Calendar and events, Money and bills, shopping by aisle, your own movie lists, Archive now",
+        "Free forever: chores, shopping lists, notes, messages, recipes and meals, movie night, house problems, Nestie",
+        "Free first week on the yearly plan",
+        "Without Plus, what's already in Calendar and Money stays readable",
+        "Manage or restore it any time in Settings"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "NestZone Plus: bütün ev için tek abonelik",
+          "body": "Takvim, Para, reyonlara göre alışveriş, kendi film listelerin ve \"Hemen arşivle\" artık NestZone Plus'ta. Biri abone olunca evdeki herkes kullanıyor; yıllık planda ilk hafta bedava. Geri kalan her şey bedava kalıyor, yazdığın hiçbir şey de gitmiyor: Plus bir gün biterse hepsini okumaya devam edersin.",
+          "highlights": [
+            "Tek abonelik bütün eve yeter, kim ödediği fark etmez",
+            "Plus'ta: takvim ve etkinlikler, para ve faturalar, reyonlara göre alışveriş, kendi film listelerin, hemen arşivle",
+            "Hep bedava: işler, alışveriş listeleri, notlar, mesajlar, tarifler ve yemekler, film gecesi, ev sorunları, Nestie",
+            "Yıllık planda ilk hafta bedava",
+            "Plus yokken Takvim ve Para'da zaten olanlar okunmaya devam eder",
+            "Ayarlar'dan istediğin zaman yönet ya da geri yükle"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.11.0-new-tabs",
       "version": "1.11.0",
       "kind": "feature",

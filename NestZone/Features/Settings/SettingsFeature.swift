@@ -47,6 +47,12 @@ public struct SettingsFeature: Sendable {
         /// shows, not an alert from here, because what follows it — Sign in
         /// with Apple — can only be run by a view.
         public var isConfirmingDelete = false
+        /// A restore from the NestZone Plus row is running, and what it found.
+        public var isRestoringPlus = false
+        public var plusRestoreResult: PlusRestoreResult?
+        @Shared(.pro) public var pro: ProStatus
+
+        public enum PlusRestoreResult: Equatable, Sendable { case restored, nothing }
         /// Apple has been asked again and the server is deleting the account.
         /// Draws the row as busy and stops a second deletion.
         public var isDeletingAccount = false
@@ -184,6 +190,8 @@ public struct SettingsFeature: Sendable {
         case signOutTapped
         case signOutConfirmed
         case deleteAccountTapped
+        case plusRestoreTapped
+        case plusRestoreFinished(Result<Bool, AppError>)
         /// Apple answered the fresh sign-in the deletion asks for. The code is
         /// what lets the server revoke the Apple token; without one the account
         /// is still deleted.
@@ -237,6 +245,8 @@ public struct SettingsFeature: Sendable {
     private enum CancelID { case members, copyReset, pushTokenCopyReset }
 
     @Dependency(\.homes) var homes
+    @Dependency(\.purchases) var purchases
+    @Dependency(\.pro) var proClient
     @Dependency(\.auth) var auth
     @Dependency(\.users) var usersClient
     @Dependency(\.continuousClock) var clock
@@ -506,6 +516,28 @@ public struct SettingsFeature: Sendable {
             case .sessionReady:
                 guard state.isSigningOut, !state.isAwaitingSession else { return .none }
                 return signOut(&state)
+
+            case .plusRestoreTapped:
+                guard !state.isRestoringPlus else { return .none }
+                state.isRestoringPlus = true
+                state.plusRestoreResult = nil
+                return .run { send in
+                    await send(.plusRestoreFinished(Result {
+                        try await purchases.restore()
+                        return try await proClient.refresh().active
+                    }.mapError(AppError.init)))
+                }
+
+            case let .plusRestoreFinished(.success(active)):
+                state.isRestoringPlus = false
+                state.plusRestoreResult = active ? .restored : .nothing
+                return .none
+
+            case let .plusRestoreFinished(.failure(error)):
+                state.isRestoringPlus = false
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
 
             case .deleteAccountTapped:
                 guard !state.isDeletingAccount else { return .none }

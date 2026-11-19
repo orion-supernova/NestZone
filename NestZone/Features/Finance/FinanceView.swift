@@ -144,6 +144,14 @@ public struct FinanceView: View {
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
         .stagedBuild(2)
+        // A house without Plus: locked when there is nothing here, read-only
+        // under a banner when there is.
+        .proModule(
+            .finance,
+            hasData: !store.expenses.isEmpty || !store.bills.isEmpty || !store.budgets.isEmpty
+                || store.summary.expenseCount > 0,
+            isLoaded: !store.isLoading
+        )
         .alert($store.scope(state: \.alert, action: \.alert))
         .modifier(FinanceDestinations(store: store))
     }
@@ -171,6 +179,7 @@ public struct FinanceView: View {
             Image(systemName: "plus")
         }
         .accessibilityLabel(Text(L10n.commonAdd))
+        .proLocked(.finance)
     }
 
     // MARK: - Chrome

@@ -27,6 +27,10 @@ public struct HomeFeature: Sendable {
         /// anything coming", and `events:upcoming` answers that with at most a
         /// handful of rows however many years of events the household has.
         public var upcoming: [EventOccurrence] = []
+        /// Whether the house has Plus. Without it the calendar and the bills
+        /// are not read at all, so Up next, the bill alarms and the event
+        /// clauses have nothing to draw and the events counter is a teaser.
+        @Shared(.pro) public var pro: ProStatus
         /// Who lives here: the getting-started checklist asks whether anybody
         /// else has joined yet, and a problem's row says who is on it.
         public var members: IdentifiedArrayOf<User> = []
@@ -392,6 +396,8 @@ public struct HomeFeature: Sendable {
     public enum Action: Equatable {
         case task
         case statsUpdated(HomeStats)
+        /// Plus turned on or off: start or stop the reads it gates.
+        case proChanged(Bool)
         case billsUpdated([Bill])
         case issuesUpdated([HouseIssue])
         case tasksUpdated([HouseTask])
@@ -485,6 +491,32 @@ public struct HomeFeature: Sendable {
 
     public init() {}
 
+    /// The same capped agenda At a glance reads, so the week's count is the
+    /// same number in both places.
+    private func eventsEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await events in eventsClient.upcoming(homeID, 20) {
+                await send(.upcomingEventsUpdated(events))
+            }
+        } catch: { _, send in
+            // An empty calendar is the normal case, and a list that cannot
+            // load is not worth an alert over the whole tab.
+            await send(.partFailed(.upcoming))
+        }
+        .cancellable(id: CancelID.events, cancelInFlight: true)
+    }
+
+    private func billsEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await bills in financeClient.bills(homeID) {
+                await send(.billsUpdated(bills))
+            }
+        } catch: { _, send in
+            await send(.partFailed(.bills))
+        }
+        .cancellable(id: CancelID.bills, cancelInFlight: true)
+    }
+
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -511,18 +543,7 @@ public struct HomeFeature: Sendable {
                     }
                     .cancellable(id: CancelID.tasks, cancelInFlight: true),
 
-                    .run { send in
-                        // The same capped agenda At a glance reads, so the
-                        // week's count is the same number in both places.
-                        for try await events in eventsClient.upcoming(homeID, 20) {
-                            await send(.upcomingEventsUpdated(events))
-                        }
-                    } catch: { _, send in
-                        // An empty calendar is the normal case, and a list that
-                        // cannot load is not worth an alert over the whole tab.
-                        await send(.partFailed(.upcoming))
-                    }
-                    .cancellable(id: CancelID.events, cancelInFlight: true),
+                    state.pro.isPro ? eventsEffect(homeID) : .send(.partFailed(.upcoming)),
 
                     .run { send in
                         for try await members in homesClient.members(homeID) {
@@ -536,14 +557,7 @@ public struct HomeFeature: Sendable {
                     // "Needs you": the two things in the house with a date that
                     // can pass. Quiet on failure — the section simply stays
                     // away, which is also what it does when all is well.
-                    .run { send in
-                        for try await bills in financeClient.bills(homeID) {
-                            await send(.billsUpdated(bills))
-                        }
-                    } catch: { _, send in
-                        await send(.partFailed(.bills))
-                    }
-                    .cancellable(id: CancelID.bills, cancelInFlight: true),
+                    state.pro.isPro ? billsEffect(homeID) : .send(.partFailed(.bills)),
 
                     .run { send in
                         for try await board in issuesClient.board(homeID) {
@@ -556,6 +570,17 @@ public struct HomeFeature: Sendable {
 
                     .send(.askForNotificationsIfNeeded)
                 )
+
+            case let .proChanged(isPro):
+                let homeID = state.homeID
+                if isPro { return .merge(eventsEffect(homeID), billsEffect(homeID)) }
+                // Let go of both reads and what they brought: the calendar and
+                // the bills are read-only history now, and Today does not draw
+                // them.
+                state.upcoming = []
+                state.bills = []
+                state.loaded.formUnion([.upcoming, .bills])
+                return .merge(.cancel(id: CancelID.events), .cancel(id: CancelID.bills))
 
             // The one place a newcomer is asked about notifications. Everyone
             // lands here — creating a home and joining one both end on this

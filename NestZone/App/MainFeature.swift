@@ -78,6 +78,15 @@ public struct MainFeature: Sendable {
         /// that happened, which is knowledge only this reducer has.
         public var inbox: InboxFeature.State
 
+        /// Whether this house has NestZone Plus: one subscription to
+        /// `pro:status` for the life of the tab bar, written to the shared
+        /// `.pro` key every gate reads.
+        public var pro: ProStatusFeature.State
+
+        /// The paywall, opened on whatever was reached for. Presented from
+        /// whichever layer is on top (`PaywallLayer`).
+        @Presents public var paywall: PaywallFeature.State?
+
         public init(
             homeID: HomeID,
             home: Home? = nil,
@@ -116,6 +125,17 @@ public struct MainFeature: Sendable {
             self.companion = companion
             self.settings = SettingsFeature.State(homeID: homeID, home: home, user: user)
             self.inbox = InboxFeature.State(homeID: homeID, currentUserID: user?.id)
+            self.pro = ProStatusFeature.State(homeID: homeID)
+        }
+
+        /// The layer that has to present the paywall: a sheet can only be
+        /// presented by the view on top, and Settings, Add anything and the
+        /// dinner sheet are each a layer of their own.
+        var paywallLayer: PaywallLayer {
+            if isSettingsPresented { .settings }
+            else if capture != nil { .capture }
+            else if now.dinner != nil { .dinner }
+            else { .root }
         }
 
         /// How many people have to say yes for a movie-night match.
@@ -135,6 +155,9 @@ public struct MainFeature: Sendable {
             }
         }
     }
+
+    /// Where the paywall is drawn from.
+    public enum PaywallLayer: Hashable, Sendable { case root, settings, capture, dinner }
 
     public enum Tab: String, CaseIterable, Hashable, Sendable {
         case today, lists, plans, house, messages
@@ -171,6 +194,10 @@ public struct MainFeature: Sendable {
         /// The confirmation's "Open".
         case capturedOpenTapped
         case capturedDismissed
+        case proStatus(ProStatusFeature.Action)
+        case paywall(PresentationAction<PaywallFeature.Action>)
+        /// A gated control, or the server, asked for the paywall.
+        case paywallRequested(ProFeature?)
     }
 
     private enum CancelID { case presentSettings, captured }
@@ -199,6 +226,7 @@ public struct MainFeature: Sendable {
         #endif
         Scope(state: \.settings, action: \.settings) { SettingsFeature() }
         Scope(state: \.inbox, action: \.inbox) { InboxFeature() }
+        Scope(state: \.pro, action: \.proStatus) { ProStatusFeature() }
 
         Reduce { state, action in
             switch action {
@@ -352,11 +380,35 @@ public struct MainFeature: Sendable {
             case let .inbox(.delegate(.open(category))):
                 return route(&state, to: category)
 
+            case let .paywallRequested(feature):
+                guard state.paywall == nil else { return .none }
+                state.paywall = PaywallFeature.State(feature: feature, houseName: state.home?.name ?? "")
+                return .none
+
+            case .paywall(.presented(.delegate(.dismiss))):
+                state.paywall = nil
+                return .none
+
+            // Plus turned on or off. Today and the dock start or stop their
+            // calendar and bills reads; a house without Plus opens on the
+            // modules it can use.
+            case let .proStatus(.delegate(.changed(isPro, firstAnswer))):
+                if firstAnswer, !isPro {
+                    if state.plans.selected == .calendar { state.plans.selected = .recipes }
+                    if state.house.selected == .finance { state.house.selected = .maintenance }
+                }
+                return .merge(
+                    .send(.home(.proChanged(isPro))),
+                    .send(.now(.proChanged(isPro)))
+                )
+
             case .home, .today, .lists, .plans, .house, .messages,
-                 .settings, .inbox, .customize, .capture, .companion:
+                 .settings, .inbox, .customize, .capture, .companion,
+                 .proStatus, .paywall:
                 return .none
             }
         }
+        .ifLet(\.$paywall, action: \.paywall) { PaywallFeature() }
         .ifLet(\.$customize, action: \.customize) { CustomizeFeature() }
         .ifLet(\.$capture, action: \.capture) { CaptureFeature() }
     }
@@ -387,22 +439,12 @@ public struct MainFeature: Sendable {
             return .none
         case .decideDinner:
             return .send(.now(.decideDinnerTapped))
-        case let .event(eventID, day):
-            screen = .calendar(CalendarFeature.State(
-                homeID: state.homeID,
-                currentUserID: state.user?.id,
-                day: day,
-                openingEventID: eventID
-            ))
-        // Opened *at* the event, not merely on its day: the grid behind it
-        // shows the right date and the sheet for the thing that was tapped is
-        // already up.
-        case let .occurrence(occurrence):
-            screen = .calendar(CalendarFeature.State(
-                homeID: state.homeID,
-                currentUserID: state.user?.id,
-                showing: occurrence
-            ))
+        // The calendar is Plus: a specific event for a house without it is
+        // the paywall, not a screen it cannot use. (The module itself opens
+        // on its own locked or read-only screen.)
+        case .event, .occurrence:
+            if !state.pro.status.isPro { return .send(.paywallRequested(.calendar)) }
+            return openEvent(target, &state, from: tab)
         case let .issue(issueID):
             screen = .issues(IssuesFeature.State(
                 homeID: state.homeID,
@@ -411,8 +453,6 @@ public struct MainFeature: Sendable {
             ))
         case let .recipe(recipe):
             screen = .recipeDetail(RecipeDetailFeature.State(recipe: recipe, homeID: state.homeID))
-        // The Done list is bounded on purpose; this is where the rest of it
-        // lives. A push because it is a drill-down into the same subject.
         case .taskArchive:
             screen = .taskArchive(TaskArchiveFeature.State(
                 homeID: state.homeID,
@@ -433,12 +473,42 @@ public struct MainFeature: Sendable {
             screen = .stats(HouseStatsFeature.State(homeID: state.homeID))
         }
 
-        // Chat's stack holds conversations and nothing else, so a request that
-        // arrives while it is on screen (a notification row, say) opens on the
-        // tab that owns its subject.
         let tab = tab == .messages ? Self.owner(of: target) : tab
         state.selectedTab = tab
         push(screen, onto: tab, isSpecific: target.isSpecific, &state)
+        return .none
+    }
+
+    /// An event or an occurrence, for a house that has Plus.
+    private func openEvent(
+        _ target: RouteStack.Target,
+        _ state: inout State,
+        from tab: Tab
+    ) -> Effect<Action> {
+        let screen: Route.State
+        switch target {
+        case let .event(eventID, day):
+            screen = .calendar(CalendarFeature.State(
+                homeID: state.homeID,
+                currentUserID: state.user?.id,
+                day: day,
+                openingEventID: eventID
+            ))
+        // Opened *at* the event, not merely on its day: the grid behind it
+        // shows the right date and the sheet for the thing that was tapped is
+        // already up.
+        case let .occurrence(occurrence):
+            screen = .calendar(CalendarFeature.State(
+                homeID: state.homeID,
+                currentUserID: state.user?.id,
+                showing: occurrence
+            ))
+        default:
+            return .none
+        }
+        let tab = tab == .messages ? Self.owner(of: target) : tab
+        state.selectedTab = tab
+        push(screen, onto: tab, isSpecific: true, &state)
         return .none
     }
 

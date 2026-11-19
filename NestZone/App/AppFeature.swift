@@ -32,6 +32,10 @@ public struct AppFeature: Sendable {
         /// language changes (the root view is re-identified), and a second
         /// restore beside the first is two exchanges of a token that rotates.
         public var restoreStarted = false
+        /// The user the Plus subscription was last asked about this launch, so
+        /// `pro:refresh` runs once per launch and sign-in, not once per profile
+        /// edit.
+        public var proCheckedFor: UserID?
         /// This device's standing with APNs and with the server, held here
         /// because this is the only reducer that lives for the whole session.
         /// iOS delivers a token once per launch, long before there is a
@@ -45,6 +49,8 @@ public struct AppFeature: Sendable {
 
         @Shared(.theme) public var theme: AppTheme
         @Shared(.language) public var language: AppLanguage
+        /// Reset when a session ends: it is one house's standing.
+        @Shared(.pro) public var pro: ProStatus
 
         public init() {}
 
@@ -109,6 +115,8 @@ public struct AppFeature: Sendable {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.push) var push
     @Dependency(\.devices) var devices
+    @Dependency(\.purchases) var purchases
+    @Dependency(\.pro) var proClient
 
     public init() {}
 
@@ -128,6 +136,9 @@ public struct AppFeature: Sendable {
                 // connection's gate, which has to happen before the tabs exist.
                 let firstRun = !state.restoreStarted
                 state.restoreStarted = true
+                // The SDK starts anonymous and is tied to the person when the
+                // session answers (`currentUserChanged`).
+                if firstRun { purchases.configure(nil) }
                 if firstRun, state.isRestoringSession, state.selectedHome != nil,
                    authClient.beginOptimisticLaunch() {
                     state.isProvisional = true
@@ -271,7 +282,14 @@ public struct AppFeature: Sendable {
                 state.currentUser = user
                 state.main?.user = user
                 state.main?.propagateSession()
-                return .none
+                // Purchases belong to the person, and the server is asked to
+                // look at their subscription once per launch and sign-in.
+                guard let user, state.proCheckedFor != user.id else { return .none }
+                state.proCheckedFor = user.id
+                return .run { _ in
+                    await purchases.logIn(user.id.rawValue)
+                    _ = try? await proClient.refresh()
+                }
 
             case let .sessionRestoreFinished(outcome):
                 state.isRestoringSession = false
@@ -473,6 +491,8 @@ public struct AppFeature: Sendable {
     private func endSession(_ state: inout State, clearCache: Bool) -> Effect<Action> {
         state.currentUser = nil
         state.main = nil
+        state.proCheckedFor = nil
+        state.$pro.withLock { $0 = .unknown }
         // The token belongs to the device and outlives the session,
         // but this standing does not: it was registered against the
         // user who just left. The broker replays the token to the
@@ -501,7 +521,9 @@ public struct AppFeature: Sendable {
             // directory outlives every screen that filled it. An
             // effect rather than a line in the reducer because it
             // is the main actor's state, not this one's.
-            .run { _ in await AvatarDirectory.shared.clear() }
+            .run { _ in await AvatarDirectory.shared.clear() },
+            // Purchases are the person's, not the phone's.
+            .run { _ in await purchases.logOut() }
         )
     }
 

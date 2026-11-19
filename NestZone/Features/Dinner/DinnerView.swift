@@ -190,6 +190,7 @@ struct DinnerSheet: View {
         )
         .sensoryFeedback(.selection, trigger: store.makeItAnOccasion)
         .accessibilityAddTraits(store.makeItAnOccasion ? [.isButton, .isSelected] : .isButton)
+        .proLocked(.eventFromElsewhere)
     }
 
     /// When the occasion starts. Only the clock face — the day is the day being

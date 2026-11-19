@@ -175,13 +175,17 @@ struct MainView: View {
             // Over Settings when it was opened from there, so closing it
             // lands back where the person was.
             .customizeSheet(store, when: true)
+            .paywallSheet(store, layer: .settings)
         }
         // Over the tabs otherwise: Today's own link.
         .customizeSheet(store, when: false)
-        .nowSheets(store.scope(state: \.now, action: \.now))
+        .nowSheets(store.scope(state: \.now, action: \.now), main: store)
         .sheet(item: $store.scope(state: \.capture, action: \.capture)) {
             CaptureView(store: $0)
+                .paywallSheet(store, layer: .capture)
         }
+        // Over the tabs when nothing else is up.
+        .paywallSheet(store, layer: .root)
         // Above the dock and the tab bar, clear of both.
         .overlay(alignment: .bottom) {
             if let outcome = store.captured {
@@ -200,6 +204,14 @@ struct MainView: View {
         // The dock is on every tab, so what it reads is subscribed to here,
         // for the life of the tab bar rather than of any one tab.
         .task { await store.send(.now(.task)).finish() }
+        // Whether this house has Plus, for the life of the tab bar.
+        .task { await store.send(.proStatus(.task)).finish() }
+        // A gated control, or a refusal from the server, asking for the paywall.
+        .task {
+            for await feature in PaywallBroker.shared.requests() {
+                store.send(.paywallRequested(feature))
+            }
+        }
         // The house's companion is shared, so it is read for the life of the
         // tab bar too; Release builds draw none of it and never ask.
         .task { if CompanionFlag.isEnabled { await store.send(.companion(.task)).finish() } }
@@ -427,6 +439,8 @@ private struct SegmentSwitch: View {
 
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Calendar and Money wear a small lock for a house without Plus.
+    @Shared(.pro) private var pro
     @Namespace private var underline
     /// How far the underline is drawn out while it travels — 1 at rest, about
     /// 30pt over its 18 at full stretch.
@@ -441,10 +455,18 @@ private struct SegmentSwitch: View {
                 let isSelected = module == selected
                 Button { pick(module) } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(module.title)
-                            .font(.system(.title3, design: .rounded, weight: .bold))
-                            .foregroundStyle(isSelected ? .primary : .secondary)
-                            .lineLimit(1)
+                        HStack(spacing: 4) {
+                            Text(module.title)
+                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .foregroundStyle(isSelected ? .primary : .secondary)
+                                .lineLimit(1)
+                            if module.needsPlus, !pro.isPro {
+                                Image(systemName: "lock.fill")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityHidden(true)
+                            }
+                        }
                             // The name just chosen lands a touch small and
                             // springs up to size. Every name hears the change;
                             // only the chosen one moves.
@@ -554,8 +576,24 @@ extension View {
     }
 
     /// The sheets the dock and the dinner card open, over the whole tab bar.
-    func nowSheets(_ store: StoreOf<NowFeature>) -> some View {
-        modifier(NowSheets(store: store))
+    func nowSheets(_ store: StoreOf<NowFeature>, main: StoreOf<MainFeature>) -> some View {
+        modifier(NowSheets(store: store, main: main))
+    }
+
+    /// Presents the paywall from the layer that is on top, for the same reason
+    /// as `customizeSheet`: a sheet can only be presented by the view on top,
+    /// and each binding is live only while its layer is the one asked for.
+    func paywallSheet(_ store: StoreOf<MainFeature>, layer: MainFeature.PaywallLayer) -> some View {
+        sheet(item: Binding(
+            get: {
+                store.paywallLayer == layer
+                    ? store.scope(state: \.paywall, action: \.paywall.presented)
+                    : nil
+            },
+            set: { if $0 == nil { store.send(.paywall(.dismiss)) } }
+        )) { paywall in
+            PaywallView(store: paywall)
+        }
     }
 
     /// The avatar and the bell, on the root screen of every tab.
@@ -587,11 +625,13 @@ extension View {
 /// so the dock, Today and Meals all open the same sheet.
 private struct NowSheets: ViewModifier {
     @Bindable var store: StoreOf<NowFeature>
+    let main: StoreOf<MainFeature>
 
     func body(content: Content) -> some View {
         content
             .sheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
                 DinnerSheet(store: $0)
+                    .paywallSheet(main, layer: .dinner)
             }
             .sheet(item: $store.scope(state: \.occasion, action: \.occasion)) {
                 EventComposerSheet(store: $0)
@@ -652,4 +692,9 @@ private struct CapturedToast: View {
 private struct PurchaseWatch: Hashable {
     var home: HomeID
     var user: UserID?
+}
+
+extension HubModule {
+    /// Whether the module is Plus as a whole.
+    var needsPlus: Bool { self == .calendar || self == .finance }
 }

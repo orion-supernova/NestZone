@@ -92,6 +92,20 @@ struct CaptureView: View {
                     ) {
                         store.send(.kindTapped(kind), animation: Motion.spring)
                     }
+                    // Event and Expense are Plus; the lock is the chip's own
+                    // and a tap opens the paywall (the reducer asks for it).
+                    .overlay(alignment: .topTrailing) {
+                        if kind.proFeature != nil, !store.pro.isPro {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.secondary)
+                                .padding(3)
+                                .background(.thinMaterial, in: .circle)
+                                .offset(x: 4, y: -4)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        }
+                    }
                 }
             }
         }
@@ -309,6 +323,17 @@ extension CaptureOutcome {
         case .problem: L10n.captureAddedProblem
         case .event: L10n.captureAddedEvent
         case .expense: L10n.captureAddedExpense
+        }
+    }
+}
+
+extension CaptureKind {
+    /// What a house needs Plus for to file a line here, if anything.
+    var proFeature: ProFeature? {
+        switch self {
+        case .event: .eventFromElsewhere
+        case .expense: .expenseFromElsewhere
+        case .shopping, .chore, .note, .problem: nil
         }
     }
 }

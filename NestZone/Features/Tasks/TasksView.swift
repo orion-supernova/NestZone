@@ -5,6 +5,7 @@ public struct TasksView: View {
     @Bindable var store: StoreOf<TasksFeature>
 
     @Environment(\.theme) private var theme
+    @Shared(.pro) private var pro
 
     /// Chores this person ticked on this screen, for the haptic. Counted at the
     /// tap rather than read off the chore, because the chore also changes when
@@ -213,8 +214,10 @@ public struct TasksView: View {
                         Button {
                             store.send(.archiveTapped(task.id))
                         } label: {
+                            // The lock is the glyph itself: a swipe button is
+                            // not a view a badge can sit on.
                             Label { Text(L10n.tasksArchiveAction) } icon: {
-                                Image(systemName: "archivebox")
+                                Image(systemName: pro.isPro ? "archivebox" : "lock.fill")
                             }
                         }
                         .tint(Palette.warning)
