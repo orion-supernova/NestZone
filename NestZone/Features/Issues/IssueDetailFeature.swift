@@ -325,8 +325,8 @@ public struct IssueDetailFeature: Sendable {
 
     @Dependency(\.issues) var issuesClient
     @Dependency(\.paywall) var paywall
-    /// Booking a visit makes an event, and logging a cost makes an expense:
-    /// both are Plus. The estimate and the "spent" figure stay free.
+    /// Problems are Plus: a house without it reads the problem, and every
+    /// control that writes asks for the paywall instead. Deleting stays.
     @Shared(.pro) var pro: ProStatus
     @Dependency(\.dismiss) var dismiss
 
@@ -336,6 +336,9 @@ public struct IssueDetailFeature: Sendable {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.issues) }
+            }
             switch action {
             case .task:
                 let id = state.issue.id
@@ -518,7 +521,6 @@ public struct IssueDetailFeature: Sendable {
                 return .none
 
             case .scheduleVisitTapped:
-                guard pro.isPro else { return .run { _ in paywall.request(.eventFromElsewhere) } }
                 // Reopened on the visit already booked, when there is one that
                 // has not happened yet: the second tap on this control is
                 // nearly always "they're coming Thursday now", and a sheet that
@@ -571,7 +573,6 @@ public struct IssueDetailFeature: Sendable {
                 return .none
 
             case .logCostTapped:
-                guard pro.isPro else { return .run { _ in paywall.request(.expenseFromElsewhere) } }
                 let issue = state.current
                 state.expense = ExpenseComposerFeature.State(
                     homeID: state.homeID,
@@ -593,6 +594,7 @@ public struct IssueDetailFeature: Sendable {
             case let .photosPicked(images):
                 guard !images.isEmpty else { return .none }
                 let id = state.issue.id
+                let homeID = state.homeID
                 state.uploading += images.count
                 return .run { send in
                     // Encoded off the main actor, one at a time: re-drawing a
@@ -602,7 +604,7 @@ public struct IssueDetailFeature: Sendable {
                     var stored: [IssuePhotoIDs] = []
                     for image in images {
                         guard let encoded = IssuePhoto.encode(image) else { continue }
-                        stored.append(try await issuesClient.uploadPhoto(encoded))
+                        stored.append(try await issuesClient.uploadPhoto(homeID, encoded))
                     }
                     try await issuesClient.attachPhotos(id, stored)
                     await send(.photosAttached)
@@ -711,6 +713,19 @@ public struct IssueDetailFeature: Sendable {
         } catch: { error, send in
             await send(.statusCommitted(previous))
             await send(.writeFailed(AppError(error)))
+        }
+    }
+}
+
+extension IssueDetailFeature {
+    /// The actions that change the problem or what hangs off it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .statusTapped, .statusNoteConfirmed, .meTooTapped, .assignTapped,
+             .postTapped, .deleteEntryTapped, .makeChoreTapped, .addPartsTapped,
+             .partsConfirmed, .scheduleVisitTapped, .visitConfirmed, .logCostTapped,
+             .photosPicked, .removePhotoTapped, .editTapped: true
+        default: false
         }
     }
 }

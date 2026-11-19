@@ -26,6 +26,9 @@ public struct CatalogQuery: Equatable, Sendable {
     public var query: String?
     public var year: Int?
     public var includeAdult: Bool
+    /// The house asking, so the server can judge Plus by it. Mature titles are
+    /// coerced off there for a house without Plus, never refused.
+    public var homeID: HomeID?
 
     public init(kind: Kind, query: String? = nil, year: Int? = nil, includeAdult: Bool = false) {
         self.kind = kind
@@ -55,6 +58,7 @@ extension CatalogClient: DependencyKey {
                 "kind": request.kind.rawValue,
                 "includeAdult": request.includeAdult,
             ]
+            if let homeID = request.homeID { args["homeId"] = homeID }
             if let query = request.query { args["query"] = query }
             if let year = request.year { args["year"] = year.convexNumber }
             return try await ConvexConnection.shared.act(

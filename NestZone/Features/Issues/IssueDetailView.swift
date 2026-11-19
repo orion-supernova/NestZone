@@ -14,6 +14,9 @@ public struct IssueDetailView: View {
 
     @Environment(\.theme) private var theme
     @Environment(\.openURL) private var openURL
+    /// Problems are Plus: a house without it can read one and delete it, and
+    /// nothing else on this screen writes.
+    @Shared(.pro) private var pro
     @Namespace private var glass
     @State private var picked: [PhotosPickerItem] = []
     @FocusState private var isComposing: Bool
@@ -38,7 +41,7 @@ public struct IssueDetailView: View {
                 headline.appear(1)
                 statusCard.appear(2)
 
-                if store.awaitsVerdict {
+                if store.awaitsVerdict, pro.isPro {
                     verdictPrompt.appear(3)
                 }
 
@@ -63,7 +66,7 @@ public struct IssueDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) { overflowMenu }
         }
-        .safeAreaInset(edge: .bottom) { composer }
+        .safeAreaInset(edge: .bottom) { if pro.isPro { composer } }
         // The problem is fixed. The one thing on this screen worth celebrating.
         .overlay { ConfettiBurst(trigger: store.fixedCelebration) }
         // Bumped only when this person's own move lands on Fixed (see
@@ -199,14 +202,16 @@ public struct IssueDetailView: View {
                     }
                 }
 
-                Divider().opacity(0.4)
+                if pro.isPro {
+                    Divider().opacity(0.4)
 
-                HStack(spacing: 10) {
-                    MeTooButton(count: issue.affectedCount, isOn: store.isAffected) {
-                        store.send(.meTooTapped)
+                    HStack(spacing: 10) {
+                        MeTooButton(count: issue.affectedCount, isOn: store.isAffected) {
+                            store.send(.meTooTapped)
+                        }
+                        Spacer(minLength: 4)
+                        assigneeMenu
                     }
-                    Spacer(minLength: 4)
-                    assigneeMenu
                 }
             }
         }
@@ -279,6 +284,7 @@ public struct IssueDetailView: View {
         GlassCard(padding: 18) {
             VStack(spacing: 16) {
                 StatusTrack(status: issue.status) { store.send(.statusTapped($0)) }
+                    .allowsHitTesting(pro.isPro)
 
                 if issue.status == .blocked,
                    let reason = issue.blockedReason, !reason.isEmpty {
@@ -304,7 +310,7 @@ public struct IssueDetailView: View {
                     .transition(.opacity)
                 }
 
-                if let next = issue.status.next {
+                if pro.isPro, let next = issue.status.next {
                     PrimaryButton(issue.status.advanceTitle, symbol: next.symbol) {
                         store.send(.statusTapped(next))
                     }
@@ -425,8 +431,7 @@ public struct IssueDetailView: View {
             actionTitle: upcoming ? L10n.issuesPlanMoveVisit : L10n.issuesPlanBookVisit,
             actionSymbol: upcoming ? "calendar.badge.clock" : nil,
             glass: glass,
-            onOpen: store.detail?.event != nil ? { store.send(.openEventTapped) } : nil,
-            lockedBy: .eventFromElsewhere
+            onOpen: store.detail?.event != nil ? { store.send(.openEventTapped) } : nil
         ) {
             store.send(.scheduleVisitTapped)
         }
@@ -472,8 +477,7 @@ public struct IssueDetailView: View {
             actionTitle: L10n.issuesPlanLogCost,
             progress: store.detail?.estimateProgress,
             isOver: store.detail?.isOverEstimate ?? false,
-            glass: glass,
-            lockedBy: .expenseFromElsewhere
+            glass: glass
         ) {
             store.send(.logCostTapped)
         }
@@ -598,7 +602,7 @@ public struct IssueDetailView: View {
                             author: store.state.member(entry.authorID),
                             isFirst: index == 0,
                             isLast: index == store.timeline.count - 1,
-                            canRemove: entry.isRemovable(by: store.currentUserID)
+                            canRemove: pro.isPro && entry.isRemovable(by: store.currentUserID)
                         ) {
                             store.send(.deleteEntryTapped(entry.id))
                         }
@@ -674,21 +678,23 @@ public struct IssueDetailView: View {
 
     private var overflowMenu: some View {
         Menu {
-            Button { store.send(.editTapped) } label: {
-                Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
-            }
+            if pro.isPro {
+                Button { store.send(.editTapped) } label: {
+                    Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
+                }
 
-            Section(String(localized: L10n.issuesMoveTo)) {
-                ForEach(store.otherStatuses) { status in
-                    Button { store.send(.statusTapped(status)) } label: {
-                        Label { Text(status.title) } icon: {
-                            Image(systemName: status.symbol)
+                Section(String(localized: L10n.issuesMoveTo)) {
+                    ForEach(store.otherStatuses) { status in
+                        Button { store.send(.statusTapped(status)) } label: {
+                            Label { Text(status.title) } icon: {
+                                Image(systemName: status.symbol)
+                            }
                         }
                     }
                 }
-            }
 
-            Divider()
+                Divider()
+            }
             Button(role: .destructive) { store.send(.deleteTapped) } label: {
                 Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
             }
@@ -728,9 +734,10 @@ private struct PlanRow: View {
     let glass: Namespace.ID
     /// Present when the arranged thing lives somewhere else worth going to.
     var onOpen: (() -> Void)? = nil
-    /// Set when the control's action needs NestZone Plus: it wears a lock.
-    var lockedBy: ProFeature? = nil
     let action: () -> Void
+    /// Arranging anything is Plus; a house without it sees the plan, not the
+    /// buttons.
+    @Shared(.pro) private var pro
 
     var body: some View {
         HStack(spacing: 12) {
@@ -780,16 +787,17 @@ private struct PlanRow: View {
                 .accessibilityLabel(Text(L10n.commonOpen))
             }
 
-            Button(action: action) {
-                Image(systemName: actionSymbol ?? (state == .empty ? "plus" : "plus.circle"))
-                    .font(.footnote.weight(.bold))
-                    .foregroundStyle(tint)
-                    .frame(width: 32, height: 32)
-                    .contentShape(.circle)
+            if pro.isPro {
+                Button(action: action) {
+                    Image(systemName: actionSymbol ?? (state == .empty ? "plus" : "plus.circle"))
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(tint)
+                        .frame(width: 32, height: 32)
+                        .contentShape(.circle)
+                }
+                .buttonStyle(.pressable)
+                .accessibilityLabel(Text(actionTitle))
             }
-            .buttonStyle(.pressable)
-            .accessibilityLabel(Text(actionTitle))
-            .proLocked(if: lockedBy)
         }
         .glassRow()
         .glassEffectID("plan-\(symbol)", in: glass)

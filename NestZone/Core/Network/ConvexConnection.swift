@@ -366,9 +366,10 @@ public final class ConvexConnection: @unchecked Sendable {
     public func upload(
         _ data: Data,
         contentType: String = "image/jpeg",
-        signedBy mutation: String
+        signedBy mutation: String,
+        args: [String: ConvexEncodable?] = [:]
     ) async throws -> String {
-        let destination = try await mutate(mutation, args: [:], as: String.self)
+        let destination = try await mutate(mutation, args: args, as: String.self)
         guard let url = URL(string: destination) else {
             throw AppError.server("The upload address made no sense")
         }

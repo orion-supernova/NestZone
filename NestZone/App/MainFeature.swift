@@ -464,7 +464,10 @@ public struct MainFeature: Sendable {
         case .event, .occurrence:
             if !state.pro.status.isPro { return .send(.paywallRequested(.calendar)) }
             return openEvent(target, &state, from: tab)
+        // Problems are Plus too: a specific one for a house without it is the
+        // paywall. (The module opens on its own locked or read-only screen.)
         case let .issue(issueID):
+            if !state.pro.status.isPro { return .send(.paywallRequested(.issues)) }
             screen = .issues(IssuesFeature.State(
                 homeID: state.homeID,
                 currentUserID: state.user?.id,

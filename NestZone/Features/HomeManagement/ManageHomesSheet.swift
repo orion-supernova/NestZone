@@ -11,6 +11,7 @@ struct ManageHomesSheet: View {
     @Bindable var store: StoreOf<ManageHomesFeature>
 
     @Environment(\.theme) private var theme
+    @Shared(.pro) private var pro
 
     var body: some View {
         NavigationStack {
@@ -35,10 +36,12 @@ struct ManageHomesSheet: View {
             // A row that is already on its way out must not be tapped again.
             .disabled(store.leavingID != nil)
         }
-        .sheet(item: $store.scope(state: \.destination?.create, action: \.destination.create)) {
+        // Hosted, so the paywall can come up over them: a refused join asks
+        // for it from inside the sheet.
+        .hostedSheet(item: $store.scope(state: \.destination?.create, action: \.destination.create)) {
             CreateHomeSheet(store: $0)
         }
-        .sheet(item: $store.scope(state: \.destination?.join, action: \.destination.join)) {
+        .hostedSheet(item: $store.scope(state: \.destination?.join, action: \.destination.join)) {
             JoinHomeSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -100,10 +103,20 @@ struct ManageHomesSheet: View {
     private var addSection: some View {
         Section {
             Button { store.send(.createTapped) } label: {
-                Label { Text(L10n.homeSetupCreateHomeTitle) } icon: {
-                    Image(systemName: "house.and.flag")
+                HStack {
+                    Label { Text(L10n.homeSetupCreateHomeTitle) } icon: {
+                        Image(systemName: "house.and.flag")
+                    }
+                    Spacer(minLength: 8)
+                    if !pro.allowsAnotherHome {
+                        Image(systemName: "lock.fill")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                    }
                 }
             }
+            .accessibilityHint(pro.allowsAnotherHome ? "" : String(localized: L10n.proLockedHint))
             Button { store.send(.joinTapped) } label: {
                 Label { Text(L10n.joinAnotherHomeButton) } icon: {
                     Image(systemName: "person.2.badge.key")

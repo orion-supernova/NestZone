@@ -24,6 +24,12 @@ public struct ProStatus: Equatable, Sendable {
 
     public static let unknown = ProStatus()
 
+    /// Whether this person may make a second home without asking for Plus:
+    /// only the person who pays for Plus themselves (a house that is covered
+    /// by somebody else's does not carry over to a home of their own). True
+    /// until the server has answered, so nothing locks mid-load.
+    public var allowsAnotherHome: Bool { !isLoaded || (isPro && mine) }
+
     /// Whoever's subscription covers the house.
     public struct Carrier: Equatable, Sendable {
         public var id: UserID

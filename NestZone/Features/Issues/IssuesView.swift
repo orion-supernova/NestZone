@@ -68,6 +68,7 @@ public struct IssuesView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.issuesReport))
+                .proLocked(.issues)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -89,6 +90,9 @@ public struct IssuesView: View {
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
         .stagedBuild(2)
+        // A house without Plus: locked when there is nothing here, read-only
+        // under a banner when there is.
+        .proModule(.issues, hasData: !store.issues.isEmpty, isLoaded: store.hasLoaded)
         .alert($store.scope(state: \.alert, action: \.alert))
         .hostedSheet(item: $store.scope(state: \.compose, action: \.compose)) { store in
             IssueComposerSheet(store: store)
@@ -665,6 +669,7 @@ public struct IssuesView: View {
                             }
                             .font(.footnote.weight(.medium))
                         }
+                        .proLocked(.issues)
                     }
                     if inRoom.isEmpty {
                         Text(L10n.issuesRoomClear(String(localized: area.title)))

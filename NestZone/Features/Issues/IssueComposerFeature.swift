@@ -227,6 +227,10 @@ public struct IssueComposerFeature: Sendable {
 
     @Dependency(\.issues) var issuesClient
     @Dependency(\.dismiss) var dismiss
+    @Dependency(\.paywall) var paywall
+    /// Problems are Plus. A free house cannot reach this sheet from the
+    /// screens; this is the net under them.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -234,6 +238,9 @@ public struct IssueComposerFeature: Sendable {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, case .submitTapped = action {
+                return .run { _ in paywall.request(.issues) }
+            }
             switch action {
             case .submitTapped:
                 guard state.canSubmit else {
@@ -256,6 +263,7 @@ public struct IssueComposerFeature: Sendable {
 
                 let payload = state.payload
                 let photos = state.photos
+                let homeID = state.homeID
                 return .run { send in
                     // The pictures go up first and the report carries their ids,
                     // so a report is never written half-illustrated: if an
@@ -263,7 +271,7 @@ public struct IssueComposerFeature: Sendable {
                     // there, with everything typed into it, to try again.
                     var stored: [IssuePhotoIDs] = []
                     for photo in photos {
-                        stored.append(try await issuesClient.uploadPhoto(photo))
+                        stored.append(try await issuesClient.uploadPhoto(homeID, photo))
                     }
                     var report = payload
                     report.photos = stored

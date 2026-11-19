@@ -233,13 +233,17 @@ struct MainView: View {
     /// so there are never two text fields stacked over the tab bar. (Only on
     /// iOS 26.1 and later; 26.0 cannot hide an accessory once it is shown.)
     private var showsDock: Bool {
+        // The movie game lays its swipe buttons out over the whole screen, so
+        // the accessory would sit on top of them.
+        let top = store.state[stack: store.selectedTab].path.last
+        if case .movieNight = top { return false }
         switch store.selectedTab {
         case .lists:
-            !(store.lists.path.isEmpty && store.lists.selected == .shopping)
+            return !(store.lists.path.isEmpty && store.lists.selected == .shopping)
         case .messages:
-            store.messages.path.isEmpty
+            return store.messages.path.isEmpty
         case .today, .plans, .house:
-            true
+            return true
         }
     }
 
@@ -696,5 +700,5 @@ private struct PurchaseWatch: Hashable {
 
 extension HubModule {
     /// Whether the module is Plus as a whole.
-    var needsPlus: Bool { self == .calendar || self == .finance }
+    var needsPlus: Bool { requiresPlus }
 }
