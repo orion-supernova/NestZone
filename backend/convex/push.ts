@@ -414,7 +414,7 @@ async function fanOut(
 }
 
 /** The notification categories that belong to Household Pro. */
-const PRO_CATEGORIES = new Set(["finance", "calendar", "issues"]);
+const PRO_CATEGORIES = new Set(["finance", "calendar", "issues", "messages"]);
 
 /**
  * Whether a Pro-domain notification must not reach this house. Asks the
