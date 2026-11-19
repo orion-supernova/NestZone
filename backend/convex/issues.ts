@@ -33,7 +33,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
-import { requireMembers } from "./lib/relations";
+import { discardIssuePhotos, requireMembers } from "./lib/relations";
 import { outstandingNames } from "./lib/pending";
 import { anyHomeAllows, proAllows, proEnforced, proRequired, requirePro } from "./lib/pro";
 import { noteGrowth } from "./lib/companion";
@@ -1095,6 +1095,10 @@ export const remove = mutation({
       ...expenses.map((e) => ctx.db.patch(e._id, { issue_id: undefined })),
     ]);
     await ctx.db.delete(id);
+    // Its pictures go with it — both copies. They used to stay in storage for
+    // good, pointed at by nothing. Through `discardFile`, so a photo under
+    // report is kept until a moderator settles it.
+    await discardIssuePhotos(ctx, issue);
     return { ok: true };
   },
 });

@@ -3,8 +3,47 @@ import { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { discardFile } from "./moderation";
 
-/** A user document plus the one field the phone cannot work out for itself. */
-export type PublicUser = Omit<Doc<"users">, "chat_suspended_at"> & { avatar_url: string | null };
+/**
+ * The caller's own user document, plus the one field the phone cannot work out
+ * for itself. Only ever for the person themselves (`users:me` and the writes
+ * that answer with the caller's own profile): it carries their email, phone and
+ * every bookkeeping field.
+ */
+export type OwnUser = Omit<Doc<"users">, "chat_suspended_at"> & { avatar_url: string | null };
+
+/**
+ * Another person, as a housemate (or anyone else who is not them) may see them.
+ *
+ * An allow-list, never a deny-list: a field added to `users` tomorrow stays on
+ * the server until somebody decides it belongs here. Email and phone go to the
+ * person themselves and nobody else (`ownUser`). Every app build decodes
+ * `email`, `home_id`, `created` and `updated` with `decodeIfPresent`, so
+ * leaving them out degrades to "absent", never to a blank screen; a person
+ * with no `name` is drawn as "Someone" rather than their email's local part.
+ */
+export type PublicUser = {
+  _id: Id<"users">;
+  _creationTime: number;
+  name?: string;
+  /** The photo's storage id: its identity, what a report names. */
+  avatar?: Id<"_storage">;
+  avatar_url: string | null;
+};
+
+async function avatarUrl(ctx: QueryCtx | MutationCtx, doc: Doc<"users">) {
+  return doc.avatar ? await ctx.storage.getUrl(doc.avatar) : null;
+}
+
+/** The caller's own document. Never pass anybody else's through this. */
+export async function ownUser(
+  ctx: QueryCtx | MutationCtx,
+  doc: Doc<"users">,
+): Promise<OwnUser> {
+  // A suspension is between the person and the moderators, never on the
+  // wire, not even to them.
+  const { chat_suspended_at: _suspended, ...rest } = doc;
+  return { ...rest, avatar_url: await avatarUrl(ctx, doc) };
+}
 
 /**
  * Resolves `avatar` into a URL the client can actually load.
@@ -27,13 +66,27 @@ export async function publicUser(
   ctx: QueryCtx | MutationCtx,
   doc: Doc<"users">,
 ): Promise<PublicUser> {
-  // A suspension is between the person and the moderators, never on the
-  // wire to the rest of the house.
-  const { chat_suspended_at: _suspended, ...rest } = doc;
-  return {
-    ...rest,
-    avatar_url: doc.avatar ? await ctx.storage.getUrl(doc.avatar) : null,
+  const out: PublicUser = {
+    _id: doc._id,
+    _creationTime: doc._creationTime,
+    avatar_url: await avatarUrl(ctx, doc),
   };
+  if (doc.name !== undefined) out.name = doc.name;
+  if (doc.avatar !== undefined) out.avatar = doc.avatar;
+  return out;
+}
+
+/**
+ * The email for a row naming `doc`, when the row goes to `caller`: theirs if
+ * it is them, `null` for anybody else. For the screens whose rows carry a name
+ * and an email rather than a whole user (contributions, the ledger, the
+ * archive), which old builds decode with the key present.
+ */
+export function emailFor(
+  caller: Doc<"users">,
+  doc: Doc<"users"> | null | undefined,
+): string | null {
+  return doc && doc._id === caller._id ? (doc.email ?? null) : null;
 }
 
 /** `publicUser` over a list, resolving the URLs concurrently. */

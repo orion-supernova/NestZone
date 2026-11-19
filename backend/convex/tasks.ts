@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { emailFor } from "./lib/users";
 import { openTasks } from "./lib/pending";
 import { requireMembers } from "./lib/relations";
 import { noteGrowth } from "./lib/companion";
@@ -160,6 +161,7 @@ async function syncCompletionSnapshot(
 async function memberProfiles(
   ctx: QueryCtx,
   memberIds: Id<"users">[],
+  caller: Doc<"users">,
 ): Promise<Map<string, { name: string | null; email: string | null }>> {
   const members = await Promise.all(memberIds.map((id) => ctx.db.get(id)));
   const profiles = new Map<string, { name: string | null; email: string | null }>();
@@ -167,7 +169,8 @@ async function memberProfiles(
     if (!member) continue;
     profiles.set(member._id as string, {
       name: member.name ?? null,
-      email: member.email ?? null,
+      // Only the caller's own: an email is never a housemate's to read.
+      email: emailFor(caller, member),
     });
   }
   return profiles;
@@ -242,7 +245,7 @@ export const archive = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { homeId, limit }) => {
-    await requireUser(ctx);
+    const caller = await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
 
     const windowDays = doneWindowDays();
@@ -273,7 +276,7 @@ export const archive = query({
         .take(take),
     ]);
 
-    const profiles = await memberProfiles(ctx, home.members ?? []);
+    const profiles = await memberProfiles(ctx, home.members ?? [], caller);
 
     const merged = [...aged, ...putAway]
       .sort((a, b) => (b.completed_at ?? 0) - (a.completed_at ?? 0))

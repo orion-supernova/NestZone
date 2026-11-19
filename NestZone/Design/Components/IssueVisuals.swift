@@ -625,17 +625,21 @@ public struct IssuePhotoStrip: View {
     /// Handed the *storage id*, not the URL: deleting a picture is a write, and
     /// a signed URL is not an identity.
     private let onDelete: ((String) -> Void)?
+    /// Also handed the storage id: a report names the picture, not its URL.
+    private let onReport: ((String) -> Void)?
 
     @State private var index = 0
 
     public init(
         photos: [IssuePhotoRef],
         height: CGFloat = 210,
-        onDelete: ((String) -> Void)? = nil
+        onDelete: ((String) -> Void)? = nil,
+        onReport: ((String) -> Void)? = nil
     ) {
         self.photos = photos
         self.height = height
         self.onDelete = onDelete
+        self.onReport = onReport
     }
 
     public var body: some View {
@@ -678,22 +682,41 @@ public struct IssuePhotoStrip: View {
         .frame(height: height)
         .clipShape(.rect(cornerRadius: Metrics.cardRadius, style: .continuous))
         .overlay(alignment: .topTrailing) {
-            if let onDelete, photos.indices.contains(index) {
-                Button(role: .destructive) { onDelete(photos[index].id) } label: {
-                    Image(systemName: "trash.fill")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 32, height: 32)
-                        .contentShape(.circle)
+            if photos.indices.contains(index), onDelete != nil || onReport != nil {
+                HStack(spacing: 8) {
+                    if let onReport {
+                        control("flag.fill", label: L10n.reportPhoto) { onReport(photos[index].id) }
+                    }
+                    if let onDelete {
+                        control("trash.fill", label: L10n.issuesPhotoRemove, role: .destructive) {
+                            onDelete(photos[index].id)
+                        }
+                    }
                 }
-                .buttonStyle(.pressable)
-                .background(.black.opacity(0.35), in: .circle)
                 .padding(10)
-                .accessibilityLabel(Text(L10n.issuesPhotoRemove))
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(L10n.issuesPhotosAccessibility(photos.count)))
+    }
+
+    /// A round control over the picture, which may be any brightness.
+    private func control(
+        _ symbol: String,
+        label: LocalizedStringResource,
+        role: ButtonRole? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(role: role, action: action) {
+            Image(systemName: symbol)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .contentShape(.circle)
+        }
+        .buttonStyle(.pressable)
+        .background(.black.opacity(0.35), in: .circle)
+        .accessibilityLabel(Text(label))
     }
 }
 

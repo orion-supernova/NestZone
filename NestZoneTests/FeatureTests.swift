@@ -3298,7 +3298,7 @@ struct MessagesTests {
     @Test("A sent message is on screen before the server has heard of it")
     func sendIsOptimistic() async {
         let store = TestStore(initialState: chat(draft: "hello")) { ChatFeature() } withDependencies: {
-            $0.messages.send = { _, _ in "m1" }
+            $0.messages.send = { _, _, _, _ in "m1" }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
@@ -3330,7 +3330,7 @@ struct MessagesTests {
         // and does arrive first.
         let reply = AsyncStream<Void>.makeStream()
         let store = TestStore(initialState: chat(draft: "hi")) { ChatFeature() } withDependencies: {
-            $0.messages.send = { _, _ in
+            $0.messages.send = { _, _, _, _ in
                 for await _ in reply.stream { break }
                 return "m1"
             }
@@ -3356,7 +3356,7 @@ struct MessagesTests {
     func failedSendKeepsTheText() async {
         let attempts = LockIsolated(0)
         let store = TestStore(initialState: chat(draft: "important")) { ChatFeature() } withDependencies: {
-            $0.messages.send = { _, _ in
+            $0.messages.send = { _, _, _, _ in
                 let n = attempts.withValue { $0 += 1; return $0 }
                 if n == 1 { throw AppError.server("nope") }
                 return "m1"

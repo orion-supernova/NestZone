@@ -130,6 +130,8 @@ public struct SettingsFeature: Sendable {
         @Shared(.theme) public var theme: AppTheme
         @Shared(.language) public var language: AppLanguage
         @Shared(.includeAdultTitles) public var includeAdultTitles: Bool
+        /// Who this person has blocked, for the Privacy row's count.
+        @Shared(.blockedPeople) public var blocked: [BlockedPerson]
 
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
@@ -159,6 +161,7 @@ public struct SettingsFeature: Sendable {
     public enum Destination {
         case editName(EditNameFeature)
         case manageHomes(ManageHomesFeature)
+        case blockedPeople(BlockedPeopleFeature)
     }
 
     public enum Action: BindableAction {
@@ -206,6 +209,9 @@ public struct SettingsFeature: Sendable {
         case deleteAccountAuthorizationFailed(AppError)
         case deleteAccountFinished(Result<Bool, AppError>)
         case removeMemberTapped(User)
+        case blockMemberTapped(User)
+        case blockMemberFailed(BlockedPerson, AppError)
+        case blockedPeopleTapped
         case memberRemoved
         /// Carries what it takes to undo the removal: who went, and where they
         /// stood in the list.
@@ -221,6 +227,7 @@ public struct SettingsFeature: Sendable {
         public enum Alert: Equatable {
             case confirmSignOut
             case confirmRemoveMember(UserID)
+            case confirmBlockMember(UserID)
         }
 
         @CasePathable
@@ -261,6 +268,7 @@ public struct SettingsFeature: Sendable {
     @Dependency(\.devices) var devices
     @Dependency(\.openURL) var openURL
     @Dependency(\.inbox) var inbox
+    @Dependency(\.moderation) var moderation
 
     public init() {}
 
@@ -593,6 +601,47 @@ public struct SettingsFeature: Sendable {
 
             case let .removeMemberTapped(user):
                 state.alert = .confirmRemoveMember(user)
+                return .none
+
+            // Blocking is quiet and one person's: you stop seeing them, and a
+            // 1:1 between you closes. Asked first, because it is easy to hit
+            // from a menu and is not obvious how to undo (it is: Settings).
+            case let .blockMemberTapped(user):
+                state.alert = AlertState {
+                    TextState(String(localized: L10n.chatBlockTitle(user.displayName)))
+                } actions: {
+                    ButtonState(role: .destructive, action: .confirmBlockMember(user.id)) {
+                        TextState(String(localized: L10n.chatBlockConfirm))
+                    }
+                    ButtonState(role: .cancel) {
+                        TextState(String(localized: L10n.commonCancel))
+                    }
+                } message: {
+                    TextState(String(localized: L10n.chatBlockMessage))
+                }
+                return .none
+
+            case let .alert(.presented(.confirmBlockMember(userID))):
+                guard let user = state.members[id: userID] else { return .none }
+                let person = BlockedPerson(id: userID, name: user.displayName, avatarURL: user.avatarURL)
+                state.$blocked.withLock { people in
+                    if !people.contains(where: { $0.id == userID }) { people.insert(person, at: 0) }
+                }
+                return .run { _ in
+                    try await moderation.block(userID)
+                } catch: { error, send in
+                    await send(.blockMemberFailed(person, AppError(error)))
+                }
+
+            case let .blockMemberFailed(person, error):
+                // Nothing was blocked, so no push is coming to say so.
+                state.$blocked.withLock { $0.removeAll { $0.id == person.id } }
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .blockedPeopleTapped:
+                state.destination = .blockedPeople(BlockedPeopleFeature.State())
                 return .none
 
             case let .alert(.presented(.confirmRemoveMember(userID))):

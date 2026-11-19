@@ -15,6 +15,7 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { emailFor } from "./lib/users";
 import { openTasks, outstandingItems } from "./lib/pending";
 import { READ_WINDOW } from "./messages";
 import { blockedBy } from "./lib/moderation";
@@ -246,7 +247,7 @@ export const contributions = query({
     tzOffsetMinutes: v.optional(v.number()),
   },
   handler: async (ctx, { homeId, windowDays, tzOffsetMinutes }) => {
-    await requireUser(ctx);
+    const caller = await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
 
     const offset = tzOffsetMinutes ?? 0;
@@ -344,7 +345,8 @@ export const contributions = query({
         {
           userId: user._id,
           name: user.name ?? null,
-          email: user.email ?? null,
+          // Only the caller's own: an email is never a housemate's to read.
+          email: emailFor(caller, user),
           completed: completed.get(id) ?? 0,
           openAssigned: openAssigned.get(id) ?? 0,
           overdue: overdue.get(id) ?? 0,

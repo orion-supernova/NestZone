@@ -509,7 +509,12 @@ makes fixing a typo in an old note free.
   mirror of the server, filled inside the clients for the three reads a `User`
   arrives through (`users:me`, `homes:members`, `users:byIds`), so there is no
   path by which one arrives and the directory misses it. It holds no optimistic
-  state and is cleared on sign-out. Faces load through `RemoteImage` with
+  state and is cleared on sign-out.
+  Anybody else's user reaches a phone as `publicUser` (lib/users.ts), an
+  allow-list of `_id`, `_creationTime`, `name`, `avatar` and `avatar_url`; only
+  `users:me` (`ownUser`) carries the person's own email and phone, and a row that
+  names somebody (contributions, the ledger, the archive) sends `email` only on
+  the caller's own row (`emailFor`), so a housemate with no name reads "Someone". Faces load through `RemoteImage` with
   `persistence: .disk`, and `AvatarPhoto.renderSize` rounds the app's eight
   drawn sizes onto two so a member is one decoded bitmap, not eight.
   Tapping one opens it full screen, everywhere, off the same lookup — the

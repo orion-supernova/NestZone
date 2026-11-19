@@ -82,6 +82,9 @@ public struct MainFeature: Sendable {
         /// `pro:status` for the life of the tab bar, written to the shared
         /// `.pro` key every gate reads.
         public var pro: ProStatusFeature.State
+        /// What this person has reported and blocked, for the life of the tab
+        /// bar: the faces and photos they hid, and the people they blocked.
+        public var moderation: ModerationSessionFeature.State
         /// `pro:status` has answered once for this house.
         var heardPro = false
 
@@ -129,6 +132,7 @@ public struct MainFeature: Sendable {
             self.settings = SettingsFeature.State(homeID: homeID, home: home, user: user)
             self.inbox = InboxFeature.State(homeID: homeID, currentUserID: user?.id)
             self.pro = ProStatusFeature.State(homeID: homeID)
+            self.moderation = ModerationSessionFeature.State(homeID: homeID, userID: user?.id)
         }
 
         /// How many people have to say yes for a movie-night match.
@@ -185,6 +189,7 @@ public struct MainFeature: Sendable {
         case capturedOpenTapped
         case capturedDismissed
         case proStatus(ProStatusFeature.Action)
+        case moderation(ModerationSessionFeature.Action)
         case paywall(PresentationAction<PaywallFeature.Action>)
         /// A gated control, or the server, asked for the paywall.
         case paywallRequested(ProFeature?)
@@ -222,6 +227,7 @@ public struct MainFeature: Sendable {
         Scope(state: \.settings, action: \.settings) { SettingsFeature() }
         Scope(state: \.inbox, action: \.inbox) { InboxFeature() }
         Scope(state: \.pro, action: \.proStatus) { ProStatusFeature() }
+        Scope(state: \.moderation, action: \.moderation) { ModerationSessionFeature() }
 
         Reduce { state, action in
             switch action {
@@ -430,7 +436,7 @@ public struct MainFeature: Sendable {
 
             case .home, .today, .lists, .plans, .house, .messages,
                  .settings, .inbox, .customize, .capture, .companion,
-                 .proStatus, .paywall:
+                 .proStatus, .moderation, .paywall:
                 return .none
             }
         }

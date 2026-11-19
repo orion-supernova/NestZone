@@ -7,6 +7,8 @@ import SwiftUI
 /// screen to hold two things that only need to be findable.
 struct AvatarViewerBar: View {
     let name: String
+    /// Set where this face can be reported — somebody else's, in a house.
+    var report: (() -> Void)?
     let close: () -> Void
 
     var body: some View {
@@ -17,6 +19,24 @@ struct AvatarViewerBar: View {
                 .lineLimit(1)
 
             Spacer(minLength: 0)
+
+            if let report {
+                Button(action: report) {
+                    Label {
+                        Text(L10n.reportPhoto)
+                    } icon: {
+                        Image(systemName: "flag.fill")
+                    }
+                    .labelStyle(.iconOnly)
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 30, height: 30)
+                    .contentShape(.circle)
+                }
+                .buttonStyle(.pressable)
+                .background(Palette.viewerControl, in: .circle)
+                .accessibilityLabel(Text(L10n.reportPhoto))
+            }
 
             Button(action: close) {
                 Label {

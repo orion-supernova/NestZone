@@ -50,6 +50,9 @@ public struct IssueDetailFeature: Sendable {
         @Presents public var edit: IssueComposerFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
         @Presents public var confirm: ConfirmationDialogState<Action.Confirm>?
+        /// A photo being reported, and the thanks that follows.
+        @Presents public var report: ReportFeature.State?
+        public var notice: ReportNotice?
 
         public var id: IssueID { issue.id }
 
@@ -291,6 +294,8 @@ public struct IssueDetailFeature: Sendable {
         case photosPicked([Data])
         case photosAttached
         case removePhotoTapped(String)
+        case reportPhotoTapped(String)
+        case noticeExpired
 
         case openEventTapped
         case openShoppingListTapped
@@ -304,6 +309,7 @@ public struct IssueDetailFeature: Sendable {
         case edit(PresentationAction<IssueComposerFeature.Action>)
         case alert(PresentationAction<Alert>)
         case confirm(PresentationAction<Confirm>)
+        case report(PresentationAction<ReportFeature.Action>)
         case delegate(Delegate)
 
         public enum Alert: Equatable {}
@@ -321,7 +327,7 @@ public struct IssueDetailFeature: Sendable {
         }
     }
 
-    private enum CancelID { case detail }
+    private enum CancelID { case detail, notice }
 
     @Dependency(\.issues) var issuesClient
     @Dependency(\.paywall) var paywall
@@ -329,6 +335,7 @@ public struct IssueDetailFeature: Sendable {
     /// control that writes asks for the paywall instead. Deleting stays.
     @Shared(.pro) var pro: ProStatus
     @Dependency(\.dismiss) var dismiss
+    @Dependency(\.continuousClock) var clock
 
     public init() {}
 
@@ -625,6 +632,37 @@ public struct IssueDetailFeature: Sendable {
                     await send(.writeFailed(AppError(error)))
                 }
 
+            // Reporting is never a Plus feature: it is how somebody gets a
+            // picture they did not want to see out of their house.
+            case let .reportPhotoTapped(storageID):
+                state.report = ReportFeature.State(subject: ReportSubject(
+                    kind: .issuePhoto,
+                    targetID: storageID,
+                    issueID: state.issue.id
+                ))
+                return .none
+
+            // The picture is hidden from this person at once, whatever the
+            // server answered; the thanks is said quietly.
+            case let .report(.presented(.delegate(.reported(outcome)))):
+                let hidden = state.report?.subject.targetID
+                state.report = nil
+                state.notice = ReportNotice(outcome)
+                return .merge(
+                    .run { _ in
+                        if let hidden { await ModerationDirectory.shared.hidePhoto(hidden) }
+                    },
+                    .run { send in
+                        try await clock.sleep(for: ReportNotice.linger)
+                        await send(.noticeExpired)
+                    }
+                    .cancellable(id: CancelID.notice, cancelInFlight: true)
+                )
+
+            case .noticeExpired:
+                state.notice = nil
+                return .none
+
             // MARK: Leaving
 
             case .openEventTapped:
@@ -680,7 +718,7 @@ public struct IssueDetailFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            case .binding, .expense, .edit, .alert, .confirm, .delegate:
+            case .binding, .expense, .edit, .alert, .confirm, .report, .delegate:
                 return .none
             }
         }
@@ -688,6 +726,7 @@ public struct IssueDetailFeature: Sendable {
         .ifLet(\.$edit, action: \.edit) { IssueComposerFeature() }
         .ifLet(\.$alert, action: \.alert)
         .ifLet(\.$confirm, action: \.confirm)
+        .ifLet(\.$report, action: \.report) { ReportFeature() }
     }
 
     /// Moves the problem, optimistically, and owns putting it back.

@@ -57,6 +57,7 @@ public struct SettingsView: View {
             appearanceSection
             notificationsSection
             preferencesSection
+            privacySection
             aboutSection
             accountSection
             #if DEBUG
@@ -72,6 +73,9 @@ public struct SettingsView: View {
         }
         .hostedSheet(item: $store.scope(state: \.destination?.manageHomes, action: \.destination.manageHomes)) {
             ManageHomesSheet(store: $0)
+        }
+        .hostedSheet(item: $store.scope(state: \.destination?.blockedPeople, action: \.destination.blockedPeople)) {
+            BlockedPeopleView(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
         .confirmationDialog(
@@ -286,6 +290,15 @@ public struct SettingsView: View {
                                     // Home's, and deleting yourself is below.
                                     if member.id != store.user?.id {
                                         Menu {
+                                            Button(role: .destructive) {
+                                                store.send(.blockMemberTapped(member))
+                                            } label: {
+                                                Label {
+                                                    Text(L10n.chatBlock)
+                                                } icon: {
+                                                    Image(systemName: "hand.raised")
+                                                }
+                                            }
                                             Button(role: .destructive) {
                                                 store.send(.removeMemberTapped(member))
                                             } label: {
@@ -728,6 +741,32 @@ public struct SettingsView: View {
             Text(L10n.proFullName)
         } footer: {
             Text(L10n.plusFooter)
+        }
+    }
+
+    /// What this person has chosen not to see: the way back from a block.
+    private var privacySection: some View {
+        Section {
+            Button { store.send(.blockedPeopleTapped) } label: {
+                LabeledContent {
+                    HStack(spacing: 6) {
+                        if !store.blocked.isEmpty {
+                            Text(store.blocked.count, format: .number)
+                        }
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Palette.accessory)
+                    }
+                } label: {
+                    Label { Text(L10n.settingsBlockedPeople) } icon: {
+                        Image(systemName: "hand.raised.fill")
+                    }
+                }
+            }
+        } header: {
+            Text(L10n.settingsPrivacyTitle)
+        } footer: {
+            Text(L10n.settingsBlockedPeopleHelp)
         }
     }
 

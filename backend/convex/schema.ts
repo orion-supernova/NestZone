@@ -1842,7 +1842,10 @@ export default defineSchema({
     // Deleting a thing settles every open report about it, whoever filed it.
     .index("by_kind_target_status", ["kind", "target_id", "status"])
     // Taking somebody out of a home answers every open report about them there.
-    .index("by_target_user_home_status", ["target_user_id", "home_id", "status"]),
+    .index("by_target_user_home_status", ["target_user_id", "home_id", "status"])
+    // Retention: settled reports go a year after `resolved_at`
+    // (`moderation:sweepReports`). Open reports are never in its range.
+    .index("by_status_resolved", ["status", "resolved_at"]),
 
   // A file a report still needs. Every path that deletes a stored file asks
   // first (`discardFile`, lib/moderation.ts); a held file is marked

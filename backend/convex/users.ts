@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireUser, currentUserId } from "./lib/auth";
-import { publicUser, publicUsers, discardAvatar } from "./lib/users";
+import { ownUser, publicUsers, discardAvatar } from "./lib/users";
 import { revokeAppleAuthorization } from "./lib/apple";
 import { departHome } from "./lib/membership";
 import { deleteSubscriber } from "./lib/revenuecat";
@@ -15,7 +15,7 @@ export const me = query({
     const uid = await currentUserId(ctx);
     if (!uid) return null;
     const doc = await ctx.db.get(uid);
-    return doc ? await publicUser(ctx, doc) : null;
+    return doc ? await ownUser(ctx, doc) : null;
   },
 });
 
@@ -31,7 +31,7 @@ export const updateProfile = mutation({
     patch.updated = Date.now();
     await ctx.db.patch(user._id, patch);
     const doc = await ctx.db.get(user._id);
-    return doc ? await publicUser(ctx, doc) : null;
+    return doc ? await ownUser(ctx, doc) : null;
   },
 });
 
@@ -100,7 +100,7 @@ export const setAvatar = mutation({
     }
 
     const doc = await ctx.db.get(user._id);
-    return doc ? await publicUser(ctx, doc) : null;
+    return doc ? await ownUser(ctx, doc) : null;
   },
 });
 

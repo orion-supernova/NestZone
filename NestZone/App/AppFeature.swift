@@ -51,6 +51,7 @@ public struct AppFeature: Sendable {
         @Shared(.language) public var language: AppLanguage
         /// Reset when a session ends: it is one house's standing.
         @Shared(.pro) public var pro: ProStatus
+        @Shared(.blockedPeople) public var blockedPeople: [BlockedPerson]
 
         public init() {}
 
@@ -523,6 +524,8 @@ public struct AppFeature: Sendable {
         state.main = nil
         state.proCheckedFor = nil
         state.$pro.withLock { $0 = .unknown }
+        // Who a person blocked is theirs, not the phone's.
+        state.$blockedPeople.withLock { $0 = [] }
         // The token belongs to the device and outlives the session,
         // but this standing does not: it was registered against the
         // user who just left. The broker replays the token to the
@@ -553,6 +556,8 @@ public struct AppFeature: Sendable {
             // effect rather than a line in the reducer because it
             // is the main actor's state, not this one's.
             .run { _ in await AvatarDirectory.shared.clear() },
+            // And what they reported: faces and photos hidden for them.
+            .run { _ in await ModerationDirectory.shared.clear() },
             // Purchases are the person's, not the phone's.
             .run { _ in await purchases.logOut() }
         )

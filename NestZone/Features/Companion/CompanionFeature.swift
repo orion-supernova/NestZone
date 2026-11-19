@@ -2179,7 +2179,7 @@ extension AppError {
     var isRetryable: Bool {
         switch self {
         case .offline, .server, .unknown: true
-        case .notAuthenticated, .decoding, .validation, .noHomeSelected, .cancelled, .proRequired: false
+        case .notAuthenticated, .decoding, .validation, .noHomeSelected, .cancelled, .proRequired, .refused: false
         }
     }
 }

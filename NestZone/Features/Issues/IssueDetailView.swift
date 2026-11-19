@@ -18,6 +18,7 @@ public struct IssueDetailView: View {
     /// nothing else on this screen writes.
     @Shared(.pro) private var pro
     @Namespace private var glass
+    private let moderation = ModerationDirectory.shared
     @State private var picked: [PhotosPickerItem] = []
     @FocusState private var isComposing: Bool
 
@@ -30,10 +31,14 @@ public struct IssueDetailView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: Metrics.sectionSpacing) {
-                if !issue.photos.isEmpty {
-                    IssuePhotoStrip(photos: issue.photos) { storageID in
-                        store.send(.removePhotoTapped(storageID))
-                    }
+                // Photos this person reported are not drawn for them again.
+                let photos = issue.photos.filter { !moderation.isPhotoHidden($0.id) }
+                if !photos.isEmpty {
+                    IssuePhotoStrip(
+                        photos: photos,
+                        onDelete: { storageID in store.send(.removePhotoTapped(storageID)) },
+                        onReport: { storageID in store.send(.reportPhotoTapped(storageID)) }
+                    )
                     .padding(.horizontal, Metrics.screenPadding)
                     .appear(0)
                 }
@@ -127,6 +132,17 @@ public struct IssueDetailView: View {
         .hostedSheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
             ExpenseComposerSheet(store: store)
         }
+        .hostedSheet(item: $store.scope(state: \.report, action: \.report)) { store in
+            ReportSheet(store: store)
+        }
+        .overlay(alignment: .bottom) {
+            if let notice = store.notice {
+                ReportNoticeToast(notice: notice)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Motion.spring, value: store.notice)
         .hostedSheet(item: $store.scope(state: \.edit, action: \.edit)) { store in
             IssueComposerSheet(store: store)
         }

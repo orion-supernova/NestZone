@@ -76,7 +76,11 @@ public struct Avatar: View {
     }
 
     private var photo: URL? {
-        switch source {
+        // A face this person reported is not drawn for them again: the
+        // initials stand in, which is what every avatar already does for a
+        // person with no photo.
+        guard !ModerationDirectory.shared.isFaceHidden(seed) else { return nil }
+        return switch source {
         case .directory: AvatarDirectory.shared.url(for: seed)
         case let .photo(url): url
         }

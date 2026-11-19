@@ -13,6 +13,7 @@
 import { Doc, Id, TableNames } from "../_generated/dataModel";
 import { MutationCtx, QueryCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { discardFile } from "./moderation";
 
 /** Load a referenced document or throw. Use before storing any v.id(). */
 export async function requireRef<T extends TableNames>(
@@ -60,6 +61,22 @@ export async function requireMembers(
   }
 }
 
+/**
+ * Frees a house problem's pictures, the full copy and the board-sized one
+ * (`photos`, `photo_thumbs`), once the problem row itself is gone. At most
+ * twelve files (six photos, two copies each), deduplicated because a photo
+ * filed before thumbnails existed is its own thumbnail. Through `discardFile`,
+ * so a picture a report still holds is deferred, not deleted.
+ */
+export async function discardIssuePhotos(
+  ctx: MutationCtx,
+  issue: Pick<Doc<"issues">, "photos" | "photo_thumbs">,
+): Promise<number> {
+  const ids = new Set<Id<"_storage">>([...(issue.photos ?? []), ...(issue.photo_thumbs ?? [])]);
+  for (const id of ids) await discardFile(ctx, id);
+  return ids.size;
+}
+
 /** Delete a conversation and every message in it. */
 export async function cascadeDeleteConversation(
   ctx: MutationCtx,
@@ -70,6 +87,8 @@ export async function cascadeDeleteConversation(
     .withIndex("by_conversation", (q) => q.eq("conversation_id", conversationId))
     .collect();
   await Promise.all(messages.map((m) => ctx.db.delete(m._id)));
+  // No caller today; if one appears, the attachments go too.
+  for (const m of messages) await discardFile(ctx, m.file);
   await ctx.db.delete(conversationId);
   return messages.length;
 }
@@ -241,14 +260,33 @@ const PURGE_PARENTS = 5;
  * empty by the time it is deleted.
  */
 const HOME_TABLES = [
-  "bills", "events", "issues", "tasks", "task_completions", "shopping_items",
+  "bills", "events", "tasks", "task_completions", "shopping_items",
   "notes", "recipes", "movies", "meal_plans", "expenses", "settlements",
   "budgets", "issue_comments", "home_activity", "activity_reads",
 ] as const;
 
 /**
- * Deletes one bounded batch of a deleted home's rows (about 5,000 writes at
- * most). `more` is whether anything is left. Idempotent: it reads what is
+ * House problems per batch. Each carries up to twelve files (six photos, two
+ * copies), and a file is a hold read plus a delete, so problems go in smaller
+ * batches than plain rows: 25 problems is at most 300 files.
+ */
+const PURGE_ISSUES = 25;
+
+/**
+ * Deletes one bounded batch of a deleted home's rows (about 6,000 writes at
+ * most, files included, under Convex's 8,000).
+ *
+ * Files go with the rows that own them, through `discardFile` (so a file a
+ * report holds is deferred, not deleted): a problem's photos and thumbnails,
+ * and a message's attachment — the same two the app's own deletes already
+ * free (`issues:removePhoto`, `messages:remove`). `tasks.image`,
+ * `notes.image` and `recipes.image` are deliberately NOT freed here: no build
+ * uploads to them and their writers accept any storage id unchecked, so
+ * deleting what they name would let a house delete a file that belongs to
+ * somebody else (a housemate's face, another house's photo) just by emptying
+ * itself. Once the row is gone such a file is unreferenced, and the weekly
+ * `storage:reapReport`, which checks every reference first, is what reclaims
+ * it. `more` is whether anything is left. Idempotent: it reads what is
  * there, so a retried or overlapping batch only finds less.
  */
 export async function purgeHomeBatch(
@@ -272,6 +310,18 @@ export async function purgeHomeBatch(
     removed += n;
     if (n === PURGE_ROWS) more = true;
   }
+
+  // House problems, with their files.
+  const issues = await ctx.db
+    .query("issues")
+    .withIndex("by_home", (q) => q.eq("home_id", homeId))
+    .take(PURGE_ISSUES);
+  for (const issue of issues) {
+    await ctx.db.delete(issue._id);
+    await discardIssuePhotos(ctx, issue);
+  }
+  removed += issues.length;
+  if (issues.length === PURGE_ISSUES) more = true;
 
   // Movie lists after their movies (above, by home), so a batch never
   // strands a film under a list that is gone.
@@ -318,6 +368,8 @@ export async function purgeHomeBatch(
       .withIndex("by_conversation", (q) => q.eq("conversation_id", convo._id))
       .take(PURGE_ROWS);
     await Promise.all(messages.map((m) => ctx.db.delete(m._id)));
+    // The attachments, as `messages:remove` frees them.
+    for (const m of messages) await discardFile(ctx, m.file);
     removed += messages.length;
     if (messages.length < PURGE_ROWS) {
       await ctx.db.delete(convo._id);

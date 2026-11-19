@@ -173,6 +173,9 @@ struct InboxPanel: View {
         .hostedSheet(item: $store.scope(state: \.admin, action: \.admin)) {
             InboxAdminView(store: $0)
         }
+        .hostedSheet(item: $store.scope(state: \.reports, action: \.reports)) {
+            ReportsView(store: $0)
+        }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
 
@@ -193,13 +196,26 @@ struct InboxPanel: View {
             }
             .disabled(!store.badge.hasUnread)
 
-            if store.badge.isAdmin {
+            if store.badge.isAdmin || store.isModerator {
                 Divider()
+            }
+            if store.badge.isAdmin {
                 Button {
                     store.send(.adminTapped)
                 } label: {
                     Label { Text(L10n.inboxAdminOpen) } icon: {
                         Image(systemName: "hammer.fill")
+                    }
+                }
+            }
+            // Two people read what was reported out of somebody's chat. The
+            // door exists for them and for nobody else.
+            if store.isModerator {
+                Button {
+                    store.send(.reportsTapped)
+                } label: {
+                    Label { Text(L10n.moderationOpen) } icon: {
+                        Image(systemName: "flag.fill")
                     }
                 }
             }
