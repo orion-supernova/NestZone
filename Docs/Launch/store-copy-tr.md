@@ -73,7 +73,7 @@ Biri abone olsun, bütün ev kullansın. Plus ile gelenler:
 • Kendi film listelerin ve yetişkin içerik
 • Biten işleri erkenden arşivleme
 • İkinci bir ev
-Yıllık planda ilk hafta bedava. Plus bir gün biterse hiçbir şey silinmez: yazdıkların okunmaya devam eder, sadece Plus'lı yerlere yenisi eklenemez.
+Yıllık planda ilk hafta bedava. Plus bir gün biterse yazdıkların yerinde kalır, okumaya devam edersin; sadece Plus'a özel yerlere yeni bir şey ekleyemezsin.
 
 Abonelik, satın almayı onayladığında Apple Hesabı'ndan ücretlendirilir. Dönem bitmeden en az 24 saat önce iptal etmezsen kendiliğinden yenilenir; yenileme ücreti dönem bitmeden önceki 24 saat içinde alınır. Aboneliğini Apple Hesabı ayarlarından istediğin zaman yönetebilir ya da iptal edebilirsin. Ücretsiz deneme bitince ücretli aboneliğe geçer; denemenin kullanılmayan kısmı abone olduğunda geçersiz olur.
 
@@ -152,8 +152,8 @@ evden çıkarabilirsin.
 NestZone Plus, Apple üzerinden ödenen ve kendiliğinden yenilenen bir
 abonelik; Apple Hesabı ayarlarından istediğin zaman iptal edebilirsin.
 Işıltılar tek seferlik alınır, evin kumbarasına girer ve süreleri dolmaz;
-paraya çevrilemez. Plus biterse hiçbir şey silinmez, yazdıkların okunmaya
-devam eder.
+paraya çevrilemez. Plus bir gün biterse yazdıkların yerinde kalır, okumaya
+devam edersin.
 
 EN *(ref)*: By using NestZone you agree to these terms and Apple's standard
 EULA. You're responsible, with your household, for what you put in; houses
