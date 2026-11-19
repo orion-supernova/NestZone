@@ -4,6 +4,7 @@ import { requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireRef, requireSameHome, cascadeDeleteMovieList } from "./lib/relations";
 import { internal } from "./_generated/api";
 import { requireUser } from "./lib/auth";
+import { proAllows, proRequired, requirePro } from "./lib/pro";
 
 const listType = v.union(v.literal("wishlist"), v.literal("watched"), v.literal("custom"));
 
@@ -40,13 +41,29 @@ export const createList = mutation({
     is_preset: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    await requireHomeMember(ctx, args.homeId);
+    const home = await requireHomeMember(ctx, args.homeId);
+    const type = args.type ?? "custom";
+    // Custom lists are Household Pro. A preset (Wishlist, Watched) is free,
+    // but only to put back one the house is missing — a second "Wishlist" is
+    // a custom list by another name.
+    if (!(await proAllows(ctx, home))) {
+      if (type === "custom") {
+        throw proRequired("customMovieLists");
+      }
+      const existing = await ctx.db
+        .query("movie_lists")
+        .withIndex("by_home", (q) => q.eq("home_id", args.homeId))
+        .collect();
+      if (existing.some((l) => l.type === type)) {
+        throw proRequired("customMovieLists");
+      }
+    }
     const now = Date.now();
     const id = await ctx.db.insert("movie_lists", {
       home_id: args.homeId,
       name: args.name,
       description: args.description,
-      type: args.type ?? "custom",
+      type,
       is_preset: args.is_preset ?? false,
       created: now,
       updated: now,
@@ -72,6 +89,9 @@ export const addMovie = mutation({
     // could file movies into home B's list.
     const list = await requireRef(ctx, args.listId, "List");
     requireSameHome(list, args.homeId, "List");
+    // Filing into a custom list is Household Pro; the presets never are.
+    // What a lapsed house already filed there stays readable and removable.
+    if (list.type === "custom") await requirePro(ctx, args.homeId, "customMovieLists");
 
     // Already filed here? Hand back the row rather than a second copy of it.
     // Saving the same film twice is now one tap away from several screens — a

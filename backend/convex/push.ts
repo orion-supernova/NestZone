@@ -27,6 +27,7 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { proEnforced } from "./lib/pro";
 
 /// Apple rejects a provider that mints tokens more often than once per 20
 /// minutes, and accepts one for up to an hour. Refreshing at 40 keeps us clear
@@ -412,6 +413,24 @@ async function fanOut(
   };
 }
 
+/** The notification categories that belong to Household Pro. */
+const PRO_CATEGORIES = new Set(["finance", "calendar"]);
+
+/**
+ * Whether a Pro-domain notification must not reach this house. Asks the
+ * database only for a Pro category while enforcement is on, so the other
+ * thirty-odd senders pay nothing for it.
+ */
+async function silencedForPlan(
+  ctx: { runQuery: (ref: any, args: any) => Promise<any> },
+  homeId: Id<"homes">,
+  category: string | undefined,
+): Promise<boolean> {
+  if (!category || !PRO_CATEGORIES.has(category) || !proEnforced()) return false;
+  const allowed: boolean = await ctx.runQuery(internal.pro.homeAllows, { homeId });
+  return !allowed;
+}
+
 /**
  * Fans a notification out to every device in a home except the one that caused
  * it.
@@ -436,6 +455,14 @@ export const notifyHome = internalAction({
     skipFeed: v.optional(v.boolean()),
   },
   handler: async (ctx, { environment: only, skipFeed, ...args }) => {
+    // Money and Calendar are Household Pro. A house without it hears nothing
+    // about either — no push and no feed row — which silences every reminder
+    // sweep and every mutation's announcement in both domains in one place.
+    // A no-op while PRO_ENFORCE is off.
+    if (await silencedForPlan(ctx, args.homeId, args.category)) {
+      return { sent: 0, dropped: 0 };
+    }
+
     // The feed first, and unconditionally.
     //
     // A push is a tap on the shoulder that may not arrive — the phone is off,
@@ -496,6 +523,12 @@ export const notifyUsers = internalAction({
     ...alertArgs,
   },
   handler: async (ctx, args) => {
+    // No caller addresses Money or Calendar to people today; the same rule as
+    // `notifyHome` holds anyway, so one that starts to cannot leak past it.
+    if (args.homeId && (await silencedForPlan(ctx, args.homeId, args.category))) {
+      return { sent: 0, dropped: 0 };
+    }
+
     // Filed with an explicit audience, which is what keeps it out of everybody
     // else's feed. `notifyHome` needs no such thing: its audience is the home.
     if (args.homeId) {

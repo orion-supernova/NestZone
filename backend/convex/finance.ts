@@ -27,6 +27,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireMembers, requireRef, requireSameHome } from "./lib/relations";
+import { requirePro } from "./lib/pro";
 
 const financeCategory = v.union(
   v.literal("groceries"),
@@ -827,6 +828,7 @@ export const createExpense = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, args.homeId);
+    await requirePro(ctx, home, "finance");
     const amount = requireAmount(args.amount);
 
     const title = args.title.trim();
@@ -921,6 +923,7 @@ export const updateExpense = mutation({
     const expense = await ctx.db.get(args.id);
     if (!expense) throw new Error("Expense not found");
     const home = await requireDocHome(ctx, expense, "Expense");
+    await requirePro(ctx, home, "finance");
 
     if (args.eventId) {
       const event = await requireRef(ctx, args.eventId, "Event");
@@ -1013,6 +1016,7 @@ export const settle = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, args.homeId);
+    await requirePro(ctx, home, "finance");
     const amount = requireAmount(args.amount);
     if (args.fromUser === args.toUser) {
       throw new Error("A payment needs two different people");
@@ -1075,6 +1079,7 @@ export const createBill = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, args.homeId);
+    await requirePro(ctx, home, "finance");
     const amount = requireAmount(args.amount);
     const title = args.title.trim();
     if (!title) throw new Error("Give the bill a name");
@@ -1132,6 +1137,7 @@ export const updateBill = mutation({
     const bill = await ctx.db.get(id);
     if (!bill) throw new Error("Bill not found");
     const home = await requireDocHome(ctx, bill, "Bill");
+    await requirePro(ctx, home, "finance");
     if (fields.responsible) {
       await requireMembers(ctx, home, [fields.responsible], "Bill");
     }
@@ -1179,6 +1185,7 @@ export const payBill = mutation({
     const bill = await ctx.db.get(args.id);
     if (!bill) throw new Error("Bill not found");
     const home = await requireDocHome(ctx, bill, "Bill");
+    await requirePro(ctx, home, "finance");
 
     const amount = requireAmount(args.amount ?? bill.amount);
     const paidBy = args.paidBy ?? user._id;
@@ -1268,7 +1275,8 @@ export const setBudget = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, args.homeId);
+    const home = await requireHomeMember(ctx, args.homeId);
+    await requirePro(ctx, home, "finance");
     const limit = requireAmount(args.limit, "Budget");
 
     const existing = await ctx.db

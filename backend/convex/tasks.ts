@@ -7,6 +7,7 @@ import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { openTasks } from "./lib/pending";
 import { requireMembers } from "./lib/relations";
 import { noteGrowth } from "./lib/companion";
+import { requirePro } from "./lib/pro";
 
 // Shown as the notification title; the body carries what actually changed.
 const NOTIFY_TITLE = "New task";
@@ -498,7 +499,10 @@ export const setArchived = mutation({
     const user = await requireUser(ctx);
     const task = await ctx.db.get(id);
     if (!task) throw new Error("Task not found");
-    await requireDocHome(ctx, task, "Task");
+    const home = await requireDocHome(ctx, task, "Task");
+    // "Archive now" is Household Pro. Putting a chore back never is, so a
+    // house that lapsed can always restore what it archived.
+    if (archived) await requirePro(ctx, home, "archiveNow");
     if (archived && !task.is_completed) {
       throw new Error("Only a finished chore can be archived.");
     }

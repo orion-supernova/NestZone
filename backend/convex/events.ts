@@ -6,6 +6,7 @@ import { MutationCtx } from "./_generated/server";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireMembers, requireRef, requireSameHome, unlinkEvent } from "./lib/relations";
 import { outstandingNames } from "./lib/pending";
+import { requirePro } from "./lib/pro";
 import { internal } from "./_generated/api";
 
 // The household calendar.
@@ -785,7 +786,8 @@ export const stockUp = mutation({
     const user = await requireUser(ctx);
     const event = await ctx.db.get(id);
     if (!event) throw new Error("Event not found");
-    await requireDocHome(ctx, event, "Event");
+    const home = await requireDocHome(ctx, event, "Event");
+    await requirePro(ctx, home, "calendar");
     requireNotOver(event.series_end);
 
     const recipeIds = event.recipe_ids ?? [];
@@ -874,7 +876,8 @@ export const addItems = mutation({
     const user = await requireUser(ctx);
     const event = await ctx.db.get(id);
     if (!event) throw new Error("Event not found");
-    await requireDocHome(ctx, event, "Event");
+    const home = await requireDocHome(ctx, event, "Event");
+    await requirePro(ctx, home, "calendar");
     requireNotOver(event.series_end);
 
     const outstanding = await outstandingNames(ctx, event.home_id);
@@ -939,6 +942,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, args.homeId);
+    await requirePro(ctx, home, "calendar");
 
     const title = args.title.trim();
     if (!title) throw new Error("An event needs a name");
@@ -1015,6 +1019,7 @@ export const update = mutation({
     const event = await ctx.db.get(args.id);
     if (!event) throw new Error("Event not found");
     const home = await requireDocHome(ctx, event, "Event");
+    await requirePro(ctx, home, "calendar");
 
     // One occurrence is over when *it* has ended; the series only when its
     // last one has — editing "every Friday" from last Friday's sheet is still
@@ -1179,7 +1184,8 @@ export const rsvp = mutation({
     const user = await requireUser(ctx);
     const event = await ctx.db.get(id);
     if (!event) throw new Error("Event not found");
-    await requireDocHome(ctx, event, "Event");
+    const home = await requireDocHome(ctx, event, "Event");
+    await requirePro(ctx, home, "calendar");
     // Per series, so a series with dates still to come still takes an answer.
     requireNotOver(event.series_end);
 

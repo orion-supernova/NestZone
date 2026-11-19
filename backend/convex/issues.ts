@@ -35,6 +35,7 @@ import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireMembers } from "./lib/relations";
 import { outstandingNames } from "./lib/pending";
+import { proAllows, requirePro } from "./lib/pro";
 import { noteGrowth } from "./lib/companion";
 
 // ---------------------------------------------------------------------------
@@ -1372,7 +1373,9 @@ export const scheduleVisit = mutation({
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(args.id);
     if (!issue) throw new Error("Problem not found");
-    await requireDocHome(ctx, issue, "Problem");
+    const home = await requireDocHome(ctx, issue, "Problem");
+    // Booking a visit writes a calendar event, which is Household Pro.
+    await requirePro(ctx, home, "eventFromElsewhere");
     if (args.endsAt < args.startsAt) throw new Error("The visit ends before it starts");
 
     const title =
@@ -1492,7 +1495,10 @@ export const addParts = mutation({
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
-    await requireDocHome(ctx, issue, "Problem");
+    const home = await requireDocHome(ctx, issue, "Problem");
+    // Shopping categories are Household Pro: a free house's parts go under
+    // this function's own default, never refused (see shopping.ts).
+    const pickedCategory = (await proAllows(ctx, home)) ? category : undefined;
 
     const outstanding = await outstandingNames(ctx, issue.home_id);
     const seen = new Set<string>();
@@ -1519,7 +1525,7 @@ export const addParts = mutation({
           name,
           // Parts are hardware, not groceries. The list groups by aisle and
           // this is the aisle a washer is on.
-          category: category ?? "household",
+          category: pickedCategory ?? "household",
           is_purchased: false,
           issue_id: issue._id,
           issue_title: issue.title ?? "",
