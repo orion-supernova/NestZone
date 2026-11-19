@@ -91,7 +91,9 @@ export const addMovie = mutation({
     requireSameHome(list, args.homeId, "List");
     // Filing into a custom list is Household Pro; the presets never are.
     // What a lapsed house already filed there stays readable and removable.
-    if (list.type === "custom") await requirePro(ctx, args.homeId, "customMovieLists");
+    // An old row with no type is custom unless it is marked a preset.
+    const isCustom = list.type === "custom" || (list.type === undefined && !list.is_preset);
+    if (isCustom) await requirePro(ctx, args.homeId, "customMovieLists");
 
     // Already filed here? Hand back the row rather than a second copy of it.
     // Saving the same film twice is now one tap away from several screens — a

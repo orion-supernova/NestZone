@@ -860,7 +860,12 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   then one home per step, then the person's own rows, then the user. What the
   person wrote into a shared home stays and points at an id that no longer
   resolves; every reader must tolerate that, as it already does for a
-  member who left.
+  member who left (`finance:summary` keeps a nameless, non-member row for
+  such an id while it carries a balance, and `settle` accepts it on one
+  side). A home whose last member goes loses its document and its members'
+  mirrors at once; its rows then drain in bounded batches
+  (`homes:purgeHomeData`, logged per batch, an error past 200 batches).
+  Removing a member rotates the invite code.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

@@ -33,8 +33,10 @@ async function allowedCategory(
   ctx: MutationCtx,
   home: Doc<"homes">,
   picked: Category | undefined,
+  /** The item's category now: an edit that keeps it is never refiled. */
+  current?: Category,
 ): Promise<Category | undefined> {
-  if (picked === undefined) return undefined;
+  if (picked === undefined || picked === current) return picked;
   return (await proAllows(ctx, home)) ? picked : DEFAULT_CATEGORY;
 }
 
@@ -303,7 +305,7 @@ export const update = mutation({
     if (!item) throw new Error("Item not found");
     const home = await requireDocHome(ctx, item, "Item");
     if (fields.category !== undefined) {
-      fields.category = await allowedCategory(ctx, home, fields.category);
+      fields.category = await allowedCategory(ctx, home, fields.category, item.category);
     }
     await ctx.db.patch(id, { ...fields, updated_by: user._id, updated: Date.now() });
     return await ctx.db.get(id);

@@ -579,22 +579,25 @@ export const summary = query({
     const involved = new Set<string>(memberIds.map(String));
     for (const [id, value] of net) if (value !== 0) involved.add(id);
 
-    const docs = await Promise.all(
-      [...involved].map((id) => ctx.db.get(id as Id<"users">)),
-    );
+    const ids = [...involved] as Id<"users">[];
+    const docs = await Promise.all(ids.map((id) => ctx.db.get(id)));
     const isMember = new Set(memberIds.map(String));
-    const members = docs
-      .filter((u): u is Doc<"users"> => u !== null)
-      .map((u) => ({
-        userId: u._id,
-        name: u.name,
-        email: u.email,
-        isMember: isMember.has(u._id),
-        paid: paidAll.get(u._id) ?? 0,
-        owed: owedAll.get(u._id) ?? 0,
-        net: net.get(u._id) ?? 0,
-        paidThisMonth: paidMonth.get(u._id) ?? 0,
-        shareThisMonth: shareMonth.get(u._id) ?? 0,
+    // A deleted account still carries its balance: its row stays, nameless and
+    // not a member, so the nets still sum to zero and settle-up can clear it.
+    // A member whose user row is missing (none should be) is dropped as before.
+    const members = ids
+      .map((id, i) => ({ id, doc: docs[i] }))
+      .filter(({ id, doc }) => doc !== null || ((net.get(id) ?? 0) !== 0 && !isMember.has(id)))
+      .map(({ id, doc }) => ({
+        userId: id,
+        name: doc?.name ?? null,
+        email: doc?.email ?? null,
+        isMember: isMember.has(id),
+        paid: paidAll.get(id) ?? 0,
+        owed: owedAll.get(id) ?? 0,
+        net: net.get(id) ?? 0,
+        paidThisMonth: paidMonth.get(id) ?? 0,
+        shareThisMonth: shareMonth.get(id) ?? 0,
       }));
 
     // --- Settling up -------------------------------------------------------
@@ -1021,7 +1024,16 @@ export const settle = mutation({
     if (args.fromUser === args.toUser) {
       throw new Error("A payment needs two different people");
     }
-    await requireMembers(ctx, home, [args.fromUser, args.toUser], "Settlement");
+    // At least one side lives here. The other may be somebody who has left or
+    // deleted their account and still carries a balance (finance:summary
+    // keeps their row for exactly this): settling it is how the house clears
+    // it. A settlement grants nothing to the person it names.
+    const members = new Set<string>(home.members ?? []);
+    const fromIn = members.has(args.fromUser);
+    const toIn = members.has(args.toUser);
+    if (!fromIn && !toIn) {
+      throw new Error("Settlement includes a user who is not a member of this home");
+    }
 
     const now = Date.now();
     const id = await ctx.db.insert("settlements", {
