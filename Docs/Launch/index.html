@@ -72,6 +72,7 @@ a{color:var(--accent)}
 
 <div class="wrap">
 <nav class="toc" aria-label="Sections">
+  <a href="#upnext">Up next</a>
   <a href="#status">Status</a>
   <a href="#verdict">Verdict</a>
   <a href="#tiers">Free and Pro</a>
@@ -95,6 +96,42 @@ a{color:var(--accent)}
   <div class="meta"><span>Written 2026-11-19</span><span>Branch: dev @ 6e3d433</span><span>Bundle: com.walhallaa.NestZone</span><span>ASC app 6749852085</span></div>
 </header>
 
+<section id="upnext">
+<h2>Up next</h2>
+<p>The working list. Tick a line off by deleting it; add new ones at the bottom of their group.</p>
+<h3>Now (in review since 2026-11-19 22:40)</h3>
+<ul>
+<li>1.12.0 (7) is in App Review with the NestZone Plus group (Yearly, Monthly) and the four Sparkle packs: 8 items. Up to 48 hours; Apple emails the result. Build 8 (Xcode Cloud, same code) is unused.</li>
+<li>If Apple asks anything, answer in App Store Connect → App Review. Keep <code>JAR_ENVIRONMENTS</code> with Sandbox and <code>PRO_SANDBOX=on</code> until then, or the reviewer's purchases won't land.</li>
+</ul>
+<h3>The day it is approved</h3>
+<ul>
+<li><code>npx convex env set COMPANION_NOTIFY on</code> (Nestie's three notifications for everyone).</li>
+<li><code>npx convex env set JAR_ENVIRONMENTS "Production"</code> (Sandbox stops crediting Sparkles).</li>
+<li><code>npx convex env remove PRO_SANDBOX</code> (sandbox Plus stops counting).</li>
+<li>Purge the screenshot houses: <code>npx convex run demo:purgeScreenshotHome '{"homeId":"k170brcagky5rfn2rk5ms6b30h8jgsjk"}'</code> and <code>…'{"homeId":"k1781yry39kvpfqbd1jqawbw2h8jh801"}'</code>.</li>
+<li>Clear <code>PRO_COMP_USER_IDS</code> (it holds the two demo members): <code>npx convex env remove PRO_COMP_USER_IDS</code>.</li>
+<li>Release the version if it was set to manual release; check the listing in both languages on a phone.</li>
+</ul>
+<h3>After release</h3>
+<ul>
+<li><strong>PRO_ENFORCE=on</strong> only when the version census says no pre-1.12 build is still writing to Plus domains (<code>npx convex run inbox:versionCensus '{}'</code>, read the <code>unknown</code> row first). See <code>backend/DEPRECATIONS.md</code>, "Switches that narrow".</li>
+<li>China mainland was removed from availability to pass submission (it needs a Security Assessment and an AI-content filing). Add it back once both are filed.</li>
+<li>Xcode Cloud builds every stage push and numbers its own builds; a local upload plus a stage push makes two binaries. Pick one route per release.</li>
+<li>Age rating questions (Location Sharing, Dating) are due by 2027-01-15.</li>
+<li><code>finance_due_in</code> Turkish plural still reads off; fix in the next build.</li>
+</ul>
+<h3>Gifting Plus</h3>
+<p>Use RevenueCat, not promo codes. RevenueCat → Customers → search the person's Convex user id → Entitlements → <em>Grant</em> <code>pro</code> for a duration (a month, a year, lifetime). It shows in the dashboard, expires on its own, can be revoked, and needs no card. The server counts a grant as real (<code>store: promotional</code>), and the person's house turns Plus the next time they open the app (<code>pro:refresh</code> runs on launch) or within 6 hours (<code>pro:sweep</code>). Plus is the house's, so one grant covers everyone they live with.</p>
+<p>Apple offer codes are the alternative for strangers (a free period that then renews, needs an Apple account with a payment method). <code>PRO_COMP_USER_IDS</code> is for the owner's testing only, never gifts.</p>
+<div class="tbl"><table>
+<thead><tr><th>Person</th><th>User id</th><th>Gift</th></tr></thead>
+<tbody>
+<tr><td>Zeynep Ozahishali</td><td><code>md7cza3gjbbt41bntgdhzrnwbn8ds4jk</code></td><td>to grant</td></tr>
+<tr><td>Jade Arana</td><td><code>md717zj7fh5h15xgbetn1ctm698emep8</code></td><td>to grant</td></tr>
+</tbody></table></div>
+</section>
+
 <section id="status">
 <h2>Status, 2026-11-19</h2>
 <div class="tbl"><table>
@@ -107,7 +144,7 @@ a{color:var(--accent)}
 <tr><td>App Store Connect</td><td><span class="pill free">Mostly done</span></td><td>Renamed NestZone, subtitle, categories; group "NestZone Plus" with yearly $19.99 (free week) and monthly $2.99; Sparkles 300/1000/2200/5000; version 1.12.0 text, keywords, support URL, review notes; App Privacy published; age rating 4+; free in 175 countries; Mac and Vision Pro off. Missing: screenshots, review screenshots per product, Turkish listing, Content Rights, contact info.</td></tr>
 <tr><td>RevenueCat</td><td><span class="pill free">Set up</span></td><td>Project NestZone, App Store app with existing keys, entitlement <code>pro</code>, offering <code>default</code> ($rc_annual, $rc_monthly). Missing: secret key into Convex, notification URL into App Store Connect (both need you).</td></tr>
 <tr><td>Nestie on</td><td><span class="pill free">Merged to dev</span></td><td>On in Release; nothing needed hiding (all art drawn). Server: APPLE_APP_ID set, JAR_ENVIRONMENTS=Production,Sandbox, PRO_SANDBOX=on. COMPANION_NOTIFY stays sandbox until the App Store release.</td></tr>
-<tr><td>Release 1.12.0 (build 6)</td><td><span class="pill high">Waiting on owner</span></td><td><code>./deploy.sh</code> dry run passes; the real run (backend deploy, changelog sync, push stage → TestFlight) needs the owner to run or approve it.</td></tr>
+<tr><td>Release 1.12.0 (build 7)</td><td><span class="pill high">In App Review</span></td><td>Backend deployed, changelog synced, new icon (no old name), uploaded from this Mac and submitted with Plus and the Sparkle packs on 2026-11-19. Screenshots (EN/TR, plain captions) and review screenshots uploaded; Turkish privacy URL set.</td></tr>
 </tbody></table></div>
 </section>
 
