@@ -285,6 +285,12 @@ before changing anything here.
   opens the paywall 3 s after launch. `-openSparkleStore 1` opens the shop and
   then the Sparkles store. `-forceFreeHouse 1` treats the house as without Plus
   (locks drawn, paywall reachable) whatever the server says.
+  `-screenshotPersona <Name>` shows the signed-in account as that name with
+  the initials avatar (no photo), so a real name and face stay out of store
+  screenshots: it rewrites the `User` where `users:me`, `homes:members` and
+  `users:byIds` are decoded, so every screen and `AvatarDirectory` follow, and
+  it holds back the notifications pre-prompt (the only prompt that opens by
+  itself on a first launch). Nothing is written to the server.
 - **The shop is an ordinary NestZone screen that happens to sell things.**
   Glass cards on the Backdrop, the theme's accent, the app's type, SF Symbols.
   Money is `Amount` (`leaf.fill` and `sparkle`, colour on the glyph only via

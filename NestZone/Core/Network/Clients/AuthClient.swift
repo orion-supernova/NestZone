@@ -101,6 +101,7 @@ extension AuthClient: DependencyKey {
             currentUser: {
                 connection
                     .subscribe(to: "users:me", as: User?.self)
+                    .transforming { StoreDemo.maskedMe($0) }
                     // Your own face, for the screens that draw it before the
                     // household list has arrived.
                     .recordingAvatars { AvatarDirectory.record($0) }

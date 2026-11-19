@@ -37,6 +37,7 @@ extension HomesClient: DependencyKey {
         members: { homeID in
             ConvexConnection.shared
                 .subscribe(to: "homes:members", args: ["homeId": homeID], as: [User].self)
+                .transforming { StoreDemo.masked($0) }
                 // Seven features hold this subscription, so it is also the read
                 // that tells the whole app what the household looks like.
                 .recordingAvatars { AvatarDirectory.record($0) }
