@@ -37005,7 +37005,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yıllık faturalanır · otomatik yenilenir · aylık yaklaşık %@"
+            "value": "Yılda bir ödenir · otomatik yenilenir · aylık yaklaşık %@"
           }
         }
       }
@@ -37023,7 +37023,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yıllık faturalanır · otomatik yenilenir"
+            "value": "Yılda bir ödenir · otomatik yenilenir"
           }
         }
       }
@@ -37041,7 +37041,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aylık faturalanır · otomatik yenilenir"
+            "value": "Ayda bir ödenir · otomatik yenilenir"
           }
         }
       }
@@ -37074,13 +37074,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld gün bedava dene"
+                  "value": "%lld gün ücretsiz dene"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld gün bedava dene"
+                  "value": "%lld gün ücretsiz dene"
                 }
               }
             }
@@ -37119,7 +37119,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ödeme, satın almayı onayladığında Apple Hesabı'ndan alınır. Mevcut dönem bitmeden en az 24 saat önce iptal etmezsen abonelik otomatik yenilenir; yenileme ücreti dönem bitmeden önceki 24 saat içinde hesabından alınır. Aboneliği Apple Hesabı ayarlarından istediğin zaman yönetebilir ya da iptal edebilirsin. Ücretsiz denemenin kullanılmayan kısmı, abone olduğunda sona erer."
+            "value": "Ödeme, satın almayı onayladığında Apple Hesabından tahsil edilir. Mevcut dönem bitmeden en az 24 saat önce iptal etmezsen abonelik otomatik yenilenir; yenileme ücreti de dönem bitmeden önceki 24 saat içinde Apple Hesabından alınır. Aboneliği istediğin zaman Apple Hesabı ayarlarından yönetebilir ya da iptal edebilirsin. Ücretsiz denemenin kullanılmayan kısmı, abone olduğunda sona erer."
           }
         }
       }
