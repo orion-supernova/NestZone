@@ -186,6 +186,28 @@ public struct MoneyText: View, Animatable {
     }
 }
 
+/// A share that counts to its value instead of snapping — the figure in the
+/// middle of a budget ring, rolling round with the sweep.
+private struct PercentText: View, Animatable {
+    private var fraction: Double
+
+    init(_ fraction: Double) {
+        self.fraction = fraction
+    }
+
+    // `nonisolated` for the same reason as `MoneyText`'s.
+    nonisolated var animatableData: Double {
+        get { fraction }
+        set { fraction = newValue }
+    }
+
+    var body: some View {
+        Text(fraction, format: .percent.precision(.fractionLength(0)))
+            .contentTransition(.numericText(value: fraction))
+            .monospacedDigit()
+    }
+}
+
 // MARK: - Where the money went
 
 /// The month's spend, split by category.
@@ -209,6 +231,7 @@ public struct SpendDonut: View {
     private static let minArc = 0.005
 
     @State private var drawn = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(
         categories: [CategoryTotal],
@@ -301,7 +324,9 @@ public struct SpendDonut: View {
         .frame(width: diameter, height: diameter)
         .animation(Motion.spring, value: categories)
         .animation(Motion.spring, value: selection)
-        .onAppear { withAnimation(Motion.celebrate) { drawn = true } }
+        // Money settles where it is: a bounce would show a share bigger
+        // than it is for a moment.
+        .onAppear { withAnimation(reduceMotion ? nil : Motion.dataDraw) { drawn = true } }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(L10n.financeDonutCaption))
         .accessibilityValue(Text(Money.text(total, currency: currency)))
@@ -422,7 +447,9 @@ public struct SpendBars: View {
                 .padding(.bottom, 18)
         }
         .animation(Motion.spring, value: points)
-        .onAppear { withAnimation(Motion.arrive.delay(0.08)) { grown = true } }
+        // Grown to the month's total and no further: a bar that springs past
+        // its figure shows a spend that never happened.
+        .drawIn($grown, animation: Motion.dataDraw.delay(0.08))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(L10n.financeTrendTitle))
     }
@@ -512,7 +539,7 @@ public struct BalanceBars: View {
                 .frame(width: 1)
         }
         .animation(Motion.spring, value: members)
-        .onAppear { withAnimation(Motion.arrive.delay(0.1)) { grown = true } }
+        .drawIn($grown, animation: Motion.dataDraw.delay(0.1))
     }
 
     private func row(_ member: MemberFinance) -> some View {
@@ -598,6 +625,11 @@ public struct BudgetRing: View {
     private let thickness: CGFloat
 
     @State private var drawn = false
+    /// The second lap, drawn once the first has finished. Sweeping both at
+    /// once read as one ring that went a bit far, not as a budget spent and
+    /// then some.
+    @State private var overshot = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(
         progress: BudgetProgress,
@@ -616,6 +648,14 @@ public struct BudgetRing: View {
     /// second lap — beyond that the ring has said all it can.
     private var overshoot: Double { min(max(progress.progress - 1, 0), 1) }
 
+    /// What the middle says while the ring draws: it counts up with the sweep,
+    /// and on round the overshoot, rather than sitting at its final value while
+    /// the ring catches up with it.
+    private var shownProgress: Double {
+        guard drawn else { return 0 }
+        return overshot ? progress.progress : min(progress.progress, 1)
+    }
+
     public var body: some View {
         ZStack {
             Circle()
@@ -631,7 +671,7 @@ public struct BudgetRing: View {
 
             if overshoot > 0 {
                 Circle()
-                    .trim(from: 0, to: drawn ? overshoot : 0)
+                    .trim(from: 0, to: overshot ? overshoot : 0)
                     .stroke(
                         Palette.danger,
                         style: StrokeStyle(lineWidth: thickness * 0.55, lineCap: .round)
@@ -644,15 +684,30 @@ public struct BudgetRing: View {
                 Image(systemName: progress.category.symbol)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(progress.category.tint)
-                Text(progress.progress, format: .percent.precision(.fractionLength(0)))
+                PercentText(shownProgress)
                     .font(.system(.caption, design: .rounded, weight: .bold))
-                    .monospacedDigit()
-                    .contentTransition(.numericText(value: progress.progress))
             }
         }
         .frame(width: diameter, height: diameter)
-        .animation(Motion.spring, value: progress)
-        .onAppear { withAnimation(Motion.celebrate.delay(0.05)) { drawn = true } }
+        // Money settles where it is, on a later push as on the first draw.
+        .animation(Motion.dataDraw, value: progress)
+        // No bounce: the celebration spring swept a budget at 90% to about
+        // 101% before settling, so for a moment it looked spent.
+        //
+        // The second lap starts when the first has landed — chained off its
+        // completion rather than given a delay of its own, so the figure in
+        // the middle is only ever counting along one sweep at a time. Both
+        // land at once under Reduce Motion.
+        .onAppear {
+            guard !reduceMotion else {
+                drawn = true
+                overshot = true
+                return
+            }
+            withAnimation(Motion.dataDraw.delay(0.05)) { drawn = true } completion: {
+                withAnimation(Motion.dataDraw) { overshot = true }
+            }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(progress.category.title))
         .accessibilityValue(Text(L10n.financeBudgetSpentOf(
@@ -748,7 +803,7 @@ public struct Sparkline: View {
                 }
             }
         }
-        .onAppear { withAnimation(.easeOut(duration: 0.6)) { drawn = true } }
+        .drawIn($drawn, animation: .easeOut(duration: 0.6))
         .accessibilityHidden(true)
     }
 
@@ -781,20 +836,23 @@ public struct Sparkline: View {
 
 // MARK: - Celebration
 
-/// The one genuinely playful moment on this screen: everything squares up.
+/// A burst of chips that rise, drift and fade — for a problem fixed, or a house
+/// with nothing left wrong with it. (Squaring up has its own moment, told on
+/// the balance itself.)
 ///
-/// A burst of chips that rise, drift and fade. Driven by the timeline's own
-/// clock rather than by an animated `@State` value, because `withAnimation`
-/// interpolates *view* properties and not the stored number a `Canvas` reads —
-/// animating the progress that way would hand every frame the final value and
-/// draw nothing at all. `task(id:)` owns the flight, so it cancels cleanly when
-/// the view goes away mid-burst and never leaves a timer behind.
+/// Driven by the timeline's own clock rather than by an animated `@State`
+/// value, because `withAnimation` interpolates *view* properties and not the
+/// stored number a `Canvas` reads — animating the progress that way would hand
+/// every frame the final value and draw nothing at all. `task(id:)` owns the
+/// flight, so it cancels cleanly when the view goes away mid-burst and never
+/// leaves a timer behind.
 public struct ConfettiBurst: View {
     private let trigger: Int
     private let tints: [Color]
 
     @State private var startedAt: Date?
     @State private var seed = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Enough to read as a burst, few enough that a mid-range phone never drops
     /// a frame drawing it.
@@ -821,16 +879,20 @@ public struct ConfettiBurst: View {
                 // Eased out, so the chips leave fast and settle slowly.
                 let progress = CGFloat(1 - pow(1 - linear, 2))
 
-                for index in 0..<Self.count {
+                // Reduce Motion: a few chips fade where they are — the moment
+                // without the flight.
+                let count = reduceMotion ? 8 : Self.count
+                for index in 0..<count {
                     let flight = Flight(index: index, seed: seed, size: size)
-                    let x = size.width / 2 + flight.drift * progress * size.width * 0.4
+                    let travel: CGFloat = reduceMotion ? 0.35 : progress
+                    let x = size.width / 2 + flight.drift * travel * size.width * 0.4
                     let y = size.height / 2
-                        - flight.reach * progress
-                        + flight.gravity * progress * progress
+                        - flight.reach * travel
+                        + (reduceMotion ? 0 : flight.gravity * progress * progress)
                     var chip = context
                     chip.opacity = Double(1 - progress)
                     chip.translateBy(x: x, y: y)
-                    chip.rotate(by: .radians(Double(flight.spin * progress)))
+                    chip.rotate(by: .radians(reduceMotion ? 0 : Double(flight.spin * progress)))
                     chip.fill(
                         Path(
                             roundedRect: CGRect(x: -3, y: -4.5, width: 6, height: 9),

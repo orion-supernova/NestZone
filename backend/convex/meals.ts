@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireRef, requireSameHome } from "./lib/relations";
 import { internal } from "./_generated/api";
+import { noteGrowth } from "./lib/companion";
 
 // What is for dinner, by calendar day.
 //
@@ -144,6 +145,8 @@ export const set = mutation({
     });
 
     const now = Date.now();
+    // Dinner decided grows Nestie, on the evening itself (convex/companion.ts).
+    await noteGrowth(ctx, args.homeId, { kind: "meal", date: args.date });
     if (existing) {
       await ctx.db.patch(existing._id, { ...fields, updated: now });
       return existing._id;
@@ -166,7 +169,11 @@ export const clear = mutation({
       .query("meal_plans")
       .withIndex("by_home_date", (q) => q.eq("home_id", homeId).eq("date", date))
       .unique();
-    if (existing) await ctx.db.delete(existing._id);
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      // Dinner called off: Nestie stops counting it (convex/companion.ts).
+      await noteGrowth(ctx, homeId, { kind: "meal", date });
+    }
     return { ok: true };
   },
 });

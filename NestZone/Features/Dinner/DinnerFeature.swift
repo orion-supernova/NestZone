@@ -50,6 +50,9 @@ public struct DinnerFeature: Sendable {
         /// one needs — a menu, a shopping list built from it, and a budget — and
         /// the meal plan keeps a pointer back to it.
         public var makeItAnOccasion = false
+        /// An occasion is an event, and events are Plus: without it the toggle
+        /// is locked and the dinner is saved without one.
+        @Shared(.pro) public var pro: ProStatus
         /// When the occasion starts.
         ///
         /// A meal plan is a *day* — dinner is a calendar day, not an instant —
@@ -241,6 +244,7 @@ public struct DinnerFeature: Sendable {
     @Dependency(\.meals) var meals
     @Dependency(\.polls) var pollsClient
     @Dependency(\.events) var events
+    @Dependency(\.paywall) var paywall
 
     public init() {}
 
@@ -443,6 +447,9 @@ public struct DinnerFeature: Sendable {
                 return .none
 
             case .occasionToggled:
+                guard state.pro.isPro else {
+                    return .run { _ in paywall.request(.eventFromElsewhere) }
+                }
                 state.makeItAnOccasion.toggle()
                 // Seeded on the way in rather than in `init`, so it lands on the
                 // evening of the day being planned rather than on whatever day
@@ -465,7 +472,7 @@ public struct DinnerFeature: Sendable {
                     customTitle = state.trimmedCustomTitle,
                     cuisine = state.selectedCuisine,
                     place = state.place,
-                    asOccasion = state.makeItAnOccasion && kind == .cook,
+                    asOccasion = state.makeItAnOccasion && kind == .cook && state.pro.isPro,
                     occasionStart = state.occasionStart
                 ] send in
                     // A plan points at a `recipes` row, and an Explore recipe is
@@ -509,6 +516,10 @@ public struct DinnerFeature: Sendable {
                         // offers a time, and a stale date behind it would put
                         // Saturday's party on the day the sheet was opened.
                         let start = MealDate.at(occasionStart, on: date)
+                        // A refusal (Plus ran out since the sheet opened) saves
+                        // the dinner without its event; the paywall is already
+                        // on its way from the refusal itself.
+                        do {
                         eventID = try await events.create(NewEvent(
                             homeID: homeID,
                             title: title.isEmpty
@@ -522,6 +533,9 @@ public struct DinnerFeature: Sendable {
                             // all to the shopping list" work on the other side.
                             recipeIDs: recipeID.map { [$0] } ?? []
                         ))
+                        } catch AppError.proRequired {
+                            eventID = nil
+                        }
                     }
 
                     try await meals.set(

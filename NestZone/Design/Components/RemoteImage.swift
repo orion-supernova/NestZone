@@ -116,6 +116,7 @@ extension RemoteImage where Placeholder == ImagePlaceholder {
 public struct ImagePlaceholder: View {
     @State private var shimmer = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     public init() {}
 
@@ -132,13 +133,19 @@ public struct ImagePlaceholder: View {
                 .offset(x: shimmer ? 400 : -200)
             }
             .clipped()
-            .onAppear {
-                // A never-ending sweep is exactly what Reduce Motion is for,
-                // and it keeps a display link alive for as long as anything
-                // is still loading.
-                guard !reduceMotion else { return }
-                withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) {
-                    shimmer = true
+            // A never-ending sweep is exactly what Reduce Motion is for,
+            // and it keeps a display link alive for as long as anything
+            // is still loading — so not for a segment switched away from
+            // either, which is still loading behind its opacity.
+            .onChange(of: !reduceMotion && phase == .onScreen, initial: true) { _, sweeping in
+                if sweeping {
+                    withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) {
+                        shimmer = true
+                    }
+                } else {
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) { shimmer = false }
                 }
             }
             .accessibilityHidden(true)

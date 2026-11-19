@@ -27,6 +27,7 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { proEnforced } from "./lib/pro";
 
 /// Apple rejects a provider that mints tokens more often than once per 20
 /// minutes, and accepts one for up to an hour. Refreshing at 40 keeps us clear
@@ -138,8 +139,13 @@ export const unregisterDevice = mutation({
 // MARK: - Internals used by the sender
 
 export const tokensForHome = internalQuery({
-  args: { homeId: v.id("homes"), exclude: v.optional(v.id("users")) },
-  handler: async (ctx, { homeId, exclude }) => {
+  args: {
+    homeId: v.id("homes"),
+    exclude: v.optional(v.id("users")),
+    /** Only devices on this APNs gateway. Absent: every device, as always. */
+    environment: v.optional(environment),
+  },
+  handler: async (ctx, { homeId, exclude, environment: only }) => {
     const home = await ctx.db.get(homeId);
     if (!home) return [];
     const recipients = (home.members ?? []).filter((m) => m !== exclude);
@@ -156,7 +162,7 @@ export const tokensForHome = internalQuery({
             .collect(),
         ),
       )
-    ).flat();
+    ).flat().filter((r) => !only || r.environment === only);
     return rows.map((r) => ({
       id: r._id,
       token: r.token,
@@ -294,6 +300,14 @@ async function deliver(
   topic: string,
   body: unknown,
   extraHeaders: Record<string, string>,
+  /**
+   * Only this gateway, for a send meant for some builds and not others
+   * (`notifyHome`'s `environment`). A `BadDeviceToken` is then skipped: no
+   * try on the other gateway — which would reach exactly the build the caller
+   * meant to leave out, a TestFlight build that misreported "sandbox" — and no
+   * correcting or dropping the token, which a normal send will do properly.
+   */
+  strict = false,
 ): Promise<"sent" | "dropped" | "failed"> {
   try {
     const first = await post(
@@ -320,6 +334,7 @@ async function deliver(
     // classes of build, so ask the other gateway before writing the device off.
     // Getting this wrong is expensive: it deletes the only way to reach a phone.
     if (first.status === 400 && first.text.includes("BadDeviceToken")) {
+      if (strict) return "failed";
       const other = device.environment === "sandbox" ? "production" : "sandbox";
       const retry = await post(other, device.token, jwt, topic, body, extraHeaders);
 
@@ -362,6 +377,8 @@ async function fanOut(
   },
   devices: Device[],
   alert: Alert,
+  /** `deliver`'s `strict`: this gateway only. */
+  strict = false,
 ): Promise<{ sent: number; dropped: number }> {
   if (devices.length === 0) return { sent: 0, dropped: 0 };
 
@@ -387,13 +404,31 @@ async function fanOut(
     : {};
 
   const results = await Promise.all(
-    devices.map((device) => deliver(ctx, device, jwt, topic, payload, headers)),
+    devices.map((device) => deliver(ctx, device, jwt, topic, payload, headers, strict)),
   );
 
   return {
     sent: results.filter((r) => r === "sent").length,
     dropped: results.filter((r) => r === "dropped").length,
   };
+}
+
+/** The notification categories that belong to Household Pro. */
+const PRO_CATEGORIES = new Set(["finance", "calendar", "issues", "messages"]);
+
+/**
+ * Whether a Pro-domain notification must not reach this house. Asks the
+ * database only for a Pro category while enforcement is on, so the other
+ * thirty-odd senders pay nothing for it.
+ */
+async function silencedForPlan(
+  ctx: { runQuery: (ref: any, args: any) => Promise<any> },
+  homeId: Id<"homes">,
+  category: string | undefined,
+): Promise<boolean> {
+  if (!category || !PRO_CATEGORIES.has(category) || !proEnforced()) return false;
+  const allowed: boolean = await ctx.runQuery(internal.pro.homeAllows, { homeId });
+  return !allowed;
 }
 
 /**
@@ -405,8 +440,29 @@ export const notifyHome = internalAction({
     homeId: v.id("homes"),
     actor: v.optional(v.id("users")),
     ...alertArgs,
+    /**
+     * Only devices on this APNs gateway. For a feature that only some builds
+     * draw: `sandbox` is a development-signed install from Xcode, the only
+     * kind that draws Nestie until it ships (`COMPANION_NOTIFY`). Absent, as
+     * at every other caller: every device in the home.
+     */
+    environment: v.optional(environment),
+    /**
+     * Leave the household's feed alone. Only for the same case: a row in the
+     * feed is read on every build, including the ones that can't show what it
+     * is about. Absent, as at every other caller: the feed is written first.
+     */
+    skipFeed: v.optional(v.boolean()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { environment: only, skipFeed, ...args }) => {
+    // Money and Calendar are Household Pro. A house without it hears nothing
+    // about either — no push and no feed row — which silences every reminder
+    // sweep and every mutation's announcement in both domains in one place.
+    // A no-op while PRO_ENFORCE is off.
+    if (await silencedForPlan(ctx, args.homeId, args.category)) {
+      return { sent: 0, dropped: 0 };
+    }
+
     // The feed first, and unconditionally.
     //
     // A push is a tap on the shoulder that may not arrive — the phone is off,
@@ -419,24 +475,29 @@ export const notifyHome = internalAction({
     // notification itself is: a module that learns to notify a household gets
     // the record for free, and cannot ship having remembered one and not the
     // other.
-    await ctx.runMutation(internal.inbox.record, {
-      homeId: args.homeId,
-      category: args.category,
-      title: args.title,
-      body: args.body,
-      actor: args.actor,
-    });
+    if (!skipFeed) {
+      await ctx.runMutation(internal.inbox.record, {
+        homeId: args.homeId,
+        category: args.category,
+        title: args.title,
+        body: args.body,
+        actor: args.actor,
+      });
+    }
 
     if (!isConfigured()) return { sent: 0, dropped: 0 };
 
     const devices: Device[] = await ctx.runQuery(internal.push.tokensForHome, {
       homeId: args.homeId,
       exclude: args.actor,
+      environment: only,
     });
-    return await fanOut(ctx, devices, {
-      ...args,
-      threadId: args.threadId ?? args.homeId,
-    });
+    return await fanOut(
+      ctx,
+      devices,
+      { ...args, threadId: args.threadId ?? args.homeId },
+      only !== undefined,
+    );
   },
 });
 
@@ -462,6 +523,12 @@ export const notifyUsers = internalAction({
     ...alertArgs,
   },
   handler: async (ctx, args) => {
+    // No caller addresses Money or Calendar to people today; the same rule as
+    // `notifyHome` holds anyway, so one that starts to cannot leak past it.
+    if (args.homeId && (await silencedForPlan(ctx, args.homeId, args.category))) {
+      return { sent: 0, dropped: 0 };
+    }
+
     // Filed with an explicit audience, which is what keeps it out of everybody
     // else's feed. `notifyHome` needs no such thing: its audience is the home.
     if (args.homeId) {

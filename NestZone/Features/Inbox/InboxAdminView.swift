@@ -70,7 +70,7 @@ struct InboxAdminView: View {
             }
             .task { await store.send(.task).finish() }
         }
-        .sheet(item: $store.scope(state: \.composer, action: \.composer)) {
+        .hostedSheet(item: $store.scope(state: \.composer, action: \.composer)) {
             InboxComposerSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))

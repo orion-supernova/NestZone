@@ -14,10 +14,10 @@ public struct RecipesView: View {
         content
             .background(Backdrop(tint: theme.accent))
             .scrollEdgeEffectStyle(.soft, for: .top)
-            .searchable(text: $store.searchText, prompt: Text(L10n.commonSearch))
+            .segmentSearchable(text: $store.searchText, prompt: Text(L10n.commonSearch))
             .navigationTitle(Text(L10n.recipesScreenTitle))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .segmentToolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button { store.send(.composeTapped) } label: {
                         Image(systemName: "plus")
@@ -29,7 +29,7 @@ public struct RecipesView: View {
             .navigationDestination(
                 item: $store.scope(state: \.destination?.detail, action: \.destination.detail)
             ) { RecipeDetailView(store: $0) }
-            .sheet(
+            .hostedSheet(
                 item: $store.scope(state: \.destination?.compose, action: \.destination.compose)
             ) { ComposeRecipeSheet(store: $0) }
             .alert($store.scope(state: \.alert, action: \.alert))

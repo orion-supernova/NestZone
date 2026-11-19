@@ -25,6 +25,10 @@ public struct HomesClient: Sendable {
     /// behind would strand its contents forever. With other members remaining,
     /// only this user is removed.
     public var leave: @Sendable (HomeID) async throws -> Void
+    /// Takes another member out of `home` (`homes:removeMember`). The
+    /// household's own answer to a person who should not be in it any more;
+    /// what they wrote for the house stays for the others.
+    public var removeMember: @Sendable (_ homeID: HomeID, _ userID: UserID) async throws -> Void
 }
 
 extension HomesClient: DependencyKey {
@@ -33,6 +37,7 @@ extension HomesClient: DependencyKey {
         members: { homeID in
             ConvexConnection.shared
                 .subscribe(to: "homes:members", args: ["homeId": homeID], as: [User].self)
+                .transforming { StoreDemo.masked($0) }
                 // Seven features hold this subscription, so it is also the read
                 // that tells the whole app what the household looks like.
                 .recordingAvatars { AvatarDirectory.record($0) }
@@ -59,6 +64,11 @@ extension HomesClient: DependencyKey {
         },
         leave: { homeID in
             try await ConvexConnection.shared.mutate("homes:leave", args: ["homeId": homeID])
+        },
+        removeMember: { homeID, userID in
+            try await ConvexConnection.shared.mutate(
+                "homes:removeMember", args: ["homeId": homeID, "userId": userID]
+            )
         }
     )
 

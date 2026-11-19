@@ -12,6 +12,12 @@ public struct ShoppingFeature: Sendable {
         public var draft = ""
         public var draftCategory: ShoppingItem.Category = .groceries
         @Shared(.shoppingGrouped) public var isGrouped: Bool
+        @Shared(.pro) var pro: ProStatus
+        /// What the screen draws. Aisles are Plus, so a house without it is
+        /// always on the flat list whatever was stored before (the default
+        /// used to be grouped, and a house may have lapsed). The stored choice
+        /// is left alone: a house that gets Plus back finds its own.
+        public var effectiveGrouped: Bool { (isGrouped || StoreDemo.groupsShopping) && pro.isPro }
         /// Categories the user has collapsed. Not persisted — a collapse is a
         /// "get this out of my way for now", not a preference.
         public var collapsed: Set<ShoppingItem.Category> = []
@@ -408,6 +414,9 @@ public struct ShoppingFeature: Sendable {
                 return .send(.writeFailed(error))
 
             case let .viewModeToggled(grouped):
+                // Without Plus the switch has nothing to remember: the flat
+                // list is the only mode, and the stored choice waits.
+                guard state.pro.isPro else { return .none }
                 state.$isGrouped.withLock { $0 = grouped }
                 return .none
 

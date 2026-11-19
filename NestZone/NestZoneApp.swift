@@ -25,6 +25,10 @@ struct NestZoneApp: App {
     /// and nowhere else, so the app keeps a delegate purely to forward it.
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() {
+        LaunchWarmup.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             #if DEBUG
@@ -33,6 +37,13 @@ struct NestZoneApp: App {
             //   xcrun simctl launch booted com.walhallaa.NestZone -glassLab
             if ProcessInfo.processInfo.arguments.contains("-glassLab") {
                 GlassListLab()
+            } else if let page = UserDefaults.standard.string(forKey: "artSheet") {
+                // A contact sheet of the companion's art (Features/Companion/ArtSheet.swift).
+                ArtSheet(page: page)
+            } else if ProcessInfo.processInfo.arguments.contains("-nestieBench") {
+                // Nestie against a stand-in server, signed out
+                // (Features/Companion/NestieBench.swift).
+                NestieBench()
             } else {
                 root
             }
@@ -46,7 +57,12 @@ struct NestZoneApp: App {
         AppView(store: Self.store)
             // The window exists by the time its content appears, which is the
             // earliest the recogniser has anything to attach to.
-            .onAppear { KeyboardDismisser.shared.install() }
+            .onAppear {
+                KeyboardDismisser.shared.install()
+                #if DEBUG || MEASURE
+                FrameMeter.shared.startIfAsked()
+                #endif
+            }
     }
 }
 

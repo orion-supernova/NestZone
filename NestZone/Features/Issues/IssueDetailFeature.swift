@@ -324,6 +324,10 @@ public struct IssueDetailFeature: Sendable {
     private enum CancelID { case detail }
 
     @Dependency(\.issues) var issuesClient
+    @Dependency(\.paywall) var paywall
+    /// Problems are Plus: a house without it reads the problem, and every
+    /// control that writes asks for the paywall instead. Deleting stays.
+    @Shared(.pro) var pro: ProStatus
     @Dependency(\.dismiss) var dismiss
 
     public init() {}
@@ -332,6 +336,9 @@ public struct IssueDetailFeature: Sendable {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.issues) }
+            }
             switch action {
             case .task:
                 let id = state.issue.id
@@ -587,6 +594,7 @@ public struct IssueDetailFeature: Sendable {
             case let .photosPicked(images):
                 guard !images.isEmpty else { return .none }
                 let id = state.issue.id
+                let homeID = state.homeID
                 state.uploading += images.count
                 return .run { send in
                     // Encoded off the main actor, one at a time: re-drawing a
@@ -596,7 +604,7 @@ public struct IssueDetailFeature: Sendable {
                     var stored: [IssuePhotoIDs] = []
                     for image in images {
                         guard let encoded = IssuePhoto.encode(image) else { continue }
-                        stored.append(try await issuesClient.uploadPhoto(encoded))
+                        stored.append(try await issuesClient.uploadPhoto(homeID, encoded))
                     }
                     try await issuesClient.attachPhotos(id, stored)
                     await send(.photosAttached)
@@ -705,6 +713,19 @@ public struct IssueDetailFeature: Sendable {
         } catch: { error, send in
             await send(.statusCommitted(previous))
             await send(.writeFailed(AppError(error)))
+        }
+    }
+}
+
+extension IssueDetailFeature {
+    /// The actions that change the problem or what hangs off it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .statusTapped, .statusNoteConfirmed, .meTooTapped, .assignTapped,
+             .postTapped, .deleteEntryTapped, .makeChoreTapped, .addPartsTapped,
+             .partsConfirmed, .scheduleVisitTapped, .visitConfirmed, .logCostTapped,
+             .photosPicked, .removePhotoTapped, .editTapped: true
+        default: false
         }
     }
 }

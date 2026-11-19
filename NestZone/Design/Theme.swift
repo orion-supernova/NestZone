@@ -28,6 +28,17 @@ public enum AppTheme: String, CaseIterable, Sendable, Codable, Identifiable {
         }
     }
 
+    /// What is written on a fill of the accent: white or a deep ink, whichever
+    /// reads at 4.5:1 or better on that accent (5.7, 5.4, 6.2, 7.6 and 6.7).
+    /// Text in the accent itself on glass over a night sky does not, so a
+    /// label that has to be read in any sky sits on a fill and uses this.
+    public var onAccent: Color {
+        switch self {
+        case .basic, .deepOcean: Palette.onAccentLight
+        case .cyberpunk, .retroWave, .neonNight: Palette.onAccentDark
+        }
+    }
+
     /// The second hue, for two-stop gradients on hero elements only.
     public var support: Color {
         switch self {
@@ -73,6 +84,10 @@ public enum AppTheme: String, CaseIterable, Sendable, Codable, Identifiable {
 
 /// Every literal colour in the app, allocated exactly once.
 public enum Palette {
+    /// Written on a violet or a blue fill, and on the deep ink fill below.
+    public static let onAccentLight = Color(hex: "FFFFFF")
+    /// Written on a pink, magenta or green fill.
+    public static let onAccentDark = Color(hex: "12091F")
     public static let violet = Color(hex: "7C3AED")
     public static let indigo = Color(hex: "4F46E5")
     public static let magenta = Color(hex: "FF1F8A")
@@ -124,6 +139,58 @@ public enum Palette {
         traits.userInterfaceStyle == .dark
             ? UIColor(white: 1, alpha: 0.10)
             : UIColor(white: 0, alpha: 0.06)
+    })
+
+    /// The companion's two currencies, as glyph colours: Leaves green,
+    /// Sparkles gold. Fixed rather than themed — the colour is how anyone
+    /// tells the two apart, on Today, in the shop and in the Sparkles store —
+    /// and only ever on the glyph, never on the number beside it, which stays
+    /// in the text's own colour. Each clears 3:1 as a graphic on white, the
+    /// grouped grey and the dark card, with darker and lighter versions under
+    /// Increase Contrast.
+    public static let leaf = currency(light: "059669", dark: "34D399", lightHigh: "047857", darkHigh: "6EE7B7")
+    public static let sparkle = currency(light: "C27803", dark: "FBBF24", lightHigh: "A16207", darkHigh: "FCD34D")
+    /// The same colours, faint: the fill behind a price.
+    public static let leafWash = currency(light: "05966924", dark: "34D39924", lightHigh: "04785729", darkHigh: "6EE7B729")
+    public static let sparkleWash = currency(light: "C2780324", dark: "FBBF2424", lightHigh: "A1620729", darkHigh: "FCD34D29")
+
+    /// The vote's yes and no as fills under white text: the system green and
+    /// red are 2.3:1 and 3.6:1 against white, these are 5:1 and 6.5:1.
+    public static let answerYes = Color(hex: "15803D")
+    public static let answerNo = Color(hex: "B91C1C")
+
+    /// Red as the colour of a sentence ("Didn't go through"), where the
+    /// system red on a white card is 3.6:1.
+    public static let dangerText = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor(Color(hex: "FCA5A5")) : UIColor(Color(hex: "B91C1C"))
+    })
+
+    private static func currency(light: String, dark: String, lightHigh: String, darkHigh: String) -> Color {
+        let colors = [light, dark, lightHigh, darkHigh].map { UIColor(Color(hex: $0)) }
+        return Color(uiColor: UIColor { traits in
+            let high = traits.accessibilityContrast == .high
+            return traits.userInterfaceStyle == .dark ? colors[high ? 3 : 1] : colors[high ? 2 : 0]
+        })
+    }
+
+    /// The button that spends: a sheen across its top half, a hairline rim,
+    /// and a shadow that tightens as it is pressed into the page.
+    public static let depthSheen = LinearGradient(
+        colors: [Color.white.opacity(0.18), Color.white.opacity(0)], startPoint: .top, endPoint: .center
+    )
+    public static let depthRim = Color.white.opacity(0.22)
+    public static let depthShadow = Color(uiColor: UIColor { traits in
+        UIColor(white: 0, alpha: traits.userInterfaceStyle == .dark ? 0.45 : 0.18)
+    })
+    public static let depthInner = Color.black.opacity(0.25)
+    /// What dims a screen under a card that asks something.
+    public static let dim = Color.black.opacity(0.32)
+    /// The wash under a card's glass, so its words read over anything — the
+    /// glass alone let a busy scene show through the secondary text.
+    public static let cardWash = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.07, green: 0.06, blue: 0.10, alpha: 0.72)
+            : UIColor(white: 1, alpha: 0.7)
     })
 
     /// One colour per spending category, allocated once.

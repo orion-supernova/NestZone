@@ -176,6 +176,10 @@ public struct TasksFeature: Sendable {
     private static let undoWindow: Duration = .seconds(5)
 
     @Dependency(\.tasks) var tasksClient
+    @Dependency(\.paywall) var paywall
+    /// "Archive now" is Plus; the automatic archive and putting a chore back
+    /// are not.
+    @Shared(.pro) var pro: ProStatus
     @Dependency(\.homes) var homesClient
     @Dependency(\.continuousClock) var clock
 
@@ -271,6 +275,7 @@ public struct TasksFeature: Sendable {
             // which is the difference the swipe's two buttons are there to
             // make, and why only one of them stops to ask.
             case let .archiveTapped(id):
+                guard pro.isPro else { return .run { _ in paywall.request(.archiveNow) } }
                 guard let task = state.tasks[id: id], task.isCompleted else { return .none }
                 return hold(.init(task: task, kind: .archive), &state)
 

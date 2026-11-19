@@ -21,6 +21,14 @@ public struct SettingsFeature: Sendable {
         /// here — this screen displays it, and sign-out unregisters it.
         public var pushRegistration: PushRegistration = .none
         public var notificationStatus: UNAuthorizationStatus = .notDetermined
+        /// The launch is still restoring the session behind these tabs, so this
+        /// device's push token is not known to the server yet and a sign-out
+        /// now could not unregister it. Owned by `AppFeature`.
+        public var isAwaitingSession = false
+        /// A sign-out was confirmed and is on its way: waiting for the restore
+        /// (see above) or already running. Draws the row as busy.
+        public var isSigningOut = false
+        var signOutSent = false
         public var isSendingTestPush = false
         /// The row shows the first eight characters, which is all you need to
         /// pick this device out of a list. Matching one against a backend row,
@@ -34,6 +42,26 @@ public struct SettingsFeature: Sendable {
         /// over the avatar, and stops a second change being started on top of
         /// the first.
         public var isUpdatingAvatar = false
+
+        /// The "Delete account" confirmation is up. It is a dialog the view
+        /// shows, not an alert from here, because what follows it — Sign in
+        /// with Apple — can only be run by a view.
+        public var isConfirmingDelete = false
+        /// A restore from the NestZone Plus row is running, and what it found.
+        public var isRestoringPlus = false
+        public var plusRestoreResult: PlusRestoreResult?
+        @Shared(.pro) public var pro: ProStatus
+
+        public enum PlusRestoreResult: Equatable, Sendable { case restored, nothing }
+        /// Apple has been asked again and the server is deleting the account.
+        /// Draws the row as busy and stops a second deletion.
+        public var isDeletingAccount = false
+        /// Between "Delete" in the dialog and Apple's sheet answering, so a
+        /// second tap cannot ask Apple twice.
+        public var isAuthorizingDelete = false
+        /// A member is being removed from the house. Kept by id, so the row
+        /// that asked is the one that goes, whatever the list does meanwhile.
+        public var removingMember: UserID?
 
         /// Where the "check for updates" row stands.
         ///
@@ -164,6 +192,27 @@ public struct SettingsFeature: Sendable {
         case openAppStoreTapped(URL)
         case signOutTapped
         case signOutConfirmed
+        case deleteAccountTapped
+        /// "Delete" was chosen in the dialog and Apple's sheet is on its way.
+        /// Nothing else about the deletion can start until it answers.
+        case deleteAccountConfirmed
+        case plusRestoreTapped
+        case plusRestoreFinished(Result<Bool, AppError>)
+        /// Apple answered the fresh sign-in the deletion asks for. The code is
+        /// what lets the server revoke the Apple token; without one the account
+        /// is still deleted.
+        case deleteAccountAuthorized(code: String?)
+        /// Apple's sheet was refused or failed. Backing out is silent.
+        case deleteAccountAuthorizationFailed(AppError)
+        case deleteAccountFinished(Result<Bool, AppError>)
+        case removeMemberTapped(User)
+        case memberRemoved
+        /// Carries what it takes to undo the removal: who went, and where they
+        /// stood in the list.
+        case removeMemberFailed(AppError, restoring: User, at: Int)
+        /// The restore behind the tabs has answered (or has nothing to
+        /// answer with), so a sign-out that was waiting for it can go.
+        case sessionReady
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<Alert>)
@@ -171,6 +220,7 @@ public struct SettingsFeature: Sendable {
 
         public enum Alert: Equatable {
             case confirmSignOut
+            case confirmRemoveMember(UserID)
         }
 
         @CasePathable
@@ -181,12 +231,28 @@ public struct SettingsFeature: Sendable {
             /// Customize belongs to the tab bar, not to Settings, so the tab
             /// container opens it — over this sheet.
             case customizeTapped
+            /// The sign-out finished. Raised so the root ends the session
+            /// itself, rather than relying on the SDK announcing it: the SDK
+            /// says nothing the root will act on while the launch is still
+            /// restoring.
+            case signedOut
+            #if DEBUG
+            /// The Nestie Lab belongs to the companion, which `MainFeature`
+            /// owns: it brings Today forward and opens the Lab there.
+            case nestieLabRequested
+            #endif
         }
+
+        #if DEBUG
+        case nestieLabTapped
+        #endif
     }
 
     private enum CancelID { case members, copyReset, pushTokenCopyReset }
 
     @Dependency(\.homes) var homes
+    @Dependency(\.purchases) var purchases
+    @Dependency(\.pro) var proClient
     @Dependency(\.auth) var auth
     @Dependency(\.users) var usersClient
     @Dependency(\.continuousClock) var clock
@@ -443,14 +509,126 @@ public struct SettingsFeature: Sendable {
                 return .none
 
             case .alert(.presented(.confirmSignOut)), .signOutConfirmed:
-                // Deliberately `token` and not "the token the server told us
-                // it took": an earlier launch may have registered this same
-                // token successfully, and skipping the unregister because
-                // *this* launch could not confirm it leaves the device
-                // receiving a household's notifications after leaving it.
-                return .run { [token = state.pushRegistration.token] _ in
-                    await auth.signOut(token)
+                state.isSigningOut = true
+                // Before the restore has answered this device's token has not
+                // been registered, so there is nothing to unregister, and a
+                // sign-out now would leave it receiving the household's
+                // notifications. Wait: `AppFeature` sends `.sessionReady` when
+                // the restore has answered. If the restore ends in a refusal
+                // the tabs go and there is nothing to unregister.
+                guard !state.isAwaitingSession else { return .none }
+                return signOut(&state)
+
+            case .sessionReady:
+                guard state.isSigningOut, !state.isAwaitingSession else { return .none }
+                return signOut(&state)
+
+            case .plusRestoreTapped:
+                guard !state.isRestoringPlus else { return .none }
+                state.isRestoringPlus = true
+                state.plusRestoreResult = nil
+                return .run { send in
+                    await send(.plusRestoreFinished(Result {
+                        try await purchases.restore()
+                        return try await proClient.refresh().active
+                    }.mapError(AppError.init)))
                 }
+
+            case let .plusRestoreFinished(.success(active)):
+                state.isRestoringPlus = false
+                state.plusRestoreResult = active ? .restored : .nothing
+                return .none
+
+            case let .plusRestoreFinished(.failure(error)):
+                state.isRestoringPlus = false
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .deleteAccountTapped:
+                guard !state.isDeletingAccount, !state.isAuthorizingDelete else { return .none }
+                state.isConfirmingDelete = true
+                return .none
+
+            case .deleteAccountConfirmed:
+                state.isAuthorizingDelete = true
+                return .none
+
+            case let .deleteAccountAuthorized(code):
+                state.isAuthorizingDelete = false
+                guard !state.isDeletingAccount else { return .none }
+                state.isDeletingAccount = true
+                return .run { send in
+                    await send(.deleteAccountFinished(Result {
+                        try await auth.deleteAccount(code)
+                        return true
+                    }.mapError { AppError($0) }))
+                }
+
+            case let .deleteAccountAuthorizationFailed(error):
+                state.isAuthorizingDelete = false
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            // The account is gone and so is the session, so this ends where a
+            // sign-out ends: the root drops the tabs.
+            case .deleteAccountFinished(.success):
+                state.isDeletingAccount = false
+                return .send(.delegate(.signedOut))
+
+            // The server no longer knew who was asking: the deletion had
+            // already gone through (its answer was lost, or a second request
+            // followed the first), so this ends as a sign-out does.
+            case let .deleteAccountFinished(.failure(error)) where error.meansSessionIsGone:
+                state.isDeletingAccount = false
+                return .send(.delegate(.signedOut))
+
+            // A refused deletion changed nothing on the server, so there is
+            // nothing to put back but the row.
+            case let .deleteAccountFinished(.failure(error)):
+                state.isDeletingAccount = false
+                state.alert = .failure(error)
+                return .none
+
+            case let .removeMemberTapped(user):
+                state.alert = .confirmRemoveMember(user)
+                return .none
+
+            case let .alert(.presented(.confirmRemoveMember(userID))):
+                guard state.removingMember == nil,
+                      let index = state.members.index(id: userID),
+                      let user = state.members[id: userID],
+                      userID != state.user?.id
+                else { return .none }
+                // Out of the list at once; the push confirms it. A write that
+                // fails changed nothing, so no push is coming to bring them
+                // back: the failure carries the person and their place.
+                state.removingMember = userID
+                state.members.remove(id: userID)
+                return .run { [homeID = state.homeID] send in
+                    try await homes.removeMember(homeID, userID)
+                    await send(.memberRemoved)
+                } catch: { error, send in
+                    await send(.removeMemberFailed(AppError(error), restoring: user, at: index))
+                }
+
+            case .memberRemoved:
+                state.removingMember = nil
+                return .none
+
+            case let .removeMemberFailed(error, user, index):
+                state.removingMember = nil
+                if state.members[id: user.id] == nil {
+                    state.members.insert(user, at: min(index, state.members.count))
+                }
+                state.alert = .failure(error)
+                return .none
+
+            #if DEBUG
+            case .nestieLabTapped:
+                return .send(.delegate(.nestieLabRequested))
+            #endif
 
             case .destination(.presented(.editName(.finished))):
                 state.destination = nil
@@ -462,6 +640,22 @@ public struct SettingsFeature: Sendable {
         }
         .ifLet(\.$destination, action: \.destination)
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+extension SettingsFeature {
+    /// Signs out, once. Deliberately `token` and not "the token the server told
+    /// us it took": an earlier launch may have registered this same token
+    /// successfully, and skipping the unregister because *this* launch could not
+    /// confirm it leaves the device receiving a household's notifications after
+    /// leaving it.
+    fileprivate func signOut(_ state: inout State) -> Effect<Action> {
+        guard !state.signOutSent else { return .none }
+        state.signOutSent = true
+        return .run { [token = state.pushRegistration.token] send in
+            await auth.signOut(token)
+            await send(.delegate(.signedOut))
+        }
     }
 }
 
@@ -478,6 +672,26 @@ extension AlertState where Action == SettingsFeature.Action.Alert {
             }
         } message: {
             TextState(String(localized: L10n.settingsLogoutConfirmMessage))
+        }
+    }
+}
+
+extension AlertState where Action == SettingsFeature.Action.Alert {
+    /// Names the person, so a tap meant for another row cannot remove them
+    /// unseen, and says what stays.
+    static func confirmRemoveMember(_ user: User) -> Self {
+        let name = user.displayName
+        return AlertState {
+            TextState(String(localized: L10n.settingsRemoveMemberTitle(name)))
+        } actions: {
+            ButtonState(role: .destructive, action: .confirmRemoveMember(user.id)) {
+                TextState(String(localized: L10n.settingsRemoveMemberButton))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.settingsRemoveMemberMessage(name)))
         }
     }
 }

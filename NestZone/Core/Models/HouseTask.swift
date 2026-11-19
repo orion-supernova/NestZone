@@ -18,6 +18,11 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
     /// about to go. A dialog that said "this will change the contribution
     /// split" without saying whose would be a worse dialog than none.
     public var completedBy: UserID?
+    /// When the box was ticked. The server keeps it on the task (it is the
+    /// last field of the index the Done list reads), so a phone can tell how
+    /// busy the house has been without another query — which is what the
+    /// companion on Today grows from.
+    public var completedAt: Timestamp?
     public var image: String?
     public var homeID: HomeID?
     public var priority: Priority
@@ -61,6 +66,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         case assignedTo = "assigned_to"
         case isCompleted = "is_completed"
         case completedBy = "completed_by"
+        case completedAt = "completed_at"
         case image
         case homeID = "home_id"
         case priority
@@ -80,6 +86,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         assignedTo = try c.decodeIfPresent(UserID.self, forKey: .assignedTo)
         isCompleted = try c.decodeIfPresent(Bool.self, forKey: .isCompleted) ?? false
         completedBy = try c.decodeIfPresent(UserID.self, forKey: .completedBy)
+        completedAt = try c.decodeIfPresent(Timestamp.self, forKey: .completedAt)
         image = try c.decodeIfPresent(String.self, forKey: .image)
         homeID = try c.decodeIfPresent(HomeID.self, forKey: .homeID)
         priority = c.decodeLenient(Priority.self, forKey: .priority, default: .medium)
@@ -99,6 +106,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         assignedTo: UserID? = nil,
         isCompleted: Bool = false,
         completedBy: UserID? = nil,
+        completedAt: Timestamp? = nil,
         image: String? = nil,
         homeID: HomeID? = nil,
         priority: Priority = .medium,
@@ -116,6 +124,7 @@ public struct HouseTask: Codable, Identifiable, Hashable, Sendable {
         self.assignedTo = assignedTo
         self.isCompleted = isCompleted
         self.completedBy = completedBy
+        self.completedAt = completedAt
         self.image = image
         self.homeID = homeID
         self.priority = priority

@@ -73,6 +73,17 @@ wish.
 | What | Deprecated in | Replaced by | Remove when | Steps |
 |---|---|---|---|---|
 | `inbox:activity` accepting `category: null` | 1.9.1 | the key being absent | `versionCensus` shows no devices on 1.9.0, and `unknown` is 0 | Change the validator back to `v.optional(v.string())` and drop the `?? undefined` in the handler. |
+| `inbox:whoAmI` | 1.12.0 | `inbox:accounts` (CLI) and the Admin panel's own id | Already true: no build ever called it, so the next backend deploy may remove it | Delete the `whoAmI` export in convex/inbox.ts and the line in CLAUDE.md's Commands that names it. |
+
+## Switches that narrow
+
+Some narrowing is not a removal but a switch, flipped on the deployment once
+the census allows it. It is recorded here on the same terms as a row: what it
+narrows, and the condition.
+
+| Switch | What turning it on narrows | Turn on when |
+|---|---|---|
+| `PRO_ENFORCE=on` | Household Pro (lib/pro.ts). Money and Calendar writes, every House problems write except removes (`issues`), custom movie lists and `tasks:setArchived(true)` refuse with `PRO_REQUIRED` for a house without Pro; `homes:create` and `homes:join` refuse (`multipleHomes`) for a person already in a home unless they carry Plus themselves or, for a join, the house does; shopping categories are filed under the default and `catalog:discover`'s `includeAdult` is turned off (`matureContent`) instead of refused; Messages writes refuse (`messages`: `messages:send`, `messages:edit`, `conversations:create`, `conversations:rename`, and a chat poll's — `generic`, not Nestie's vote — `polls:create`, `addItem`, `vote`, `unvote`), while reading, `messages:remove`, `messages:markRead` and movie, recipe and Nestie polls stay free; finance, calendar, issues and messages notifications stop for those houses. Nobody loses a home they are already in. Reads never change. Builds before 1.12.0 have no paywall and show such a refusal as a generic error. | `versionCensus` shows the TestFlight households on 1.12.0 or later, and `unknown` is 0. Turning it off again is always safe. |
 
 ### Row format
 

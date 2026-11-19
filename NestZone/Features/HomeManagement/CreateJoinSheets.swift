@@ -12,7 +12,6 @@ private struct FormSheet<Field: View>: View {
     let isSubmitting: Bool
     let didSucceed: Bool
     let canSubmit: Bool
-    let shakeCount: Int
     let onSubmit: () -> Void
     @ViewBuilder let field: Field
 
@@ -59,8 +58,8 @@ private struct FormSheet<Field: View>: View {
             }
             .appear(0)
 
+            // The field shakes itself when it's refused.
             field
-                .shake(on: shakeCount)
                 .appear(1)
 
             PrimaryButton(submitTitle, isLoading: isSubmitting, action: onSubmit)
@@ -97,7 +96,6 @@ struct CreateHomeSheet: View {
             isSubmitting: store.isSubmitting,
             didSucceed: store.didSucceed,
             canSubmit: store.canSubmit,
-            shakeCount: store.shakeCount,
             onSubmit: { store.send(.submitTapped) }
         ) {
             GlassTextField(
@@ -126,7 +124,6 @@ struct JoinHomeSheet: View {
             isSubmitting: store.isSubmitting,
             didSucceed: store.didSucceed,
             canSubmit: store.canSubmit,
-            shakeCount: store.shakeCount,
             onSubmit: { store.send(.submitTapped) }
         ) {
             GlassTextField(

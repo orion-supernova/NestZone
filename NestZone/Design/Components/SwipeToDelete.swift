@@ -33,6 +33,7 @@ public struct SwipeToDelete<Content: View>: View {
     /// gesture ends *or is cancelled*.
     @GestureState private var translation: CGFloat = 0
     @State private var width: CGFloat = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Wide enough for the icon and its label, and for a 44pt tap target.
     private let actionWidth: CGFloat = 88
@@ -107,6 +108,21 @@ public struct SwipeToDelete<Content: View>: View {
         .sensoryFeedback(.impact(weight: .medium), trigger: isFullSwipe) { _, full in full }
         // VoiceOver never sees the gesture, so the action is offered directly.
         .accessibilityAction(named: Text(title)) { commit() }
+        .transition(departure)
+    }
+
+    /// A row swiped away leaves as dust; any other way out is the ordinary
+    /// fade.
+    ///
+    /// Decided by whether the row is open *now*, because a removed row leaves
+    /// with the transition it was last drawn with — and a row is last drawn
+    /// open exactly when it was the swipe, or its revealed button, that took
+    /// it. Rows leaving because a filter or a month changed were drawn closed,
+    /// so a whole screenful never blurs out at once. Plain fade under Reduce
+    /// Motion, where the lift and the shrink are travel. A caller that sets its
+    /// own transition outside this one keeps it.
+    private var departure: AnyTransition {
+        revealed > 1 && !reduceMotion ? .dust : .opacity
     }
 
     private var deleteButton: some View {

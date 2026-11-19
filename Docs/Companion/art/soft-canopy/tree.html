@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Soft Canopy</title>
+<style>
+:root{--fg:#f4efff}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1d1336;color:var(--fg);font:12px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+#grid{display:flex;flex-wrap:wrap}
+.cell{position:relative;width:520px;height:360px;flex:none}
+canvas{display:block;width:520px;height:360px}
+.lab{position:absolute;left:12px;top:10px;font-weight:600;font-size:13px;letter-spacing:.1px;padding:3px 9px;border-radius:999px;background:rgba(20,10,40,.28);color:#fff}
+.lab small{font-weight:500;opacity:.75;margin-left:6px}
+.ops{position:absolute;right:10px;bottom:8px;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:5px 8px;border-radius:8px;background:rgba(20,10,40,.55);color:#fff}
+pre{margin:16px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#f4efff}
+</style>
+</head>
+<body>
+<div id="grid"></div>
+<script>
+'use strict';
+const Q=new URLSearchParams(location.search);
+
+// =====================================================================
+// Seeded randomness — identical to plant.html: FNV-1a, then mulberry32.
+// =====================================================================
+function hash(s){let h=2166136261>>>0;for(const c of s){h^=c.codePointAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let a=seed;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ---------- math
+const TAU=Math.PI*2, clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)), lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>1-Math.pow(1-clamp(t),3), smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
+const back=t=>{if(t<=0)return 0;if(t>=1)return 1;const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)};
+const wrap=a=>{a=(a+Math.PI)%TAU;if(a<0)a+=TAU;return a-Math.PI};
+const rot=(x,y,a)=>{const c=Math.cos(a),s=Math.sin(a);return[x*c-y*s,x*s+y*c]};
+// One light for the whole scene: from the upper left.
+const LX=-.5, LY=-.866, LA=Math.atan2(LY,LX), SA=LA+Math.PI;
+
+// ---------- colour (channels 0..255; HSL with s,l in 0..1)
+const hex=h=>{const n=parseInt(h.slice(1),16);return[n>>16&255,n>>8&255,n&255]};
+const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+function toHSL(c){const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}return[h,s,l]}
+function fromHSL(h,s,l){h=((h%360)+360)%360;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  return[f(0)*255,f(8)*255,f(4)*255]}
+const css=(c,a=1)=>`rgba(${Math.round(clamp(c[0],0,255))},${Math.round(clamp(c[1],0,255))},${Math.round(clamp(c[2],0,255))},${a})`;
+// Night: a multiply toward moonlight, so everything goes dimmer and cooler together.
+const MOON=[.62,.67,.92];
+const night=(c,n)=>[c[0]*lerp(1,MOON[0],n),c[1]*lerp(1,MOON[1],n),c[2]*lerp(1,MOON[2],n)];
+function hsl(c,ds,dl,sMul=1){const[h,s,l]=toHSL(c);return fromHSL(h,clamp(s*sMul+ds),clamp(l+dl))}
+
+// =====================================================================
+// Species. Sizes are in points at full growth, before the fit.
+// leaf = [shadow, body, light, rim]   wood = [base, shadow, light]
+// =====================================================================
+const DRY=['#655C36','#A39249','#D6C37A','#F3E7B0'].map(hex);   // straw: where a thirsty canopy heads
+const DRYWOOD=hex('#8C7D6E');
+const SP={
+ magnolia:{name:'Magnolia',
+  trunkH:58,trunkW:[29,16],trunkCurve:.1,lean:.14,twin:0,bark:'lines',knots:1,
+  canopy:{cy:145,cw:80,ch:70},arc:[150,390],
+  ring:{n:[6,7],r:[28,34],rad:.74},back:{n:[2,2],r:[28,32],rad:.35},front:{n:[2,3],r:[30,36],y:[.05,.4],spread:.7},
+  limbs:3,reach:.5,lobes:[3,4],squash:.92,
+  leaf:['#2A5956','#4A8D60','#8FC478','#E6F6BF'],wood:['#7D6159','#573F3B','#AB8C7F'],
+  bloom:{type:'cup',size:[9,11.5],clusters:.75,per:[1,2],pw:.5,cols:['#D2689A','#FBD3E2','#C04F84'],glow:'#FFB0CF',bud:['#7F8C78','#B9C1AA']},
+  canopyBloom:null,fruit:null,edge:{n:[1,2],len:[6.5,8],w:1,spread:1.7,cols:null},gloss:.45},
+ cherry:{name:'Cherry blossom',
+  trunkH:68,trunkW:[27,14],trunkCurve:.12,lean:.16,twin:0,bark:'bands',knots:0,
+  canopy:{cy:138,cw:112,ch:50},arc:[168,372],
+  ring:{n:[7,8],r:[24,30],rad:.8},back:{n:[2,3],r:[24,28],rad:.4},front:{n:[3,4],r:[25,30],y:[0,.3],spread:1},
+  limbs:4,reach:.55,lobes:[3,4],squash:.84,
+  leaf:['#2E5D51','#5A9B63','#A3D185','#EAF7C6'],wood:['#6C4846','#4A302F','#956B65'],
+  bloom:{type:'star5',size:[3.8,4.8],clusters:1.4,per:[2,4],pw:.62,cols:['#F2A6C4','#FFF0F5','#E07592'],glow:'#FFC4DA',bud:['#D9739B','#F2A9C4']},
+  canopyBloom:{k:.9,cols:['#C98AAE','#F3BCD2','#FFE4EE','#FFF7FA']},fruit:null,edge:{n:[1,2],len:[5.5,7],w:1,spread:1.7,cols:null},gloss:.25},
+ pomegranate:{name:'Pomegranate',
+  trunkH:50,trunkW:[25,15],trunkCurve:.16,lean:.12,twin:0,bark:'lines',knots:1,
+  canopy:{cy:136,cw:92,ch:62},arc:[155,385],
+  ring:{n:[6,7],r:[27,33],rad:.76},back:{n:[2,2],r:[26,30],rad:.38},front:{n:[2,3],r:[28,34],y:[.05,.4],spread:.8},
+  limbs:3,reach:.5,lobes:[3,4],squash:.9,
+  leaf:['#143A33','#255B42','#3F7E4B','#C6E79A'],wood:['#6F574C','#4C3A33','#977D70'],
+  bloom:{type:'trumpet',size:[7,8.5],clusters:.55,per:[1,2],pw:.42,cols:['#B92D1E','#F35B33','#FFD25A'],glow:'#FF8E62',bud:['#B83424','#E8603E']},
+  canopyBloom:null,fruit:{type:'pom',size:[6.5,8],per:.5,stem:2.5,cluster:[1,1],cols:['#C42A3D','#861A2D','#F2696D','#FFE0E0','#7A1424']},
+  edge:{n:[1,2],len:[6,7.5],w:.85,spread:1.7,cols:null},gloss:.9},
+ azalea:{name:'Azalea',
+  trunkH:24,trunkW:[21,14],trunkCurve:.08,lean:.08,twin:0,bark:'lines',knots:0,
+  canopy:{cy:104,cw:110,ch:62},arc:[160,380],
+  ring:{n:[7,8],r:[28,34],rad:.74},back:{n:[3,3],r:[28,32],rad:.4},front:{n:[3,4],r:[30,35],y:[.05,.45],spread:1},
+  limbs:4,reach:.45,lobes:[3,4],squash:.88,
+  leaf:['#22503F','#3D7A4E','#76AF67','#DDF1B2'],wood:['#6A4F45','#4A3730','#937466'],
+  bloom:{type:'star5',size:[5.5,7],clusters:1.5,per:[2,4],pw:.72,cols:['#B32B7F','#F25AAE','#FFE3F2'],glow:'#FF7BC2',bud:['#A62E78','#E0629F']},
+  canopyBloom:null,fruit:null,edge:{n:[1,1],len:[5,6],w:.9,spread:1.6,cols:null},gloss:.35},
+ lemon:{name:'Lemon',
+  trunkH:68,trunkW:[25,15],trunkCurve:.07,lean:.08,twin:0,bark:'lines',knots:0,
+  canopy:{cy:146,cw:84,ch:70},arc:[130,410],
+  ring:{n:[7,8],r:[27,32],rad:.74},back:{n:[2,3],r:[27,31],rad:.36},front:{n:[3,3],r:[29,34],y:[-.05,.35],spread:.7},
+  limbs:3,reach:.5,lobes:[3,4],squash:.95,
+  leaf:['#2A6844','#4E9F4D','#A5D86A','#F1FAC3'],wood:['#7C6A57','#594B3E','#A6927B'],
+  bloom:{type:'star5',size:[3.6,4.4],clusters:.6,per:[2,3],pw:.42,cols:['#E8DDBF','#FFFCF1','#F1C84A'],glow:'#FFF4C2',bud:['#C7A3BE','#EBD3E3']},
+  canopyBloom:null,fruit:{type:'lemon',size:[7,8.5],per:.5,stem:2.5,cluster:[1,1],cols:['#F6CF35','#D79F1E','#FFF08C','#FFFFFF','#B98F1A']},
+  edge:{n:[1,2],len:[6,7.5],w:.85,spread:1.7,cols:null},gloss:.65},
+ olive:{name:'Olive',
+  trunkH:64,trunkW:[33,16],trunkCurve:.2,lean:.18,twin:1,bark:'gnarl',knots:3,
+  canopy:{cy:140,cw:118,ch:48},arc:[168,372],
+  ring:{n:[7,8],r:[23,28],rad:.82},back:{n:[2,2],r:[22,26],rad:.42},front:{n:[2,3],r:[24,29],y:[0,.3],spread:.9},
+  limbs:4,reach:.58,lobes:[3,4],squash:.74,
+  leaf:['#485F51','#7B927D','#B9C8B2','#EFF4E7'],wood:['#827569','#5B5149','#AB9F92'],
+  bloom:{type:'star4',size:[2.6,3.2],clusters:.5,per:[2,3],pw:.6,cols:['#DCD5B2','#F6F2DC','#E1CF74'],glow:'#FFF9DA',bud:['#B9B79A','#DCDBC4']},
+  canopyBloom:null,fruit:{type:'olive',size:[3,3.6],per:.9,stem:4,cluster:[2,3],cols:['#3F2C46','#24182B','#6F5578','#EADFEE','#3F2C46']},
+  edge:{n:[2,3],len:[7.5,9],w:.42,spread:1.8,cols:['#6E8672','#D0DACB']},gloss:.2,marks:'light'},
+};
+const ORDER=['magnolia','cherry','pomegranate','azalea','lemon','olive'];
+
+// =====================================================================
+// The model: everything the seed decides, built once.
+// =====================================================================
+const GK=[[1,.7,0],[.5,1.9,1],[.8,.23,2]];            // the gust: three slow sines (amplitude, rad/s, phase)
+// The steady-state answer of a damped spring (natural rate w0, damping z) to each sine of the gust:
+// the same sines, scaled and delayed. Stateless, so any frame can be drawn from `t` alone.
+function springOf(w0,z){return GK.map(([a,w,p])=>{const r=w/w0,A=1/Math.sqrt((1-r*r)**2+(2*z*r)**2);return[a*A,w,p-Math.atan2(2*z*r,1-r*r)]})}
+function sig(sp,t){let s=0;for(const k of sp)s+=k[0]*Math.sin(k[1]*t+k[2]);return .45+.55*s/2.3}
+
+function build(seedText,kind){
+  const S=SP[kind], r=rng(hash(seedText));
+  const U=(a,b)=>a+(b-a)*r(), I=(a,b)=>a+Math.floor(r()*(b-a+1));
+  const M={kind,S};
+  // 1. trunk
+  const lean=(r()-.5)*S.lean, hj=U(.94,1.06), wj=U(.92,1.08), bend=(r()-.5)*2*S.trunkCurve;
+  const th=S.trunkH*hj;
+  M.T={x:Math.sin(lean)*th,y:-Math.cos(lean)*th};
+  M.tc={x:M.T.x/2+Math.cos(lean)*bend*th,y:M.T.y/2+Math.sin(lean)*bend*th};
+  M.leanSign=lean>=0?1:-1;
+  M.trunkSp=springOf(1.3,.6);
+  // 2. canopy envelope
+  const C={x:M.T.x*1.3+U(-6,6),y:-S.canopy.cy*hj}, cw=S.canopy.cw*wj, ch=S.canopy.ch*hj;
+  M.C=C;
+  // 3. clumps: a ring that makes the silhouette, a few behind it, a few in front of it
+  const clumps=[];
+  function addClump(tier,x,y,R,keep){
+    const nb=I(S.lobes[0],S.lobes[1]), lobes=[{x:0,y:.14,r:.74,core:1}];
+    for(let j=0;j<nb;j++){const u=(j+.5+(r()-.5)*.4)/nb, a=lerp(3.40,6.02,u), d=U(.4,.5), lr=U(.46,.58);
+      lobes.push({x:Math.cos(a)*d,y:Math.sin(a)*d,r:lr,core:0})}
+    for(const lb of lobes){lb.marks=[];const nm=lb.core?3:2;
+      for(let q=0;q<nm;q++){const a=U(.25,2.9), d=U(.38,.72)*lb.r;lb.marks.push({x:lb.x+Math.cos(a)*d,y:lb.y+Math.sin(a)*d,a:a+Math.PI/2+U(-.5,.5),s:U(.13,.19)})}}
+    let gl=1;for(let j=2;j<lobes.length;j++)if(lobes[j].x*LX+lobes[j].y*LY>lobes[gl].x*LX+lobes[gl].y*LY)gl=j;
+    lobes[gl].gloss=1;
+    const rot0=(r()-.5)*.4, sq=S.squash*U(.94,1.06), w0=U(1.7,2.6), ph=r()*TAU;
+    clumps.push({tier,x,y,R,keep,lobes,rot:rot0,sq,w0,ph,sp:springOf(w0,.3)});
+  }
+  const a0=S.arc[0]*Math.PI/180, a1=S.arc[1]*Math.PI/180;
+  const nR=I(S.ring.n[0],S.ring.n[1]);
+  for(let k=0;k<nR;k++){const u=(k+.5+(r()-.5)*.5)/nR, a=lerp(a0,a1,u), rad=S.ring.rad*U(.92,1.06), R=U(S.ring.r[0],S.ring.r[1]), keep=.25+r()*.75;
+    addClump(1,C.x+Math.cos(a)*cw*rad,C.y+Math.sin(a)*ch*rad,R,keep)}
+  const nB=I(S.back.n[0],S.back.n[1]);
+  for(let k=0;k<nB;k++){const u=(k+.5+(r()-.5)*.6)/nB, a=lerp(a0+.25,a1-.25,u), rad=S.back.rad*U(.8,1.2), R=U(S.back.r[0],S.back.r[1]), keep=r()*.8;
+    addClump(0,C.x+Math.cos(a)*cw*rad,C.y+Math.sin(a)*ch*rad-ch*.12,R,keep)}
+  const nF=I(S.front.n[0],S.front.n[1]);
+  for(let k=0;k<nF;k++){const u=(k+.5+(r()-.5)*.5)/nF, y=C.y+ch*U(S.front.y[0],S.front.y[1]), R=U(S.front.r[0],S.front.r[1]), keep=1+r();
+    addClump(2,C.x+(u-.5)*cw*S.front.spread,y,R,keep)}
+  // the crown: the highest ring clump, the sapling's first, never lost to sleep
+  let crown=0;for(let i=0;i<clumps.length;i++)if(clumps[i].tier===1&&clumps[i].y<clumps[crown].y)crown=i;
+  clumps[crown].keep=2; M.crown=crown;
+  // 4. limbs: clumps grouped by their direction from the trunk top; one limb per group, one twig per clump
+  const idx=clumps.map((c,i)=>i).sort((p,q)=>Math.atan2(clumps[p].y-M.T.y,clumps[p].x-M.T.x)-Math.atan2(clumps[q].y-M.T.y,clumps[q].x-M.T.x));
+  const limbs=[];
+  for(let gI=0;gI<S.limbs;gI++){
+    const mem=idx.slice(Math.floor(gI*idx.length/S.limbs),Math.floor((gI+1)*idx.length/S.limbs));
+    let gx=0,gy=0;for(const i of mem){gx+=clumps[i].x;gy+=clumps[i].y}gx/=mem.length;gy/=mem.length;
+    const x=M.T.x+(gx-M.T.x)*S.reach, y=M.T.y+(gy-M.T.y)*S.reach, len=Math.hypot(x-M.T.x,y-M.T.y);
+    const lb=(r()-.5)*.35, mx=(M.T.x+x)/2, my=(M.T.y+y)/2, nx=-(y-M.T.y)/len, ny=(x-M.T.x)/len;
+    limbs.push({x,y,cx:mx+nx*lb*len,cy:my+ny*lb*len,mem,side:clamp((x-M.T.x)/len*1.6,-1,1),sp:springOf(U(1.5,2.1),.45)});
+    for(const i of mem){const c=clumps[i];c.limb=gI;const tl=Math.hypot(c.x-x,c.y-y)||1, tb=(r()-.5)*.25;
+      c.tcx=(x+c.x)/2-(c.y-y)/tl*tb*tl; c.tcy=(y+c.y)/2+(c.x-x)/tl*tb*tl; c.side=clamp((c.x-x)/tl*1.6,-1,1)}
+  }
+  M.limbs=limbs;
+  // 5. when each part arrives: the crown first, then outwards from it
+  const order=clumps.map((c,i)=>i).sort((p,q)=>Math.hypot(clumps[p].x-clumps[crown].x,clumps[p].y-clumps[crown].y)-Math.hypot(clumps[q].x-clumps[crown].x,clumps[q].y-clumps[crown].y));
+  order.forEach((i,rank)=>{clumps[i].b=.24+.58*rank/Math.max(1,order.length-1)});
+  for(const L of limbs){L.birth=Math.max(.17,Math.min(...L.mem.map(i=>clumps[i].b))-.13);L.dur=.12}
+  // 6. leaves at the canopy's edge only, pointing out
+  const leaves=[];
+  clumps.forEach((c,i)=>{if(c.tier!==1)return;const n=I(S.edge.n[0],S.edge.n[1]), out=Math.atan2(c.y-C.y,c.x-C.x);
+    for(let j=0;j<n;j++){let a=out+(r()-.5)*S.edge.spread;if(Math.sin(a)>.35)a=Math.atan2(.35,Math.cos(a));
+      leaves.push({c:i,a:a-c.rot,d:U(.82,.92),len:U(S.edge.len[0],S.edge.len[1]),w:S.edge.w*U(.85,1.15),ph:r()*TAU,f:U(5,8),keep:r(),birth:c.b+.03+r()*.04})}});
+  M.leaves=leaves;
+  // 7. blossom clusters and fruit, in clump-local units
+  const clusters=[], fruit=[];
+  clumps.forEach((c,i)=>{
+    const n=Math.floor(S.bloom.clusters*(c.R/27)*(c.tier===0?.6:1)*U(.6,1.4)+r());
+    for(let j=0;j<n;j++){const a=U(-2.95,.25), rho=U(.3,.82), nf=I(S.bloom.per[0],S.bloom.per[1]), fl=[];
+      for(let f=0;f<nf;f++){const fa=r()*TAU, fd=nf>1?U(.6,1):0, size=U(S.bloom.size[0],S.bloom.size[1]), rt=r()*TAU, birth=.86+r()*.08;fl.push({fa,fd,size,rt,birth})}
+      clusters.push({c:i,x:Math.cos(a)*rho,y:Math.sin(a)*rho,fl,glow:false})}
+    if(S.fruit&&c.tier>0){const nfr=Math.floor(S.fruit.per*(c.R/27)+r());
+      for(let j=0;j<nfr;j++){const a=U(.35,2.8), rho=U(.62,.9), size=U(S.fruit.size[0],S.fruit.size[1]), stem=S.fruit.stem*U(.8,1.2), ph=r()*TAU, birth=.9+r()*.06, k=I(S.fruit.cluster[0],S.fruit.cluster[1]);
+        fruit.push({c:i,x:Math.cos(a)*rho,y:Math.sin(a)*rho,size,stem,ph,birth,k})}}
+  });
+  // soft glows are one gradient fill each, so only a few clusters get one
+  const share=Math.min(1,12/Math.max(1,clusters.length));for(const cl of clusters)cl.glow=r()<share;
+  M.clusters=clusters; M.fruit=fruit;
+  // 8. where fallen leaves come to rest on the soil, around the trunk
+  M.ground=Array.from({length:14},()=>({x:U(-38,38),y:U(-3.5,2.5),rot:r()*TAU,s:U(4.4,5.6),tone:r()}));
+  // 9. bark marks along the trunk, in (t along, u across) trunk space
+  M.bark=[];const nb=S.bark==='bands'?6:S.bark==='gnarl'?7:4;
+  for(let i=0;i<nb;i++){const t0=U(.08,.85);
+    if(S.bark==='bands'){const u0=U(-.3,.05);M.bark.push({t0,t1:t0+U(-.008,.008),u0,u1:u0+U(.14,.24)})}
+    else if(S.bark==='gnarl'){const u0=U(-.4,.3);M.bark.push({t0,t1:t0+U(.12,.22),u0,u1:u0+U(.1,.3)})}
+    else{const u0=U(.05,.32);M.bark.push({t0,t1:t0+U(.1,.2),u0,u1:u0+U(-.06,.06)})}}
+  M.twinkles=Array.from({length:6},(_,i)=>({a:-Math.PI*(.08+.84*(i+U(.15,.85))/6),d:U(.92,1.12),s:U(2.2,3.4),w:U(1.6,2.8),ph:r()*TAU}));
+  M.knots=Array.from({length:S.knots},(_,i)=>({t:.28+.5*(i+U(.1,.9))/Math.max(1,S.knots),u:(i%2?1:-1)*U(.05,.2),s:U(.09,.14)}));
+  M.clumps=clumps;
+  // 10. depth layers. The back clumps are layer 0. The rest go back to front (ring by height, then the
+  // front clumps), each one layer above every earlier clump it overlaps, so no two clumps that overlap
+  // share a layer and painter's order between them is exact. Capped, so the cost stays fixed.
+  const MAXL=5;
+  const rest=clumps.map((c,i)=>i).filter(i=>clumps[i].tier>0).sort((p,q)=>(clumps[p].tier*1000+clumps[p].y)-(clumps[q].tier*1000+clumps[q].y));
+  clumps.forEach(c=>{if(c.tier===0)c.layer=0});
+  rest.forEach((i,n)=>{const c=clumps[i];let L=1;
+    for(let q=0;q<n;q++){const o=clumps[rest[q]];if(Math.hypot(c.x-o.x,c.y-o.y)<(c.R+o.R)*.8)L=Math.max(L,o.layer+1)}
+    c.layer=Math.min(MAXL,L)});
+  M.layers=1+Math.max(...clumps.map(c=>c.layer));
+  // 11. the rim light: only where a lobe's lit edge is the canopy's outer silhouette
+  const RL=clumps.map(c=>c.lobes.map(lb=>{const[x,y]=rot(lb.x*c.R,lb.y*c.R*c.sq,c.rot);return[c.x+x,c.y+y,lb.r*c.R]}));
+  const inside=(x,y,L,k=.985)=>{for(const q of L)if((x-q[0])**2+(y-q[1])**2<(q[2]*k)**2)return true;return false};
+  const run=(from,to,n,ok)=>{let best=null,cur=null;for(let s=0;s<=n;s++){const a=lerp(from,to,s/n);
+      if(ok(a)){if(!cur)cur=[a,a];else cur[1]=a;if(!best||cur[1]-cur[0]>best[1]-best[0])best=[cur[0],cur[1]]}else cur=null}
+    return best&&best[1]-best[0]>.45?best:null};
+  clumps.forEach((c,i)=>{
+    const all=[];clumps.forEach((o,q)=>{if(q!==i)all.push(...RL[q])});
+    c.lobes.forEach((lb,j)=>{const[x,y,rr]=RL[i][j], cover=RL[i].filter((_,q)=>q!==j).concat(all);
+      const rim=run(LA-1.15,LA+1.15,18,a=>!inside(x+Math.cos(a)*rr,y+Math.sin(a)*rr,cover));
+      lb.rim=rim&&[rim[0]-c.rot,rim[1]-c.rot]})});
+  // 12. blossoms, fruit and edge leaves are drawn after every layer, so keep only those no later layer hides
+  const above=c=>{const L=[];clumps.forEach((o,q)=>{if(o.layer>c.layer)L.push(...RL[q])});return L};
+  const restPt=(c,lx,ly)=>{const[x,y]=rot(lx*c.R,ly*c.R*c.sq,c.rot);return[c.x+x,c.y+y]};
+  for(const cl of clusters){const c=clumps[cl.c],[x,y]=restPt(c,cl.x,cl.y),cov=above(c);
+    cl.hidden=inside(x,y,cov,1.08)||inside(x-5,y,cov,1.02)||inside(x+5,y,cov,1.02)}
+  for(const f of fruit){const c=clumps[f.c],[x,y]=restPt(c,f.x,f.y),cov=above(c);f.hidden=inside(x,y+f.stem+f.size,cov,1.05)}
+  for(const lf of leaves){const c=clumps[lf.c],a=lf.a+c.rot,cov=above(c),bx=c.x+Math.cos(a)*c.R*lf.d,by=c.y+Math.sin(a)*c.R*lf.d*c.sq;
+    lf.hidden=inside(bx+Math.cos(a)*lf.len*.8,by+Math.sin(a)*lf.len*.8,cov,1)}
+  // 13. measure the grown tree once and fit it: at most 232 tall and 196 either side
+  let top=0,left=0,right=0,bot=-1e9;
+  RL.forEach((L,i)=>L.forEach(q=>{top=Math.min(top,q[1]-q[2]);left=Math.min(left,q[0]-q[2]);right=Math.max(right,q[0]+q[2]);if(clumps[i].tier===2)bot=Math.max(bot,q[1]+q[2])}));
+  top-=S.edge.len[1]*.9;left-=S.edge.len[1]*.9;right+=S.edge.len[1]*.9;
+  M.fit=Math.min(1,232/-top,196/Math.max(-left,right));
+  M.box={top,bot,cx:C.x,cy:C.y,cr:Math.max(cw,ch)};
+  return M;
+}
+
+// =====================================================================
+// Path batches: every shape of one colour goes in one path, filled once.
+// Every filled subpath is traced clockwise on screen (increasing canvas
+// angle), so overlapping shapes in one batch union under non-zero fill.
+// =====================================================================
+let OPS=0, SEGS=0;
+const newP=()=>({p:new Path2D(),n:0});
+function fillP(ctx,P,style){if(!P.n)return;ctx.fillStyle=style;ctx.fill(P.p);OPS++}
+function strokeP(ctx,P,style,w){if(!P.n)return;ctx.strokeStyle=style;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(P.p);OPS++}
+function circ(P,x,y,r){if(r<=.05)return;P.p.moveTo(x+r,y);P.p.arc(x,y,r,0,TAU);P.n++;SEGS+=4}
+// An ellipse as four cubics, so the Swift port needs nothing but addCurve.
+function ell(P,x,y,rx,ry,a){if(rx<=.05||ry<=.05)return;const k=.5523,c=Math.cos(a),s=Math.sin(a);
+  const X=(u,v)=>x+c*u-s*v, Y=(u,v)=>y+s*u+c*v;
+  P.p.moveTo(X(rx,0),Y(rx,0));
+  P.p.bezierCurveTo(X(rx,k*ry),Y(rx,k*ry),X(k*rx,ry),Y(k*rx,ry),X(0,ry),Y(0,ry));
+  P.p.bezierCurveTo(X(-k*rx,ry),Y(-k*rx,ry),X(-rx,k*ry),Y(-rx,k*ry),X(-rx,0),Y(-rx,0));
+  P.p.bezierCurveTo(X(-rx,-k*ry),Y(-rx,-k*ry),X(-k*rx,-ry),Y(-k*rx,-ry),X(0,-ry),Y(0,-ry));
+  P.p.bezierCurveTo(X(k*rx,-ry),Y(k*rx,-ry),X(rx,-k*ry),Y(rx,-k*ry),X(rx,0),Y(rx,0));
+  P.p.closePath();P.n++;SEGS+=4}
+// A shadow crescent on a lobe's edge between angles a0..a1, t thick in the middle.
+function crescent(P,x,y,r,a0,a1,t){if(r<=.3)return;
+  const am=(a0+a1)/2, p0x=x+Math.cos(a0)*r, p0y=y+Math.sin(a0)*r, p1x=x+Math.cos(a1)*r, p1y=y+Math.sin(a1)*r;
+  const mx=x+Math.cos(am)*(r-t), my=y+Math.sin(am)*(r-t);
+  P.p.moveTo(p0x,p0y);P.p.arc(x,y,r,a0,a1,false);P.p.quadraticCurveTo(2*mx-(p0x+p1x)/2,2*my-(p0y+p1y)/2,p0x,p0y);P.p.closePath();P.n++;SEGS+=4}
+function arcS(P,x,y,r,a0,a1){if(r<=.3)return;P.p.moveTo(x+Math.cos(a0)*r,y+Math.sin(a0)*r);P.p.arc(x,y,r,a0,a1,false);P.n++;SEGS+=2}
+// A petal from its base along angle a: len long, wid its half-width scale.
+function petal(P,x,y,a,len,wid){if(len<=.2)return;const c=Math.cos(a),s=Math.sin(a);
+  const X=(u,v)=>x+c*u*len-s*v*wid, Y=(u,v)=>y+s*u*len+c*v*wid;
+  P.p.moveTo(x,y);
+  P.p.bezierCurveTo(X(.05,-.9),Y(.05,-.9),X(.85,-1.05),Y(.85,-1.05),X(1,0),Y(1,0));
+  P.p.bezierCurveTo(X(.85,1.05),Y(.85,1.05),X(.05,.9),Y(.05,.9),x,y);
+  P.p.closePath();P.n++;SEGS+=2}
+// Half a leaf (side +1 or -1 of its midrib), always traced clockwise.
+function leafHalf(P,x,y,a,s,w,side){if(s<=.2)return;const c=Math.cos(a),sn=Math.sin(a);
+  const X=(u,v)=>x+c*u*s-sn*v*s*side*w, Y=(u,v)=>y+sn*u*s+c*v*s*side*w;
+  if(side<0){P.p.moveTo(x,y);P.p.bezierCurveTo(X(.3,.55),Y(.3,.55),X(1.1,.5),Y(1.1,.5),X(1.65,0),Y(1.65,0));P.p.lineTo(x,y)}
+  else{P.p.moveTo(x,y);P.p.lineTo(X(1.65,0),Y(1.65,0));P.p.bezierCurveTo(X(1.1,.5),Y(1.1,.5),X(.3,.55),Y(.3,.55),x,y)}
+  P.p.closePath();P.n++;SEGS+=2}
+// A tapered limb: a quadratic centre line with round ends, clockwise.
+function limb(P,x,y,cx,cy,x1,y1,w0,w1){
+  if(w0<=.1||Math.hypot(x1-x,y1-y)<.2)return;
+  const a0=Math.atan2(cy-y,cx-x), a1=Math.atan2(y1-cy,x1-cx), am=Math.atan2(y1-y,x1-x), wm=(w0+w1)/4;
+  P.p.moveTo(x+Math.sin(a0)*w0/2,y-Math.cos(a0)*w0/2);
+  P.p.quadraticCurveTo(cx+Math.sin(am)*wm,cy-Math.cos(am)*wm,x1+Math.sin(a1)*w1/2,y1-Math.cos(a1)*w1/2);
+  P.p.arc(x1,y1,w1/2,a1-Math.PI/2,a1+Math.PI/2,false);
+  P.p.quadraticCurveTo(cx-Math.sin(am)*wm,cy+Math.cos(am)*wm,x-Math.sin(a0)*w0/2,y+Math.cos(a0)*w0/2);
+  P.p.arc(x,y,w0/2,a0+Math.PI/2,a0+Math.PI*1.5,false);
+  P.p.closePath();P.n++;SEGS+=4}
+// The same limb, moved across itself toward (k>0) or away from (k<0) the light, and thinned.
+function limbOff(P,x,y,cx,cy,x1,y1,w0,w1,k,f){
+  const am=Math.atan2(y1-y,x1-x);let nx=Math.sin(am),ny=-Math.cos(am);if(nx*LX+ny*LY<0){nx=-nx;ny=-ny}
+  const wm=(w0+w1)/2;
+  limb(P,x+nx*k*w0,y+ny*k*w0,cx+nx*k*wm,cy+ny*k*wm,x1+nx*k*w1,y1+ny*k*w1,w0*f,w1*f)}
+const qpt=(x,y,cx,cy,x1,y1,t)=>{const u=1-t;return[u*u*x+2*u*t*cx+t*t*x1,u*u*y+2*u*t*cy+t*t*y1]};
+const qtan=(x,y,cx,cy,x1,y1,t)=>Math.atan2(2*(1-t)*(cy-y)+2*t*(y1-cy),2*(1-t)*(cx-x)+2*t*(x1-cx));
+
+// =====================================================================
+// One frame.
+// o = {g growth, m mood, t seconds, wind, day}
+// Draws in the tree's own space: the base of the trunk at the origin.
+// =====================================================================
+function drawTree(ctx,M,o){
+  const S=M.S, g=o.g, m=o.m, t=o.t, wind=o.wind, nt=1-o.day;
+  // ---- mood, as four numbers
+  const vig=smooth((m-.62)/.38), dry=smooth((.66-m)/.56), sleep=smooth((.32-m)/.27);
+  const slump=dry+.6*sleep, open=smooth((m-.22)/.4);
+  // ---- growth
+  const sz=lerp(.36,1,smooth((g-.1)/.74)), wf=lerp(.22,1,smooth((g-.1)/.8)), young=1.4-.4*g;
+  const tg=ease((g-.085)/.16)*lerp(.42,1,smooth((g-.12)/.7)), bloomIn=smooth((g-.84)/.1), szR=Math.pow(sz,.6);
+  const spr=sz*lerp(.45,1,smooth((g-.25)/.45));       // how far limbs and twigs reach out from the trunk top
+  // ---- colour
+  const leafCol=(i,tier,green)=>{
+    let c=hex(S.leaf[i]);
+    if(S.canopyBloom&&!green)c=mixc(c,hex(S.canopyBloom.cols[i]),S.canopyBloom.k*bloomIn*open);
+    c=mixc(c,DRY[i],dry*.9);
+    let[h,s,l]=toHSL(c);
+    s=clamp(s*(1+.34*vig)*(1-.1*(1-vig)*(1-dry))*(1-.5*sleep)); l=clamp(l+(i>=2?.035:.012)*vig); if(i>=2)h-=7*vig; l=lerp(l,.8,.3*sleep);
+    if(tier===0){l*=.86;h+=wrap((200-h)*Math.PI/180)*180/Math.PI*.08}else if(tier===2)l=Math.min(1,l*1.035);
+    return night(fromHSL(h,s,l),nt)};
+  const woodCol=i=>{let c=mixc(hex(S.wood[i]),DRYWOOD,.25*dry);c=hsl(c,0,.08*sleep,1-.3*sleep);
+    if(g<.36)c=mixc(c,hex(['#4E8F4A','#3A6E3E','#8CC56E'][i]),1-smooth((g-.18)/.16));   // a sprout's stem is green
+    return night(c,nt)};
+  const bloomCol=(h,k=1)=>night(hsl(hex(h),0,0,(1-.35*dry)*(1+.1*vig)),nt*k);
+  const rimCol=i=>mixc(leafCol(3,i),[205,214,255],nt*.75);
+  const gust=sig(GK,t);
+
+  // ---- pose: trunk, limbs, clumps
+  const thT=wind*.03*sig(M.trunkSp,t)*young+M.leanSign*.07*slump;
+  const[Tx,Ty]=rot(M.T.x*tg,M.T.y*tg,thT), [tcx,tcy]=rot(M.tc.x*tg,M.tc.y*tg,thT*.5);
+  const LP=M.limbs.map(L=>{const lg=ease((g-L.birth)/L.dur), ang=thT+wind*.05*sig(L.sp,t)*young+L.side*(.2*slump-.1*vig);
+    const[vx,vy]=rot((L.x-M.T.x)*spr*lg,(L.y-M.T.y)*spr*lg,ang), [qx,qy]=rot((L.cx-M.T.x)*spr*lg,(L.cy-M.T.y)*spr*lg,ang);
+    return{X:Tx+vx,Y:Ty+vy,CX:Tx+qx,CY:Ty+qy,ang,lg}});
+  const ks=1+.1*vig-.13*dry-.09*sleep, sqk=1+.05*vig-.07*dry;
+  const CP=M.clumps.map(c=>{const L=M.limbs[c.limb], lp=LP[c.limb], tw=ease((g-(c.b-.07))/.08);
+    const ang=lp.ang+c.side*.12*slump;
+    const[ux,uy]=rot((c.x-L.x)*spr*tw,(c.y-L.y)*spr*tw,ang), [qx,qy]=rot((c.tcx-L.x)*spr*tw,(c.tcy-L.y)*spr*tw,ang);
+    const pop=back((g-c.b)/.07), v0=smooth((c.keep-sleep*.55)/.08+1), vis=v0<.45?0:v0;   // a clump either reads or is gone
+    const sx=wind*3*sig(c.sp,t)*(c.R/27)*sz*young, bob=.55*Math.sin(c.w0*t+c.ph)*(.4+.6*wind)*sz;
+    const sag=(5*slump*(c.R/27)-4*vig)*sz;
+    return{AX:lp.X+ux,AY:lp.Y+uy,QX:lp.X+qx,QY:lp.Y+qy,tw,
+      X:lp.X+ux+sx+c.side*2*slump*sz,Y:lp.Y+uy+bob+sag,Rw:c.R*szR*pop*vis*ks,rho:c.rot+sx*.012,sq:c.sq*sqk,vis}});
+  const lobeW=(c,p,lb)=>{const[x,y]=rot(lb.x*p.Rw,lb.y*p.Rw*p.sq,p.rho);return[p.X+x,p.Y+y,lb.r*p.Rw]};
+  const ptW=(p,lx,ly)=>{const[x,y]=rot(lx*p.Rw,ly*p.Rw*p.sq,p.rho);return[p.X+x,p.Y+y]};
+  const bT=(y)=>Ty+(y-M.T.y)*spr;
+  const box={top:bT(M.box.top),bot:bT(M.box.bot),cx:Tx+(M.box.cx-M.T.x)*spr,cy:bT(M.box.cy),cr:M.box.cr*spr};
+
+  // ---- 1. a soft halo behind the crown, so it reads on the night sky
+  if(g>.2){const k=smooth((g-.2)/.3), hc=mixc(nt>.5?[200,184,255]:[255,250,235],hex(S.bloom.glow),bloomIn*open*.6);
+    const gr=ctx.createRadialGradient(box.cx,box.cy,0,box.cx,box.cy,box.cr*1.7);
+    gr.addColorStop(0,css(hc,(.1+.14*vig+.05*nt)*k*(1-.6*sleep)));gr.addColorStop(1,css(hc,0));
+    const P=newP();circ(P,box.cx,box.cy,box.cr*1.7);fillP(ctx,P,gr)}
+  // ---- 2. the seed, wobbling before it cracks
+  const ksd=1-smooth((g-.085)/.04);
+  if(ksd>0){ctx.save();ctx.translate(0,-3);ctx.rotate(Math.sin(t*9)*.14*smooth((g-.03)/.05));ctx.scale(ksd,ksd);
+    const A=newP(),B=newP();ell(A,0,0,8.5,5.4,-.3);ell(B,-2.6,-1.8,3,1.4,-.3);
+    fillP(ctx,A,css(night(hex('#8A5A3A'),nt)));fillP(ctx,B,css(night(hex('#D2A27A'),nt),.8));ctx.restore()}
+  if(g<.085)return;
+
+  // ---- 3. twigs to the back clumps, hidden behind them
+  const w0=S.trunkW[0]*wf, w1=S.trunkW[1]*wf, lw0=w1*.8, lw1=w1*.42, tw0=lw1*.85;
+  {const P=newP();M.clumps.forEach((c,i)=>{if(c.tier!==0)return;const p=CP[i],lp=LP[c.limb];if(p.tw<=0)return;
+      limb(P,lp.X,lp.Y,p.QX,p.QY,p.AX,p.AY,tw0*Math.sqrt(p.tw),Math.max(1,tw0*.4))});
+    fillP(ctx,P,css(woodCol(1)))}
+
+  // ---- the canopy, layer by layer: layer 0 (back), then the wood, then layers 1..n, back to front
+  const glowBase=hex(S.bloom.glow);
+  // One depth layer of clumps, as an offset stack: the silhouette in shadow, the body shifted toward
+  // the light (leaving a shadow crescent on the far side), light caps on the upper lobes, a rim, gloss.
+  function layer(k){
+    const shade=newP(),body=newP(),marks=newP(),lite=newP(),hot=newP(),rim=newP(),gloss=newP();
+    M.clumps.forEach((c,i)=>{if(c.layer!==k)return;const p=CP[i];if(p.Rw<.6)return;const dr=p.rho-c.rot;
+      for(const lb of c.lobes){const[x,y,r]=lobeW(c,p,lb);
+        circ(shade,x,y,r);
+        circ(body,x+LX*.13*r,y+LY*.13*r,.88*r);
+        if(p.Rw>6)for(const mk of lb.marks){const[mx,my]=ptW(p,mk.x,mk.y);ell(marks,mx,my,mk.s*p.Rw,mk.s*p.Rw*.36,mk.a+p.rho)}
+        if(!lb.core&&lb.y<.05){circ(lite,x+LX*.33*r,y+LY*.33*r,.56*r);if(lb.y<-.12)circ(hot,x+LX*.47*r,y+LY*.47*r,.3*r)}
+        if(lb.rim)arcS(rim,x,y,r*.955,lb.rim[0]+dr,lb.rim[1]+dr);
+        if(lb.gloss)ell(gloss,x+LX*.5*r,y+LY*.5*r,.2*r,.085*r,LA+Math.PI/2)}});
+    const tr=k===0?0:k>=M.layers-1?2:1, depth=k===0?0:(k-1)/Math.max(1,M.layers-2);
+    const dk=c=>k===0?c:mixc(c,[0,0,0],.06*(1-depth));
+    const cb=dk(leafCol(1,tr)), cs=dk(leafCol(0,tr)), cl=dk(leafCol(2,tr));
+    let gr=ctx.createLinearGradient(0,box.top,0,box.bot);
+    gr.addColorStop(0,css(mixc(cs,cb,.45)));gr.addColorStop(1,css(cs));
+    fillP(ctx,shade,gr);
+    gr=ctx.createLinearGradient(0,box.top,0,box.bot);
+    gr.addColorStop(0,css(mixc(cb,cl,.25)));gr.addColorStop(.55,css(cb));gr.addColorStop(1,css(mixc(cb,cs,.35)));
+    fillP(ctx,body,gr);
+    if(k===0&&g>.3){const ax=(Tx+box.cx)/2, ay=lerp(Ty,box.bot,.5), ar=box.cr*.95, sc=mixc(cs,[12,10,24],.4);
+      const ag=ctx.createRadialGradient(ax,ay,0,ax,ay,ar);ag.addColorStop(0,css(sc,.6));ag.addColorStop(.6,css(sc,.25));ag.addColorStop(1,css(sc,0));fillP(ctx,body,ag)}
+    fillP(ctx,marks,S.marks==='light'?css(mixc(cl,leafCol(3,tr),.4),.55):css(mixc(cb,cs,.6),.5));
+    const lx=box.cx+LX*box.cr*.8, ly=box.cy+LY*box.cr*.8;
+    gr=ctx.createRadialGradient(lx,ly,0,lx,ly,box.cr*1.9);
+    gr.addColorStop(0,css(mixc(cl,leafCol(3,tr),.22)));gr.addColorStop(1,css(mixc(cl,cb,.55)));
+    fillP(ctx,lite,gr);
+    fillP(ctx,hot,css(mixc(cl,leafCol(3,tr),.45),.18+.42*vig));
+    strokeP(ctx,rim,css(rimCol(tr),.7),1.4);
+    const ga=S.gloss*(.12+.8*vig)*(1-.85*dry)*(1-.5*nt);
+    if(ga>.02)fillP(ctx,gloss,`rgba(255,255,255,${ga})`);
+  }
+  function blossoms(){
+    const B=S.bloom, glows=[], dark=newP(), light=newP(), mid=newP(), budD=newP(), budL=newP();
+    const kOpen=.35+.65*open;
+    for(const cl of M.clusters){if(cl.hidden)continue;const p=CP[cl.c];if(p.Rw<1)continue;
+      const[cx,cy]=ptW(p,cl.x,cl.y);let rad=0;
+      for(const f of cl.fl){const kf=back((g-f.birth)/.05);if(kf<=0)continue;
+        const s0=f.size*sz*kf*Math.min(1,p.vis*1.2), sway=Math.sin(t*.8+f.rt)*.08*wind;
+        const x=cx+Math.cos(f.fa)*f.fd*f.size*sz, y=cy+Math.sin(f.fa)*f.fd*f.size*sz;rad=Math.max(rad,f.fd*f.size*sz+s0);
+        if(open>.12){const s=s0*kOpen, a0=f.rt+sway;
+          if(B.type==='cup'){const tl=Math.sin(f.rt)*.25+sway, up=-Math.PI/2+tl, [bx,by]=rot(0,s*.38,tl);
+            petal(dark,x+bx,y+by,up-.42,s*1.08,s*.46);petal(dark,x+bx,y+by,up+.42,s*1.08,s*.46);
+            petal(light,x+bx,y+by,up,s*1.16,s*.5);
+            ell(mid,x+bx*.55,y+by*.55,s*.3,s*.2,tl)}
+          else if(B.type==='trumpet'){const tl=Math.sin(f.rt)*.35+sway;
+            petal(dark,x,y+s*.55,-Math.PI/2+tl,s*1.05,s*.34);
+            for(const d of[-.8,0,.8]){const[bx,by]=rot(0,-s*.35,tl);petal(light,x+bx,y+by,-Math.PI/2+tl+d,s*.62,s*.44)}
+            const[mx,my]=rot(0,-s*.45,tl);circ(mid,x+mx,y+my,s*.14)}
+          else{const n=B.type==='star4'?4:5;
+            for(let q=0;q<n;q++)petal(dark,x,y,a0+q*TAU/n,s,s*B.pw);
+            for(let q=0;q<n;q++)petal(light,x+LX*.14*s,y+LY*.14*s,a0+q*TAU/n,s*.76,s*B.pw*.76);
+            circ(mid,x,y,s*.19)}}
+        if(open<.6){const s=s0*(1-open), a=-Math.PI/2+Math.sin(f.rt)*.4+(Math.PI-.4)*(dry*.5+sleep*.3)*(Math.cos(f.rt)>0?1:-1);
+          petal(budD,x,y,a,s*1.15,s*.5);petal(budL,x+LX*.12*s,y+LY*.12*s,a,s*.8,s*.3)}}
+      if(cl.glow&&rad>0&&open>.15)glows.push([cx,cy,rad*2.1+3*sz])}
+    const ga=(.22+.18*nt)*open*(1-.5*sleep);
+    for(const[x,y,r]of glows){const gr=ctx.createRadialGradient(x,y,0,x,y,r),c=night(glowBase,nt*.5);
+      gr.addColorStop(0,css(c,ga));gr.addColorStop(1,css(c,0));const P=newP();circ(P,x,y,r);fillP(ctx,P,gr)}
+    fillP(ctx,dark,css(bloomCol(B.cols[0],.75)));fillP(ctx,light,css(bloomCol(B.cols[1],.75)));fillP(ctx,mid,css(bloomCol(B.cols[2],.75)));
+    fillP(ctx,budD,css(bloomCol(B.bud[0])));fillP(ctx,budL,css(bloomCol(B.bud[1])));
+  }
+  function fruits(){
+    const F=S.fruit;if(!F)return;
+    const stem=newP(),body=newP(),shade=newP(),lite=newP(),spec=newP(),tip=newP();
+    for(const f of M.fruit){if(f.hidden)continue;const p=CP[f.c];if(p.Rw<1)continue;
+      const kf=back((g-f.birth)/.05);if(kf<=0)continue;
+      const[hx,hy]=ptW(p,f.x,f.y), s=f.size*sz*kf*(1-.12*dry)*Math.min(1,p.vis*1.2);
+      for(let q=0;q<f.k;q++){
+        const psi=-thT*2+(.1+.1*wind)*Math.sin((1.6+q*.3)*t+f.ph+q)+(f.k>1?(q-(f.k-1)/2)*.55:0);
+        const L=f.stem*sz+s*(F.type==='olive'?1.1:1), fx=hx+Math.sin(-psi)*L, fy=hy+Math.cos(psi)*L;
+        stem.p.moveTo(hx,hy);stem.p.quadraticCurveTo(hx,hy+L*.5,fx+Math.sin(-psi)*-s*.9,fy-Math.cos(psi)*s*.9);stem.n++;SEGS++;
+        if(F.type==='pom'){circ(body,fx,fy,s);
+          const cx=fx-Math.sin(-psi)*-s*.95,cy=fy+Math.cos(psi)*s*.95;     // the crown, opposite the stem
+          tip.p.moveTo(cx-s*.32,cy-s*.12);tip.p.lineTo(cx-s*.38,cy+s*.3);tip.p.lineTo(cx-s*.12,cy+s*.12);tip.p.lineTo(cx,cy+s*.36);tip.p.lineTo(cx+s*.12,cy+s*.12);tip.p.lineTo(cx+s*.38,cy+s*.3);tip.p.lineTo(cx+s*.32,cy-s*.12);tip.p.closePath();tip.n++;SEGS+=7}
+        else if(F.type==='lemon'){ell(body,fx,fy,s*.8,s*1.02,-psi);const[nx,ny]=rot(0,s*1.02,-psi);circ(tip,fx+nx,fy+ny,s*.2)}
+        else ell(body,fx,fy,s*.8,s,-psi);
+        crescent(shade,fx,fy,s*.86,SA-1.3,SA+1.3,s*.34);
+        ell(lite,fx+LX*s*.36,fy+LY*s*.36,s*.32,s*.42,LA+Math.PI/2);
+        circ(spec,fx+LX*s*.5,fy+LY*s*.5,s*.13)}}
+    const shine=(.55+.45*vig)*(1-.6*dry);
+    const fc=i=>night(hsl(hex(F.cols[i]),0,0,(1-.45*dry)),nt);
+    strokeP(ctx,stem,css(woodCol(1)),Math.max(.8,1.1*sz));
+    fillP(ctx,body,css(fc(0)));fillP(ctx,shade,css(fc(1),.85));fillP(ctx,lite,css(fc(2),.55+.35*shine));
+    fillP(ctx,tip,css(fc(4)));fillP(ctx,spec,css(fc(3),.85*shine));
+  }
+
+  // ---- 4. the back layer: darker and cooler, so it sits behind
+  layer(0);
+
+  // ---- 5. wood: trunk, limbs, twigs. Base, shadow side, light side, bark.
+  {const base=newP(),dark=newP(),lite=newP(),lines=newP(),knots=newP(),contact=newP();
+    {const cr=w0*1.6+4, cg=ctx.createRadialGradient(0,0,0,0,0,cr), cc=night(hex('#24140E'),nt);
+      cg.addColorStop(0,css(cc,.42));cg.addColorStop(.55,css(cc,.18));cg.addColorStop(1,css(cc,0));
+      ctx.save();ctx.translate(0,1);ctx.scale(1,.24);circ(contact,0,0,cr);fillP(ctx,contact,cg);ctx.restore()}
+    const trunks=S.twin?[[-w0*.2,0,tcx+w0*.5,tcy,Tx,Ty,w0*.66,w1*.78],[w0*.22,0,tcx-w0*.55,tcy,Tx+w1*.1,Ty,w0*.6,w1*.72]]:[[0,0,tcx,tcy,Tx,Ty,w0,w1]];
+    const segs=[...trunks];
+    for(const[i,L]of M.limbs.entries()){const lp=LP[i];if(lp.lg>0)segs.push([Tx,Ty,lp.CX,lp.CY,lp.X,lp.Y,lw0*Math.sqrt(lp.lg),lw1])}
+    for(const s of segs)limb(base,...s);
+    // root flare
+    if(g>.3){const k=smooth((g-.3)/.3);ell(base,-w0*.46,-w0*.1,w0*.42*k,w0*.2*k,-.35);ell(base,w0*.46,-w0*.1,w0*.42*k,w0*.2*k,.35)}
+    M.clumps.forEach((c,i)=>{if(c.tier===0)return;const p=CP[i],lp=LP[c.limb];if(p.tw<=0)return;
+      limb(base,lp.X,lp.Y,p.QX,p.QY,p.AX,p.AY,tw0*Math.sqrt(p.tw),Math.max(1,tw0*.4))});
+    segs.forEach((sg,i)=>{const t0=i<trunks.length?0:.22,[x,y,cx,cy,x1,y1,a,b]=sg,[sx,sy]=qpt(x,y,cx,cy,x1,y1,t0);
+      const s2=[sx,sy,lerp(cx,x1,t0),lerp(cy,y1,t0),x1,y1,lerp(a,b,t0),b];limbOff(dark,...s2,-.21,.56);limbOff(lite,...s2,.3,.16)});
+    if(g>.3)ell(dark,w0*.5,-w0*.08,w0*.3,w0*.14,.35);
+    // bark marks, in trunk space
+    if(g>.32)for(const tr of trunks){const[x,y,cx,cy,x1,y1,a,b]=tr;
+      const at=(tt,u)=>{const[px,py]=qpt(x,y,cx,cy,x1,y1,tt),ang=qtan(x,y,cx,cy,x1,y1,tt),w=lerp(a,b,tt);return[px-Math.sin(ang)*u*w,py+Math.cos(ang)*u*w]};
+      for(const b0 of M.bark){const p0=at(b0.t0,b0.u0),p1=at((b0.t0+b0.t1)/2,(b0.u0+b0.u1)/2+.04),p2=at(b0.t1,b0.u1);
+        lines.p.moveTo(p0[0],p0[1]);lines.p.quadraticCurveTo(2*p1[0]-(p0[0]+p2[0])/2,2*p1[1]-(p0[1]+p2[1])/2,p2[0],p2[1]);lines.n++;SEGS+=2}
+      if(tr===trunks[0])for(const kn of M.knots){const[px,py]=at(kn.t,kn.u),w=lerp(a,b,kn.t);ell(knots,px,py,w*kn.s,w*kn.s*1.5,qtan(x,y,cx,cy,x1,y1,kn.t)+Math.PI/2)}}
+    fillP(ctx,base,css(woodCol(0)));fillP(ctx,dark,css(woodCol(1)));fillP(ctx,lite,css(woodCol(2),.85));
+    const bandy=S.bark==='bands';
+    strokeP(ctx,lines,css(bandy?woodCol(2):woodCol(1),bandy?.5:.6),bandy?1.1:1.1);
+    fillP(ctx,knots,css(mixc(woodCol(1),[20,12,10],.35)));
+    // ambient occlusion: the wood darkens as it goes up into the canopy's shade (the same path, refilled)
+    if(g>.3){const k=smooth((g-.3)/.25), y0=Math.min(Ty,box.bot)-6*sz, y1=Ty+38*sz;
+      const gr=ctx.createLinearGradient(0,y0,0,y1), sc=mixc(mixc(leafCol(0,0),woodCol(1),.5),[18,10,16],.45);
+      gr.addColorStop(0,css(sc,.75*k));gr.addColorStop(.45,css(sc,.35*k));gr.addColorStop(1,css(sc,0));fillP(ctx,base,gr)}
+  }
+
+  // ---- 7. the other layers, back to front; then what sits on them
+  for(let k=1;k<M.layers;k++)layer(k);
+  blossoms();fruits();
+
+  // ---- 8. leaves at the edge, with their own flutter
+  {const dk=newP(),lt=newP(),rib=newP();const ec=S.edge.cols;
+    for(const lf of M.leaves){if(lf.hidden)continue;const c=M.clumps[lf.c],p=CP[lf.c];if(p.Rw<1)continue;
+      const k=back((g-lf.birth)/.06)*smooth((lf.keep-(dry*.35+sleep*.4))/.1+.5);if(k<=0)continue;
+      const a=lf.a+p.rho, x=p.X+Math.cos(a)*p.Rw*lf.d, y=p.Y+Math.sin(a)*p.Rw*lf.d*p.sq;
+      let d=a+wrap(Math.PI/2-a)*(.45*dry+.35*sleep)+(.05+.2*wind*gust)*Math.sin(lf.f*t+lf.ph);
+      const s=lf.len*sz*k*(1+.05*vig-.12*dry), nx=-Math.sin(d), ny=Math.cos(d), litSide=nx*LX+ny*LY>0?1:-1;
+      leafHalf(lt,x,y,d,s,lf.w,litSide);leafHalf(dk,x,y,d,s,lf.w,-litSide);
+      rib.p.moveTo(x+Math.cos(d)*s*.1,y+Math.sin(d)*s*.1);rib.p.lineTo(x+Math.cos(d)*s*1.35,y+Math.sin(d)*s*1.35);rib.n++;SEGS++}
+    const top=ec?night(hsl(mixc(hex(ec[0]),DRY[1],dry*.9),0,.08*sleep,1-.4*sleep),nt):leafCol(1,2,1);
+    const under=ec?night(hsl(mixc(hex(ec[1]),DRY[2],dry*.9),0,.06*sleep,1-.4*sleep),nt):leafCol(2,2,1);
+    fillP(ctx,dk,css(top));fillP(ctx,lt,css(under));strokeP(ctx,rib,css(leafCol(0,1,1),.5),.7)}
+
+  // ---- 9. a bright house: a few glints around the crown
+  if(vig>.02&&g>.5){const P=newP();
+    for(const q of M.twinkles){const tw=Math.max(0,Math.sin(t*q.w+q.ph)), rr=q.s*tw*vig*sz;if(rr<.35)continue;
+      const x=box.cx+Math.cos(q.a)*box.cr*q.d*1.05, y=box.cy+Math.sin(q.a)*box.cr*q.d*.9-6*sz;
+      P.p.moveTo(x,y-rr*2.4);P.p.quadraticCurveTo(x,y,x+rr*2.4,y);P.p.quadraticCurveTo(x,y,x,y+rr*2.4);P.p.quadraticCurveTo(x,y,x-rr*2.4,y);P.p.quadraticCurveTo(x,y,x,y-rr*2.4);P.p.closePath();P.n++;SEGS+=4}
+    fillP(ctx,P,css(night(hex('#FFF1C4'),nt*.3),.95))}
+  // ---- 10. the sprout's seed leaves, which fall away as the crown arrives
+  {const kc=back((g-.1)/.05)*(1-smooth((g-.27)/.06));
+    if(kc>0){const dk=newP(),lt=newP();
+      for(const sd of[-1,1]){const d=-Math.PI/2+sd*(1.05+.5*slump)+Math.sin(t*2)*.05*wind,s=8.5*kc;
+        const nx=-Math.sin(d),ny=Math.cos(d),ls=nx*LX+ny*LY>0?1:-1;leafHalf(lt,Tx,Ty,d,s,1.15,ls);leafHalf(dk,Tx,Ty,d,s,1.15,-ls)}
+      fillP(ctx,dk,css(night(hsl(hex('#3E8A48'),0,0,1-.5*dry),nt)));fillP(ctx,lt,css(night(hsl(hex('#86C76A'),0,0,1-.5*dry),nt)))}}
+}
+// Leaves a quiet house has let go of, lying on the soil around the trunk (not scaled by the fit).
+function drawFallen(ctx,M,o){
+  const m=o.m, dry=smooth((.66-m)/.56), sleep=smooth((.32-m)/.27), nt=1-o.day;
+  const n=Math.round(14*clamp((dry*.55+sleep*.45-.12)/.88));if(!n||o.g<.3)return;
+  const dk=newP(),lt=newP();
+  for(let i=0;i<n;i++){const q=M.ground[i];leafHalf(q.tone>.5?lt:dk,q.x,q.y,q.rot,q.s,.9,1);leafHalf(q.tone>.5?dk:lt,q.x,q.y,q.rot,q.s,.9,-1)}
+  fillP(ctx,dk,css(night(hex('#9A7A3E'),nt)));fillP(ctx,lt,css(night(hex('#CDAE62'),nt)));
+}
+
+// =====================================================================
+// Scene stand-ins: sky, and a placeholder pot shown only with pot=1 (the app's scene draws its own)
+// =====================================================================
+function dayness(h){return clamp((Math.cos((h-13)/24*TAU)+.4)/1.1)}
+function sky(ctx,W,H,day){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,css(mixc(hex('#2A1A4D'),hex('#EEE6FB'),day)));g.addColorStop(1,css(mixc(hex('#150D2A'),hex('#D8CBF2'),day)));
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+function pot(ctx,o){
+  const nt=1-o.day, dry=smooth((.66-o.m)/.56), N=c=>css(night(hex(c),nt));
+  ctx.fillStyle=`rgba(40,20,70,${.18+.22*nt})`;ctx.beginPath();ctx.ellipse(0,55,66,8,0,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.moveTo(-46,6);ctx.lineTo(46,6);ctx.bezierCurveTo(45,30,41,44,34,52);ctx.quadraticCurveTo(0,57,-34,52);ctx.bezierCurveTo(-41,44,-45,30,-46,6);ctx.closePath();
+  let gr=ctx.createLinearGradient(-46,0,46,0);gr.addColorStop(0,N('#E2A07F'));gr.addColorStop(.45,N('#CB7D5C'));gr.addColorStop(1,N('#9A543F'));ctx.fillStyle=gr;ctx.fill();
+  ctx.beginPath();ctx.ellipse(-24,30,3.2,13,-.12,0,TAU);ctx.fillStyle=`rgba(255,235,220,${.22*(1-.6*nt)})`;ctx.fill();
+  gr=ctx.createLinearGradient(-53,0,53,0);gr.addColorStop(0,N('#EAAA88'));gr.addColorStop(.5,N('#D88A68'));gr.addColorStop(1,N('#A85E46'));
+  ctx.fillStyle=gr;ctx.beginPath();ctx.roundRect(-53,-1,106,13,6.5);ctx.fill();
+  ctx.fillStyle=N('#E9A584');ctx.beginPath();ctx.ellipse(0,0,52,6.5,0,0,TAU);ctx.fill();
+  ctx.fillStyle=css(night(mixc(hex('#3E2A20'),hex('#8F765C'),dry*.8),nt));ctx.beginPath();ctx.ellipse(0,.6,45.5,4.9,0,0,TAU);ctx.fill();
+  ctx.fillStyle=`rgba(0,0,0,${.18})`;ctx.beginPath();ctx.ellipse(0,-1.2,45.5,3.4,0,Math.PI,TAU);ctx.ellipse(0,-.2,45.5,2.2,0,TAU,Math.PI,true);ctx.fill();
+}
+
+// =====================================================================
+// Page: one tree, or a sheet of them; a still from `t`, or a live loop.
+// =====================================================================
+const BASE={x:260,y:282};
+function cellFor(p){
+  const el=document.createElement('div');el.className='cell';
+  const cv=document.createElement('canvas');el.appendChild(cv);
+  if(p.label){const l=document.createElement('div');l.className='lab';l.innerHTML=p.label;el.appendChild(l)}
+  let opsEl=null;if(p.ops){opsEl=document.createElement('div');opsEl.className='ops';el.appendChild(opsEl)}
+  document.getElementById('grid').appendChild(el);
+  const dpr=window.devicePixelRatio||1;cv.width=520*dpr;cv.height=360*dpr;
+  const ctx=cv.getContext('2d'), M=build(p.seed,p.species);
+  const draw=t=>{const day=dayness(p.hour), o={g:p.growth,m:p.mood,t,wind:p.wind,day};
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,520,360);
+    if(p.bg!=='none')sky(ctx,520,360,day);
+    ctx.save();if(p.zoom>1){ctx.translate(260,180);ctx.scale(p.zoom,p.zoom);ctx.translate(-260-p.fx,-180-p.fy)}
+    ctx.translate(BASE.x,BASE.y);if(p.pot)pot(ctx,o);
+    OPS=0;SEGS=0;drawFallen(ctx,M,o);
+    ctx.scale(M.fit,M.fit);drawTree(ctx,M,o);ctx.restore();
+    const n=OPS,sg=SEGS;
+    if(opsEl)opsEl.textContent=`${n} draw calls · ${sg} path segments`;
+    return{n,sg}};
+  return{draw,M};
+}
+function params(over={}){
+  const P={species:Q.get('species')||'magnolia',seed:Q.get('seed')||'home_k7f3x9',growth:+(Q.get('growth')??.97),mood:+(Q.get('mood')??.9),
+    hour:+(Q.get('hour')??13),wind:+(Q.get('wind')??.6),bg:Q.get('bg')||'auto',ops:Q.get('ops')==='1',pot:Q.get('pot')==='1',
+    zoom:+(Q.get('zoom')||1),fx:+(Q.get('fx')||0),fy:+(Q.get('fy')||-30)};
+  return Object.assign(P,over);
+}
+const still=Q.has('t'), T0=+(Q.get('t')??0), sheet=Q.get('sheet');
+const MOODS=[[1,'Bright'],[.62,'Content'],[.3,'Thirsty'],[.05,'Dozing']];
+const STAGES=[[.05,'Seed'],[.15,'Sprout'],[.32,'Sapling'],[.55,'Young tree'],[.78,'Tree'],[.97,'In bloom']];
+let cells=[];
+if(Q.get('audit')==='1'){
+  // every species × stage × mood × day/night × two moments: the most draw calls any frame needs
+  document.getElementById('grid').style.display='none';
+  const cv=document.createElement('canvas');cv.width=520;cv.height=360;const ctx=cv.getContext('2d');
+  const out=[];let worst={n:0},worstS={sg:0};
+  for(const sp of ORDER){let mx=0,ms=0,where='';const seeds=['home_k7f3x9','home_a1','house_42','nest_zz'];
+    for(const seed of seeds){const M=build(seed,sp);
+      for(const[g]of[...STAGES,[.9],[.88]])for(const[m]of[...MOODS,[.45],[.8]])for(const h of[13,1])for(const t of[0,3.7,11.2]){
+        ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,520,360);ctx.save();ctx.translate(260,282);
+        const o={g,m,t,wind:.6,day:dayness(h)};OPS=0;SEGS=0;drawFallen(ctx,M,o);ctx.scale(M.fit,M.fit);drawTree(ctx,M,o);ctx.restore();
+        const n=OPS,sg=SEGS;if(n>mx){mx=n;where=`${seed} g${g} m${m} h${h}`}ms=Math.max(ms,sg)}}
+    out.push(`${sp.padEnd(12)} max draw calls ${String(mx).padStart(3)}   max path segments ${String(ms).padStart(5)}   (worst: ${where})`)}
+  // typical: in bloom, content-to-bright, by day
+  for(const sp of ORDER){const M=build('home_k7f3x9',sp);ctx.save();ctx.translate(260,282);const o={g:.97,m:.9,t:0,wind:.6,day:1};OPS=0;SEGS=0;drawFallen(ctx,M,o);ctx.scale(M.fit,M.fit);drawTree(ctx,M,o);ctx.restore();
+    out.push(`${sp.padEnd(12)} typical (bloom, mood .9, day): ${OPS} draw calls, ${SEGS} segments, fit ${M.fit.toFixed(3)}, ${M.clumps.length} clumps, ${M.leaves.length} edge leaves, ${M.clusters.reduce((a,c)=>a+c.fl.length,0)} flowers, ${M.fruit.length} fruit`)}
+  const pre=document.createElement('pre');pre.id='audit';pre.textContent=out.join('\n');document.body.appendChild(pre);
+}else{
+  if(sheet==='species'||sheet==='night')for(const sp of ORDER)cells.push(cellFor(params({species:sp,label:`${SP[sp].name}`,...(sheet==='night'?{hour:+(Q.get('hour')??1)}:{})})));
+  else if(sheet==='moods')for(const[m,n]of MOODS)cells.push(cellFor(params({mood:m,label:`${n}<small>mood ${m}</small>`})));
+  else if(sheet==='growth')for(const[g,n]of STAGES)cells.push(cellFor(params({growth:g,label:`${n}<small>growth ${g}</small>`})));
+  else if(sheet==='seeds')for(const s of['home_k7f3x9','home_a1','house_42','nest_zz','flat_7','casa_mia'])cells.push(cellFor(params({seed:s,label:s})));
+  else cells.push(cellFor(params()));
+  const cols=+(Q.get('cols')||(cells.length>=6?3:cells.length===4?2:cells.length));
+  document.getElementById('grid').style.width=(cols*520)+'px';
+  if(still)for(const c of cells)c.draw(T0);
+  else{const t0=performance.now();const loop=now=>{const t=(now-t0)/1000;for(const c of cells)c.draw(t);requestAnimationFrame(loop)};requestAnimationFrame(loop)}
+}
+</script>
+</body>
+</html>

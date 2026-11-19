@@ -238,6 +238,13 @@ export default defineSchema({
     home_id: v.optional(v.array(v.id("homes"))), // PB maxSelect=999 -> array
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
+    /**
+     * Set only on the made-up members of an App Store screenshot household
+     * (convex/demo.ts), naming the seed that made them. They have no auth
+     * account and no email, and `demo:purgeScreenshotHome` deletes only users
+     * carrying this. Absent on every real person.
+     */
+    demo_seed: v.optional(v.string()),
   })
     .index("email", ["email"])
     .index("by_pbId", ["pbId"]),
@@ -296,8 +303,17 @@ export default defineSchema({
     invite_code: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
+    /**
+     * Set only on an App Store screenshot household (convex/demo.ts): which
+     * seed made it, e.g. `screenshots-tr`. `demo:purgeScreenshotHome` refuses
+     * any home without it. Absent on every real household.
+     */
+    demo_seed: v.optional(v.string()),
   }).index("by_pbId", ["pbId"])
-    .index("by_invite_code", ["invite_code"]),
+    .index("by_invite_code", ["invite_code"])
+    // `demo:listScreenshotHomes`: every real home sits under `undefined`, so
+    // a range over strings is exactly the demo ones.
+    .index("by_demo_seed", ["demo_seed"]),
 
   tasks: defineTable({
     pbId: v.optional(v.string()),
@@ -1371,4 +1387,387 @@ export default defineSchema({
     user_id: v.id("users"),
     read_at: v.number(),
   }).index("by_user", ["user_id"]),
+
+  // --- Nestie, the household companion --------------------------------------
+  //
+  // A plant or a pet the house grows from what it already does. Shared by the
+  // house: one jar, one scene, one album, whoever's phone is looking. The rules
+  // live in convex/lib/companion.ts and the catalog in lib/companionData.ts,
+  // which is generated from the app's own Swift so the two cannot price a thing
+  // differently. Docs/Companion/HANDOFF.md, step 2, is the design.
+
+  /**
+   * One per home: the jar, what it bought, the scene, the days it keeps.
+   *
+   * The jar's two balances are denormalised from `jar_ledger` and written in
+   * the same transaction as every ledger row (`moveJar`), so the number on the
+   * card and the list under it cannot disagree.
+   */
+  companion_homes: defineTable({
+    home_id: v.id("homes"),
+    /** Progress, earned by growing and never sold. Can be spent with Sparkles making up the rest. */
+    leaves: v.number(),
+    /** What people buy, plus a pinch earned at stages and graduations. Below zero only after a refund. */
+    sparkles: v.number(),
+    /** Whether the house has had its welcome gift. Once per house, ever. */
+    welcomed: v.boolean(),
+    /** Everyday decorations the jar bought (`DecorItem` ids), plus the watering can. Bounded by the catalog. */
+    owned_decor: v.array(v.string()),
+    /** Species bought, alone or in a pack. Bounded by the catalog. */
+    owned_species: v.array(v.string()),
+    /** What sits where. Spots are `SceneLayout`'s; the tree holds up to four. */
+    layout: v.object({
+      above: v.optional(v.string()),
+      sky: v.optional(v.string()),
+      weather: v.optional(v.string()),
+      tree: v.array(v.string()),
+      wearing: v.optional(v.string()),
+      pot: v.optional(v.string()),
+      left: v.optional(v.string()),
+      right: v.optional(v.string()),
+      ground: v.optional(v.string()),
+    }),
+    /** The holidays this house keeps. Absent means its region's defaults; empty means none. */
+    holidays: v.optional(v.array(v.string())),
+    /** Two-letter region: the default holidays, and which way round the seasons go. */
+    region: v.optional(v.string()),
+    /** Minutes east of UTC, as `events.tz_offset`: where the house's days begin. */
+    tz_offset: v.optional(v.number()),
+    /** The one growing now. Absent before the first and between a graduation and the next. */
+    current_id: v.optional(v.id("companions")),
+    /**
+     * How many the house has grown all the way, and which species. Denormalised
+     * from the album so a reward check ("grow two", "grow them all") is a field
+     * read rather than an album read. The set is bounded by the catalog.
+     */
+    album_count: v.number(),
+    grown_species: v.optional(v.array(v.string())),
+    /**
+     * The colourways grown all the way after the finale, `"<species>:<colour>"`
+     * with the colour 1–3. Bounded by the catalog (species × 3). Absent means
+     * none; the original colour of a species is `grown_species`.
+     */
+    grown_colours: v.optional(v.array(v.string())),
+    /**
+     * When the house first had every `freeToHave` species in `grown_species`:
+     * written once, by the graduation that completed it. Absent for a house
+     * that completed it before this field existed (or through an import) —
+     * that house has still reached the finale (`grownAllFree`), it just has
+     * no moment to replay.
+     */
+    finale_at: v.optional(v.number()),
+    /**
+     * The most Leaves any phone's MVP file has brought. An import is credited
+     * only what it brings above this, so imports add up to the largest one
+     * whatever their order and whatever was spent in between.
+     */
+    import_max_leaves: v.optional(v.number()),
+    /**
+     * Unused: imports bring no Sparkles. Reserved, should Sparkles ever be
+     * imported under the same high-water rule; nothing writes or reads it.
+     */
+    import_max_sparkles: v.optional(v.number()),
+    /** When `setPlace` last moved the offset: at most once a day. */
+    place_set_at: v.optional(v.number()),
+    /**
+     * When `setPlace` last moved the region: at most once in 30 days, so the
+     * hemisphere can't be flipped to bring a season's species round early.
+     */
+    region_set_at: v.optional(v.number()),
+    created: v.number(),
+    updated: v.number(),
+  }).index("by_home", ["home_id"]),
+
+  /**
+   * Every companion a house has had: the one growing, and the album.
+   *
+   * `points` is denormalised from `companion_days` — moved by the difference
+   * whenever a day is recounted — so the card's growth is a field, not a sum.
+   */
+  companions: defineTable({
+    home_id: v.id("homes"),
+    /** The album card's identity (`Graduate.id` is a UUID on the phone). Kept from an import. */
+    uuid: v.string(),
+    species: v.string(),
+    /** Seeds the drawing: `<homeId>-<album count when it arrived>`, as the app has always made it. */
+    seed: v.string(),
+    started_at: v.number(),
+    /** `released` is one swapped for another before it graduated: never in the album. */
+    status: v.union(v.literal("growing"), v.literal("graduated"), v.literal("released")),
+    graduated_at: v.optional(v.number()),
+    points: v.number(),
+    /** The highest stage already paid into the jar, so a stage pays once even if points dip. */
+    paid_stage: v.number(),
+    last_care_at: v.optional(v.number()),
+    /**
+     * The house's offset when this one arrived. Its days are counted in this
+     * for its whole life, so moving the house's offset can't add days under
+     * a companion that is growing.
+     */
+    tz_offset: v.optional(v.number()),
+    /** `import` came from one phone's MVP file; only such a one may be swapped by a later import. */
+    origin: v.union(v.literal("server"), v.literal("import")),
+    created: v.number(),
+    /**
+     * Set by `companion:wake` when the six-day floor passes. Every companion
+     * gets exactly one wake, scheduled at its start (`start`, or `importLocal`
+     * when it creates one or moves its start; `scheduleMissingWakes` for those
+     * growing before the wake existed). The rule is the clock (`readiness`);
+     * this write only exists so every card's `forHome` read runs again at
+     * that moment, since a query does not re-run on time passing alone.
+     */
+    of_age_at: v.optional(v.number()),
+    /** The `requestId` of the `start` that made this one: a retry with it is answered, not repeated. */
+    start_request: v.optional(v.string()),
+    /** The one that `start` graduated just before making this one, so a retry can say so again. */
+    follows: v.optional(v.id("companions")),
+    /**
+     * A seed: started by the server the moment its predecessor graduated in a
+     * house of two or more, so nothing done while the house votes is lost.
+     * `species` is the vote's first option until the house chooses; then this
+     * is cleared and `chosen_at` set. A seed is never ready (`readiness`).
+     */
+    undecided: v.optional(v.boolean()),
+    /** When a seed's species was chosen, by the vote or by somebody picking. */
+    chosen_at: v.optional(v.number()),
+    /** The vote this seed is waiting on (`companion_votes`). */
+    vote_id: v.optional(v.id("companion_votes")),
+    /**
+     * Notifications already sent about this one, each once: `ready` (all grown
+     * up), and on a seed `vote` (the vote opened) and `arrived` (it was
+     * chosen). Written in the same mutation that schedules the push.
+     */
+    notified: v.optional(v.array(v.string())),
+    /**
+     * The colourway, an integer 1–3, chosen by whoever started it after the
+     * house's finale (`start`'s `colour`). Absent is the original colour.
+     */
+    colour: v.optional(v.number()),
+  })
+    // The album: `eq(status, "graduated")`, newest first.
+    .index("by_home_status_graduated", ["home_id", "status", "graduated_at"])
+    // An import's album cards, so the same card never lands twice.
+    .index("by_home_uuid", ["home_id", "uuid"])
+    // Every house growing one, for the hourly event sweep.
+    .index("by_status", ["status", "started_at"]),
+
+  /**
+   * Choosing the next one together: one row per vote, opened by the server in
+   * the write that graduates a companion in a house of two or more.
+   *
+   * The ballot itself is an ordinary `generic` poll (`poll_id`, its
+   * `poll_items` and `poll_votes`), so the swipe deck and `polls:vote` work on
+   * it unchanged and every shipped build — which lists only `movie` and
+   * `recipe` rounds — never shows it. This row is what makes that poll
+   * Nestie's: the options the server chose, the seed waiting on it, the
+   * deadline, and how it ended. `polls:create` can make a `generic` poll too,
+   * but never one of these.
+   */
+  companion_votes: defineTable({
+    home_id: v.id("homes"),
+    poll_id: v.id("polls"),
+    /** The seed growing while the house decides; the winner is applied to it. */
+    companion_id: v.id("companions"),
+    /** The one that graduated and opened this vote. */
+    after_id: v.optional(v.id("companions")),
+    /** Species ids, in the server's order: the tie-break after "not grown yet". */
+    options: v.array(v.string()),
+    status: v.union(v.literal("open"), v.literal("closed")),
+    opened_at: v.number(),
+    closes_at: v.number(),
+    closed_at: v.optional(v.number()),
+    /**
+     * How it ended: `everyone` answered every option, the `deadline` came,
+     * somebody `decided` on the votes so far, or somebody `picked` before
+     * anybody else had voted. `moved` is a seed that stopped being the house's
+     * (the house was deleted under it, say).
+     */
+    how: v.optional(
+      v.union(
+        v.literal("everyone"),
+        v.literal("deadline"),
+        v.literal("decided"),
+        v.literal("picked"),
+        v.literal("moved"),
+      ),
+    ),
+    /** The species chosen. Absent on a vote that ended with no yes at all. */
+    winner: v.optional(v.string()),
+    closed_by: v.optional(v.id("users")),
+  })
+    .index("by_poll", ["poll_id"])
+    .index("by_home_opened", ["home_id", "opened_at"]),
+
+  /**
+   * The growth ledger: one row per credited thing.
+   *
+   * Keyed per thing (`task:<id>`, `meal:<date>`, `fix:<id>`, `poll:<id>`,
+   * `event:<id>:<start>`, `care:<companion>:<user>:<day>`; purchases
+   * `shop:<id>:<at>`, one per trip) and unique per companion, so ticking a box
+   * twice or a reconcile running twice can never count a thing twice. A row
+   * belongs to the companion it was credited to for good: a graduate's rows
+   * are its history, and nothing moves or recounts them.
+   */
+  companion_growth: defineTable({
+    home_id: v.id("homes"),
+    companion_id: v.id("companions"),
+    key: v.string(),
+    kind: v.union(
+      v.literal("chore"),
+      v.literal("purchase"),
+      v.literal("dinner"),
+      v.literal("event"),
+      v.literal("fix"),
+      v.literal("movie"),
+      v.literal("care"),
+    ),
+    /** The house's day it counts on, `YYYY-MM-DD`. */
+    day: v.string(),
+    at: v.number(),
+    /** Who did it. Absent when the app can't say. */
+    user_id: v.optional(v.id("users")),
+    /** Its weight before the day's rules (repeats, per-person halving, caps). */
+    weight: v.number(),
+    /** For chores: the title, normalised, to spot the same chore twice in a day. */
+    title_key: v.optional(v.string()),
+  })
+    .index("by_companion_key", ["companion_id", "key"])
+    // Recounting one day.
+    .index("by_companion_day", ["companion_id", "day"])
+    // The newest few, for the mood.
+    .index("by_companion_at", ["companion_id", "at"])
+    // One person's care days, for "cared today".
+    .index("by_companion_kind_user", ["companion_id", "kind", "user_id", "day"])
+    .index("by_home", ["home_id"]),
+
+  /**
+   * One row per day a companion had anything credited: the day's tally, the
+   * rest bank across it, and what it grew. Recounted from the ledger when one
+   * of its rows changes, then the bank is carried forward to the days after.
+   */
+  companion_days: defineTable({
+    home_id: v.id("homes"),
+    companion_id: v.id("companions"),
+    day: v.string(),
+    raw: v.number(),
+    carers: v.number(),
+    /** Banked rest paid into this day. */
+    paid: v.number(),
+    /** The bank carried out of it. */
+    bank_out: v.number(),
+    growth: v.number(),
+    /** How many lived in the house when the day was first counted; recounts keep it. */
+    members: v.optional(v.number()),
+  })
+    .index("by_companion_day", ["companion_id", "day"])
+    .index("by_home", ["home_id"]),
+
+  /**
+   * Everything that ever went in or out of a house's jar, and who did it.
+   *
+   * `key` is unique within a home and is the idempotency of every move:
+   * `welcome`, `stage:<album slot>:<stage>`, `graduation:<album slot>` (the
+   * slot is `album_count` when paid, so swapping companions never pays twice),
+   * `buy:<requestId>`, `import:<userId>`, `topup:<transactionId>` for a
+   * verified App Store top-up and `refund:<transactionId>` for its refund
+   * (non-Production environments carry their name: `topup:Sandbox:<id>`, see
+   * lib/jar.ts). Amounts are signed deltas.
+   */
+  jar_ledger: defineTable({
+    home_id: v.id("homes"),
+    key: v.string(),
+    kind: v.union(
+      v.literal("welcome"),
+      v.literal("stage"),
+      v.literal("graduation"),
+      v.literal("buy"),
+      v.literal("import"),
+      v.literal("topUp"),
+      v.literal("refund"),
+    ),
+    leaves: v.number(),
+    sparkles: v.number(),
+    user_id: v.optional(v.id("users")),
+    /** What was bought: `decor:<id>`, `species:<id>` or `pack:<id>`. */
+    item: v.optional(v.string()),
+    /** For a purchase: the Leaves its Sparkles made up, so a replay says so too. */
+    made_up: v.optional(v.number()),
+    companion_id: v.optional(v.id("companions")),
+    created: v.number(),
+  })
+    .index("by_home_key", ["home_id", "key"])
+    // The jar's feed: who added and who spent, newest first. Also the purge's.
+    .index("by_home_created", ["home_id", "created"])
+    // "This house's top-ups" and "its refunds". Nothing reads it yet: the
+    // deployment-wide record of a purchase is `jar_purchases`.
+    .index("by_home_kind", ["home_id", "kind"]),
+
+  /**
+   * Every App Store transaction the server has ruled on, once per transaction
+   * across the whole deployment (`jar:topUp`, convex/jarStore.ts).
+   *
+   * This, not the ledger, is what makes a top-up idempotent: the ledger's key
+   * is unique only within a home, and a transaction must credit one home,
+   * once, whichever house a phone sends it to. So these rows outlive the house
+   * they credited — `companion:purgeHome` never touches them — or a deleted
+   * house's receipts could be spent again in another.
+   *
+   * A row with no `credited_at` is a tombstone: Apple said it was refunded or
+   * revoked before any jar was credited, and it never will be.
+   */
+  jar_purchases: defineTable({
+    transaction_id: v.string(),
+    original_transaction_id: v.string(),
+    product_id: v.string(),
+    /** What the transaction is worth, from lib/jar.ts's table, at the time. */
+    sparkles: v.number(),
+    /** The house credited. Absent on a tombstone written from a notification. */
+    home_id: v.optional(v.id("homes")),
+    /** Whose phone sent it. Absent on a tombstone written from a notification. */
+    user_id: v.optional(v.id("users")),
+    environment: v.union(v.literal("Production"), v.literal("Sandbox"), v.literal("Xcode")),
+    purchased_at: v.number(),
+    credited_at: v.optional(v.number()),
+    revoked_at: v.optional(v.number()),
+    created: v.number(),
+  })
+    // Apple's ids are per environment (Xcode starts at 0 on every Mac), so the
+    // identity is the pair.
+    .index("by_transaction_environment", ["transaction_id", "environment"])
+    // What one environment credited, newest first (`jarStore:credited`):
+    // listing a Sandbox round after TestFlight or App Review.
+    .index("by_environment_credited", ["environment", "credited_at"]),
+
+  // --- Household Pro ---------------------------------------------------------
+  //
+  // One row per person, mirroring what RevenueCat says about their `pro`
+  // entitlement. A house is Pro while ANY current member has a row that has
+  // not expired (lib/pro.ts) — Apple sells to one Apple ID, the data belongs to
+  // a house, and one subscription covering everyone is the point. No plan
+  // field on the home: if the payer leaves, Pro leaves with them and there is
+  // nothing stale to clean up.
+  //
+  // Written only by `pro:refresh` and `pro:sweep` (convex/pro.ts), from
+  // RevenueCat's answer, never from anything a phone says. A person with no
+  // entitlement at all has no row.
+  pro_entitlements: defineTable({
+    user_id: v.id("users"),
+    /** When access ends, ms. `null` is lifetime. Includes any billing grace. */
+    expires_at: v.union(v.number(), v.null()),
+    product_id: v.optional(v.string()),
+    /** RevenueCat's `store` ("app_store", "promotional", …). */
+    store: v.optional(v.string()),
+    /** Counted only while `PRO_SANDBOX` is "on" (TestFlight and App Review). */
+    is_sandbox: v.boolean(),
+    /** False once a cancellation or a billing problem has been seen. */
+    will_renew: v.boolean(),
+    checked_at: v.number(),
+  })
+    .index("by_user", ["user_id"])
+    // The sweep: rows about to expire, or just expired, re-asked of RevenueCat.
+    .index("by_expires", ["expires_at"])
+    // The sweep's second half: every row, lifetime included, re-asked once a
+    // day, oldest answer first — a restore can move a purchase to another
+    // user, and a refund can end a lifetime one, without any date nearing.
+    .index("by_checked", ["checked_at"]),
 });

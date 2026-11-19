@@ -56,6 +56,92 @@
   ],
   "entries": [
     {
+      "slug": "1.12.0-nestzone-plus",
+      "version": "1.12.0",
+      "kind": "feature",
+      "title": "NestZone Plus: one subscription for the whole house",
+      "body": "Calendar, Money, house problems, shopping by aisle, your own movie lists, \"Archive now\", being in more than one home and mature movie titles are part of NestZone Plus now. One person subscribes and everyone in the house gets it, with a free first week on the yearly plan. Everything else stays free, and nothing you've already written goes anywhere: if Plus ever stops, you can still read all of it.",
+      "highlights": [
+        "One subscription covers the whole house, whoever pays",
+        "Plus: Calendar, Money and bills, house problems, shopping by aisle, your own movie lists, Archive now, a second home, mature movie titles",
+        "Free forever: chores, shopping lists, notes, messages, recipes and meals, movie night, Nestie",
+        "Free first week on the yearly plan",
+        "Without Plus, what's already in Calendar, Money and Problems stays readable",
+        "Manage or restore it any time in Settings"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "NestZone Plus geldi: bütün eve tek abonelik",
+          "body": "Takvim, Finans, Sorunlar, reyon reyon alışveriş, kendi film listelerin, yetişkin içerik, erken arşivleme ve ikinci bir ev artık NestZone Plus'ta. Evden biri abone oluyor, herkes kullanıyor. Yıllık planda ilk hafta bedava. Gerisi bedava kalıyor. Şimdiye kadar yazdıkların da yerinde duruyor: Plus bir gün biterse hepsini okumaya devam edersin.",
+          "highlights": [
+            "Biri abone olsun, bütün ev kullansın",
+            "Plus'ta: Takvim, Finans ve faturalar, Sorunlar, reyon reyon alışveriş, kendi film listelerin, yetişkin içerik, erken arşivleme, ikinci bir ev",
+            "Hep bedava: Görevler, düz alışveriş listesi, Notlar, Mesajlar, Tarifler ve Yemekler, film listeleri, film gecesi, Nestie",
+            "Yıllık planda ilk hafta bedava",
+            "Plus bitse de Takvim, Finans ve Sorunlar'a yazdıkların yerinde kalır, okumaya devam edersin",
+            "Ayarlar'dan istediğin zaman yönet ya da geri yükle"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.12.0-nestie",
+      "version": "1.12.0",
+      "kind": "feature",
+      "title": "Meet Nestie, your house's plant or pet",
+      "body": "Your house now grows something together: a plant or a pet that lives on Today. Doing things around the house, like finishing chores, shopping and planning meals, helps it grow. Water it, dress it up, collect the ones you've grown in the album, and watch it change with the weather and the holidays. Nestie is free. Sparkles, bought in packs, are only for extras like new decorations and pets.",
+      "highlights": [
+        "Pick a plant or a pet and grow it together, free",
+        "Everyone in the house helps it grow, just by getting things done",
+        "Water it, decorate it, and keep every one you've grown in the album",
+        "Leaves are earned by the house; Sparkles are optional, for extras",
+        "Holidays bring free decorations, and the season changes how it looks",
+        "Nestie tells you when it's ready, and when it's time to vote on the next one"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Nestie geldi: evin kendi bitkisi ya da minik dostu",
+          "body": "Eve hediye geldi! Artık hep birlikte bir bitki ya da minik bir dost büyütüyorsunuz, Bugün'de yaşıyor. İşleri bitirdikçe, alışveriş yaptıkça, yemek planladıkça büyüyor. Sula, süsle, büyüttüklerini albümde biriktir; hava değiştikçe, bayramlar geldikçe o da değişiyor. Nestie bedava. Işıltılar paket paket satılıyor, onlar da sadece yeni süsler, yeni dostlar gibi ekstralar için.",
+          "highlights": [
+            "Bir bitki ya da minik dost seç, birlikte büyütün. Bedava",
+            "Evde kim iş yaparsa Nestie büyür",
+            "Sula, süsle, büyüttüklerini albümde biriktir",
+            "Yapraklar evin emeğiyle gelir; Işıltılar isteğe bağlı, ekstralar için",
+            "Bayramlarda bedava süsler var, mevsim değişince görünüşü de değişiyor",
+            "Hazır olunca da, yenisine oy verme zamanı gelince de Nestie haber veriyor"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.12.0-fixes",
+      "version": "1.12.0",
+      "kind": "improvement",
+      "title": "Fixes and improvements",
+      "body": "Small things that make the app nicer to use.",
+      "highlights": [
+        "Improved animations and haptics all over the app",
+        "Settling up now ends with an \"All square\" stamp",
+        "Fixed taps that buzzed twice",
+        "Fixed a wrong home code shaking twice"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Düzeltmeler ve iyileştirmeler",
+          "body": "Uygulamayı daha keyifli yapan ufak dokunuşlar.",
+          "highlights": [
+            "Animasyonlar ve titreşimler baştan sona elden geçti",
+            "Hesaplaşınca artık \"Hesap kapandı\" damgası basılıyor",
+            "Bazı dokunuşlarda iki kere titreşme düzeldi",
+            "Yanlış ev kodu girince alanın iki kere sallanması düzeldi"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.11.0-new-tabs",
       "version": "1.11.0",
       "kind": "feature",

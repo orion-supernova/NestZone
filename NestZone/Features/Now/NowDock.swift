@@ -11,6 +11,10 @@ public struct NowDock: View {
 
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Taps on the `+`. Each turns it a quarter, which leaves a plus looking
+    /// like a plus — so it never has to turn back.
+    @State private var adds = 0
 
     public init(store: StoreOf<NowFeature>) {
         self.store = store
@@ -22,12 +26,24 @@ public struct NowDock: View {
         HStack(spacing: 10) {
             Button { store.send(.dockTapped) } label: {
                 HStack(spacing: 10) {
-                    emblem
+                    if store.dockItem != .add {
+                        // Stacked, so the emblem leaving and the one arriving
+                        // blur across in one place rather than side by side.
+                        ZStack {
+                            emblem
+                                .id(emblemKey)
+                                .transition(reduceMotion ? .opacity : AnyTransition(.blurReplace))
+                        }
+                    }
                     VStack(alignment: .leading, spacing: 0) {
                         title
                             .font(.subheadline.weight(store.dockItem == .add ? .regular : .semibold))
                             .foregroundStyle(store.dockItem == .add ? .secondary : .primary)
                             .lineLimit(1)
+                            // The live thing changing — tonight's dinner giving
+                            // way to the movie round, one event to the next —
+                            // morphs rather than cuts.
+                            .contentTransition(.interpolate)
                         if !isInline, let subtitle {
                             subtitle
                                 .font(.caption2)
@@ -42,10 +58,17 @@ public struct NowDock: View {
             .buttonStyle(.plain)
             .accessibilityIdentifier("Dock")
 
-            Button { store.send(.addTapped) } label: {
+            Button {
+                adds += 1
+                store.send(.addTapped)
+            } label: {
                 Image(systemName: "plus")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(.white)
+                    // A quarter turn as Add anything opens. The light tap is
+                    // already the press style's, on the way down.
+                    .rotationEffect(.degrees(reduceMotion ? 0 : Double(adds) * 90))
+                    .animation(Motion.release, value: adds)
                     .frame(width: 30, height: 30)
                     .background(theme.accent, in: .circle)
                     .contentShape(.circle)
@@ -60,6 +83,19 @@ public struct NowDock: View {
     }
 
     // MARK: - Contents
+
+    /// The emblem's identity: the thing in the dock, not the state it is in.
+    /// An event that gets under way keeps its emblem (and bounces); something
+    /// else taking the dock blurs across to its own.
+    private var emblemKey: String {
+        switch store.dockItem {
+        case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence):
+            occurrence.id
+        case .dinner, .dinnerUndecided: "dinner"
+        case .movieRound: "movieRound"
+        case .add: "add"
+        }
+    }
 
     @ViewBuilder
     private var emblem: some View {

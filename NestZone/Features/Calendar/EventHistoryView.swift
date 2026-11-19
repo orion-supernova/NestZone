@@ -43,7 +43,7 @@ struct EventHistorySheet: View {
             }
             .task { await store.send(.task).finish() }
             .alert($store.scope(state: \.alert, action: \.alert))
-            .sheet(item: $store.scope(state: \.detail, action: \.detail)) { store in
+            .hostedSheet(item: $store.scope(state: \.detail, action: \.detail)) { store in
                 EventDetailSheet(store: store)
             }
             .animation(Motion.spring, value: store.history)

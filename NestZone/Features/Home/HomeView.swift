@@ -8,14 +8,32 @@ import SwiftUI
 /// when it has something in it, unless it was set to Always — and a short row
 /// of ways into everything else. No section draws an empty state: "nothing
 /// here" is what the sentence is for.
-public struct HomeView: View {
+public struct HomeView<Companion: View>: View {
     @Bindable var store: StoreOf<HomeFeature>
+    /// The companion, drawn under the sentence — small on a day when something
+    /// is wrong, so the alarm stays the first thing on the screen. Handed in by
+    /// the tab container: Today does not own it.
+    private let companion: (_ compact: Bool) -> Companion
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var glass
+    @State private var isScrolling = false
+    @State private var position = ScrollPosition(edge: .top)
+    /// The day went quiet while this screen was up, so "All clear" earns its
+    /// check. Never set by a day that was already quiet when it loaded: a mark
+    /// that is always there says nothing.
+    @State private var clearedHere = false
+    /// When this person last ticked a chore on Today. A day that goes quiet
+    /// within a second of that went quiet because of them, and only then does
+    /// the phone tap — the same change arriving from somebody else's phone is
+    /// theirs to feel, not this one's.
+    @State private var lastOwnTick = Date.distantPast
+    @State private var allClears = 0
 
-    public init(store: StoreOf<HomeFeature>) {
+    public init(store: StoreOf<HomeFeature>, @ViewBuilder companion: @escaping (_ compact: Bool) -> Companion) {
         self.store = store
+        self.companion = companion
     }
 
     public var body: some View {
@@ -28,6 +46,9 @@ public struct HomeView: View {
                 if let hero = store.hero {
                     heroCard(hero).appear(1)
                 }
+                companion(store.hero != nil)
+                    .environment(\.isScrolling, isScrolling)
+                    .appear(1)
                 ForEach(Array(store.layout.shown.enumerated()), id: \.element) { index, section in
                     self.section(section).appear(index + 2)
                 }
@@ -38,6 +59,11 @@ public struct HomeView: View {
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, Metrics.scrollBottomInset)
         }
+        .onScrollPhaseChange { _, phase in isScrolling = phase.isScrolling }
+        .scrollPosition($position)
+        #if DEBUG || MEASURE
+        .task { await flickForever() }
+        #endif
         .background(Backdrop(tint: theme.accent))
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.tabBarHome))
@@ -46,23 +72,69 @@ public struct HomeView: View {
         .alert($store.scope(state: \.alert, action: \.alert))
     }
 
+    #if DEBUG || MEASURE
+    /// `-todayScroll 1` flicks Today to the bottom and back, quickly and over
+    /// and over, so its scroll can be profiled on a simulator nobody touches.
+    private func flickForever() async {
+        guard UserDefaults.standard.bool(forKey: "todayScroll") else { return }
+        var down = true
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(0.9))
+            withAnimation(.easeOut(duration: 0.45)) { position.scrollTo(edge: down ? .bottom : .top) }
+            down.toggle()
+        }
+    }
+    #endif
+
     // MARK: - The sentence
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        // Read once: the sentence is built from most of the screen's state,
+        // and the text, its animation and the check all want the same answer.
+        let glance = store.glance
+        return VStack(alignment: .leading, spacing: 6) {
             Text(eyebrow)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
-            glanceText
-                .font(.system(.title2, design: .rounded, weight: .bold))
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.numericText())
-                .animation(Motion.spring, value: store.glance)
-                .accessibilityAddTraits(.isHeader)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                glanceText(glance)
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .contentTransition(.numericText())
+                    .animation(Motion.spring, value: glance)
+                    .accessibilityAddTraits(.isHeader)
+                if glance.isEmpty, clearedHere {
+                    allClearMark
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 4)
         .redacted(reason: store.loaded.contains([.tasks, .bills, .issues]) ? [] : .placeholder)
+        .onChange(of: glance.isEmpty) { wasClear, isClear in
+            guard isClear, !wasClear, store.loaded.contains([.tasks, .bills, .issues]) else {
+                if !isClear { clearedHere = false }
+                return
+            }
+            withAnimation(Motion.spring) { clearedHere = true }
+            if Date.now.timeIntervalSince(lastOwnTick) < 1 { allClears += 1 }
+        }
+        .sensoryFeedback(.success, trigger: allClears)
+    }
+
+    /// The check that draws itself beside "All clear" when the last thing on
+    /// the day is dealt with. A fade under Reduce Motion.
+    @ViewBuilder
+    private var allClearMark: some View {
+        let mark = Image(systemName: "checkmark.circle.fill")
+            .font(.system(.title2, design: .rounded, weight: .bold))
+            .foregroundStyle(Palette.success)
+            .accessibilityHidden(true)
+        if reduceMotion {
+            mark.transition(.opacity)
+        } else {
+            mark.transition(.symbolEffect(.drawOn))
+        }
     }
 
     /// "Tuesday evening · Hi Murat".
@@ -78,8 +150,7 @@ public struct HomeView: View {
         return "\(String(localized: part)) · \(String(localized: L10n.homeHi(name)))"
     }
 
-    private var glanceText: Text {
-        let clauses = store.glance
+    private func glanceText(_ clauses: [GlanceClause]) -> Text {
         guard !clauses.isEmpty else { return Text(L10n.glanceAllClear) }
         var text = Text(verbatim: "")
         for (index, clause) in clauses.enumerated() {
@@ -166,7 +237,7 @@ public struct HomeView: View {
                 block(section) { quietLine(L10n.homeUpNextClear) }
             }
         case .movieNight:
-            if visibility == .always || store.movieNightIsTimely {
+            if store.showsMovieNight {
                 movieNightRow
             }
         case .stats:
@@ -219,7 +290,7 @@ public struct HomeView: View {
                         .frame(width: 28, height: 28)
                         .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
                 .accessibilityLabel(Text(L10n.commonClose))
             }
             ForEach(HomeFeature.State.SetupStep.allCases) { step in
@@ -238,7 +309,7 @@ public struct HomeView: View {
                 Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(isDone ? Palette.success : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
+                    .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                 Text(setupTitle(step))
                     .font(.subheadline.weight(.medium))
                     .strikethrough(isDone, color: .secondary)
@@ -434,7 +505,10 @@ public struct HomeView: View {
                     assignee: task.assignedTo.flatMap { store.members[id: $0] },
                     isMine: task.assignedTo != nil && task.assignedTo == store.user?.id,
                     now: store.now
-                ) { store.send(.taskToggled(task.id)) }
+                ) {
+                    lastOwnTick = .now
+                    store.send(.taskToggled(task.id))
+                }
                     .glassEffectID(task.id.rawValue, in: glass)
                     .transition(.move(edge: .leading).combined(with: .opacity))
             }
@@ -443,6 +517,7 @@ public struct HomeView: View {
                     Text(L10n.homeMoreChores(store.hiddenChoreCount))
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(theme.accent)
+                        .contentTransition(.numericText())
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.leading, 4)
                         .frame(minHeight: 32)
@@ -607,31 +682,62 @@ public struct HomeView: View {
 
     // MARK: - The shelf
 
-    /// Ways into the things Today summarises, as plain links at the bottom —
-    /// where the "See all" capsules and the unlabelled chart button on every
-    /// section header used to be.
+    /// Ways into the things Today summarises, at the bottom — where the "See
+    /// all" capsules and the unlabelled chart button on every section header
+    /// used to be. Four equal glass pills in a 2x2 grid: a glyph and a short
+    /// label each, and a label that does not fit one line wraps inside its
+    /// pill rather than being cut.
     private var shelf: some View {
-        FlowLayout(spacing: 16, lineSpacing: 6) {
-            shelfLink(L10n.homeShelfAllChores) { store.send(.delegate(.openTasks)) }
-            shelfLink(L10n.homeShelfContributions) { store.send(.delegate(.openContributions)) }
+        GlassGroup(spacing: 10) {
+            LazyVGrid(columns: shelfColumns, spacing: 10) {
+                shelfPill(L10n.homeShelfAllChores, symbol: "checklist") {
+                    store.send(.delegate(.openTasks))
+                }
+                shelfPill(L10n.homeShelfContributions, symbol: "person.2") {
+                    store.send(.delegate(.openContributions))
+                }
                 .accessibilityIdentifier("ContributionsButton")
-            shelfLink(L10n.hubStatsTitle) { store.send(.delegate(.openStats)) }
-            shelfLink(L10n.homeShelfEditToday) { store.send(.delegate(.openCustomize)) }
+                shelfPill(L10n.hubStatsTitle, symbol: "square.grid.2x2") {
+                    store.send(.delegate(.openStats))
+                }
+                shelfPill(L10n.homeShelfEditToday, symbol: "slider.horizontal.3") {
+                    store.send(.delegate(.openCustomize))
+                }
                 .accessibilityIdentifier("EditTodayButton")
+            }
         }
-        .padding(.leading, 4)
         .padding(.top, 4)
     }
 
-    private func shelfLink(_ title: LocalizedStringResource, action: @escaping () -> Void) -> some View {
+    private var shelfColumns: [GridItem] {
+        [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
+    }
+
+    private func shelfPill(
+        _ title: LocalizedStringResource,
+        symbol: String,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(theme.accent)
-                .frame(minHeight: 32)
-                .contentShape(.rect)
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(theme.accent)
+                    .accessibilityHidden(true)
+                Text(title)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget, alignment: .leading)
+            .contentShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))
         }
         .buttonStyle(.pressable)
+        .glassCard(cornerRadius: Metrics.tightRadius, interactive: true)
     }
 }
 
@@ -685,7 +791,7 @@ private struct HeroCard: View {
                     .frame(minHeight: Metrics.minTapTarget)
                     .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
             }
         }
         .padding(Metrics.cardPadding)
@@ -702,25 +808,58 @@ private struct TaskRow: View {
     let now: Date
     let onToggle: () -> Void
 
+    /// Ticks from this checkbox, counted at the tap. The chore itself also
+    /// changes when somebody else finishes it, and their tick is not this
+    /// phone's to buzz or pop for. The row outlives its tick here — Today
+    /// holds a ticked chore for a beat before it goes — so the haptic can live
+    /// on it.
+    @State private var ticks = 0
+    @State private var pops = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         HStack(spacing: 12) {
-            Button(action: onToggle) {
+            Button(action: toggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(task.isCompleted ? Palette.success : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
+                    // The tick grows out of the ring rather than swapping in.
+                    .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
+                    // Squash, overshoot, settle. Idle until a tap moves the
+                    // counter, so a row scrolling past costs nothing.
+                    .keyframeAnimator(initialValue: CGFloat(1), trigger: pops) { content, scale in
+                        content.scaleEffect(scale)
+                    } keyframes: { _ in
+                        CubicKeyframe(0.8, duration: 0.08)
+                        SpringKeyframe(1.18, duration: 0.12)
+                        SpringKeyframe(1, duration: 0.15, spring: .init(duration: 0.15, bounce: 0.5))
+                    }
                     .frame(width: 34, height: 34)
                     .contentShape(.circle)
             }
             .buttonStyle(.pressable)
-            .sensoryFeedback(.success, trigger: task.isCompleted) { _, done in done }
+            .sensoryFeedback(.success, trigger: ticks)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title)
                     .font(.subheadline.weight(.medium))
-                    .strikethrough(task.isCompleted, color: .secondary)
                     .foregroundStyle(task.isCompleted ? .secondary : .primary)
                     .lineLimit(1)
+                    // The line alone, swept across by a copy of the title whose
+                    // letters are clear. Only there while the chore is done, so
+                    // an open row — nearly every row Today draws — carries
+                    // nothing extra while the screen scrolls.
+                    .overlay(alignment: .leading) {
+                        if task.isCompleted {
+                            Text(task.title)
+                                .font(.subheadline.weight(.medium))
+                                .strikethrough(color: .secondary)
+                                .foregroundStyle(.clear)
+                                .lineLimit(1)
+                                .transition(strikeTransition)
+                                .accessibilityHidden(true)
+                        }
+                    }
 
                 if let due = task.dueDate, !task.isCompleted {
                     Text(dueText(due.date))
@@ -739,7 +878,31 @@ private struct TaskRow: View {
         .animation(Motion.spring, value: task.isCompleted)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(task.isCompleted ? [.isButton, .isSelected] : .isButton)
-        .accessibilityAction(named: Text(L10n.tasksToggleAction), onToggle)
+        .accessibilityAction(named: Text(L10n.tasksToggleAction), toggle)
+    }
+
+    /// Only ticking celebrates; reopening is a correction. Reduce Motion keeps
+    /// the new glyph and the haptic and drops the squash.
+    private func toggle() {
+        if !task.isCompleted {
+            ticks += 1
+            if !reduceMotion { pops += 1 }
+        }
+        onToggle()
+    }
+
+    private var strikeTransition: AnyTransition {
+        reduceMotion ? .opacity : AnyTransition(Strike()).animation(.easeOut(duration: 0.25))
+    }
+
+    /// The strikethrough drawing itself across the title, left to right. A
+    /// horizontal scale, not a mask: the letters on this layer are clear, so
+    /// the line is all there is to stretch, and no offscreen pass is paid for
+    /// it on the screen that has to scroll the smoothest.
+    private struct Strike: Transition {
+        func body(content: Content, phase: TransitionPhase) -> some View {
+            content.scaleEffect(x: phase.isIdentity ? 1 : 0.01, anchor: .leading)
+        }
     }
 
     private func dueText(_ date: Date) -> String {
@@ -802,12 +965,18 @@ private struct SuggestedDinnerCard: View {
                         .frame(minHeight: Metrics.minTapTarget)
                         .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
             }
         }
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
         .accessibilityElement(children: .contain)
+    }
+}
+
+extension HomeView where Companion == EmptyView {
+    public init(store: StoreOf<HomeFeature>) {
+        self.init(store: store) { _ in EmptyView() }
     }
 }

@@ -1,5 +1,5 @@
 {
-  "originHash" : "31106ac9cf90f7fab59071b38bbd77135d0eae3fbf2a313065676d2b267f9370",
+  "originHash" : "14d06edb10c91528339aa1233f9659402c31ab6a5c1a6613478dde7b761a3833",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "125b71b2f8725931a5b0e8252f0799ef2adad120",
         "version" : "0.8.1"
+      }
+    },
+    {
+      "identity" : "purchases-ios-spm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/RevenueCat/purchases-ios-spm.git",
+      "state" : {
+        "revision" : "a835ead7b1b0439864e2450e17c08be193aec473",
+        "version" : "5.103.2"
       }
     },
     {

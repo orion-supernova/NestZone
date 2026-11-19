@@ -21,6 +21,9 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ActionCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
+import { proEnforced } from "./lib/pro";
 
 const BASE = "https://api.themoviedb.org/3";
 const PAGES = 3;
@@ -52,6 +55,13 @@ const GENRES: Record<string, number> = {
 async function requireSignedIn(ctx: ActionCtx): Promise<void> {
   const uid = await getAuthUserId(ctx);
   if (!uid) throw new Error("Not authenticated");
+}
+
+/** Whether the caller may see mature titles (Plus, `pro:matureAllowed`).
+ *  Typed apart from the action so its return type does not loop through
+ *  `internal`, which includes this module. */
+async function matureAllowed(ctx: ActionCtx, homeId?: Id<"homes">): Promise<boolean> {
+  return await ctx.runQuery(internal.pro.matureAllowed, { homeId });
 }
 
 function apiKey(): string {
@@ -164,11 +174,20 @@ export const discover = action({
     query: v.optional(v.string()),
     year: v.optional(v.number()),
     includeAdult: v.optional(v.boolean()),
+    /** The house browsing, for the mature-content gate. Optional: builds
+     *  before Plus send none, and are judged by the caller's homes. */
+    homeId: v.optional(v.id("homes")),
   },
   handler: async (ctx, args) => {
     // Signed-in users only: this action spends our TMDb quota.
     await requireSignedIn(ctx);
-    const includeAdult = args.includeAdult ?? false;
+    // Mature content is Plus ("matureContent"): coerced off for a free house,
+    // never refused, because old builds send the flag with every browse. The
+    // database is asked only when the flag is on and enforcement is too.
+    const includeAdult: boolean =
+      (args.includeAdult ?? false) &&
+      (!proEnforced() ||
+        (await matureAllowed(ctx, args.homeId)));
     const sortBy = "popularity.desc";
 
     switch (args.kind) {
@@ -275,6 +294,10 @@ export const details = action({
   args: { tmdbId: v.string() },
   handler: async (ctx, { tmdbId }) => {
     await requireSignedIn(ctx);
+    // The id goes straight into the request path, so it is a TMDb number or
+    // an IMDb "tt" id (older saved movies hold those) and nothing else:
+    // anything else could walk the proxy to another TMDb endpoint on our key.
+    if (!/^(tt)?\d{1,12}$/.test(tmdbId)) throw new Error("Not a movie id");
     const data = await fetchJSON(
       url(`/movie/${tmdbId}`, { append_to_response: "credits,keywords" }),
     );

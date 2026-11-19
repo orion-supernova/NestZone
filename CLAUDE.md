@@ -21,10 +21,14 @@ NestZone/                 the app target — one module, four layers
     Customize/            Today's sections: Automatic, Always or Off, and their order
     Now/                  the dock over the tab bar, and tonight's dinner
     Capture/              Add anything: one field that files a line in the right module
+    Companion/            Nestie: the house's plant or pet on Today (Debug builds only, for now)
   Resources/              Localizable.xcstrings, bundled sample recipes
 backend/convex/           Convex functions (queries, mutations, actions)
 backend/changelog.json    the app's release notes — see "Shipping a change"
 backend/DEPRECATIONS.md   what may be removed from the backend, and when
+Docs/Companion/           Nestie's plan, prototypes, holiday sources — start at HANDOFF.md
+Docs/index.html           every doc in one place (local, never published); rebuild with python3 Docs/build-hub.py
+Docs/Launch/              the App Store launch plan: NestZone Plus, Nestie on, review readiness
 deploy.sh                 the release: backend, changelog, version, merge to stage
 XCODE_CLOUD.md            what builds the app once stage is pushed, and its setup
 ci_scripts/               Xcode Cloud's post-clone hook: trusts this app's macros
@@ -43,6 +47,96 @@ single-module tabs and no Household list any more — testers called a tab for
 the shopping list alone overkill. The segment each tab was left on is
 remembered per device (`TabSegments`).
 
+A segment is built the first time it is shown and kept after that
+(`SegmentedRoot`): the screens that are not on show stay in the `ZStack` at no
+opacity, untouchable and hidden from VoiceOver, so going back costs nothing and
+each keeps its scroll position and its live reads. A switch is staged: the
+fade (scoped to the opacity alone, `.animation(Motion.fade) { $0.opacity }`,
+because an `animation(value:)` on the container animated every row and the
+bar too) and the underline land in the tap's frame, and the bar items, search
+and entrances follow 50 ms later (`onStage`). Warm switches went from about
+55–98 ms to about 55–80 ms. The first switch to a module is view construction,
+which keeping alive cannot remove, so Calendar, Issues and Finance build in
+beats (`stagedBuild` and `Staged`, `Design/Staged.swift`): the bar and the
+container in the tap's frame, each piece a frame after the one before, fading
+up as it lands. That took their first build from 245–280 ms to 130–155. A
+`List` screen cannot be staged (a list that is nothing has no toolbar), and
+Tasks, Shopping, Recipes, Notes and Movies are still 115–200 ms
+on the simulator (on an iPhone 16e in Release: first builds 42–86 ms, returns 31–45,
+warm 30–50, so a phone does not need this work; HANDOFF.md, step 1). About 40% of
+that is the simulator, not the app: SwiftUI asks the runtime once per field
+type whether it is a `DynamicProperty`, and a cold answer costs a millisecond
+there because the simulator reads every framework's conformance records off
+disk, where a device has a table the system built. Warming those answers in
+Debug was tried and dropped — it flattered the simulator and changed nothing
+a person feels. The real number was a Release build on a phone, now taken (above). There is no
+slow *return*: the one that was measured was a first build, because
+`-segmentCycle` used to end on the last segment, which is remembered, so the
+next launch opened there. It now ends where it began. See
+`Docs/Companion/HANDOFF.md`, step 0, for the numbers and what is open.
+`SegmentedRoot` tells each screen where it stands through
+`\.segmentPhase` (`onScreen`, `leaving`, `away`; `segmentChosen` is the same
+without the 50 ms lag), and what only makes sense in front of a person waits
+for it: a module's bar items and search go through `segmentToolbar` and
+`segmentSearchable`, never a bare `.toolbar` or `.searchable` at a module's
+root (the bar is the stack's, so every kept segment's items would stand in it
+at once); `appear`, `drawIn` and `bounces` rewind once the screen has faded out
+and play again when it returns; `pulse` and the loading shimmers stop; and work
+a live push could start, a haptic or a celebration, goes through `segmentTask`
+(Finance's square-up does), which is cancelled the moment the segment is left.
+**Never read `\.segmentPhase` in a screen's own `body`**: it changes three times
+in a switch. Read it through `LivePhase` in a modifier of a few lines, which
+also answers `onScreen` for anything presented, because a sheet declared
+inside a segment inherits the environment. A new module screen, or a new
+continuous animation, follows the same rules. Measure a switch with
+`-frameMeter 1 -openTab lists -segmentCycle 4` (Debug): it opens on that tab
+and, after five seconds, walks its segments every four, so each switch lands in
+a log window of its own (`-segmentCycle 1` walks every 1.5 s, straight from
+launch). `-frameMeter 2` also logs every late frame with its time, to see how a
+switch splits across frames; `-appTabSegments "calendar,tasks,finance"` opens
+each tab on the segment you name, to measure a first build of any of them.
+
+- **Launch, measured on the simulator (Release, MEASURE).** The first screen
+  is the launch view; Today replaces it once the session has been restored
+  (about 500 ms of network, nothing to optimise on the device) and then draws
+  in one frame of about 570 ms, which is what `-frameMeter 2` calls the first
+  late frame. Most of that is SwiftUI building a `TabView` and a
+  `NavigationStack` for the first time; the app's own code in it (store, reducer
+  state, `HomeView.body`) is about 60 ms. Two things in the measurement are
+  the simulator and not the app: about 700 ms before `main` (dyld loads every
+  framework off disk, notifying the debugger of each) and the accessibility
+  bundles loading. The first `Text(LocalizedStringResource)` used to cost
+  about 200 ms of the frame, inside the tab bar's labels (Markdown parsing
+  scans every attribute scope the runtime knows); `LaunchWarmup` does one off
+  the main thread at launch, so the frame finds it done. Measure launch with
+  `sample <pid> 5 1` started right after `simctl launch`, not with Time
+  Profiler: it is wall-clock, symbolicated for the app and for SwiftUI, and
+  shows time spent blocked, which Time Profiler on the simulator leaves out
+  and cannot symbolicate. Staging the first Today build the way Calendar is
+  staged was not done: the dock and Nestie each cost under 10% of the frame
+  when removed outright, and the dock cannot be built a beat late without it
+  sliding in.
+- **Optimistic launch.** With a stored session and a cached home, the tabs are
+  drawn from the cache while the session restores (`isProvisional`).
+  convex-swift sends a read or write immediately with whatever identity it has,
+  so `ConvexConnection` waits on `AuthGate` first: reads wait, writes wait and
+  fail `.offline` if the restore cannot reach the server, and a refused session
+  ends both quietly. A new network path must go through `subscribe`, `mutate`
+  or `act`, never `client` directly. Every way out of a closed gate leaves it
+  open or rejected (restore answered, refused, cancelled, signed out, signed
+  in). A write waits at most 8 s, then fails `.offline` so its rollback runs;
+  writes that waited are released in the order they were made and then run in
+  parallel like any others (nothing else orders writes, and a chain let one
+  stalled write hold every other). Signing out before the restore has answered
+  stays on a spinner until the restore ends or 10 s pass, then signs out with
+  whatever push token exists; the sign-out ends the session itself (the
+  delegate `signedOut` -> `endSession`), not by waiting for the SDK's
+  `.unauthenticated`, which the root ignores while the launch is provisional.
+  A Keychain that cannot be read is never "no session": only a Keychain that
+  answered "nothing" is, and the launch decision reads it off the main thread
+  (`LaunchWarmup`).
+  `-optimisticLaunch 0` (Debug, MEASURE) launches the old way. See
+  `Docs/Companion/HANDOFF.md`, step 0b.
 - **A tap switches tab or opens a screen in place — never both.** A whole
   module goes to its tab, switched to its segment and popped to root. A
   specific thing (an event, a problem, the chore split) is opened on the stack
@@ -68,6 +162,166 @@ remembered per device (`TabSegments`).
   House → At a glance, the movie game at the top of Movies).
 - Segments and Today's layout are per-device `@Shared` app storage, not server
   state, so no backend or older app version is involved.
+
+## Nestie (the companion)
+
+A plant or pet the house grows from what it already does, on Today. The plan,
+the decisions and what's next are in `Docs/Companion/HANDOFF.md` — read it
+before changing anything here.
+
+- **Ships from 1.12.0, free** (`CompanionFlag` is on in every build). The Lab,
+  the bench and every launch-argument hook stay Debug-only, reached from
+  Settings → Developer. A release build offers only what is drawn
+  (`Species.onShelf`, `DecorItem.onShelf`), never the emoji stand-ins. At the
+  release set the backend env: `APPLE_APP_ID=6749852085`,
+  `JAR_ENVIRONMENTS=Production,Sandbox` while the build is in review and then
+  `Production`, and `COMPANION_NOTIFY=on`.
+- **The Lab (Debug only, `Features/Companion/Lab/`) has a master switch,
+  "Pretend house", off by default.** Off, the card is the real house and the
+  Lab only changes how it looks (`LabLook`: mood, hour and day, birthday,
+  hemisphere, colourway), never written; while a pretend day or hemisphere is
+  on, the writes drawn from the scene (decorate, holidays) are refused. On,
+  `CompanionHost` reduces the feature inside a dependency scope whose
+  `CompanionClient` and `SparkleStoreClient` are the stand-in server's
+  (`FakeNestieServer`, the same one `NestieBench` runs, kept in
+  `pretendHouse.json`), so every flow, ceremony and purchase card is the real
+  one and no code path reaches `ConvexConnection`; the live client also
+  refuses and logs any call made while the switch is on (`PretendRoute`), and
+  turning the switch resets the card. The Lab's labels are plain English
+  (`Text(verbatim:)`) on purpose, so a hundred developer strings stay out of
+  the shipped catalog; what it shows of the app (card, ceremonies) stays
+  localized. Release builds carry none of it (`LabSlot` is an empty stand-in).
+- **The companion is the house's, on the server** (`CompanionClient`: live
+  `companion:forHome`, `companion:album` while its sheet is open, writes and
+  `shop:buy`; all through `ConvexConnection`). Growth and "ready" are the
+  server's; the client counts nothing. `State.house` is computed: `served` plus
+  the writes in flight (`writes`). **An entry shows only while
+  `served` does not already show it**, and on the answer its result is folded
+  into `served` before it goes (a start's and a graduation's wait for the
+  push), so the answer and the push can come in either order; a write is
+  raced against 15 s and a timeout is a failure. A buy debits locally, sends a
+  request id per tap and the card's price, and handles `bought`, `owned`,
+  `short`, `unavailable` and `priceChanged`; the server's prices win. The Lab
+  never writes the real house (`serverShop` is built from `served` and `now`
+  only, and a pretend day blocks the writes drawn from the scene). What the card draws is stored and assigned
+  only on change (`refresh`), and the card is small views that read their own
+  part. The MVP's one-phone file is offered once per person and home to
+  `importLocal` and kept. `-nestieBench 1` runs it signed out against a
+  stand-in server (`-nestieOrder pushFirst|answerFirst`).
+- **A graduation is never lost.** When `start` graduates a ready companion in
+  the same write (`graduated`), the moment is held in `State.moment` (memory
+  only: after a relaunch the album card is the record) and plays once, 450 ms
+  after no sheet is open and none is about to open (`momentReady`, a delayed
+  action: a sheet presented in the action that dismisses another is dropped;
+  `pendingSheet` and `placeOnOpen` say what is about to open). Closing the
+  ceremony ends the moment; closing anything else lets it play.
+- All art and motion are code (SwiftUI `Canvas`), by decision: no paid tools. `CompanionScene` draws from a `Snapshot` read in
+  `body` — state read only inside the canvas closure is not tracked, and the
+  scene drew without its tree.
+- **The tree is drawn only when what it shows changes; the wind is a
+  transform.** `TreeLayer` is its own `Equatable` view, redrawn when the mood or
+  growth eases or the light moves, and the wind shears that picture about the
+  root (`SceneSnapshot.Wind.bend`). Do not put the tree back into the per-frame
+  canvas: at 30 fps its shapes took the main thread's whole budget and Today
+  stuttered while it scrolled. Do not put SwiftUI shader effects
+  (`layerEffect`, `distortionEffect`) over the scene either: two of them held
+  Today to ~25 fps on the simulator, the main thread waiting on the GPU every
+  frame — a wait no CPU profile shows. The two per-frame canvases (`back`,
+  `front`) render asynchronously (`Canvas(rendersAsynchronously: true)`): drawn
+  into the parent layer, every scene frame re-encoded the whole screen on the
+  main thread, and a full set of decorations dropped a frame every few seconds
+  (RULES.md §16). The scene also holds still while Today scrolls
+  (`isScrolling`) and when a sheet covers it (`paused`; not at half height), and a grid of portraits uses
+  `ScenePortrait` — one still canvas each, never a live `CompanionScene`. The
+  tree is keyed on seed *and* species: a new companion keeps the old seed until
+  something graduates. Measure before and after any change to the scene:
+  `-frameMeter 1` logs late frames (what a person sees as stutter), and
+  `-todayScroll 1` / `-companionScroll 1` scroll Today or Choose by themselves.
+- **The finale opens colourways.** Once a house has grown every free species
+  (`finaleAt`, or `grownSpecies` covering `freeToHave` for a house that
+  finished before it existed) it may grow one again in colour 1–3
+  (`companion:start`'s `colour`, refused by message, never by status). Every
+  painter, layer key and still-cache key carries the `colourway` (0 is the
+  original and must stay pixel-identical); a palette is a table, never built
+  per frame, and a pattern is polygons cut from the leaf's own edge points:
+  a boolean `Path.intersection` cost up to ten times the leaf. The names and
+  palettes are RULES.md §17.
+- Holiday dates are computed or come from verified tables, never guessed; the
+  sources and disagreements are in `Docs/Companion/HOLIDAYS.md`.
+- **Two currencies, one price per item.** Leaves are progress — earned, never
+  sold. Sparkles are what people buy, plus a few earned at stages and
+  graduations. A thing is priced in exactly one of them (its `Access` holds a
+  `Price`, not two numbers): "100 Leaves or 5 Sparkles" for the same item is
+  paying to skip progress. A house short of Leaves can make up the rest with
+  its own Sparkles, one for one (`Exchange`) — the same price, paid partly in
+  the other coin, never a cheaper one — and Sparkles are never made up with
+  Leaves. Both live in the house's jar.
+- **Nothing is bought without asking, and never with a system alert.** Every
+  purchase opens the purchase card (`State.card`, `PurchaseCardLayer`): the
+  thing, what it costs, the jar before and after; the Leaves made up with
+  Sparkles; or "not enough" with the sum done and a way to the Sparkles store,
+  a full-screen cover that returns to the card once there is enough. The card
+  is glass snapped to the bottom edge, running on past the home indicator —
+  not a native half-sheet, whose float leaves a strip of screen under it,
+  which the owner rejected. Real money goes through the store's own sheet with
+  nothing of ours in front of it. The store is StoreKit 2
+  (`SparkleStoreKit`, behind `SparkleStoreClient`): a purchase is sent to
+  `jar:topUp` as its signed transaction and **finished only after the server
+  answers** `credited`, `already` or `revoked` (`SparkleSettlement`), so a
+  crash or a dead network costs a delay, never the Sparkles. A listener over
+  `Transaction.unfinished` and `.updates` (`watchPurchases`, started by the
+  screen's task, ended with it) lands Ask to Buy approvals and interrupted
+  purchases. Debug builds can still use the old test store with
+  `-sparkleStore test`; `NestZone.storekit` is the Debug run scheme's
+  StoreKit configuration and is not in the app target.
+  A pack the store gave no price is never shelved, and never reads as free or
+  test: only the explicit `-sparkleStore test` argument (read from the launch
+  arguments, not the defaults) shows test wording.
+- **Screenshot launch arguments (`StoreDemo`, Debug and MEASURE only).**
+  `-storeDemo 1` draws the Plus paywall with two demo packages (yearly $19.99
+  with a 1-week trial, monthly $2.99, formatted for the phone's locale) and the
+  Sparkles store with the catalog's shelf prices as ordinary buy buttons; buying
+  does nothing. `-openPaywall <feature>` (`calendar`, `finance`, `issues`, ...)
+  opens the paywall 3 s after launch. `-openSparkleStore 1` opens the shop and
+  then the Sparkles store. `-forceFreeHouse 1` treats the house as without Plus
+  (locks drawn, paywall reachable) whatever the server says.
+  `-screenshotPersona <Name>` shows the signed-in account as that name with
+  the initials avatar (no photo), so a real name and face stay out of store
+  screenshots: it rewrites the `User` where `users:me`, `homes:members` and
+  `users:byIds` are decoded, so every screen and `AvatarDirectory` follow, and
+  it holds back the notifications pre-prompt (the only prompt that opens by
+  itself on a first launch). Nothing is written to the server. The persona
+  also covers the rows that carry a server-side name and email and never pass
+  through a `User` (contributions, the ledger, the archive, the bell's actor),
+  by id; the signed-in id is kept in the defaults, so the very first launch can
+  show the real handle in the household list until `users:me` has answered:
+  launch once, then shoot.
+  `-shoppingGroupedDemo 1` draws the shopping list in aisles (Plus house;
+  `-appShoppingGrouped 1` does not work, launch arguments reach a Bool
+  `@AppStorage` as a string). `StoreDemoLaunch` opens screens ~3 s after
+  launch, waiting for their data: `-openConversation first` (first group chat,
+  else first chat), `-openMovieNight 1`, `-openRecipe first`, `-openIssue first`
+  (first open problem), `-calendarMode agenda|week|month`.
+- **The shop is an ordinary NestZone screen that happens to sell things.**
+  Glass cards on the Backdrop, the theme's accent, the app's type, SF Symbols.
+  Money is `Amount` (`leaf.fill` and `sparkle`, colour on the glyph only via
+  `Palette.leaf` / `.sparkle`, the number in the text's colour); the one button
+  that spends Leaves, Sparkles or real money is `.depth` (pressed in, not
+  lifted), everything else `PrimaryButton` / `SecondaryButton`. The only colour
+  of its own is the window each thing stands in, which is the companion's sky
+  at the hour (`ShopStage`, `StageWell`). No shop palette, no drawn coins, no
+  heavy weights, no glass control inside a toolbar item (iOS already wraps it),
+  no countdowns, exactly one computed "Best value". The first redesign — a
+  solid plum room with a gold-and-violet game-shop look — was rejected as not
+  this app.
+- **Shelves are pages.** Decor, Plants and Pets are a paging `TabView`, each
+  with its own scroll, under a switch in a `safeAreaBar`. One list with its
+  content swapped flashed empty and opened short shelves past their end.
+- **The catalog is one list** (`CompanionCatalog.swift`): every species and
+  decoration, each had exactly one way (`Access`: free, bought, a pack, in
+  season, with a holiday, or earned). A holiday of a faith brings free things
+  only and never sells. What isn't drawn yet is sketched as its emoji
+  (`Species.art`, `DecorItem.isDrawn`) until the art pass.
 
 ## Shipping a change
 
@@ -237,7 +491,11 @@ makes fixing a typo in an old note free.
   value and quietly undo the wrong one. `ConvexConnection.subscribe` now drops
   duplicate payloads, so that accident is gone and the rollback has to be real.
 - **Strings** live in `Resources/Localizable.xcstrings`, reached through `L10n`.
-  Nothing user-visible is a literal. The catalog is **hand-maintained**: add a
+  Nothing user-visible is a literal. **Turkish is written in Turkish**, not
+  translated off the English: friendly, casual, everyday street language, the
+  `sen` form ("Eve hediye geldi!", "Bugün bedava", "Seç bakalım"). A literal
+  rendering that is grammatical but nobody would say ("Güzel bir şeye yeter,
+  biraz da artar") is wrong. Labels fit on one line in both languages. The catalog is **hand-maintained**: add a
   case to `L10n.swift` and the matching entry in Xcode's String Catalog editor.
   Automatic extraction is off (`SWIFT_EMIT_LOC_STRINGS = NO`) on purpose —
   `L10n.r(_:_:)` hides the key behind a parameter, so the extractor cannot see it
@@ -299,6 +557,25 @@ makes fixing a typo in an old note free.
   URL. Anything drawn on every screen, or on every row of one, gets `.disk`; a
   browsing surface with thousands of images (posters) stays on `.session`, which
   is what `URLCache` and its byte budget are for.
+- **Motion: playful everywhere, like Telegram and Duolingo, and never
+  removed.** The owner's rules, decided on the shop's redesign:
+  - One tap, one reaction — reactions stack, they never restart (key each to
+    its own id, not a shared timestamp; the Water button's drops once
+    restarted on every tap while every tap queued its own sparkle).
+  - Haptics only for the person's own action: key them on a local tap
+    counter, never on a model value a live subscription can also change.
+  - No bounce on money or data (`Motion.dataDraw`); bounce is for
+    characters, badges and presses (`Motion.pop`, `.release`). Confetti is for
+    what a house achieves, never for money moving (settling up gets a stamp).
+  - Segment switches replay their entrances — the owner likes it; "don't
+    animate what's repeated" is for desktop-style tools, not this app.
+  - Every motion has a Reduce Motion fallback (no travel, scale or spin; the
+    glyph change and the haptic stay). Nothing new runs continuously on a
+    screen at rest — a loading shimmer runs only while it is loading, and
+    `pulse` stays at one per screen.
+  - A tap is felt once. A control that gives its own haptic when the tap
+    lands uses `.pressableQuiet`, not `.pressable`, and `Chip` already ticks
+    on its own taps, so a screen never adds a tick around one.
 - **Colours** are `static let` constants in `Palette`. Never build a `Color` or
   gradient inside a `body`.
 - **Glass goes on things that float** — cards, controls, bars. Never on a
@@ -318,6 +595,12 @@ makes fixing a typo in an old note free.
   a semaphore. Clear the stored token **only** when the server explicitly rejects
   it; a network failure must leave it in place and retry, or a two-second blip
   signs the user out permanently.
+- **A refused refresh token is answered with null tokens, not an error**
+  (`@convex-dev/auth` 0.0.87), so `persist` clearing the stored token on
+  `noTokens` is right and a rejection cannot cause an endless retry. Known
+  risk, and library behaviour: the library accepts a just-used refresh token
+  again for only `REFRESH_TOKEN_REUSE_WINDOW_MS` (10 s), so a launch killed
+  mid-exchange and reopened more than 10 s later loses the session.
 - **Sign-out unregisters the push token first**, while there is still an identity
   to authorise the mutation with.
 - **Mutation arguments are camelCase (`homeId`); document fields are snake_case
@@ -329,6 +612,15 @@ makes fixing a typo in an old note free.
 ```bash
 # build + run
 xcodebuild -scheme NestZone -destination 'platform=iOS Simulator,name=iPhone 17' build
+
+# measure on a phone: Release optimisation with the launch-argument hooks
+# (-frameMeter, -segmentCycle, -openTab, -todayScroll, -companionScroll,
+# -companionDemo) and Nestie compiled in. MEASURE is a command-line condition,
+# never in the project, so the App Store build cannot carry it. `$(inherited)`
+# matters: a bare MEASURE replaces the packages' own conditions and TCA stops
+# compiling. Read the frame meter with xctrace, see HANDOFF.md step 1.
+xcodebuild -scheme NestZone -configuration Release -destination 'id=<udid>' \
+  -allowProvisioningUpdates 'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) MEASURE' build
 
 # tests (reducer tests via TestStore, plus a UI walk of every tab)
 xcodebuild test -scheme NestZone -destination 'platform=iOS Simulator,name=iPhone 17'
@@ -366,6 +658,62 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
 # Push is a quiet no-op until all four are set. To check a key without sending
 # a real push, sign a JWT and POST to a fake device: `BadDeviceToken` means the
 # credentials are good, `InvalidProviderToken` means they are not.
+
+# Sparkle top-ups (StoreKit 2, `jar:topUp`). Production fails closed until the
+# app's numeric Apple ID is set (App Store Connect -> App Information -> Apple
+# ID); Apple signs it into every Production transaction.
+#   npx convex env set APPLE_APP_ID <digits>
+# Which environments may credit a jar. Production is always in. Sandbox is
+# free to the buyer, so on this one deployment it mints Sparkles for anyone
+# with a sandbox account: on for a TestFlight round, off after. **While a
+# build is in App Review, JAR_ENVIRONMENTS must include Sandbox, or the
+# reviewer's purchase won't deliver; remove it after.** "Xcode" (the
+# StoreKit configuration file, signed by your own Mac, unverifiable) is
+# accepted only for the admins and JAR_TEST_USER_IDS, and is for development.
+#   npx convex env set JAR_ENVIRONMENTS "Production"
+#   npx convex env set JAR_ENVIRONMENTS "Production,Sandbox,Xcode"   # dev only
+#   npx convex env set JAR_TEST_USER_IDS "jh7abc..."
+# Refunds: App Store Connect -> the app -> App Information -> App Store Server
+# Notifications, Version 2, Production and Sandbox URL both:
+#   https://nestzone-convex-api.walhallaa.com/appstore/notifications
+# That hostname is the API origin (:3210); HTTP actions live on the site
+# origin (:3211), and the tunnel forwards only /.well-known/* there today, so
+# the route answers 404 until a second ingress rule sends /appstore/.* to
+# :3211 too (Docs/Convex-Migration/Backend-Deploy-Runbook.md, the tunnel
+# section). App Store Connect's "Request a Test Notification" then lands as a
+# TEST, which the server answers 200 and ignores (`npx convex logs`).
+# What a Sandbox round credited, and to which jars (bounded, newest first):
+#   npx convex run jarStore:credited '{"environment":"Sandbox"}'
+
+# Who hears Nestie's three notifications (ready, the vote, the new one).
+# Unset or off: nobody, no push and no feed row. sandbox: push only to
+# development-signed Xcode installs (the APNs sandbox gateway), no feed row.
+# on: everyone, like any notification. Turn it on in the same release as
+# CompanionFlag; until then only Debug builds draw Nestie. The "sent" mark is
+# written either way, so switching it on never announces anything stale.
+#   npx convex env set COMPANION_NOTIFY sandbox
+
+# Household Pro (convex/pro.ts, lib/pro.ts).
+#   REVENUECAT_SECRET_KEY  RevenueCat's secret v1 key; pro:refresh and the
+#                          sweep ask RevenueCat with it. Unset: refresh throws
+#                          a clear error, the sweep does nothing.
+#   PRO_ENFORCE=on         the server refuses Pro writes (PRO_REQUIRED) and
+#                          drops finance/calendar/issues/messages
+#                          notifications for a house without Pro. Unset: every gate is a no-op. Turn it
+#                          on only per DEPRECATIONS.md ("Switches that narrow").
+#   PRO_SANDBOX=on         sandbox purchases count (TestFlight, App Review);
+#                          off after, like JAR_ENVIRONMENTS.
+#   PRO_COMP_USER_IDS      comma-separated user ids that are always Pro (the
+#                          owner's testing; never a sales channel).
+#   npx convex env set REVENUECAT_SECRET_KEY sk_...
+#   npx convex env set PRO_SANDBOX on
+
+# Sign in with Apple revocation on account deletion (users:deleteAccount).
+# A Sign in with Apple key (.p8) from the Developer portal. Unset: accounts
+# are still deleted, Apple's token is just not revoked.
+#   npx convex env set SIWA_KEY_ID  <10-char key id>
+#   npx convex env set SIWA_TEAM_ID <10-char team id>
+#   npx convex env set -- SIWA_PRIVATE_KEY "$(cat AuthKey_XXXXXXXXXX.p8)"
 ```
 
 ## Backend notes
@@ -498,6 +846,89 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   activity older than 90 days in self-rescheduling batches. The feed is the one
   table here that is *meant* to be forgotten; kept forever it is not a storage
   bill but a slow bell.
+- **A Sparkle top-up is credited by the server, from Apple's signature, once
+  per transaction across the deployment.** The phone sends StoreKit 2's
+  `jwsRepresentation` to `jar:topUp` (a Node action, convex/jar.ts: Apple's
+  `SignedDataVerifier`, the chain to a pinned Apple Root CA - G3, OCSP, bundle
+  id, environment, consumable, a product in lib/jar.ts's table, which is the
+  catalog the Swift exports) and convex/jarStore.ts writes the purchase row,
+  the ledger row and the balance in one transaction. `jar_purchases` is the
+  idempotency, not the ledger, because a ledger key is unique only within a
+  home and a receipt must credit one home: the same house asking again hears
+  `already` with its Sparkles, another house `already` with 0. A purchase
+  credits only its buyer: the app signs `appAccountToken` (a UUID derived
+  from the user id, `accountToken` in lib/jar.ts, the same bytes as
+  `SparkleAccount.token`, with a test vector both sides keep) and a mismatch,
+  or no token outside Xcode, is `invalid`. Those rows
+  outlive the house (`purgeHome` leaves them) or a deleted house's receipts
+  could be spent again. `invalid` is only for data that is not Apple's or
+  not ours to credit (offline verification fails, Sandbox off, Xcode from a
+  non-test account, not a consumable, another buyer). A genuine Apple
+  transaction we can't settle yet — the online check fails but the offline
+  one passes, `APPLE_APP_ID` unset, a Production product the table doesn't
+  know — is thrown, so the phone keeps it and asks again. Refunds arrive at
+  `POST /appstore/notifications`: `REFUND` and `REVOKE` debit the jar once
+  (`refund:<transactionId>`), the jar may go below zero and nothing bought is
+  taken back; a refund for a transaction never credited leaves a tombstone so
+  its pre-refund JWS can't be credited later. Every other type and every
+  unknown transaction is a 200. The phone's test store (`SparkleStoreClient`
+  while `isTestStore`) never reaches the server: its Sparkles are credited
+  nowhere in the real house, and the pretend house's store credits its own jar.
+- **Household Pro is the house's, carried by a person.** A house is Pro while
+  any current member has an unexpired `pro_entitlements` row (lib/pro.ts);
+  there is no plan field on the home, so a payer who leaves takes Pro with
+  them. Rows are written only from RevenueCat's answer (`pro:refresh`, the
+  6-hourly `pro:sweep`), never from what a phone says; the RevenueCat app
+  user id is the Convex user id. `pro:status` is the app's live read.
+  Every gate goes through `requirePro` (a `ConvexError` with
+  `{ code: "PRO_REQUIRED", feature }`) or `proAllows` (for coercions), and
+  all of it is a no-op until `PRO_ENFORCE=on`. **Pro gates features, never
+  the household's data:** queries never refuse, removes stay open, and
+  `tasks:setArchived(false)` always works. Shopping categories are coerced to
+  the default, never refused, because old builds send one with every item.
+  `push.notifyHome` and `notifyUsers` drop `finance`, `calendar`, `issues`
+  and `messages` for a free house, push and feed row both, which is what silences the reminder sweeps
+  (`finance:sweepReminders`, `issues:sweepStale`). A new Pro gate is one
+  `requirePro` call after the membership check, plus a `ProFeature`.
+  The `feature` strings a refusal carries: `calendar`, `finance`,
+  `shoppingCategories`, `customMovieLists`, `archiveNow`,
+  `eventFromElsewhere`, `expenseFromElsewhere`, `issues`, `multipleHomes`,
+  `matureContent`, `messages`. **House problems are Plus** (`issues`): every write
+  refuses for a free house (create, update, setStatus, assign, toggleMeToo,
+  comment, uploadUrl, attachPhotos, makeChore, scheduleVisit, addParts);
+  `remove`, `removeComment`, `removePhoto` and every read stay open, and
+  `noteChoreDone` never refuses, because ticking a chore is free.
+  `issues:uploadUrl` takes an optional `homeId`; without one the caller needs
+  any Plus home. **A second home is Plus, and the person's**
+  (`multipleHomes`): `homes:create` and `homes:join` refuse a caller already
+  in a home unless `userHasPro` (their own entitlement or the comp list) or,
+  for a join, the house joined is Plus already. Nobody is taken out of a home
+  they are in, and leaving is free. **Mature titles are Plus**
+  (`matureContent`): `catalog:discover` turns `includeAdult` off for a free
+  caller (judged by its optional `homeId`, or by any of the caller's homes and
+  their own Plus), never refused, because old builds send it on every browse.
+  **Messages is Plus** (`messages`): `messages:send`, `messages:edit`,
+  `conversations:create` (a 1:1 or a group, a reopened 1:1 included) and
+  `conversations:rename` refuse for a free house; so do a chat poll's
+  `polls:create` (`type: "generic"`), `addItem`, `vote` and `unvote`. A chat
+  poll is a `generic` poll that is not Nestie's vote (`companionVoteFor`):
+  movie rounds, recipe rounds and Nestie's vote never refuse. Every read,
+  `messages:remove`, `messages:markRead`, `polls:remove` and
+  `polls:setStatus` stay open. There is no add-member or leave function for a
+  conversation today; one added later follows the same rule (adding refuses,
+  leaving never does).
+- **Leaving, being removed and deleting an account are one code path**
+  (`departHome`, lib/membership.ts). `users:deleteAccount` runs in bounded,
+  self-rescheduling steps (`deleteAccountStep`): sign-in rows and devices,
+  then one home per step, then the person's own rows, then the user. What the
+  person wrote into a shared home stays and points at an id that no longer
+  resolves; every reader must tolerate that, as it already does for a
+  member who left (`finance:summary` keeps a nameless, non-member row for
+  such an id while it carries a balance, and `settle` accepts it on one
+  side). A home whose last member goes loses its document and its members'
+  mirrors at once; its rows then drain in bounded batches
+  (`homes:purgeHomeData`, logged per batch, an error past 200 batches).
+  Removing a member rotates the invite code.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.

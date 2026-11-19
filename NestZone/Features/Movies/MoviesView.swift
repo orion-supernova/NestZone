@@ -66,19 +66,20 @@ public struct MoviesView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.movieListsTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { store.send(.createListTapped) } label: {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.moviesNewListTitle))
+                .proLocked(.customMovieLists)
             }
         }
         .task { await store.send(.task).finish() }
         .navigationDestination(item: $store.scope(
             state: \.destination?.list, action: \.destination.list
         )) { MovieListView(store: $0) }
-        .sheet(item: $store.scope(
+        .hostedSheet(item: $store.scope(
             state: \.destination?.createList, action: \.destination.createList
         )) { CreateMovieListSheet(store: $0) }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -241,16 +242,17 @@ struct MovieListView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.movieListDetailAddMovies))
+                .proLocked(if: store.list.kind == .custom ? .customMovieLists : nil)
             }
         }
         .task { await store.send(.task).finish() }
-        .sheet(isPresented: Binding(
+        .hostedSheet(isPresented: Binding(
             get: { store.isSearchPresented },
             set: { if !$0 { store.send(.searchDismissed) } }
         )) {
             AddMoviesSheet(store: store, poster: poster)
         }
-        .sheet(item: $store.scope(state: \.detail, action: \.detail)) {
+        .hostedSheet(item: $store.scope(state: \.detail, action: \.detail)) {
             MovieInfoSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -334,7 +336,10 @@ struct MovieListView: View {
                             }
                         }
                     }
-                    .appear(index)
+                    // Only the first screenful staggers: a lazy poster appears
+                    // when it is scrolled to, and the fortieth waiting out its
+                    // capped delay read as the grid lagging behind the finger.
+                    .appear(index < 8 ? index : 0)
                 }
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -411,8 +416,15 @@ private struct ListChip: View {
     let isBusy: Bool
     let action: () -> Void
 
+    /// Your own taps. The tick keys on these rather than on `isSaved`, which
+    /// also flips when somebody else files the film from their phone.
+    @State private var taps = 0
+
     var body: some View {
-        Button(action: action) {
+        Button {
+            taps += 1
+            action()
+        } label: {
             HStack(spacing: 6) {
                 if isBusy {
                     ProgressView().controlSize(.small)
@@ -434,9 +446,10 @@ private struct ListChip: View {
             // shape only the label glyphs are tappable.
             .contentShape(.capsule)
         }
-        .buttonStyle(.pressable)
+        .buttonStyle(.pressableQuiet)
         .disabled(isBusy)
         .animation(Motion.spring, value: isSaved)
+        .sensoryFeedback(.selection, trigger: taps)
         .accessibilityAddTraits(isSaved ? [.isSelected, .isButton] : .isButton)
     }
 }
@@ -524,6 +537,8 @@ struct MovieInfoSheet: View {
                             ) {
                                 store.send(.listToggled(list))
                             }
+                            .proLocked(if: list.kind == .custom && !store.state.isSaved(in: list)
+                                ? .customMovieLists : nil)
                         }
                     }
                     .padding(.horizontal, 2)

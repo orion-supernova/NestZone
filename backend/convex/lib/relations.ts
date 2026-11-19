@@ -12,6 +12,7 @@
 
 import { Doc, Id, TableNames } from "../_generated/dataModel";
 import { MutationCtx, QueryCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
 
 /** Load a referenced document or throw. Use before storing any v.id(). */
 export async function requireRef<T extends TableNames>(
@@ -160,9 +161,19 @@ export async function unlinkEvent(
  * Delete a home and everything scoped to it, and scrub it from every user's
  * `home_id` mirror.
  *
- * Called when the last member leaves. Without this the home's rows survive with
- * no member able to satisfy `requireHomeMember`, i.e. permanently unreachable
- * data that no code path can ever read, write or clean up again.
+ * Called when the last member leaves (or deletes their account). Without this
+ * the home's rows survive with no member able to satisfy `requireHomeMember`,
+ * i.e. permanently unreachable data that no code path can ever read, write or
+ * clean up again.
+ *
+ * In two halves, because a household with years of history cannot be deleted
+ * inside one transaction's read and write limits — and when it was tried in
+ * one, a scheduled caller (account deletion) could fail half-way with nothing
+ * left to finish the job. So the part that decides access goes now, in the
+ * caller's transaction: the home document, every member's mirror, Nestie's
+ * row. The household's rows are then unreachable to everyone, and drain in
+ * bounded batches behind it (`homes:purgeHomeData`, `purgeHomeBatch` below),
+ * the same way Nestie's ledger already did (`companion:purgeHome`).
  */
 export async function cascadeDeleteHome(
   ctx: MutationCtx,
@@ -170,97 +181,152 @@ export async function cascadeDeleteHome(
 ): Promise<Record<string, number>> {
   const removed: Record<string, number> = {};
   // Read before anything is deleted: the home doc carries the member list the
-  // mirror-scrub below needs, and this function ends by deleting it.
+  // mirror-scrub below needs.
   const memberIds = (await ctx.db.get(homeId))?.members ?? [];
 
-  // Every table at once, and every row within a table at once.
-  //
-  // This was eleven index scans taken end to end and then one `delete` awaited
-  // per row, which on any household with history cannot finish inside a
-  // mutation's one second. It is called when the last member leaves — and the
-  // comment above is the whole point: if it times out, the home's rows survive
-  // with nobody able to satisfy `requireHomeMember`, which is precisely the
-  // unreachable data this function exists to prevent.
-  //
-  // `issue_comments` is in here rather than behind a per-issue cascade for the
-  // same reason: it carries `home_id` precisely so a household's entries are one
-  // index range instead of one read per problem the household ever had.
-  //
-  // `task_completions` likewise. Nothing else in the app may delete a row of it
-  // — the record of who did the housework outlives the task, the archive and
-  // every tidy-up of the list — but it does not outlive the household it
-  // belongs to, which is what this function is for.
-  //
-  // `home_activity` and `activity_reads` are in here for the ordinary reason:
-  // both are home-scoped, both carry `by_home`, and a feed that outlived its
-  // household would be rows nobody can reach and nobody can delete. The
-  // changelog is not — `app_updates` belongs to the app, not to any home.
-  const simple = [
-    "tasks", "task_completions", "shopping_items", "notes", "recipes", "movies",
-    "meal_plans", "expenses", "settlements", "bills", "budgets", "events",
-    "issues", "issue_comments", "home_activity", "activity_reads",
-  ] as const;
-  await Promise.all(
-    simple.map(async (table) => {
-      const rows = await ctx.db
-        .query(table)
-        .withIndex("by_home", (q) => q.eq("home_id", homeId))
-        .collect();
-      await Promise.all(rows.map((r) => ctx.db.delete(r._id)));
-      removed[table] = rows.length;
-    }),
+  // The home's own members, not every user in the deployment: `homes.members`
+  // is the authoritative membership list (it is what `requireHomeMember`
+  // enforces) and the mirror is patched alongside it in the same transaction,
+  // so these are exactly the users to scrub.
+  const members = await Promise.all(memberIds.map((id) => ctx.db.get(id)));
+  const scrubbed = await Promise.all(
+    members
+      .filter((u) => u !== null && (u.home_id ?? []).some((h) => h === homeId))
+      .map((u) =>
+        ctx.db
+          .patch(u!._id, { home_id: (u!.home_id ?? []).filter((h) => h !== homeId) })
+          .then(() => 1),
+      ),
   );
-
-  const [lists, polls, convos, members] = await Promise.all([
-    ctx.db
-      .query("movie_lists")
-      .withIndex("by_home", (q) => q.eq("home_id", homeId))
-      .collect(),
-    ctx.db
-      .query("polls")
-      .withIndex("by_home", (q) => q.eq("home_id", homeId))
-      .collect(),
-    ctx.db
-      .query("conversations")
-      .withIndex("by_home", (q) => q.eq("home_id", homeId))
-      .collect(),
-    // The home's own members, not every user in the deployment. The old read
-    // was `ctx.db.query("users").collect()` — an unindexed scan of the entire
-    // user table to find the handful of rows whose mirror points here, growing
-    // with the app's sign-ups rather than with the household being deleted.
-    // `homes.members` is the authoritative membership list (it is what
-    // `requireHomeMember` enforces) and the mirror is patched alongside it in
-    // the same transaction, so these are exactly the users to scrub.
-    Promise.all(memberIds.map((id) => ctx.db.get(id))),
-  ]);
-
-  const [, pollResults, messageCounts, scrubbed] = await Promise.all([
-    Promise.all(lists.map((l) => cascadeDeleteMovieList(ctx, l._id))),
-    Promise.all(polls.map((p) => cascadeDeletePoll(ctx, p._id))),
-    Promise.all(convos.map((c) => cascadeDeleteConversation(ctx, c._id))),
-    // Scrub the denormalised mirror on users so no user points at a dead home.
-    Promise.all(
-      members
-        .filter((u) => u !== null && (u.home_id ?? []).some((h) => h === homeId))
-        .map((u) =>
-          ctx.db
-            .patch(u!._id, {
-              home_id: (u!.home_id ?? []).filter((h) => h !== homeId),
-            })
-            .then(() => 1),
-        ),
-    ),
-  ]);
-
-  removed["movie_lists"] = lists.length;
-  removed["polls"] = polls.length;
-  removed["poll_items"] = pollResults.reduce((n, r) => n + r.items, 0);
-  removed["poll_votes"] = pollResults.reduce((n, r) => n + r.votes, 0);
-  removed["conversations"] = convos.length;
-  removed["messages"] = messageCounts.reduce((n, c) => n + c, 0);
   removed["users_scrubbed"] = scrubbed.length;
+
+  // Nestie's rows outlive nothing either, but a companion's ledger grows with
+  // the house's age, so only the one `companion_homes` row goes here and the
+  // rest drain in batches behind it (`companion:purgeHome`).
+  const companionHomes = await ctx.db
+    .query("companion_homes")
+    .withIndex("by_home", (q) => q.eq("home_id", homeId))
+    .take(10);
+  await Promise.all(companionHomes.map((row) => ctx.db.delete(row._id)));
+  if (companionHomes.length > 0) {
+    await ctx.scheduler.runAfter(0, internal.companion.purgeHome, { homeId });
+  }
+  removed["companion_homes"] = companionHomes.length;
 
   await ctx.db.delete(homeId);
   removed["homes"] = 1;
+
+  // Everything else, scheduled. Scheduling cannot fail the way a long delete
+  // can, so leaving stays one quick transaction.
+  await ctx.scheduler.runAfter(0, internal.homes.purgeHomeData, { homeId });
   return removed;
+}
+
+/** Rows of one home-scoped table deleted per batch. */
+const PURGE_ROWS = 150;
+/** Parents (polls, conversations) emptied per batch, each up to PURGE_ROWS children. */
+const PURGE_PARENTS = 5;
+
+/**
+ * Tables with a `by_home` index, deleted row by row. The ones the reminder
+ * and growth sweeps read come first, so a deleted house stops being looked
+ * at soonest.
+ *
+ * `issue_comments` carries `home_id` precisely so a household's entries are
+ * one index range instead of one read per problem. `task_completions` — which
+ * nothing else in the app may delete, the record of who did the housework —
+ * does not outlive the household it belongs to. `home_activity` and
+ * `activity_reads` are home-scoped like the rest; `app_updates` belongs to
+ * the app, not to any home. `movies` goes by its own `by_home`, so a list is
+ * empty by the time it is deleted.
+ */
+const HOME_TABLES = [
+  "bills", "events", "issues", "tasks", "task_completions", "shopping_items",
+  "notes", "recipes", "movies", "meal_plans", "expenses", "settlements",
+  "budgets", "issue_comments", "home_activity", "activity_reads",
+] as const;
+
+/**
+ * Deletes one bounded batch of a deleted home's rows (about 5,000 writes at
+ * most). `more` is whether anything is left. Idempotent: it reads what is
+ * there, so a retried or overlapping batch only finds less.
+ */
+export async function purgeHomeBatch(
+  ctx: MutationCtx,
+  homeId: Id<"homes">,
+): Promise<{ removed: number; more: boolean }> {
+  let removed = 0;
+  let more = false;
+
+  const counts = await Promise.all(
+    HOME_TABLES.map(async (table) => {
+      const rows = await ctx.db
+        .query(table)
+        .withIndex("by_home", (q) => q.eq("home_id", homeId))
+        .take(PURGE_ROWS);
+      await Promise.all(rows.map((r) => ctx.db.delete(r._id)));
+      return rows.length;
+    }),
+  );
+  for (const n of counts) {
+    removed += n;
+    if (n === PURGE_ROWS) more = true;
+  }
+
+  // Movie lists after their movies (above, by home), so a batch never
+  // strands a film under a list that is gone.
+  const lists = await ctx.db
+    .query("movie_lists")
+    .withIndex("by_home", (q) => q.eq("home_id", homeId))
+    .take(PURGE_ROWS);
+  if (counts[HOME_TABLES.indexOf("movies")] < PURGE_ROWS) {
+    await Promise.all(lists.map((l) => ctx.db.delete(l._id)));
+    removed += lists.length;
+    if (lists.length === PURGE_ROWS) more = true;
+  } else if (lists.length > 0) {
+    more = true;
+  }
+
+  // Polls and conversations: empty a few, deleting each only once empty.
+  const polls = await ctx.db
+    .query("polls")
+    .withIndex("by_home", (q) => q.eq("home_id", homeId))
+    .take(PURGE_PARENTS);
+  for (const poll of polls) {
+    const [items, votes] = await Promise.all([
+      ctx.db.query("poll_items").withIndex("by_poll", (q) => q.eq("poll_id", poll._id)).take(PURGE_ROWS),
+      ctx.db.query("poll_votes").withIndex("by_poll", (q) => q.eq("poll_id", poll._id)).take(PURGE_ROWS),
+    ]);
+    await Promise.all([...items, ...votes].map((r) => ctx.db.delete(r._id)));
+    removed += items.length + votes.length;
+    if (items.length < PURGE_ROWS && votes.length < PURGE_ROWS) {
+      await ctx.db.delete(poll._id);
+      removed += 1;
+    } else {
+      more = true;
+    }
+  }
+  if (polls.length === PURGE_PARENTS) more = true;
+
+  const convos = await ctx.db
+    .query("conversations")
+    .withIndex("by_home", (q) => q.eq("home_id", homeId))
+    .take(PURGE_PARENTS);
+  for (const convo of convos) {
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversation_id", convo._id))
+      .take(PURGE_ROWS);
+    await Promise.all(messages.map((m) => ctx.db.delete(m._id)));
+    removed += messages.length;
+    if (messages.length < PURGE_ROWS) {
+      await ctx.db.delete(convo._id);
+      removed += 1;
+    } else {
+      more = true;
+    }
+  }
+  if (convos.length === PURGE_PARENTS) more = true;
+
+  return { removed, more };
 }

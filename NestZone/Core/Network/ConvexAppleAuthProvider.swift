@@ -91,9 +91,18 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     ) async throws -> ConvexAuthTokens {
         await refreshGate.wait()
 
-        guard let refresh = tokenStore.refreshToken else {
+        let refresh: String
+        switch tokenStore.lookup() {
+        case let .present(token):
+            refresh = token
+        case .absent:
             await refreshGate.signal()
             throw ConvexAuthError.noCachedSession
+        case .unreadable:
+            // A Keychain that cannot be read says nothing about the session.
+            // Not "no session": that would send the person to sign in again.
+            await refreshGate.signal()
+            throw ConvexAuthError.unreachable
         }
 
         let result: SignInActionResult
@@ -123,7 +132,30 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     }
 
     /// Whether a silent restore is even worth attempting.
-    public var hasStoredSession: Bool { tokenStore.refreshToken != nil }
+    public var hasStoredSession: Bool { storedSession != .absent }
+
+    /// Whether a session is stored, where "could not read the Keychain" is
+    /// kept apart from "nothing stored". Only `.absent` is the end of a
+    /// session.
+    public var storedSession: StoredSession {
+        switch tokenStore.lookup() {
+        case .present: .present
+        case .absent: .absent
+        case .unreadable: .unreadable
+        }
+    }
+
+    /// `storedSession` for the launch decision, answered from a read the app
+    /// started off the main thread (`LaunchWarmup`).
+    public static var launchSession: StoredSession {
+        switch KeychainTokenStore.launchLookup() {
+        case .present: .present
+        case .absent: .absent
+        case .unreadable: .unreadable
+        }
+    }
+
+    public enum StoredSession: Sendable { case present, absent, unreadable }
 
     public func extractIdToken(from authResult: ConvexAuthTokens) -> String {
         authResult.token

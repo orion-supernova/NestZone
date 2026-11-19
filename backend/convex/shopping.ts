@@ -1,8 +1,11 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, MutationCtx } from "./_generated/server";
+import { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { outstandingItems, outstandingNames } from "./lib/pending";
+import { noteGrowth } from "./lib/companion";
+import { proAllows } from "./lib/pro";
 
 // Shown as the notification title; the body carries what actually changed.
 const NOTIFY_TITLE = "Added to the list";
@@ -13,6 +16,29 @@ const category = v.union(
   v.literal("cleaning"),
   v.literal("other"),
 );
+
+type Category = "groceries" | "household" | "cleaning" | "other";
+
+/** What the list adds under when nobody picks an aisle. */
+const DEFAULT_CATEGORY: Category = "groceries";
+
+/**
+ * The category a write may keep. Shopping categories are Household Pro, but
+ * every build already on a phone sends one with every item — so a house
+ * without Pro is never refused, its item is quietly filed under the default
+ * instead (and an item sent without one stays without one). Always the
+ * category as sent while PRO_ENFORCE is off.
+ */
+async function allowedCategory(
+  ctx: MutationCtx,
+  home: Doc<"homes">,
+  picked: Category | undefined,
+  /** The item's category now: an edit that keeps it is never refiled. */
+  current?: Category,
+): Promise<Category | undefined> {
+  if (picked === undefined || picked === current) return picked;
+  return (await proAllows(ctx, home)) ? picked : DEFAULT_CATEGORY;
+}
 
 /**
  * How many bought items the list carries back with it.
@@ -63,14 +89,14 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, args.homeId);
+    const home = await requireHomeMember(ctx, args.homeId);
     const now = Date.now();
     const createdId = await ctx.db.insert("shopping_items", {
       home_id: args.homeId,
       name: args.name,
       description: args.description,
       quantity: args.quantity,
-      category: args.category,
+      category: await allowedCategory(ctx, home, args.category),
       is_purchased: false,
       created_by: user._id,
       updated_by: user._id,
@@ -126,7 +152,8 @@ export const createMany = mutation({
   returns: v.array(v.id("shopping_items")),
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, args.homeId);
+    const home = await requireHomeMember(ctx, args.homeId);
+    const picked = await allowedCategory(ctx, home, args.category);
 
     if (args.names.length > MANY_INPUT_LIMIT) {
       throw new Error(`At most ${MANY_LIMIT} items at once`);
@@ -158,7 +185,7 @@ export const createMany = mutation({
           home_id: args.homeId,
           name,
           // What the list screen adds under when nobody picks an aisle.
-          category: args.category ?? "groceries",
+          category: picked ?? DEFAULT_CATEGORY,
           is_purchased: false,
           created_by: user._id,
           updated_by: user._id,
@@ -203,7 +230,8 @@ export const createFromRecipe = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
-    await requireHomeMember(ctx, args.homeId);
+    const home = await requireHomeMember(ctx, args.homeId);
+    const picked = await allowedCategory(ctx, home, args.category);
 
     const outstanding = await outstandingNames(ctx, args.homeId);
 
@@ -222,7 +250,7 @@ export const createFromRecipe = mutation({
         ctx.db.insert("shopping_items", {
           home_id: args.homeId,
           name,
-          category: args.category ?? "groceries",
+          category: picked ?? DEFAULT_CATEGORY,
           is_purchased: false,
           recipe_id: args.recipeId,
           recipe_title: args.recipeTitle,
@@ -257,6 +285,8 @@ export const setPurchased = mutation({
     if (!item) throw new Error("Item not found");
     await requireDocHome(ctx, item, "Item");
     await ctx.db.patch(id, { is_purchased, updated_by: user._id, updated: Date.now() });
+    // A trip to the shops grows Nestie (convex/companion.ts).
+    await noteGrowth(ctx, item.home_id, { kind: "shopping", id });
     return await ctx.db.get(id);
   },
 });
@@ -273,7 +303,10 @@ export const update = mutation({
     const user = await requireUser(ctx);
     const item = await ctx.db.get(id);
     if (!item) throw new Error("Item not found");
-    await requireDocHome(ctx, item, "Item");
+    const home = await requireDocHome(ctx, item, "Item");
+    if (fields.category !== undefined) {
+      fields.category = await allowedCategory(ctx, home, fields.category, item.category);
+    }
     await ctx.db.patch(id, { ...fields, updated_by: user._id, updated: Date.now() });
     return await ctx.db.get(id);
   },

@@ -31,6 +31,13 @@ extension DevicesClient: DependencyKey {
                     "appVersion": AppVersion.current.raw,
                 ]
             )
+            // Remembered for sign-out, which may come before this launch has
+            // a token of its own; see `PushTokenMemory`.
+            await PushTokenMemory.standard.registered(token) { stale in
+                try await ConvexConnection.shared.mutate(
+                    "push:unregisterDevice", args: ["token": stale]
+                )
+            }
         },
         unregister: { token in
             try await ConvexConnection.shared.mutate(

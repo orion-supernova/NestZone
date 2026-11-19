@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import SwiftUI
 
 /// The household's six counters, each a way into the screen it counts.
@@ -16,6 +17,8 @@ struct HouseStatsGrid: View {
     let statsLoaded: Bool
     let eventsLoaded: Bool
     let open: (HouseStatTile) -> Void
+
+    @Shared(.pro) private var pro
 
     var body: some View {
         GlassGroup(spacing: 18) {
@@ -81,13 +84,43 @@ struct HouseStatsGrid: View {
                 // that could disagree with the list under it is the failure
                 // the Finance screen's bill counters were moved client-side to
                 // avoid.
-                StatTile(
-                    title: L10n.homeStatsEventsTitle,
-                    value: eventsThisWeek,
-                    symbol: "calendar",
-                    tint: Palette.statEvents
-                ) { open(.events) }
-                    .redacted(reason: eventsLoaded ? [] : .placeholder)
+                if pro.isPro {
+                    StatTile(
+                        title: L10n.homeStatsEventsTitle,
+                        value: eventsThisWeek,
+                        symbol: "calendar",
+                        tint: Palette.statEvents
+                    ) { open(.events) }
+                        .redacted(reason: eventsLoaded ? [] : .placeholder)
+                } else {
+                    // A teaser: the calendar is Plus, so there is no count to
+                    // read, and the tile says so and opens the plans.
+                    Button { PaywallBroker.shared.request(.calendar) } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .font(.callout.weight(.semibold))
+                                    .foregroundStyle(Palette.statEvents)
+                                Spacer()
+                                Image(systemName: "lock.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Text(L10n.proTeaserValue)
+                                .font(.system(.title, design: .rounded, weight: .bold))
+                            Text(L10n.homeStatsEventsTitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .padding(Metrics.cardPadding)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(.rect)
+                        .glassCard(cornerRadius: Metrics.tightRadius)
+                    }
+                    .buttonStyle(.pressable)
+                    .accessibilityHint(Text(L10n.proLockedHint))
+                }
             }
         }
     }

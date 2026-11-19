@@ -109,6 +109,9 @@ struct LaunchView: View {
 /// it as the bar's accessory, so it shrinks and returns with it.
 struct MainView: View {
     @Bindable var store: StoreOf<MainFeature>
+    /// Which sheets are up, so the paywall opens over the top one
+    /// (`PaywallHost`).
+    @State private var paywallHosts = PaywallHosts()
 
     var body: some View {
         TabView(selection: Binding(
@@ -117,8 +120,12 @@ struct MainView: View {
         )) {
             Tab(value: MainFeature.Tab.today) {
                 RouteStackView(store: store.scope(state: \.today, action: \.today)) {
-                    HomeView(store: store.scope(state: \.homeTab, action: \.home))
-                        .sessionToolbar(store)
+                    HomeView(store: store.scope(state: \.homeTab, action: \.home)) { compact in
+                        if CompanionFlag.isEnabled {
+                            CompanionCard(store: store.scope(state: \.companion, action: \.companion), compact: compact)
+                        }
+                    }
+                    .sessionToolbar(store)
                 }
             } label: {
                 Label { Text(L10n.tabBarHome) } icon: { Image(systemName: "sun.max.fill") }
@@ -145,13 +152,16 @@ struct MainView: View {
             .accessibilityIdentifier("MessagesTab")
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        #if DEBUG || MEASURE
+        .onAppear { FrameMeter.shared.todayAppeared() }
+        #endif
         .dock(isEnabled: showsDock) {
             NowDock(store: store.scope(state: \.now, action: \.now))
         }
         // One panel and one Settings sheet for the whole tab bar, whichever
         // tab's button asked for them.
         .inboxPanel(store.scope(state: \.inbox, action: \.inbox))
-        .sheet(isPresented: Binding(
+        .hostedSheet(isPresented: Binding(
             get: { store.isSettingsPresented },
             set: { if !$0 { store.send(.settingsDismissed) } }
         )) {
@@ -172,9 +182,14 @@ struct MainView: View {
         // Over the tabs otherwise: Today's own link.
         .customizeSheet(store, when: false)
         .nowSheets(store.scope(state: \.now, action: \.now))
-        .sheet(item: $store.scope(state: \.capture, action: \.capture)) {
+        .hostedSheet(item: $store.scope(state: \.capture, action: \.capture)) {
             CaptureView(store: $0)
         }
+        // Over the tabs when no sheet is up; over the top sheet when one is
+        // (every `hostedSheet` hosts it too).
+        .paywallHost(depth: 0)
+        .environment(paywallHosts)
+        .environment(\.paywallStore, store)
         // Above the dock and the tab bar, clear of both.
         .overlay(alignment: .bottom) {
             if let outcome = store.captured {
@@ -193,6 +208,42 @@ struct MainView: View {
         // The dock is on every tab, so what it reads is subscribed to here,
         // for the life of the tab bar rather than of any one tab.
         .task { await store.send(.now(.task)).finish() }
+        // Whether this house has Plus, for the life of the tab bar.
+        .task { await store.send(.proStatus(.task)).finish() }
+        // A gated control, or a refusal from the server, asking for the paywall.
+        .task {
+            for await feature in PaywallBroker.shared.requests() {
+                store.send(.paywallRequested(feature))
+            }
+        }
+        #if DEBUG || MEASURE
+        // `-openPaywall <feature>` and `-openSparkleStore 1`, for screenshots.
+        .task {
+            if let feature = StoreDemo.paywallFeature {
+                try? await Task.sleep(for: .seconds(3))
+                store.send(.paywallRequested(feature))
+            }
+            if StoreDemo.opensSparkleStore {
+                try? await Task.sleep(for: .seconds(3))
+                store.send(.companion(.shopTapped))
+                try? await Task.sleep(for: .seconds(1.5))
+                store.send(.companion(.storeTapped))
+            }
+        }
+        // `-openConversation`, `-openMovieNight`, `-openRecipe`, `-openIssue`,
+        // `-calendarMode`: see StoreDemoLaunch.
+        .task { await StoreDemoLaunch.run(store) }
+        #endif
+        // The house's companion is shared, so it is read for the life of the
+        // tab bar too; Release builds draw none of it and never ask.
+        .task { if CompanionFlag.isEnabled { await store.send(.companion(.task)).finish() } }
+        // Purchases that finish outside a tap (Ask to Buy, an interrupted one):
+        // for as long as this screen is, which is as long as somebody is signed
+        // in with a home.
+        // Keyed on the house and the person, so a change of either restarts it.
+        .task(id: PurchaseWatch(home: store.companion.homeID, user: store.companion.userID)) {
+            if CompanionFlag.isEnabled { await store.send(.companion(.watchPurchases)).finish() }
+        }
     }
 
     /// Whether the dock is drawn. It steps aside where the screen has a field
@@ -200,13 +251,17 @@ struct MainView: View {
     /// so there are never two text fields stacked over the tab bar. (Only on
     /// iOS 26.1 and later; 26.0 cannot hide an accessory once it is shown.)
     private var showsDock: Bool {
+        // The movie game lays its swipe buttons out over the whole screen, so
+        // the accessory would sit on top of them.
+        let top = store.state[stack: store.selectedTab].path.last
+        if case .movieNight = top { return false }
         switch store.selectedTab {
         case .lists:
-            !(store.lists.path.isEmpty && store.lists.selected == .shopping)
+            return !(store.lists.path.isEmpty && store.lists.selected == .shopping)
         case .messages:
-            store.messages.path.isEmpty
+            return store.messages.path.isEmpty
         case .today, .plans, .house:
-            true
+            return true
         }
     }
 
@@ -241,17 +296,91 @@ private struct SegmentedRoot: View {
     @Bindable var store: StoreOf<RouteStack>
 
     @Environment(\.theme) private var theme
+    /// Read for `isLoaded` alone, to hold a Plus module back (see `body`).
+    @Shared(.pro) private var pro
+    /// The modules whose screens have been shown, and so are built and kept.
+    /// A module nobody opens is never built.
+    @State private var visited: Set<HubModule> = []
+    /// The visited modules that have faded out since they were left.
+    @State private var rested: Set<HubModule> = []
+    /// The module whose bar items, search and entrances are live. It follows
+    /// `store.selected` a few frames late, on purpose: a switch used to do
+    /// everything in one frame (the fade, the underline, the bar being
+    /// rebuilt, the search field coming and going, and every row of two
+    /// screens re-reading the phase), and that one frame was 100 ms and more.
+    /// Split in two, neither half is.
+    @State private var onStage: HubModule?
+
+    /// How long a screen takes to fade out, and a little over.
+    private static let fadeOut: Duration = .milliseconds(260)
+    /// How long the bar and the entrances wait behind the fade and the underline.
+    private static let stageLag: Duration = .milliseconds(50)
 
     var body: some View {
         ZStack {
-            if let selected = store.selected,
-               let segment = store.scope(state: \.segments[id: selected], action: \.segments[id: selected]) {
-                RouteView(store: segment.scope(state: \.screen, action: \.screen))
-                    .id(selected)
-                    .transition(.opacity)
+            // A Plus module is not built until `pro:status` has answered:
+            // `isPro` is true until then so a Plus house never sees a lock,
+            // and a free house opening on Calendar or Finance would otherwise
+            // build the screen and start its reads just to be moved off it.
+            ForEach(group.modules.filter {
+                (visited.contains($0) || $0 == store.selected) && !($0.requiresPlus && !pro.isLoaded)
+            }) { module in
+                if let segment = store.scope(state: \.segments[id: module], action: \.segments[id: module]) {
+                    SegmentPage(
+                        store: segment.scope(state: \.screen, action: \.screen),
+                        phase: phase(of: module),
+                        isSelected: module == store.selected
+                    )
+                }
             }
         }
-        .animation(Motion.fade, value: store.selected)
+        .onChange(of: store.selected, initial: true) { _, selected in
+            guard let selected else { return }
+            // A Plus module held back above is not "visited" yet: a free house
+            // is about to be moved off it, and it must not be built then.
+            if !(selected.requiresPlus && !pro.isLoaded) { visited.insert(selected) }
+            rested.remove(selected)
+        }
+        .onChange(of: pro.isLoaded) { _, loaded in
+            guard loaded, let selected = store.selected else { return }
+            visited.insert(selected)
+        }
+        // A screen that has been left is told so twice: at once, to take its
+        // bar items and search away, and when it has finished fading, to put
+        // its entrances back to their start where nobody can see it. Switching
+        // again before then leaves it as it was, and the next switch sweeps up.
+        .task(id: store.selected) {
+            if onStage != nil {
+                guard (try? await Task.sleep(for: Self.stageLag)) != nil else { return }
+            }
+            onStage = store.selected
+            guard (try? await Task.sleep(for: Self.fadeOut)) != nil else { return }
+            rested = visited.filter { $0 != store.selected }
+        }
+        #if DEBUG || MEASURE
+        .task {
+            // `-segmentCycle 1` walks the tab's segments on its own, to watch
+            // a switch frame by frame.
+            let asked = UserDefaults.standard.double(forKey: "segmentCycle")
+            guard asked > 0 else { return }
+            // `-segmentCycle 4` waits four seconds between switches instead,
+            // after the launch has settled, so a switch's late frames are not
+            // lost in the launch's.
+            if asked > 1 { try? await Task.sleep(for: .seconds(5)) }
+            // The others (their first builds), the one it opened on (a return
+            // to a screen already built), the others again (warm), and home. It
+            // ends where it began because the last segment is remembered per
+            // device: a walk that ended on another module opened the next
+            // launch there, and its "return" to the first module was that
+            // module's first build.
+            let opened = store.selected ?? group.defaultModule
+            let others = group.modules.filter { $0 != opened }
+            for module in others + [opened] + others + [opened] {
+                try? await Task.sleep(for: .seconds(asked > 1 ? asked : 1.5))
+                store.send(.segmentPicked(module))
+            }
+        }
+        #endif
         .toolbar(removing: .title)
         // Inline for every module, including the one that asks for a large
         // title: a large title is drawn in the content, not the toolbar, so
@@ -288,6 +417,52 @@ private struct SegmentedRoot: View {
             .padding(.bottom, 4)
         }
     }
+
+    /// The phase follows the stage, not the tap, and that is safe because
+    /// the stage only ever holds the module chosen at the moment it moves
+    /// (`task` above reads `store.selected` when it assigns). A page becomes
+    /// `onScreen` only by being the one chosen, so no entrance, shimmer or
+    /// bounce can start on a page that was left or has not arrived yet — a
+    /// page built for the first time at the tap included, whose entrances
+    /// wait for the stage instead of joining the tap's frame. In the lag the
+    /// page being left is still `onScreen` and the page arriving is
+    /// `leaving`; the things that must not run on the first of them in that
+    /// window (`segmentTask`) also ask whether the segment is still chosen,
+    /// which is not staged (`SegmentPage`).
+    private func phase(of module: HubModule) -> SegmentPhase {
+        if module == (onStage ?? store.selected) { .onScreen }
+        else if rested.contains(module) { .away }
+        else { .leaving }
+    }
+}
+
+/// A module's screen in a grouped tab: shown, or kept alive out of sight.
+///
+/// Hidden rather than removed so that switching back costs nothing — no
+/// rebuilt screen, no new subscription, scroll position where it was left.
+/// Hidden means invisible, untouchable and unspoken, and told so
+/// (`SegmentPhase`) so that nothing runs for nobody.
+private struct SegmentPage: View {
+    let store: StoreOf<Route>
+    let phase: SegmentPhase
+    /// Whether this is the segment chosen, which is ahead of `phase` by a few
+    /// frames: what a person sees and can touch follows the tap at once.
+    let isSelected: Bool
+    /// False for the frame a page is first built in, so it fades in.
+    @State private var appeared = false
+
+    var body: some View {
+        RouteView(store: store)
+            .environment(\.segmentPhase, phase)
+            .environment(\.segmentChosen, isSelected)
+            // The fade is scoped to the opacity. `animation(_:value:)` on the
+            // container animated everything the switch touched underneath it,
+            // every row's entrance rewinding and the bar, as well.
+            .animation(Motion.fade) { $0.opacity(isSelected && appeared ? 1 : 0) }
+            .allowsHitTesting(isSelected)
+            .accessibilityHidden(!isSelected)
+            .onAppear { appeared = true }
+    }
 }
 
 /// The modules of a tab, as names along the top of it.
@@ -303,7 +478,16 @@ private struct SegmentSwitch: View {
     let pick: (HubModule) -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Calendar and Money wear a small lock for a house without Plus.
+    @Shared(.pro) private var pro
     @Namespace private var underline
+    /// How far the underline is drawn out while it travels — 1 at rest, about
+    /// 30pt over its 18 at full stretch.
+    @State private var stretch: CGFloat = 1
+
+    private static let underlineWidth: CGFloat = 18
+    private static let stretchedWidth: CGFloat = 30
 
     var body: some View {
         HStack(spacing: 18) {
@@ -311,18 +495,42 @@ private struct SegmentSwitch: View {
                 let isSelected = module == selected
                 Button { pick(module) } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(module.title)
-                            .font(.system(.title3, design: .rounded, weight: .bold))
-                            .foregroundStyle(isSelected ? .primary : .secondary)
-                            .lineLimit(1)
+                        HStack(spacing: 4) {
+                            Text(module.title)
+                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .foregroundStyle(isSelected ? .primary : .secondary)
+                                .lineLimit(1)
+                            if module.needsPlus, !pro.isPro {
+                                Image(systemName: "lock.fill")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityHidden(true)
+                            }
+                        }
+                            // The name just chosen lands a touch small and
+                            // springs up to size. Every name hears the change;
+                            // only the chosen one moves.
+                            .keyframeAnimator(
+                                initialValue: CGFloat(1),
+                                trigger: reduceMotion ? nil : selected
+                            ) { name, scale in
+                                name.scaleEffect(isSelected ? scale : 1, anchor: .bottomLeading)
+                            } keyframes: { _ in
+                                MoveKeyframe(0.96)
+                                SpringKeyframe(1, duration: 0.32, spring: Spring(duration: 0.32, bounce: 0.4))
+                            }
                         ZStack {
                             if isSelected {
                                 Capsule()
                                     .fill(theme.accent)
+                                    // Inside the matched frame, so it stretches
+                                    // about its own centre as it slides rather
+                                    // than being thrown wider off course.
+                                    .scaleEffect(x: stretch, y: 1)
                                     .matchedGeometryEffect(id: "underline", in: underline)
                             }
                         }
-                        .frame(width: 18, height: 3)
+                        .frame(width: Self.underlineWidth, height: 3)
                     }
                     .frame(minHeight: Metrics.minTapTarget)
                     .contentShape(.rect)
@@ -333,6 +541,18 @@ private struct SegmentSwitch: View {
             }
         }
         .animation(Motion.spring, value: selected)
+        .onChange(of: selected) { _, _ in
+            // Under Reduce Motion the underline only moves; it does not also
+            // stretch.
+            guard !reduceMotion else { return }
+            // Drawn out as it leaves, gathered back in as it lands — the way
+            // a drop of ink travels.
+            withAnimation(.easeOut(duration: 0.14)) {
+                stretch = Self.stretchedWidth / Self.underlineWidth
+            } completion: {
+                withAnimation(Motion.release) { stretch = 1 }
+            }
+        }
         .sensoryFeedback(.selection, trigger: selected)
     }
 }
@@ -367,7 +587,7 @@ extension View {
     /// top, and Settings may or may not be up when Customize is asked for.
     /// Each binding is live only while its layer is the top one.
     func customizeSheet(_ store: StoreOf<MainFeature>, when overSettings: Bool) -> some View {
-        sheet(item: Binding(
+        hostedSheet(item: Binding(
             get: {
                 store.isSettingsPresented == overSettings
                     ? store.scope(state: \.customize, action: \.customize.presented)
@@ -432,10 +652,10 @@ private struct NowSheets: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
+            .hostedSheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
                 DinnerSheet(store: $0)
             }
-            .sheet(item: $store.scope(state: \.occasion, action: \.occasion)) {
+            .hostedSheet(item: $store.scope(state: \.occasion, action: \.occasion)) {
                 EventComposerSheet(store: $0)
             }
             .alert($store.scope(state: \.alert, action: \.alert))
@@ -449,11 +669,20 @@ private struct CapturedToast: View {
     let outcome: CaptureOutcome
     let open: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// One per line filed while the toast is up — the first as it arrives, and
+    /// again if another lands before it has gone.
+    @State private var filed = 0
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: outcome.kind.symbol)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(outcome.kind.tint)
+                // The module's glyph hops as the line lands in it. Still under
+                // Reduce Motion, where the haptic says it alone.
+                .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.bounce, options: .nonRepeating, value: reduceMotion ? 0 : filed)
             Text(outcome.message)
                 .font(.subheadline)
                 .lineLimit(1)
@@ -472,7 +701,22 @@ private struct CapturedToast: View {
         .padding(.trailing, 4)
         .padding(.vertical, 6)
         .glassEffect(.regular.interactive(), in: .capsule)
+        // Only ever shown for this person's own Add, so the haptic is theirs.
+        .sensoryFeedback(.success, trigger: filed)
+        .onAppear { filed += 1 }
+        .onChange(of: outcome) { _, _ in filed += 1 }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: Text(L10n.commonOpen), open)
     }
+}
+
+/// Who the purchase listener is for.
+private struct PurchaseWatch: Hashable {
+    var home: HomeID
+    var user: UserID?
+}
+
+extension HubModule {
+    /// Whether the module is Plus as a whole.
+    var needsPlus: Bool { requiresPlus }
 }

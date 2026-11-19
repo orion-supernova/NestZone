@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Nestie finale (bench, iPhone 17, iOS 27.0 simulator)</title>
+<style>body{font:15px -apple-system,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px}figure{display:inline-block;width:210px;margin:8px;vertical-align:top}img{width:100%;border-radius:10px;border:1px solid #ddd}figcaption{font-size:12px;color:#555}</style>
+<h1>The finale</h1>
+<p>Run on the bench: <code>-nestieBench 1 -nestieScenario finale -nestieScript finale</code> (graduate flow), <code>finaleStart</code> (start flow, one cover), and the same with Reduce Motion on. Colour names are placeholders until the art table lands, and all three swatches draw alike until the painters take <code>colourway</code>.</p>
+<h2>Frame meter (<code>-frameMeter 2</code>, iPhone 17 simulator, Debug)</h2>
+<table border="1" cellpadding="6" style="border-collapse:collapse;font-size:13px">
+<tr><th></th><th>First frame of the cover</th><th>Worst frame after it</th><th>Late frames in the cascade</th></tr>
+<tr><td>Graduation cover (baseline, same run)</td><td>about 36 ms</td><td>175 ms (presentation)</td><td>n/a</td></tr>
+<tr><td>Finale cover, first version</td><td>108 ms</td><td>108 ms</td><td>a run of nine 33 ms frames</td></tr>
+<tr><td>Finale cover, stills warmed ahead, tiles built a row a frame, cascade by one animated value</td><td>35 ms</td><td>138 ms (the same presentation frame the graduation cover has)</td><td>two 34 ms frames</td></tr>
+<tr><td>Finale in the start flow (<code>finaleStart</code>)</td><td>38 ms</td><td>41 ms</td><td>none above 41 ms</td></tr>
+</table>
+<h2>Graduate flow</h2>
+<figure><img src="graduate-flow-1-title.jpg"><figcaption>The finale opens with its title and confetti</figcaption></figure>
+<figure><img src="graduate-flow-2-album-crown-door.jpg"><figcaption>The album as stills, the crown, the next door</figcaption></figure>
+<figure><img src="graduate-flow-3-colour-picker.jpg"><figcaption>Choose after the finale: three swatches</figcaption></figure>
+<figure><img src="graduate-flow-4-coloured-card.jpg"><figcaption>A coloured start: "Kitten · Colour 2"</figcaption></figure>
+<h2>Start flow (one cover)</h2>
+<figure><img src="start-flow-1-graduation.jpg"><figcaption>"All grown up!" first</figcaption></figure>
+<figure><img src="start-flow-2-finale-same-cover.jpg"><figcaption>then the finale, same cover</figcaption></figure>
+<h2>Reduce Motion</h2>
+<figure><img src="reduce-motion-1-title.jpg"><figcaption>no confetti flight, no scale</figcaption></figure>
+<figure><img src="reduce-motion-2-album-crown-door.jpg"><figcaption>the cascade is a fade</figcaption></figure>

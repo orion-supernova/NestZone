@@ -14,6 +14,10 @@ public enum HubModule: String, CaseIterable, Identifiable, Sendable {
 
     public var id: String { rawValue }
 
+    /// Whether the whole module is NestZone Plus, so a house without it sees
+    /// it locked or read-only.
+    public var requiresPlus: Bool { self == .calendar || self == .finance || self == .maintenance }
+
     /// The tab group this module lives in. One answer per module, so a module
     /// is never on two tabs and never on none.
     public var group: TabGroup {

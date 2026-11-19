@@ -268,14 +268,30 @@ public struct ExpenseComposerFeature: Sendable {
         }
     }
 
+    @Dependency(\.paywall) var paywall
+    /// Money is Plus: saving asks for the paywall.
+    @Shared(.pro) var pro: ProStatus
+
     @Dependency(\.finance) var finance
 
     public init() {}
+
+    /// What needs Plus here, so a free house gets the paywall at the tap and
+    /// not the server's refusal after it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .submitTapped: true
+        default: false
+        }
+    }
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.finance) }
+            }
             switch action {
             case .submitTapped:
                 guard state.canSubmit else {
@@ -509,14 +525,30 @@ public struct BillComposerFeature: Sendable {
         }
     }
 
+    @Dependency(\.paywall) var paywall
+    /// Money is Plus: saving asks for the paywall.
+    @Shared(.pro) var pro: ProStatus
+
     @Dependency(\.finance) var finance
 
     public init() {}
+
+    /// What needs Plus here, so a free house gets the paywall at the tap and
+    /// not the server's refusal after it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .submitTapped: true
+        default: false
+        }
+    }
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.finance) }
+            }
             switch action {
             case .submitTapped:
                 guard state.canSubmit else { return .none }
@@ -663,14 +695,30 @@ public struct PayBillFeature: Sendable {
         }
     }
 
+    @Dependency(\.paywall) var paywall
+    /// Money is Plus: paying asks for the paywall.
+    @Shared(.pro) var pro: ProStatus
+
     @Dependency(\.finance) var finance
 
     public init() {}
+
+    /// What needs Plus here, so a free house gets the paywall at the tap and
+    /// not the server's refusal after it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .payTapped: true
+        default: false
+        }
+    }
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.finance) }
+            }
             switch action {
             case .payTapped:
                 guard state.canSubmit else { return .none }
@@ -779,14 +827,30 @@ public struct BudgetEditorFeature: Sendable {
         }
     }
 
+    @Dependency(\.paywall) var paywall
+    /// Money is Plus: saving asks for the paywall.
+    @Shared(.pro) var pro: ProStatus
+
     @Dependency(\.finance) var finance
 
     public init() {}
+
+    /// What needs Plus here, so a free house gets the paywall at the tap and
+    /// not the server's refusal after it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .submitTapped: true
+        default: false
+        }
+    }
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.finance) }
+            }
             switch action {
             case let .suggestionTapped(minor):
                 state.limitText = Money.editableText(minor, currency: state.currency)
@@ -899,7 +963,7 @@ public struct SettleUpFeature: Sendable {
             if id == currentUserID { return String(localized: L10n.financeYou) }
             return members[id: id]?.displayName
                 ?? balances.first { $0.userID == id }?.displayName
-                ?? String(localized: L10n.financeSomeone)
+                ?? String(localized: L10n.memberDeleted)
         }
 
         /// The suggestions still worth showing.
@@ -924,14 +988,30 @@ public struct SettleUpFeature: Sendable {
         }
     }
 
+    @Dependency(\.paywall) var paywall
+    /// Money is Plus: settling asks for the paywall.
+    @Shared(.pro) var pro: ProStatus
+
     @Dependency(\.finance) var finance
 
     public init() {}
+
+    /// What needs Plus here, so a free house gets the paywall at the tap and
+    /// not the server's refusal after it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .recordTapped: true
+        default: false
+        }
+    }
 
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.finance) }
+            }
             switch action {
             case let .suggestionTapped(transfer):
                 state.from = transfer.from

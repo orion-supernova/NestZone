@@ -27,6 +27,10 @@ public struct HomeFeature: Sendable {
         /// anything coming", and `events:upcoming` answers that with at most a
         /// handful of rows however many years of events the household has.
         public var upcoming: [EventOccurrence] = []
+        /// Whether the house has Plus. Without it the calendar and the bills
+        /// are not read at all, so Up next, the bill alarms and the event
+        /// clauses have nothing to draw and the events counter is a teaser.
+        @Shared(.pro) public var pro: ProStatus
         /// Who lives here: the getting-started checklist asks whether anybody
         /// else has joined yet, and a problem's row says who is on it.
         public var members: IdentifiedArrayOf<User> = []
@@ -63,6 +67,12 @@ public struct HomeFeature: Sendable {
         public var dinnerSuggestion: EventOccurrence?
         /// Whether the household has a movie round open, also handed down.
         public var movieRoundIsOpen = false
+        /// What the dock over the tab bar is showing right now, handed down so
+        /// Today never says the same thing twice: the dock is on screen here
+        /// too, so a movie round, tonight's dinner or an event about to start
+        /// that it already shows is left out of Today's sections. Nothing is
+        /// lost — the dock is the way in.
+        public var dock: DockItem = .add
         /// The container's clock, which moves on every half minute. Today reads
         /// the time of day off it — "Tuesday evening" — and so does the
         /// decision about which chores are due.
@@ -93,6 +103,16 @@ public struct HomeFeature: Sendable {
         }
 
         public var layout: TodayLayout { TodayLayout(raw: layoutRaw) }
+
+        /// Every finished chore on the Done list, when and by whom — what the
+        /// companion grows from. A chore ticked a moment ago has no time yet;
+        /// it counts when the server's copy arrives with one.
+        public var completions: [Completion] {
+            tasks.compactMap { task in
+                guard task.isCompleted, let at = task.completedAt?.date else { return nil }
+                return Completion(at: at, by: task.completedBy)
+            }
+        }
 
         /// Bills already late or due within `needsYouBillDays`, soonest first.
         public var billsDue: [Bill] {
@@ -198,7 +218,31 @@ public struct HomeFeature: Sendable {
         /// What is coming, not what is under way — the dock above the tab bar
         /// already says what is happening now.
         public var comingUp: [EventOccurrence] {
-            Array(upcoming.filter { !$0.isInProgress && $0.start > now }.prefix(4))
+            Array(upcoming.filter { !$0.isInProgress && $0.start > now && $0 != dockEvent }.prefix(4))
+        }
+
+        /// The event the dock is showing, if it is showing one.
+        var dockEvent: EventOccurrence? {
+            switch dock {
+            case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence): occurrence
+            default: nil
+            }
+        }
+
+        /// Whether the dock is already showing tonight's dinner.
+        var dockShowsDinner: Bool {
+            switch dock {
+            case .dinner, .dinnerSuggestion, .dinnerUndecided: true
+            default: false
+            }
+        }
+
+        /// Whether Today draws the movie-night row: not while the dock is
+        /// showing the open round — that was the same row twice, one above the
+        /// other.
+        public var showsMovieNight: Bool {
+            if case .movieRound = dock { return false }
+            return layout.visibility(of: .movieNight) == .always || movieNightIsTimely
         }
 
         /// Events in the next seven days, the way the counters count them.
@@ -338,7 +382,10 @@ public struct HomeFeature: Sendable {
         /// Undecided, it stays off Today — the dock asks in the evening, and
         /// asking every morning is the nag the old card was.
         public var showsTonight: Bool {
-            switch layout.visibility(of: .tonight) {
+            // In the evening the dock carries tonight's dinner, and opens the
+            // same sheet this card does.
+            if dockShowsDinner { return false }
+            return switch layout.visibility(of: .tonight) {
             case .off: false
             case .always: true
             case .automatic: tonight != nil || dinnerSuggestion != nil
@@ -349,6 +396,8 @@ public struct HomeFeature: Sendable {
     public enum Action: Equatable {
         case task
         case statsUpdated(HomeStats)
+        /// Plus turned on or off: start or stop the reads it gates.
+        case proChanged(Bool)
         case billsUpdated([Bill])
         case issuesUpdated([HouseIssue])
         case tasksUpdated([HouseTask])
@@ -442,6 +491,43 @@ public struct HomeFeature: Sendable {
 
     public init() {}
 
+    /// The same capped agenda At a glance reads, so the week's count is the
+    /// same number in both places.
+    private func eventsEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await events in eventsClient.upcoming(homeID, 20) {
+                await send(.upcomingEventsUpdated(events))
+            }
+        } catch: { _, send in
+            // An empty calendar is the normal case, and a list that cannot
+            // load is not worth an alert over the whole tab.
+            await send(.partFailed(.upcoming))
+        }
+        .cancellable(id: CancelID.events, cancelInFlight: true)
+    }
+
+    private func issuesEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await board in issuesClient.board(homeID) {
+                await send(.issuesUpdated(board.issues))
+            }
+        } catch: { _, send in
+            await send(.partFailed(.issues))
+        }
+        .cancellable(id: CancelID.issues, cancelInFlight: true)
+    }
+
+    private func billsEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await bills in financeClient.bills(homeID) {
+                await send(.billsUpdated(bills))
+            }
+        } catch: { _, send in
+            await send(.partFailed(.bills))
+        }
+        .cancellable(id: CancelID.bills, cancelInFlight: true)
+    }
+
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -468,18 +554,7 @@ public struct HomeFeature: Sendable {
                     }
                     .cancellable(id: CancelID.tasks, cancelInFlight: true),
 
-                    .run { send in
-                        // The same capped agenda At a glance reads, so the
-                        // week's count is the same number in both places.
-                        for try await events in eventsClient.upcoming(homeID, 20) {
-                            await send(.upcomingEventsUpdated(events))
-                        }
-                    } catch: { _, send in
-                        // An empty calendar is the normal case, and a list that
-                        // cannot load is not worth an alert over the whole tab.
-                        await send(.partFailed(.upcoming))
-                    }
-                    .cancellable(id: CancelID.events, cancelInFlight: true),
+                    state.pro.isPro ? eventsEffect(homeID) : .send(.partFailed(.upcoming)),
 
                     .run { send in
                         for try await members in homesClient.members(homeID) {
@@ -493,25 +568,30 @@ public struct HomeFeature: Sendable {
                     // "Needs you": the two things in the house with a date that
                     // can pass. Quiet on failure — the section simply stays
                     // away, which is also what it does when all is well.
-                    .run { send in
-                        for try await bills in financeClient.bills(homeID) {
-                            await send(.billsUpdated(bills))
-                        }
-                    } catch: { _, send in
-                        await send(.partFailed(.bills))
-                    }
-                    .cancellable(id: CancelID.bills, cancelInFlight: true),
+                    state.pro.isPro ? billsEffect(homeID) : .send(.partFailed(.bills)),
 
-                    .run { send in
-                        for try await board in issuesClient.board(homeID) {
-                            await send(.issuesUpdated(board.issues))
-                        }
-                    } catch: { _, send in
-                        await send(.partFailed(.issues))
-                    }
-                    .cancellable(id: CancelID.issues, cancelInFlight: true),
+                    // Problems are Plus as well: no read for a house without it.
+                    state.pro.isPro ? issuesEffect(homeID) : .send(.partFailed(.issues)),
 
                     .send(.askForNotificationsIfNeeded)
+                )
+
+            case let .proChanged(isPro):
+                let homeID = state.homeID
+                if isPro {
+                    return .merge(eventsEffect(homeID), billsEffect(homeID), issuesEffect(homeID))
+                }
+                // Let go of the reads and what they brought: the calendar, the
+                // bills and the problems are read-only history now, and Today
+                // does not draw them.
+                state.upcoming = []
+                state.bills = []
+                state.issues = []
+                state.loaded.formUnion([.upcoming, .bills, .issues])
+                return .merge(
+                    .cancel(id: CancelID.events),
+                    .cancel(id: CancelID.bills),
+                    .cancel(id: CancelID.issues)
                 )
 
             // The one place a newcomer is asked about notifications. Everyone
@@ -519,7 +599,8 @@ public struct HomeFeature: Sendable {
             // tab — and it is the first screen where the ask means something,
             // because there is finally a household to be notified about.
             case .askForNotificationsIfNeeded:
-                guard !state.hasAskedForNotifications else { return .none }
+                guard !state.hasAskedForNotifications, !StoreDemo.suppressesPrompts
+                else { return .none }
                 return .run { send in
                     // A permission sheet over a tab that has not finished
                     // drawing reads as an ambush.

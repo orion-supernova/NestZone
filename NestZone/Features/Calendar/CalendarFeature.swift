@@ -374,6 +374,10 @@ public struct CalendarFeature: Sendable {
         /// on having heard from the server at all, so the empty state cannot
         /// flash during a load.
         public var hasLoadedOnce = false
+        /// Whether this house has ever had an event, as far as this screen has
+        /// seen: what a house without Plus is told, to decide between the
+        /// read-only calendar and the locked one.
+        public var sawEvents = false
         public var isBlank: Bool { hasLoadedOnce && occurrences.isEmpty && !isFiltering && month.isCurrent }
     }
 
@@ -393,6 +397,8 @@ public struct CalendarFeature: Sendable {
         case occurrencesUpdated(String, [EventOccurrence])
         case membersUpdated([User])
         case loadFailed(AppError)
+        /// There is something still to come, for a house without Plus.
+        case eventsAhead
 
         case modeSelected(State.Mode)
         case monthStepped(by: Int)
@@ -444,7 +450,11 @@ public struct CalendarFeature: Sendable {
 
     @Dependency(\.events) var events
     @Dependency(\.homes) var homes
+    @Dependency(\.paywall) var paywall
     @Dependency(\.continuousClock) var clock
+    /// The calendar is Plus: a house without it reads what is there and the
+    /// controls that write ask for the paywall instead.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -452,10 +462,26 @@ public struct CalendarFeature: Sendable {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.calendar) }
+            }
             switch action {
+            case .eventsAhead:
+                state.sawEvents = true
+                return .none
+
             case .task:
                 let homeID = state.homeID
+                // One look ahead for a house without Plus, whose calendar is
+                // only drawn read-only when it has something in it.
+                let ahead: Effect<Action> = pro.isPro ? .none : .run { send in
+                    for try await upcoming in events.upcoming(homeID, 1) {
+                        if !upcoming.isEmpty { await send(.eventsAhead) }
+                        break
+                    }
+                } catch: { _, _ in }
                 return .merge(
+                    ahead,
                     subscribe(state.homeID, state.month, state.mode),
                     .run { send in
                         for try await members in homes.members(homeID) {
@@ -473,6 +499,7 @@ public struct CalendarFeature: Sendable {
                 guard windowID == state.windowID else { return .none }
                 state.isLoading = false
                 state.hasLoadedOnce = true
+                if !incoming.isEmpty { state.sawEvents = true }
                 apply(&state, incoming)
 
                 // Opened by id: resolve it now that the window has arrived. The
@@ -957,3 +984,14 @@ public struct CalendarFeature: Sendable {
 // Navigation state is `Equatable` so parent states compare cleanly; declared
 // here rather than via the deprecated `@Reducer(state:)` argument.
 extension CalendarFeature.Destination.State: Equatable {}
+
+extension CalendarFeature {
+    /// The actions that start writing something, which a house without Plus
+    /// is stopped at. Deleting stays free, like the server's `remove`.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .addTapped, .addOnDayTapped, .rsvpTapped, .editTapped: true
+        default: false
+        }
+    }
+}

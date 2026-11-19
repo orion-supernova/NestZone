@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nestie trees: two directions</title>
+<style>
+  :root { --bg: #f6f3fb; --ink: #2b2540; --muted: #6d6585; --card: #fff; --line: #e4def0; --accent: #7c5cff; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #15121f; --ink: #ece8f6; --muted: #a39cba; --card: #1f1b2c; --line: #302a42; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 6px; }
+  .lede { color: var(--muted); max-width: 760px; margin: 0 0 28px; }
+  .verdict { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; margin-bottom: 32px; }
+  .verdict b { color: var(--accent); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  section { margin-bottom: 40px; }
+  h2 { font-size: 20px; margin: 0 0 12px; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 10px 14px; font-size: 14px; color: var(--muted); }
+  figcaption b { color: var(--ink); }
+  ul { margin: 6px 0 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Nestie's trees: two directions</h1>
+  <p class="lede">Both are drawn entirely in code, seeded per household, and drawn only when the tree's state changes; the wind bends that picture as it is. Same six species, same moods, same growth stages.</p>
+
+  <div class="verdict">
+    <b>The tree is B, layered gouache</b> — your choice, for being more detailed, more premium, more realistic and more artsy. Since this page was made it had a second pass: shadows cast inside the canopy, the canopy's shade on the branches, a night rim light, petals with gradients and stamens, and quiet moods that read as one tired tree. Its renders below are the second pass.
+    <ul>
+      <li><b>A, soft canopy</b>, stays here for reference, with its Swift port (<code>soft-canopy/CanopyPainter.swift</code>, not compiled into the app).</li>
+    </ul>
+  </div>
+
+  <section>
+    <h2>The six species, by day</h2>
+    <div class="grid">
+      <figure><img src="soft-canopy/renders/1_species_day.jpg" alt="Direction A, six species by day"><figcaption><b>A · soft canopy</b></figcaption></figure>
+      <figure><img src="gouache/renders/01-species-day.jpg" alt="Direction B, six species by day"><figcaption><b>B · layered gouache</b> (shown with a stand-in pot)</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Moods: bright, content, thirsty, dozing</h2>
+    <div class="grid">
+      <figure><img src="soft-canopy/renders/2_moods_magnolia.jpg" alt="Direction A, moods"><figcaption><b>A</b> · magnolia</figcaption></figure>
+      <figure><img src="gouache/renders/02-moods-magnolia.jpg" alt="Direction B, moods"><figcaption><b>B</b> · magnolia</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Growing up</h2>
+    <div class="grid">
+      <figure><img src="soft-canopy/renders/3_growth_lemon.jpg" alt="Direction A, growth"><figcaption><b>A</b> · lemon, seed to bloom</figcaption></figure>
+      <figure><img src="gouache/renders/03-growth-magnolia.jpg" alt="Direction B, growth"><figcaption><b>B</b> · magnolia, seed to bloom</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>At night</h2>
+    <div class="grid">
+      <figure><img src="soft-canopy/renders/5_species_night.jpg" alt="Direction A at night"><figcaption><b>A</b></figcaption></figure>
+      <figure><img src="gouache/renders/05-night-species.jpg" alt="Direction B at night"><figcaption><b>B</b></figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Every house grows its own</h2>
+    <div class="grid">
+      <figure><img src="soft-canopy/renders/7_seeds_olive.jpg" alt="Direction A, six households"><figcaption><b>A</b> · six households' olives</figcaption></figure>
+      <figure><img src="gouache/renders/07-seeds-magnolia.jpg" alt="Direction B, six households"><figcaption><b>B</b> · six households' magnolias</figcaption></figure>
+    </div>
+  </section>
+</main>
+</body>
+</html>

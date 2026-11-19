@@ -2,12 +2,43 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { cascadeDeletePoll } from "./lib/relations";
+import { noteGrowth } from "./lib/companion";
+import { companionVoteFor } from "./lib/companionVote";
 import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
+import { requirePro } from "./lib/pro";
 
 const pollType = v.union(v.literal("movie"), v.literal("recipe"), v.literal("generic"));
 const pollStatus = v.union(v.literal("draft"), v.literal("active"), v.literal("closed"));
+
+/**
+ * Nestie's vote for the next one is a `generic` poll the server opened
+ * (`companion_votes`): its options, its end and its deletion are the
+ * server's, never a member's by hand. Ballots go through `vote` as on any
+ * poll.
+ */
+async function refuseCompanionVote(ctx: MutationCtx, poll: Doc<"polls">) {
+  if (await companionVoteFor(ctx, poll)) {
+    throw new Error("The vote for the next one runs itself");
+  }
+}
+
+/**
+ * Whether this poll belongs to Messages: a `generic` poll that is not
+ * Nestie's vote. Movie rounds (the movie-night game), recipe rounds (Meals)
+ * and Nestie's vote are not Messages and stay free.
+ */
+async function isChatPoll(ctx: QueryCtx | MutationCtx, poll: Doc<"polls">): Promise<boolean> {
+  if (poll.type !== "generic") return false;
+  return (await companionVoteFor(ctx, poll)) === null;
+}
+
+/** Messages is Plus: a chat poll's writes refuse for a free house. */
+async function requireChatPollPro(ctx: MutationCtx, poll: Doc<"polls">) {
+  if (!poll.home_id) return;
+  if (await isChatPoll(ctx, poll)) await requirePro(ctx, poll.home_id, "messages");
+}
 
 /**
  * The PocketBase rule: "polls update/delete: owner-only and home member".
@@ -83,6 +114,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
+    // A `generic` poll is a chat poll, which is Messages, which is Plus.
+    // Nestie's vote is never made here (companion.ts opens it), so every
+    // `generic` create is a member's. Movie and recipe rounds stay free.
+    if (args.type === "generic") await requirePro(ctx, args.homeId, "messages");
     const now = Date.now();
     const pollId = await ctx.db.insert("polls", {
       home_id: args.homeId,
@@ -138,6 +173,18 @@ export const vote = mutation({
     const poll = await ctx.db.get(args.pollId);
     if (!poll) throw new Error("Poll not found");
     await requireDocHome(ctx, poll, "Poll");
+    await requireChatPollPro(ctx, poll);
+
+    // Nestie's vote takes ballots only while it is open, and only on its own
+    // options; once every member has answered every one, it closes itself
+    // (`companion:voteChanged`). A ballot on it grows nothing.
+    const companionVote = await companionVoteFor(ctx, poll);
+    if (companionVote) {
+      if (companionVote.status !== "open") throw new Error("That vote is over");
+      if (!companionVote.options.includes(args.target_external_id)) {
+        throw new Error("That isn't one of the options");
+      }
+    }
 
     const existing = await ctx.db
       .query("poll_votes")
@@ -150,6 +197,21 @@ export const vote = mutation({
       .first();
 
     const now = Date.now();
+    // A movie round the house agrees on grows Nestie (convex/companion.ts).
+    // Only a vote that can move the answer is worth a reconcile: a new yes,
+    // or a yes turned to no. Re-sending the same vote, or a first no, can't.
+    const moves = existing ? existing.vote !== args.vote : args.vote;
+    // Any new answer can be the last one Nestie's vote was waiting for, a
+    // first no included; the same answer sent again can't.
+    if (companionVote && (!existing || existing.vote !== args.vote)) {
+      await ctx.scheduler.runAfter(0, internal.companion.voteChanged, {
+        pollId: args.pollId,
+        userId: user._id,
+      });
+    }
+    if (poll.type === "movie" && moves) {
+      await noteGrowth(ctx, poll.home_id, { kind: "poll", id: args.pollId });
+    }
     if (existing) {
       await ctx.db.patch(existing._id, { vote: args.vote, updated: now });
       return existing._id;
@@ -183,6 +245,7 @@ export const unvote = mutation({
     const poll = await ctx.db.get(args.pollId);
     if (!poll) throw new Error("Poll not found");
     await requireDocHome(ctx, poll, "Poll");
+    await requireChatPollPro(ctx, poll);
 
     const existing = await ctx.db
       .query("poll_votes")
@@ -194,10 +257,21 @@ export const unvote = mutation({
       )
       .first();
 
+    // A ballot on Nestie's vote stands once the vote is over: what it chose
+    // was chosen with it. Not an error, for the same reason as below.
+    const companionVote = await companionVoteFor(ctx, poll);
+    if (companionVote && companionVote.status !== "open") return;
+
     // Undoing a swipe the server never recorded is not a failure: the vote is
     // gone either way, which is all the caller asked for. The optimistic client
     // can outrun its own write, and that must not surface as an error.
-    if (existing) await ctx.db.delete(existing._id);
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      // Taking back a yes can undo the house agreeing on a film (convex/companion.ts).
+      if (existing.vote && poll.type === "movie") {
+        await noteGrowth(ctx, poll.home_id, { kind: "poll", id: args.pollId });
+      }
+    }
   },
 });
 
@@ -218,6 +292,8 @@ export const addItem = mutation({
     if (poll.status && poll.status !== "active") {
       throw new Error("Cannot add items to a poll that is not active");
     }
+    await refuseCompanionVote(ctx, poll);
+    await requireChatPollPro(ctx, poll);
     const now = Date.now();
     return await ctx.db.insert("poll_items", { poll_id: pollId, ...rest, created: now, updated: now });
   },
@@ -230,6 +306,7 @@ export const remove = mutation({
     const poll = await ctx.db.get(pollId);
     if (!poll) return { ok: true };
     await requirePollOwner(ctx, poll);
+    await refuseCompanionVote(ctx, poll);
     await cascadeDeletePoll(ctx, pollId);
     return { ok: true };
   },
@@ -241,6 +318,8 @@ export const setStatus = mutation({
     const poll = await ctx.db.get(pollId);
     if (!poll) throw new Error("Poll not found");
     await requirePollOwner(ctx, poll);
+    // Closing Nestie's vote early is `companion:decide`, which counts it.
+    await refuseCompanionVote(ctx, poll);
     await ctx.db.patch(pollId, { status, updated: Date.now() });
     return await ctx.db.get(pollId);
   },

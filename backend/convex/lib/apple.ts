@@ -17,7 +17,7 @@
 // every sign-in. Apple returns `email` and the user's name ONLY on the very
 // first authorization, so accounts are keyed on `sub`, never on email.
 
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createRemoteJWKSet, importPKCS8, jwtVerify, SignJWT } from "jose";
 
 const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
@@ -61,4 +61,121 @@ export async function verifyAppleIdentityToken(
     emailVerified: asBool(payload.email_verified),
     isPrivateRelay: asBool(payload.is_private_email),
   };
+}
+
+// MARK: - Revoking (account deletion)
+//
+// App Store Guideline 5.1.1(v): an app offering Sign in with Apple must revoke
+// the user's tokens when they delete their account. The app hands over a
+// fresh `authorizationCode` from a re-authorization; it is exchanged here for
+// a refresh token, which is then revoked, and Apple stops listing the app
+// under the person's "Sign in with Apple" settings.
+//
+// Configure the deployment once (a Sign in with Apple key from the Developer
+// portal; not the APNs key, though the shape is the same):
+//   npx convex env set SIWA_KEY_ID   <10-char key id>
+//   npx convex env set SIWA_TEAM_ID  <10-char team id>
+//   npx convex env set -- SIWA_PRIVATE_KEY "$(cat AuthKey_XXXXXXXXXX.p8)"
+
+const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
+const APPLE_REVOKE_URL = "https://appleid.apple.com/auth/revoke";
+
+/** Whether this deployment can revoke at all. */
+export function canRevokeApple(): boolean {
+  return Boolean(
+    process.env.SIWA_KEY_ID && process.env.SIWA_TEAM_ID && process.env.SIWA_PRIVATE_KEY,
+  );
+}
+
+/**
+ * Exchanges a native authorization code and revokes what it yields.
+ *
+ * Answers `revoked` when Apple confirmed it, `failed` for anything else on
+ * Apple's side (returned, not thrown — a deletion must not hinge on a third
+ * party), and `mismatch` when the code belongs to a different Apple ID than
+ * `expectedSubject`: nothing is revoked then, because the token would be
+ * somebody else's. Without an expected subject there is nobody to check the
+ * code against, so nothing is revoked either. Neither the code nor a token is
+ * ever logged.
+ */
+export type AppleRevocation = "revoked" | "failed" | "mismatch";
+
+export async function revokeAppleAuthorization(
+  code: string,
+  expectedSubject: string | null,
+): Promise<AppleRevocation> {
+  if (!canRevokeApple() || !expectedSubject) return "failed";
+  // The audience of a native token is the bundle id, so that is the client.
+  const clientId = process.env.APNS_BUNDLE_ID || APPLE_AUDIENCE;
+
+  // The client secret is an ES256 JWT, signed the way push.ts signs for APNs.
+  const key = await importPKCS8(process.env.SIWA_PRIVATE_KEY!, "ES256");
+  const clientSecret = await new SignJWT({})
+    .setProtectedHeader({ alg: "ES256", kid: process.env.SIWA_KEY_ID! })
+    .setIssuer(process.env.SIWA_TEAM_ID!)
+    .setIssuedAt()
+    .setExpirationTime("5m")
+    .setAudience(APPLE_ISSUER)
+    .setSubject(clientId)
+    .sign(key);
+
+  const form = (fields: Record<string, string>) => ({
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(fields).toString(),
+  });
+
+  const exchanged = await fetch(
+    APPLE_TOKEN_URL,
+    form({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+      grant_type: "authorization_code",
+    }),
+  );
+  if (!exchanged.ok) {
+    // `invalid_grant` is the usual one: a code is single-use and lives five
+    // minutes. The body is Apple's error name, never a credential.
+    console.warn(`Sign in with Apple code exchange: ${exchanged.status} ${await exchanged.text()}`);
+    return "failed";
+  }
+  const tokens = (await exchanged.json()) as {
+    refresh_token?: string;
+    access_token?: string;
+    id_token?: string;
+  };
+  const token = tokens.refresh_token ?? tokens.access_token;
+  if (!token) return "failed";
+
+  // Whose authorization this is: the id_token Apple returns with the exchange.
+  // Unreadable is as good as unknown, and unknown is never revoked.
+  let subject = "";
+  try {
+    if (!tokens.id_token) return "failed";
+    const { payload } = await jwtVerify(tokens.id_token, jwks, {
+      issuer: APPLE_ISSUER,
+      audience: clientId,
+      algorithms: ["RS256"],
+    });
+    subject = typeof payload.sub === "string" ? payload.sub : "";
+  } catch {
+    return "failed";
+  }
+  if (subject !== expectedSubject) return "mismatch";
+
+  const revoked = await fetch(
+    APPLE_REVOKE_URL,
+    form({
+      client_id: clientId,
+      client_secret: clientSecret,
+      token,
+      token_type_hint: tokens.refresh_token ? "refresh_token" : "access_token",
+    }),
+  );
+  if (!revoked.ok) {
+    console.warn(`Sign in with Apple revoke: ${revoked.status} ${await revoked.text()}`);
+    return "failed";
+  }
+  return "revoked";
 }

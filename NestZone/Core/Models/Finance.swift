@@ -982,7 +982,15 @@ public struct MemberFinance: Codable, Identifiable, Hashable, Sendable {
 extension MemberFinance {
     /// The same fallback chain as `User.displayName`, so the same person is
     /// named the same way on every screen.
-    public var displayName: String { User.displayName(name: name, email: email) }
+    ///
+    /// A member who deleted their account keeps their balance with no name and
+    /// no email, and is drawn as "Deleted member" rather than "Someone".
+    public var displayName: String {
+        if let persona = StoreDemo.personaName(for: userID) { return persona }
+        let hasName = !(name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !hasName, (email ?? "").isEmpty, !isMember { return String(localized: L10n.memberDeleted) }
+        return User.displayName(name: name, email: email)
+    }
     public var initials: String { User.initials(from: displayName) }
     public var isSettled: Bool { net == 0 }
 }

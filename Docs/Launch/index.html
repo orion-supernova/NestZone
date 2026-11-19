@@ -1,0 +1,351 @@
+<title>NestZone Launch Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column with a sticky section index on wide screens; tables scroll in their own boxes. */
+:root{
+  --bg:#f5f7f6; --surface:#ffffff; --ink:#15211d; --muted:#5b6b65; --line:#dbe3df;
+  --accent:#1f7a5c; --accent-soft:#e1f1ea; --pro:#7a4fd6; --pro-soft:#efe8fc;
+  --block:#c0392b; --block-soft:#fbe6e3; --warn:#b26b00; --warn-soft:#fdf0d9; --ok:#1f7a5c;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --surface:#161e1b; --ink:#e4ece8; --muted:#94a59e; --line:#26322d;
+  --accent:#4cc79b; --accent-soft:#183128; --pro:#a989f0; --pro-soft:#251d3a;
+  --block:#ff7b6b; --block-soft:#3a1d19; --warn:#f0b04d; --warn-soft:#33270f; --ok:#4cc79b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --surface:#161e1b; --ink:#e4ece8; --muted:#94a59e; --line:#26322d;
+  --accent:#4cc79b; --accent-soft:#183128; --pro:#a989f0; --pro-soft:#251d3a;
+  --block:#ff7b6b; --block-soft:#3a1d19; --warn:#f0b04d; --warn-soft:#33270f; --ok:#4cc79b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:13px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 0 4px 12px;border-left:2px solid var(--line)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+main{min-width:0}
+header.hero{display:grid;gap:12px;padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(32px,5vw,48px)/1.05 var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font:700 26px/1.2 var(--display);margin:56px 0 12px;text-wrap:balance}
+h3{font:600 17px/1.3 var(--display);margin:28px 0 8px}
+p{margin:0 0 12px;max-width:68ch}
+.lede{font-size:17px;color:var(--muted);max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;font:13px var(--mono);color:var(--muted)}
+code{font:13px var(--mono);background:var(--accent-soft);padding:1px 5px;border-radius:4px;word-break:break-word}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card h4{margin:0 0 6px;font:600 15px var(--display)}
+.card p{font-size:14px;margin:0;color:var(--muted)}
+.stat{font:700 30px/1 var(--display);margin-bottom:6px}
+.pill{display:inline-block;font:600 11px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:999px;white-space:nowrap}
+.pill.block{background:var(--block-soft);color:var(--block)}
+.pill.high{background:var(--warn-soft);color:var(--warn)}
+.pill.med{background:var(--accent-soft);color:var(--accent)}
+.pill.pro{background:var(--pro-soft);color:var(--pro)}
+.pill.free{background:var(--accent-soft);color:var(--accent)}
+.tbl{overflow-x:auto;margin:12px 0 20px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+ol.steps,ul.list{margin:0 0 16px;padding-left:22px;max-width:72ch}
+ol.steps li,ul.list li{margin:6px 0}
+.phase{display:grid;grid-template-columns:56px minmax(0,1fr);gap:16px;padding:20px 0;border-top:1px solid var(--line)}
+.phase .num{font:700 34px/1 var(--display);color:var(--accent)}
+.phase h3{margin-top:0}
+.callout{border:1px solid var(--line);border-left:4px solid var(--pro);background:var(--surface);border-radius:8px;padding:14px 16px;margin:16px 0}
+.callout.warn{border-left-color:var(--warn)}
+.callout p:last-child{margin-bottom:0}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;overflow-x:auto}
+pre.code{font:13px/1.5 var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:26px;position:relative}
+.check li::before{content:"";position:absolute;left:2px;top:6px;width:13px;height:13px;border:1.5px solid var(--muted);border-radius:3px}
+a{color:var(--accent)}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr);gap:16px}nav.toc{display:none}}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sections">
+  <a href="#status">Status</a>
+  <a href="#verdict">Verdict</a>
+  <a href="#tiers">Free and Pro</a>
+  <a href="#model">Who pays</a>
+  <a href="#arch">Architecture</a>
+  <a href="#gates">Every gate</a>
+  <a href="#compat">Old builds</a>
+  <a href="#paywall">The paywall</a>
+  <a href="#cleanup">Lab removal</a>
+  <a href="#review">Review blockers</a>
+  <a href="#stores">Store setup</a>
+  <a href="#phases">Phases</a>
+  <a href="#decisions">Decisions</a>
+</nav>
+<main>
+
+<header class="hero">
+  <span class="eyebrow">NestZone · iOS 1.12.0 · plan of record</span>
+  <h1>From TestFlight to the App Store, with NestZone Plus</h1>
+  <p class="lede">What has to change before NestZone can go to App Review: a household subscription sold through RevenueCat, Finance and Calendar behind it, the developer lab taken out, and the two things Apple would reject the current build for.</p>
+  <div class="meta"><span>Written 2026-11-19</span><span>Branch: dev @ 6e3d433</span><span>Bundle: com.walhallaa.NestZone</span><span>ASC app 6749852085</span></div>
+</header>
+
+<section id="status">
+<h2>Status, 2026-11-19</h2>
+<div class="tbl"><table>
+<thead><tr><th>Area</th><th>State</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Legal page</td><td><span class="pill free">Live</span></td><td>walhallaa.com/nestzone-privacy-terms: privacy, terms, Plus and Sparkles, Turkish summary.</td></tr>
+<tr><td>Cleanup and compliance (app)</td><td><span class="pill free">Merged to dev</span></td><td>Lab out of Release, Lab door in Settings → Developer, account deletion, remove member, privacy manifest, iPhone portrait only, one <code>app_name</code>, legal links. Debug and Release built.</td></tr>
+<tr><td>Backend</td><td><span class="pill free">Merged to dev, not deployed</span></td><td>Household Plus, gates behind <code>PRO_ENFORCE</code>, deleteAccount, removeMember (rotates the code), batched home purge. Reviewed; review fixes in.</td></tr>
+<tr><td>NestZone Plus in the app</td><td><span class="pill free">Merged to dev</span></td><td>RevenueCat SDK, paywall from any sheet, gates, Settings row, 1.12.0 changelog. Reviewed; fixes in (purchase settling, RevenueCat identity order, write gates, deletion guard). App and tests compile; tests not run; not yet seen on a device.</td></tr>
+<tr><td>App Store Connect</td><td><span class="pill free">Mostly done</span></td><td>Renamed NestZone, subtitle, categories; group "NestZone Plus" with yearly $19.99 (free week) and monthly $2.99; Sparkles 300/1000/2200/5000; version 1.12.0 text, keywords, support URL, review notes; App Privacy published; age rating 4+; free in 175 countries; Mac and Vision Pro off. Missing: screenshots, review screenshots per product, Turkish listing, Content Rights, contact info.</td></tr>
+<tr><td>RevenueCat</td><td><span class="pill free">Set up</span></td><td>Project NestZone, App Store app with existing keys, entitlement <code>pro</code>, offering <code>default</code> ($rc_annual, $rc_monthly). Missing: secret key into Convex, notification URL into App Store Connect (both need you).</td></tr>
+<tr><td>Nestie on</td><td><span class="pill free">Merged to dev</span></td><td>On in Release; nothing needed hiding (all art drawn). Server: APPLE_APP_ID set, JAR_ENVIRONMENTS=Production,Sandbox, PRO_SANDBOX=on. COMPANION_NOTIFY stays sandbox until the App Store release.</td></tr>
+<tr><td>Release 1.12.0 (build 6)</td><td><span class="pill high">Waiting on owner</span></td><td><code>./deploy.sh</code> dry run passes; the real run (backend deploy, changelog sync, push stage → TestFlight) needs the owner to run or approve it.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="verdict">
+<h2>Where it stands</h2>
+<div class="grid">
+  <div class="card"><div class="stat">2</div><h4>Review blockers</h4><p>No in-app account deletion. No privacy manifest.</p></div>
+  <div class="card"><div class="stat">0</div><h4>Store products</h4><p>App Store Connect has no subscription group, no IAPs, no metadata. RevenueCat has no project.</p></div>
+  <div class="card"><div class="stat">~6,600</div><h4>Lines of lab code</h4><p>30 Debug-only files plus 5 bits that compile into Release today.</p></div>
+  <div class="card"><div class="stat">136</div><h4>Public backend functions</h4><p>All authenticated. None checks a plan yet; 31 of them belong to Pro domains.</p></div>
+</div>
+<p>The app itself is in good shape for review. There are no force-crash calls in Release paths, no TODOs, Turkish is complete, every backend function checks who is calling, and Sign in with Apple followed by "Create a home" lets a reviewer use everything alone. The work is the subscription, the cleanup and the paperwork.</p>
+</section>
+
+<section id="tiers">
+<h2>Free and Pro</h2>
+<p>The owner's tiering, made exact. The rule underneath it: <strong>Pro gates features, never the household's own data.</strong> A house that stops paying keeps reading everything it wrote; it just can't add more in the Pro places.</p>
+<div class="tbl"><table>
+<thead><tr><th>Module</th><th>Free</th><th>Pro</th></tr></thead>
+<tbody>
+<tr><td>Tasks</td><td>Everything, including the Done list and the automatic Archive (after 30 days) and restoring from it</td><td><span class="pill pro">Pro</span> "Archive now", the swipe that puts a finished chore away early</td></tr>
+<tr><td>Shopping</td><td>A plain list. Items grouped under their event, recipe or problem stay</td><td><span class="pill pro">Pro</span> Categories: picking one, grouping by aisle, clearing an aisle. A free house still sees the Categories/List toggle and the picker, locked; a tap opens the paywall</td></tr>
+<tr><td>Notes</td><td>Everything</td><td>—</td></tr>
+<tr><td>Messages</td><td>—</td><td><span class="pill pro">Pro</span> The whole module: sending, editing, new conversations and chat polls. A free house keeps reading its conversations; deleting your own message and marking read stay</td></tr>
+<tr><td>Movie night polls, Nestie's vote</td><td>Everything, wherever they appear (dock, Today, Movies)</td><td>—</td></tr>
+<tr><td>Recipes and Meals, Dinner</td><td>Everything</td><td><span class="pill pro">Pro</span> "Make it an occasion" (it creates a calendar event)</td></tr>
+<tr><td>Movies and Movie night</td><td>Watchlist, Watched, the swipe game, search</td><td><span class="pill pro">Pro</span> Custom lists: creating one, adding to one. Mature titles: the Settings switch is locked, and a free house always gets the family-safe catalogue (the stored choice is kept for an upgrade)</td></tr>
+<tr><td>Calendar</td><td>—</td><td><span class="pill pro">Pro</span> The whole module, event detail, history, "Up next" on Today, events in the dock, event reminders</td></tr>
+<tr><td>Money (Finance)</td><td>—</td><td><span class="pill pro">Pro</span> The whole module, bills on Today, bill reminders, settle-up</td></tr>
+<tr><td>House problems</td><td>—</td><td><span class="pill pro">Pro</span> The whole module, like Money: reporting, moving along, assigning, comments, photos, parts, visits, making a chore, urgent problems in "Needs you". Linked chores and shopping items stay usable; deleting stays</td></tr>
+<tr><td>Homes</td><td>One home, plus any home you join that already has Pro, and every home you are already in</td><td><span class="pill pro">Pro</span> Creating a second home (the person needs Plus themselves). Joining a free home as a free person needs Pro</td></tr>
+<tr><td>Nestie, the house's plant or pet</td><td>Everything: growing, ceremonies, the album, decorating, Leaves earned by the house</td><td>Not part of Plus. Sparkles are sold separately as one-off packs (300, 1000, 2200) through the purchase card</td></tr>
+<tr><td>Add anything</td><td>Tasks, shopping, notes, recipes, movies</td><td><span class="pill pro">Pro</span> The Event, Expense and Problem kinds</td></tr>
+</tbody></table></div>
+<div class="callout"><p><strong>One rule for every house without Pro, whether it never subscribed or stopped renewing:</strong> what is already there stays readable, new things need Pro. Calendar, Money and Problems open read-only with a banner and an "Upgrade" button when the house has data in them, and on a locked preview when it has none; their reminders stop. Custom movie lists and categories stay visible and their items can be removed. Nothing is ever deleted because a card expired.</p></div>
+</section>
+
+<section id="model">
+<h2>Who pays: the household</h2>
+<p>Apple sells a subscription to one Apple ID. NestZone's data belongs to a house. If Pro were per person, two people would open the same party and one would see a budget the other can't, which is worse than not having the feature. So <strong>any member with an active Pro subscription makes the whole house Pro.</strong> One subscription covers a house of five; that is the selling point, and it's why the other four care whether it renews.</p>
+<ul class="list">
+<li>No owner field needed. A house is Pro while <em>some current member</em> holds an unexpired entitlement. If the payer leaves, Pro leaves with them, with no stale <code>plan_source</code> to clean up.</li>
+<li>A person in two houses lifts both. That's acceptable and simple; revisit only if it's abused.</li>
+<li>The paywall says who is carrying it: "Murat's Pro covers this house."</li>
+<li>Family Sharing: on. A family that shares purchases is almost always the same household.</li>
+</ul>
+</section>
+
+<section id="arch">
+<h2>Architecture</h2>
+<p>RevenueCat runs the purchase, the receipts and the renewals. Convex stays the only judge of what a house may do, because a client-side check is decoration: every old build and every modified client talks to the same server.</p>
+<pre class="mermaid">
+flowchart LR
+  A[iPhone · RevenueCat SDK] -- purchase / restore --> B[App Store]
+  B -- receipts --> C[RevenueCat]
+  A -- "pro:refresh (after purchase, on launch)" --> D[Convex action]
+  D -- "GET /v1/subscribers/{userId} (secret key)" --> C
+  D --> E[(pro_entitlements)]
+  F[cron: every 6h, near-expiry rows] --> D
+  C -. "webhook (later, needs tunnel rule)" .-> G[POST /revenuecat]
+  G --> E
+  E --> H["requirePro(home) · homePro(home)"]
+  H --> I[Pro mutations refuse]
+  H --> J[notifyHome drops finance / calendar pushes]
+  H --> K["pro:status (live query) → app gates"]
+</pre>
+<h3>Why pull before push</h3>
+<p>HTTP actions live on the site origin (:3211) and the tunnel forwards only <code>/.well-known/*</code> there today. A RevenueCat webhook therefore needs a new ingress rule before it can work. Pulling instead needs nothing new: after a purchase or a restore, and once per launch, the app asks the server to check; the server asks RevenueCat with the secret key and writes the answer. A cron re-checks rows that are about to expire so a cancelled subscription ends on time even if nobody opens the app. The webhook is added later as a faster path, not a dependency.</p>
+<h3>Server pieces</h3>
+<div class="tbl"><table>
+<thead><tr><th>Piece</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td><code>pro_entitlements</code></td><td>One row per user: <code>user_id</code>, <code>expires_at</code> (null = lifetime), <code>product_id</code>, <code>store</code>, <code>is_sandbox</code>, <code>will_renew</code>, <code>checked_at</code>. Index <code>by_user</code>, <code>by_expires</code>.</td></tr>
+<tr><td><code>lib/pro.ts</code></td><td><code>homeProStatus(ctx, home)</code> reads each member's row (a house is at most a handful of people) and returns <code>{ pro, carriedBy, expiresAt }</code>. <code>requirePro(ctx, homeId)</code> throws <code>PRO_REQUIRED</code>. Respects <code>PRO_ENFORCE</code>.</td></tr>
+<tr><td><code>pro:status</code></td><td>Live query by home, so a purchase on one phone unlocks the others in the house within a second.</td></tr>
+<tr><td><code>pro:refresh</code></td><td>Action. Calls RevenueCat with <code>REVENUECAT_SECRET_KEY</code>, maps the <code>pro</code> entitlement into the row. Sandbox purchases count only while <code>PRO_SANDBOX=on</code> (TestFlight and review), the same pattern as <code>JAR_ENVIRONMENTS</code>.</td></tr>
+<tr><td><code>pro:sweep</code></td><td>Cron every 6 h: refresh rows expiring within 24 h or expired within the last 3 days (billing grace).</td></tr>
+<tr><td><code>push.notifyHome</code></td><td>One check: a <code>finance</code> or <code>calendar</code> category for a non-Pro house sends nothing and files no feed row. That silences every reminder cron and every mutation push in both domains at once.</td></tr>
+</tbody></table></div>
+<h3>App pieces</h3>
+<ul class="list">
+<li><code>PurchasesClient</code> (<code>@DependencyClient</code>): configure, offerings, purchase, restore, customer-info stream. RevenueCat's <code>appUserID</code> is the Convex user id, set at sign-in and logged out at sign-out.</li>
+<li><code>ProClient</code>: subscribes to <code>pro:status</code> for the current home and calls <code>pro:refresh</code>. The server's answer is the only one the app trusts.</li>
+<li><code>ProFeature</code> enum, the registry: <code>calendar, finance, shoppingCategories, customMovieLists, archiveNow, eventFromElsewhere, expenseFromElsewhere, issues, messages, multipleHomes, matureContent</code>. Every gate asks it; changing what is Pro is one line.</li>
+<li><code>PaywallFeature</code> takes the <code>ProFeature</code> that was reached for, so the sheet opens on what the person wanted.</li>
+<li><code>ProGate</code> view modifiers: <code>.proLocked(_:)</code> for a control (lock glyph, tap opens the paywall), <code>ProLockedScreen</code> for a whole module, <code>ProReadOnlyBanner</code> for lapse.</li>
+</ul>
+</section>
+
+<section id="gates">
+<h2>Every gate</h2>
+<p>Each one, client and server. "Refuse" is the server throwing <code>PRO_REQUIRED</code>; "coerce" is the server quietly writing the free value instead.</p>
+<div class="tbl"><table>
+<thead><tr><th>Gate</th><th>App</th><th>Server</th></tr></thead>
+<tbody>
+<tr><td>Calendar module</td><td>Segment shows a lock; choosing it shows <code>ProLockedScreen</code> with a preview. <code>MainFeature.open</code> turns <code>.module(.calendar)</code>, <code>.event</code>, <code>.occurrence</code> into the paywall. Plans opens on Meals for a free house.</td><td>Refuse <code>events:create/update/rsvp/stockUp/addItems</code>. Allow <code>remove</code>. Queries stay open (read-only on lapse).</td></tr>
+<tr><td>Money module</td><td>Same as Calendar.</td><td>Refuse every <code>finance</code> create, update, settle, pay and budget write. Allow the removes. Queries open.</td></tr>
+<tr><td>Messages module</td><td>Like Money: the Messages tab shows <code>ProLockedScreen</code> with a preview when there are no conversations; with some it is read-only, and each chat swaps its composer for the banner. New chat and Edit are locked and open the paywall. A chat notification opens the read-only conversation.</td><td>Refuse <code>messages</code> send, edit, new conversation and chat polls (feature string <code>messages</code>). Allow delete and mark read. Queries open.</td></tr>
+<tr><td>Today</td><td>Skip the <code>events:upcoming</code> and <code>finance:bills</code> reads; hide Up next, bill alarms and the event clauses in the day's sentence; the events tile in At a glance becomes a teaser.</td><td>—</td></tr>
+<tr><td>The dock</td><td>Pass no events; dinner, movie round and <code>+</code> stay.</td><td>—</td></tr>
+<tr><td>Add anything</td><td>Event, Expense and Problem chips carry a lock; choosing one opens the paywall instead of the composer.</td><td>Covered by the module refusals.</td></tr>
+<tr><td>Dinner "make it an occasion"</td><td>Toggle locked.</td><td><code>events:create</code> refuses; the new client saves the dinner without the event.</td></tr>
+<tr><td>Problems module</td><td>Same as Money: segment lock, <code>ProLockedScreen</code> with no problems, read-only banner with some. No report, status, assign, comment, photo, parts, visit or make-chore controls; delete stays. <code>MainFeature.open</code> turns <code>.issue</code> into the paywall; <code>.module(.maintenance)</code> opens the locked screen. House opens on Problems, both segments locked for a free house.</td><td>Refuse every <code>issues</code> write except remove; <code>issues:scheduleVisit</code> refuses with <code>issues</code>. <code>issues:uploadUrl</code> takes <code>homeId</code>.</td></tr>
+<tr><td>Today: problems</td><td>No <code>issues:board</code> read: urgent problems leave "Needs you"; the problem counters open the locked screen.</td><td>—</td></tr>
+<tr><td>Add anything: Problem</td><td>The Problem chip carries a lock; choosing it opens the paywall.</td><td>Covered by the module refusals.</td></tr>
+<tr><td>More than one home</td><td>Manage homes: "Create another home" wears a lock and opens the paywall unless the person has Plus themselves. "Join another home" is not blocked: the server decides and its refusal opens the paywall. Someone already in 2+ homes keeps them and switches freely.</td><td>Refuse <code>homes:create</code> unless the person has Plus; allow <code>homes:join</code> for a free person when the joined home is Plus. Feature string <code>multipleHomes</code>.</td></tr>
+<tr><td>Mature titles</td><td>Settings switch shows locked and off for a free house; the stored value is never cleared. <code>catalog:discover</code> carries <code>homeId</code>.</td><td><strong>Coerce</strong>: <code>includeAdult</code> is forced off for a free house, never refused.</td></tr>
+<tr><td>Shopping categories</td><td>Free house: flat list forced; the category picker and the Categories/List toggle stay visible with a lock and open the paywall.</td><td><strong>Coerce</strong>: <code>shopping:create/update/createMany</code> write the default category for a free house. Old builds always send one, so never refuse.</td></tr>
+<tr><td>Custom movie lists</td><td><code>+</code> and custom-list chips locked; existing custom lists stay readable, items removable.</td><td>Refuse <code>movies:createList</code> for <code>custom</code> (or no type) and <code>movies:addMovie</code> into a custom list. A preset type is allowed only if that preset is missing.</td></tr>
+<tr><td>Archive now</td><td>The swipe shows a lock.</td><td>Refuse <code>tasks:setArchived(true)</code>; always allow <code>false</code> so restoring never breaks.</td></tr>
+<tr><td>Notifications</td><td>Inbox rows for Pro domains route through <code>open</code>, so they land on the paywall.</td><td><code>notifyHome</code> drops <code>finance</code> and <code>calendar</code> for free houses.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="compat">
+<h2>Old builds on the same backend</h2>
+<p>Every build in TestFlight talks to the one deployment, and none of them has a paywall. A refused write would show them "Something went wrong on our end". So enforcement is a switch, not a deploy:</p>
+<ol class="steps">
+<li>Deploy the backend with every gate written and <code>PRO_ENFORCE</code> unset. Behaviour is unchanged for everyone.</li>
+<li>Ship 1.12.0 to TestFlight, then the App Store. The new client gates itself from <code>pro:status</code> regardless of the switch.</li>
+<li>Once <code>inbox:versionCensus</code> shows the TestFlight households on 1.12.0, set <code>PRO_ENFORCE=on</code>.</li>
+<li>Existing TestFlight households get no grant. What they already put in Money and Calendar stays readable; adding more needs Pro, exactly like a lapsed subscription.</li>
+</ol>
+<p>Reads never throw. A gated query for a free house returns its data, because read-only on lapse needs it, and old Today and dock screens would otherwise show alerts.</p>
+</section>
+
+<section id="paywall">
+<h2>The paywall</h2>
+<p>An ordinary NestZone screen that happens to sell something, built the way the Nestie shop was settled: glass cards on the Backdrop, the theme's accent, SF Symbols, no countdowns, exactly one "Best value". It is a custom SwiftUI sheet on top of the RevenueCat SDK, not RevenueCat's hosted paywall, so it looks like the app.</p>
+<ul class="list">
+<li>Opens on what was tapped: "Money is part of Pro" with a still of the Money screen, then the four things Pro adds.</li>
+<li>Two plans: yearly (Best value, with a 1-week free trial) and monthly. Prices come from StoreKit through RevenueCat, localised; the app never prints a hardcoded price.</li>
+<li>Says "One subscription covers everyone in {house}".</li>
+<li>Restore purchases, Terms of Use (Apple's standard EULA) and Privacy Policy links on the sheet itself (Guideline 3.1.2).</li>
+<li>Settings gets a "NestZone Plus" row: status, who carries it, renewal date, "Manage subscription" (<code>manageSubscriptionsSheet</code>), Restore.</li>
+<li>Success is a stamp and a haptic, never confetti, since this is money moving.</li>
+<li>Copy written in both languages the way people talk: "Ev için Plus", "Bütün ev kullanır".</li>
+</ul>
+</section>
+
+<section id="cleanup">
+<h2>Taking the lab out</h2>
+<p><strong>Decided:</strong> the lab tools stay, in Debug builds only, and the Nestie Lab's door moves off the Nestie card into a Debug-only <em>Developer</em> section in Settings. What changes is everything that leaks into Release.</p>
+<div class="callout"><p><strong>Nestie ships in this release.</strong> <code>CompanionFlag</code> turns on in Release, with its own changelog entry, the three Sparkle packs in App Store Connect, and the server switches: <code>APPLE_APP_ID=6749852085</code>, <code>JAR_ENVIRONMENTS=Production,Sandbox</code> while in review (Production only after), <code>COMPANION_NOTIFY=on</code>. Before it goes: every species and decoration a Release build can offer must be drawn (anything still an emoji sketch is hidden in Release, not sold), and the Nestie walk-through on the owner's iPhone.</p></div>
+<div class="tbl"><table>
+<thead><tr><th>What</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td>The Nestie Lab tile, LabChip badges and PointsStepper on the Nestie card</td><td>Off the card; the Lab opens from Settings → Developer (Debug only)</td></tr>
+<tr><td><code>Features/Companion/Lab/</code>, NestieBench, FakeNestieServer, PixelAudit, TreeAudit, ArtSheet, GlassListLab</td><td>Keep, Debug only (already gated)</td></tr>
+<tr><td><code>LabLook</code>, <code>LabSlot</code>'s stand-in, <code>LabChip</code>'s Release no-op, compiled into Release</td><td>Gate so Release carries none of it</td></tr>
+<tr><td><code>SparkleStoreClient.test</code> (compiles into Release), <code>debugWood</code></td><td>Debug only</td></tr>
+<tr><td>"Send a test notification" and the copyable push token in Settings</td><td>Debug only</td></tr>
+<tr><td><code>inbox:whoAmI</code> (no build calls it)</td><td>Record in DEPRECATIONS.md, remove next backend deploy</td></tr>
+<tr><td>Hardcoded admin email in <code>lib/admin.ts</code></td><td>Move to <code>ADMIN_USER_IDS</code></td></tr>
+<tr><td>FrameMeter and the <code>-frameMeter</code>, <code>-segmentCycle</code>, <code>-openTab</code>, <code>-todayScroll</code> measurement hooks</td><td>Keep (Debug and MEASURE only; they're how performance is measured)</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="review">
+<h2>Review blockers and risks</h2>
+<div class="tbl"><table>
+<thead><tr><th>Severity</th><th>Issue</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td><span class="pill block">Blocker</span></td><td>No account deletion (5.1.1(v)). Settings has only Sign out; no backend function deletes a user.</td><td><code>users:deleteAccount</code>: leave every home (deleting a home left empty), delete devices, avatar, Pro row, auth accounts and sessions, the user; messages keep their text as "Deleted member". Revoke the Sign in with Apple token. A destructive Settings row with a confirm that names what goes.</td></tr>
+<tr><td><span class="pill block">Blocker</span></td><td>No <code>PrivacyInfo.xcprivacy</code>; UserDefaults (CA92.1) and file timestamps (C617.1) are used.</td><td>Add the manifest with both reasons and the collected data types; check the archive's privacy report.</td></tr>
+<tr><td><span class="pill high">High</span></td><td>Subscriptions need Terms and Privacy links in the app and in the listing (3.1.2).</td><td>Links on the paywall and in Settings. Privacy policy hosted at a stable URL; Apple's standard EULA for terms.</td></tr>
+<tr><td><span class="pill high">High</span></td><td>The name is mixed: the display name and the App Store Connect record say Bungalaven, the app's copy says NestZone (2.3.7). <strong>Decided: NestZone.</strong></td><td>Display name, camera prompt and every mention through one <code>app_name</code> string; rename the App Store Connect record to NestZone.</td></tr>
+<tr><td><span class="pill high">High</span></td><td>iPad is enabled with every orientation, and no screen is designed for it. Reviewers test on iPad.</td><td>iPhone only (<code>TARGETED_DEVICE_FAMILY = 1</code>), portrait only. The app still runs on iPad in compatibility mode.</td></tr>
+<tr><td><span class="pill med">Medium</span></td><td>Shared messages and photos with no report or block (1.2).</td><td>Houses are invite-only. Add "Remove member" to the house screen and say so in the review notes.</td></tr>
+<tr><td><span class="pill med">Medium</span></td><td>Xcode Cloud workflow is disabled and set to internal TestFlight only.</td><td>Enable it, set the distribution to "TestFlight and App Store".</td></tr>
+<tr><td><span class="pill med">Medium</span></td><td><code>catalog:details</code> puts the TMDb id straight into a path; no rate limits anywhere.</td><td>Validate the id as digits. Rate limits after launch.</td></tr>
+<tr><td><span class="pill med">Medium</span></td><td>Debug builds write to the production deployment.</td><td>Known and accepted for now; a dev deployment is the post-launch fix.</td></tr>
+</tbody></table></div>
+<h3>App Privacy label</h3>
+<p>Linked to the user, used for app functionality, no tracking: name and email (Apple), user id and push token, photos (avatars, problems, recipes, messages), user content (messages, notes, tasks, events, recipes, problems), financial info (household expenses and budgets), purchase history (Pro, via RevenueCat).</p>
+</section>
+
+<section id="stores">
+<h2>Store setup</h2>
+<h3>App Store Connect</h3>
+<ul class="list check">
+<li>Subscription group "NestZone Plus", level 1 for both products.</li>
+<li><code>com.walhallaa.NestZone.plus.yearly</code>, 1 year, 1-week free trial for new subscribers.</li>
+<li><code>com.walhallaa.NestZone.plus.monthly</code>, 1 month, no trial.</li>
+<li>Display names and descriptions in English and Turkish; a review screenshot of the paywall for each.</li>
+<li>Billing grace period: 16 days. Family Sharing: on.</li>
+<li>Consumables <code>com.walhallaa.NestZone.sparkles.300</code>, <code>.1000</code>, <code>.2200</code>: names, descriptions in English and Turkish, prices from <code>NestZone.storekit</code>, a review screenshot of the purchase card each.</li>
+<li>In-App Purchase key (.p8) and App Store Connect API key, for RevenueCat.</li>
+<li>App Store Server Notifications V2 URL: RevenueCat's, with RevenueCat forwarding to <code>/appstore/notifications</code> so Sparkle refunds reach the jar. That route answers 404 until the tunnel sends <code>/appstore/.*</code> to :3211; until then a refund is not debited (a known, small risk).</li>
+<li><strong>Two purchase paths in one app.</strong> Sparkles keep their StoreKit 2 flow, finished only after the server credits. So RevenueCat runs with <code>purchasesAreCompletedBy: .myApp</code>: the app finishes Plus transactions itself once <code>pro:refresh</code> answers, and each listener ignores the other's product ids.</li>
+<li>Version: rename "1.0" to 1.12.0 to match the build; description, keywords, promo text, support and privacy URLs, screenshots (6.9" and 6.5"), age rating, App Privacy, review notes, the build.</li>
+</ul>
+<h3>RevenueCat</h3>
+<ul class="list check">
+<li>Project "NestZone", App Store app with bundle <code>com.walhallaa.NestZone</code>, the .p8 key uploaded.</li>
+<li>Entitlement <code>pro</code>; products yearly and monthly attached to it.</li>
+<li>Offering <code>default</code> with <code>$rc_annual</code> and <code>$rc_monthly</code> packages.</li>
+<li>Public SDK key into the app (it's public by design); secret v1 key into Convex: <code>REVENUECAT_SECRET_KEY</code>.</li>
+</ul>
+<h3>Review notes, drafted</h3>
+<pre class="code">Sign in with Apple, then tap "Create a home"; one person can use every
+feature alone. Invite codes are optional.
+
+NestZone Plus is a household subscription: one member subscribes and
+everyone in that home gets Money (shared expenses, bills, settle-up),
+Calendar, House problems, shopping categories, custom movie lists,
+mature movie titles, "Archive now" and a second home.
+Open Plans → Calendar, House → Money or House → Problems to see the paywall. Restore
+Purchases is on the paywall and in Settings → NestZone Plus.
+
+Delete account: Settings → Account → Delete account.
+Households are invite-only; a member can be removed from House settings.</pre>
+</section>
+
+<section id="phases">
+<h2>Phases</h2>
+<div class="phase"><div class="num">1</div><div><h3>Clean the build</h3><p>Lab removal, the Release leaks, Settings debug rows to Debug, the NestZone→NestZone strings, iPhone and portrait only, the TMDb id check, the admin email to env. One commit, one build.</p></div></div>
+<div class="phase"><div class="num">2</div><div><h3>Compliance</h3><p>Account deletion end to end with Apple token revocation; the privacy manifest; Terms and Privacy links; Remove member. Backend reviewed before deploying, deployed additively.</p></div></div>
+<div class="phase"><div class="num">3</div><div><h3>Pro on the server</h3><p><code>pro_entitlements</code>, <code>lib/pro.ts</code>, <code>pro:status</code>, <code>pro:refresh</code>, the sweep cron, every gate above behind <code>PRO_ENFORCE</code>, the <code>notifyHome</code> check, the shopping coercion. <code>DEPRECATIONS.md</code> rows where behaviour narrows.</p></div></div>
+<div class="phase"><div class="num">4</div><div><h3>Pro in the app</h3><p>RevenueCat SDK through SPM, <code>PurchasesClient</code>, <code>ProClient</code>, the registry, <code>PaywallFeature</code>, the gates, the Settings row, strings in both languages, reducer tests (written, left for the owner to run), the 1.12.0 changelog entry.</p></div></div>
+<div class="phase"><div class="num">5</div><div><h3>Stores</h3><p>The App Store Connect group and products, the keys, the RevenueCat project, entitlement and offering, Convex env vars, a sandbox purchase on the owner's iPhone.</p></div></div>
+<div class="phase"><div class="num">6</div><div><h3>Nestie on</h3><p><code>CompanionFlag</code> on in Release, undrawn items hidden in Release, the Sparkle products and server env, the changelog entry, a full walk on the owner's iPhone (choose, grow, ceremony, decorate, buy Sparkles in Sandbox).</p></div></div>
+<div class="phase"><div class="num">7</div><div><h3>Listing and submission</h3><p>Metadata in both languages, screenshots, privacy label, age rating, review notes; Xcode Cloud switched on; <code>./deploy.sh</code> (backend first, then the app); <code>PRO_SANDBOX=on</code> while in review; submit the build with both subscriptions and the three Sparkle packs.</p></div></div>
+</section>
+
+<section id="decisions">
+<h2>Decisions for the owner</h2>
+<div class="tbl"><table>
+<thead><tr><th>Question</th><th>Recommendation</th></tr></thead>
+<tbody>
+<tr><td>Price</td><td><span class="pill free">Decided</span> $2.99 a month, $19.99 a year, with Apple's equivalent prices elsewhere.</td></tr>
+<tr><td>Trial</td><td><span class="pill free">Decided</span> 1 week free on the yearly plan only.</td></tr>
+<tr><td>Where the privacy policy lives</td><td><span class="pill free">Decided</span> walhallaa.com/nestzone-privacy-terms, beside the other apps' pages (Firebase Hosting).</td></tr>
+<tr><td>TestFlight households already using Money or Calendar</td><td><span class="pill free">Decided</span> No grant. Their data stays readable; new entries need Pro.</td></tr>
+<tr><td>Names</td><td><span class="pill free">Decided</span> The app is NestZone. The subscription is NestZone Plus (the code calls it <code>pro</code>; people see "Plus").</td></tr>
+<tr><td>Nestie and its Lab</td><td><span class="pill free">Decided</span> Nestie ships in this release, free, with Sparkle packs. The Lab stays in Debug, opened from Settings → Developer instead of the card.</td></tr>
+</tbody></table></div>
+</section>
+
+</main>
+</div>

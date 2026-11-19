@@ -22,6 +22,11 @@ struct CaptureView: View {
                     preview
                 }
                 .padding(Metrics.screenPadding)
+                // Typing can move the guess from one kind to another, and the
+                // chip and the preview move with it rather than cutting. Keyed
+                // on the kind alone, so a keystroke that leaves the kind where
+                // it was is not animated.
+                .animation(Motion.spring, value: store.kind)
             }
             .scrollBounceBehavior(.basedOnSize)
             .safeAreaInset(edge: .bottom) { addButton }
@@ -44,13 +49,13 @@ struct CaptureView: View {
         .task { await store.send(.task).finish() }
         .onAppear { isFocused = true }
         .alert($store.scope(state: \.alert, action: \.alert))
-        .sheet(item: $store.scope(state: \.composer?.problem, action: \.composer.problem)) { store in
+        .hostedSheet(item: $store.scope(state: \.composer?.problem, action: \.composer.problem)) { store in
             IssueComposerSheet(store: store)
         }
-        .sheet(item: $store.scope(state: \.composer?.event, action: \.composer.event)) { store in
+        .hostedSheet(item: $store.scope(state: \.composer?.event, action: \.composer.event)) { store in
             EventComposerSheet(store: store)
         }
-        .sheet(item: $store.scope(state: \.composer?.expense, action: \.composer.expense)) { store in
+        .hostedSheet(item: $store.scope(state: \.composer?.expense, action: \.composer.expense)) { store in
             ExpenseComposerSheet(store: store)
         }
     }
@@ -87,10 +92,26 @@ struct CaptureView: View {
                     ) {
                         store.send(.kindTapped(kind), animation: Motion.spring)
                     }
+                    // Event, Expense and Problem are Plus; the lock is the chip's own
+                    // and a tap opens the paywall (the reducer asks for it).
+                    .overlay(alignment: .topTrailing) {
+                        if kind.proFeature != nil, !store.pro.isPro {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.secondary)
+                                .padding(3)
+                                .background(.thinMaterial, in: .circle)
+                                .offset(x: 4, y: -4)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        }
+                    }
                 }
             }
         }
-        .sensoryFeedback(.selection, trigger: store.kind)
+        // No tick of its own: a chip gives one when it is tapped, and the
+        // guess moving while somebody types — sometimes on the model's late
+        // answer, well after the keystroke — is not a tap.
     }
 
     // MARK: Preview
@@ -234,6 +255,7 @@ struct CaptureView: View {
         .padding(.horizontal, Metrics.screenPadding)
         .padding(.top, 8)
         .padding(.bottom, 12)
+        .animation(Motion.spring, value: store.kind)
     }
 
     /// Says what the tap will do, not just "Add".
@@ -301,6 +323,18 @@ extension CaptureOutcome {
         case .problem: L10n.captureAddedProblem
         case .event: L10n.captureAddedEvent
         case .expense: L10n.captureAddedExpense
+        }
+    }
+}
+
+extension CaptureKind {
+    /// What a house needs Plus for to file a line here, if anything.
+    var proFeature: ProFeature? {
+        switch self {
+        case .event: .eventFromElsewhere
+        case .expense: .expenseFromElsewhere
+        case .problem: .issues
+        case .shopping, .chore, .note: nil
         }
     }
 }

@@ -3,8 +3,9 @@ import SwiftUI
 /// The app's motion vocabulary.
 ///
 /// One rule holds the whole system together: motion explains a change, it never
-/// decorates. Every curve here settles in under a third of a second, so nothing
-/// stands between a tap and the next thing the user wants to do.
+/// decorates. Most curves here settle in about a third of a second, so nothing
+/// stands between a tap and the next thing the user wants to do; the few that
+/// take longer — money arriving, a celebration — say why.
 public enum Motion {
     /// Default for anything that moves position or size.
     public static let spring = SwiftUI.Animation.spring(response: 0.34, dampingFraction: 0.82)
@@ -17,6 +18,23 @@ public enum Motion {
     /// Reserved for the one or two genuinely playful moments — a poll match, a
     /// completed streak. Overshoots on purpose.
     public static let celebrate = SwiftUI.Animation.spring(response: 0.5, dampingFraction: 0.55)
+    /// Letting go of something pressed: back up with a little spring past
+    /// where it rests, so a press feels like a squash.
+    public static let release = SwiftUI.Animation.spring(duration: 0.32, bounce: 0.4)
+    /// Something crossing the screen — a coin from the jar to the thing it
+    /// buys. No bounce: it arrives, it doesn't wobble.
+    public static let travel = SwiftUI.Animation.spring(duration: 0.45, bounce: 0)
+    /// Money arriving: a number counting up, a meter filling. Smooth and
+    /// never past the true value.
+    public static let settle = SwiftUI.Animation.smooth(duration: 0.6)
+    /// Leaving: quick and out of the way.
+    public static let exit = SwiftUI.Animation.easeOut(duration: 0.18)
+    /// A chart drawing in: a ring sweeping round, a donut filling. Lively, but
+    /// never past the true value — data and money don't bounce.
+    public static let dataDraw = SwiftUI.Animation.spring(duration: 0.55, bounce: 0)
+    /// Something small popping into place — a badge, a check, a count. The
+    /// most bounce anything but a character gets.
+    public static let pop = SwiftUI.Animation.spring(duration: 0.35, bounce: 0.5)
 
     /// Delay for the nth element in a staggered sequence. Capped so a long list
     /// never leaves the last row waiting.
@@ -32,6 +50,7 @@ private struct AppearModifier: ViewModifier {
     let distance: CGFloat
     @State private var shown = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     func body(content: Content) -> some View {
         content
@@ -41,14 +60,36 @@ private struct AppearModifier: ViewModifier {
             // with it — a delay only reads as choreography when there is
             // movement to choreograph.
             .offset(y: shown || reduceMotion ? 0 : distance)
-            .onAppear {
-                guard !shown else { return }
-                withAnimation(
-                    reduceMotion ? Motion.fade : Motion.arrive.delay(Motion.stagger(index))
-                ) {
-                    shown = true
+            .onAppear(perform: play)
+            // A segment that is kept alive never appears again, so its
+            // entrance is put back once it has faded out (behind the opacity,
+            // where nobody sees it) and played when it returns. A row that is
+            // built before its segment is on screen waits for it — that
+            // includes a segment's first build, which happens in the tap's
+            // frame while the stage still holds the module being left, so the
+            // entrances start a few frames later rather than adding to it.
+            .onChange(of: phase) { _, phase in
+                switch phase {
+                case .onScreen: play()
+                case .away: rewind()
+                case .leaving: break
                 }
             }
+    }
+
+    private func play() {
+        guard !shown, phase == .onScreen else { return }
+        withAnimation(
+            reduceMotion ? Motion.fade : Motion.arrive.delay(Motion.stagger(index))
+        ) {
+            shown = true
+        }
+    }
+
+    private func rewind() {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { shown = false }
     }
 }
 
@@ -78,11 +119,17 @@ extension View {
 
 // MARK: - Press feedback
 
-/// Scales a control slightly while held, with a light haptic on the way down.
+/// Scales a control slightly while held, with a light haptic on the way down
+/// — or none, for a control that gives its own when the tap lands, so one
+/// tap is never felt twice.
 public struct PressableButtonStyle: ButtonStyle {
     var scale: CGFloat = 0.97
+    var haptic = true
 
-    public init(scale: CGFloat = 0.97) { self.scale = scale }
+    public init(scale: CGFloat = 0.97, haptic: Bool = true) {
+        self.scale = scale
+        self.haptic = haptic
+    }
 
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -90,13 +137,15 @@ public struct PressableButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.92 : 1)
             .animation(Motion.press, value: configuration.isPressed)
             .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { _, pressed in
-                pressed   // fire on press, not on release
+                haptic && pressed   // fire on press, not on release
             }
     }
 }
 
 extension ButtonStyle where Self == PressableButtonStyle {
     public static var pressable: PressableButtonStyle { PressableButtonStyle() }
+    /// Pressable without its own haptic, for a control whose tap gives one.
+    public static var pressableQuiet: PressableButtonStyle { PressableButtonStyle(haptic: false) }
 }
 
 // MARK: - Rejection
@@ -122,13 +171,23 @@ private struct ShakeEffect: GeometryEffect {
 private struct ShakeModifier: ViewModifier {
     let trigger: Int
     @State private var progress: CGFloat = 0
+    @State private var dim = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
-            .modifier(ShakeEffect(progress: progress))
+            .modifier(ShakeEffect(progress: reduceMotion ? 0 : progress))
+            // Reduce Motion: the refusal is a dip in place, not a shake.
+            .opacity(dim ? 0.55 : 1)
             .onChange(of: trigger) { _, _ in
-                progress = 0
-                withAnimation(.easeOut(duration: 0.4)) { progress = 1 }
+                if reduceMotion {
+                    withAnimation(.easeOut(duration: 0.12)) { dim = true } completion: {
+                        withAnimation(.easeIn(duration: 0.13)) { dim = false }
+                    }
+                } else {
+                    progress = 0
+                    withAnimation(.easeOut(duration: 0.4)) { progress = 1 }
+                }
             }
     }
 }
@@ -137,6 +196,76 @@ extension View {
     /// Shakes whenever `trigger` changes — for input the app is refusing.
     public func shake(on trigger: Int) -> some View {
         modifier(ShakeModifier(trigger: trigger))
+    }
+
+    /// Draws a chart in on appear — sets `drawn` with `animation`, or at once
+    /// under Reduce Motion, where a ring sweeping round is travel for nothing.
+    public func drawIn(_ drawn: Binding<Bool>, animation: Animation = Motion.dataDraw) -> some View {
+        modifier(DrawInModifier(drawn: drawn, animation: animation))
+    }
+}
+
+private struct DrawInModifier: ViewModifier {
+    @Binding var drawn: Bool
+    let animation: Animation
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear(perform: draw)
+            // Drawn again each time its segment comes back, the way entrances
+            // are (see `AppearModifier`).
+            .onChange(of: phase) { _, phase in
+                switch phase {
+                case .onScreen: draw()
+                case .away:
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) { drawn = false }
+                case .leaving: break
+                }
+            }
+    }
+
+    private func draw() {
+        guard !drawn, phase == .onScreen else { return }
+        if reduceMotion { drawn = true } else { withAnimation(animation) { drawn = true } }
+    }
+}
+
+// MARK: - Leaving
+
+/// "Dust": a row leaving shrinks a touch, blurs and lifts as it fades —
+/// leaving is an event, not a cut. A fade under Reduce Motion.
+public struct DustTransition: Transition {
+    public init() {}
+
+    public func body(content: Content, phase: TransitionPhase) -> some View {
+        content.modifier(DustEffect(gone: phase == .didDisappear, visible: phase.isIdentity))
+    }
+}
+
+/// The dust itself, where the environment can be read.
+private struct DustEffect: ViewModifier {
+    let gone: Bool
+    let visible: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        let travel = gone && !reduceMotion
+        content
+            .opacity(visible ? 1 : 0)
+            .scaleEffect(travel ? 0.92 : 1)
+            .blur(radius: travel ? 4 : 0)
+            .offset(y: travel ? -6 : 0)
+    }
+}
+
+extension AnyTransition {
+    /// Arrives like any row, leaves as dust.
+    public static var dust: AnyTransition {
+        .asymmetric(insertion: .opacity, removal: AnyTransition(DustTransition()))
     }
 }
 
@@ -175,16 +304,22 @@ private struct SymbolBounceModifier: ViewModifier {
     let active: Bool
     @State private var trigger = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     func body(content: Content) -> some View {
         content
             .symbolEffect(.bounce, options: .nonRepeating, value: trigger)
             .onAppear { fire(if: active) }
             .onChange(of: active) { _, now in fire(if: now) }
+            // A kept segment bounces again when it comes back, and not while
+            // it is away: nobody is there to see it.
+            .onChange(of: phase) { _, phase in
+                if phase == .onScreen { fire(if: active) }
+            }
     }
 
     private func fire(if shouldFire: Bool) {
-        guard shouldFire, !reduceMotion else { return }
+        guard shouldFire, !reduceMotion, phase == .onScreen else { return }
         trigger += 1
     }
 }
@@ -213,12 +348,15 @@ private struct PulseModifier: ViewModifier {
     let active: Bool
     @State private var on = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @LivePhase private var phase
 
     /// The only animation in the app that never ends, so it is also the only
     /// one that keeps a display link alive for as long as it is on screen.
     /// Switched off entirely under Reduce Motion rather than softened: a slow
-    /// endless throb is the exact thing that setting exists to stop.
-    private var isBreathing: Bool { active && !reduceMotion }
+    /// endless throb is the exact thing that setting exists to stop. It stops
+    /// as well when its screen is a kept segment that has been switched away
+    /// from, where a link would be kept alive for something nobody can see.
+    private var isBreathing: Bool { active && !reduceMotion && phase == .onScreen }
 
     func body(content: Content) -> some View {
         content

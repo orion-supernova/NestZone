@@ -8,9 +8,8 @@ public struct CreateHomeFeature: Sendable {
         public var name = ""
         public var isSubmitting = false
         public var didSucceed = false
-        /// Incremented on every rejection so the field can shake. A counter
-        /// rather than a flag, so two identical errors in a row still register.
-        public var shakeCount = 0
+        /// Cleared on every submit and set again on a rejection, so two
+        /// identical errors in a row are still two refusals to the field.
         public var inlineError: String?
 
         public init() {}
@@ -65,7 +64,6 @@ public struct CreateHomeFeature: Sendable {
 
             case let .failed(error):
                 state.isSubmitting = false
-                state.shakeCount += 1
                 state.inlineError = error.errorDescription
                 return .none
 
@@ -83,7 +81,6 @@ public struct JoinHomeFeature: Sendable {
         public var code = ""
         public var isSubmitting = false
         public var didSucceed = false
-        public var shakeCount = 0
         public var inlineError: String?
 
         public init() {}
@@ -132,7 +129,6 @@ public struct JoinHomeFeature: Sendable {
 
             case let .failed(error):
                 state.isSubmitting = false
-                state.shakeCount += 1
                 // The server answers a bad code with a bare string; turn it into
                 // the localized message instead of showing raw server text.
                 state.inlineError = if case let .server(message) = error,

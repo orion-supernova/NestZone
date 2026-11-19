@@ -11,12 +11,15 @@ public struct FinanceView: View {
     @Bindable var store: StoreOf<FinanceFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var glass
     @Namespace private var sectionPill
     /// The row with its delete button showing, if any. Held here rather than in
     /// each row so opening one closes the last, as the system list does.
     @State private var revealedExpenseID: ExpenseID?
     @FocusState private var isSearchFocused: Bool
+    /// The settle-up moment, told on the balance hero. See `SquareUp`.
+    @State private var squareUp = SquareUp()
 
     public init(store: StoreOf<FinanceFeature>) {
         self.store = store
@@ -25,40 +28,44 @@ public struct FinanceView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: Metrics.sectionSpacing) {
-                monthScrubber
-                if store.hasSeveralCurrencies {
-                    currencyPicker
-                }
-                sectionPicker
-
-                Group {
-                    switch store.section {
-                    case .overview: overview
-                    case .ledger: ledger
-                    case .bills: billsPage
-                    case .budgets: budgetsPage
+                Staged(1) {
+                    monthScrubber
+                    if store.hasSeveralCurrencies {
+                        currencyPicker
                     }
+                    sectionPicker
                 }
-                // Each face is its own view, not four states of one.
-                //
-                // Without the id, all four branches shared an identity: SwiftUI
-                // swapped the content in place, so the transition below never
-                // had an insertion to run and none of the `appear` staggers
-                // inside ever saw a second `onAppear`. Switching to an empty
-                // Bills tab looked like nothing had happened at all. With it,
-                // the outgoing face leaves, the incoming one arrives, and its
-                // contents stagger in every time — which is the whole point of
-                // a picker that swaps a page.
-                //
-                // It rebuilds the subtree on each switch. That is the price of
-                // the effect and it is a fair one: the switch is a deliberate
-                // tap, it happens at most a few times a visit, and each face is
-                // a handful of cards.
-                .id(store.section)
-                // Faces cross-dissolve and lift rather than sliding: they are
-                // four views of one month, not four places, and a horizontal
-                // slide would claim otherwise.
-                .transition(.opacity.combined(with: .offset(y: 10)))
+
+                Staged(2, fades: false) {
+                    Group {
+                        switch store.section {
+                        case .overview: overview
+                        case .ledger: ledger
+                        case .bills: billsPage
+                        case .budgets: budgetsPage
+                        }
+                    }
+                    // Each face is its own view, not four states of one.
+                    //
+                    // Without the id, all four branches shared an identity: SwiftUI
+                    // swapped the content in place, so the transition below never
+                    // had an insertion to run and none of the `appear` staggers
+                    // inside ever saw a second `onAppear`. Switching to an empty
+                    // Bills tab looked like nothing had happened at all. With it,
+                    // the outgoing face leaves, the incoming one arrives, and its
+                    // contents stagger in every time — which is the whole point of
+                    // a picker that swaps a page.
+                    //
+                    // It rebuilds the subtree on each switch. That is the price of
+                    // the effect and it is a fair one: the switch is a deliberate
+                    // tap, it happens at most a few times a visit, and each face is
+                    // a handful of cards.
+                    .id(store.section)
+                    // Faces cross-dissolve and lift rather than sliding: they are
+                    // four views of one month, not four places, and a horizontal
+                    // slide would claim otherwise.
+                    .transition(.opacity.combined(with: .offset(y: 10)))
+                }
             }
             .padding(.bottom, Metrics.scrollBottomInset)
             .animation(Motion.spring, value: store.section)
@@ -68,7 +75,7 @@ public struct FinanceView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.managementModuleFinanceTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .segmentToolbar {
             ToolbarItem(placement: .primaryAction) { addMenu }
         }
         .safeAreaInset(edge: .bottom) {
@@ -82,45 +89,71 @@ public struct FinanceView: View {
             }
         }
         // The one genuinely playful moment: the household reaches square.
-        .overlay { ConfettiBurst(trigger: store.settledCelebration) }
+        // Told on the balance itself rather than thrown over the screen — the
+        // figure counts down, is swallowed, and a stamp lands where it was.
+        //
+        // The figure the house squared *from* has to survive the push that
+        // squared it, so it is only copied while nothing is waiting to be
+        // told.
+        .onChange(of: store.yourNet, initial: true) { _, net in
+            if !isTellingSquareUp { squareUp.lastNet = net }
+        }
+        .onAppear {
+            // Whatever was celebrated before this screen was drawn has been
+            // celebrated. Without this, a view rebuilt over a store that had
+            // already squared up once would play it again.
+            if squareUp.played == nil { squareUp.played = store.settledCelebration }
+        }
+        // Held while a sheet covers the card — usually the settle-up sheet
+        // whose save caused it — and while another face is showing, so the
+        // moment is seen rather than merely felt.
+        .segmentTask(id: isSquareUpDue) {
+            guard isSquareUpDue else { return }
+            // A sheet that has just been put away is still sliding off.
+            guard await Self.pause(0.45) else { return }
+            playSquareUp()
+        }
+        // The beats the keyframes land on. Every wait checks it was not cut
+        // short: a cancelled sleep returns at once, and four haptics in a row
+        // is worse than none. Switching the segment away is such a cut: the
+        // task is cancelled the moment the segment stops being the one chosen,
+        // and the stamp lands at once (`abandonSquareUp`) instead of slamming
+        // and buzzing behind another screen.
+        .segmentTask(id: squareUp.stamps) {
+            guard squareUp.isStamping else { return }
+            guard await Self.pause(0.72) else { return abandonSquareUp() }
+            squareUp.gulps += 1
+            guard await Self.pause(0.13) else { return abandonSquareUp() }
+            squareUp.slams += 1
+            withAnimation(Motion.pop) { squareUp.inked = true }
+            guard await Self.pause(0.1) else { return abandonSquareUp() }
+            squareUp.successes += 1
+            guard await Self.pause(0.3) else { return abandonSquareUp() }
+            finishSquareUp()
+            // The stamp has faded into the title by now; its ink is put away
+            // for next time.
+            _ = await Self.pause(0.25)
+            squareUp.inked = false
+        }
+        // The house's shared moment, so these follow the moment wherever it
+        // came from rather than a tap of this person's — the one exception to
+        // that rule in the app.
+        .sensoryFeedback(.impact(weight: .light), trigger: squareUp.gulps)
+        .sensoryFeedback(.impact(weight: .heavy), trigger: squareUp.slams)
+        .sensoryFeedback(.success, trigger: squareUp.successes)
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
+        .stagedBuild(2)
+        // A house without Plus: locked when there is nothing here, read-only
+        // under a banner when there is.
+        .proModule(
+            .finance,
+            hasData: !store.expenses.isEmpty || !store.bills.isEmpty || !store.budgets.isEmpty
+                || store.summary.expenseCount > 0,
+            isLoaded: !store.isLoading
+        )
         .alert($store.scope(state: \.alert, action: \.alert))
-        .sheet(item: $store.scope(
-            state: \.destination?.composeExpense,
-            action: \.destination.composeExpense
-        )) { store in
-            ExpenseComposerSheet(store: store)
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.composeBill,
-            action: \.destination.composeBill
-        )) { store in
-            BillComposerSheet(store: store)
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.payBill,
-            action: \.destination.payBill
-        )) { store in
-            PayBillSheet(store: store)
-                .presentationDetents([.medium, .large])
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.settleUp,
-            action: \.destination.settleUp
-        )) { store in
-            SettleUpSheet(store: store)
-        }
-        .sheet(item: $store.scope(
-            state: \.destination?.editBudget,
-            action: \.destination.editBudget
-        )) { store in
-            // Full height, like the expense and bill composers. A medium detent
-            // had to hold a header, a wrapping grid of ten category chips and
-            // an amount field, which left the field itself scrolled half out of
-            // sight the moment the keyboard came up.
-            BudgetEditorSheet(store: store)
-        }
+        .modifier(FinanceDestinations(store: store))
     }
 
     private var addMenu: some View {
@@ -146,6 +179,7 @@ public struct FinanceView: View {
             Image(systemName: "plus")
         }
         .accessibilityLabel(Text(L10n.commonAdd))
+        .proLocked(.finance)
     }
 
     // MARK: - Chrome
@@ -347,17 +381,31 @@ public struct FinanceView: View {
     /// What the household owes you, or you it. The reason this screen exists.
     private var balanceHero: some View {
         let net = store.yourNet
-        let isOwed = net > 0
-        let isSquare = net == 0
+        // While the settle-up moment is being told, the card is still on the
+        // story it started from: the title and colour of the balance the house
+        // squared *from* until the stamp has landed, and — until the moment
+        // starts — that figure too.
+        let told = isTellingSquareUp ? squareUp.lastNet : net
+        let figure = isSquareUpHeld ? squareUp.lastNet : net
+        let isOwed = told > 0
+        let isSquare = told == 0
         let tint: Color = isSquare ? Palette.success : (isOwed ? Palette.success : Palette.warning)
 
         return VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
                     Label {
-                        Text(isSquare
-                            ? L10n.financeAllSquareTitle
-                            : (isOwed ? L10n.financeYouAreOwed : L10n.financeYouOwe))
+                        // A different sentence, not the same one edited: it
+                        // blurs across rather than retyping in place. Stacked,
+                        // so the two overlap for the moment they both exist
+                        // instead of standing side by side.
+                        ZStack(alignment: .leading) {
+                            Text(isSquare
+                                ? L10n.financeAllSquareTitle
+                                : (isOwed ? L10n.financeYouAreOwed : L10n.financeYouOwe))
+                                .id(isSquare ? 0 : (isOwed ? 1 : -1))
+                                .transition(reduceMotion ? .opacity : AnyTransition(.blurReplace))
+                        }
                     } icon: {
                         Image(systemName: isSquare
                             ? "checkmark.seal.fill"
@@ -367,11 +415,12 @@ public struct FinanceView: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(tint)
 
-                    MoneyText(abs(net), currency: store.currency)
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
+                    SquareUpFigure(
+                        amount: abs(figure),
+                        currency: store.currency,
+                        stamps: squareUp.stamps,
+                        inked: squareUp.inked
+                    )
                 }
 
                 Spacer(minLength: 8)
@@ -390,7 +439,7 @@ public struct FinanceView: View {
                 Text(L10n.financeAllSquareMessage)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-            } else {
+            } else if !isTellingSquareUp {
                 // Named, not just counted: "you owe €40" is an amount, "you owe
                 // Bea €40" is something a person can act on.
                 VStack(alignment: .leading, spacing: 6) {
@@ -425,8 +474,84 @@ public struct FinanceView: View {
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard(tinted: tint.opacity(0.12))
+        // The card breathes in while the figure counts down and wobbles when
+        // the stamp lands — the same timeline the figure plays, on the same
+        // trigger. Never bumped under Reduce Motion.
+        .keyframeAnimator(initialValue: SquareUpFrame(), trigger: squareUp.stamps) { card, frame in
+            card.scaleEffect(x: frame.cardX, y: frame.cardY, anchor: .bottom)
+        } keyframes: { _ in
+            SquareUpFrame.timeline
+        }
         .animation(Motion.spring, value: net)
         .accessibilityElement(children: .contain)
+    }
+
+    // MARK: - Squaring up
+
+    /// A settle-up moment this screen has not told yet.
+    private var isSquareUpHeld: Bool {
+        guard let played = squareUp.played else { return false }
+        return store.settledCelebration > played
+    }
+
+    /// From the push that squared the house until the stamp has landed.
+    private var isTellingSquareUp: Bool { isSquareUpHeld || squareUp.isStamping }
+
+    /// Whether the held moment can be told now: nothing over the card, and the
+    /// card on screen. (The segment being on screen is `segmentTask`'s to
+    /// check, so that this view's body never reads the phase.)
+    private var isSquareUpDue: Bool {
+        isSquareUpHeld && store.destination == nil && store.section == .overview
+    }
+
+    private func playSquareUp() {
+        let count = store.settledCelebration
+        // A later push may have unsquared the house while the moment waited,
+        // and then there is nothing left to tell.
+        guard store.summary.isSquare else {
+            withAnimation(Motion.settle) {
+                squareUp.played = count
+                squareUp.lastNet = store.yourNet
+            }
+            return
+        }
+        if reduceMotion {
+            // The figure fades to nought, the seal fades in beside the title,
+            // and the haptic is the moment. Nothing travels or scales.
+            withAnimation(.easeOut(duration: 0.3)) {
+                squareUp.played = count
+                squareUp.lastNet = store.yourNet
+            }
+            squareUp.successes += 1
+        } else {
+            // The figure counts down to nought as money does; the keyframes
+            // and the beats take it from there.
+            withAnimation(Motion.settle) {
+                squareUp.played = count
+                squareUp.isStamping = true
+            }
+            squareUp.stamps += 1
+        }
+    }
+
+    /// The stamp has landed: the title catches up with the figure.
+    private func finishSquareUp() {
+        withAnimation(Motion.spring) {
+            squareUp.isStamping = false
+            squareUp.lastNet = store.yourNet
+        }
+    }
+
+    /// Cut short — the screen went away mid-moment. Lands it at once.
+    private func abandonSquareUp() {
+        finishSquareUp()
+        squareUp.inked = false
+    }
+
+    /// Sleeps, and says whether the sleep ran its course.
+    private static func pause(_ seconds: Double) async -> Bool {
+        try? await Task.sleep(for: .seconds(seconds))
+        return !Task.isCancelled
     }
 
     /// The month's spend, its trend, and six months of shape behind it.
@@ -557,12 +682,15 @@ public struct FinanceView: View {
                 }
             }
             GlassList {
-                ForEach(store.billsNeedingAttention.prefix(3)) { bill in
+                let shown = Array(store.billsNeedingAttention.prefix(3))
+                let lead = Self.leadOverdue(in: shown)
+                ForEach(shown) { bill in
                     BillRow(
                         bill: bill,
                         payerName: store.state.name(for: bill.responsible),
                         currency: store.currency,
                         isPaying: store.paying.contains(bill.id),
+                        isLead: bill.id == lead,
                         glass: glass,
                         onTap: { store.send(.billTapped(bill.id)) },
                         onPay: { store.send(.payBillTapped(bill.id)) },
@@ -734,6 +862,7 @@ public struct FinanceView: View {
                 Text(L10n.financeSearchPlaceholder)
             }
             .focused($isSearchFocused)
+            .segmentFocus($isSearchFocused)
             .submitLabel(.search)
             if !store.search.isEmpty {
                 Button { store.send(.binding(.set(\.search, ""))) } label: {
@@ -863,7 +992,8 @@ public struct FinanceView: View {
         symbol: String,
         bills: [Bill]
     ) -> some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+        let lead = Self.leadOverdue(in: bills)
+        return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             SectionHeader(title, symbol: symbol)
             GlassList {
                 ForEach(bills) { bill in
@@ -872,6 +1002,7 @@ public struct FinanceView: View {
                         payerName: store.state.name(for: bill.responsible),
                         currency: store.currency,
                         isPaying: store.paying.contains(bill.id),
+                        isLead: bill.id == lead,
                         glass: glass,
                         onTap: { store.send(.billTapped(bill.id)) },
                         onPay: { store.send(.payBillTapped(bill.id)) },
@@ -880,6 +1011,12 @@ public struct FinanceView: View {
                 }
             }
         }
+    }
+
+    /// The one overdue bill in a list allowed to keep moving: the first one
+    /// listed. Two throbbing rows is a screen shouting.
+    private static func leadOverdue(in bills: [Bill]) -> BillID? {
+        bills.first { $0.urgency().demandsAttention }?.id
     }
 
     // MARK: - Budgets
@@ -1263,10 +1400,14 @@ private struct BillRow: View {
     let payerName: String
     let currency: String
     let isPaying: Bool
+    /// Whether this is the one overdue bill on screen that keeps breathing.
+    let isLead: Bool
     let glass: Namespace.ID
     let onTap: () -> Void
     let onPay: () -> Void
     let onQuickPay: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var urgency: Bill.Urgency { bill.urgency() }
     private var days: Int { bill.daysUntilDue() }
@@ -1282,10 +1423,17 @@ private struct BillRow: View {
                         Image(systemName: bill.category.symbol)
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(urgency.tint)
+                            // Any other overdue bill takes one breath as it
+                            // arrives and then keeps still.
+                            .symbolEffect(
+                                .breathe,
+                                options: .nonRepeating,
+                                isActive: urgency.demandsAttention && !isLead && !reduceMotion
+                            )
                     }
                     // Only a bill that has already gone wrong is allowed to
-                    // move, and there is at most one such group on screen.
-                    .pulse(urgency.demandsAttention)
+                    // move, and only the first of them keeps moving.
+                    .pulse(urgency.demandsAttention && isLead)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(bill.title)
@@ -1411,7 +1559,8 @@ private struct PayerRow: View {
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
         }
-        .onAppear { withAnimation(Motion.arrive.delay(0.12)) { grown = true } }
+        // Money, so it grows to its share and stops there — no spring past it.
+        .drawIn($grown, animation: Motion.dataDraw.delay(0.12))
         .accessibilityElement(children: .combine)
     }
 }
@@ -1493,5 +1642,206 @@ private struct TrendChip: View {
         .contentTransition(.numericText(value: change))
         .accessibilityLabel(Text(isUp ? L10n.financeTrendUp : L10n.financeTrendDown))
         .accessibilityValue(Text(abs(change), format: .percent.precision(.fractionLength(0))))
+    }
+}
+
+// MARK: - Squaring up
+
+/// How far this screen has got in telling the household it is square.
+///
+/// Local rather than in the reducer: none of it is about the household's money,
+/// only about which beat of a short story the card is on — and a view rebuilt
+/// halfway through simply lands it.
+private struct SquareUp {
+    /// The last celebration this screen has told, or `nil` before it has looked.
+    /// Anything above it is waiting to be told.
+    var played: Int?
+    /// Your balance as the card last showed it: the figure the moment counts
+    /// down from, and the title it starts on.
+    var lastNet = 0
+    /// From the start of the count-down until the stamp has landed.
+    var isStamping = false
+    /// Bumped once per moment. Plays the keyframes.
+    var stamps = 0
+    /// Whether the checkmark has been drawn into the stamp.
+    var inked = false
+    /// One counter per beat, for the haptics.
+    var gulps = 0
+    var slams = 0
+    var successes = 0
+}
+
+/// One frame of the settle-up moment — every track its keyframes drive.
+///
+/// About a second and a half, in four beats:
+/// - 0–0.6s: the figure counts down to nought while the card breathes in;
+/// - 0.6–0.85s: the nought pops, then is swallowed;
+/// - 0.85–1.25s: a stamp slams down where it was, the card wobbles like jelly
+///   and a ring spreads from the impact;
+/// - 1.25–1.5s: the stamp shrinks off into the title, which now says so.
+///
+/// No `Canvas`, no timeline: transforms on views that are already there, for a
+/// second and a half, and then nothing at all.
+private struct SquareUpFrame {
+    var cardX: CGFloat = 1
+    var cardY: CGFloat = 1
+    var figureScale: CGFloat = 1
+    var figureBlur: CGFloat = 0
+    var stampScale: CGFloat = 0
+    var stampAngle: Double = 0
+    var stampOpacity: Double = 0
+    /// 0 on the figure, 1 beside the title.
+    var stampHome: CGFloat = 0
+    var ringScale: CGFloat = 1
+    var ringOpacity: Double = 0
+
+    /// Every track ends at rest or out of sight, and every track that moves
+    /// something out of sight snaps back before it is seen again — so the card
+    /// is right whether the animator holds the last frame or the first.
+    @KeyframesBuilder<SquareUpFrame>
+    static var timeline: some Keyframes<SquareUpFrame> {
+        // The card: in with the count, then jelly on the slam.
+        KeyframeTrack(\.cardX) {
+            CubicKeyframe(1.02, duration: 0.6)
+            LinearKeyframe(1.02, duration: 0.25)
+            CubicKeyframe(1.04, duration: 0.06)
+            CubicKeyframe(0.98, duration: 0.14)
+            SpringKeyframe(1, duration: 0.4, spring: Spring(duration: 0.4, bounce: 0.3))
+        }
+        KeyframeTrack(\.cardY) {
+            CubicKeyframe(0.97, duration: 0.6)
+            LinearKeyframe(0.97, duration: 0.25)
+            CubicKeyframe(0.94, duration: 0.06)
+            CubicKeyframe(1.04, duration: 0.14)
+            SpringKeyframe(1, duration: 0.4, spring: Spring(duration: 0.4, bounce: 0.3))
+        }
+        // The figure: pops, is swallowed, and comes back as the stamp leaves.
+        KeyframeTrack(\.figureScale) {
+            LinearKeyframe(1, duration: 0.6)
+            CubicKeyframe(1.35, duration: 0.12)
+            CubicKeyframe(0, duration: 0.13)
+            LinearKeyframe(0, duration: 0.4)
+            SpringKeyframe(1, duration: 0.25, spring: Spring(duration: 0.3, bounce: 0.3))
+        }
+        KeyframeTrack(\.figureBlur) {
+            LinearKeyframe(0, duration: 0.72)
+            CubicKeyframe(6, duration: 0.13)
+            LinearKeyframe(6, duration: 0.4)
+            CubicKeyframe(0, duration: 0.25)
+        }
+        // The stamp: slammed down big and crooked, straightened, then off to
+        // the title.
+        KeyframeTrack(\.stampScale) {
+            MoveKeyframe(0)
+            LinearKeyframe(0, duration: 0.85)
+            MoveKeyframe(2.2)
+            CubicKeyframe(0.9, duration: 0.1)
+            CubicKeyframe(1.05, duration: 0.08)
+            CubicKeyframe(1, duration: 0.07)
+            LinearKeyframe(1, duration: 0.15)
+            CubicKeyframe(0.27, duration: 0.25)
+        }
+        KeyframeTrack(\.stampAngle) {
+            LinearKeyframe(0, duration: 0.85)
+            MoveKeyframe(-12)
+            CubicKeyframe(4, duration: 0.1)
+            CubicKeyframe(0, duration: 0.15)
+        }
+        KeyframeTrack(\.stampOpacity) {
+            MoveKeyframe(0)
+            LinearKeyframe(0, duration: 0.85)
+            MoveKeyframe(1)
+            LinearKeyframe(1, duration: 0.4)
+            CubicKeyframe(0, duration: 0.25)
+        }
+        KeyframeTrack(\.stampHome) {
+            MoveKeyframe(0)
+            LinearKeyframe(0, duration: 1.25)
+            CubicKeyframe(1, duration: 0.25)
+        }
+        // The one ring the slam sends out.
+        KeyframeTrack(\.ringScale) {
+            MoveKeyframe(1)
+            LinearKeyframe(1, duration: 0.85)
+            CubicKeyframe(2.6, duration: 0.4)
+        }
+        KeyframeTrack(\.ringOpacity) {
+            MoveKeyframe(0)
+            LinearKeyframe(0, duration: 0.85)
+            MoveKeyframe(0.55)
+            CubicKeyframe(0, duration: 0.4)
+        }
+    }
+}
+
+/// The balance figure, and the stamp that lands on it when the house squares up.
+///
+/// Its own view so the animator's content reads nothing but what it was handed:
+/// it is called once a frame for the length of the moment.
+private struct SquareUpFigure: View {
+    let amount: Int
+    let currency: String
+    /// Bumped once per moment — the same trigger the card's squash plays on, so
+    /// the two run one timeline.
+    let stamps: Int
+    /// Whether the checkmark has been drawn into the stamp yet.
+    let inked: Bool
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let stampSize: CGFloat = 64
+    /// From the stamp's centre on the figure to the title's icon, measured off
+    /// the hero's own type sizes. The stamp is fading as it arrives, so a point
+    /// either way at a larger text size never shows.
+    private static let homeOffset = CGSize(width: -23, height: -38)
+
+    var body: some View {
+        KeyframeAnimator(initialValue: SquareUpFrame(), trigger: stamps) { frame in
+            MoneyText(amount, currency: currency)
+                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+                // Reduce Motion: a new figure fades in rather than rolling its
+                // digits there.
+                .id(reduceMotion ? amount : 0)
+                .transition(.opacity)
+                // Swallowed toward the stamp's side, which is the leading edge.
+                .scaleEffect(frame.figureScale, anchor: .leading)
+                .blur(radius: frame.figureBlur)
+                .overlay(alignment: .leading) { stamp(frame) }
+        } keyframes: { _ in
+            SquareUpFrame.timeline
+        }
+    }
+
+    private func stamp(_ frame: SquareUpFrame) -> some View {
+        ZStack {
+            Circle()
+                .stroke(Palette.success, lineWidth: 3)
+                .scaleEffect(frame.ringScale)
+                .opacity(frame.ringOpacity)
+            ZStack {
+                Image(systemName: "seal.fill")
+                    .font(.system(size: Self.stampSize))
+                    .foregroundStyle(Palette.success)
+                if inked {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 24, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .transition(.symbolEffect(.drawOn))
+                }
+            }
+            .scaleEffect(frame.stampScale)
+            .rotationEffect(.degrees(frame.stampAngle))
+            .opacity(frame.stampOpacity)
+        }
+        .frame(width: Self.stampSize, height: Self.stampSize)
+        .offset(
+            x: Self.homeOffset.width * frame.stampHome,
+            y: Self.homeOffset.height * frame.stampHome
+        )
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

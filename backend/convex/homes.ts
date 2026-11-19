@@ -1,8 +1,10 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
-import { Doc } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
+import { homeProStatus, proEnforced, proRequired, userHasPro } from "./lib/pro";
 import { requireUser, requireHomeMember } from "./lib/auth";
-import { cascadeDeleteHome } from "./lib/relations";
+import { departHome } from "./lib/membership";
+import { purgeHomeBatch } from "./lib/relations";
 import { publicUsers } from "./lib/users";
 import { internal } from "./_generated/api";
 
@@ -73,6 +75,8 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    // A second home is Plus, carried by the person (lib/pro.ts).
+    if (!(await mayAddHome(ctx, user))) throw proRequired("multipleHomes");
     const now = Date.now();
     const inviteCode = crypto.randomUUID().toUpperCase();
     const homeId = await ctx.db.insert("homes", {
@@ -111,6 +115,29 @@ export const create = mutation({
     return await ctx.db.get(homeId);
   },
 });
+
+/**
+ * Whether this person may take on one more home: always while `PRO_ENFORCE`
+ * is off, when they belong to no other home, or when they carry Plus
+ * themselves (`userHasPro`; a Plus house they are in does not count — Plus
+ * for a second home is the person's). Never takes a home away: somebody
+ * already in two keeps both, and leaving stays free.
+ */
+async function mayAddHome(
+  ctx: MutationCtx,
+  user: Doc<"users">,
+  joining?: Id<"homes">,
+): Promise<boolean> {
+  if (!proEnforced()) return true;
+  let count = 0;
+  for (const id of user.home_id ?? []) {
+    if (id === joining) continue;
+    const home = await ctx.db.get(id);
+    if (home && (home.members ?? []).includes(user._id)) count += 1;
+  }
+  if (count === 0) return true;
+  return await userHasPro(ctx, user._id);
+}
 
 /** The built-in movie lists, in the order the Movies screen shows them. */
 const PRESET_LISTS = [
@@ -167,6 +194,16 @@ export const join = mutation({
     if (!home) throw new Error("Invalid invite code");
 
     const wasAlreadyMember = (home.members ?? []).some((m) => m === user._id);
+    // A second home is Plus: the person's own, or the house being joined
+    // already has it (the house pays). Re-entering a code for a home you are
+    // in is not a second home.
+    if (
+      !wasAlreadyMember &&
+      !(await mayAddHome(ctx, user, home._id)) &&
+      !(await homeProStatus(ctx, home)).pro
+    ) {
+      throw proRequired("multipleHomes");
+    }
 
     const members = new Set([...(home.members ?? []), user._id]);
     await ctx.db.patch(home._id, { members: [...members], updated: Date.now() });
@@ -197,20 +234,101 @@ export const leave = mutation({
   handler: async (ctx, { homeId }) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
-    const remaining = (home.members ?? []).filter((m) => m !== user._id);
+    // Last member out takes the home with them (lib/membership.ts).
+    const departure = await departHome(ctx, home, user._id);
+    return { ok: true, ...departure };
+  },
+});
 
-    // Last member out takes the home and everything in it. Otherwise the rows
-    // survive with nobody able to satisfy requireHomeMember — permanently
-    // unreadable data that no code path could ever reach or clean up again.
-    if (remaining.length === 0) {
-      const removed = await cascadeDeleteHome(ctx, homeId);
-      return { ok: true, deletedHome: true, removed };
+/** Batches after which a purge still running is logged as an error. */
+const PURGE_WARN_ROUNDS = 200;
+
+/**
+ * Drains a deleted home's rows, one bounded batch per transaction, scheduling
+ * the next until nothing is left (lib/relations.ts, `purgeHomeBatch`). The
+ * home document is already gone, so nobody can reach these rows meanwhile.
+ *
+ * Every batch is logged with what it removed, and a purge that keeps going
+ * past 200 batches is logged as an error each time, so one that is stuck or
+ * failing is loud in `npx convex logs` rather than quietly half-done. A batch
+ * that throws is retried by nothing — the error is in the logs with the home
+ * id, and running this again with that id resumes where it stopped.
+ */
+export const purgeHomeData = internalMutation({
+  args: { homeId: v.id("homes"), round: v.optional(v.number()) },
+  returns: v.object({ removed: v.number(), more: v.boolean() }),
+  handler: async (ctx, { homeId, round }) => {
+    const n = round ?? 0;
+    if (await ctx.db.get(homeId)) {
+      console.error(`homes:purgeHomeData refused: home ${homeId} still exists`);
+      return { removed: 0, more: false };
     }
+    const { removed, more } = await purgeHomeBatch(ctx, homeId);
+    if (n >= PURGE_WARN_ROUNDS) {
+      console.error(`homes:purgeHomeData ${homeId} still running at batch ${n} (removed ${removed})`);
+    } else {
+      console.log(`homes:purgeHomeData ${homeId} batch ${n}: removed ${removed}${more ? ", more to go" : ", done"}`);
+    }
+    if (more) {
+      await ctx.scheduler.runAfter(0, internal.homes.purgeHomeData, { homeId, round: n + 1 });
+    }
+    return { removed, more };
+  },
+});
 
-    await ctx.db.patch(homeId, { members: remaining, updated: Date.now() });
-    await ctx.db.patch(user._id, {
-      home_id: (user.home_id ?? []).filter((h) => h !== homeId),
+/**
+ * Takes another member out of a home.
+ *
+ * Houses are invite-only, so this is the house's answer to somebody who
+ * should no longer be in it (App Review asks for one where people share
+ * messages and photos). Any member may do it — there is no owner — and never
+ * to themselves: that is `leave`, which may delete the home, and this never
+ * can, because the caller stays.
+ *
+ * Idempotent: somebody already gone is `removed: false`, not an error, so a
+ * retry or two phones doing it at once land the same. What they wrote stays
+ * with the household, exactly as when somebody leaves.
+ */
+export const removeMember = mutation({
+  args: { homeId: v.id("homes"), userId: v.id("users") },
+  returns: v.object({ ok: v.boolean(), removed: v.boolean() }),
+  handler: async (ctx, { homeId, userId }) => {
+    const caller = await requireUser(ctx);
+    const home = await requireHomeMember(ctx, homeId);
+    if (userId === caller._id) throw new Error("To leave a home yourself, use leave");
+    if (!(home.members ?? []).includes(userId)) return { ok: true, removed: false };
+
+    const removedUser = await ctx.db.get(userId);
+    await departHome(ctx, home, userId);
+    // A new invite code, or the person just removed could walk straight back
+    // in with the one they already have. Old codes simply stop matching.
+    await ctx.db.patch(homeId, { invite_code: crypto.randomUUID().toUpperCase() });
+
+    const homeName = home.name ?? "Your home";
+    // The person removed hears it as a push only: the home's feed is no
+    // longer theirs to read, so no row is filed for them (no `homeId`).
+    await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
+      userIds: [userId],
+      actor: caller._id,
+      title: homeName,
+      body: caller.name
+        ? `${caller.name} removed you from the home`
+        : "You were removed from the home",
+      category: "home",
     });
-    return { ok: true, deletedHome: false };
+    // And the house is told, so a removal is never silent to the people
+    // still living there.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId,
+      actor: caller._id,
+      title: homeName,
+      body:
+        (caller.name && removedUser?.name
+          ? `${caller.name} removed ${removedUser.name} from the home`
+          : "Someone was removed from the home") +
+        ". The invite code has changed.",
+      category: "home",
+    });
+    return { ok: true, removed: true };
   },
 });

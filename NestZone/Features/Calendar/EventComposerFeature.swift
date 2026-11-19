@@ -386,16 +386,33 @@ public struct EventComposerFeature: Sendable {
 
     private enum CancelID { case recipes }
 
+    @Dependency(\.paywall) var paywall
+    /// Saving an event is Plus.
+    @Shared(.pro) var pro: ProStatus
+
     @Dependency(\.events) var events
     @Dependency(\.recipes) var recipesClient
     @Dependency(\.dismiss) var dismiss
 
     public init() {}
 
+    /// What needs Plus here, so a free house gets the paywall at the tap and
+    /// not the server's refusal after it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .submitTapped, .scopeDialog(.presented(.saveThisOne)),
+             .scopeDialog(.presented(.saveAll)): true
+        default: false
+        }
+    }
+
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.calendar) }
+            }
             switch action {
             case .task:
                 return state.wantsRecipes ? subscribeToRecipes(&state) : .none
