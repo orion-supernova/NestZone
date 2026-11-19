@@ -185,6 +185,16 @@ public enum Palette {
     public static let depthInner = Color.black.opacity(0.25)
     /// What dims a screen under a card that asks something.
     public static let dim = Color.black.opacity(0.32)
+    /// What darkens the blur behind a message's menu, so only the lifted bubble
+    /// and the menu read.
+    public static let menuScrim = Color.black.opacity(0.4)
+    /// A message's bubble where glass cannot be drawn (the lifted preview is a
+    /// still picture), as flat as glass looks over the thread.
+    public static let bubblePreview = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 0.17, alpha: 1)
+            : UIColor(white: 0.93, alpha: 1)
+    })
     /// The wash under a card's glass, so its words read over anything — the
     /// glass alone let a busy scene show through the secondary text.
     public static let cardWash = Color(uiColor: UIColor { traits in

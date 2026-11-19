@@ -105,7 +105,7 @@ struct MessageBubble: View, Equatable {
             // Their own row, outside the bubble's single accessibility element:
             // each chip is a control and has to stay reachable.
             if !reactions.isEmpty {
-                ReactionChips(reactions: reactions, me: me, toggle: handlers.react)
+                ReactionChips(reactions: reactions, me: me, alignment: isMine ? .trailing : .leading, toggle: handlers.react)
                     .padding(.horizontal, 6)
                     .padding(.top, 2)
                     .frame(maxWidth: 280, alignment: isMine ? .trailing : .leading)
@@ -205,8 +205,10 @@ struct MessageBubble: View, Equatable {
 
         if canHold {
             // The system lays the menu out and gives the lift and the haptic;
-            // the preview is the bubble itself, as it looks in the thread.
-            positioned(tappable.contextMenu { menu } preview: { surface.frame(maxWidth: 300) })
+            // UIKit's interaction (a background, so the swipe, the tap and the
+            // quote's button above it keep their touches) lets the blur behind
+            // the menu be told when it opens.
+            positioned(tappable.background { MessageContextMenu(model: menuModel, preview: previewImage) })
         } else {
             positioned(tappable)
         }
@@ -245,68 +247,33 @@ struct MessageBubble: View, Equatable {
             )
     }
 
-    /// Reactions, then what can be done with the message.
-    @ViewBuilder
-    private var menu: some View {
-        let mine = Set(reactions.filter { $0.userID == me }.map(\.emoji))
-        let emoji = ReactionEmoji.all
-        // One compact row at the top of the menu, the way Mail shows its flag
-        // colours: the palette style. Two plain ControlGroups read as a grid
-        // of loose emoji with dividers, which the owner rightly called bad.
-        ControlGroup {
-            ForEach(emoji, id: \.self) { reactionButton($0, chosen: mine.contains($0)) }
-        }
-        .controlGroupStyle(.palette)
-
-        if canReply {
-            Button { handlers.reply() } label: {
-                Label { Text(L10n.messagesReply) } icon: { Image(systemName: "arrowshape.turn.up.left") }
-            }
-        }
-        if message.kind != .image {
-            Button { handlers.copy() } label: {
-                Label { Text(L10n.messagesCopy) } icon: { Image(systemName: "doc.on.doc") }
-            }
-        }
-        Button { handlers.togglePin() } label: {
-            Label {
-                Text(isPinned ? L10n.messagesUnpin : L10n.messagesPin)
-            } icon: {
-                Image(systemName: isPinned ? "pin.slash" : "pin")
-            }
-        }
-
-        Divider()
-
-        if canModify {
-            Button { handlers.edit() } label: {
-                Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
-            }
-            Button(role: .destructive) { handlers.delete() } label: {
-                Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
-            }
-        } else {
-            Button { handlers.report() } label: {
-                Label { Text(L10n.messagesReport) } icon: { Image(systemName: "exclamationmark.bubble") }
-            }
-            Button(role: .destructive) { handlers.blockSender() } label: {
-                Label {
-                    Text(L10n.messagesBlockSender(senderName))
-                } icon: {
-                    Image(systemName: "hand.raised")
-                }
-            }
-        }
+    /// What the menu is built from, read when it opens.
+    private var menuModel: MessageMenuModel {
+        MessageMenuModel(
+            myEmoji: Set(reactions.filter { $0.userID == me }.map(\.emoji)),
+            canReply: canReply,
+            canCopy: message.kind != .image,
+            isPinned: isPinned,
+            canModify: canModify,
+            senderName: senderName,
+            handlers: handlers
+        )
     }
 
-    private func reactionButton(_ emoji: String, chosen: Bool) -> some View {
-        Button { handlers.react(emoji) } label: {
-            // A palette draws its items' images, so the emoji is drawn into
-            // one (once per emoji and state, cached). The emoji already
-            // chosen sits on a tinted disc; tapping it takes it back.
-            Image(uiImage: EmojiGlyph.image(emoji, chosen: chosen))
-        }
-        .accessibilityLabel(Text(chosen ? L10n.reactionPickerMine(emoji) : L10n.reactionPickerAdd(emoji)))
+    /// The bubble as a still picture for the lifted preview: a context-menu
+    /// preview is a snapshot, and glass does not draw into one, so the
+    /// others' bubbles stand in as a flat fill.
+    private func previewImage(size: CGSize, scale: CGFloat, scheme: ColorScheme) -> UIImage? {
+        let flat = content
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .frame(width: size.width, height: size.height, alignment: .leading)
+            .background(isMine ? AnyShapeStyle(theme.accent) : AnyShapeStyle(Palette.bubblePreview))
+            .environment(\.theme, theme)
+            .environment(\.colorScheme, scheme)
+        let renderer = ImageRenderer(content: flat)
+        renderer.scale = scale
+        return renderer.uiImage
     }
 
     /// The quote, if this is a reply, and the words.
