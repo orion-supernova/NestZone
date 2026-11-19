@@ -1,6 +1,492 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "pro_preview_dishes": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dishes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bulaşık"
+          }
+        }
+      }
+    },
+    "pro_preview_bins": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take out the bins"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çöpü çıkar"
+          }
+        }
+      }
+    },
+    "pro_preview_archived": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşivlendi"
+          }
+        }
+      }
+    },
+    "pro_preview_groceries": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groceries"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Market"
+          }
+        }
+      }
+    },
+    "pro_preview_electricity": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Electricity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elektrik"
+          }
+        }
+      }
+    },
+    "pro_preview_paid_by_you": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid by you"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sen ödedin"
+          }
+        }
+      }
+    },
+    "pro_preview_paid_by_housemate": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid by a housemate"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev arkadaşın ödedi"
+          }
+        }
+      }
+    },
+    "pro_preview_amount_groceries": {
+      "comment": "A sample price in the Plus paywall's Money preview",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "$34.00"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "340 ₺"
+          }
+        }
+      }
+    },
+    "pro_preview_amount_bill": {
+      "comment": "A sample price in the Plus paywall's Money preview",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "$61.50"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "615 ₺"
+          }
+        }
+      }
+    },
+    "pro_preview_dinner_party": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner party"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akşam yemeği"
+          }
+        }
+      }
+    },
+    "pro_preview_plumber": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plumber visit"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tesisatçı gelecek"
+          }
+        }
+      }
+    },
+    "pro_preview_saturday": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sat · 19:00"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cmt · 19:00"
+          }
+        }
+      }
+    },
+    "pro_preview_monday": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mon · 10:00"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pzt · 10:00"
+          }
+        }
+      }
+    },
+    "pro_preview_tap": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitchen tap is dripping"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mutfak musluğu damlatıyor"
+          }
+        }
+      }
+    },
+    "pro_preview_bulb": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hallway light is out"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koridorun lambası yanmıyor"
+          }
+        }
+      }
+    },
+    "pro_preview_urgent": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urgent"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acil"
+          }
+        }
+      }
+    },
+    "pro_preview_open": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
+    "pro_preview_fruit_veg": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fruit & veg"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meyve sebze"
+          }
+        }
+      }
+    },
+    "pro_preview_bakery": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bakery"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fırın"
+          }
+        }
+      }
+    },
+    "pro_preview_apples": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apples"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elma"
+          }
+        }
+      }
+    },
+    "pro_preview_spinach": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spinach"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ispanak"
+          }
+        }
+      }
+    },
+    "pro_preview_bread": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bread"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekmek"
+          }
+        }
+      }
+    },
+    "pro_preview_list_friday": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friday night"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuma gecesi"
+          }
+        }
+      }
+    },
+    "pro_preview_list_must": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Must watch"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mutlaka izle"
+          }
+        }
+      }
+    },
+    "pro_preview_home_flat": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Our flat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evimiz"
+          }
+        }
+      }
+    },
+    "pro_preview_home_cabin": {
+      "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekend cabin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hafta sonu evi"
+          }
+        }
+      }
+    },
+    "paywall_no_plans_message": {
+      "comment": "Paywall, when the store has no plans to show (not a connection problem)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus can't be bought just yet. Try again in a little while."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus şu an alınamıyor. Biraz sonra tekrar dene."
+          }
+        }
+      }
+    },
     "": {},
     "%@": {
       "comment": "A step number. The argument is the step number.",
