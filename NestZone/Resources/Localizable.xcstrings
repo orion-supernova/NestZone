@@ -50,7 +50,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Arşivlendi"
+            "value": "Arşivde"
           }
         }
       }
@@ -194,7 +194,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tesisatçı gelecek"
+            "value": "Tesisatçı geliyor"
           }
         }
       }
@@ -266,7 +266,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Koridorun lambası yanmıyor"
+            "value": "Koridorun ışığı yanmıyor"
           }
         }
       }
@@ -320,7 +320,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Meyve sebze"
+            "value": "Manav"
           }
         }
       }
@@ -446,7 +446,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evimiz"
+            "value": "Bizim ev"
           }
         }
       }
@@ -464,7 +464,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hafta sonu evi"
+            "value": "Yazlık"
           }
         }
       }
@@ -482,7 +482,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plus şu an alınamıyor. Biraz sonra tekrar dene."
+            "value": "Plus şu an alınamıyor. Birazdan tekrar dene."
           }
         }
       }
