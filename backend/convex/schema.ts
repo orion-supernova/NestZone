@@ -1749,5 +1749,9 @@ export default defineSchema({
   })
     .index("by_user", ["user_id"])
     // The sweep: rows about to expire, or just expired, re-asked of RevenueCat.
-    .index("by_expires", ["expires_at"]),
+    .index("by_expires", ["expires_at"])
+    // The sweep's second half: every row, lifetime included, re-asked once a
+    // day, oldest answer first — a restore can move a purchase to another
+    // user, and a refund can end a lifetime one, without any date nearing.
+    .index("by_checked", ["checked_at"]),
 });

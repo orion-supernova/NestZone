@@ -101,12 +101,14 @@ crons.interval(
 // so this is for the house where nobody opens the app: a cancelled
 // subscription has to end on time, and a renewed one must not lapse for a
 // night because nobody looked. Rows expiring within a day or expired within
-// the last three (Apple's billing grace), at most a hundred a run, none
-// checked within the last hour. Quiet until REVENUECAT_SECRET_KEY is set.
+// the last three (Apple's billing grace), and every other row — lifetime
+// included — once a day, a hundred a round, chaining rounds while there is
+// more. Quiet until REVENUECAT_SECRET_KEY is set.
 crons.interval(
   "pro sweep",
   { hours: 6 },
   internal.pro.sweep,
+  {},
 );
 
 export default crons;

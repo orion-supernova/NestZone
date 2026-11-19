@@ -6,6 +6,7 @@ import { requireUser, currentUserId } from "./lib/auth";
 import { publicUser, publicUsers, discardAvatar } from "./lib/users";
 import { revokeAppleAuthorization } from "./lib/apple";
 import { departHome } from "./lib/membership";
+import { deleteSubscriber } from "./lib/revenuecat";
 
 /** The signed-in user's profile (null when logged out). */
 export const me = query({
@@ -159,6 +160,9 @@ export const deleteAccount = action({
     }
 
     await ctx.runMutation(internal.users.deleteAccountStep, { userId });
+    // RevenueCat keeps a subscriber per app user id; it goes too. Best
+    // effort and logged, like Apple's half: the account is already gone.
+    await deleteSubscriber(userId);
     return { ok: true, appleRevoked };
   },
 });
