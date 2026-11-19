@@ -216,6 +216,21 @@ struct MainView: View {
                 store.send(.paywallRequested(feature))
             }
         }
+        #if DEBUG || MEASURE
+        // `-openPaywall <feature>` and `-openSparkleStore 1`, for screenshots.
+        .task {
+            if let feature = StoreDemo.paywallFeature {
+                try? await Task.sleep(for: .seconds(3))
+                store.send(.paywallRequested(feature))
+            }
+            if StoreDemo.opensSparkleStore {
+                try? await Task.sleep(for: .seconds(3))
+                store.send(.companion(.shopTapped))
+                try? await Task.sleep(for: .seconds(1.5))
+                store.send(.companion(.storeTapped))
+            }
+        }
+        #endif
         // The house's companion is shared, so it is read for the life of the
         // tab bar too; Release builds draw none of it and never ask.
         .task { if CompanionFlag.isEnabled { await store.send(.companion(.task)).finish() } }

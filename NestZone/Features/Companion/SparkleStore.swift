@@ -46,8 +46,11 @@ public enum PurchaseOutcome: Equatable, Sendable {
 
 extension SparkleStoreClient: DependencyKey {
     public static var liveValue: SparkleStoreClient {
+        #if DEBUG || MEASURE
+        if StoreDemo.isOn { return .demo }
+        #endif
         #if DEBUG
-        isTestStore ? .test : SparkleStoreKit.client
+        return isTestStore ? .test : SparkleStoreKit.client
         #else
         SparkleStoreKit.client
         #endif
@@ -57,7 +60,11 @@ extension SparkleStoreClient: DependencyKey {
     /// `-sparkleStore test`. The test store's packs say so in the shop.
     public static var isTestStore: Bool {
         #if DEBUG
-        UserDefaults.standard.string(forKey: "sparkleStore") == "test"
+        // The launch argument itself, not the defaults key: a value left in
+        // the app's defaults by an old run must not turn a real store fake.
+        CommandLine.arguments.firstIndex(of: "-sparkleStore").map {
+            CommandLine.arguments.indices.contains($0 + 1) && CommandLine.arguments[$0 + 1] == "test"
+        } ?? false
         #else
         false
         #endif
@@ -82,6 +89,16 @@ extension SparkleStoreClient: DependencyKey {
             guard let sparkles = SparklePack.shelf.first(where: { $0.id == id })?.sparkles else { return .cancelled }
             return .preview(sparkles)
         },
+        credits: { _, _ in AsyncStream { $0.finish() } }
+    )
+    #endif
+
+    #if DEBUG || MEASURE
+    /// `-storeDemo 1`: the catalog's shelf priced as a loaded store would,
+    /// and a buy that does nothing.
+    static let demo = SparkleStoreClient(
+        packs: { StoreDemo.sparklePacks },
+        purchase: { _, _, _ in .cancelled },
         credits: { _, _ in AsyncStream { $0.finish() } }
     )
     #endif

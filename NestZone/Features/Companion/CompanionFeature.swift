@@ -1262,7 +1262,11 @@ public struct CompanionFeature: Sendable {
                 guard !state.arePacksLoaded else { return .none }
                 state.packsUnavailable = false
                 return .run { send in
-                    guard let packs = try? await sparkleStore.packs(), !packs.isEmpty else {
+                    // A pack the store gave no price is not for sale; the
+                    // explicit test store's are unpriced on purpose.
+                    let all = (try? await sparkleStore.packs()) ?? []
+                    let packs = SparkleStoreClient.isTestStore ? all : all.filter { $0.displayPrice != nil }
+                    guard !packs.isEmpty else {
                         await send(.packsUnavailable)
                         return
                     }
@@ -1280,7 +1284,8 @@ public struct CompanionFeature: Sendable {
                 return .none
 
             case let .packTapped(pack):
-                guard state.buyingPack == nil else { return .none }
+                guard state.buyingPack == nil,
+                      pack.displayPrice != nil || SparkleStoreClient.isTestStore else { return .none }
                 state.buyingPack = pack.id
                 state.packNote = nil
                 let homeID = state.homeID

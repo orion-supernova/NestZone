@@ -86,6 +86,7 @@ public struct PaywallFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .task:
+                if StoreDemo.isOn { return .send(.offeringLoaded(StoreDemo.plusPackages)) }
                 guard purchases.isAvailable() else {
                     state.isLoading = false
                     state.isUnavailable = true
@@ -120,6 +121,8 @@ public struct PaywallFeature: Sendable {
                 return .none
 
             case .purchaseTapped:
+                // `-storeDemo 1`: a paywall for screenshots buys nothing.
+                if StoreDemo.isOn { return .none }
                 guard let package = state.selected, !state.isPurchasing, !state.isRestoring,
                       !state.didSucceed else { return .none }
                 state.isPurchasing = true

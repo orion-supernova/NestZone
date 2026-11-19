@@ -274,6 +274,17 @@ before changing anything here.
   purchases. Debug builds can still use the old test store with
   `-sparkleStore test`; `NestZone.storekit` is the Debug run scheme's
   StoreKit configuration and is not in the app target.
+  A pack the store gave no price is never shelved, and never reads as free or
+  test: only the explicit `-sparkleStore test` argument (read from the launch
+  arguments, not the defaults) shows test wording.
+- **Screenshot launch arguments (`StoreDemo`, Debug and MEASURE only).**
+  `-storeDemo 1` draws the Plus paywall with two demo packages (yearly $19.99
+  with a 1-week trial, monthly $2.99, formatted for the phone's locale) and the
+  Sparkles store with the catalog's shelf prices as ordinary buy buttons; buying
+  does nothing. `-openPaywall <feature>` (`calendar`, `finance`, `issues`, ...)
+  opens the paywall 3 s after launch. `-openSparkleStore 1` opens the shop and
+  then the Sparkles store. `-forceFreeHouse 1` treats the house as without Plus
+  (locks drawn, paywall reachable) whatever the server says.
 - **The shop is an ordinary NestZone screen that happens to sell things.**
   Glass cards on the Backdrop, the theme's accent, the app's type, SF Symbols.
   Money is `Amount` (`leaf.fill` and `sparkle`, colour on the glyph only via
