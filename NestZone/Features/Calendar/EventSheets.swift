@@ -92,7 +92,7 @@ struct EventComposerSheet: View {
             .animation(Motion.fade, value: store.inlineError)
             .task { await store.send(.task).finish() }
             .confirmationDialog($store.scope(state: \.scopeDialog, action: \.scopeDialog))
-            .sheet(item: $store.scope(state: \.picker, action: \.picker)) { store in
+            .hostedSheet(item: $store.scope(state: \.picker, action: \.picker)) { store in
                 RecipePickerSheet(store: store)
                     .presentationDetents([.medium, .large])
             }
@@ -483,7 +483,7 @@ struct EventComposerSheet: View {
                     .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .sheet(isPresented: $isPickingCurrency) {
+                .hostedSheet(isPresented: $isPickingCurrency) {
                     CurrencyPicker(selected: store.currency, used: store.currencyOptions) { code in
                         store.send(.binding(.set(\.currency, code)))
                     }
@@ -776,7 +776,7 @@ struct EventDetailSheet: View {
             .task { await store.send(.task).finish() }
             .alert($store.scope(state: \.alert, action: \.alert))
             .confirmationDialog($store.scope(state: \.scopeDialog, action: \.scopeDialog))
-            .sheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
+            .hostedSheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
                 ExpenseComposerSheet(store: store)
             }
             .animation(Motion.spring, value: store.state.visibleSections)

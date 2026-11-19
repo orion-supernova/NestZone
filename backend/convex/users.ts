@@ -1,5 +1,5 @@
 import { query, mutation, action, internalQuery, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireUser, currentUserId } from "./lib/auth";
@@ -127,6 +127,20 @@ const SESSION_BATCH = 20;
 /** Longest authorization code accepted. Apple's are well under this. */
 const MAX_AUTH_CODE = 4096;
 
+/** The Apple `sub` this user signs in with, which is what an authorization
+ *  code has to belong to before it may revoke anything. */
+export const appleSubject = internalQuery({
+  args: { userId: v.id("users") },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { userId }) => {
+    const account = await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", userId).eq("provider", "apple"))
+      .first();
+    return account?.providerAccountId ?? null;
+  },
+});
+
 export const callerId = internalQuery({
   args: {},
   returns: v.id("users"),
@@ -153,8 +167,15 @@ export const deleteAccount = action({
     let appleRevoked = false;
     if (authorizationCode && authorizationCode.length <= MAX_AUTH_CODE) {
       try {
-        appleRevoked = await revokeAppleAuthorization(authorizationCode);
+        // The code must be this person's own: one from another Apple ID would
+        // revoke that other person's authorization of the app. Refused before
+        // anything is deleted, with an answer the app can say plainly.
+        const expected: string | null = await ctx.runQuery(internal.users.appleSubject, { userId });
+        const outcome = await revokeAppleAuthorization(authorizationCode, expected);
+        if (outcome === "mismatch") throw new ConvexError({ code: "APPLE_ACCOUNT_MISMATCH" });
+        appleRevoked = outcome === "revoked";
       } catch (error) {
+        if (error instanceof ConvexError) throw error;
         console.error(`Sign in with Apple revocation failed: ${String(error)}`);
       }
     }

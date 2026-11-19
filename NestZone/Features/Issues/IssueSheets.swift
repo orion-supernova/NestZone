@@ -435,7 +435,7 @@ struct IssueComposerSheet: View {
                                     .contentShape(.capsule)
                                 }
                                 .buttonStyle(.plain)
-                                .sheet(isPresented: $isPickingCurrency) {
+                                .hostedSheet(isPresented: $isPickingCurrency) {
                                     CurrencyPicker(
                                         selected: store.currency,
                                         used: store.currencyOptions

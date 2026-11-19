@@ -288,6 +288,10 @@ public struct EventDetailFeature: Sendable {
 
     private enum CancelID { case plan }
 
+    @Dependency(\.paywall) var paywall
+    /// The calendar is Plus: a free house reads an event and the controls that write ask for the paywall.
+    @Shared(.pro) var pro: ProStatus
+
     @Dependency(\.events) var events
     @Dependency(\.shopping) var shopping
     @Dependency(\.meals) var meals
@@ -295,10 +299,22 @@ public struct EventDetailFeature: Sendable {
 
     public init() {}
 
+    /// What needs Plus here, so a free house gets the paywall at the tap and
+    /// not the server's refusal after it.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .rsvpTapped, .addItemTapped, .stockUpTapped, .addExpenseTapped, .editTapped: true
+        default: false
+        }
+    }
+
     public var body: some ReducerOf<Self> {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.calendar) }
+            }
             switch action {
             case .task:
                 let id = state.occurrence.eventID

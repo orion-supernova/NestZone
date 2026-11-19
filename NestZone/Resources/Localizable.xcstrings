@@ -35651,6 +35651,23 @@
         }
       }
     },
+    "settings_delete_account_wrong_apple": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's a different Apple ID from the one you signed in with. Nothing was deleted. Try again with the same one."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu, giriş yaptığın Apple Kimliği değil. Hiçbir şey silinmedi. Aynı hesapla tekrar dene."
+          }
+        }
+      }
+    },
     "settings_delete_account_confirm": {
       "extractionState": "manual",
       "localizations": {
@@ -36402,13 +36419,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your payment went through, but Plus is taking a moment to show up. It turns on by itself, or tap Restore purchases."
+            "value": "Your payment went through, but Plus is taking a moment to show up. We check again each time you come back to the app, or you can tap Restore purchases."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ödeme tamam ama Plus'ın görünmesi biraz sürüyor. Kendiliğinden açılır, ya da Satın alımları geri yükle'ye dokun."
+            "value": "Ödeme tamam ama Plus'ın görünmesi biraz sürüyor. Uygulamaya her döndüğünde tekrar bakıyoruz, istersen Satın alımları geri yükle'ye de dokunabilirsin."
           }
         }
       }

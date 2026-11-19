@@ -79,7 +79,7 @@ public struct MoviesView: View {
         .navigationDestination(item: $store.scope(
             state: \.destination?.list, action: \.destination.list
         )) { MovieListView(store: $0) }
-        .sheet(item: $store.scope(
+        .hostedSheet(item: $store.scope(
             state: \.destination?.createList, action: \.destination.createList
         )) { CreateMovieListSheet(store: $0) }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -246,13 +246,13 @@ struct MovieListView: View {
             }
         }
         .task { await store.send(.task).finish() }
-        .sheet(isPresented: Binding(
+        .hostedSheet(isPresented: Binding(
             get: { store.isSearchPresented },
             set: { if !$0 { store.send(.searchDismissed) } }
         )) {
             AddMoviesSheet(store: store, poster: poster)
         }
-        .sheet(item: $store.scope(state: \.detail, action: \.detail)) {
+        .hostedSheet(item: $store.scope(state: \.detail, action: \.detail)) {
             MovieInfoSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))

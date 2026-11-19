@@ -187,9 +187,22 @@ extension AuthClient: DependencyKey {
                 // Omitted rather than null when there is no code: the server's
                 // argument is optional, and a missing field is what says so.
                 let args: [String: ConvexEncodable?]? = code.map { ["authorizationCode": $0] }
-                let _: ConvexConnection.Discarded? = try await connection.act(
-                    "users:deleteAccount", args: args
-                )
+                do {
+                    let _: ConvexConnection.Discarded? = try await connection.act(
+                        "users:deleteAccount", args: args
+                    )
+                } catch let error as AppError {
+                    // The code came from a different Apple ID: nothing was
+                    // deleted, and the person can do something about it.
+                    if case let .server(message) = error, message.contains("APPLE_ACCOUNT_MISMATCH") {
+                        throw AppError.validation(String(localized: L10n.settingsDeleteAccountWrongApple))
+                    }
+                    // The session was already gone (the server deleted the
+                    // account and the answer never arrived, or a second tap
+                    // came after the first). Nothing is left to refuse: end
+                    // it the way a finished deletion does.
+                    guard error.meansSessionIsGone else { throw error }
+                }
                 // The account is gone, so the session is too. Same ending as
                 // a sign-out, minus the unregister that can no longer be made.
                 await connection.client.logout()

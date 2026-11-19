@@ -67,10 +67,10 @@ public struct SettingsView: View {
         .background(Backdrop(tint: theme.accent))
         .navigationTitle(Text(L10n.settingsScreenTitle))
         .task { await store.send(.task).finish() }
-        .sheet(item: $store.scope(state: \.destination?.editName, action: \.destination.editName)) {
+        .hostedSheet(item: $store.scope(state: \.destination?.editName, action: \.destination.editName)) {
             EditNameSheet(store: $0)
         }
-        .sheet(item: $store.scope(state: \.destination?.manageHomes, action: \.destination.manageHomes)) {
+        .hostedSheet(item: $store.scope(state: \.destination?.manageHomes, action: \.destination.manageHomes)) {
             ManageHomesSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -80,6 +80,7 @@ public struct SettingsView: View {
             titleVisibility: .visible
         ) {
             Button(role: .destructive) {
+                store.send(.deleteAccountConfirmed)
                 Task { await reauthorizeForDeletion() }
             } label: {
                 Text(L10n.settingsDeleteAccountConfirm)
@@ -93,7 +94,7 @@ public struct SettingsView: View {
         }
         .manageSubscriptionsSheet(isPresented: $showsManageSubscription)
         #if DEBUG
-        .sheet(isPresented: $showsGlassLab) {
+        .hostedSheet(isPresented: $showsGlassLab) {
             NavigationStack {
                 GlassListLab()
                     .toolbar {
@@ -727,7 +728,7 @@ public struct SettingsView: View {
                     }
                 }
             }
-            .disabled(store.isSigningOut || store.isDeletingAccount)
+            .disabled(store.isSigningOut || store.isDeletingAccount || store.isAuthorizingDelete)
 
             // Guideline 5.1.1(v): an account made in the app can be deleted in
             // it. Destructive, last, and behind a dialog that says what goes.
@@ -742,7 +743,7 @@ public struct SettingsView: View {
                     }
                 }
             }
-            .disabled(store.isSigningOut || store.isDeletingAccount)
+            .disabled(store.isSigningOut || store.isDeletingAccount || store.isAuthorizingDelete)
         } header: {
             Text(L10n.settingsAccountTitle)
         }

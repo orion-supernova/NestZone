@@ -32,9 +32,9 @@ public struct AppFeature: Sendable {
         /// language changes (the root view is re-identified), and a second
         /// restore beside the first is two exchanges of a token that rotates.
         public var restoreStarted = false
-        /// The user the Plus subscription was last asked about this launch, so
-        /// `pro:refresh` runs once per launch and sign-in, not once per profile
-        /// edit.
+        /// The user RevenueCat was tied to this launch, so `pro:refresh` runs
+        /// once per launch and sign-in, not once per profile edit. Set only
+        /// once `logIn` has succeeded: until then it is tried again.
         public var proCheckedFor: UserID?
         /// This device's standing with APNs and with the server, held here
         /// because this is the only reducer that lives for the whole session.
@@ -99,6 +99,8 @@ public struct AppFeature: Sendable {
         case deviceRegistered(String)
         case deviceRegistrationFailed(String)
         case appEnteredForeground
+        /// RevenueCat now knows who this is.
+        case purchasesLoggedIn(UserID)
         case retryRestoreTapped
         /// A sign-out confirmed during the restore has waited as long as it may.
         case provisionalSignOutExpired
@@ -108,7 +110,7 @@ public struct AppFeature: Sendable {
     }
 
     private enum CancelID {
-        case authState, currentUser, deviceToken, deviceRegistration, foreground, restore, signOutWait
+        case authState, currentUser, deviceToken, deviceRegistration, foreground, restore, signOutWait, purchasesIdentity
     }
 
     @Dependency(\.auth) var authClient
@@ -137,14 +139,19 @@ public struct AppFeature: Sendable {
                 let firstRun = !state.restoreStarted
                 state.restoreStarted = true
                 // The SDK starts anonymous and is tied to the person when the
-                // session answers (`currentUserChanged`).
-                if firstRun { purchases.configure(nil) }
+                // session answers (`currentUserChanged`). Configured in an
+                // effect, off the main actor: it is not needed by the first
+                // frame, and `logIn` waits for it by retrying.
+                let configure: Effect<Action> = firstRun
+                    ? .run { _ in purchases.configure(nil) }
+                    : .none
                 if firstRun, state.isRestoringSession, state.selectedHome != nil,
                    authClient.beginOptimisticLaunch() {
                     state.isProvisional = true
                     _ = syncMain(&state)
                 }
                 return .merge(
+                    configure,
                     .run { send in
                         for await status in authClient.authState() {
                             await send(.authStatusChanged(status))
@@ -285,11 +292,30 @@ public struct AppFeature: Sendable {
                 // Purchases belong to the person, and the server is asked to
                 // look at their subscription once per launch and sign-in.
                 guard let user, state.proCheckedFor != user.id else { return .none }
-                state.proCheckedFor = user.id
-                return .run { _ in
-                    await purchases.logIn(user.id.rawValue)
+                // Not marked as done here: a `logIn` that fails is tried again,
+                // and a purchase made on the anonymous id is one nobody sees.
+                return .run { send in
+                    var wait = 2
+                    while true {
+                        do {
+                            try await purchases.logIn(user.id.rawValue)
+                            break
+                        } catch is CancellationError {
+                            return
+                        } catch {
+                            guard (try? await clock.sleep(for: .seconds(wait))) != nil else { return }
+                            wait = min(wait * 2, 60)
+                        }
+                    }
+                    await send(.purchasesLoggedIn(user.id))
                     _ = try? await proClient.refresh()
                 }
+                .cancellable(id: CancelID.purchasesIdentity, cancelInFlight: true)
+
+            case let .purchasesLoggedIn(id):
+                // Only if this is still who is signed in.
+                if state.currentUser?.id == id { state.proCheckedFor = id }
+                return .none
 
             case let .sessionRestoreFinished(outcome):
                 state.isRestoringSession = false
@@ -393,10 +419,14 @@ public struct AppFeature: Sendable {
             // costs nothing while things are working, because the listener only
             // restarts when this device is not actually registered.
             case .appEnteredForeground:
+                // A Plus payment that was not credited yet is looked at again.
+                let recheck: Effect<Action> = state.main == nil
+                    ? .none
+                    : .send(.main(.proStatus(.becameActive)))
                 guard state.status == .authenticated,
                       !state.pushRegistration.isRegistered
-                else { return .none }
-                return listenForDeviceToken(onlyIfAlreadyAuthorized: true)
+                else { return recheck }
+                return .merge(recheck, listenForDeviceToken(onlyIfAlreadyAuthorized: true))
 
             case .retryRestoreTapped:
                 state.isRestoringSession = true
@@ -516,6 +546,7 @@ public struct AppFeature: Sendable {
             // authorise as nobody, and the token belongs to whoever
             // signs in next.
             .cancel(id: CancelID.deviceRegistration),
+            .cancel(id: CancelID.purchasesIdentity),
             // On the same terms as the cached home list above: a
             // household's faces are a household's data, and the
             // directory outlives every screen that filled it. An

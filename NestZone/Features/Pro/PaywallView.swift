@@ -42,6 +42,8 @@ struct PaywallView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { store.send(.closeTapped) } label: { Image(systemName: "xmark") }
                         .accessibilityLabel(Text(L10n.paywallClose))
+                        // Closing would cancel the settling of a payment.
+                        .disabled(store.isPurchasing || store.isRestoring)
                 }
             }
             .overlay { if store.didSucceed { successStamp } }
@@ -142,7 +144,11 @@ struct PaywallView: View {
                         PlanCard(
                             package: package,
                             isSelected: package.id == store.selected?.id
-                        ) { store.send(.packageTapped(package.id), animation: Motion.spring) }
+                        ) {
+                            // No spring and no symbol replace under Reduce
+                            // Motion: the tick and the haptic still say it.
+                            store.send(.packageTapped(package.id), animation: reduceMotion ? nil : Motion.spring)
+                        }
                     }
                 }
 
@@ -246,6 +252,7 @@ private struct PlanCard: View {
     let pick: () -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button(action: pick) {
@@ -253,7 +260,7 @@ private struct PlanCard: View {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(isSelected ? theme.accent : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
+                    .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace))
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
                         Text(package.kind == .yearly ? L10n.paywallYearly : L10n.paywallMonthly)
@@ -283,7 +290,7 @@ private struct PlanCard: View {
         .buttonStyle(.pressableQuiet)
         .glassCard(tinted: isSelected ? theme.accent.opacity(0.14) : nil, interactive: true)
         .sensoryFeedback(.selection, trigger: isSelected) { _, now in now }
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     /// "1 week free, then $19.99 a year", or just the price.

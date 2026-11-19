@@ -149,6 +149,7 @@ struct ProTests {
         again.didSucceed = false
         let second = TestStore(initialState: again) { PaywallFeature() } withDependencies: {
             $0.purchases.restore = {}
+            $0.purchases.syncAppStore = {}
             $0.pro.refresh = { ProRefreshResult(active: false) }
         }
         await second.send(.restoreTapped) { $0.isRestoring = true }
@@ -197,16 +198,21 @@ struct ProTests {
         #expect(store.state.paywall == nil)
     }
 
-    @Test("A free house's tabs open on what it can use")
+    @Test("A free house's tabs open on what it can use, for display only")
     func freeHouseDefaults() async {
+        let remembered = TabSegments.stored
         let store = TestStore(initialState: MainFeature.State(
             homeID: "h1", segments: [.plans: .calendar, .house: .finance]
-        )) { MainFeature() }
+        )) { MainFeature() } withDependencies: {
+            $0.purchases.settleUnfinished = { _ in }
+        }
         store.exhaustivity = .off
 
-        await store.send(.proStatus(.delegate(.changed(isPro: false, firstAnswer: true))))
+        await store.send(.proStatus(.statusUpdated(ProStatusPayload(pro: false))))
         #expect(store.state.plans.selected == .recipes)
         #expect(store.state.house.selected == .maintenance)
+        // What each tab was left on is the person's, not the opening's.
+        #expect(TabSegments.stored == remembered)
     }
 
     @Test("Add anything will not file a line as an event for a free house")

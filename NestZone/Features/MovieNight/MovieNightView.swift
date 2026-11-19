@@ -83,18 +83,18 @@ public struct MovieNightView: View {
                 }
             }
             .task { await store.send(.task).finish() }
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.pickKind, action: \.destination.pickKind
             )) { PollKindSheet(store: $0, onStart: { query, title in
                 store.send(.kindChosen(query, title: title))
             }) }
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.summary, action: \.destination.summary
             )) { PollSummarySheet(store: $0) }
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.history, action: \.destination.history
             )) { PollHistorySheet(store: $0) }
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.movieInfo, action: \.destination.movieInfo
             )) { MovieInfoSheet(store: $0) }
             .alert($store.scope(state: \.alert, action: \.alert))
@@ -841,7 +841,7 @@ struct PollSummarySheet: View {
                     Button { store.send(.doneTapped) } label: { Text(L10n.commonDone) }
                 }
             }
-            .sheet(item: $store.scope(state: \.movieInfo, action: \.movieInfo)) {
+            .hostedSheet(item: $store.scope(state: \.movieInfo, action: \.movieInfo)) {
                 MovieInfoSheet(store: $0)
             }
         }
@@ -898,7 +898,7 @@ struct PollHistorySheet: View {
                 }
             }
             .alert($store.scope(state: \.alert, action: \.alert))
-            .sheet(item: $store.scope(state: \.movieInfo, action: \.movieInfo)) {
+            .hostedSheet(item: $store.scope(state: \.movieInfo, action: \.movieInfo)) {
                 MovieInfoSheet(store: $0)
             }
             .animation(Motion.spring, value: store.polls)

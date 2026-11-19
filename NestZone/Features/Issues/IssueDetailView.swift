@@ -93,7 +93,7 @@ public struct IssueDetailView: View {
         // once, when it is made — every read after that force-unwraps, so the
         // dismissal it was meant to survive is exactly where it crashed (1.9.1,
         // TestFlight). `holding(_:)` reads the last value instead of trapping.
-        .sheet(item: $store.statusNote) { presented in
+        .hostedSheet(item: $store.statusNote) { presented in
             let note = $store.statusNote.holding(presented)
             StatusNoteSheet(
                 note: note.wrappedValue,
@@ -103,7 +103,7 @@ public struct IssueDetailView: View {
             )
             .presentationDetents([.height(320)])
         }
-        .sheet(item: $store.partsDraft) { presented in
+        .hostedSheet(item: $store.partsDraft) { presented in
             let draft = $store.partsDraft.holding(presented)
             PartsSheet(
                 text: draft.text,
@@ -113,7 +113,7 @@ public struct IssueDetailView: View {
             )
             .presentationDetents([.medium, .large])
         }
-        .sheet(item: $store.visitDraft) { presented in
+        .hostedSheet(item: $store.visitDraft) { presented in
             VisitSheet(
                 draft: $store.visitDraft.holding(presented),
                 onConfirm: { store.send(.visitConfirmed) },
@@ -121,10 +121,10 @@ public struct IssueDetailView: View {
             )
             .presentationDetents([.medium, .large])
         }
-        .sheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
+        .hostedSheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
             ExpenseComposerSheet(store: store)
         }
-        .sheet(item: $store.scope(state: \.edit, action: \.edit)) { store in
+        .hostedSheet(item: $store.scope(state: \.edit, action: \.edit)) { store in
             IssueComposerSheet(store: store)
         }
     }

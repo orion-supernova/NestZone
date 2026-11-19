@@ -117,19 +117,19 @@ public struct CalendarView: View {
             isLoaded: store.hasLoadedOnce
         )
         .alert($store.scope(state: \.alert, action: \.alert))
-        .sheet(item: $store.scope(
+        .hostedSheet(item: $store.scope(
             state: \.destination?.compose,
             action: \.destination.compose
         )) { store in
             EventComposerSheet(store: store)
         }
-        .sheet(item: $store.scope(
+        .hostedSheet(item: $store.scope(
             state: \.destination?.detail,
             action: \.destination.detail
         )) { store in
             EventDetailSheet(store: store)
         }
-        .sheet(item: $store.scope(
+        .hostedSheet(item: $store.scope(
             state: \.destination?.history,
             action: \.destination.history
         )) { store in

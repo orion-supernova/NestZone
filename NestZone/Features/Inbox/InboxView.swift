@@ -23,7 +23,7 @@ private struct InboxPanelHost: ViewModifier {
     @Bindable var store: StoreOf<InboxFeature>
 
     func body(content: Content) -> some View {
-        content.sheet(isPresented: $store.isOpen) {
+        content.hostedSheet(isPresented: $store.isOpen) {
             InboxPanel(store: store)
         }
     }
@@ -170,7 +170,7 @@ struct InboxPanel: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
-        .sheet(item: $store.scope(state: \.admin, action: \.admin)) {
+        .hostedSheet(item: $store.scope(state: \.admin, action: \.admin)) {
             InboxAdminView(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))

@@ -29,7 +29,7 @@ public struct RecipesView: View {
             .navigationDestination(
                 item: $store.scope(state: \.destination?.detail, action: \.destination.detail)
             ) { RecipeDetailView(store: $0) }
-            .sheet(
+            .hostedSheet(
                 item: $store.scope(state: \.destination?.compose, action: \.destination.compose)
             ) { ComposeRecipeSheet(store: $0) }
             .alert($store.scope(state: \.alert, action: \.alert))

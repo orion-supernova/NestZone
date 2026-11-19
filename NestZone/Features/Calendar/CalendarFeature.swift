@@ -990,7 +990,7 @@ extension CalendarFeature {
     /// is stopped at. Deleting stays free, like the server's `remove`.
     static func writes(_ action: Action) -> Bool {
         switch action {
-        case .addTapped, .addOnDayTapped, .rsvpTapped: true
+        case .addTapped, .addOnDayTapped, .rsvpTapped, .editTapped: true
         default: false
         }
     }

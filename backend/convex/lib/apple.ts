@@ -90,12 +90,21 @@ export function canRevokeApple(): boolean {
 /**
  * Exchanges a native authorization code and revokes what it yields.
  *
- * Returns whether Apple confirmed the revocation. Answers from Apple are
- * returned as false, not thrown — a deletion must not hinge on a third party —
- * and neither the code nor a token is ever logged.
+ * Answers `revoked` when Apple confirmed it, `failed` for anything else on
+ * Apple's side (returned, not thrown — a deletion must not hinge on a third
+ * party), and `mismatch` when the code belongs to a different Apple ID than
+ * `expectedSubject`: nothing is revoked then, because the token would be
+ * somebody else's. Without an expected subject there is nobody to check the
+ * code against, so nothing is revoked either. Neither the code nor a token is
+ * ever logged.
  */
-export async function revokeAppleAuthorization(code: string): Promise<boolean> {
-  if (!canRevokeApple()) return false;
+export type AppleRevocation = "revoked" | "failed" | "mismatch";
+
+export async function revokeAppleAuthorization(
+  code: string,
+  expectedSubject: string | null,
+): Promise<AppleRevocation> {
+  if (!canRevokeApple() || !expectedSubject) return "failed";
   // The audience of a native token is the bundle id, so that is the client.
   const clientId = process.env.APNS_BUNDLE_ID || APPLE_AUDIENCE;
 
@@ -129,11 +138,31 @@ export async function revokeAppleAuthorization(code: string): Promise<boolean> {
     // `invalid_grant` is the usual one: a code is single-use and lives five
     // minutes. The body is Apple's error name, never a credential.
     console.warn(`Sign in with Apple code exchange: ${exchanged.status} ${await exchanged.text()}`);
-    return false;
+    return "failed";
   }
-  const tokens = (await exchanged.json()) as { refresh_token?: string; access_token?: string };
+  const tokens = (await exchanged.json()) as {
+    refresh_token?: string;
+    access_token?: string;
+    id_token?: string;
+  };
   const token = tokens.refresh_token ?? tokens.access_token;
-  if (!token) return false;
+  if (!token) return "failed";
+
+  // Whose authorization this is: the id_token Apple returns with the exchange.
+  // Unreadable is as good as unknown, and unknown is never revoked.
+  let subject = "";
+  try {
+    if (!tokens.id_token) return "failed";
+    const { payload } = await jwtVerify(tokens.id_token, jwks, {
+      issuer: APPLE_ISSUER,
+      audience: clientId,
+      algorithms: ["RS256"],
+    });
+    subject = typeof payload.sub === "string" ? payload.sub : "";
+  } catch {
+    return "failed";
+  }
+  if (subject !== expectedSubject) return "mismatch";
 
   const revoked = await fetch(
     APPLE_REVOKE_URL,
@@ -146,7 +175,7 @@ export async function revokeAppleAuthorization(code: string): Promise<boolean> {
   );
   if (!revoked.ok) {
     console.warn(`Sign in with Apple revoke: ${revoked.status} ${await revoked.text()}`);
-    return false;
+    return "failed";
   }
-  return true;
+  return "revoked";
 }
