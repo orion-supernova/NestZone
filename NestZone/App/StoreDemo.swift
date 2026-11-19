@@ -21,6 +21,12 @@ enum StoreDemo {
 
     static var opensSparkleStore: Bool { defaults.bool(forKey: "openSparkleStore") }
 
+    /// `-shoppingGroupedDemo 1`: the shopping list in aisles, whatever was
+    /// stored (still Plus only). A launch argument reaches `@AppStorage` as a
+    /// string, which a Bool key does not read, so `-appShoppingGrouped 1` is
+    /// not a way to turn it on.
+    static var groupsShopping: Bool { defaults.bool(forKey: "shoppingGroupedDemo") }
+
     /// The house is treated as without Plus, to photograph what a lock looks like.
     static var forcesFreeHouse: Bool { defaults.bool(forKey: "forceFreeHouse") }
 
@@ -36,7 +42,20 @@ enum StoreDemo {
 
     /// The signed-in user's id, learnt from `users:me`, which is the only read
     /// that says who "me" is. Guarded by a lock: streams deliver off the main actor.
-    private static let meID = OSAllocatedUnfairLock<String?>(initialState: nil)
+    /// Also kept in the defaults, so a later launch knows who "me" is before
+    /// `users:me` answers: the household list can arrive first and would
+    /// otherwise be shown unmasked, with the real handle.
+    private static let meKey = "screenshotPersonaMeID"
+    private static let meID = OSAllocatedUnfairLock<String?>(
+        initialState: UserDefaults.standard.string(forKey: "screenshotPersonaMeID"))
+
+    /// The persona's name when `id` is the signed-in account, for the rows that
+    /// carry a name and an email from the server (contributions, the ledger,
+    /// the archive, the feed) and so never pass through a `User`.
+    static func personaName(for id: UserID?) -> String? {
+        guard let persona, let id, meID.withLock({ $0 }) == id.rawValue else { return nil }
+        return persona
+    }
 
     /// `user` as the persona when it is the signed-in account; others untouched.
     private static func masked(_ user: User, isMe: Bool) -> User {
@@ -52,6 +71,7 @@ enum StoreDemo {
     static func maskedMe(_ user: User?) -> User? {
         guard persona != nil, let user else { return user }
         meID.withLock { $0 = user.id.rawValue }
+        defaults.set(user.id.rawValue, forKey: meKey)
         return masked(user, isMe: true)
     }
 
@@ -122,12 +142,14 @@ enum StoreDemo {
     static var isOn: Bool { false }
     static var persona: String? { nil }
     static var suppressesPrompts: Bool { false }
+    static func personaName(for id: UserID?) -> String? { nil }
     static func maskedMe(_ user: User?) -> User? { user }
     static func masked(_ user: User) -> User { user }
     static func masked(_ users: [User]) -> [User] { users }
     static var paywallFeature: ProFeature?? { nil }
     static var opensSparkleStore: Bool { false }
     static var forcesFreeHouse: Bool { false }
+    static var groupsShopping: Bool { false }
     static var plusPackages: [PlusPackage] { [] }
     static var sparklePacks: [SparklePack] { [] }
     #endif

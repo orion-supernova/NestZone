@@ -99,7 +99,9 @@ public struct MemberContribution: Codable, Identifiable, Hashable, Sendable {
 extension MemberContribution {
     /// Same fallback chain as `User.displayName` — the stats query returns the
     /// raw profile fields rather than a resolved name, so both sides agree.
-    public var displayName: String { User.displayName(name: name, email: email) }
+    public var displayName: String {
+        StoreDemo.personaName(for: userID) ?? User.displayName(name: name, email: email)
+    }
 
     public var initials: String { User.initials(from: displayName) }
 

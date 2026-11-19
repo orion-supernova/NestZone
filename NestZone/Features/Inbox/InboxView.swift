@@ -516,7 +516,8 @@ private struct ActivityRow: View {
                             .multilineTextAlignment(.leading)
                     }
 
-                    if let name = row.actorName, !name.isEmpty, let actor = row.actor {
+                    if let actor = row.actor,
+                       let name = StoreDemo.personaName(for: actor) ?? row.actorName, !name.isEmpty {
                         HStack(spacing: 5) {
                             // `viewable: false`: this whole row is a control
                             // that goes somewhere else, and a tappable face

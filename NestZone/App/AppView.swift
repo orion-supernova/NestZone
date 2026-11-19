@@ -230,6 +230,9 @@ struct MainView: View {
                 store.send(.companion(.storeTapped))
             }
         }
+        // `-openConversation`, `-openMovieNight`, `-openRecipe`, `-openIssue`,
+        // `-calendarMode`: see StoreDemoLaunch.
+        .task { await StoreDemoLaunch.run(store) }
         #endif
         // The house's companion is shared, so it is read for the life of the
         // tab bar too; Release builds draw none of it and never ask.

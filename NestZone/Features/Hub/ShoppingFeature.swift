@@ -17,7 +17,7 @@ public struct ShoppingFeature: Sendable {
         /// always on the flat list whatever was stored before (the default
         /// used to be grouped, and a house may have lapsed). The stored choice
         /// is left alone: a house that gets Plus back finds its own.
-        public var effectiveGrouped: Bool { isGrouped && pro.isPro }
+        public var effectiveGrouped: Bool { (isGrouped || StoreDemo.groupsShopping) && pro.isPro }
         /// Categories the user has collapsed. Not persisted — a collapse is a
         /// "get this out of my way for now", not a preference.
         public var collapsed: Set<ShoppingItem.Category> = []
