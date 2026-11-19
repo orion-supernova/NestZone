@@ -1,7 +1,9 @@
 // Scheduled work.
 //
-// Five jobs: the bill, event and house-problem reminder sweeps, the one that
-// throws old household activity away, and Nestie's look over events that ended.
+// The bill, event and house-problem reminder sweeps, the one that throws old
+// household activity away, Nestie's look over events that ended, Pro's
+// re-check, the moderation nudge, and the retention and storage sweeps at the
+// bottom.
 //
 // Daily rather than hourly, and at a fixed UTC hour, because a `bills` row has
 // no timezone on it — the household that owns it does, and the server does not
@@ -118,6 +120,39 @@ crons.interval(
   "moderation nudge",
   { hours: 3 },
   internal.moderation.nudgeStale,
+  {},
+);
+
+// Reports, kept a year after they are settled.
+//
+// The privacy policy promises it: a dismissed or actioned report is deleted
+// twelve months after `resolved_at`, its held files released (and so deleted,
+// when their deletion was waiting on it). Open reports are never touched.
+// A hundred a run, chaining while there is more (`moderation:sweepReports`).
+// At 03:30, after the activity sweep.
+crons.daily(
+  "report retention",
+  { hourUTC: 3, minuteUTC: 30 },
+  internal.moderation.sweepReports,
+  {},
+);
+
+// What people hid, once the thing hidden is gone: a deleted message, a photo
+// or face whose file was freed. Paged a hundred at a time by cursor
+// (`moderation:sweepHidden`); weekly is plenty for a table this small.
+crons.weekly(
+  "hidden content cleanup",
+  { dayOfWeek: "sunday", hourUTC: 4, minuteUTC: 0 },
+  internal.moderation.sweepHidden,
+  {},
+);
+
+// Stored files nothing points at (`storage:reapReport`): logs how many and
+// how many bytes, and deletes them only once STORAGE_REAP=on.
+crons.weekly(
+  "storage reap report",
+  { dayOfWeek: "sunday", hourUTC: 4, minuteUTC: 30 },
+  internal.storage.reapReport,
   {},
 );
 

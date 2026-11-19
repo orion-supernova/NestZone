@@ -38,6 +38,7 @@ import { outstandingNames } from "./lib/pending";
 import { anyHomeAllows, proAllows, proEnforced, proRequired, requirePro } from "./lib/pro";
 import { noteGrowth } from "./lib/companion";
 import { discardFile } from "./lib/moderation";
+import { claimFiles } from "./lib/files";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -739,6 +740,13 @@ export const create = mutation({
     if (args.assignedTo) {
       await requireMembers(ctx, home, [args.assignedTo], "Problem");
     }
+    // Only files this house uploaded (lib/files.ts): a storage id read off
+    // another house's signed URL is refused, or deleting this problem would
+    // delete their photo.
+    const photos = args.photos?.slice(0, MAX_PHOTOS);
+    const photoThumbs = args.photoThumbs?.slice(0, MAX_PHOTOS);
+    await claimFiles(ctx, photos ?? [], { homeId: home._id, userId: user._id, kind: "issue_photo" });
+    await claimFiles(ctx, photoThumbs ?? [], { homeId: home._id, userId: user._id, kind: "issue_thumb" });
 
     const now = Date.now();
     const id = await ctx.db.insert("issues", {
@@ -752,11 +760,9 @@ export const create = mutation({
       is_open: true,
       reported_by: user._id,
       assigned_to: args.assignedTo,
-      photos: args.photos?.slice(0, MAX_PHOTOS),
-      photo_thumbs: args.photoThumbs?.slice(0, MAX_PHOTOS),
-      photo_uploaders: args.photos?.length
-        ? args.photos.slice(0, MAX_PHOTOS).map(() => user._id)
-        : undefined,
+      photos,
+      photo_thumbs: photoThumbs,
+      photo_uploaders: photos?.length ? photos.map(() => user._id) : undefined,
       due_by: args.dueBy,
       cost_estimate:
         args.costEstimate === undefined ? undefined : requireEstimate(args.costEstimate),
@@ -1225,8 +1231,15 @@ export const attachPhotos = mutation({
     for (const [index, storageId] of storageIds.entries()) {
       if (merged.length >= MAX_PHOTOS) break;
       if (merged.includes(storageId)) continue;
+      const thumb = thumbIds?.[index] ?? storageId;
+      // Only files this house uploaded (lib/files.ts): a storage id read off
+      // another house's signed URL is refused, or `removePhoto` would then
+      // delete their photo.
+      const owner = { homeId: home._id, userId: user._id };
+      await claimFiles(ctx, [storageId], { ...owner, kind: "issue_photo" });
+      if (thumb !== storageId) await claimFiles(ctx, [thumb], { ...owner, kind: "issue_thumb" });
       merged.push(storageId);
-      mergedThumbs.push(thumbIds?.[index] ?? storageId);
+      mergedThumbs.push(thumb);
       mergedUploaders.push(user._id);
     }
 

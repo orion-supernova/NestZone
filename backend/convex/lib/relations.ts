@@ -13,7 +13,7 @@
 import { Doc, Id, TableNames } from "../_generated/dataModel";
 import { MutationCtx, QueryCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { discardFile } from "./moderation";
+import { discardFile, discardHomeFile } from "./moderation";
 
 /** Load a referenced document or throw. Use before storing any v.id(). */
 export async function requireRef<T extends TableNames>(
@@ -280,13 +280,11 @@ const PURGE_ISSUES = 25;
  * report holds is deferred, not deleted): a problem's photos and thumbnails,
  * and a message's attachment — the same two the app's own deletes already
  * free (`issues:removePhoto`, `messages:remove`). `tasks.image`,
- * `notes.image` and `recipes.image` are deliberately NOT freed here: no build
- * uploads to them and their writers accept any storage id unchecked, so
- * deleting what they name would let a house delete a file that belongs to
- * somebody else (a housemate's face, another house's photo) just by emptying
- * itself. Once the row is gone such a file is unreferenced, and the weekly
- * `storage:reapReport`, which checks every reference first, is what reclaims
- * it. `more` is whether anything is left. Idempotent: it reads what is
+ * `notes.image` and `recipes.image` are freed only when the file's claim is
+ * this house's (`discardHomeFile`, lib/files.ts): their ids were stored
+ * unchecked before claims existed, so a row may name somebody else's file,
+ * and that one is left for the weekly `storage:reapReport`, which checks
+ * every reference first. `more` is whether anything is left. Idempotent: it reads what is
  * there, so a retried or overlapping batch only finds less.
  */
 export async function purgeHomeBatch(
@@ -303,6 +301,10 @@ export async function purgeHomeBatch(
         .withIndex("by_home", (q) => q.eq("home_id", homeId))
         .take(PURGE_ROWS);
       await Promise.all(rows.map((r) => ctx.db.delete(r._id)));
+      // A task's, note's or recipe's picture, if it is this house's.
+      for (const r of rows) {
+        if ("image" in r && r.image) await discardHomeFile(ctx, r.image, homeId);
+      }
       return rows.length;
     }),
   );

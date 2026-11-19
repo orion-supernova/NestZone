@@ -9,6 +9,7 @@ import { openTasks } from "./lib/pending";
 import { requireMembers } from "./lib/relations";
 import { noteGrowth } from "./lib/companion";
 import { requirePro } from "./lib/pro";
+import { discardHomeFile } from "./lib/moderation";
 
 // Shown as the notification title; the body carries what actually changed.
 const NOTIFY_TITLE = "New task";
@@ -548,6 +549,8 @@ export const remove = mutation({
     // finds nothing is the cheapest read in the database.
     await retractCompletion(ctx, id);
     await ctx.db.delete(id);
+    // Its picture goes with it, if it was this house's (lib/files.ts).
+    await discardHomeFile(ctx, task.image, task.home_id);
     return { ok: true };
   },
 });
@@ -582,6 +585,7 @@ export const removeFinished = mutation({
     }
     await retractCompletion(ctx, id);
     await ctx.db.delete(id);
+    await discardHomeFile(ctx, task.image, task.home_id);
     // The credit goes with it here too: the reconcile finds no task and takes
     // the chore off the companion growing now.
     await noteGrowth(ctx, task.home_id, { kind: "task", id });

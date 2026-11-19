@@ -809,6 +809,23 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   a signed URL and only the storage id reaches a mutation. `issues:detail`
   returns `photo_refs` — ids *and* URLs — because the screen has to draw a photo
   and delete it, and a signed URL is not an identity.
+- **A row that owns a file frees it when it goes, through `discardFile`**
+  (a file a report holds is deferred, not deleted): `issues:remove` and the
+  house purge free a problem's photos and thumbnails, the purge and
+  `messages:remove` a message's attachment, account deletion the face.
+  **A file belongs to the house (or, for a face, the person) that first
+  attached it** (`file_claims`, lib/files.ts): every writer that takes a
+  storage id calls `claimFile` and a foreign or unknown id is `NOT_FOUND`, so
+  an id read off a signed URL cannot be attached and then deleted elsewhere.
+  `tasks`/`notes`/`recipes.image` are freed only when their claim is the
+  house's (`discardHomeFile`). `storage:reapReport` (weekly, Sun 04:30
+  UTC) finds files over a week old that no `v.id("_storage")` field or hold
+  names and logs count and bytes, deleting them only with `STORAGE_REAP=on`.
+  A new file field goes into its `REF_TABLES`, or its files read as orphans.
+  Settled reports are deleted a year after `resolved_at`
+  (`moderation:sweepReports`, daily 03:30, holds released first; open
+  reports never), and `moderation:sweepHidden` (weekly) drops hides whose
+  message or file is gone.
 - `convex/crons.ts` runs `finance:sweepReminders` daily at 08:00 UTC. It is
   idempotent by design — every nudge is recorded against
   `<due_date>:<daysBefore>` before it is sent, because a duplicate reminder is

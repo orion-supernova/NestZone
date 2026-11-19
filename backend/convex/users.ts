@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireUser, currentUserId } from "./lib/auth";
 import { ownUser, publicUsers, discardAvatar } from "./lib/users";
+import { claimFile } from "./lib/files";
 import { revokeAppleAuthorization } from "./lib/apple";
 import { departHome } from "./lib/membership";
 import { deleteSubscriber } from "./lib/revenuecat";
@@ -87,6 +88,12 @@ export const setAvatar = mutation({
   handler: async (ctx, { storageId }) => {
     const user = await requireUser(ctx);
     const previous = user.avatar;
+    // Only a file this person uploaded (lib/files.ts). An id read off somebody
+    // else's signed URL is refused: set as an avatar and then replaced, it
+    // would be deleted as "the previous avatar".
+    if (storageId) {
+      await claimFile(ctx, storageId, { userId: user._id, kind: "avatar" });
+    }
 
     await ctx.db.patch(user._id, {
       avatar: storageId ?? undefined,

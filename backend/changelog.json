@@ -60,27 +60,27 @@
       "version": "1.12.0",
       "kind": "feature",
       "title": "NestZone Plus: one subscription for the whole house",
-      "body": "Calendar, Money, house problems, shopping by aisle, your own movie lists, \"Archive now\", being in more than one home and mature movie titles are part of NestZone Plus now. One person subscribes and everyone in the house gets it, with a free first week on the yearly plan. Everything else stays free, and nothing you've already written goes anywhere: if Plus ever stops, you can still read all of it.",
+      "body": "Calendar, Money, house problems, house chat, shopping by aisle, your own movie lists, \"Archive now\", being in more than one home and mature movie titles are part of NestZone Plus now. One person subscribes and everyone in the house gets it, with a free first week on the yearly plan. Everything else stays free, and nothing you've already written goes anywhere: if Plus ever stops, you can still read all of it.",
       "highlights": [
-        "One subscription covers the whole house, whoever pays",
-        "Plus: Calendar, Money and bills, house problems, shopping by aisle, your own movie lists, Archive now, a second home, mature movie titles",
-        "Free forever: chores, shopping lists, notes, messages, recipes and meals, movie night, Nestie",
+        "One subscription covers the whole house, whoever pays, and up to two homes",
+        "Plus: Calendar, Money and bills, house problems, house chat, shopping by aisle, your own movie lists, Archive now, a second home, mature movie titles",
+        "Free forever: chores, shopping lists, notes, recipes and meals, movie night, Nestie",
         "Free first week on the yearly plan",
-        "Without Plus, what's already in Calendar, Money and Problems stays readable",
-        "Manage or restore it any time in Settings"
+        "Without Plus, what's already in Calendar, Money, Problems and chat stays readable",
+        "See everything Plus includes, and manage or restore it, in Settings"
       ],
       "translations": [
         {
           "language": "tr",
           "title": "NestZone Plus geldi: bütün eve tek abonelik",
-          "body": "Takvim, Finans, Sorunlar, reyon reyon alışveriş, kendi film listelerin, yetişkin içerik, erken arşivleme ve ikinci bir ev artık NestZone Plus'ta. Evden biri abone oluyor, herkes kullanıyor. Yıllık planda ilk hafta bedava. Gerisi bedava kalıyor. Şimdiye kadar yazdıkların da yerinde duruyor: Plus bir gün biterse hepsini okumaya devam edersin.",
+          "body": "Takvim, Finans, Sorunlar, Mesajlar, reyon reyon alışveriş, kendi film listelerin, yetişkin içerik, erken arşivleme ve ikinci bir ev artık NestZone Plus'ta. Evden biri abone oluyor, herkes kullanıyor. Yıllık planda ilk hafta bedava. Gerisi bedava kalıyor. Şimdiye kadar yazdıkların da yerinde duruyor: Plus bir gün biterse hepsini okumaya devam edersin.",
           "highlights": [
-            "Biri abone olsun, bütün ev kullansın",
-            "Plus'ta: Takvim, Finans ve faturalar, Sorunlar, reyon reyon alışveriş, kendi film listelerin, yetişkin içerik, erken arşivleme, ikinci bir ev",
-            "Hep bedava: Görevler, düz alışveriş listesi, Notlar, Mesajlar, Tarifler ve Yemekler, film listeleri, film gecesi, Nestie",
+            "Biri abone olsun, bütün ev kullansın. Tek abonelik iki eve kadar yetiyor",
+            "Plus'ta: Takvim, Finans ve faturalar, Sorunlar, Mesajlar, reyon reyon alışveriş, kendi film listelerin, yetişkin içerik, erken arşivleme, ikinci bir ev",
+            "Hep bedava: Görevler, düz alışveriş listesi, Notlar, Tarifler ve Yemekler, film listeleri, film gecesi, Nestie",
             "Yıllık planda ilk hafta bedava",
-            "Plus bitse de Takvim, Finans ve Sorunlar'a yazdıkların yerinde kalır, okumaya devam edersin",
-            "Ayarlar'dan istediğin zaman yönet ya da geri yükle"
+            "Plus bitse de Takvim, Finans, Sorunlar ve Mesajlar'a yazdıkların yerinde kalır, okumaya devam edersin",
+            "Plus'ta neler var, Ayarlar'dan bak; oradan yönet ya da geri yükle"
           ]
         }
       ]
@@ -116,6 +116,36 @@
       ]
     },
     {
+      "slug": "1.12.0-chat",
+      "version": "1.12.0",
+      "kind": "feature",
+      "title": "House chat got better",
+      "body": "React to a message, reply to a specific one, pin the thing everyone keeps asking for, and @mention someone so only they get the ping. And if someone crosses a line, you can report a message or a photo, or block them.",
+      "highlights": [
+        "Hold a message to react with 👍 ❤️ 😂 😮 😢 🙏",
+        "Swipe a message to reply to it",
+        "Pin a message to the top, like the Wi-Fi password",
+        "Type @ to mention someone; only they get notified",
+        "Search inside a chat",
+        "Report a message or photo, or block someone; reports are checked within 24 hours"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Ev sohbeti daha iyi oldu",
+          "body": "Mesajlara emojiyle tepki ver, belli bir mesajı yanıtla, herkesin sürekli sorduğu şeyi en üste sabitle, birini @ ile an, bildirim sadece ona gitsin. Biri çizgiyi aşarsa mesajı ya da fotoğrafı şikayet edebilir, onu engelleyebilirsin.",
+          "highlights": [
+            "Mesaja basılı tut, 👍 ❤️ 😂 😮 😢 🙏 ile tepki ver",
+            "Yanıtlamak için mesajı kaydır",
+            "Wi-Fi şifresi gibi bir mesajı en üste sabitle",
+            "Birini anmak için @ yaz, bildirim sadece ona gitsin",
+            "Sohbetin içinde arama yap",
+            "Mesajı ya da fotoğrafı şikayet et, birini engelle; şikayetlere 24 saat içinde bakılır"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.12.0-fixes",
       "version": "1.12.0",
       "kind": "improvement",
@@ -125,7 +155,9 @@
         "Improved animations and haptics all over the app",
         "Settling up now ends with an \"All square\" stamp",
         "Fixed taps that buzzed twice",
-        "Fixed a wrong home code shaking twice"
+        "Fixed a wrong home code shaking twice",
+        "Redesigned the Sparkles store, with a small starter pack and a new middle one",
+        "Your email and phone number are no longer shared with your housemates"
       ],
       "translations": [
         {
@@ -136,7 +168,9 @@
             "Animasyonlar ve titreşimler baştan sona elden geçti",
             "Hesaplaşınca artık \"Hesap kapandı\" damgası basılıyor",
             "Bazı dokunuşlarda iki kere titreşme düzeldi",
-            "Yanlış ev kodu girince alanın iki kere sallanması düzeldi"
+            "Yanlış ev kodu girince alanın iki kere sallanması düzeldi",
+            "Işıltı mağazası yenilendi; küçük bir başlangıç paketi ve arada yeni bir paket eklendi",
+            "E-posta adresin ve telefonun artık evdekilere gitmiyor"
           ]
         }
       ]

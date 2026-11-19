@@ -14,6 +14,7 @@ import { ConvexError } from "convex/values";
 import { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { requireUser } from "./auth";
+import { claimedByHome, dropClaims } from "./files";
 
 /** The ids in `MODERATOR_USER_IDS`, as strings. */
 function configuredModeratorIds(): Set<string> {
@@ -143,6 +144,27 @@ export async function discardFile(
   } catch {
     // Already gone. Nothing to reclaim and nothing to report.
   }
+  // The claim goes with the file (lib/files.ts), so none outlives it.
+  await dropClaims(ctx, storageId);
+}
+
+/**
+ * `discardFile`, but only for a file claimed by `homeId` (lib/files.ts).
+ *
+ * For fields whose ids were stored unchecked before claims existed
+ * (`tasks.image`, `notes.image`, `recipes.image`): such a row may name a file
+ * that belongs to another house or to somebody's face, and deleting it would
+ * be deleting theirs. An unclaimed or foreign file is left alone; once nothing
+ * points at it the weekly `storage:reapReport` reclaims it.
+ */
+export async function discardHomeFile(
+  ctx: MutationCtx,
+  storageId: Id<"_storage"> | undefined | null,
+  homeId: Id<"homes">,
+): Promise<void> {
+  if (!storageId) return;
+  if (!(await claimedByHome(ctx, storageId, homeId))) return;
+  await discardFile(ctx, storageId);
 }
 
 /** Holds a file for a report. Idempotent per report and file. */
@@ -195,6 +217,7 @@ export async function releaseHolds(
       } catch {
         // Already gone.
       }
+      await dropClaims(ctx, hold.storage_id);
     }
   }
 }

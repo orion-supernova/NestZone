@@ -7,6 +7,7 @@ import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
 import { requirePro } from "./lib/pro";
 import { blockedBy, blockedEitherWay, discardFile, requireChatAllowed } from "./lib/moderation";
+import { claimFile } from "./lib/files";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { QueryCtx, MutationCtx } from "./_generated/server";
@@ -155,6 +156,12 @@ export const send = mutation({
     const mentions = Array.from(new Set(args.mentions ?? []))
       .filter((id) => id !== user._id && inThread.has(id))
       .slice(0, MAX_MENTIONS);
+
+    // Only a file this house uploaded (lib/files.ts): an id read off another
+    // house's signed URL is refused, or deleting this message would delete it.
+    if (args.file) {
+      await claimFile(ctx, args.file, { homeId: convo.home_id, userId: user._id, kind: "message" });
+    }
 
     const now = Date.now();
     const id = await ctx.db.insert("messages", {

@@ -867,3 +867,132 @@ export const nudgeStale = internalMutation({
     return { nudged: stale.length };
   },
 });
+
+// ---------------------------------------------------------------------------
+// Retention
+
+/**
+ * How long a settled report is kept: twelve months after `resolved_at`, as
+ * the privacy policy says. An open report is never deleted, however old.
+ */
+const REPORT_RETENTION_MS = 365 * DAY_MS;
+/** Reports deleted per run of `sweepReports`. */
+const RETENTION_BATCH = 100;
+/** Runs one day's sweep may chain before it stops and says so. */
+const RETENTION_MAX_ROUNDS = 50;
+
+/**
+ * Deletes settled reports (dismissed or actioned) resolved more than twelve
+ * months ago, releasing whatever they still hold first (`releaseHolds`), so a
+ * file whose deletion was deferred for the report goes with it. Settling
+ * already releases a report's holds; this is the belt to that brace.
+ *
+ * A hundred per run, chaining itself while a full batch came back, up to
+ * fifty runs a day. Idempotent: a rerun only finds less. The daily cron
+ * (`crons.ts`) starts it at round 0.
+ */
+export const sweepReports = internalMutation({
+  args: { round: v.optional(v.number()) },
+  returns: v.object({ deleted: v.number(), more: v.boolean() }),
+  handler: async (ctx, { round }) => {
+    const n = round ?? 0;
+    const cutoff = Date.now() - REPORT_RETENTION_MS;
+    const settled: Doc<"reports">[] = [];
+    for (const status of ["dismissed", "actioned"] as const) {
+      const room = RETENTION_BATCH - settled.length;
+      if (room <= 0) break;
+      const rows = await ctx.db
+        .query("reports")
+        .withIndex("by_status_resolved", (q) =>
+          // `gte(0)` keeps a settled report with no `resolved_at` (none
+          // exists; settling always stamps it) out of the range, rather than
+          // treating "never stamped" as "long ago".
+          q.eq("status", status).gte("resolved_at", 0).lte("resolved_at", cutoff),
+        )
+        .take(room);
+      settled.push(...rows);
+    }
+
+    for (const report of settled) {
+      await releaseHolds(ctx, report._id);
+      // `releaseHolds` reads ten at a time; a report holds at most two (the
+      // file and its thumbnail), so one pass is all of them. Checked anyway,
+      // so a report is never deleted from under a hold.
+      const left = await ctx.db
+        .query("report_holds")
+        .withIndex("by_report", (q) => q.eq("report_id", report._id))
+        .first();
+      if (left) continue;
+      await ctx.db.delete(report._id);
+    }
+
+    const more = settled.length === RETENTION_BATCH;
+    if (settled.length > 0) {
+      console.log(`moderation:sweepReports round ${n}: deleted ${settled.length}${more ? ", more to go" : ""}`);
+    }
+    if (more) {
+      if (n + 1 >= RETENTION_MAX_ROUNDS) {
+        console.error(`moderation:sweepReports stopped after ${n + 1} rounds; tomorrow's run continues`);
+      } else {
+        await ctx.scheduler.runAfter(0, internal.moderation.sweepReports, { round: n + 1 });
+      }
+    }
+    return { deleted: settled.length, more };
+  },
+});
+
+/** `hidden_content` rows looked at per run of `sweepHidden`. */
+const HIDDEN_BATCH = 100;
+/** Runs one week's sweep may chain: 20,000 rows. */
+const HIDDEN_MAX_ROUNDS = 200;
+
+/**
+ * Drops `hidden_content` rows whose target no longer exists: a message that
+ * was deleted, a problem photo or face whose file is gone. Nothing would ever
+ * show them again, and the thread reads (`by_user_conversation`) would keep
+ * paying for them.
+ *
+ * `target_id` is a string and has no index of its own, so this walks the
+ * table a page at a time — a hundred rows and a hundred point reads per run,
+ * chaining by cursor. The table is one row per thing one person reported, so
+ * a weekly walk of all of it is cheap. A held file still exists, so the hide
+ * for a reported photo stays while the report does.
+ */
+export const sweepHidden = internalMutation({
+  args: { cursor: v.optional(v.union(v.string(), v.null())), round: v.optional(v.number()) },
+  returns: v.object({ checked: v.number(), deleted: v.number(), more: v.boolean() }),
+  handler: async (ctx, { cursor, round }) => {
+    const n = round ?? 0;
+    const page = await ctx.db
+      .query("hidden_content")
+      .paginate({ numItems: HIDDEN_BATCH, cursor: cursor ?? null });
+    let deleted = 0;
+    for (const row of page.page) {
+      let exists: boolean;
+      if (row.kind === "message") {
+        const id = ctx.db.normalizeId("messages", row.target_id);
+        exists = id !== null && (await ctx.db.get(id)) !== null;
+      } else {
+        const id = ctx.db.system.normalizeId("_storage", row.target_id);
+        exists = id !== null && (await ctx.db.system.get(id)) !== null;
+      }
+      if (!exists) {
+        await ctx.db.delete(row._id);
+        deleted += 1;
+      }
+    }
+    const more = !page.isDone;
+    if (deleted > 0) console.log(`moderation:sweepHidden round ${n}: deleted ${deleted} of ${page.page.length}`);
+    if (more) {
+      if (n + 1 >= HIDDEN_MAX_ROUNDS) {
+        console.error(`moderation:sweepHidden stopped after ${n + 1} rounds`);
+      } else {
+        await ctx.scheduler.runAfter(0, internal.moderation.sweepHidden, {
+          cursor: page.continueCursor,
+          round: n + 1,
+        });
+      }
+    }
+    return { checked: page.page.length, deleted, more };
+  },
+});

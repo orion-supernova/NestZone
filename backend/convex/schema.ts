@@ -1858,6 +1858,19 @@ export default defineSchema({
     .index("by_storage", ["storage_id"])
     .index("by_report", ["report_id"]),
 
+  // Who a stored file belongs to (lib/files.ts). Written on a file's first
+  // attach — the house it was attached in, or for an avatar the person — and
+  // every later attach must match, so a storage id read off a signed URL
+  // cannot be attached, and then deleted, by another house. Not a reference:
+  // `storage:reapReport` ignores it, and it goes with its file.
+  file_claims: defineTable({
+    storage_id: v.id("_storage"),
+    home_id: v.optional(v.id("homes")),
+    user_id: v.id("users"),
+    kind: v.string(),
+    created: v.number(),
+  }).index("by_storage", ["storage_id"]),
+
   // What one person has reported and so no longer sees. Per person: the rest
   // of the house sees it until a moderator decides. `conversation_id` is set
   // for a message so a thread's read needs only that thread's hides.
