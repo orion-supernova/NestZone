@@ -670,8 +670,8 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
 #                          sweep ask RevenueCat with it. Unset: refresh throws
 #                          a clear error, the sweep does nothing.
 #   PRO_ENFORCE=on         the server refuses Pro writes (PRO_REQUIRED) and
-#                          drops finance/calendar notifications for a house
-#                          without Pro. Unset: every gate is a no-op. Turn it
+#                          drops finance/calendar/issues notifications for a
+#                          house without Pro. Unset: every gate is a no-op. Turn it
 #                          on only per DEPRECATIONS.md ("Switches that narrow").
 #   PRO_SANDBOX=on         sandbox purchases count (TestFlight, App Review);
 #                          off after, like JAR_ENVIRONMENTS.
@@ -858,9 +858,27 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   the household's data:** queries never refuse, removes stay open, and
   `tasks:setArchived(false)` always works. Shopping categories are coerced to
   the default, never refused, because old builds send one with every item.
-  `push.notifyHome` drops `finance` and `calendar` for a free house, push and
-  feed row both, which is what silences the reminder sweeps. A new Pro gate
-  is one `requirePro` call after the membership check, plus a `ProFeature`.
+  `push.notifyHome` drops `finance`, `calendar` and `issues` for a free
+  house, push and feed row both, which is what silences the reminder sweeps
+  (`finance:sweepReminders`, `issues:sweepStale`). A new Pro gate is one
+  `requirePro` call after the membership check, plus a `ProFeature`.
+  The `feature` strings a refusal carries: `calendar`, `finance`,
+  `shoppingCategories`, `customMovieLists`, `archiveNow`,
+  `eventFromElsewhere`, `expenseFromElsewhere`, `issues`, `multipleHomes`,
+  `matureContent`. **House problems are Plus** (`issues`): every write
+  refuses for a free house (create, update, setStatus, assign, toggleMeToo,
+  comment, uploadUrl, attachPhotos, makeChore, scheduleVisit, addParts);
+  `remove`, `removeComment`, `removePhoto` and every read stay open, and
+  `noteChoreDone` never refuses, because ticking a chore is free.
+  `issues:uploadUrl` takes an optional `homeId`; without one the caller needs
+  any Plus home. **A second home is Plus, and the person's**
+  (`multipleHomes`): `homes:create` and `homes:join` refuse a caller already
+  in a home unless `userHasPro` (their own entitlement or the comp list) or,
+  for a join, the house joined is Plus already. Nobody is taken out of a home
+  they are in, and leaving is free. **Mature titles are Plus**
+  (`matureContent`): `catalog:discover` turns `includeAdult` off for a free
+  caller (judged by its optional `homeId`, or by any of the caller's homes and
+  their own Plus), never refused, because old builds send it on every browse.
 - **Leaving, being removed and deleting an account are one code path**
   (`departHome`, lib/membership.ts). `users:deleteAccount` runs in bounded,
   self-rescheduling steps (`deleteAccountStep`): sign-in rows and devices,

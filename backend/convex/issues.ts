@@ -35,7 +35,7 @@ import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireMembers } from "./lib/relations";
 import { outstandingNames } from "./lib/pending";
-import { proAllows, requirePro } from "./lib/pro";
+import { anyHomeAllows, proAllows, proEnforced, proRequired, requirePro } from "./lib/pro";
 import { noteGrowth } from "./lib/companion";
 
 // ---------------------------------------------------------------------------
@@ -729,6 +729,9 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, args.homeId);
+    // House problems are Plus (lib/pro.ts). Reading, deleting and ticking a
+    // linked chore stay free; filing and working one are not.
+    await requirePro(ctx, home, "issues");
 
     const title = clean(args.title, 200);
     if (!title) throw new Error("Say what is wrong");
@@ -817,7 +820,8 @@ export const update = mutation({
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
-    await requireDocHome(ctx, issue, "Problem");
+    const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
 
     const title = fields.title === undefined ? issue.title : clean(fields.title, 200);
     if (fields.title !== undefined && !title) throw new Error("Say what is wrong");
@@ -904,7 +908,8 @@ export const setStatus = mutation({
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
-    await requireDocHome(ctx, issue, "Problem");
+    const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
     if (issue.status === status) return await ctx.db.get(id);
 
     const now = Date.now();
@@ -983,6 +988,7 @@ export const assign = mutation({
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
     const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
     if (issue.assigned_to === userId) return await ctx.db.get(id);
     if (userId) await requireMembers(ctx, home, [userId], "Problem");
 
@@ -1028,7 +1034,8 @@ export const toggleMeToo = mutation({
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
-    await requireDocHome(ctx, issue, "Problem");
+    const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
 
     const current = issue.me_too ?? [];
     const has = current.some((u) => u === user._id);
@@ -1097,7 +1104,8 @@ export const comment = mutation({
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
-    await requireDocHome(ctx, issue, "Problem");
+    const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
 
     const text = clean(body, MAX_COMMENT);
     if (!text) throw new Error("Write something first");
@@ -1148,9 +1156,20 @@ export const removeComment = mutation({
  * out of the transaction that records it.
  */
 export const uploadUrl = mutation({
-  args: {},
-  handler: async (ctx) => {
-    await requireUser(ctx);
+  // `homeId` is optional because builds before Plus send no arguments; with
+  // it, the gate is that house's. Without it, the caller must belong to at
+  // least one Plus house. A URL is only good for `attachPhotos` / `create`,
+  // which refuse a free house anyway, so this only spares an upload that
+  // could never be filed.
+  args: { homeId: v.optional(v.id("homes")) },
+  handler: async (ctx, { homeId }) => {
+    const user = await requireUser(ctx);
+    if (homeId) {
+      const home = await requireHomeMember(ctx, homeId);
+      await requirePro(ctx, home, "issues");
+    } else if (proEnforced() && !(await anyHomeAllows(ctx, user))) {
+      throw proRequired("issues");
+    }
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -1166,7 +1185,8 @@ export const attachPhotos = mutation({
     const user = await requireUser(ctx);
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
-    await requireDocHome(ctx, issue, "Problem");
+    const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
     if (storageIds.length === 0) return { photos: issue.photos?.length ?? 0 };
 
     const existing = issue.photos ?? [];
@@ -1276,6 +1296,7 @@ export const makeChore = mutation({
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
     const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
 
     // Already has one that still exists. Two chores for one fault is how a
     // household ends up arguing about which of them was done.
@@ -1374,8 +1395,9 @@ export const scheduleVisit = mutation({
     const issue = await ctx.db.get(args.id);
     if (!issue) throw new Error("Problem not found");
     const home = await requireDocHome(ctx, issue, "Problem");
-    // Booking a visit writes a calendar event, which is Household Pro.
-    await requirePro(ctx, home, "eventFromElsewhere");
+    // House problems are Plus, and so is the calendar event this writes;
+    // one gate, named for the screen the person is on.
+    await requirePro(ctx, home, "issues");
     if (args.endsAt < args.startsAt) throw new Error("The visit ends before it starts");
 
     const title =
@@ -1496,6 +1518,7 @@ export const addParts = mutation({
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
     const home = await requireDocHome(ctx, issue, "Problem");
+    await requirePro(ctx, home, "issues");
     // Shopping categories are Household Pro: a free house's parts go under
     // this function's own default, never refused (see shopping.ts).
     const pickedCategory = (await proAllows(ctx, home)) ? category : undefined;

@@ -34,7 +34,10 @@ export type ProFeature =
   | "customMovieLists"
   | "archiveNow"
   | "eventFromElsewhere"
-  | "expenseFromElsewhere";
+  | "expenseFromElsewhere"
+  | "issues"
+  | "multipleHomes"
+  | "matureContent";
 
 export type ProStatus = {
   pro: boolean;
@@ -134,6 +137,42 @@ function describe(row: Doc<"pro_entitlements">): ProStatus {
     expiresAt: row.expires_at,
     willRenew: row.will_renew,
   };
+}
+
+/**
+ * Whether this one person carries Plus themselves: their own active
+ * entitlement, or the comp list. Not "is any house of theirs Plus" — that is
+ * `homeProStatus`. For what Plus grants a person rather than a house (more
+ * than one home).
+ */
+export async function userHasPro(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<"users">,
+): Promise<boolean> {
+  if (compedUsers().has(userId)) return true;
+  const row = await entitlementOf(ctx, userId);
+  return row !== null && entitlementActive(row, Date.now());
+}
+
+/**
+ * Whether a Plus feature that names no house may be used by this person: true
+ * when enforcement is off, when they carry Plus themselves, or when any home
+ * they belong to is Plus. For the few functions that take no `homeId` (old
+ * builds call them without one). A person has a handful of homes, so this is
+ * a handful of point reads.
+ */
+export async function anyHomeAllows(
+  ctx: QueryCtx | MutationCtx,
+  user: Doc<"users">,
+): Promise<boolean> {
+  if (!proEnforced()) return true;
+  if (await userHasPro(ctx, user._id)) return true;
+  for (const id of user.home_id ?? []) {
+    const home = await ctx.db.get(id);
+    if (!home || !(home.members ?? []).includes(user._id)) continue;
+    if ((await homeProStatus(ctx, home)).pro) return true;
+  }
+  return false;
 }
 
 async function loadHome(
