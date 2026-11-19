@@ -27,6 +27,8 @@ backend/convex/           Convex functions (queries, mutations, actions)
 backend/changelog.json    the app's release notes — see "Shipping a change"
 backend/DEPRECATIONS.md   what may be removed from the backend, and when
 Docs/Companion/           Nestie's plan, prototypes, holiday sources — start at HANDOFF.md
+Docs/index.html           every doc in one place (local, never published); rebuild with python3 Docs/build-hub.py
+Docs/Launch/              the App Store launch plan: NestZone Plus, Nestie on, review readiness
 deploy.sh                 the release: backend, changelog, version, merge to stage
 XCODE_CLOUD.md            what builds the app once stage is pushed, and its setup
 ci_scripts/               Xcode Cloud's post-clone hook: trusts this app's macros
