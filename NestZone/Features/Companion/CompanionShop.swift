@@ -1392,11 +1392,12 @@ struct SparkleStoreView: View {
         }
     }
 
-    /// What a pack without a store price says. Only the Debug test store has
-    /// none ("Free test"); a release build never shows a price it was not given.
+    /// What a pack without a store price says. Only the explicit test store
+    /// (`-sparkleStore test`) calls it a test; anywhere else a pack the store
+    /// did not price is not for sale, and never reads as free.
     private static var noPrice: String {
         #if DEBUG
-        String(localized: L10n.storeTestPrice)
+        SparkleStoreClient.isTestStore ? String(localized: L10n.storeTestPrice) : "–"
         #else
         "–"
         #endif

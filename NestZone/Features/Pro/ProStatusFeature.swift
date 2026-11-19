@@ -91,7 +91,9 @@ public struct ProStatusFeature: Sendable {
                 )
 
             case let .statusUpdated(payload):
-                let next = ProStatus(payload, now: now)
+                var next = ProStatus(payload, now: now)
+                // `-forceFreeHouse 1` (Debug/MEASURE): locks for screenshots.
+                if StoreDemo.forcesFreeHouse { next.isPro = false; next.enforced = true }
                 let wasLoaded = state.status.isLoaded
                 let was = state.status.isPro
                 guard next != state.status else { return .none }
