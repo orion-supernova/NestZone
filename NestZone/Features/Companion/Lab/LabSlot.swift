@@ -1,14 +1,12 @@
+#if DEBUG
 import ComposableArchitecture
 import Foundation
 
-/// Where the card keeps what the Lab tells it, and the only thing of the Lab
-/// that a Release build carries: an empty slot with nothing behind it.
-///
-/// On a Debug build it holds the Lab's settings (`CompanionLab`, kept in its
-/// own file on this phone); everywhere else every question has the answer
-/// "nothing is pretended", so the reducer reads it without a conditional.
+/// Where the card keeps what the Lab tells it: the Lab's settings
+/// (`CompanionLab`, kept in its own file on this phone). Debug builds only; a
+/// Release build has no Lab, and `CompanionFeature.State` answers "nothing is
+/// pretended" on its own.
 public struct LabSlot: Equatable {
-    #if DEBUG
     @Shared var lab: CompanionLab
 
     init(homeID: HomeID) {
@@ -31,14 +29,5 @@ public struct LabSlot: Equatable {
         guard lab.nextBuy != nil else { return }
         $lab.withLock { $0.nextBuy = nil }
     }
-    #else
-    init(homeID: HomeID) {}
-
-    var look: LabLook { LabLook() }
-    var isPretend: Bool { false }
-    var members: Int? { nil }
-
-    func wake() {}
-    func buyAnswered() {}
-    #endif
 }
+#endif

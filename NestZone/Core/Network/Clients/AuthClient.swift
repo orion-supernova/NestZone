@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import ConvexMobile
 import Foundation
 
 /// Sign-in, sign-out, and the signed-in profile.
@@ -34,6 +35,15 @@ public struct AuthClient: Sendable {
     /// left waiting on a session that is not coming.
     public var endOptimisticLaunch: @Sendable () -> Void = {}
     public var updateDisplayName: @Sendable (String) async throws -> Void
+    /// Deletes the signed-in account on the server (`users:deleteAccount`), then
+    /// ends the session on this device. The code is the fresh `authorizationCode`
+    /// of a Sign in with Apple the person just did, which lets the server revoke
+    /// the Apple token; without one the account is still deleted.
+    ///
+    /// There is no push token to unregister first: the server deletes the
+    /// account's devices itself, and after that there is no identity left to
+    /// authorise the mutation with.
+    public var deleteAccount: @Sendable (_ authorizationCode: String?) async throws -> Void
 }
 
 /// What SwiftUI's `SignInWithAppleButton` hands back, reduced to the two things
@@ -172,6 +182,18 @@ extension AuthClient: DependencyKey {
                 // Returns the patched document, so it cannot use the SDK's
                 // no-result overload.
                 try await connection.mutate("users:updateProfile", args: ["name": trimmed])
+            },
+            deleteAccount: { code in
+                // Omitted rather than null when there is no code: the server's
+                // argument is optional, and a missing field is what says so.
+                let args: [String: ConvexEncodable?]? = code.map { ["authorizationCode": $0] }
+                let _: ConvexConnection.Discarded? = try await connection.act(
+                    "users:deleteAccount", args: args
+                )
+                // The account is gone, so the session is too. Same ending as
+                // a sign-out, minus the unregister that can no longer be made.
+                await connection.client.logout()
+                connection.gate.reject()
             }
         )
     }()

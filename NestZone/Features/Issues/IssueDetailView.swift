@@ -850,7 +850,7 @@ private struct TimelineRow: View {
                     if let author {
                         Avatar(initials: author.initials, seed: author.id.rawValue, size: 18)
                     }
-                    Text(authorName ?? String(localized: L10n.issuesTheApp))
+                    Text(authorName ?? String(localized: L10n.appName))
                         .font(.caption.weight(.semibold))
                     Text(verbatim: "·")
                         .font(.caption2)

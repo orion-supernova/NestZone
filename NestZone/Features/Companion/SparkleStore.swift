@@ -45,7 +45,13 @@ public enum PurchaseOutcome: Equatable, Sendable {
 }
 
 extension SparkleStoreClient: DependencyKey {
-    public static var liveValue: SparkleStoreClient { isTestStore ? .test : SparkleStoreKit.client }
+    public static var liveValue: SparkleStoreClient {
+        #if DEBUG
+        isTestStore ? .test : SparkleStoreKit.client
+        #else
+        SparkleStoreKit.client
+        #endif
+    }
 
     /// Whether purchases are fake: Debug builds launched with
     /// `-sparkleStore test`. The test store's packs say so in the shop.
@@ -59,25 +65,26 @@ extension SparkleStoreClient: DependencyKey {
 
     public static let testValue = SparkleStoreClient()
 
+    #if DEBUG
     /// Lists the four packs unpriced, charges nothing, and hands the Sparkles
-    /// over after a moment.
+    /// over after a moment. Debug builds only: a Release build carries no fake
+    /// store.
     static let test = SparkleStoreClient(
         packs: { SparklePack.shelf },
         purchase: { id, _, _ in
             try await Task.sleep(for: .milliseconds(600))
-            #if DEBUG
             // `-sparkleOutcome ask` or `fail`, to see the store's other answers.
             switch UserDefaults.standard.string(forKey: "sparkleOutcome") {
             case "ask": return .pending
             case "fail": throw CancellationError()
             default: break
             }
-            #endif
             guard let sparkles = SparklePack.shelf.first(where: { $0.id == id })?.sparkles else { return .cancelled }
             return .preview(sparkles)
         },
         credits: { _, _ in AsyncStream { $0.finish() } }
     )
+    #endif
 }
 
 extension DependencyValues {

@@ -180,14 +180,6 @@ struct CompanionCard: View {
                     }
                     .padding(10)
                 }
-                #if DEBUG
-                PointsStepper(store: store)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                    .padding(10)
-                LabChip(store: store)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .padding(10)
-                #endif
             }
             .clipShape(.rect(topLeadingRadius: Metrics.cardRadius, topTrailingRadius: Metrics.cardRadius, style: .continuous))
 
@@ -226,34 +218,8 @@ struct CompanionCard: View {
             action(L10n.companionDecorate, "paintbrush.pointed.fill") { store.send(.decorateTapped) }
             action(L10n.companionAlbum, "book.closed.fill") { store.send(.albumTapped) }
             action(L10n.companionHolidays, "calendar") { store.send(.holidaysTapped) }
-            #if DEBUG
-            labAction
-            #endif
         }
     }
-
-    #if DEBUG
-    /// The Lab's tile: Debug builds only, so it is a plain-English one.
-    private var labAction: some View {
-        let listed = typeSize.isAccessibilitySize
-        return Button { store.send(.labTapped) } label: {
-            (listed ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 4))) {
-                Image(systemName: store.isPretend ? "theatermasks.fill" : "flask.fill")
-                    .font(.body.weight(.semibold))
-                    .frame(width: listed ? actionIcon : nil, height: actionIcon)
-                Text(verbatim: "Lab")
-                    .font(listed ? .body.weight(.semibold) : .caption.weight(.semibold))
-                    .oneLineUnlessAccessibility()
-                if listed { Spacer(minLength: 0) }
-            }
-            .foregroundStyle(theme.accent)
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: listed ? .leading : .center)
-            .contentShape(.rect)
-        }
-        .buttonStyle(.pressable)
-        .accessibilityIdentifier("CompanionLab")
-    }
-    #endif
 
     private func action(_ title: LocalizedStringResource, _ symbol: String, _ perform: @escaping () -> Void) -> some View {
         let listed = typeSize.isAccessibilitySize
@@ -289,7 +255,6 @@ struct CompanionCard: View {
         }
         .padding(8)
         .glassCard()
-        .labBadge(store)
     }
 
     // MARK: - Nothing growing yet
@@ -323,7 +288,6 @@ struct CompanionCard: View {
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
-        .labBadge(store)
     }
 
     /// The last delivery could not be read, so there is no honest card to
@@ -341,7 +305,6 @@ struct CompanionCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
         .accessibilityIdentifier("CompanionUnreadable")
-        .labBadge(store)
     }
 }
 
@@ -699,41 +662,6 @@ private struct StripAction: View {
         }
     }
 }
-
-#if DEBUG
-/// Debug builds, in the pretend house only: points off and on right under the
-/// tree, to watch it shrink and grow through its stages without a sheet in the
-/// way. A stage is about eleven points; this steps four at a time. They are
-/// the pretend server's points, so the real house has no stepper at all.
-private struct PointsStepper: View {
-    let store: StoreOf<CompanionFeature>
-
-    var body: some View {
-        if store.isPretend {
-            HStack(spacing: 2) {
-                Button { store.send(.lab(.command(.addPoints(-4)))) } label: {
-                    Image(systemName: "minus").frame(width: 30, height: 26)
-                }
-                .accessibilityLabel(Text(verbatim: "4 fewer points"))
-                Text(verbatim: "\(Int(store.points.rounded())) / \(Int(CompanionMath.graduateAt))")
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-                    .animation(Motion.spring, value: Int(store.points.rounded()))
-                Button { store.send(.lab(.command(.addPoints(4)))) } label: {
-                    Image(systemName: "plus").frame(width: 30, height: 26)
-                }
-                .accessibilityLabel(Text(verbatim: "4 more points"))
-            }
-            .font(.caption.weight(.semibold))
-            .buttonStyle(.plain)
-            .padding(.horizontal, 4)
-            .glassControl()
-            .dynamicTypeSize(...DynamicTypeSize.xLarge)
-            .accessibilityIdentifier("CompanionPoints")
-        }
-    }
-}
-#endif
 
 /// A little drop (or heart) rising out of the Water button with each tap and
 /// fading as it goes. One per tap; never under Reduce Motion.

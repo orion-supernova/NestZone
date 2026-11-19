@@ -619,13 +619,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welcome to NestZone"
+            "value": "Welcome to %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone'a Hoş Geldiniz"
+            "value": "Hoş geldin, burası %@"
           }
         }
       }
@@ -20504,23 +20504,6 @@
         }
       }
     },
-    "issues_the_app": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NestZone"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NestZone"
-          }
-        }
-      }
-    },
     "issues_timeline_title": {
       "extractionState": "manual",
       "localizations": {
@@ -28389,13 +28372,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notifications are off for NestZone. Turn them on in Settings."
+            "value": "Notifications are off for %@. Turn them on in Settings."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone için bildirimler kapalı. Ayarlar'dan aç."
+            "value": "%@ için bildirimler kapalı. Ayarlar'dan aç."
           }
         }
       }
@@ -28559,13 +28542,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple rejected every device registered to this account, so they have been removed. Reopen NestZone to register this one again."
+            "value": "Apple rejected every device registered to this account, so they have been removed. Reopen %@ to register this one again."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple bu hesaba kayıtlı tüm cihazları reddetti, bu yüzden kayıtları kaldırıldı. Bu cihazı yeniden kaydetmek için NestZone’u tekrar açın."
+            "value": "Apple bu hesaba kayıtlı tüm cihazları reddetti, o yüzden kayıtları kaldırıldı. Bu cihazı yeniden kaydetmek için %@ uygulamasını tekrar aç."
           }
         }
       }
@@ -28576,13 +28559,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No device is registered to receive it. NestZone will try again next time you open the app."
+            "value": "No device is registered to receive it. %@ will try again next time you open the app."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bunu alacak kayıtlı bir cihaz yok. NestZone, uygulamayı bir sonraki açışınızda yeniden deneyecek."
+            "value": "Bunu alacak kayıtlı bir cihaz yok. %@ uygulamayı bir dahaki açışında yeniden deneyecek."
           }
         }
       }
@@ -35562,6 +35545,227 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$@ lazım, %1$lld var"
+          }
+        }
+      }
+    },
+    "app_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone"
+          }
+        }
+      }
+    },
+    "pro_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus"
+          }
+        }
+      }
+    },
+    "pro_full_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Plus"
+          }
+        }
+      }
+    },
+    "settings_delete_account_button": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete account"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hesabı sil"
+          }
+        }
+      }
+    },
+    "settings_delete_account_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete your account?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hesabın silinsin mi?"
+          }
+        }
+      }
+    },
+    "settings_delete_account_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile and your place in every house are deleted for good. A house you're the last member of is deleted with everything in it. Things you wrote for the house stay for the others. Apple will ask you to confirm next."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profilin ve her evdeki yerin kalıcı olarak silinir. Son üyesi olduğun ev, içindeki her şeyle birlikte silinir. Ev için yazdıkların diğerleri için kalır. Sonra Apple senden onay isteyecek."
+          }
+        }
+      }
+    },
+    "settings_delete_account_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with Apple"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple ile devam et"
+          }
+        }
+      }
+    },
+    "settings_remove_member_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %@?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ evden çıkarılsın mı?"
+          }
+        }
+      }
+    },
+    "settings_remove_member_button": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evden çıkar"
+          }
+        }
+      }
+    },
+    "settings_remove_member_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will lose access to this house. What they wrote for the house stays."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ artık bu eve giremeyecek. Ev için yazdıkları kalır."
+          }
+        }
+      }
+    },
+    "settings_member_options": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Options for %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ için seçenekler"
+          }
+        }
+      }
+    },
+    "settings_privacy_policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik Politikası"
+          }
+        }
+      }
+    },
+    "settings_terms_of_use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım Koşulları"
           }
         }
       }
