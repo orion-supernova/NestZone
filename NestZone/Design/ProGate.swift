@@ -197,6 +197,12 @@ struct ProPreview: View {
             ["film.stack.fill", "popcorn.fill", "star.fill"]
         case .archiveNow:
             ["archivebox.fill", "checkmark.circle.fill", "tray.full.fill"]
+        case .issues:
+            ["wrench.adjustable.fill", "exclamationmark.triangle.fill", "checkmark.seal.fill"]
+        case .multipleHomes:
+            ["house.fill", "person.2.fill", "key.fill"]
+        case .matureContent:
+            ["film.fill", "eye.trianglebadge.exclamationmark", "popcorn.fill"]
         case nil:
             ["calendar", "creditcard.fill", "cart.fill"]
         }

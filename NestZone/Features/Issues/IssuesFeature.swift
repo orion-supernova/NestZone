@@ -395,6 +395,10 @@ public struct IssuesFeature: Sendable {
     @Dependency(\.issues) var issuesClient
     @Dependency(\.homes) var homes
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.paywall) var paywall
+    /// Problems are Plus: a house without it reads what is there, and the
+    /// controls that write ask for the paywall instead. Deleting stays.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -402,6 +406,9 @@ public struct IssuesFeature: Sendable {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.issues) }
+            }
             switch action {
             case .task:
                 let homeID = state.homeID
@@ -717,6 +724,17 @@ public struct IssuesFeature: Sendable {
             try await issuesClient.remove(issue.id)
         } catch: { error, send in
             await send(.deleteCommitFailed(issue, AppError(error)))
+        }
+    }
+}
+
+extension IssuesFeature {
+    /// The actions that create or change a problem, which a house without
+    /// Plus is asked to upgrade for.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .addTapped, .reportInRoomTapped, .meTooTapped, .advanceTapped: true
+        default: false
         }
     }
 }

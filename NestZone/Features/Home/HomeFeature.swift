@@ -506,6 +506,17 @@ public struct HomeFeature: Sendable {
         .cancellable(id: CancelID.events, cancelInFlight: true)
     }
 
+    private func issuesEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await board in issuesClient.board(homeID) {
+                await send(.issuesUpdated(board.issues))
+            }
+        } catch: { _, send in
+            await send(.partFailed(.issues))
+        }
+        .cancellable(id: CancelID.issues, cancelInFlight: true)
+    }
+
     private func billsEffect(_ homeID: HomeID) -> Effect<Action> {
         .run { send in
             for try await bills in financeClient.bills(homeID) {
@@ -559,28 +570,29 @@ public struct HomeFeature: Sendable {
                     // away, which is also what it does when all is well.
                     state.pro.isPro ? billsEffect(homeID) : .send(.partFailed(.bills)),
 
-                    .run { send in
-                        for try await board in issuesClient.board(homeID) {
-                            await send(.issuesUpdated(board.issues))
-                        }
-                    } catch: { _, send in
-                        await send(.partFailed(.issues))
-                    }
-                    .cancellable(id: CancelID.issues, cancelInFlight: true),
+                    // Problems are Plus as well: no read for a house without it.
+                    state.pro.isPro ? issuesEffect(homeID) : .send(.partFailed(.issues)),
 
                     .send(.askForNotificationsIfNeeded)
                 )
 
             case let .proChanged(isPro):
                 let homeID = state.homeID
-                if isPro { return .merge(eventsEffect(homeID), billsEffect(homeID)) }
-                // Let go of both reads and what they brought: the calendar and
-                // the bills are read-only history now, and Today does not draw
-                // them.
+                if isPro {
+                    return .merge(eventsEffect(homeID), billsEffect(homeID), issuesEffect(homeID))
+                }
+                // Let go of the reads and what they brought: the calendar, the
+                // bills and the problems are read-only history now, and Today
+                // does not draw them.
                 state.upcoming = []
                 state.bills = []
-                state.loaded.formUnion([.upcoming, .bills])
-                return .merge(.cancel(id: CancelID.events), .cancel(id: CancelID.bills))
+                state.issues = []
+                state.loaded.formUnion([.upcoming, .bills, .issues])
+                return .merge(
+                    .cancel(id: CancelID.events),
+                    .cancel(id: CancelID.bills),
+                    .cancel(id: CancelID.issues)
+                )
 
             // The one place a newcomer is asked about notifications. Everyone
             // lands here — creating a home and joining one both end on this

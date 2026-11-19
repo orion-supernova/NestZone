@@ -269,7 +269,7 @@ public struct MovieListFeature: Sendable {
                     return .cancel(id: CancelID.search)
                 }
                 state.isSearching = true
-                return .run { [includeAdult = state.includeAdultTitles] send in
+                return .run { [includeAdult = state.includeAdultTitles && pro.isPro] send in
                     // Debounce: the old search fired a request per keystroke.
                     try await clock.sleep(for: .milliseconds(300))
                     let movies = try await catalog.discover(

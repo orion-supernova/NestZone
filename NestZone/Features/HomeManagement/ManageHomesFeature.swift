@@ -72,6 +72,11 @@ public struct ManageHomesFeature: Sendable {
     }
 
     @Dependency(\.homes) var homesClient
+    @Dependency(\.paywall) var paywall
+    /// A second home is Plus. Joining is not blocked here: the server also
+    /// allows it when the house being joined has Plus, so it decides, and its
+    /// refusal opens the paywall by itself.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -129,6 +134,9 @@ public struct ManageHomesFeature: Sendable {
                 return .none
 
             case .createTapped:
+                guard pro.allowsAnotherHome || state.homes.isEmpty else {
+                    return .run { _ in paywall.request(.multipleHomes) }
+                }
                 state.destination = .create(CreateHomeFeature.State())
                 return .none
 

@@ -35940,6 +35940,60 @@
         }
       }
     },
+    "paywall_title_issues": {
+      "comment": "Headline of the paywall and of the locked Problems screen, shown to a house without Plus.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problems are part of Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdeki sorunlar Plus'a dahil"
+          }
+        }
+      }
+    },
+    "paywall_title_multiple_homes": {
+      "comment": "Headline of the paywall when a person who is already in a home tries to create another one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than one home is part of Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birden fazla ev Plus'a dahil"
+          }
+        }
+      }
+    },
+    "paywall_title_mature_content": {
+      "comment": "Headline of the paywall when a house without Plus turns on adult titles for movies in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mature titles are part of Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yetişkin içerikler Plus'a dahil"
+          }
+        }
+      }
+    },
     "paywall_title_general": {
       "extractionState": "manual",
       "localizations": {

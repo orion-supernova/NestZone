@@ -18,6 +18,13 @@ public enum ProFeature: String, CaseIterable, Identifiable, Sendable {
     /// Logging money from somewhere other than Money: Add anything, a problem's
     /// cost.
     case expenseFromElsewhere
+    /// House problems, as a whole: reporting, moving along, commenting, and
+    /// everything a problem's plan books (a visit, parts, a chore).
+    case issues
+    /// A second home, created or joined. Someone already in two keep them.
+    case multipleHomes
+    /// Adult titles in the movie catalogue, in search and in the game.
+    case matureContent
 
     public var id: String { rawValue }
 
@@ -34,6 +41,9 @@ public enum ProFeature: String, CaseIterable, Identifiable, Sendable {
         case .shoppingCategories: "cart.fill"
         case .customMovieLists: "film.stack.fill"
         case .archiveNow: "archivebox.fill"
+        case .issues: "wrench.adjustable.fill"
+        case .multipleHomes: "house.fill"
+        case .matureContent: "eye.trianglebadge.exclamationmark"
         }
     }
 
@@ -42,6 +52,7 @@ public enum ProFeature: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .calendar: .calendar
         case .finance: .finance
+        case .issues: .maintenance
         default: nil
         }
     }

@@ -92,7 +92,7 @@ struct CaptureView: View {
                     ) {
                         store.send(.kindTapped(kind), animation: Motion.spring)
                     }
-                    // Event and Expense are Plus; the lock is the chip's own
+                    // Event, Expense and Problem are Plus; the lock is the chip's own
                     // and a tap opens the paywall (the reducer asks for it).
                     .overlay(alignment: .topTrailing) {
                         if kind.proFeature != nil, !store.pro.isPro {
@@ -333,7 +333,8 @@ extension CaptureKind {
         switch self {
         case .event: .eventFromElsewhere
         case .expense: .expenseFromElsewhere
-        case .shopping, .chore, .note, .problem: nil
+        case .problem: .issues
+        case .shopping, .chore, .note: nil
         }
     }
 }

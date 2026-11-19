@@ -227,6 +227,10 @@ public struct IssueComposerFeature: Sendable {
 
     @Dependency(\.issues) var issuesClient
     @Dependency(\.dismiss) var dismiss
+    @Dependency(\.paywall) var paywall
+    /// Problems are Plus. A free house cannot reach this sheet from the
+    /// screens; this is the net under them.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -234,6 +238,9 @@ public struct IssueComposerFeature: Sendable {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, case .submitTapped = action {
+                return .run { _ in paywall.request(.issues) }
+            }
             switch action {
             case .submitTapped:
                 guard state.canSubmit else {

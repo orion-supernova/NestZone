@@ -11,6 +11,9 @@ extension ProFeature {
         case .archiveNow: L10n.paywallTitleArchiveNow
         case .eventFromElsewhere: L10n.paywallTitleEventFromElsewhere
         case .expenseFromElsewhere: L10n.paywallTitleExpenseFromElsewhere
+        case .issues: L10n.paywallTitleIssues
+        case .multipleHomes: L10n.paywallTitleMultipleHomes
+        case .matureContent: L10n.paywallTitleMatureContent
         }
     }
 }

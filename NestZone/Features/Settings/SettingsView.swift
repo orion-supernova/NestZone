@@ -504,11 +504,14 @@ public struct SettingsView: View {
 
     private var preferencesSection: some View {
         Section {
-            Toggle(isOn: $store.includeAdultTitles) {
+            // Plus: a free house sees it off and locked, and the stored
+            // choice waits untouched for an upgrade.
+            Toggle(isOn: store.pro.isPro ? $store.includeAdultTitles : .constant(false)) {
                 Label { Text(L10n.settingsAdultTitlesTitle) } icon: {
                     Image(systemName: "eye.trianglebadge.exclamationmark")
                 }
             }
+            .proLocked(.matureContent)
         } header: {
             Text(L10n.settingsGeneralTitle)
         } footer: {

@@ -43,7 +43,10 @@ public struct ShoppingView: View {
             eventSections
             partSections
             mealSections
-            if pro.isPro { viewModeToggle }
+            // Shown to every house; a free one sees it locked and the paywall
+            // on a tap, with the list itself staying flat.
+            viewModeToggle
+                .proLocked(.shoppingCategories)
             if store.isGrouped, pro.isPro {
                 pendingSections
             } else {
@@ -455,23 +458,22 @@ public struct ShoppingView: View {
     /// scrolling back up or reopening a sheet.
     private var composer: some View {
         HStack(spacing: 10) {
-            if pro.isPro {
-                Menu {
-                    Picker(selection: $store.draftCategory) {
-                        ForEach(ShoppingItem.Category.allCases, id: \.self) { category in
-                            Label { Text(category.title) } icon: {
-                                Image(systemName: category.symbol)
-                            }
-                            .tag(category)
+            Menu {
+                Picker(selection: $store.draftCategory) {
+                    ForEach(ShoppingItem.Category.allCases, id: \.self) { category in
+                        Label { Text(category.title) } icon: {
+                            Image(systemName: category.symbol)
                         }
-                    } label: { EmptyView() }
-                } label: {
-                    Image(systemName: store.draftCategory.symbol)
-                        .font(.body.weight(.semibold))
-                        .frame(width: 40, height: 40)
-                }
-                .accessibilityLabel(Text(store.draftCategory.title))
+                        .tag(category)
+                    }
+                } label: { EmptyView() }
+            } label: {
+                Image(systemName: store.draftCategory.symbol)
+                    .font(.body.weight(.semibold))
+                    .frame(width: 40, height: 40)
             }
+            .accessibilityLabel(Text(store.draftCategory.title))
+            .proLocked(.shoppingCategories)
 
             TextField(text: $store.draft) {
                 Text(L10n.shoppingAddPlaceholder)

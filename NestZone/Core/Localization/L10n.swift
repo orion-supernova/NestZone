@@ -9823,6 +9823,21 @@ public enum L10n {
         r("paywall_title_expense_elsewhere", "Logging money is part of Plus")
     }
 
+    /// Problems are part of Plus
+    public static var paywallTitleIssues: LocalizedStringResource {
+        r("paywall_title_issues", "Problems are part of Plus")
+    }
+
+    /// More than one home is part of Plus
+    public static var paywallTitleMultipleHomes: LocalizedStringResource {
+        r("paywall_title_multiple_homes", "More than one home is part of Plus")
+    }
+
+    /// Mature titles are part of Plus
+    public static var paywallTitleMatureContent: LocalizedStringResource {
+        r("paywall_title_mature_content", "Mature titles are part of Plus")
+    }
+
     /// Plus for the whole house
     public static var paywallTitleGeneral: LocalizedStringResource {
         r("paywall_title_general", "Plus for the whole house")

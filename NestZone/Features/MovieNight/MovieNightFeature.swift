@@ -167,6 +167,9 @@ public struct MovieNightFeature: Sendable {
 
     @Dependency(\.polls) var pollsClient
     @Dependency(\.catalog) var catalog
+    /// Adult titles are Plus. The stored choice is never cleared, so it is
+    /// there again on upgrade; a free house just never asks for them.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -258,7 +261,7 @@ public struct MovieNightFeature: Sendable {
             case let .kindChosen(query, title):
                 state.destination = nil
                 state.isStarting = true
-                return .run { [homeID = state.homeID, includeAdult = state.includeAdultTitles] send in
+                return .run { [homeID = state.homeID, includeAdult = state.includeAdultTitles && pro.isPro] send in
                     var request = query
                     request.includeAdult = includeAdult
                     let movies = try await catalog.discover(request)
