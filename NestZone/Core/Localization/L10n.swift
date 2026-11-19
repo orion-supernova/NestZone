@@ -2306,6 +2306,41 @@ public enum L10n {
         r("auth_welcome_title", "Welcome to \(appNameText)")
     }
 
+    /// Your home, together
+    public static var authHeroTitle: LocalizedStringResource {
+        r("auth_hero_title", "Your home, together")
+    }
+
+    /// Chores, shopping, plans and money, with everyone at home.
+    public static var authHeroSubtitle: LocalizedStringResource {
+        r("auth_hero_subtitle", "Chores, shopping, plans and money, with everyone at home.")
+    }
+
+    /// Dishes done
+    public static var authPreviewChore: LocalizedStringResource {
+        r("auth_preview_chore", "Dishes done")
+    }
+
+    /// Oat milk
+    public static var authPreviewShopping: LocalizedStringResource {
+        r("auth_preview_shopping", "Oat milk")
+    }
+
+    /// Pasta at 7
+    public static var authPreviewDinner: LocalizedStringResource {
+        r("auth_preview_dinner", "Pasta at 7")
+    }
+
+    /// Movie night
+    public static var authPreviewMovie: LocalizedStringResource {
+        r("auth_preview_movie", "Movie night")
+    }
+
+    /// By continuing you agree to the [Terms](https://walhallaa.com/nestzone-privacy-terms#terms) and [Privacy Policy](https://walhallaa.com/nestzone-privacy-terms).
+    public static var authLegal: LocalizedStringResource {
+        r("auth_legal", "By continuing you agree to the [Terms](https://walhallaa.com/nestzone-privacy-terms#terms) and [Privacy Policy](https://walhallaa.com/nestzone-privacy-terms).")
+    }
+
     /// Sign in to continue ✨
     public static var authSignInSubtitle: LocalizedStringResource {
         r("auth_sign_in_subtitle", "Sign in to continue ✨")

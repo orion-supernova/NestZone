@@ -25,34 +25,43 @@ public struct AuthView: View {
         ZStack {
             backdrop
 
-            // Greeting high, button just below centre, the rest of the slack
-            // left at the bottom. Both gaps are capped rather than free: an
-            // uncapped pair splits the leftover space evenly and drags the
-            // button onto the home indicator on a tall phone.
-            VStack(spacing: 0) {
-                // Capped, so the mark lands in the same place on a 6.9" phone
-                // as it does on an SE instead of drifting down with the glass.
-                Spacer(minLength: 30)
-                    .frame(maxHeight: 200)
-
-                mark.appear(0)
-                headline.appear(1).padding(.top, 32)
-
-                Spacer()
-                    .frame(maxHeight: 40)
-
-                signInButton.appear(2)
-
-                Spacer()
+            // The picture and the words scroll (so a very large type size never
+            // clips); the button and the legal line stay put under them. The
+            // hero takes a share of the height instead of a fixed size, so a
+            // tall phone is filled and a small one is not crowded.
+            ScrollView {
+                VStack(spacing: 28) {
+                    AuthHero()
+                        .containerRelativeFrame(.vertical) { height, _ in
+                            min(max(height * 0.44, 260), 420)
+                        }
+                    headline.appear(6)
+                }
+                .padding(.horizontal, Metrics.screenPadding)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
             }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 14) {
+                signInButton
+                Text(L10n.authLegal)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .tint(theme.accent)
+                    .multilineTextAlignment(.center)
+            }
+            .appear(7)
             .padding(.horizontal, Metrics.screenPadding)
-            .padding(.bottom, 24)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
     }
 
-    /// One vertical wash in the theme accent. It exists so the glass above has
-    /// something to refract; anything busier just muddies it.
+    /// One vertical wash in the theme accent, so the glass cards have something
+    /// to refract; anything busier just muddies them.
     private var backdrop: some View {
         LinearGradient(
             colors: [
@@ -66,21 +75,12 @@ public struct AuthView: View {
         .ignoresSafeArea()
     }
 
-    private var mark: some View {
-        Image(systemName: "house.fill")
-            .font(.system(size: 34, weight: .semibold))
-            .foregroundStyle(theme.accent)
-            .frame(width: 84, height: 84)
-            .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
-            .bounces()
-    }
-
     private var headline: some View {
-        VStack(spacing: 8) {
-            Text(L10n.authWelcomeTitle)
+        VStack(spacing: 10) {
+            Text(L10n.authHeroTitle)
                 .font(.system(.largeTitle, design: .rounded, weight: .bold))
                 .multilineTextAlignment(.center)
-            Text(L10n.authSignInSubtitle)
+            Text(L10n.authHeroSubtitle)
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

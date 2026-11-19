@@ -1048,6 +1048,132 @@
         }
       }
     },
+    "auth_hero_title": {
+      "comment": "Headline on the sign-in screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your home, together"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evin, birlikte"
+          }
+        }
+      }
+    },
+    "auth_hero_subtitle": {
+      "comment": "One-sentence description under the sign-in headline",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chores, shopping, plans and money, with everyone at home."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşler, alışveriş, planlar ve para, evdeki herkesle."
+          }
+        }
+      }
+    },
+    "auth_preview_chore": {
+      "comment": "Sample text on a decorative floating card on the sign-in screen: a chore ticked off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dishes done"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bulaşıklar tamam"
+          }
+        }
+      }
+    },
+    "auth_preview_shopping": {
+      "comment": "Sample text on a decorative floating card on the sign-in screen: a shopping item",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oat milk"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yulaf sütü"
+          }
+        }
+      }
+    },
+    "auth_preview_dinner": {
+      "comment": "Sample text on a decorative floating card on the sign-in screen: tonight's dinner plan",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasta at 7"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saat 7'de makarna"
+          }
+        }
+      }
+    },
+    "auth_preview_movie": {
+      "comment": "Sample text on a decorative floating card on the sign-in screen: a movie plan",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movie night"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film gecesi"
+          }
+        }
+      }
+    },
+    "auth_legal": {
+      "comment": "Legal line under the Sign in with Apple button; both bracketed phrases are links, keep the markdown and URLs",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By continuing you agree to the [Terms](https://walhallaa.com/nestzone-privacy-terms#terms) and [Privacy Policy](https://walhallaa.com/nestzone-privacy-terms)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam ederek [Koşullar](https://walhallaa.com/nestzone-privacy-terms#terms) ve [Gizlilik Politikası](https://walhallaa.com/nestzone-privacy-terms) metinlerini kabul etmiş olursun."
+          }
+        }
+      }
+    },
     "auth_sign_in_subtitle": {
       "extractionState": "manual",
       "localizations": {
