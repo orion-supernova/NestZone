@@ -97,7 +97,7 @@ extension TaskCompletion {
     /// Same fallback chain as `User.displayName`, so a name reads the same here
     /// as it does on the leaderboard.
     public var displayName: String? {
-        userID == nil ? nil : User.displayName(name: name, email: email)
+        userID == nil ? nil : StoreDemo.personaName(for: userID) ?? User.displayName(name: name, email: email)
     }
 
     public var initials: String? { displayName.map(User.initials(from:)) }

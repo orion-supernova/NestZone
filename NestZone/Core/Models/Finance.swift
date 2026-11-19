@@ -986,6 +986,7 @@ extension MemberFinance {
     /// A member who deleted their account keeps their balance with no name and
     /// no email, and is drawn as "Deleted member" rather than "Someone".
     public var displayName: String {
+        if let persona = StoreDemo.personaName(for: userID) { return persona }
         let hasName = !(name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         if !hasName, (email ?? "").isEmpty, !isMember { return String(localized: L10n.memberDeleted) }
         return User.displayName(name: name, email: email)

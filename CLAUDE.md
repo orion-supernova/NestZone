@@ -290,7 +290,18 @@ before changing anything here.
   screenshots: it rewrites the `User` where `users:me`, `homes:members` and
   `users:byIds` are decoded, so every screen and `AvatarDirectory` follow, and
   it holds back the notifications pre-prompt (the only prompt that opens by
-  itself on a first launch). Nothing is written to the server.
+  itself on a first launch). Nothing is written to the server. The persona
+  also covers the rows that carry a server-side name and email and never pass
+  through a `User` (contributions, the ledger, the archive, the bell's actor),
+  by id; the signed-in id is kept in the defaults, so the very first launch can
+  show the real handle in the household list until `users:me` has answered:
+  launch once, then shoot.
+  `-shoppingGroupedDemo 1` draws the shopping list in aisles (Plus house;
+  `-appShoppingGrouped 1` does not work, launch arguments reach a Bool
+  `@AppStorage` as a string). `StoreDemoLaunch` opens screens ~3 s after
+  launch, waiting for their data: `-openConversation first` (first group chat,
+  else first chat), `-openMovieNight 1`, `-openRecipe first`, `-openIssue first`
+  (first open problem), `-calendarMode agenda|week|month`.
 - **The shop is an ordinary NestZone screen that happens to sell things.**
   Glass cards on the Backdrop, the theme's accent, the app's type, SF Symbols.
   Money is `Amount` (`leaf.fill` and `sparkle`, colour on the glyph only via
