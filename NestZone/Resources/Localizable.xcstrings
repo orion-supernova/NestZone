@@ -30063,7 +30063,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ için"
+            "value": "Etkinlik için: %@"
           }
         }
       }
@@ -30080,7 +30080,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ için"
+            "value": "Tarif için: %@"
           }
         }
       }
@@ -30097,7 +30097,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ onarımı için"
+            "value": "Tamir için: %@"
           }
         }
       }
