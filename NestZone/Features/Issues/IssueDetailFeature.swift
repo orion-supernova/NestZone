@@ -594,6 +594,7 @@ public struct IssueDetailFeature: Sendable {
             case let .photosPicked(images):
                 guard !images.isEmpty else { return .none }
                 let id = state.issue.id
+                let homeID = state.homeID
                 state.uploading += images.count
                 return .run { send in
                     // Encoded off the main actor, one at a time: re-drawing a
@@ -603,7 +604,7 @@ public struct IssueDetailFeature: Sendable {
                     var stored: [IssuePhotoIDs] = []
                     for image in images {
                         guard let encoded = IssuePhoto.encode(image) else { continue }
-                        stored.append(try await issuesClient.uploadPhoto(encoded))
+                        stored.append(try await issuesClient.uploadPhoto(homeID, encoded))
                     }
                     try await issuesClient.attachPhotos(id, stored)
                     await send(.photosAttached)

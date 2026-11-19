@@ -264,6 +264,7 @@ public struct MovieNightFeature: Sendable {
                 return .run { [homeID = state.homeID, includeAdult = state.includeAdultTitles && pro.isPro] send in
                     var request = query
                     request.includeAdult = includeAdult
+                    request.homeID = homeID
                     let movies = try await catalog.discover(request)
                     guard !movies.isEmpty else {
                         throw AppError.server(String(

@@ -57,7 +57,7 @@ public struct IssuesClient: Sendable {
     /// Uploads both sizes and hands back both ids. They are taken together
     /// because they are stored together — a full picture filed without its
     /// thumbnail leaves the board drawing the wrong row's photo.
-    public var uploadPhoto: @Sendable (IssuePhotoUpload) async throws -> IssuePhotoIDs
+    public var uploadPhoto: @Sendable (HomeID, IssuePhotoUpload) async throws -> IssuePhotoIDs
     public var attachPhotos: @Sendable (IssueID, [IssuePhotoIDs]) async throws -> Void
     public var removePhoto: @Sendable (IssueID, String) async throws -> Void
 }
@@ -249,19 +249,21 @@ extension IssuesClient: DependencyKey {
             )
         },
 
-        uploadPhoto: { photo in
+        uploadPhoto: { homeID, photo in
             // Two round trips, not one: the bytes never pass through a mutation,
             // so each size needs its own signed URL. They are small and they go
             // out together.
             async let full = ConvexConnection.shared.upload(
                 photo.full.data,
                 contentType: photo.full.contentType,
-                signedBy: "issues:uploadUrl"
+                signedBy: "issues:uploadUrl",
+                args: ["homeId": homeID]
             )
             async let thumbnail = ConvexConnection.shared.upload(
                 photo.thumbnail.data,
                 contentType: photo.thumbnail.contentType,
-                signedBy: "issues:uploadUrl"
+                signedBy: "issues:uploadUrl",
+                args: ["homeId": homeID]
             )
             return try await IssuePhotoIDs(full: full, thumbnail: thumbnail)
         },

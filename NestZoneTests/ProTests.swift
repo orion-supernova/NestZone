@@ -39,10 +39,11 @@ struct ProTests {
     @Test("Every server feature name is one the app knows")
     func registry() {
         for name in ["calendar", "finance", "shoppingCategories", "customMovieLists",
-                     "archiveNow", "eventFromElsewhere", "expenseFromElsewhere"] {
+                     "archiveNow", "eventFromElsewhere", "expenseFromElsewhere", "issues",
+                     "multipleHomes", "matureContent"] {
             #expect(ProFeature(serverName: name) != nil)
         }
-        #expect(ProFeature.allCases.count == 7)
+        #expect(ProFeature.allCases.count == 10)
     }
 
     @Test("The end date is checked on the phone as well as on the server")
@@ -229,5 +230,80 @@ struct ProTests {
         await store.send(.kindTapped(.event))
         #expect(store.state.kind != .event)
         #expect(asked.value == [.eventFromElsewhere])
+    }
+
+    // MARK: Problems, homes, mature titles
+
+    @Test("A specific problem for a free house is the paywall, not the screen")
+    func issueRoutesToPaywall() async {
+        @Shared(.pro) var pro: ProStatus
+        $pro.withLock { $0.isPro = false }
+        let store = TestStore(initialState: MainFeature.State(homeID: "h1")) { MainFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.today(.delegate(.open(.issue("i1")))))
+        await store.receive(\.paywallRequested)
+        #expect(store.state.paywall?.feature == .issues)
+        #expect(store.state.today.path.isEmpty)
+    }
+
+    @Test("The Problems module opens on its own tab, where its locked screen is")
+    func problemsModuleStaysOnItsTab() async {
+        @Shared(.pro) var pro: ProStatus
+        $pro.withLock { $0.isPro = false }
+        let store = TestStore(initialState: MainFeature.State(homeID: "h1")) { MainFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.today(.delegate(.open(.module(.maintenance)))))
+        #expect(store.state.selectedTab == .house)
+        #expect(store.state.house.selected == .maintenance)
+        #expect(store.state.paywall == nil)
+        #expect(HubModule.maintenance.requiresPlus)
+    }
+
+    @Test("Reporting a problem asks a free house for the paywall")
+    func reportingIsGated() async {
+        @Shared(.pro) var pro: ProStatus
+        $pro.withLock { $0.isPro = false }
+        let asked = LockIsolated<[ProFeature?]>([])
+        let store = TestStore(initialState: IssuesFeature.State(homeID: "h1")) {
+            IssuesFeature()
+        } withDependencies: {
+            $0.paywall.request = { feature in asked.withValue { $0.append(feature) } }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.addTapped)
+        #expect(store.state.compose == nil)
+        #expect(asked.value == [.issues])
+    }
+
+    @Test("Add anything will not file a problem for a free house")
+    func captureLocksProblem() async {
+        @Shared(.pro) var pro: ProStatus
+        $pro.withLock { $0.isPro = false }
+        let asked = LockIsolated<[ProFeature?]>([])
+        let store = TestStore(
+            initialState: CaptureFeature.State(homeID: "h1", currentUserID: nil, members: [])
+        ) { CaptureFeature() } withDependencies: {
+            $0.paywall.request = { feature in asked.withValue { $0.append(feature) } }
+        }
+        store.exhaustivity = .off
+        await store.send(.kindTapped(.problem))
+        #expect(store.state.kind != .problem)
+        #expect(asked.value == [.issues])
+    }
+
+    @Test("Only a person paying for Plus themselves may make another home")
+    func anotherHome() {
+        #expect(ProStatus.unknown.allowsAnotherHome)
+
+        var covered = ProStatus(ProStatusPayload(pro: true, mine: false), now: Date())
+        #expect(!covered.allowsAnotherHome)
+        covered.mine = true
+        #expect(covered.allowsAnotherHome)
+
+        let free = ProStatus(ProStatusPayload(pro: false), now: Date())
+        #expect(!free.allowsAnotherHome)
     }
 }

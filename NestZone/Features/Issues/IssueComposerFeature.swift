@@ -263,6 +263,7 @@ public struct IssueComposerFeature: Sendable {
 
                 let payload = state.payload
                 let photos = state.photos
+                let homeID = state.homeID
                 return .run { send in
                     // The pictures go up first and the report carries their ids,
                     // so a report is never written half-illustrated: if an
@@ -270,7 +271,7 @@ public struct IssueComposerFeature: Sendable {
                     // there, with everything typed into it, to try again.
                     var stored: [IssuePhotoIDs] = []
                     for photo in photos {
-                        stored.append(try await issuesClient.uploadPhoto(photo))
+                        stored.append(try await issuesClient.uploadPhoto(homeID, photo))
                     }
                     var report = payload
                     report.photos = stored

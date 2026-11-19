@@ -269,12 +269,13 @@ public struct MovieListFeature: Sendable {
                     return .cancel(id: CancelID.search)
                 }
                 state.isSearching = true
+                let homeID = state.homeID
                 return .run { [includeAdult = state.includeAdultTitles && pro.isPro] send in
                     // Debounce: the old search fired a request per keystroke.
                     try await clock.sleep(for: .milliseconds(300))
-                    let movies = try await catalog.discover(
-                        .search(query, includeAdult: includeAdult)
-                    )
+                    var request = CatalogQuery.search(query, includeAdult: includeAdult)
+                    request.homeID = homeID
+                    let movies = try await catalog.discover(request)
                     await send(.searchResponse(movies))
                 } catch: { error, send in
                     await send(.failed(AppError(error)))

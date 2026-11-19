@@ -129,17 +129,18 @@ a{color:var(--accent)}
 <thead><tr><th>Module</th><th>Free</th><th>Pro</th></tr></thead>
 <tbody>
 <tr><td>Tasks</td><td>Everything, including the Done list and the automatic Archive (after 30 days) and restoring from it</td><td><span class="pill pro">Pro</span> "Archive now", the swipe that puts a finished chore away early</td></tr>
-<tr><td>Shopping</td><td>A plain list. Items grouped under their event, recipe or problem stay</td><td><span class="pill pro">Pro</span> Categories: picking one, grouping by aisle, clearing an aisle</td></tr>
+<tr><td>Shopping</td><td>A plain list. Items grouped under their event, recipe or problem stay</td><td><span class="pill pro">Pro</span> Categories: picking one, grouping by aisle, clearing an aisle. A free house still sees the Categories/List toggle and the picker, locked; a tap opens the paywall</td></tr>
 <tr><td>Notes, Messages, polls</td><td>Everything</td><td>—</td></tr>
 <tr><td>Recipes and Meals, Dinner</td><td>Everything</td><td><span class="pill pro">Pro</span> "Make it an occasion" (it creates a calendar event)</td></tr>
-<tr><td>Movies and Movie night</td><td>Watchlist, Watched, the swipe game, search</td><td><span class="pill pro">Pro</span> Custom lists: creating one, adding to one</td></tr>
+<tr><td>Movies and Movie night</td><td>Watchlist, Watched, the swipe game, search</td><td><span class="pill pro">Pro</span> Custom lists: creating one, adding to one. Mature titles: the Settings switch is locked, and a free house always gets the family-safe catalogue (the stored choice is kept for an upgrade)</td></tr>
 <tr><td>Calendar</td><td>—</td><td><span class="pill pro">Pro</span> The whole module, event detail, history, "Up next" on Today, events in the dock, event reminders</td></tr>
 <tr><td>Money (Finance)</td><td>—</td><td><span class="pill pro">Pro</span> The whole module, bills on Today, bill reminders, settle-up</td></tr>
-<tr><td>House problems</td><td>Everything, including the cost estimate and the "spent" number</td><td><span class="pill pro">Pro</span> "Log cost" (an expense) and "Book a visit" (an event)</td></tr>
+<tr><td>House problems</td><td>—</td><td><span class="pill pro">Pro</span> The whole module, like Money: reporting, moving along, assigning, comments, photos, parts, visits, making a chore, urgent problems in "Needs you". Linked chores and shopping items stay usable; deleting stays</td></tr>
+<tr><td>Homes</td><td>One home, plus any home you join that already has Pro, and every home you are already in</td><td><span class="pill pro">Pro</span> Creating a second home (the person needs Plus themselves). Joining a free home as a free person needs Pro</td></tr>
 <tr><td>Nestie, the house's plant or pet</td><td>Everything: growing, ceremonies, the album, decorating, Leaves earned by the house</td><td>Not part of Plus. Sparkles are sold separately as one-off packs (300, 1000, 2200) through the purchase card</td></tr>
-<tr><td>Add anything</td><td>Tasks, shopping, notes, recipes, movies, problems</td><td><span class="pill pro">Pro</span> The Event and Expense kinds</td></tr>
+<tr><td>Add anything</td><td>Tasks, shopping, notes, recipes, movies</td><td><span class="pill pro">Pro</span> The Event, Expense and Problem kinds</td></tr>
 </tbody></table></div>
-<div class="callout"><p><strong>One rule for every house without Pro, whether it never subscribed or stopped renewing:</strong> what is already there stays readable, new things need Pro. Calendar and Money open read-only with a banner and an "Upgrade" button when the house has data in them, and on a locked preview when it has none; their reminders stop. Custom movie lists and categories stay visible and their items can be removed. Nothing is ever deleted because a card expired.</p></div>
+<div class="callout"><p><strong>One rule for every house without Pro, whether it never subscribed or stopped renewing:</strong> what is already there stays readable, new things need Pro. Calendar, Money and Problems open read-only with a banner and an "Upgrade" button when the house has data in them, and on a locked preview when it has none; their reminders stop. Custom movie lists and categories stay visible and their items can be removed. Nothing is ever deleted because a card expired.</p></div>
 </section>
 
 <section id="model">
@@ -188,7 +189,7 @@ flowchart LR
 <ul class="list">
 <li><code>PurchasesClient</code> (<code>@DependencyClient</code>): configure, offerings, purchase, restore, customer-info stream. RevenueCat's <code>appUserID</code> is the Convex user id, set at sign-in and logged out at sign-out.</li>
 <li><code>ProClient</code>: subscribes to <code>pro:status</code> for the current home and calls <code>pro:refresh</code>. The server's answer is the only one the app trusts.</li>
-<li><code>ProFeature</code> enum, the registry: <code>calendar, finance, shoppingCategories, customMovieLists, archiveNow, eventFromElsewhere, expenseFromElsewhere</code>. Every gate asks it; changing what is Pro is one line.</li>
+<li><code>ProFeature</code> enum, the registry: <code>calendar, finance, shoppingCategories, customMovieLists, archiveNow, eventFromElsewhere, expenseFromElsewhere, issues, multipleHomes, matureContent</code>. Every gate asks it; changing what is Pro is one line.</li>
 <li><code>PaywallFeature</code> takes the <code>ProFeature</code> that was reached for, so the sheet opens on what the person wanted.</li>
 <li><code>ProGate</code> view modifiers: <code>.proLocked(_:)</code> for a control (lock glyph, tap opens the paywall), <code>ProLockedScreen</code> for a whole module, <code>ProReadOnlyBanner</code> for lapse.</li>
 </ul>
@@ -201,13 +202,17 @@ flowchart LR
 <thead><tr><th>Gate</th><th>App</th><th>Server</th></tr></thead>
 <tbody>
 <tr><td>Calendar module</td><td>Segment shows a lock; choosing it shows <code>ProLockedScreen</code> with a preview. <code>MainFeature.open</code> turns <code>.module(.calendar)</code>, <code>.event</code>, <code>.occurrence</code> into the paywall. Plans opens on Meals for a free house.</td><td>Refuse <code>events:create/update/rsvp/stockUp/addItems</code>. Allow <code>remove</code>. Queries stay open (read-only on lapse).</td></tr>
-<tr><td>Money module</td><td>Same as Calendar. House opens on Problems for a free house.</td><td>Refuse every <code>finance</code> create, update, settle, pay and budget write. Allow the removes. Queries open.</td></tr>
+<tr><td>Money module</td><td>Same as Calendar.</td><td>Refuse every <code>finance</code> create, update, settle, pay and budget write. Allow the removes. Queries open.</td></tr>
 <tr><td>Today</td><td>Skip the <code>events:upcoming</code> and <code>finance:bills</code> reads; hide Up next, bill alarms and the event clauses in the day's sentence; the events tile in At a glance becomes a teaser.</td><td>—</td></tr>
 <tr><td>The dock</td><td>Pass no events; dinner, movie round and <code>+</code> stay.</td><td>—</td></tr>
-<tr><td>Add anything</td><td>Event and Expense chips carry a lock; choosing one opens the paywall instead of the composer.</td><td>Covered by the module refusals.</td></tr>
+<tr><td>Add anything</td><td>Event, Expense and Problem chips carry a lock; choosing one opens the paywall instead of the composer.</td><td>Covered by the module refusals.</td></tr>
 <tr><td>Dinner "make it an occasion"</td><td>Toggle locked.</td><td><code>events:create</code> refuses; the new client saves the dinner without the event.</td></tr>
-<tr><td>Problems: Log cost, Book a visit</td><td>Both buttons locked. Cost estimate and spent stay visible.</td><td>Refuse <code>issues:scheduleVisit</code>.</td></tr>
-<tr><td>Shopping categories</td><td>Free house: flat list forced, category picker and Categories/List toggle hidden.</td><td><strong>Coerce</strong>: <code>shopping:create/update/createMany</code> write the default category for a free house. Old builds always send one, so never refuse.</td></tr>
+<tr><td>Problems module</td><td>Same as Money: segment lock, <code>ProLockedScreen</code> with no problems, read-only banner with some. No report, status, assign, comment, photo, parts, visit or make-chore controls; delete stays. <code>MainFeature.open</code> turns <code>.issue</code> into the paywall; <code>.module(.maintenance)</code> opens the locked screen. House opens on Problems, both segments locked for a free house.</td><td>Refuse every <code>issues</code> write except remove; <code>issues:scheduleVisit</code> refuses with <code>issues</code>. <code>issues:uploadUrl</code> takes <code>homeId</code>.</td></tr>
+<tr><td>Today: problems</td><td>No <code>issues:board</code> read: urgent problems leave "Needs you"; the problem counters open the locked screen.</td><td>—</td></tr>
+<tr><td>Add anything: Problem</td><td>The Problem chip carries a lock; choosing it opens the paywall.</td><td>Covered by the module refusals.</td></tr>
+<tr><td>More than one home</td><td>Manage homes: "Create another home" wears a lock and opens the paywall unless the person has Plus themselves. "Join another home" is not blocked: the server decides and its refusal opens the paywall. Someone already in 2+ homes keeps them and switches freely.</td><td>Refuse <code>homes:create</code> unless the person has Plus; allow <code>homes:join</code> for a free person when the joined home is Plus. Feature string <code>multipleHomes</code>.</td></tr>
+<tr><td>Mature titles</td><td>Settings switch shows locked and off for a free house; the stored value is never cleared. <code>catalog:discover</code> carries <code>homeId</code>.</td><td><strong>Coerce</strong>: <code>includeAdult</code> is forced off for a free house, never refused.</td></tr>
+<tr><td>Shopping categories</td><td>Free house: flat list forced; the category picker and the Categories/List toggle stay visible with a lock and open the paywall.</td><td><strong>Coerce</strong>: <code>shopping:create/update/createMany</code> write the default category for a free house. Old builds always send one, so never refuse.</td></tr>
 <tr><td>Custom movie lists</td><td><code>+</code> and custom-list chips locked; existing custom lists stay readable, items removable.</td><td>Refuse <code>movies:createList</code> for <code>custom</code> (or no type) and <code>movies:addMovie</code> into a custom list. A preset type is allowed only if that preset is missing.</td></tr>
 <tr><td>Archive now</td><td>The swipe shows a lock.</td><td>Refuse <code>tasks:setArchived(true)</code>; always allow <code>false</code> so restoring never breaks.</td></tr>
 <tr><td>Notifications</td><td>Inbox rows for Pro domains route through <code>open</code>, so they land on the paywall.</td><td><code>notifyHome</code> drops <code>finance</code> and <code>calendar</code> for free houses.</td></tr>

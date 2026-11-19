@@ -239,11 +239,11 @@ struct MainView: View {
         if case .movieNight = top { return false }
         switch store.selectedTab {
         case .lists:
-            !(store.lists.path.isEmpty && store.lists.selected == .shopping)
+            return !(store.lists.path.isEmpty && store.lists.selected == .shopping)
         case .messages:
-            store.messages.path.isEmpty
+            return store.messages.path.isEmpty
         case .today, .plans, .house:
-            true
+            return true
         }
     }
 
