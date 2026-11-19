@@ -9,7 +9,7 @@
 
 import type { CatalogData } from "./companionTypes";
 
-export const CATALOG_VERSION = "0c345e747c08";
+export const CATALOG_VERSION = "7d48ff36aab3";
 
 export const CATALOG: CatalogData = {
   "decor" : [
@@ -40,7 +40,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 120,
+          "amount" : 60,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -96,7 +96,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 240,
+          "amount" : 120,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -108,7 +108,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 160,
+          "amount" : 80,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -140,7 +140,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 500,
+          "amount" : 250,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -152,7 +152,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 200,
+          "amount" : 100,
           "currency" : "sparkles"
         },
         "type" : "holidaySale"
@@ -234,7 +234,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 120,
+          "amount" : 60,
           "currency" : "sparkles"
         },
         "season" : {
@@ -254,7 +254,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 150,
+          "amount" : 75,
           "currency" : "sparkles"
         },
         "type" : "holidaySale"
@@ -266,7 +266,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 120,
+          "amount" : 60,
           "currency" : "sparkles"
         },
         "type" : "holidaySale"
@@ -278,7 +278,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 100,
+          "amount" : 50,
           "currency" : "sparkles"
         },
         "type" : "holidaySale"
@@ -314,7 +314,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 120,
+          "amount" : 60,
           "currency" : "sparkles"
         },
         "type" : "holidaySale"
@@ -326,7 +326,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 120,
+          "amount" : 60,
           "currency" : "sparkles"
         },
         "type" : "holidaySale"
@@ -338,7 +338,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 200,
+          "amount" : 100,
           "currency" : "sparkles"
         },
         "type" : "holidaySale"
@@ -3252,7 +3252,7 @@ export const CATALOG: CatalogData = {
     {
       "id" : "forestFriends",
       "price" : {
-        "amount" : 900,
+        "amount" : 400,
         "currency" : "sparkles"
       },
       "species" : [
@@ -3264,7 +3264,7 @@ export const CATALOG: CatalogData = {
     {
       "id" : "snowFriends",
       "price" : {
-        "amount" : 900,
+        "amount" : 400,
         "currency" : "sparkles"
       },
       "species" : [
@@ -3383,7 +3383,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 400,
+          "amount" : 180,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -3514,7 +3514,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 350,
+          "amount" : 150,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -3525,7 +3525,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 450,
+          "amount" : 200,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -3536,7 +3536,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 600,
+          "amount" : 250,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -3676,7 +3676,7 @@ export const CATALOG: CatalogData = {
     {
       "access" : {
         "price" : {
-          "amount" : 600,
+          "amount" : 250,
           "currency" : "sparkles"
         },
         "type" : "buy"
@@ -3759,19 +3759,19 @@ export const CATALOG: CatalogData = {
   "stages" : {
     "pet" : [
       0,
-      0.080000000000000002,
-      0.20000000000000001,
+      0.08,
+      0.2,
       0.38,
-      0.56000000000000005,
-      0.76000000000000001,
-      0.93999999999999995
+      0.56,
+      0.76,
+      0.94
     ],
     "plant" : [
       0,
-      0.10000000000000001,
-      0.28000000000000003,
+      0.1,
+      0.28,
       0.5,
-      0.71999999999999997,
+      0.72,
       0.88
     ]
   },

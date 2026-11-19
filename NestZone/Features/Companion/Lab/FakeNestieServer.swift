@@ -99,7 +99,7 @@ actor FakeNestieServer {
                 case "fail": throw CancellationError()
                 default: break
                 }
-                guard let sparkles = SparklePack.shelf.first(where: { $0.id == id })?.sparkles else { return .cancelled }
+                guard let sparkles = (SparklePack.shelf + SparklePack.retired).first(where: { $0.id == id })?.sparkles else { return .cancelled }
                 await self.apply(.topUp(sparkles))
                 return .added(sparkles)
             },
