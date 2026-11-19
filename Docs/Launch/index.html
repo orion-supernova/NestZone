@@ -73,6 +73,7 @@ a{color:var(--accent)}
 <div class="wrap">
 <nav class="toc" aria-label="Sections">
   <a href="#upnext">Up next</a>
+  <a href="#plus-homes">Plus and homes</a>
   <a href="#status">Status</a>
   <a href="#verdict">Verdict</a>
   <a href="#tiers">Free and Pro</a>
@@ -140,6 +141,34 @@ a{color:var(--accent)}
 <tr><td>Murat (owner, test)</td><td><code>md75cpajk2hsse5qvpwv8kfqv18dqjfn</code></td><td>granted a month, until 2026-12-20</td></tr>
 <tr><td>Jade Arana</td><td><code>md717zj7fh5h15xgbetn1ctm698emep8</code></td><td>to grant</td></tr>
 </tbody></table></div>
+</section>
+
+<section id="plus-homes">
+<h2>Plus and homes: the rules</h2>
+<p>Plus belongs to a person, and it lights up the homes they are in. There is no plan stored on a home: a home is Plus while at least one of its current members carries Plus <em>and</em> that home is one their Plus covers. Server: <code>lib/pro.ts</code> (<code>homeProStatus</code>, <code>coveredHomes</code>, <code>PLUS_HOMES_PER_PERSON = 2</code>); live since 2026-11-19.</p>
+<h3>The cap: one person's Plus covers two homes</h3>
+<ul>
+<li>Covered = the first two homes the person joined, in join order (the order of <code>users.home_id</code>). A third home they are in gets nothing from them; it is still Plus if another member there pays and has room.</li>
+<li>Leaving a home and coming back counts as a new join, so that home goes to the end of the order.</li>
+<li>Comped people (<code>PRO_COMP_USER_IDS</code>) and RevenueCat gifts follow exactly the same rule as paying.</li>
+<li>Settings shows "Your Plus covers 2 of 2 homes: …" to the person who carries it.</li>
+</ul>
+<h3>What happens when…</h3>
+<div class="tbl"><table>
+<thead><tr><th>Situation</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>A free person tries to create or join a second home</td><td>Refused (<code>multipleHomes</code>), unless the home being joined is already Plus: then the house pays and they may join.</td></tr>
+<tr><td>A Plus person creates or joins a 2nd home</td><td>Allowed; both homes are Plus on their one subscription.</td></tr>
+<tr><td>A Plus person creates or joins a 3rd, 4th… home</td><td>Allowed (they have Plus), but that home is not covered by them. It is Plus only if someone else there pays and has a slot.</td></tr>
+<tr><td>The Plus person leaves a home</td><td>That home drops to free at once (unless another member covers it). Their Plus moves with them; the slot frees, so the next home in their order becomes covered.</td></tr>
+<tr><td>The Plus person deletes a home (the last member leaves)</td><td>The home and its data are deleted; the freed slot goes to their next home in order.</td></tr>
+<tr><td>Someone else leaves a Plus home</td><td>Nothing changes for the home.</td></tr>
+<tr><td>Plus ends (cancelled, refunded, gift expired)</td><td>Every home it covered drops to free unless someone else there pays. Nobody is removed from any home and nothing is deleted: what was written stays readable; new writes in Plus features wait for Plus. They keep every home they are in but cannot add another.</td></tr>
+<tr><td>Two people in one home both pay</td><td>The home is Plus while either covers it. If one leaves, the other keeps it Plus.</td></tr>
+<tr><td>A free member of a Plus home</td><td>Uses every Plus feature in that home. In their own other home (if any) they are free.</td></tr>
+</tbody></table></div>
+<h3>Today, before enforcement</h3>
+<p><code>PRO_ENFORCE</code> is off, so the server does not refuse anything yet: the app already shows the locks and the paywall from <code>pro:status</code>, but an older build can still write. Turn it on only when the version census shows no pre-1.12 build is still writing (see Up next).</p>
 </section>
 
 <section id="status">

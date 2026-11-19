@@ -250,12 +250,13 @@ struct MessageBubble: View, Equatable {
     private var menu: some View {
         let mine = Set(reactions.filter { $0.userID == me }.map(\.emoji))
         let emoji = ReactionEmoji.all
+        // One compact row at the top of the menu, the way Mail shows its flag
+        // colours: the palette style. Two plain ControlGroups read as a grid
+        // of loose emoji with dividers, which the owner rightly called bad.
         ControlGroup {
-            ForEach(emoji.prefix(3), id: \.self) { reactionButton($0, chosen: mine.contains($0)) }
+            ForEach(emoji, id: \.self) { reactionButton($0, chosen: mine.contains($0)) }
         }
-        ControlGroup {
-            ForEach(emoji.suffix(3), id: \.self) { reactionButton($0, chosen: mine.contains($0)) }
-        }
+        .controlGroupStyle(.palette)
 
         if canReply {
             Button { handlers.reply() } label: {
@@ -300,8 +301,10 @@ struct MessageBubble: View, Equatable {
 
     private func reactionButton(_ emoji: String, chosen: Bool) -> some View {
         Button { handlers.react(emoji) } label: {
-            // The emoji already chosen is marked; tapping it takes it back.
-            Text(chosen ? "\(emoji)\u{2713}" : emoji)
+            // A palette draws its items' images, so the emoji is drawn into
+            // one (once per emoji and state, cached). The emoji already
+            // chosen sits on a tinted disc; tapping it takes it back.
+            Image(uiImage: EmojiGlyph.image(emoji, chosen: chosen))
         }
         .accessibilityLabel(Text(chosen ? L10n.reactionPickerMine(emoji) : L10n.reactionPickerAdd(emoji)))
     }
@@ -374,5 +377,31 @@ struct MessageBubble: View, Equatable {
                 .combined(with: .opacity),
             removal: sideways
         )
+    }
+}
+
+
+/// Emoji drawn as images for the reaction palette, cached: the menu asks for
+/// them every time it opens.
+@MainActor
+enum EmojiGlyph {
+    private static var cache: [String: UIImage] = [:]
+
+    static func image(_ emoji: String, chosen: Bool) -> UIImage {
+        let key = chosen ? emoji + "#" : emoji
+        if let hit = cache[key] { return hit }
+        let side: CGFloat = 34
+        let image = UIGraphicsImageRenderer(size: CGSize(width: side, height: side)).image { _ in
+            if chosen {
+                UIColor(Palette.violet).withAlphaComponent(0.45).setFill()
+                UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: side, height: side)).fill()
+            }
+            let font = UIFont.systemFont(ofSize: 24)
+            let text = emoji as NSString
+            let size = text.size(withAttributes: [.font: font])
+            text.draw(at: CGPoint(x: (side - size.width) / 2, y: (side - size.height) / 2), withAttributes: [.font: font])
+        }.withRenderingMode(.alwaysOriginal)
+        cache[key] = image
+        return image
     }
 }
