@@ -82,9 +82,12 @@ public struct MainFeature: Sendable {
         /// `pro:status` for the life of the tab bar, written to the shared
         /// `.pro` key every gate reads.
         public var pro: ProStatusFeature.State
+        /// `pro:status` has answered once for this house.
+        var heardPro = false
 
-        /// The paywall, opened on whatever was reached for. Presented from
-        /// whichever layer is on top (`PaywallLayer`).
+        /// The paywall, opened on whatever was reached for. Presented by
+        /// whichever sheet is on top, or the tab bar when none is
+        /// (`PaywallHost`).
         @Presents public var paywall: PaywallFeature.State?
 
         public init(
@@ -128,16 +131,6 @@ public struct MainFeature: Sendable {
             self.pro = ProStatusFeature.State(homeID: homeID)
         }
 
-        /// The layer that has to present the paywall: a sheet can only be
-        /// presented by the view on top, and Settings, Add anything and the
-        /// dinner sheet are each a layer of their own.
-        var paywallLayer: PaywallLayer {
-            if isSettingsPresented { .settings }
-            else if capture != nil { .capture }
-            else if now.dinner != nil { .dinner }
-            else { .root }
-        }
-
         /// How many people have to say yes for a movie-night match.
         var memberCount: Int { max(home?.members.count ?? 1, 1) }
 
@@ -155,9 +148,6 @@ public struct MainFeature: Sendable {
             }
         }
     }
-
-    /// Where the paywall is drawn from.
-    public enum PaywallLayer: Hashable, Sendable { case root, settings, capture, dinner }
 
     public enum Tab: String, CaseIterable, Hashable, Sendable {
         case today, lists, plans, house, messages
@@ -198,12 +188,17 @@ public struct MainFeature: Sendable {
         case paywall(PresentationAction<PaywallFeature.Action>)
         /// A gated control, or the server, asked for the paywall.
         case paywallRequested(ProFeature?)
+        /// The paywall was asked for and nothing drew it. State that cannot be
+        /// seen is dropped rather than left to swallow the next request.
+        case paywallNeverShown
     }
 
-    private enum CancelID { case presentSettings, captured }
+    private enum CancelID { case presentSettings, captured, paywallShown }
 
     /// How long "Added 3 to Shopping" stays up.
     static let capturedLinger: Duration = .seconds(4)
+    /// How long the paywall has to appear before the request is dropped.
+    static let paywallShowDeadline: Duration = .seconds(2)
 
     @Dependency(\.continuousClock) var clock
 
@@ -380,23 +375,47 @@ public struct MainFeature: Sendable {
             case let .inbox(.delegate(.open(category))):
                 return route(&state, to: category)
 
+            // The first answer for a house without Plus opens its tabs on the
+            // modules it can use. Handled on the status itself rather than on
+            // the delegate that follows it, so the screens see the answer and
+            // the move in one update and never build the module they leave.
+            // Only what is on screen moves: the segment each tab was left on
+            // (`TabSegments`) is not touched, so it is where the tab opens
+            // again once there is Plus.
+            case .proStatus(.statusUpdated):
+                guard !state.heardPro else { return .none }
+                state.heardPro = true
+                if !state.pro.status.isPro {
+                    if state.plans.selected == .calendar { state.plans.selected = .recipes }
+                    if state.house.selected == .finance { state.house.selected = .maintenance }
+                }
+                return .none
+
             case let .paywallRequested(feature):
                 guard state.paywall == nil else { return .none }
                 state.paywall = PaywallFeature.State(feature: feature, houseName: state.home?.name ?? "")
+                // Whichever host is on top presents it, which takes a frame
+                // or two; its first `.task` is the proof it was drawn.
+                return .run { send in
+                    try await clock.sleep(for: Self.paywallShowDeadline)
+                    await send(.paywallNeverShown)
+                }
+                .cancellable(id: CancelID.paywallShown, cancelInFlight: true)
+
+            case .paywall(.presented(.task)):
+                return .cancel(id: CancelID.paywallShown)
+
+            case .paywallNeverShown:
+                state.paywall = nil
                 return .none
 
             case .paywall(.presented(.delegate(.dismiss))):
                 state.paywall = nil
-                return .none
+                return .cancel(id: CancelID.paywallShown)
 
             // Plus turned on or off. Today and the dock start or stop their
-            // calendar and bills reads; a house without Plus opens on the
-            // modules it can use.
-            case let .proStatus(.delegate(.changed(isPro, firstAnswer))):
-                if firstAnswer, !isPro {
-                    if state.plans.selected == .calendar { state.plans.selected = .recipes }
-                    if state.house.selected == .finance { state.house.selected = .maintenance }
-                }
+            // calendar and bills reads.
+            case let .proStatus(.delegate(.changed(isPro, _))):
                 return .merge(
                     .send(.home(.proChanged(isPro))),
                     .send(.now(.proChanged(isPro)))

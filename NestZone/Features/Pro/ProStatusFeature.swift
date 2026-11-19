@@ -27,6 +27,12 @@ public struct ProStatusFeature: Sendable {
         case expiryReached
         /// RevenueCat says the entitlement moved: ask the server to look.
         case entitlementMoved
+        /// Look through Plus transactions the app has not finished: one that
+        /// was not credited yet when it arrived is tried again whenever
+        /// something that could have changed that does.
+        case recheckUnfinished
+        /// The app came back to the foreground.
+        case becameActive
         case delegate(Delegate)
 
         public enum Delegate: Equatable {
@@ -37,7 +43,7 @@ public struct ProStatusFeature: Sendable {
         }
     }
 
-    private enum CancelID { case status, expiry, listener, customerInfo }
+    private enum CancelID { case status, expiry, listener, customerInfo, unfinished }
 
     @Dependency(\.pro) var proClient
     @Dependency(\.purchases) var purchases
@@ -67,7 +73,9 @@ public struct ProStatusFeature: Sendable {
                     // Plus transactions that finish outside a tap: renewals,
                     // Ask to Buy, an interrupted purchase.
                     .run { _ in
-                        await purchases.watchTransactions { _ = try await proClient.refresh() }
+                        await purchases.watchTransactions { [proClient, clock] in
+                            try await PaywallFeature.settle(proClient: proClient, clock: clock)
+                        }
                     }
                     .cancellable(id: CancelID.listener, cancelInFlight: true),
 
@@ -88,7 +96,9 @@ public struct ProStatusFeature: Sendable {
                 let was = state.status.isPro
                 guard next != state.status else { return .none }
                 state.$status.withLock { $0 = next }
-                var effects: [Effect<Action>] = []
+                // The server's view moved, which is what a payment waiting to
+                // be credited was waiting for.
+                var effects: [Effect<Action>] = [.send(.recheckUnfinished)]
                 if !wasLoaded || was != next.isPro {
                     effects.append(.send(.delegate(.changed(isPro: next.isPro, firstAnswer: !wasLoaded))))
                 }
@@ -113,7 +123,18 @@ public struct ProStatusFeature: Sendable {
                 return .send(.delegate(.changed(isPro: false, firstAnswer: false)))
 
             case .entitlementMoved:
-                return .run { _ in _ = try? await proClient.refresh() }
+                return .merge(
+                    .run { _ in _ = try? await proClient.refresh() },
+                    .send(.recheckUnfinished)
+                )
+
+            case .recheckUnfinished, .becameActive:
+                return .run { [proClient, clock] _ in
+                    await purchases.settleUnfinished {
+                        try await PaywallFeature.settle(proClient: proClient, clock: clock)
+                    }
+                }
+                .cancellable(id: CancelID.unfinished, cancelInFlight: true)
 
             case .delegate:
                 return .none

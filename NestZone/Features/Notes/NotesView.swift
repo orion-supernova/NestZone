@@ -63,7 +63,7 @@ public struct NotesView: View {
             }
         }
         .task { await store.send(.task).finish() }
-        .sheet(item: $store.scope(state: \.destination?.compose, action: \.destination.compose)) {
+        .hostedSheet(item: $store.scope(state: \.destination?.compose, action: \.destination.compose)) {
             ComposeNoteSheet(store: $0, onSave: { savedAt = .now })
         }
         .alert($store.scope(state: \.alert, action: \.alert))

@@ -158,6 +158,10 @@ public struct PaywallFeature: Sendable {
                 return .run { send in
                     await send(.restoreFinished(Result {
                         try await purchases.restore()
+                        if try await proClient.refresh().active { return true }
+                        // RevenueCat saw nothing on this phone: ask the App
+                        // Store itself, then the server once more.
+                        try await purchases.syncAppStore()
                         return try await proClient.refresh().active
                     }.mapError(AppError.init)))
                 }
@@ -177,6 +181,10 @@ public struct PaywallFeature: Sendable {
                 return .none
 
             case .closeTapped:
+                // Closing cancels the effect that is settling a payment, and a
+                // payment half settled is the one thing this sheet must not
+                // leave behind.
+                guard !state.isPurchasing, !state.isRestoring else { return .none }
                 return .send(.delegate(.dismiss))
 
             case .delegate:

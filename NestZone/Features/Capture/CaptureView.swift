@@ -49,13 +49,13 @@ struct CaptureView: View {
         .task { await store.send(.task).finish() }
         .onAppear { isFocused = true }
         .alert($store.scope(state: \.alert, action: \.alert))
-        .sheet(item: $store.scope(state: \.composer?.problem, action: \.composer.problem)) { store in
+        .hostedSheet(item: $store.scope(state: \.composer?.problem, action: \.composer.problem)) { store in
             IssueComposerSheet(store: store)
         }
-        .sheet(item: $store.scope(state: \.composer?.event, action: \.composer.event)) { store in
+        .hostedSheet(item: $store.scope(state: \.composer?.event, action: \.composer.event)) { store in
             EventComposerSheet(store: store)
         }
-        .sheet(item: $store.scope(state: \.composer?.expense, action: \.composer.expense)) { store in
+        .hostedSheet(item: $store.scope(state: \.composer?.expense, action: \.composer.expense)) { store in
             ExpenseComposerSheet(store: store)
         }
     }

@@ -61,6 +61,11 @@ public enum L10n {
         r("settings_delete_account_button", "Delete account")
     }
 
+    /// That's a different Apple ID from the one you signed in with. Nothing was deleted. Try ...
+    public static var settingsDeleteAccountWrongApple: LocalizedStringResource {
+        r("settings_delete_account_wrong_apple", "That's a different Apple ID from the one you signed in with. Nothing was deleted. Try again with the same one.")
+    }
+
     /// Delete your account?
     public static var settingsDeleteAccountTitle: LocalizedStringResource {
         r("settings_delete_account_title", "Delete your account?")
@@ -9945,7 +9950,7 @@ public enum L10n {
 
     /// Your payment went through, but Plus is taking a moment to show up. It turns on by itsel...
     public static var paywallNotYetCredited: LocalizedStringResource {
-        r("paywall_not_yet_credited", "Your payment went through, but Plus is taking a moment to show up. It turns on by itself, or tap Restore purchases.")
+        r("paywall_not_yet_credited", "Your payment went through, but Plus is taking a moment to show up. We check again each time you come back to the app, or you can tap Restore purchases.")
     }
 
     /// There's no Plus subscription on this Apple ID.

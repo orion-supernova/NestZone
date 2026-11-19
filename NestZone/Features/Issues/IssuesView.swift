@@ -90,7 +90,7 @@ public struct IssuesView: View {
         .task { await store.send(.task).finish() }
         .stagedBuild(2)
         .alert($store.scope(state: \.alert, action: \.alert))
-        .sheet(item: $store.scope(state: \.compose, action: \.compose)) { store in
+        .hostedSheet(item: $store.scope(state: \.compose, action: \.compose)) { store in
             IssueComposerSheet(store: store)
         }
         .navigationDestination(item: $store.scope(state: \.detail, action: \.detail)) { store in

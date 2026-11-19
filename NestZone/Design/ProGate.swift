@@ -37,10 +37,12 @@ private struct ProLockedModifier: ViewModifier {
             content
         } else {
             content
-                // The control underneath is never reached: neither by touch
-                // nor by VoiceOver's activate.
+                // The control underneath is never reached by touch, and
+                // VoiceOver's activate is taken over: the control keeps its
+                // own label and says what happens instead.
                 .allowsHitTesting(false)
-                .accessibilityHidden(true)
+                .accessibilityHint(Text(L10n.proLockedHint))
+                .accessibilityAction(.default) { PaywallBroker.shared.request(feature) }
                 .overlay { ProLockTap(feature: feature) }
                 .overlay(alignment: .topTrailing) {
                     Image(systemName: "lock.fill")
@@ -56,7 +58,8 @@ private struct ProLockedModifier: ViewModifier {
     }
 }
 
-/// The tap that replaces a locked control's own.
+/// The touch that replaces a locked control's own. Not an element of its
+/// own: VoiceOver meets the control, with its label.
 private struct ProLockTap: View {
     let feature: ProFeature
 
@@ -64,10 +67,7 @@ private struct ProLockTap: View {
         Color.clear
             .contentShape(.rect)
             .onTapGesture { PaywallBroker.shared.request(feature) }
-            .accessibilityElement()
-            .accessibilityLabel(Text(L10n.proLockedHint))
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { PaywallBroker.shared.request(feature) }
+            .accessibilityHidden(true)
     }
 }
 

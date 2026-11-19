@@ -74,7 +74,7 @@ public struct TasksView: View {
             }
         }
         .task { await store.send(.task).finish() }
-        .sheet(item: $store.scope(
+        .hostedSheet(item: $store.scope(
             state: \.destination?.compose, action: \.destination.compose
         )) { ComposeTaskSheet(store: $0) }
         .alert($store.scope(state: \.alert, action: \.alert))

@@ -27,7 +27,7 @@ public struct MessagesView: View {
                 }
             }
             .task { await store.send(.task).finish() }
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.compose, action: \.destination.compose
             )) { NewConversationSheet(store: $0) }
             .alert($store.scope(state: \.alert, action: \.alert))

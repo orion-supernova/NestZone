@@ -56,6 +56,9 @@ public struct SettingsFeature: Sendable {
         /// Apple has been asked again and the server is deleting the account.
         /// Draws the row as busy and stops a second deletion.
         public var isDeletingAccount = false
+        /// Between "Delete" in the dialog and Apple's sheet answering, so a
+        /// second tap cannot ask Apple twice.
+        public var isAuthorizingDelete = false
         /// A member is being removed from the house. Kept by id, so the row
         /// that asked is the one that goes, whatever the list does meanwhile.
         public var removingMember: UserID?
@@ -190,6 +193,9 @@ public struct SettingsFeature: Sendable {
         case signOutTapped
         case signOutConfirmed
         case deleteAccountTapped
+        /// "Delete" was chosen in the dialog and Apple's sheet is on its way.
+        /// Nothing else about the deletion can start until it answers.
+        case deleteAccountConfirmed
         case plusRestoreTapped
         case plusRestoreFinished(Result<Bool, AppError>)
         /// Apple answered the fresh sign-in the deletion asks for. The code is
@@ -540,11 +546,16 @@ public struct SettingsFeature: Sendable {
                 return .none
 
             case .deleteAccountTapped:
-                guard !state.isDeletingAccount else { return .none }
+                guard !state.isDeletingAccount, !state.isAuthorizingDelete else { return .none }
                 state.isConfirmingDelete = true
                 return .none
 
+            case .deleteAccountConfirmed:
+                state.isAuthorizingDelete = true
+                return .none
+
             case let .deleteAccountAuthorized(code):
+                state.isAuthorizingDelete = false
                 guard !state.isDeletingAccount else { return .none }
                 state.isDeletingAccount = true
                 return .run { send in
@@ -555,6 +566,7 @@ public struct SettingsFeature: Sendable {
                 }
 
             case let .deleteAccountAuthorizationFailed(error):
+                state.isAuthorizingDelete = false
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
@@ -562,6 +574,13 @@ public struct SettingsFeature: Sendable {
             // The account is gone and so is the session, so this ends where a
             // sign-out ends: the root drops the tabs.
             case .deleteAccountFinished(.success):
+                state.isDeletingAccount = false
+                return .send(.delegate(.signedOut))
+
+            // The server no longer knew who was asking: the deletion had
+            // already gone through (its answer was lost, or a second request
+            // followed the first), so this ends as a sign-out does.
+            case let .deleteAccountFinished(.failure(error)) where error.meansSessionIsGone:
                 state.isDeletingAccount = false
                 return .send(.delegate(.signedOut))
 

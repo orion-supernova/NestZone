@@ -152,7 +152,7 @@ struct AmountField: View {
         .buttonStyle(.plain)
         .accessibilityLabel(Text(L10n.financeCurrencyLabel))
         .accessibilityValue(Text(Money.name(for: currency)))
-        .sheet(isPresented: $isPickingCurrency) {
+        .hostedSheet(isPresented: $isPickingCurrency) {
             CurrencyPicker(selected: currency, used: currencyOptions) { code in
                 onCurrencyChange?(code)
             }
@@ -1399,26 +1399,26 @@ struct FinanceDestinations: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.composeExpense,
                 action: \.destination.composeExpense
             ), content: ExpenseComposerSheet.init)
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.composeBill,
                 action: \.destination.composeBill
             ), content: BillComposerSheet.init)
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.payBill,
                 action: \.destination.payBill
             )) { store in
                 PayBillSheet(store: store)
                     .presentationDetents([.medium, .large])
             }
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.settleUp,
                 action: \.destination.settleUp
             ), content: SettleUpSheet.init)
-            .sheet(item: $store.scope(
+            .hostedSheet(item: $store.scope(
                 state: \.destination?.editBudget,
                 action: \.destination.editBudget
             )) { store in

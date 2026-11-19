@@ -74,8 +74,12 @@ public struct PurchasesClient: Sendable {
     public var isAvailable: @Sendable () -> Bool = { false }
     /// Starts the SDK. Safe to call again.
     public var configure: @Sendable (_ appUserID: String?) -> Void
-    /// Ties purchases to the Convex user id.
-    public var logIn: @Sendable (_ appUserID: String) async -> Void
+    /// Ties purchases to the Convex user id. Throws when RevenueCat could not
+    /// be reached, so the caller can try again: a purchase made while still
+    /// anonymous is recorded against an id nobody else will ever see.
+    public var logIn: @Sendable (_ appUserID: String) async throws -> Void
+    /// Identity changes (this and `logIn`) run one after the other, in the
+    /// order they were asked for.
     public var logOut: @Sendable () async -> Void
     public var offering: @Sendable () async throws -> [PlusPackage]
     /// Buys a package. `settle` is the server being asked; the transaction is
@@ -85,9 +89,19 @@ public struct PurchasesClient: Sendable {
         _ settle: @escaping @Sendable () async throws -> Void
     ) async throws -> PlusPurchaseOutcome
     public var restore: @Sendable () async throws -> Void
+    /// Asks the App Store itself for the person's transactions (`AppStore.sync`)
+    /// and tells RevenueCat. For a restore that found nothing the first time.
+    public var syncAppStore: @Sendable () async throws -> Void
     /// Plus transactions that finish outside a tap: renewals, Ask to Buy, an
     /// interrupted purchase. Runs until cancelled.
     public var watchTransactions: @Sendable (
+        _ settle: @escaping @Sendable () async throws -> Void
+    ) async -> Void
+    /// Looks once through the Plus transactions the app has not finished and
+    /// settles each. Run when something that could have changed the answer
+    /// did (the server's status, RevenueCat's entitlement, the app coming
+    /// back), not only at launch.
+    public var settleUnfinished: @Sendable (
         _ settle: @escaping @Sendable () async throws -> Void
     ) async -> Void
     public var customerInfo: @Sendable () -> AsyncStream<PlusEntitlement> = { .never }

@@ -109,6 +109,9 @@ struct LaunchView: View {
 /// it as the bar's accessory, so it shrinks and returns with it.
 struct MainView: View {
     @Bindable var store: StoreOf<MainFeature>
+    /// Which sheets are up, so the paywall opens over the top one
+    /// (`PaywallHost`).
+    @State private var paywallHosts = PaywallHosts()
 
     var body: some View {
         TabView(selection: Binding(
@@ -158,7 +161,7 @@ struct MainView: View {
         // One panel and one Settings sheet for the whole tab bar, whichever
         // tab's button asked for them.
         .inboxPanel(store.scope(state: \.inbox, action: \.inbox))
-        .sheet(isPresented: Binding(
+        .hostedSheet(isPresented: Binding(
             get: { store.isSettingsPresented },
             set: { if !$0 { store.send(.settingsDismissed) } }
         )) {
@@ -175,17 +178,18 @@ struct MainView: View {
             // Over Settings when it was opened from there, so closing it
             // lands back where the person was.
             .customizeSheet(store, when: true)
-            .paywallSheet(store, layer: .settings)
         }
         // Over the tabs otherwise: Today's own link.
         .customizeSheet(store, when: false)
-        .nowSheets(store.scope(state: \.now, action: \.now), main: store)
-        .sheet(item: $store.scope(state: \.capture, action: \.capture)) {
+        .nowSheets(store.scope(state: \.now, action: \.now))
+        .hostedSheet(item: $store.scope(state: \.capture, action: \.capture)) {
             CaptureView(store: $0)
-                .paywallSheet(store, layer: .capture)
         }
-        // Over the tabs when nothing else is up.
-        .paywallSheet(store, layer: .root)
+        // Over the tabs when no sheet is up; over the top sheet when one is
+        // (every `hostedSheet` hosts it too).
+        .paywallHost(depth: 0)
+        .environment(paywallHosts)
+        .environment(\.paywallStore, store)
         // Above the dock and the tab bar, clear of both.
         .overlay(alignment: .bottom) {
             if let outcome = store.captured {
@@ -270,6 +274,8 @@ private struct SegmentedRoot: View {
     @Bindable var store: StoreOf<RouteStack>
 
     @Environment(\.theme) private var theme
+    /// Read for `isLoaded` alone, to hold a Plus module back (see `body`).
+    @Shared(.pro) private var pro
     /// The modules whose screens have been shown, and so are built and kept.
     /// A module nobody opens is never built.
     @State private var visited: Set<HubModule> = []
@@ -290,7 +296,13 @@ private struct SegmentedRoot: View {
 
     var body: some View {
         ZStack {
-            ForEach(group.modules.filter { visited.contains($0) || $0 == store.selected }) { module in
+            // A Plus module is not built until `pro:status` has answered:
+            // `isPro` is true until then so a Plus house never sees a lock,
+            // and a free house opening on Calendar or Finance would otherwise
+            // build the screen and start its reads just to be moved off it.
+            ForEach(group.modules.filter {
+                (visited.contains($0) || $0 == store.selected) && !($0.requiresPlus && !pro.isLoaded)
+            }) { module in
                 if let segment = store.scope(state: \.segments[id: module], action: \.segments[id: module]) {
                     SegmentPage(
                         store: segment.scope(state: \.screen, action: \.screen),
@@ -302,8 +314,14 @@ private struct SegmentedRoot: View {
         }
         .onChange(of: store.selected, initial: true) { _, selected in
             guard let selected else { return }
-            visited.insert(selected)
+            // A Plus module held back above is not "visited" yet: a free house
+            // is about to be moved off it, and it must not be built then.
+            if !(selected.requiresPlus && !pro.isLoaded) { visited.insert(selected) }
             rested.remove(selected)
+        }
+        .onChange(of: pro.isLoaded) { _, loaded in
+            guard loaded, let selected = store.selected else { return }
+            visited.insert(selected)
         }
         // A screen that has been left is told so twice: at once, to take its
         // bar items and search away, and when it has finished fading, to put
@@ -547,7 +565,7 @@ extension View {
     /// top, and Settings may or may not be up when Customize is asked for.
     /// Each binding is live only while its layer is the top one.
     func customizeSheet(_ store: StoreOf<MainFeature>, when overSettings: Bool) -> some View {
-        sheet(item: Binding(
+        hostedSheet(item: Binding(
             get: {
                 store.isSettingsPresented == overSettings
                     ? store.scope(state: \.customize, action: \.customize.presented)
@@ -576,24 +594,8 @@ extension View {
     }
 
     /// The sheets the dock and the dinner card open, over the whole tab bar.
-    func nowSheets(_ store: StoreOf<NowFeature>, main: StoreOf<MainFeature>) -> some View {
-        modifier(NowSheets(store: store, main: main))
-    }
-
-    /// Presents the paywall from the layer that is on top, for the same reason
-    /// as `customizeSheet`: a sheet can only be presented by the view on top,
-    /// and each binding is live only while its layer is the one asked for.
-    func paywallSheet(_ store: StoreOf<MainFeature>, layer: MainFeature.PaywallLayer) -> some View {
-        sheet(item: Binding(
-            get: {
-                store.paywallLayer == layer
-                    ? store.scope(state: \.paywall, action: \.paywall.presented)
-                    : nil
-            },
-            set: { if $0 == nil { store.send(.paywall(.dismiss)) } }
-        )) { paywall in
-            PaywallView(store: paywall)
-        }
+    func nowSheets(_ store: StoreOf<NowFeature>) -> some View {
+        modifier(NowSheets(store: store))
     }
 
     /// The avatar and the bell, on the root screen of every tab.
@@ -625,15 +627,13 @@ extension View {
 /// so the dock, Today and Meals all open the same sheet.
 private struct NowSheets: ViewModifier {
     @Bindable var store: StoreOf<NowFeature>
-    let main: StoreOf<MainFeature>
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
+            .hostedSheet(item: $store.scope(state: \.dinner, action: \.dinner)) {
                 DinnerSheet(store: $0)
-                    .paywallSheet(main, layer: .dinner)
             }
-            .sheet(item: $store.scope(state: \.occasion, action: \.occasion)) {
+            .hostedSheet(item: $store.scope(state: \.occasion, action: \.occasion)) {
                 EventComposerSheet(store: $0)
             }
             .alert($store.scope(state: \.alert, action: \.alert))

@@ -74,6 +74,17 @@ extension AppError: LocalizedError {
         }
     }
 
+    /// The server no longer knows who is asking: the session, or the account
+    /// itself, is gone.
+    public var meansSessionIsGone: Bool {
+        switch self {
+        case .notAuthenticated: true
+        case let .server(message):
+            message.contains("Not authenticated") || message.contains("Authenticated user not found")
+        default: false
+        }
+    }
+
     /// Detail for the log, never for the user.
     public var diagnostic: String {
         switch self {

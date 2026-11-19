@@ -34,16 +34,15 @@ extension PurchasesClient: DependencyKey {
             )
         },
         logIn: { appUserID in
-            guard Purchases.isConfigured else { return }
             do {
-                _ = try await Purchases.shared.logIn(appUserID)
+                try await identity.logIn(appUserID)
             } catch {
                 log.error("logIn failed: \(String(describing: error), privacy: .public)")
+                throw error
             }
         },
         logOut: {
-            guard Purchases.isConfigured, !Purchases.shared.isAnonymous else { return }
-            _ = try? await Purchases.shared.logOut()
+            await identity.logOut()
         },
         offering: {
             guard Purchases.isConfigured else { throw PurchasesError.unavailable }
@@ -69,6 +68,9 @@ extension PurchasesClient: DependencyKey {
         },
         purchase: { packageID, settle in
             guard Purchases.isConfigured else { throw PurchasesError.unavailable }
+            // Never on an anonymous id: the purchase would be recorded against
+            // somebody nobody can find.
+            try await identity.ready()
             let offerings = try await Purchases.shared.offerings()
             guard let package = offerings.current?.availablePackages.first(where: { $0.identifier == packageID }),
                   let product = package.storeProduct.sk2Product
@@ -93,7 +95,14 @@ extension PurchasesClient: DependencyKey {
         },
         restore: {
             guard Purchases.isConfigured else { throw PurchasesError.unavailable }
+            try await identity.ready()
             _ = try await Purchases.shared.restorePurchases()
+        },
+        syncAppStore: {
+            guard Purchases.isConfigured else { throw PurchasesError.unavailable }
+            try await identity.ready()
+            try await AppStore.sync()
+            _ = try? await Purchases.shared.syncPurchases()
         },
         watchTransactions: { settle in
             await withTaskGroup(of: Void.self) { group in
@@ -104,6 +113,9 @@ extension PurchasesClient: DependencyKey {
                     for await result in StoreKit.Transaction.unfinished { await handle(result, settle) }
                 }
             }
+        },
+        settleUnfinished: { settle in
+            for await result in StoreKit.Transaction.unfinished { await handle(result, settle) }
         },
         customerInfo: {
             AsyncStream { continuation in
@@ -138,11 +150,71 @@ extension PurchasesClient: DependencyKey {
             try await settle()
             await transaction.finish()
         } catch {
-            // Unfinished, so the next launch finds it again.
+            // Left unfinished: the next check (a status change, the app coming
+            // back, the next launch) finds it again.
             log.error("plus transaction will retry: \(String(describing: error), privacy: .public)")
         }
     }
 }
+
+/// Who RevenueCat is, changed one request at a time.
+///
+/// Sign-out runs detached from the sign-in that follows it, and two identity
+/// changes in flight at once can land in either order and leave the SDK on the
+/// wrong person. Each request is chained behind the one before it, and what was
+/// last asked for is remembered so a purchase can make sure it was met.
+private actor PurchasesIdentity {
+    private var tail: Task<Void, Never>?
+    /// The person the app wants purchases tied to; nil after a sign-out.
+    private var wanted: String?
+    private var current: String?
+
+    func logIn(_ appUserID: String) async throws {
+        wanted = appUserID
+        try await serial { try await self.apply(appUserID) }
+    }
+
+    func logOut() async {
+        wanted = nil
+        try? await serial { try await self.applyLogOut() }
+    }
+
+    /// Throws unless purchases are tied to the person the app asked for. A
+    /// failed `logIn` is tried again here, on the tap that needs it.
+    func ready() async throws {
+        guard let wanted else { return }
+        try await serial { try await self.apply(wanted) }
+    }
+
+    private func apply(_ appUserID: String) async throws {
+        // Answered by a later request, or already so.
+        guard wanted == appUserID, current != appUserID else { return }
+        // No key in this build: nothing to tie. A key and an SDK that has not
+        // started yet (it is configured off the launch path) is a retry.
+        guard RevenueCatConfig.isConfigured else { return }
+        guard Purchases.isConfigured else { throw PurchasesError.unavailable }
+        _ = try await Purchases.shared.logIn(appUserID)
+        current = appUserID
+    }
+
+    private func applyLogOut() async throws {
+        current = nil
+        guard Purchases.isConfigured, !Purchases.shared.isAnonymous else { return }
+        _ = try await Purchases.shared.logOut()
+    }
+
+    private func serial(_ work: @escaping @Sendable () async throws -> Void) async throws {
+        let previous = tail
+        let task = Task<Void, Error> {
+            await previous?.value
+            try await work()
+        }
+        tail = Task { _ = await task.result }
+        try await task.value
+    }
+}
+
+private let identity = PurchasesIdentity()
 
 extension RevenueCat.SubscriptionPeriod {
     /// A rough length, for "1 week free". Months and years are only ever
