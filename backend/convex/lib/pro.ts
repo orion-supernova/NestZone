@@ -37,7 +37,8 @@ export type ProFeature =
   | "expenseFromElsewhere"
   | "issues"
   | "multipleHomes"
-  | "matureContent";
+  | "matureContent"
+  | "messages";
 
 export type ProStatus = {
   pro: boolean;

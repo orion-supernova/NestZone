@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { requireMembers } from "./lib/relations";
+import { requirePro } from "./lib/pro";
 
 /** Conversations in a home that the current user participates in. */
 export const listByHome = query({
@@ -43,7 +44,9 @@ export const rename = mutation({
     title: v.optional(v.string()),
   },
   handler: async (ctx, { conversationId, title }) => {
-    await assertParticipant(ctx, conversationId);
+    const { convo } = await assertParticipant(ctx, conversationId);
+    // Messages is Plus (lib/pro.ts); renaming a thread is using it.
+    await requirePro(ctx, convo.home_id, "messages");
     const trimmed = title?.trim();
     await ctx.db.patch(conversationId, {
       title: trimmed ? trimmed : undefined,
@@ -70,6 +73,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, args.homeId);
+    // Messages is Plus: starting a chat or a group refuses for a free house.
+    // Reopening a 1:1 you already have refuses too; the only thing to do in
+    // it is send, which refuses.
+    await requirePro(ctx, home, "messages");
     const participants = Array.from(new Set([user._id, ...args.participants]));
     // Every participant must exist and be a member of this home. Without this a
     // caller could name any user id and hand them read access to the whole

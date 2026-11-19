@@ -670,8 +670,8 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
 #                          sweep ask RevenueCat with it. Unset: refresh throws
 #                          a clear error, the sweep does nothing.
 #   PRO_ENFORCE=on         the server refuses Pro writes (PRO_REQUIRED) and
-#                          drops finance/calendar/issues notifications for a
-#                          house without Pro. Unset: every gate is a no-op. Turn it
+#                          drops finance/calendar/issues/messages
+#                          notifications for a house without Pro. Unset: every gate is a no-op. Turn it
 #                          on only per DEPRECATIONS.md ("Switches that narrow").
 #   PRO_SANDBOX=on         sandbox purchases count (TestFlight, App Review);
 #                          off after, like JAR_ENVIRONMENTS.
@@ -858,14 +858,14 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   the household's data:** queries never refuse, removes stay open, and
   `tasks:setArchived(false)` always works. Shopping categories are coerced to
   the default, never refused, because old builds send one with every item.
-  `push.notifyHome` drops `finance`, `calendar` and `issues` for a free
-  house, push and feed row both, which is what silences the reminder sweeps
+  `push.notifyHome` and `notifyUsers` drop `finance`, `calendar`, `issues`
+  and `messages` for a free house, push and feed row both, which is what silences the reminder sweeps
   (`finance:sweepReminders`, `issues:sweepStale`). A new Pro gate is one
   `requirePro` call after the membership check, plus a `ProFeature`.
   The `feature` strings a refusal carries: `calendar`, `finance`,
   `shoppingCategories`, `customMovieLists`, `archiveNow`,
   `eventFromElsewhere`, `expenseFromElsewhere`, `issues`, `multipleHomes`,
-  `matureContent`. **House problems are Plus** (`issues`): every write
+  `matureContent`, `messages`. **House problems are Plus** (`issues`): every write
   refuses for a free house (create, update, setStatus, assign, toggleMeToo,
   comment, uploadUrl, attachPhotos, makeChore, scheduleVisit, addParts);
   `remove`, `removeComment`, `removePhoto` and every read stay open, and
@@ -879,6 +879,16 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   (`matureContent`): `catalog:discover` turns `includeAdult` off for a free
   caller (judged by its optional `homeId`, or by any of the caller's homes and
   their own Plus), never refused, because old builds send it on every browse.
+  **Messages is Plus** (`messages`): `messages:send`, `messages:edit`,
+  `conversations:create` (a 1:1 or a group, a reopened 1:1 included) and
+  `conversations:rename` refuse for a free house; so do a chat poll's
+  `polls:create` (`type: "generic"`), `addItem`, `vote` and `unvote`. A chat
+  poll is a `generic` poll that is not Nestie's vote (`companionVoteFor`):
+  movie rounds, recipe rounds and Nestie's vote never refuse. Every read,
+  `messages:remove`, `messages:markRead`, `polls:remove` and
+  `polls:setStatus` stay open. There is no add-member or leave function for a
+  conversation today; one added later follows the same rule (adding refuses,
+  leaving never does).
 - **Leaving, being removed and deleting an account are one code path**
   (`departHome`, lib/membership.ts). `users:deleteAccount` runs in bounded,
   self-rescheduling steps (`deleteAccountStep`): sign-in rows and devices,

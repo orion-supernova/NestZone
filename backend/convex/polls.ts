@@ -7,6 +7,7 @@ import { companionVoteFor } from "./lib/companionVote";
 import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
+import { requirePro } from "./lib/pro";
 
 const pollType = v.union(v.literal("movie"), v.literal("recipe"), v.literal("generic"));
 const pollStatus = v.union(v.literal("draft"), v.literal("active"), v.literal("closed"));
@@ -21,6 +22,22 @@ async function refuseCompanionVote(ctx: MutationCtx, poll: Doc<"polls">) {
   if (await companionVoteFor(ctx, poll)) {
     throw new Error("The vote for the next one runs itself");
   }
+}
+
+/**
+ * Whether this poll belongs to Messages: a `generic` poll that is not
+ * Nestie's vote. Movie rounds (the movie-night game), recipe rounds (Meals)
+ * and Nestie's vote are not Messages and stay free.
+ */
+async function isChatPoll(ctx: QueryCtx | MutationCtx, poll: Doc<"polls">): Promise<boolean> {
+  if (poll.type !== "generic") return false;
+  return (await companionVoteFor(ctx, poll)) === null;
+}
+
+/** Messages is Plus: a chat poll's writes refuse for a free house. */
+async function requireChatPollPro(ctx: MutationCtx, poll: Doc<"polls">) {
+  if (!poll.home_id) return;
+  if (await isChatPoll(ctx, poll)) await requirePro(ctx, poll.home_id, "messages");
 }
 
 /**
@@ -97,6 +114,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
+    // A `generic` poll is a chat poll, which is Messages, which is Plus.
+    // Nestie's vote is never made here (companion.ts opens it), so every
+    // `generic` create is a member's. Movie and recipe rounds stay free.
+    if (args.type === "generic") await requirePro(ctx, args.homeId, "messages");
     const now = Date.now();
     const pollId = await ctx.db.insert("polls", {
       home_id: args.homeId,
@@ -152,6 +173,7 @@ export const vote = mutation({
     const poll = await ctx.db.get(args.pollId);
     if (!poll) throw new Error("Poll not found");
     await requireDocHome(ctx, poll, "Poll");
+    await requireChatPollPro(ctx, poll);
 
     // Nestie's vote takes ballots only while it is open, and only on its own
     // options; once every member has answered every one, it closes itself
@@ -223,6 +245,7 @@ export const unvote = mutation({
     const poll = await ctx.db.get(args.pollId);
     if (!poll) throw new Error("Poll not found");
     await requireDocHome(ctx, poll, "Poll");
+    await requireChatPollPro(ctx, poll);
 
     const existing = await ctx.db
       .query("poll_votes")
@@ -270,6 +293,7 @@ export const addItem = mutation({
       throw new Error("Cannot add items to a poll that is not active");
     }
     await refuseCompanionVote(ctx, poll);
+    await requireChatPollPro(ctx, poll);
     const now = Date.now();
     return await ctx.db.insert("poll_items", { poll_id: pollId, ...rest, created: now, updated: now });
   },

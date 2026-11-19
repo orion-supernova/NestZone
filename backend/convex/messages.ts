@@ -5,6 +5,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser } from "./lib/auth";
+import { requirePro } from "./lib/pro";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { QueryCtx, MutationCtx } from "./_generated/server";
@@ -59,6 +60,9 @@ export const send = mutation({
   },
   handler: async (ctx, args) => {
     const { user, convo } = await assertParticipant(ctx, args.conversationId);
+    // Messages is Plus. Reading, marking read and deleting stay open: a house
+    // that stops paying keeps every word it wrote.
+    await requirePro(ctx, convo.home_id, "messages");
     const kind = args.messageType ?? "text";
     // A blank bubble is not a message. The composer already refuses to send one;
     // this is so a retry, a paste of whitespace or a future client cannot.
@@ -145,7 +149,8 @@ async function refreshPreview(ctx: MutationCtx, conversationId: Id<"conversation
 export const edit = mutation({
   args: { messageId: v.id("messages"), content: v.string() },
   handler: async (ctx, { messageId, content }) => {
-    const { message } = await assertAuthor(ctx, messageId);
+    const { message, convo } = await assertAuthor(ctx, messageId);
+    await requirePro(ctx, convo.home_id, "messages");
     const trimmed = content.trim();
     if (!trimmed) throw new Error("Message is empty");
     await ctx.db.patch(messageId, { content: trimmed, updated: Date.now() });
