@@ -682,31 +682,62 @@ public struct HomeView<Companion: View>: View {
 
     // MARK: - The shelf
 
-    /// Ways into the things Today summarises, as plain links at the bottom —
-    /// where the "See all" capsules and the unlabelled chart button on every
-    /// section header used to be.
+    /// Ways into the things Today summarises, at the bottom — where the "See
+    /// all" capsules and the unlabelled chart button on every section header
+    /// used to be. Four equal glass pills in a 2x2 grid: a glyph and a short
+    /// label each, and a label that does not fit one line wraps inside its
+    /// pill rather than being cut.
     private var shelf: some View {
-        FlowLayout(spacing: 16, lineSpacing: 6) {
-            shelfLink(L10n.homeShelfAllChores) { store.send(.delegate(.openTasks)) }
-            shelfLink(L10n.homeShelfContributions) { store.send(.delegate(.openContributions)) }
+        GlassGroup(spacing: 10) {
+            LazyVGrid(columns: shelfColumns, spacing: 10) {
+                shelfPill(L10n.homeShelfAllChores, symbol: "checklist") {
+                    store.send(.delegate(.openTasks))
+                }
+                shelfPill(L10n.homeShelfContributions, symbol: "person.2") {
+                    store.send(.delegate(.openContributions))
+                }
                 .accessibilityIdentifier("ContributionsButton")
-            shelfLink(L10n.hubStatsTitle) { store.send(.delegate(.openStats)) }
-            shelfLink(L10n.homeShelfEditToday) { store.send(.delegate(.openCustomize)) }
+                shelfPill(L10n.hubStatsTitle, symbol: "square.grid.2x2") {
+                    store.send(.delegate(.openStats))
+                }
+                shelfPill(L10n.homeShelfEditToday, symbol: "slider.horizontal.3") {
+                    store.send(.delegate(.openCustomize))
+                }
                 .accessibilityIdentifier("EditTodayButton")
+            }
         }
-        .padding(.leading, 4)
         .padding(.top, 4)
     }
 
-    private func shelfLink(_ title: LocalizedStringResource, action: @escaping () -> Void) -> some View {
+    private var shelfColumns: [GridItem] {
+        [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
+    }
+
+    private func shelfPill(
+        _ title: LocalizedStringResource,
+        symbol: String,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(theme.accent)
-                .frame(minHeight: 32)
-                .contentShape(.rect)
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(theme.accent)
+                    .accessibilityHidden(true)
+                Text(title)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget, alignment: .leading)
+            .contentShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))
         }
         .buttonStyle(.pressable)
+        .glassCard(cornerRadius: Metrics.tightRadius, interactive: true)
     }
 }
 

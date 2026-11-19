@@ -9958,6 +9958,145 @@ public enum L10n {
         r("paywall_unavailable_message", "We couldn't load them. Check your connection and try again.")
     }
 
+    // MARK: - Plus preview samples
+
+    // Short, generic sample rows drawn inside the paywall's feature preview.
+
+    /// Dishes
+    public static var proPreviewDishes: LocalizedStringResource {
+        r("pro_preview_dishes", "Dishes")
+    }
+
+    /// Take out the bins
+    public static var proPreviewBins: LocalizedStringResource {
+        r("pro_preview_bins", "Take out the bins")
+    }
+
+    /// Archived
+    public static var proPreviewArchived: LocalizedStringResource {
+        r("pro_preview_archived", "Archived")
+    }
+
+    /// Groceries
+    public static var proPreviewGroceries: LocalizedStringResource {
+        r("pro_preview_groceries", "Groceries")
+    }
+
+    /// Electricity
+    public static var proPreviewElectricity: LocalizedStringResource {
+        r("pro_preview_electricity", "Electricity")
+    }
+
+    /// Paid by you
+    public static var proPreviewPaidByYou: LocalizedStringResource {
+        r("pro_preview_paid_by_you", "Paid by you")
+    }
+
+    /// Paid by a housemate
+    public static var proPreviewPaidByHousemate: LocalizedStringResource {
+        r("pro_preview_paid_by_housemate", "Paid by a housemate")
+    }
+
+    /// $34.00
+    public static var proPreviewAmountGroceries: LocalizedStringResource {
+        r("pro_preview_amount_groceries", "$34.00")
+    }
+
+    /// $61.50
+    public static var proPreviewAmountBill: LocalizedStringResource {
+        r("pro_preview_amount_bill", "$61.50")
+    }
+
+    /// Dinner party
+    public static var proPreviewDinnerParty: LocalizedStringResource {
+        r("pro_preview_dinner_party", "Dinner party")
+    }
+
+    /// Plumber visit
+    public static var proPreviewPlumber: LocalizedStringResource {
+        r("pro_preview_plumber", "Plumber visit")
+    }
+
+    /// Sat · 19:00
+    public static var proPreviewSaturday: LocalizedStringResource {
+        r("pro_preview_saturday", "Sat · 19:00")
+    }
+
+    /// Mon · 10:00
+    public static var proPreviewMonday: LocalizedStringResource {
+        r("pro_preview_monday", "Mon · 10:00")
+    }
+
+    /// Kitchen tap is dripping
+    public static var proPreviewTap: LocalizedStringResource {
+        r("pro_preview_tap", "Kitchen tap is dripping")
+    }
+
+    /// Hallway light is out
+    public static var proPreviewBulb: LocalizedStringResource {
+        r("pro_preview_bulb", "Hallway light is out")
+    }
+
+    /// Urgent
+    public static var proPreviewUrgent: LocalizedStringResource {
+        r("pro_preview_urgent", "Urgent")
+    }
+
+    /// Open
+    public static var proPreviewOpen: LocalizedStringResource {
+        r("pro_preview_open", "Open")
+    }
+
+    /// Fruit & veg
+    public static var proPreviewFruitVeg: LocalizedStringResource {
+        r("pro_preview_fruit_veg", "Fruit & veg")
+    }
+
+    /// Bakery
+    public static var proPreviewBakery: LocalizedStringResource {
+        r("pro_preview_bakery", "Bakery")
+    }
+
+    /// Apples
+    public static var proPreviewApples: LocalizedStringResource {
+        r("pro_preview_apples", "Apples")
+    }
+
+    /// Spinach
+    public static var proPreviewSpinach: LocalizedStringResource {
+        r("pro_preview_spinach", "Spinach")
+    }
+
+    /// Bread
+    public static var proPreviewBread: LocalizedStringResource {
+        r("pro_preview_bread", "Bread")
+    }
+
+    /// Friday night
+    public static var proPreviewListFriday: LocalizedStringResource {
+        r("pro_preview_list_friday", "Friday night")
+    }
+
+    /// Must watch
+    public static var proPreviewListMust: LocalizedStringResource {
+        r("pro_preview_list_must", "Must watch")
+    }
+
+    /// Our flat
+    public static var proPreviewHomeFlat: LocalizedStringResource {
+        r("pro_preview_home_flat", "Our flat")
+    }
+
+    /// Weekend cabin
+    public static var proPreviewHomeCabin: LocalizedStringResource {
+        r("pro_preview_home_cabin", "Weekend cabin")
+    }
+
+    /// Plus can't be bought just yet. Try again in a little while.
+    public static var paywallNoPlansMessage: LocalizedStringResource {
+        r("paywall_no_plans_message", "Plus can't be bought just yet. Try again in a little while.")
+    }
+
     /// Your purchase is waiting for approval. Plus turns on as soon as it's approved.
     public static var paywallPending: LocalizedStringResource {
         r("paywall_pending", "Your purchase is waiting for approval. Plus turns on as soon as it's approved.")

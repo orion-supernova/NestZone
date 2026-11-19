@@ -128,7 +128,7 @@ struct PaywallView: View {
         } else if store.isUnavailable {
             VStack(spacing: 10) {
                 Text(L10n.paywallUnavailableTitle).font(.headline)
-                Text(L10n.paywallUnavailableMessage)
+                Text(store.isConnectionError ? L10n.paywallUnavailableMessage : L10n.paywallNoPlansMessage)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

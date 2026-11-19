@@ -21,6 +21,9 @@ public struct PaywallFeature: Sendable {
         public var isLoading = true
         /// No SDK key, or the offering would not load.
         public var isUnavailable = false
+        /// Unavailable because the read failed (network), not because the
+        /// store has no plans to show.
+        public var isConnectionError = false
         public var isPurchasing = false
         public var isRestoring = false
         /// Each success lands one stamp and one haptic.
@@ -52,7 +55,10 @@ public struct PaywallFeature: Sendable {
     public enum Action: Equatable {
         case task
         case offeringLoaded([PlusPackage])
-        case offeringFailed
+        /// `connection`: the read itself failed. Otherwise the store answered
+        /// with no plans (products not approved yet, no key), which is not
+        /// the person's connection.
+        case offeringFailed(connection: Bool)
         case packageTapped(PlusPackage.ID)
         case purchaseTapped
         case purchaseFinished(Result<PlusPurchaseOutcome, AppError>)
@@ -87,10 +93,12 @@ public struct PaywallFeature: Sendable {
                 }
                 state.isLoading = true
                 state.isUnavailable = false
+                state.isConnectionError = false
                 return .run { send in
                     await send(.offeringLoaded(try await purchases.offering()))
-                } catch: { _, send in
-                    await send(.offeringFailed)
+                } catch: { error, send in
+                    let noPlans = (error as? PurchasesError).map { $0 == .noSuchPackage || $0 == .unavailable } ?? false
+                    await send(.offeringFailed(connection: !noPlans))
                 }
 
             case let .offeringLoaded(packages):
@@ -101,9 +109,10 @@ public struct PaywallFeature: Sendable {
                 state.selectedID = packages.first { $0.kind == .yearly }?.id ?? packages.first?.id
                 return .none
 
-            case .offeringFailed:
+            case let .offeringFailed(connection):
                 state.isLoading = false
                 state.isUnavailable = true
+                state.isConnectionError = connection
                 return .none
 
             case let .packageTapped(id):
