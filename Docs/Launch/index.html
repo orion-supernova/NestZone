@@ -72,6 +72,7 @@ a{color:var(--accent)}
 
 <div class="wrap">
 <nav class="toc" aria-label="Sections">
+  <a href="#status">Status</a>
   <a href="#verdict">Verdict</a>
   <a href="#tiers">Free and Pro</a>
   <a href="#model">Who pays</a>
@@ -93,6 +94,21 @@ a{color:var(--accent)}
   <p class="lede">What has to change before NestZone can go to App Review: a household subscription sold through RevenueCat, Finance and Calendar behind it, the developer lab taken out, and the two things Apple would reject the current build for.</p>
   <div class="meta"><span>Written 2026-11-19</span><span>Branch: dev @ 6e3d433</span><span>Bundle: com.walhallaa.NestZone</span><span>ASC app 6749852085</span></div>
 </header>
+
+<section id="status">
+<h2>Status, 2026-11-19</h2>
+<div class="tbl"><table>
+<thead><tr><th>Area</th><th>State</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Legal page</td><td><span class="pill free">Live</span></td><td>walhallaa.com/nestzone-privacy-terms: privacy, terms, Plus and Sparkles, Turkish summary.</td></tr>
+<tr><td>Cleanup and compliance (app)</td><td><span class="pill free">Merged to dev</span></td><td>Lab out of Release, Lab door in Settings → Developer, account deletion, remove member, privacy manifest, iPhone portrait only, one <code>app_name</code>, legal links. Debug and Release built.</td></tr>
+<tr><td>Backend</td><td><span class="pill free">Merged to dev, not deployed</span></td><td>Household Plus, gates behind <code>PRO_ENFORCE</code>, deleteAccount, removeMember (rotates the code), batched home purge. Reviewed; review fixes in.</td></tr>
+<tr><td>NestZone Plus in the app</td><td><span class="pill high">In progress</span></td><td>RevenueCat SDK, paywall, gates, Settings row, 1.12.0 changelog.</td></tr>
+<tr><td>App Store Connect</td><td><span class="pill free">Mostly done</span></td><td>Renamed NestZone, subtitle, categories; group "NestZone Plus" with yearly $19.99 (free week) and monthly $2.99; Sparkles 300/1000/2200/5000; version 1.12.0 text, keywords, support URL, review notes; App Privacy published; age rating 4+; free in 175 countries; Mac and Vision Pro off. Missing: screenshots, review screenshots per product, Turkish listing, Content Rights, contact info.</td></tr>
+<tr><td>RevenueCat</td><td><span class="pill free">Set up</span></td><td>Project NestZone, App Store app with existing keys, entitlement <code>pro</code>, offering <code>default</code> ($rc_annual, $rc_monthly). Missing: secret key into Convex, notification URL into App Store Connect (both need you).</td></tr>
+<tr><td>Nestie on</td><td><span class="pill high">Next</span></td><td>Flag on in Release, undrawn items hidden, server env, changelog entry.</td></tr>
+</tbody></table></div>
+</section>
 
 <section id="verdict">
 <h2>Where it stands</h2>
