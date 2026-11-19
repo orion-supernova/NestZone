@@ -13771,7 +13771,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ is on now"
+            "value": "Now: %@"
           }
         },
         "tr": {
@@ -13788,7 +13788,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ needs fixing"
+            "value": "Needs fixing: %@"
           }
         },
         "tr": {
@@ -13839,7 +13839,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ for dinner"
+            "value": "Dinner: %@"
           }
         },
         "tr": {
