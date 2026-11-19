@@ -27,7 +27,14 @@ import {
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
-import { entitlementActive, homeProStatus, proAllows, proEnforced } from "./lib/pro";
+import {
+  anyHomeAllows,
+  entitlementActive,
+  homeProStatus,
+  proAllows,
+  proEnforced,
+  userHasPro,
+} from "./lib/pro";
 import { fetchEntitlement, revenueCatConfigured } from "./lib/revenuecat";
 
 const HOUR = 60 * 60 * 1000;
@@ -100,6 +107,25 @@ export const homeAllows = internalQuery({
   returns: v.boolean(),
   handler: async (ctx, { homeId }) => {
     return await proAllows(ctx, homeId);
+  },
+});
+
+/**
+ * For `catalog:discover`: may the caller see mature titles? With a `homeId`,
+ * when that house is Plus or the caller carries Plus themselves; without one
+ * (builds before Plus), when any of their homes is Plus or they carry it.
+ * Never refuses: the catalog coerces the flag off instead.
+ */
+export const matureAllowed = internalQuery({
+  args: { homeId: v.optional(v.id("homes")) },
+  returns: v.boolean(),
+  handler: async (ctx, { homeId }) => {
+    const user = await requireUser(ctx);
+    if (!homeId) return await anyHomeAllows(ctx, user);
+    if (!proEnforced() || (await userHasPro(ctx, user._id))) return true;
+    const home = await ctx.db.get(homeId);
+    if (!home || !(home.members ?? []).includes(user._id)) return false;
+    return (await homeProStatus(ctx, home)).pro;
   },
 });
 
