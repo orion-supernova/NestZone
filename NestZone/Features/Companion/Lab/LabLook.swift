@@ -1,12 +1,13 @@
+#if DEBUG
 import Foundation
 
 /// What the card is told to pretend it looks like, and nothing else: a mood,
 /// a day and hour, a birthday, a hemisphere, a colourway. It changes how the
 /// house is drawn and is never sent anywhere, so it is safe on the real house.
 ///
-/// The Lab (Debug builds only) is the one thing that sets it. Release builds
-/// compile this type because the reducer reads it, and it is empty there for
-/// good: there is no storage behind it.
+/// The Lab (Debug builds only) is the one thing that sets it. The type is
+/// compiled out of Release: the reducer asks `CompanionFeature.State` for
+/// the few answers it needs, which are plain constants there.
 public struct LabLook: Codable, Equatable, Sendable {
     /// Pretend the house has been like this, whatever it has done.
     public var mood: Mood?
@@ -44,3 +45,4 @@ public struct LabLook: Codable, Equatable, Sendable {
         colour = Colourway.read((try? c.decodeIfPresent(Int.self, forKey: .colour)) ?? nil)
     }
 }
+#endif

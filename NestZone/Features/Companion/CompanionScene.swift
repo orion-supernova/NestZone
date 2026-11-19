@@ -880,8 +880,10 @@ struct ScenePortrait: View {
     /// 0 is the original colours, 1-3 the new ones; a companion that holds a
     /// colour of its own (an art sheet's) is drawn in that when this is 0.
     var colourway = 0
-    /// An art sheet's: draw the skeleton and mark what the wood does not hold (Debug only).
+    #if DEBUG
+    /// An art sheet's: draw the skeleton and mark what the wood does not hold.
     var debugWood = false
+    #endif
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 

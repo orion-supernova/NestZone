@@ -78,9 +78,11 @@ public struct CompanionFeature: Sendable {
         public var isUnreadable = false
         /// Writes that are on their way, and what they show meanwhile.
         var writes = Writes()
+        #if DEBUG
         /// The Lab's settings: what the card pretends, and whether it runs
-        /// against the pretend house. Empty in a Release build.
+        /// against the pretend house. A Release build has no such thing.
         public var labSlot: LabSlot
+        #endif
         var placeTold = false
         var importTried = false
         var streamRetries = 0
@@ -502,8 +504,9 @@ public struct CompanionFeature: Sendable {
             self.homeID = homeID
             self.now = now
             self.region = region
-            // A Release build has no Lab: the slot is empty and opens no file.
+            #if DEBUG
             labSlot = LabSlot(homeID: homeID)
+            #endif
         }
 
         // MARK: The house, as drawn
@@ -584,13 +587,45 @@ public struct CompanionFeature: Sendable {
 
         // MARK: Clock and calendar
 
+        #if DEBUG
         /// What the Lab pretends about the look of the house, if anything.
         var labLook: LabLook { labSlot.look }
+        #endif
+
+        /// The mood the Lab pretends, the birthday and the colourway: nothing
+        /// in a Release build, where there is no Lab to ask.
+        var labMood: Mood? {
+            #if DEBUG
+            labSlot.look.mood
+            #else
+            nil
+            #endif
+        }
+        var labBirthday: Bool {
+            #if DEBUG
+            labSlot.look.birthday
+            #else
+            false
+            #endif
+        }
+        var labColour: Int? {
+            #if DEBUG
+            labSlot.look.colour
+            #else
+            nil
+            #endif
+        }
 
         /// The day the scene thinks it is: the Lab's pretend day and hour on a
         /// Debug build, now otherwise. For drawing; on the real house nothing
         /// sent to the server is judged by it (`serverShop` uses `now`).
-        public var clock: Date { labSlot.look.date ?? now }
+        public var clock: Date {
+            #if DEBUG
+            labSlot.look.date ?? now
+            #else
+            now
+            #endif
+        }
 
         /// Where the house is, as the server judges it: its own region once
         /// it has one — it prices its seasons by it — and this phone's until
@@ -599,14 +634,32 @@ public struct CompanionFeature: Sendable {
 
         /// Where the house is, as it is drawn: the Lab's pretend hemisphere
         /// on the real house, the server's otherwise.
-        public var placeRegion: String? { labSlot.look.region ?? serverRegion }
+        public var placeRegion: String? {
+            #if DEBUG
+            labSlot.look.region ?? serverRegion
+            #else
+            serverRegion
+            #endif
+        }
 
         /// How many people live here. A pretend house says so itself.
-        var members: Int { labSlot.members ?? memberCount }
+        var members: Int {
+            #if DEBUG
+            labSlot.members ?? memberCount
+            #else
+            memberCount
+            #endif
+        }
 
         /// Whether the card runs against the pretend house. Always false in a
         /// Release build.
-        public var isPretend: Bool { labSlot.isPretend }
+        public var isPretend: Bool {
+            #if DEBUG
+            labSlot.isPretend
+            #else
+            false
+            #endif
+        }
 
         public var celebrated: Set<Holiday.ID> {
             house.holidays.map { Set($0.compactMap(Holiday.ID.init(rawValue:))) } ?? Holiday.defaults(for: placeRegion)
@@ -615,7 +668,7 @@ public struct CompanionFeature: Sendable {
         /// Everything that decides what the house can have today, as it is
         /// drawn — the Lab's pretend day included — worked out once for a
         /// whole shelf.
-        public var shop: ShopContext { shop(for: house, at: clock, birthday: labLook.birthday, region: placeRegion) }
+        public var shop: ShopContext { shop(for: house, at: clock, birthday: labBirthday, region: placeRegion) }
 
         private func shop(
             for house: CompanionHouse, at date: Date, birthday: Bool, region: String?, holidays known: [Holiday]? = nil
@@ -719,7 +772,7 @@ public struct CompanionFeature: Sendable {
                 holidays = Holiday.active(on: clock, among: celebrated, region: placeRegion)
                 holidayCache = HolidayCache(day: today, region: placeRegion, celebrated: celebrated, holidays: holidays)
             }
-            let context = shop(for: house, at: clock, birthday: labLook.birthday, region: placeRegion, holidays: holidays)
+            let context = shop(for: house, at: clock, birthday: labBirthday, region: placeRegion, holidays: holidays)
             let current = house.current
             // A seed nobody has named yet is a plant's sprout, never the pet
             // or the plant the vote happens to list first.
@@ -734,14 +787,14 @@ public struct CompanionFeature: Sendable {
             set(\.vote, house.vote)
             set(\.species, undecided ? nil : current?.species)
             // The colourway drawn: the Lab can preview another on the real house.
-            let colour = undecided ? nil : (labLook.colour ?? current?.colour)
+            let colour = undecided ? nil : (labColour ?? current?.colour)
             set(\.colour, colour)
             set(\.finaleAlbum, Self.finaleAlbum(moment: moment, served: served0, current: served0.current, undecided: served0.current?.isUndecided == true))
             set(\.look, current.map {
                 var look = Companion(
                     species: $0.isUndecided ? Self.seedStandIn : $0.species, seed: $0.seed, startedAt: $0.startedAt
                 )
-                look.colour = $0.isUndecided ? nil : (labLook.colour ?? $0.colour)
+                look.colour = $0.isUndecided ? nil : (labColour ?? $0.colour)
                 return look
             })
             let points = current.map { max($0.points ?? 0, 0) } ?? 0
@@ -755,7 +808,7 @@ public struct CompanionFeature: Sendable {
             set(\.stage, stage)
             set(\.isReady, !undecided && (current?.isReady ?? false))
             let mood: Mood = if let current {
-                labLook.mood ?? CompanionMath.mood(
+                labMood ?? CompanionMath.mood(
                     now: clock, completions: activity, lastCare: current.lastCareAt,
                     startedAt: current.startedAt, memberCount: members
                 )
@@ -2094,10 +2147,18 @@ public struct CompanionFeature: Sendable {
 
 extension CompanionFeature.State {
     /// Caring is coming back: it wakes up whatever mood the Lab pretended.
-    mutating func wakeFromLab() { labSlot.wake() }
+    mutating func wakeFromLab() {
+        #if DEBUG
+        labSlot.wake()
+        #endif
+    }
 
     /// A purchase was answered: the answer the Lab armed for it is spent.
-    mutating func labBuyAnswered() { labSlot.buyAnswered() }
+    mutating func labBuyAnswered() {
+        #if DEBUG
+        labSlot.buyAnswered()
+        #endif
+    }
 }
 
 extension Result {

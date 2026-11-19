@@ -33,6 +33,82 @@ public enum L10n {
         LocalizedStringResource(key, defaultValue: value, locale: locale, bundle: .main)
     }
 
+    // MARK: - Names
+
+    /// The app's name. The one place it is written: every sentence that says it
+    /// takes it from here, so a rename is a change to this key and nothing else.
+    public static var appName: LocalizedStringResource {
+        r("app_name", "NestZone")
+    }
+
+    /// What the subscription is called on its own ("Plus").
+    public static var proName: LocalizedStringResource {
+        r("pro_name", "Plus")
+    }
+
+    /// What the subscription is called with the app's name in front.
+    public static var proFullName: LocalizedStringResource {
+        r("pro_full_name", "\(appNameText) Plus")
+    }
+
+    /// The name as plain text, for a sentence that holds it as an argument.
+    private static var appNameText: String { String(localized: appName) }
+
+    // MARK: - Account and members
+
+    /// Delete account
+    public static var settingsDeleteAccountButton: LocalizedStringResource {
+        r("settings_delete_account_button", "Delete account")
+    }
+
+    /// Delete your account?
+    public static var settingsDeleteAccountTitle: LocalizedStringResource {
+        r("settings_delete_account_title", "Delete your account?")
+    }
+
+    /// What goes, and what stays.
+    public static var settingsDeleteAccountMessage: LocalizedStringResource {
+        r(
+            "settings_delete_account_message",
+            "Your profile and your place in every house are deleted for good. A house you're the last member of is deleted with everything in it. Things you wrote for the house stay for the others. Apple will ask you to confirm next."
+        )
+    }
+
+    /// Continue with Apple
+    public static var settingsDeleteAccountConfirm: LocalizedStringResource {
+        r("settings_delete_account_confirm", "Continue with Apple")
+    }
+
+    /// Remove %@?
+    public static func settingsRemoveMemberTitle(_ a0: String) -> LocalizedStringResource {
+        r("settings_remove_member_title", "Remove \(a0)?")
+    }
+
+    /// Remove from house
+    public static var settingsRemoveMemberButton: LocalizedStringResource {
+        r("settings_remove_member_button", "Remove from house")
+    }
+
+    /// %@ will lose access to this house. What they wrote for the house stays.
+    public static func settingsRemoveMemberMessage(_ a0: String) -> LocalizedStringResource {
+        r("settings_remove_member_message", "\(a0) will lose access to this house. What they wrote for the house stays.")
+    }
+
+    /// Options for %@
+    public static func settingsMemberOptions(_ a0: String) -> LocalizedStringResource {
+        r("settings_member_options", "Options for \(a0)")
+    }
+
+    /// Privacy Policy
+    public static var settingsPrivacyPolicy: LocalizedStringResource {
+        r("settings_privacy_policy", "Privacy Policy")
+    }
+
+    /// Terms of Use
+    public static var settingsTermsOfUse: LocalizedStringResource {
+        r("settings_terms_of_use", "Terms of Use")
+    }
+
     /// Settings
     public static var settingsScreenTitle: LocalizedStringResource {
         r("settings_screen_title", "Settings")
@@ -2220,9 +2296,9 @@ public enum L10n {
         r("auth_passwords_mismatch", "Passwords don't match")
     }
 
-    /// Welcome to NestZone
+    /// Welcome to %@
     public static var authWelcomeTitle: LocalizedStringResource {
-        r("auth_welcome_title", "Welcome to NestZone")
+        r("auth_welcome_title", "Welcome to \(appNameText)")
     }
 
     /// Sign in to continue ✨
@@ -3648,9 +3724,9 @@ public enum L10n {
         r("settings_notifications_footer", "Get a notification when someone adds a task, a shopping item, a note, a recipe or a film, plans dinner, finishes a task or joins the home.")
     }
 
-    /// Notifications are off for NestZone. Turn them on in Settings.
+    /// Notifications are off for %@. Turn them on in Settings.
     public static var settingsNotificationsDenied: LocalizedStringResource {
-        r("settings_notifications_denied", "Notifications are off for NestZone. Turn them on in Settings.")
+        r("settings_notifications_denied", "Notifications are off for \(appNameText). Turn them on in Settings.")
     }
 
     /// Open Settings
@@ -3695,19 +3771,19 @@ public enum L10n {
         r("settings_notifications_device_failed", "Registration failed")
     }
 
-    /// No device is registered to receive it. NestZone will try again next time you open the app.
+    /// No device is registered to receive it. %@ will try again next time you open the app.
     public static var settingsNotificationsTestNoDevices: LocalizedStringResource {
         r(
             "settings_notifications_test_no_devices",
-            "No device is registered to receive it. NestZone will try again next time you open the app."
+            "No device is registered to receive it. \(appNameText) will try again next time you open the app."
         )
     }
 
-    /// Apple rejected every device registered to this account, so they have been removed. Reopen NestZone to register this one again.
+    /// Apple rejected every device registered to this account, so they have been removed. Reopen %@ to register this one again.
     public static var settingsNotificationsTestDropped: LocalizedStringResource {
         r(
             "settings_notifications_test_dropped",
-            "Apple rejected every device registered to this account, so they have been removed. Reopen NestZone to register this one again."
+            "Apple rejected every device registered to this account, so they have been removed. Reopen \(appNameText) to register this one again."
         )
     }
 
@@ -6106,11 +6182,6 @@ public enum L10n {
     /// Nobody yet
     public static var issuesNobody: LocalizedStringResource {
         r("issues_nobody", "Nobody yet")
-    }
-
-    /// NestZone
-    public static var issuesTheApp: LocalizedStringResource {
-        r("issues_the_app", "NestZone")
     }
 
     /// Covered to %@

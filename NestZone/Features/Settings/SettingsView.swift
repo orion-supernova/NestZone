@@ -1,3 +1,4 @@
+import AuthenticationServices
 import ComposableArchitecture
 import SwiftUI
 
@@ -12,6 +13,7 @@ public struct SettingsView: View {
 
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.authorizationController) private var authorizationController
 
     /// One curve for both disclosures, applied to the disclosing row and never
     /// to its `Section`. Section-wide it animated every sibling row too, which
@@ -35,6 +37,10 @@ public struct SettingsView: View {
     /// nothing in the lab can avoid it.
     @State private var showsGlassLab = false
     #endif
+
+    /// One page holds both; the terms are its anchor.
+    private static let privacyURL = URL(string: "https://walhallaa.com/nestzone-privacy-terms")!
+    private static let termsURL = URL(string: "https://walhallaa.com/nestzone-privacy-terms#terms")!
 
     public init(store: StoreOf<SettingsFeature>) {
         self.store = store
@@ -64,6 +70,20 @@ public struct SettingsView: View {
             ManageHomesSheet(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
+        .confirmationDialog(
+            Text(L10n.settingsDeleteAccountTitle),
+            isPresented: $store.isConfirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button(role: .destructive) {
+                Task { await reauthorizeForDeletion() }
+            } label: {
+                Text(L10n.settingsDeleteAccountConfirm)
+            }
+            Button(role: .cancel) {} label: { Text(L10n.commonCancel) }
+        } message: {
+            Text(L10n.settingsDeleteAccountMessage)
+        }
         #if DEBUG
         .sheet(isPresented: $showsGlassLab) {
             NavigationStack {
@@ -88,10 +108,61 @@ public struct SettingsView: View {
                     Image(systemName: "slider.horizontal.3")
                 }
             }
+
+            // Nestie's Lab, with its "Pretend house" switch at the top of it:
+            // the house the card draws is Today's, so the Lab opens there.
+            Button { store.send(.nestieLabTapped) } label: {
+                Label { Text(verbatim: "Nestie Lab") } icon: {
+                    Image(systemName: "flask.fill")
+                }
+            }
+
+            if store.notificationsOn {
+                Button { store.send(.sendTestPushTapped) } label: {
+                    HStack {
+                        Label { Text(verbatim: "Send a test notification") } icon: {
+                            Image(systemName: "paperplane")
+                        }
+                        Spacer(minLength: 0)
+                        if store.isSendingTestPush {
+                            ProgressView().controlSize(.small)
+                        }
+                    }
+                }
+                .disabled(store.isSendingTestPush)
+
+                // Whether this particular device is actually reachable.
+                // "Notifications are on" and "the server can reach this phone"
+                // are different claims, and only the second one delivers
+                // anything. One row, not two: split across a `Form` separator
+                // the token sat at the left margin and read as a stray line.
+                // Tappable only when there is a token to expand to.
+                VStack(alignment: .leading, spacing: 10) {
+                    if store.pushTokenFull == nil {
+                        deviceRow
+                    } else {
+                        Button { store.send(.deviceRowTapped) } label: { deviceRow }
+                            .buttonStyle(.plain)
+                    }
+
+                    if store.isShowingFullPushToken, let token = store.pushTokenFull {
+                        VStack(alignment: .leading, spacing: 6) {
+                            pushTokenBlock(token)
+                            if let detail = store.pushTokenDetail {
+                                Text(detail)
+                                    .font(.caption2)
+                                    .foregroundStyle(Palette.accessory)
+                            }
+                        }
+                        .transition(.opacity)
+                    }
+                }
+                .animation(disclosure, value: store.isShowingFullPushToken)
+            }
         } header: {
             Text(verbatim: "Developer")
         } footer: {
-            Text(verbatim: "Merged-glass list settings, live. Debug builds only.")
+            Text(verbatim: "Debug builds only: the Nestie Lab, a test push to this phone, and this device's push token.")
         }
     }
     #endif
@@ -202,6 +273,27 @@ public struct SettingsView: View {
                                     Text(member.displayName)
                                         .font(.subheadline)
                                     Spacer(minLength: 0)
+                                    // Not on your own row: leaving is Manage
+                                    // Home's, and deleting yourself is below.
+                                    if member.id != store.user?.id {
+                                        Menu {
+                                            Button(role: .destructive) {
+                                                store.send(.removeMemberTapped(member))
+                                            } label: {
+                                                Label {
+                                                    Text(L10n.settingsRemoveMemberButton)
+                                                } icon: {
+                                                    Image(systemName: "person.crop.circle.badge.minus")
+                                                }
+                                            }
+                                        } label: {
+                                            Image(systemName: "ellipsis.circle")
+                                                .foregroundStyle(Palette.accessory)
+                                                .frame(minWidth: Metrics.minTapTarget, minHeight: Metrics.minTapTarget)
+                                                .contentShape(.rect)
+                                        }
+                                        .accessibilityLabel(Text(L10n.settingsMemberOptions(member.displayName)))
+                                    }
                                 }
                             }
                         }
@@ -313,60 +405,6 @@ public struct SettingsView: View {
                     }
                 }
             }
-
-            if store.notificationsOn {
-                Button { store.send(.sendTestPushTapped) } label: {
-                    HStack {
-                        Label {
-                            Text(L10n.settingsNotificationsSendTest)
-                        } icon: {
-                            Image(systemName: "paperplane")
-                        }
-                        Spacer(minLength: 0)
-                        if store.isSendingTestPush {
-                            ProgressView().controlSize(.small)
-                        }
-                    }
-                }
-                .disabled(store.isSendingTestPush)
-
-                // Whether this particular device is actually reachable.
-                //
-                // "Notifications are on" and "the server can reach this phone"
-                // are different claims, and only the second one delivers
-                // anything. A device whose token never arrived looks identical
-                // to a working one from this screen, which turned a five-minute
-                // question — which of these rows is my phone? — into an
-                // afternoon of guessing.
-                // One row, not two. Split across a `Form` separator the token
-                // sat at the left margin under a right-aligned value and read
-                // as a stray line rather than part of the row it belongs to.
-                //
-                // Tappable only when there is something to expand to: a row
-                // that highlights under the finger and then does nothing reads
-                // as a bug in the screen you came here to debug.
-                VStack(alignment: .leading, spacing: 10) {
-                    if store.pushTokenFull == nil {
-                        deviceRow
-                    } else {
-                        Button { store.send(.deviceRowTapped) } label: { deviceRow }
-                            .buttonStyle(.plain)
-                    }
-
-                    if store.isShowingFullPushToken, let token = store.pushTokenFull {
-                        VStack(alignment: .leading, spacing: 6) {
-                            pushTokenBlock(token)
-                            if let detail = store.pushTokenDetail {
-                                Text(detail)
-                                    .font(.caption2)
-                                    .foregroundStyle(Palette.accessory)
-                            }
-                        }
-                        .transition(.opacity)
-                    }
-                }
-                .animation(disclosure, value: store.isShowingFullPushToken)
-            }
         } header: {
             Text(L10n.settingsNotificationsTitle)
         } footer: {
@@ -397,6 +435,7 @@ public struct SettingsView: View {
         }
     }
 
+    #if DEBUG
     /// The whole token, quoted as a block so it reads as detail belonging to
     /// the row above rather than a line of text at the margin. Tapping it
     /// copies — the block is the target, because a 160-character string is
@@ -419,7 +458,7 @@ public struct SettingsView: View {
             .background(Palette.inset, in: .rect(cornerRadius: 10))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text(L10n.settingsNotificationsDevice))
+        .accessibilityLabel(Text(verbatim: "Push token"))
         .sensoryFeedback(.success, trigger: store.didCopyPushToken) { _, copied in
             copied
         }
@@ -446,12 +485,13 @@ public struct SettingsView: View {
             }
         } label: {
             Label {
-                Text(L10n.settingsNotificationsDevice)
+                Text(verbatim: "Push token")
             } icon: {
                 Image(systemName: "iphone.gen3.radiowaves.left.and.right")
             }
         }
     }
+    #endif
 
     private var preferencesSection: some View {
         Section {
@@ -506,6 +546,19 @@ public struct SettingsView: View {
             .disabled(store.updateCheck == .checking)
 
             updateOutcome
+
+            // Required in the app for a subscription (3.1.2), and for
+            // anybody who wants to read them.
+            Link(destination: Self.privacyURL) {
+                Label { Text(L10n.settingsPrivacyPolicy) } icon: {
+                    Image(systemName: "hand.raised")
+                }
+            }
+            Link(destination: Self.termsURL) {
+                Label { Text(L10n.settingsTermsOfUse) } icon: {
+                    Image(systemName: "doc.text")
+                }
+            }
         } header: {
             Text(L10n.settingsAboutTitle)
         } footer: {
@@ -597,9 +650,47 @@ public struct SettingsView: View {
                     }
                 }
             }
-            .disabled(store.isSigningOut)
+            .disabled(store.isSigningOut || store.isDeletingAccount)
+
+            // Guideline 5.1.1(v): an account made in the app can be deleted in
+            // it. Destructive, last, and behind a dialog that says what goes.
+            Button(role: .destructive) { store.send(.deleteAccountTapped) } label: {
+                HStack {
+                    Label { Text(L10n.settingsDeleteAccountButton) } icon: {
+                        Image(systemName: "person.crop.circle.badge.minus")
+                    }
+                    if store.isDeletingAccount {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(store.isSigningOut || store.isDeletingAccount)
         } header: {
             Text(L10n.settingsAccountTitle)
+        }
+    }
+
+    /// Asks Apple again, so the server gets a fresh `authorizationCode` to
+    /// revoke the Apple token with, and hands the answer to the reducer. Backing
+    /// out of Apple's sheet stops the deletion, quietly.
+    private func reauthorizeForDeletion() async {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = []
+        do {
+            let result = try await authorizationController.performRequest(request)
+            guard case let .appleID(credential) = result else {
+                store.send(.deleteAccountAuthorizationFailed(.cancelled))
+                return
+            }
+            let code = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
+            store.send(.deleteAccountAuthorized(code: code))
+        } catch {
+            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
+                store.send(.deleteAccountAuthorizationFailed(.cancelled))
+            } else {
+                store.send(.deleteAccountAuthorizationFailed(AppError(error)))
+            }
         }
     }
 }

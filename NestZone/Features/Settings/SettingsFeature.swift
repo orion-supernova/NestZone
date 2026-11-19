@@ -43,6 +43,17 @@ public struct SettingsFeature: Sendable {
         /// the first.
         public var isUpdatingAvatar = false
 
+        /// The "Delete account" confirmation is up. It is a dialog the view
+        /// shows, not an alert from here, because what follows it — Sign in
+        /// with Apple — can only be run by a view.
+        public var isConfirmingDelete = false
+        /// Apple has been asked again and the server is deleting the account.
+        /// Draws the row as busy and stops a second deletion.
+        public var isDeletingAccount = false
+        /// A member is being removed from the house. Kept by id, so the row
+        /// that asked is the one that goes, whatever the list does meanwhile.
+        public var removingMember: UserID?
+
         /// Where the "check for updates" row stands.
         ///
         /// A button rather than a poll. The answer changes when a build is
@@ -172,6 +183,19 @@ public struct SettingsFeature: Sendable {
         case openAppStoreTapped(URL)
         case signOutTapped
         case signOutConfirmed
+        case deleteAccountTapped
+        /// Apple answered the fresh sign-in the deletion asks for. The code is
+        /// what lets the server revoke the Apple token; without one the account
+        /// is still deleted.
+        case deleteAccountAuthorized(code: String?)
+        /// Apple's sheet was refused or failed. Backing out is silent.
+        case deleteAccountAuthorizationFailed(AppError)
+        case deleteAccountFinished(Result<Bool, AppError>)
+        case removeMemberTapped(User)
+        case memberRemoved
+        /// Carries what it takes to undo the removal: who went, and where they
+        /// stood in the list.
+        case removeMemberFailed(AppError, restoring: User, at: Int)
         /// The restore behind the tabs has answered (or has nothing to
         /// answer with), so a sign-out that was waiting for it can go.
         case sessionReady
@@ -182,6 +206,7 @@ public struct SettingsFeature: Sendable {
 
         public enum Alert: Equatable {
             case confirmSignOut
+            case confirmRemoveMember(UserID)
         }
 
         @CasePathable
@@ -197,7 +222,16 @@ public struct SettingsFeature: Sendable {
             /// says nothing the root will act on while the launch is still
             /// restoring.
             case signedOut
+            #if DEBUG
+            /// The Nestie Lab belongs to the companion, which `MainFeature`
+            /// owns: it brings Today forward and opens the Lab there.
+            case nestieLabRequested
+            #endif
         }
+
+        #if DEBUG
+        case nestieLabTapped
+        #endif
     }
 
     private enum CancelID { case members, copyReset, pushTokenCopyReset }
@@ -473,6 +507,78 @@ public struct SettingsFeature: Sendable {
                 guard state.isSigningOut, !state.isAwaitingSession else { return .none }
                 return signOut(&state)
 
+            case .deleteAccountTapped:
+                guard !state.isDeletingAccount else { return .none }
+                state.isConfirmingDelete = true
+                return .none
+
+            case let .deleteAccountAuthorized(code):
+                guard !state.isDeletingAccount else { return .none }
+                state.isDeletingAccount = true
+                return .run { send in
+                    await send(.deleteAccountFinished(Result {
+                        try await auth.deleteAccount(code)
+                        return true
+                    }.mapError { AppError($0) }))
+                }
+
+            case let .deleteAccountAuthorizationFailed(error):
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            // The account is gone and so is the session, so this ends where a
+            // sign-out ends: the root drops the tabs.
+            case .deleteAccountFinished(.success):
+                state.isDeletingAccount = false
+                return .send(.delegate(.signedOut))
+
+            // A refused deletion changed nothing on the server, so there is
+            // nothing to put back but the row.
+            case let .deleteAccountFinished(.failure(error)):
+                state.isDeletingAccount = false
+                state.alert = .failure(error)
+                return .none
+
+            case let .removeMemberTapped(user):
+                state.alert = .confirmRemoveMember(user)
+                return .none
+
+            case let .alert(.presented(.confirmRemoveMember(userID))):
+                guard state.removingMember == nil,
+                      let index = state.members.index(id: userID),
+                      let user = state.members[id: userID],
+                      userID != state.user?.id
+                else { return .none }
+                // Out of the list at once; the push confirms it. A write that
+                // fails changed nothing, so no push is coming to bring them
+                // back: the failure carries the person and their place.
+                state.removingMember = userID
+                state.members.remove(id: userID)
+                return .run { [homeID = state.homeID] send in
+                    try await homes.removeMember(homeID, userID)
+                    await send(.memberRemoved)
+                } catch: { error, send in
+                    await send(.removeMemberFailed(AppError(error), restoring: user, at: index))
+                }
+
+            case .memberRemoved:
+                state.removingMember = nil
+                return .none
+
+            case let .removeMemberFailed(error, user, index):
+                state.removingMember = nil
+                if state.members[id: user.id] == nil {
+                    state.members.insert(user, at: min(index, state.members.count))
+                }
+                state.alert = .failure(error)
+                return .none
+
+            #if DEBUG
+            case .nestieLabTapped:
+                return .send(.delegate(.nestieLabRequested))
+            #endif
+
             case .destination(.presented(.editName(.finished))):
                 state.destination = nil
                 return .none
@@ -515,6 +621,26 @@ extension AlertState where Action == SettingsFeature.Action.Alert {
             }
         } message: {
             TextState(String(localized: L10n.settingsLogoutConfirmMessage))
+        }
+    }
+}
+
+extension AlertState where Action == SettingsFeature.Action.Alert {
+    /// Names the person, so a tap meant for another row cannot remove them
+    /// unseen, and says what stays.
+    static func confirmRemoveMember(_ user: User) -> Self {
+        let name = user.displayName
+        return AlertState {
+            TextState(String(localized: L10n.settingsRemoveMemberTitle(name)))
+        } actions: {
+            ButtonState(role: .destructive, action: .confirmRemoveMember(user.id)) {
+                TextState(String(localized: L10n.settingsRemoveMemberButton))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.settingsRemoveMemberMessage(name)))
         }
     }
 }

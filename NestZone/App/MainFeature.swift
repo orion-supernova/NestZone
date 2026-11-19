@@ -303,6 +303,19 @@ public struct MainFeature: Sendable {
                 state.customize = CustomizeFeature.State()
                 return .none
 
+            #if DEBUG
+            // The Lab is watched against the card, so it opens on Today with
+            // Settings out of the way. A sheet presented in the action that
+            // dismisses another is dropped, hence the beat before it.
+            case .settings(.delegate(.nestieLabRequested)):
+                state.isSettingsPresented = false
+                state.selectedTab = .today
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(450))
+                    await send(.companion(.labTapped))
+                }
+            #endif
+
             case .customize(.presented(.delegate(.finished))):
                 state.customize = nil
                 return .none
