@@ -23,23 +23,57 @@ enum StoreDemo {
     /// The house is treated as without Plus, to photograph what a lock looks like.
     static var forcesFreeHouse: Bool { defaults.bool(forKey: "forceFreeHouse") }
 
-    /// The real list prices, in USD, formatted for this phone's locale.
-    static func price(_ amount: Decimal) -> String {
-        amount.formatted(.currency(code: "USD").locale(.current))
+    /// Whether the demo prices in lira, the way a Turkish storefront would.
+    private static var pricesInLira: Bool {
+        Locale.current.region == .turkey || Locale.current.language.languageCode == .turkish
+    }
+
+    /// DEMO APPROXIMATIONS of Apple's Turkish price tiers, for screenshots
+    /// only: NestZone.storekit carries USD prices alone and a real build asks
+    /// the store. Yearly, monthly, then the four Sparkle packs in shelf order.
+    private static let lira = (yearly: "749.99", monthly: "109.99",
+                               packs: ["109.99", "329.99", "649.99", "1299.99"])
+
+    /// Formats an amount like a store product's `displayPrice`: lira with
+    /// Turkish separators in Turkey, dollars in this phone's locale elsewhere.
+    private static func display(_ amount: Decimal) -> String {
+        pricesInLira
+            ? amount.formatted(.currency(code: "TRY").locale(Locale(identifier: "tr_TR")))
+            : amount.formatted(.currency(code: "USD").locale(.current))
+    }
+
+    private static func amount(usd: String, lira: String) -> Decimal {
+        Decimal(string: pricesInLira ? lira : usd)!
+    }
+
+    /// The yearly price over twelve months, rounded to a cent like the store's.
+    private static func perMonth(_ yearly: Decimal) -> Decimal {
+        var month = yearly / 12
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &month, 2, .plain)
+        return rounded
     }
 
     static var plusPackages: [PlusPackage] {
-        [
-            PlusPackage(id: "demo.yearly", kind: .yearly, price: price(Decimal(string: "19.99")!),
-                        pricePerMonth: price(Decimal(string: "1.67")!), trialDays: 7),
-            PlusPackage(id: "demo.monthly", kind: .monthly, price: price(Decimal(string: "2.99")!)),
+        let yearly = amount(usd: "19.99", lira: lira.yearly)
+        return [
+            PlusPackage(id: "demo.yearly", kind: .yearly, price: display(yearly),
+                        pricePerMonth: display(perMonth(yearly)), trialDays: 7),
+            PlusPackage(id: "demo.monthly", kind: .monthly,
+                        price: display(amount(usd: "2.99", lira: lira.monthly))),
         ]
     }
 
-    /// The catalog's shelf, priced the way the store would price it.
+    /// The catalog's shelf, priced the way the store would price it. `price`
+    /// stays in dollars because packs are compared by it; only the text
+    /// follows the storefront.
     static var sparklePacks: [SparklePack] {
-        SparklePack.shelf.map {
-            SparklePack(id: $0.id, sparkles: $0.sparkles, displayPrice: $0.price.map(price), price: $0.price)
+        SparklePack.shelf.enumerated().map { index, pack in
+            let shown = pack.price.map { usd in
+                pricesInLira ? Decimal(string: lira.packs[min(index, lira.packs.count - 1)])! : usd
+            }
+            return SparklePack(id: pack.id, sparkles: pack.sparkles,
+                               displayPrice: shown.map(display), price: pack.price)
         }
     }
     #else

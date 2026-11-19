@@ -36780,7 +36780,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ a year"
+            "value": "%@/year"
           }
         },
         "tr": {
@@ -36797,7 +36797,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ a month"
+            "value": "%@/month"
           }
         },
         "tr": {
@@ -36988,6 +36988,138 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ödeme, onayladığın anda Apple Hesabı'ndan alınır. Dönem bitmeden en az 24 saat önce iptal etmezsen abonelik kendiliğinden yenilenir. Apple Hesabı ayarlarından istediğin zaman yönetebilir ya da iptal edebilirsin. Ücretsiz deneme bitince ücretli aboneliğe geçer."
+          }
+        }
+      }
+    },
+    "paywall_billed_yearly_note": {
+      "comment": "Small line on the yearly plan card. %@ is the per-month equivalent price (e.g. $1.67). Must make clear it bills once a year and renews; the per-month figure is only a side note.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billed yearly · renews automatically · about %@/month"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yıllık faturalanır · otomatik yenilenir · aylık yaklaşık %@"
+          }
+        }
+      }
+    },
+    "paywall_billed_yearly_plain": {
+      "comment": "Small line on the yearly plan card when no per-month price is available.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billed yearly · renews automatically"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yıllık faturalanır · otomatik yenilenir"
+          }
+        }
+      }
+    },
+    "paywall_billed_monthly_note": {
+      "comment": "Small line on the monthly plan card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billed monthly · renews automatically"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aylık faturalanır · otomatik yenilenir"
+          }
+        }
+      }
+    },
+    "paywall_start_trial_days": {
+      "comment": "Main purchase button when the selected plan starts with a free trial. %lld is the number of days.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Start %lld-day free trial"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Start %lld-day free trial"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün bedava dene"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün bedava dene"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "paywall_renews_note": {
+      "comment": "One short line directly under the purchase button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renews automatically. Cancel anytime in Settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik yenilenir. İstediğin zaman Ayarlar'dan iptal edebilirsin."
+          }
+        }
+      }
+    },
+    "paywall_disclosure_full": {
+      "comment": "Full App Store subscription disclosure above Terms and Privacy on the paywall. Keep every point: charged to Apple Account at confirmation, auto-renews unless cancelled 24h before period end, renewal charged within 24h before, manage in Apple Account settings, unused trial is forfeited on purchase.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment is charged to your Apple Account when you confirm the purchase. The subscription renews automatically unless you cancel it at least 24 hours before the end of the current period, and your account is charged for the renewal within 24 hours before the period ends. You can manage or cancel it any time in your Apple Account settings. Any unused part of a free trial is forfeited when you buy a subscription."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ödeme, satın almayı onayladığında Apple Hesabı'ndan alınır. Mevcut dönem bitmeden en az 24 saat önce iptal etmezsen abonelik otomatik yenilenir; yenileme ücreti dönem bitmeden önceki 24 saat içinde hesabından alınır. Aboneliği Apple Hesabı ayarlarından istediğin zaman yönetebilir ya da iptal edebilirsin. Ücretsiz denemenin kullanılmayan kısmı, abone olduğunda sona erer."
           }
         }
       }

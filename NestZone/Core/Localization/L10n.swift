@@ -9923,14 +9923,14 @@ public enum L10n {
         r("paywall_monthly", "Monthly")
     }
 
-    /// %@ a year
+    /// %@/year
     public static func paywallPricePerYear(_ a0: String) -> LocalizedStringResource {
-        r("paywall_price_per_year", "\(a0) a year")
+        r("paywall_price_per_year", "\(a0)/year")
     }
 
-    /// %@ a month
+    /// %@/month
     public static func paywallPricePerMonth(_ a0: String) -> LocalizedStringResource {
-        r("paywall_price_per_month", "\(a0) a month")
+        r("paywall_price_per_month", "\(a0)/month")
     }
 
     /// That's %@ a month
@@ -9961,6 +9961,36 @@ public enum L10n {
     /// Subscribe
     public static var paywallSubscribe: LocalizedStringResource {
         r("paywall_subscribe", "Subscribe")
+    }
+
+    /// Billed yearly · renews automatically · about %@/month
+    public static func paywallBilledYearlyNote(_ a0: String) -> LocalizedStringResource {
+        r("paywall_billed_yearly_note", "Billed yearly · renews automatically · about \(a0)/month")
+    }
+
+    /// Billed yearly · renews automatically
+    public static var paywallBilledYearlyPlain: LocalizedStringResource {
+        r("paywall_billed_yearly_plain", "Billed yearly · renews automatically")
+    }
+
+    /// Billed monthly · renews automatically
+    public static var paywallBilledMonthlyNote: LocalizedStringResource {
+        r("paywall_billed_monthly_note", "Billed monthly · renews automatically")
+    }
+
+    /// Start %lld-day free trial
+    public static func paywallStartTrialDays(_ a0: Int) -> LocalizedStringResource {
+        r("paywall_start_trial_days", "Start \(a0)-day free trial")
+    }
+
+    /// Renews automatically. Cancel anytime in Settings.
+    public static var paywallRenewsNote: LocalizedStringResource {
+        r("paywall_renews_note", "Renews automatically. Cancel anytime in Settings.")
+    }
+
+    /// Payment is charged to your Apple Account when you confirm the purchase...
+    public static var paywallDisclosureFull: LocalizedStringResource {
+        r("paywall_disclosure_full", "Payment is charged to your Apple Account when you confirm the purchase. The subscription renews automatically unless you cancel it at least 24 hours before the end of the current period, and your account is charged for the renewal within 24 hours before the period ends. You can manage or cancel it any time in your Apple Account settings. Any unused part of a free trial is forfeited when you buy a subscription.")
     }
 
     /// Restore purchases
