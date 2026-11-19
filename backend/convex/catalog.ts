@@ -275,6 +275,9 @@ export const details = action({
   args: { tmdbId: v.string() },
   handler: async (ctx, { tmdbId }) => {
     await requireSignedIn(ctx);
+    // The id goes straight into the request path, so it is digits or nothing:
+    // anything else could walk the proxy to another TMDb endpoint on our key.
+    if (!/^\d{1,12}$/.test(tmdbId)) throw new Error("Not a movie id");
     const data = await fetchJSON(
       url(`/movie/${tmdbId}`, { append_to_response: "credits,keywords" }),
     );
