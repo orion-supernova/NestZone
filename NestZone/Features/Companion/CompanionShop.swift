@@ -1252,19 +1252,37 @@ struct SparkleStoreView: View {
         return store.packs.first { $0.sparkles >= more }?.id
     }
 
+    /// Two to a row, three rows; one to a row where the type is too big for
+    /// two. A glass card each, so the biggest pack has the biggest cluster and
+    /// the room is used.
+    @ViewBuilder
     private var packs: some View {
-        let best = SparklePack.bestValue(store.packs)
-        return VStack(spacing: 0) {
-            if store.packs.isEmpty {
-                unpriced
-            } else {
-                ForEach(Array(store.packs.enumerated()), id: \.element.id) { index, pack in
-                    if index > 0 { Divider().padding(.leading, 70) }
-                    row(pack, size: index, isBest: best == pack.id)
+        if store.packs.isEmpty {
+            unpriced.glassCard()
+        } else {
+            let best = SparklePack.bestValue(store.packs)
+            let bonuses = SparklePack.bonuses(store.packs)
+            let wide = typeSize.isAccessibilitySize
+            let rows = Self.rows(of: store.packs, columns: wide ? 1 : 2)
+            Grid(horizontalSpacing: 12, verticalSpacing: 22) {
+                ForEach(Array(rows.enumerated()), id: \.offset) { rowIndex, row in
+                    GridRow {
+                        ForEach(row, id: \.element.id) { tier, pack in
+                            card(pack, tier: tier, isBest: best == pack.id, bonus: bonuses[pack.id], wide: wide)
+                                .appear(rowIndex + 1)
+                        }
+                    }
                 }
             }
+            // Room for the tag on the first row's top edge.
+            .padding(.top, 8)
         }
-        .glassCard()
+    }
+
+    /// The packs in rows of `columns`, each with its place on the shelf.
+    private static func rows(of packs: [SparklePack], columns: Int) -> [[(offset: Int, element: SparklePack)]] {
+        let all = Array(packs.enumerated())
+        return stride(from: 0, to: all.count, by: columns).map { Array(all[$0..<min($0 + columns, all.count)]) }
     }
 
     /// The store has not priced the packs yet, or cannot be reached.
@@ -1285,111 +1303,26 @@ struct SparkleStoreView: View {
         }
     }
 
-    private func row(_ pack: SparklePack, size: Int, isBest: Bool) -> some View {
+    private func card(_ pack: SparklePack, tier: Int, isBest: Bool, bonus: Int?, wide: Bool) -> some View {
         let isBuying = store.buyingPack == pack.id
-        let note = store.packNote?.id == pack.id ? store.packNote : nil
-        let glyphs: [Font] = [.body, .title3, .title2, .title]
-        let stacked = typeSize.isAccessibilitySize
-        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(spacing: 12))
-        return layout {
-            // Bigger packs, a bigger sparkle: size shown, never shouted.
-            Image(systemName: Amount.Currency.sparkles.symbol)
-                .font(glyphs[min(size, 3)].weight(.semibold))
-                .foregroundStyle(Palette.sparkle)
-                .symbolColorRenderingMode(.gradient)
-                .frame(width: 44, height: 44)
-                .background(Palette.sparkleWash, in: .circle)
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { packFrames[pack.id] = $0 }
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                // The buy button says the amount and the price; what is left
-                // here for VoiceOver is only what the button does not say.
-                Text(pack.sparkles, format: .number)
-                    .font(.system(.title3, design: .rounded, weight: .semibold))
-                    .monospacedDigit()
-                    .accessibilityHidden(true)
-                Text(L10n.storePackUnit)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-                if isBest || enoughPack == pack.id {
-                    FlowLayout(spacing: 6) {
-                        if isBest {
-                            Text(L10n.storeBestValue)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(theme.accent, in: .capsule)
-                        }
-                        if enoughPack == pack.id, let pending = store.pending {
-                            Label {
-                                Text(L10n.storeEnoughFor(String(localized: pending.item.title)))
-                            } icon: {
-                                Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.success)
-                            }
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Palette.inset, in: .capsule)
-                        }
-                    }
-                    .padding(.top, 2)
-                }
-                if let note {
-                    Label {
-                        switch note.kind {
-                        case .waiting: Text(L10n.storeWaiting)
-                        case .failed: Text(L10n.storeDidnt)
-                        case .unverified: Text(L10n.storeUnverified)
-                        case .retrying: Text(L10n.storeRetrying)
-                        }
-                    } icon: {
-                        Image(systemName: note.kind == .failed || note.kind == .unverified ? "exclamationmark.circle" : "clock")
-                    }
-                    .font(.footnote)
-                    .foregroundStyle(note.kind == .failed || note.kind == .unverified ? Palette.dangerText : Color.secondary)
-                }
+        return SparklePackCard(
+            pack: pack,
+            tier: tier,
+            priceText: pack.displayPrice ?? Self.noPrice,
+            bonus: bonus,
+            isBest: isBest,
+            isStarter: tier == 0 && pack.sparkles == SparklePack.shelf.first?.sparkles,
+            enoughFor: enoughPack == pack.id ? store.pending.map { String(localized: $0.item.title) } : nil,
+            note: store.packNote?.id == pack.id ? store.packNote?.kind : nil,
+            isBuying: isBuying,
+            isWaiting: store.buyingPack != nil && !isBuying,
+            wide: wide,
+            onFrame: { packFrames[pack.id] = $0 },
+            onBuy: {
+                lastTapped = pack.id
+                store.send(.packTapped(pack))
             }
-            if !stacked { Spacer(minLength: 8) }
-            buyButton(pack, isBuying: isBuying, stacked: stacked)
-                // The pack being bought keeps its colour under its spinner; the
-                // others wait their turn.
-                .disabled(store.buyingPack != nil && !isBuying)
-                .allowsHitTesting(!isBuying)
-                .shake(on: note.map { $0.kind == .failed || $0.kind == .unverified ? 1 : 0 } ?? 0)
-                .accessibilityLabel(Text(verbatim: "\(Price.sparkles(pack.sparkles).spoken), \(pack.displayPrice ?? Self.noPrice)"))
-                .accessibilityIdentifier("Pack.\(pack.sparkles)")
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .frame(minHeight: 64)
-        .opacity(store.buyingPack != nil && !isBuying ? 0.5 : 1)
-        .animation(Motion.fade, value: store.buyingPack)
-    }
-
-    @ViewBuilder
-    private func buyButton(_ pack: SparklePack, isBuying: Bool, stacked: Bool) -> some View {
-        let button = Button {
-            lastTapped = pack.id
-            store.send(.packTapped(pack))
-        } label: {
-            ZStack {
-                // Holds the button's width while it waits.
-                priceLabel(pack).opacity(isBuying ? 0 : 1)
-                if isBuying { ProgressView().tint(.white) }
-            }
-        }
-        if stacked { button.buttonStyle(.depth) } else { button.buttonStyle(.depthCompact) }
-    }
-
-    @ViewBuilder
-    private func priceLabel(_ pack: SparklePack) -> some View {
-        if let price = pack.displayPrice {
-            Text(verbatim: price).monospacedDigit()
-        } else {
-            Text(verbatim: Self.noPrice)
-        }
+        )
     }
 
     /// What a pack without a store price says. Only the explicit test store

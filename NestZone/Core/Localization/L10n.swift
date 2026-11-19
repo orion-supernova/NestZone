@@ -9420,6 +9420,18 @@ public enum L10n {
         r("store_pack_unit", "Sparkles")
     }
 
+    // MARK: - Sparkles store · pack cards
+
+    /// +%lld% more
+    public static func storeBonus(_ a0: Int) -> LocalizedStringResource {
+        r("store_bonus", "+\(a0)% more")
+    }
+
+    /// Starter
+    public static var storeStarter: LocalizedStringResource {
+        r("store_starter", "Starter")
+    }
+
     // MARK: - Companion · best value
 
     /// Best value
@@ -10290,6 +10302,201 @@ public enum L10n {
     /// Plus is back on
     public static var plusRestoredOn: LocalizedStringResource {
         r("plus_restored_on", "Plus is back on")
+    }
+
+    /// Everything in Plus
+    public static var plusDetailsTitle: LocalizedStringResource {
+        r("plus_details_title", "Everything in Plus")
+    }
+
+    /// Plus is one subscription for the whole house. Here is everything it adds.
+    public static var plusDetailsSubtitle: LocalizedStringResource {
+        r("plus_details_subtitle", "Plus is one subscription for the whole house. Here is everything it adds.")
+    }
+
+    /// See everything in Plus
+    public static var plusSeeEverything: LocalizedStringResource {
+        r("plus_see_everything", "See everything in Plus")
+    }
+
+    /// Plan together
+    public static var plusGroupPlan: LocalizedStringResource {
+        r("plus_group_plan", "Plan together")
+    }
+
+    /// Money
+    public static var plusGroupMoney: LocalizedStringResource {
+        r("plus_group_money", "Money")
+    }
+
+    /// Around the house
+    public static var plusGroupHouse: LocalizedStringResource {
+        r("plus_group_house", "Around the house")
+    }
+
+    /// Movies
+    public static var plusGroupMovies: LocalizedStringResource {
+        r("plus_group_movies", "Movies")
+    }
+
+    /// More than one home
+    public static var plusGroupHomes: LocalizedStringResource {
+        r("plus_group_homes", "More than one home")
+    }
+
+    /// Shared calendar
+    public static var plusFeatureCalendarTitle: LocalizedStringResource {
+        r("plus_feature_calendar_title", "Shared calendar")
+    }
+
+    /// One calendar for the house. Invite housemates, see who's coming and get a reminder before it starts.
+    public static var plusFeatureCalendarText: LocalizedStringResource {
+        r("plus_feature_calendar_text", "One calendar for the house. Invite housemates, see who's coming and get a reminder before it starts.")
+    }
+
+    /// Add events from anywhere
+    public static var plusFeatureEventTitle: LocalizedStringResource {
+        r("plus_feature_event_title", "Add events from anywhere")
+    }
+
+    /// Turn a dinner into an occasion, or file an event from the + button, without opening the Calendar.
+    public static var plusFeatureEventText: LocalizedStringResource {
+        r("plus_feature_event_text", "Turn a dinner into an occasion, or file an event from the + button, without opening the Calendar.")
+    }
+
+    /// Shared money
+    public static var plusFeatureMoneyTitle: LocalizedStringResource {
+        r("plus_feature_money_title", "Shared money")
+    }
+
+    /// Log shared expenses, see who owes whom, settle up, and keep track of bills and budgets.
+    public static var plusFeatureMoneyText: LocalizedStringResource {
+        r("plus_feature_money_text", "Log shared expenses, see who owes whom, settle up, and keep track of bills and budgets.")
+    }
+
+    /// Log money from anywhere
+    public static var plusFeatureExpenseTitle: LocalizedStringResource {
+        r("plus_feature_expense_title", "Log money from anywhere")
+    }
+
+    /// Add an expense from the + button or from a problem's cost, not only from Money.
+    public static var plusFeatureExpenseText: LocalizedStringResource {
+        r("plus_feature_expense_text", "Add an expense from the + button or from a problem's cost, not only from Money.")
+    }
+
+    /// House problems
+    public static var plusFeatureIssuesTitle: LocalizedStringResource {
+        r("plus_feature_issues_title", "House problems")
+    }
+
+    /// Keep track of what's broken. Add photos, costs and parts, hand it to someone and book a visit.
+    public static var plusFeatureIssuesText: LocalizedStringResource {
+        r("plus_feature_issues_text", "Keep track of what's broken. Add photos, costs and parts, hand it to someone and book a visit.")
+    }
+
+    /// House chat
+    public static var plusFeatureMessagesTitle: LocalizedStringResource {
+        r("plus_feature_messages_title", "House chat")
+    }
+
+    /// Talk with the whole house or in smaller groups, and put a question to a vote with a poll.
+    public static var plusFeatureMessagesText: LocalizedStringResource {
+        r("plus_feature_messages_text", "Talk with the whole house or in smaller groups, and put a question to a vote with a poll.")
+    }
+
+    /// Shopping by aisle
+    public static var plusFeatureShoppingTitle: LocalizedStringResource {
+        r("plus_feature_shopping_title", "Shopping by aisle")
+    }
+
+    /// Group the shopping list by aisle, and clear a whole aisle at once.
+    public static var plusFeatureShoppingText: LocalizedStringResource {
+        r("plus_feature_shopping_text", "Group the shopping list by aisle, and clear a whole aisle at once.")
+    }
+
+    /// Archive now
+    public static var plusFeatureArchiveTitle: LocalizedStringResource {
+        r("plus_feature_archive_title", "Archive now")
+    }
+
+    /// Put finished chores away yourself, instead of waiting for them to move to the Archive on their own.
+    public static var plusFeatureArchiveText: LocalizedStringResource {
+        r("plus_feature_archive_text", "Put finished chores away yourself, instead of waiting for them to move to the Archive on their own.")
+    }
+
+    /// Your own movie lists
+    public static var plusFeatureListsTitle: LocalizedStringResource {
+        r("plus_feature_lists_title", "Your own movie lists")
+    }
+
+    /// Make lists beyond Watchlist and Watched, like Friday night picks.
+    public static var plusFeatureListsText: LocalizedStringResource {
+        r("plus_feature_lists_text", "Make lists beyond Watchlist and Watched, like Friday night picks.")
+    }
+
+    /// Mature titles
+    public static var plusFeatureMatureTitle: LocalizedStringResource {
+        r("plus_feature_mature_title", "Mature titles")
+    }
+
+    /// Include mature titles when you browse and search for movies, and in the movie game.
+    public static var plusFeatureMatureText: LocalizedStringResource {
+        r("plus_feature_mature_text", "Include mature titles when you browse and search for movies, and in the movie game.")
+    }
+
+    /// More than one home
+    public static var plusFeatureHomesTitle: LocalizedStringResource {
+        r("plus_feature_homes_title", "More than one home")
+    }
+
+    /// Create or join a second home. One subscription covers up to two homes.
+    public static var plusFeatureHomesText: LocalizedStringResource {
+        r("plus_feature_homes_text", "Create or join a second home. One subscription covers up to two homes.")
+    }
+
+    /// Your Plus covers %lld of %lld homes: %@
+    public static func plusCoverage(_ a0: Int, _ a1: Int, _ a2: String) -> LocalizedStringResource {
+        r("plus_coverage", "Your Plus covers \(a0) of \(a1) homes: \(a2)")
+    }
+
+    /// Your Plus covers %lld of %lld homes.
+    public static func plusCoverageCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("plus_coverage_count", "Your Plus covers \(a0) of \(a1) homes.")
+    }
+
+    /// What stays free
+    public static var plusFreeTitle: LocalizedStringResource {
+        r("plus_free_title", "What stays free")
+    }
+
+    /// Everything you've already written stays yours and readable, even without Plus.
+    public static var plusFreeReadable: LocalizedStringResource {
+        r("plus_free_readable", "Everything you've already written stays yours and readable, even without Plus.")
+    }
+
+    /// Tasks and chores
+    public static var plusFreeTasks: LocalizedStringResource {
+        r("plus_free_tasks", "Tasks and chores")
+    }
+
+    /// Notes
+    public static var plusFreeNotes: LocalizedStringResource {
+        r("plus_free_notes", "Notes")
+    }
+
+    /// Recipes and Meals
+    public static var plusFreeRecipes: LocalizedStringResource {
+        r("plus_free_recipes", "Recipes and Meals")
+    }
+
+    /// Movie Watchlist and Watched, and the movie game
+    public static var plusFreeMovies: LocalizedStringResource {
+        r("plus_free_movies", "Movie Watchlist and Watched, and the movie game")
+    }
+
+    /// Nestie, your house's plant or pet
+    public static var plusFreeNestie: LocalizedStringResource {
+        r("plus_free_nestie", "Nestie, your house's plant or pet")
     }
 
     /// One subscription covers everyone in the house.

@@ -393,7 +393,14 @@ public struct MainFeature: Sendable {
 
             case let .paywallRequested(feature):
                 guard state.paywall == nil else { return .none }
-                state.paywall = PaywallFeature.State(feature: feature, houseName: state.home?.name ?? "")
+                state.paywall = PaywallFeature.State(
+                    feature: feature,
+                    houseName: state.home?.name ?? "",
+                    homeNames: Dictionary(
+                        state.settings.homes.map { ($0.id, $0.name) },
+                        uniquingKeysWith: { first, _ in first }
+                    )
+                )
                 // Whichever host is on top presents it, which takes a frame
                 // or two; its first `.task` is the proof it was drawn.
                 return .run { send in

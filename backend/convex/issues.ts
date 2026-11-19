@@ -37,6 +37,7 @@ import { requireMembers } from "./lib/relations";
 import { outstandingNames } from "./lib/pending";
 import { anyHomeAllows, proAllows, proEnforced, proRequired, requirePro } from "./lib/pro";
 import { noteGrowth } from "./lib/companion";
+import { discardFile } from "./lib/moderation";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -753,6 +754,9 @@ export const create = mutation({
       assigned_to: args.assignedTo,
       photos: args.photos?.slice(0, MAX_PHOTOS),
       photo_thumbs: args.photoThumbs?.slice(0, MAX_PHOTOS),
+      photo_uploaders: args.photos?.length
+        ? args.photos.slice(0, MAX_PHOTOS).map(() => user._id)
+        : undefined,
       due_by: args.dueBy,
       cost_estimate:
         args.costEstimate === undefined ? undefined : requireEstimate(args.costEstimate),
@@ -1208,11 +1212,18 @@ export const attachPhotos = mutation({
       mergedThumbs.push(existing[mergedThumbs.length]);
     }
 
+    // Who attached each one, padded with `null` for photos from before it was
+    // recorded, the way the thumbnails are padded with the pictures.
+    const mergedUploaders: (Id<"users"> | null)[] = [...(issue.photo_uploaders ?? [])];
+    while (mergedUploaders.length < existing.length) mergedUploaders.push(null);
+    mergedUploaders.length = existing.length;
+
     for (const [index, storageId] of storageIds.entries()) {
       if (merged.length >= MAX_PHOTOS) break;
       if (merged.includes(storageId)) continue;
       merged.push(storageId);
       mergedThumbs.push(thumbIds?.[index] ?? storageId);
+      mergedUploaders.push(user._id);
     }
 
     await record(
@@ -1226,7 +1237,7 @@ export const attachPhotos = mutation({
             ? "Added a photo"
             : `Added ${merged.length - existing.length} photos`,
       },
-      { photos: merged, photo_thumbs: mergedThumbs },
+      { photos: merged, photo_thumbs: mergedThumbs, photo_uploaders: mergedUploaders },
     );
     return { photos: merged.length };
   },
@@ -1239,34 +1250,53 @@ export const removePhoto = mutation({
     const issue = await ctx.db.get(id);
     if (!issue) throw new Error("Problem not found");
     await requireDocHome(ctx, issue, "Problem");
-
-    // By index, so the thumbnail that goes is the one belonging to the picture
-    // that goes. Filtering each array on its own id would work until the same
-    // file were ever attached twice, and then it would silently misalign every
-    // row after it.
-    const photos = issue.photos ?? [];
-    const thumbs = issue.photo_thumbs ?? [];
-    const index = photos.indexOf(storageId);
-    if (index === -1) return { photos: photos.length };
-
-    const remaining = photos.filter((_, at) => at !== index);
-    const remainingThumbs = thumbs.filter((_, at) => at !== index);
-    await ctx.db.patch(id, {
-      photos: remaining,
-      photo_thumbs: remainingThumbs,
-      updated: Date.now(),
-    });
-
-    // Deleted, not orphaned. A file nothing points at is a file nothing will
-    // ever point at again, and storage that only grows is storage somebody
-    // eventually pays for. The thumbnail goes with it — unless it *is* the
-    // picture, which is what an older problem's fallback pairing means.
-    const thumb = thumbs[index];
-    await ctx.storage.delete(storageId);
-    if (thumb && thumb !== storageId) await ctx.storage.delete(thumb);
-    return { photos: remaining.length };
+    const { photos } = await detachPhoto(ctx, issue, storageId);
+    return { photos };
   },
 });
+
+/**
+ * Takes one photo off a problem and reclaims its files. Shared by
+ * `removePhoto` and `moderation:deleteContent`, so a moderator's removal has
+ * exactly the effects a member's does. No permission check: callers do that.
+ */
+export async function detachPhoto(
+  ctx: MutationCtx,
+  issue: Doc<"issues">,
+  storageId: Id<"_storage">,
+): Promise<{ photos: number; removed: boolean }> {
+  // By index, so the thumbnail that goes is the one belonging to the picture
+  // that goes. Filtering each array on its own id would work until the same
+  // file were ever attached twice, and then it would silently misalign every
+  // row after it.
+  const photos = issue.photos ?? [];
+  const thumbs = issue.photo_thumbs ?? [];
+  const index = photos.indexOf(storageId);
+  if (index === -1) return { photos: photos.length, removed: false };
+
+  const remaining = photos.filter((_, at) => at !== index);
+  const remainingThumbs = thumbs.filter((_, at) => at !== index);
+  // Kept in step only where it exists: a problem from before uploaders were
+  // recorded has none, and inventing a row of nulls for it says nothing.
+  const uploaders = issue.photo_uploaders;
+  await ctx.db.patch(issue._id, {
+    photos: remaining,
+    photo_thumbs: remainingThumbs,
+    ...(uploaders ? { photo_uploaders: uploaders.filter((_, at) => at !== index) } : {}),
+    updated: Date.now(),
+  });
+
+  // Deleted, not orphaned. A file nothing points at is a file nothing will
+  // ever point at again, and storage that only grows is storage somebody
+  // eventually pays for. The thumbnail goes with it — unless it *is* the
+  // picture, which is what an older problem's fallback pairing means.
+  // Through `discardFile`, which keeps a photo under report until a moderator
+  // has looked at it.
+  const thumb = thumbs[index];
+  await discardFile(ctx, storageId);
+  if (thumb && thumb !== storageId) await discardFile(ctx, thumb);
+  return { photos: remaining.length, removed: true };
+}
 
 // ---------------------------------------------------------------------------
 // The plan

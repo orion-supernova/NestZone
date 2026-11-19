@@ -21,6 +21,9 @@ public struct ProStatus: Equatable, Sendable {
     public var willRenew: Bool?
     /// The person looking is the one paying.
     public var mine = false
+    /// Which homes this person's own Plus covers and how many it may. Only
+    /// the person who pays hears it, and an older server says nothing.
+    public var coverage: Coverage?
 
     public static let unknown = ProStatus()
 
@@ -36,6 +39,11 @@ public struct ProStatus: Equatable, Sendable {
         public var name: String?
     }
 
+    public struct Coverage: Equatable, Sendable {
+        public var limit: Int
+        public var homeIDs: [HomeID]
+    }
+
     public init() {}
 
     /// Reads the server's answer. `now` is compared against the end date as
@@ -47,6 +55,7 @@ public struct ProStatus: Equatable, Sendable {
         expiresAt = payload.expiresAt.map { Date(timeIntervalSince1970: $0 / 1000) }
         willRenew = payload.willRenew
         mine = payload.mine
+        coverage = payload.coverage.map { Coverage(limit: $0.limit, homeIDs: $0.homeIds) }
         isPro = payload.pro && (expiresAt.map { $0 > now } ?? true)
     }
 }
@@ -59,6 +68,20 @@ public struct ProStatusPayload: Codable, Equatable, Sendable {
     public var expiresAt: Double?
     public var willRenew: Bool?
     public var mine: Bool
+    /// Absent from older servers and from callers who do not carry Plus
+    /// themselves; read leniently, so a shape this build does not know is
+    /// "no coverage" and never a failed status.
+    public var coverage: Coverage?
+
+    public struct Coverage: Codable, Equatable, Sendable {
+        public var limit: Int
+        public var homeIds: [HomeID]
+
+        public init(limit: Int, homeIds: [HomeID]) {
+            self.limit = limit
+            self.homeIds = homeIds
+        }
+    }
 
     public struct Carrier: Codable, Equatable, Sendable {
         public var id: UserID
@@ -76,7 +99,8 @@ public struct ProStatusPayload: Codable, Equatable, Sendable {
         carriedBy: Carrier? = nil,
         expiresAt: Double? = nil,
         willRenew: Bool? = nil,
-        mine: Bool = false
+        mine: Bool = false,
+        coverage: Coverage? = nil
     ) {
         self.pro = pro
         self.enforced = enforced
@@ -84,6 +108,35 @@ public struct ProStatusPayload: Codable, Equatable, Sendable {
         self.expiresAt = expiresAt
         self.willRenew = willRenew
         self.mine = mine
+        self.coverage = coverage
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case pro, enforced, carriedBy, expiresAt, willRenew, mine, coverage
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        pro = try c.decode(Bool.self, forKey: .pro)
+        enforced = try c.decode(Bool.self, forKey: .enforced)
+        carriedBy = try c.decodeIfPresent(Carrier.self, forKey: .carriedBy)
+        expiresAt = try c.decodeIfPresent(Double.self, forKey: .expiresAt)
+        willRenew = try c.decodeIfPresent(Bool.self, forKey: .willRenew)
+        mine = try c.decode(Bool.self, forKey: .mine)
+        coverage = (try? c.decodeIfPresent(Coverage.self, forKey: .coverage)) ?? nil
+    }
+}
+
+extension ProStatus {
+    /// "Your Plus covers 2 of 2 homes: Bizim Ev, Yazlık", only for the person
+    /// who pays and only when the server said. Homes the app cannot name are
+    /// left out of the names but still counted.
+    func coverageLine(homeNames: [HomeID: String]) -> LocalizedStringResource? {
+        guard isPro, mine, let coverage else { return nil }
+        let names = coverage.homeIDs.compactMap { homeNames[$0] }.filter { !$0.isEmpty }
+        let count = coverage.homeIDs.count
+        guard !names.isEmpty else { return L10n.plusCoverageCount(count, coverage.limit) }
+        return L10n.plusCoverage(count, coverage.limit, names.joined(separator: ", "))
     }
 }
 

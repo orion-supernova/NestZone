@@ -111,4 +111,14 @@ crons.interval(
   {},
 );
 
+// Reports nobody has looked at. Every three hours the moderators hear once
+// about each report open for more than twelve (`moderation:nudgeStale`);
+// `nudged_at` on the report is what keeps it once.
+crons.interval(
+  "moderation nudge",
+  { hours: 3 },
+  internal.moderation.nudgeStale,
+  {},
+);
+
 export default crons;

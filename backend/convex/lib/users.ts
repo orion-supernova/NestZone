@@ -1,9 +1,10 @@
 // One shape for "a user, on the wire".
 import { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx, MutationCtx } from "../_generated/server";
+import { discardFile } from "./moderation";
 
 /** A user document plus the one field the phone cannot work out for itself. */
-export type PublicUser = Doc<"users"> & { avatar_url: string | null };
+export type PublicUser = Omit<Doc<"users">, "chat_suspended_at"> & { avatar_url: string | null };
 
 /**
  * Resolves `avatar` into a URL the client can actually load.
@@ -26,8 +27,11 @@ export async function publicUser(
   ctx: QueryCtx | MutationCtx,
   doc: Doc<"users">,
 ): Promise<PublicUser> {
+  // A suspension is between the person and the moderators, never on the
+  // wire to the rest of the house.
+  const { chat_suspended_at: _suspended, ...rest } = doc;
   return {
-    ...doc,
+    ...rest,
     avatar_url: doc.avatar ? await ctx.storage.getUrl(doc.avatar) : null,
   };
 }
@@ -57,10 +61,7 @@ export async function discardAvatar(
   ctx: MutationCtx,
   storageId: Id<"_storage"> | undefined | null,
 ): Promise<void> {
-  if (!storageId) return;
-  try {
-    await ctx.storage.delete(storageId);
-  } catch {
-    // Already gone. Nothing to reclaim and nothing to report.
-  }
+  // Through `discardFile`, which also keeps a face that is under report until
+  // a moderator has looked at it.
+  await discardFile(ctx, storageId);
 }

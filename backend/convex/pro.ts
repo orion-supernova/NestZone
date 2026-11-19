@@ -29,10 +29,12 @@ import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import {
   anyHomeAllows,
+  coveredHomes,
   entitlementActive,
   homeProStatus,
   proAllows,
   proEnforced,
+  PLUS_HOMES_PER_PERSON,
   userHasPro,
 } from "./lib/pro";
 import { fetchEntitlement, revenueCatConfigured } from "./lib/revenuecat";
@@ -68,6 +70,12 @@ const statusShape = v.object({
   willRenew: v.union(v.boolean(), v.null()),
   /** The caller's own entitlement is what carries it. */
   mine: v.boolean(),
+  /**
+   * Which homes the caller's own Plus covers, in join order, at most `limit`
+   * (`PLUS_HOMES_PER_PERSON`). Present only when the caller carries Plus
+   * themselves (their own active entitlement, or comped); absent otherwise.
+   */
+  coverage: v.optional(v.object({ limit: v.number(), homeIds: v.array(v.id("homes")) })),
 });
 
 /**
@@ -90,6 +98,9 @@ export const status = query({
       const carrier = await ctx.db.get(s.carriedBy);
       carriedBy = { id: s.carriedBy, name: carrier?.name ?? null };
     }
+    const coverage = (await userHasPro(ctx, user._id))
+      ? { limit: PLUS_HOMES_PER_PERSON, homeIds: await coveredHomes(ctx, user) }
+      : undefined;
     return {
       pro: s.pro,
       enforced: proEnforced(),
@@ -97,6 +108,7 @@ export const status = query({
       expiresAt: s.expiresAt ?? null,
       willRenew: s.willRenew ?? null,
       mine: s.carriedBy === user._id,
+      ...(coverage ? { coverage } : {}),
     };
   },
 });

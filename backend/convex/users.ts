@@ -263,8 +263,10 @@ export const deleteAccountStep = internalMutation({
       return await continueLater();
     }
 
-    // 3. What was only theirs: read marks, the Pro row.
-    const [reads, updateReads, pro] = await Promise.all([
+    // 3. What was only theirs: read marks, the Pro row, their blocks (both
+    // ways) and what they hid. Reports they filed or were named in stay: a
+    // moderator's record outlives the account.
+    const [reads, updateReads, pro, blocking, blockedBy, hidden] = await Promise.all([
       ctx.db
         .query("activity_reads")
         .withIndex("by_user_home", (q) => q.eq("user_id", userId))
@@ -277,8 +279,20 @@ export const deleteAccountStep = internalMutation({
         .query("pro_entitlements")
         .withIndex("by_user", (q) => q.eq("user_id", userId))
         .take(DELETE_BATCH),
+      ctx.db
+        .query("blocks")
+        .withIndex("by_blocker_blocked", (q) => q.eq("blocker_id", userId))
+        .take(DELETE_BATCH),
+      ctx.db
+        .query("blocks")
+        .withIndex("by_blocked", (q) => q.eq("blocked_id", userId))
+        .take(DELETE_BATCH),
+      ctx.db
+        .query("hidden_content")
+        .withIndex("by_user_kind_target", (q) => q.eq("user_id", userId))
+        .take(DELETE_BATCH),
     ]);
-    const own = [...reads, ...updateReads, ...pro];
+    const own = [...reads, ...updateReads, ...pro, ...blocking, ...blockedBy, ...hidden];
     await Promise.all(own.map((r) => ctx.db.delete(r._id)));
     if (own.length > 0) return await continueLater();
 

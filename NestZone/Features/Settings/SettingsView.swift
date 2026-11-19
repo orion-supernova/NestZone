@@ -652,6 +652,10 @@ public struct SettingsView: View {
     /// The house's subscription: whether it is on, whose it is, when it
     /// renews, and the two things the App Store wants within reach — managing
     /// it and restoring it.
+    private var plusHomeNames: [HomeID: String] {
+        Dictionary(store.homes.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+    }
+
     private var plusSection: some View {
         let status = store.pro
         return Section {
@@ -681,6 +685,17 @@ public struct SettingsView: View {
                 } else {
                     Text(L10n.plusNoEnd).font(.subheadline).foregroundStyle(.secondary)
                 }
+            }
+
+            // What Plus includes stays one tap away whether or not the house
+            // has it: the paywall's sheet is gone once it is bought.
+            NavigationLink {
+                PlusDetailsView(status: status, homeNames: plusHomeNames)
+            } label: {
+                Label { Text(L10n.plusSeeEverything) } icon: { Image(systemName: "list.bullet.rectangle") }
+            }
+            if let line = status.coverageLine(homeNames: plusHomeNames) {
+                Text(line).font(.subheadline).foregroundStyle(.secondary)
             }
 
             if status.isPro, status.mine {

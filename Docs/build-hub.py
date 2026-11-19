@@ -51,6 +51,7 @@ CATALOG = [
     ]),
     ("Backend and shipping", [
         ("backend/DEPRECATIONS.md", "Deprecations", "What may be removed from the backend, and when. Includes PRO_ENFORCE.", "current"),
+        ("Docs/Backend/data-integrity-audit.html", "Data integrity audit", "References, cascades, growth, backups and a phased plan to make the backend last.", "current"),
         ("XCODE_CLOUD.md", "Xcode Cloud", "What builds the app once stage is pushed, and its setup.", "current"),
         ("Docs/Convex-Migration/Backend-Deploy-Runbook.md", "Backend deploy runbook", "Convex deploy, data import, the tunnel.", "reference"),
         ("backend/README.md", "Backend README", "The PocketBase to Convex migration, backend side.", "history"),

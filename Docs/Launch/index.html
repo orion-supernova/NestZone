@@ -120,6 +120,13 @@ a{color:var(--accent)}
 <li>Xcode Cloud builds every stage push and numbers its own builds; a local upload plus a stage push makes two binaries. Pick one route per release.</li>
 <li>Age rating questions (Location Sharing, Dating) are due by 2027-01-15.</li>
 <li><code>finance_due_in</code> Turkish plural still reads off; fix in the next build.</li>
+<li><strong>1.12.1 (being built):</strong> "Everything in Plus" page from the paywall and Settings (Plus houses keep the benefits list), the 2-home coverage line, and reporting/blocking with an in-app Reports queue for the moderators (owner and Zeynep, env <code>MODERATOR_USER_IDS</code>). The 2-home cap itself is already live on the server (2026-11-19).</li>
+<li><strong>Chat MVP (1.12.1, owner's pick 2026-11-19):</strong> emoji reactions (stored on the message), reply with a quoted line (copied at reply time), one pinned message per chat, @mentions that notify only the person, search inside a chat on the phone. Deliberately not: read receipts, typing, online/last seen (constant writes on a small server; a house app, not a chat app).</li>
+<li><strong>Işıltı store:</strong> redesign (prices never wrap, fills the screen) and six packs: new 100 ($0.99, starter) and 550 ($4.99) beside 300/1000/2200/5000. The two new products must be created in App Store Connect (EN/TR, review screenshot) and the backend catalog deployed before the build that sells them.</li>
+<li><strong>Data model audit</strong> (Docs/Backend/data-integrity-audit.html, in progress). Live check 2026-11-19: no orphans, no dangling home ids, membership mirror clean; authRefreshTokens 1,493 vs 26 sessions (rotated tokens never cleaned); poll items/votes the fastest-growing tables.</li>
+<li><strong>Server health check</strong> waits on the SSH key for the ARM host (130.61.231.195, ssh-key-2026-09-10.key is not on the Mac).</li>
+<li>Walhallaa legal page: add the content paragraph (zero tolerance, reports handled within 24 hours, reported content is shared with NestZone moderators) when reporting ships.</li>
+<li>Later, only when needed: a small admin website. Triggers: more than ~3 moderators, ~10+ reports a day, or wanting sign-up/conversion charts beyond RevenueCat's. Until then moderation is in the app and the Convex dashboard covers the rest.</li>
 </ul>
 <h3>Gifting Plus</h3>
 <p>Use RevenueCat, not promo codes. RevenueCat → Customers → search the person's Convex user id → Entitlements → <em>Grant</em> <code>pro</code> for a duration (a month, a year, lifetime). It shows in the dashboard, expires on its own, can be revoked, and needs no card. The server counts a grant as real (<code>store: promotional</code>), and the person's house turns Plus the next time they open the app (<code>pro:refresh</code> runs on launch) or within 6 hours (<code>pro:sweep</code>). Plus is the house's, so one grant covers everyone they live with.</p>
@@ -127,7 +134,8 @@ a{color:var(--accent)}
 <div class="tbl"><table>
 <thead><tr><th>Person</th><th>User id</th><th>Gift</th></tr></thead>
 <tbody>
-<tr><td>Zeynep Ozahishali</td><td><code>md7cza3gjbbt41bntgdhzrnwbn8ds4jk</code></td><td>to grant</td></tr>
+<tr><td>Zeynep Ozahishali</td><td><code>md7cza3gjbbt41bntgdhzrnwbn8ds4jk</code></td><td>to grant (also a moderator)</td></tr>
+<tr><td>Murat (owner, test)</td><td><code>md75cpajk2hsse5qvpwv8kfqv18dqjfn</code></td><td>granted a month, until 2026-12-20</td></tr>
 <tr><td>Jade Arana</td><td><code>md717zj7fh5h15xgbetn1ctm698emep8</code></td><td>to grant</td></tr>
 </tbody></table></div>
 </section>

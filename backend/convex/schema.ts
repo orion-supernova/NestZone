@@ -28,6 +28,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
+import { pinnedValidator, reactionValidator, replyToValidator } from "./lib/chat";
 
 // The categories a household's money goes into. One list, shared by expenses,
 // bills and budgets — a budget that could name a category no expense can carry
@@ -245,6 +246,14 @@ export default defineSchema({
      * carrying this. Absent on every real person.
      */
     demo_seed: v.optional(v.string()),
+    /**
+     * When a moderator stopped this person writing in chat
+     * (`moderation:suspendChat`). While set, `messages:send`/`edit`,
+     * `conversations:create`/`rename` and a chat poll's `create`/`addItem`
+     * refuse with `CHAT_SUSPENDED`. Reading is never taken away. Absent on
+     * everybody in good standing.
+     */
+    chat_suspended_at: v.optional(v.number()),
   })
     .index("email", ["email"])
     .index("by_pbId", ["pbId"]),
@@ -554,6 +563,9 @@ export default defineSchema({
     title: v.optional(v.string()),
     last_message: v.optional(v.string()),
     last_message_at: v.optional(v.number()),
+    // The one pinned message, as a snapshot (lib/chat.ts). Cleared when that
+    // message is deleted.
+    pinned: v.optional(pinnedValidator),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
@@ -572,6 +584,12 @@ export default defineSchema({
     ),
     file: v.optional(v.id("_storage")),
     read_by: v.optional(v.array(v.id("users"))),
+    // The chat MVP (lib/chat.ts). All optional and read with the message, so
+    // a thread costs the reads it always did. A reaction never touches
+    // `updated`, `read_by` or the conversation's preview.
+    reactions: v.optional(v.array(reactionValidator)),
+    reply_to: v.optional(replyToValidator),
+    mentions: v.optional(v.array(v.id("users"))),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   })
@@ -1055,6 +1073,14 @@ export default defineSchema({
     /// The invariant — same length, same order — is held by `attachPhotos` and
     /// `removePhoto` being the only things that write either one.
     photo_thumbs: v.optional(v.array(v.id("_storage"))),
+    /**
+     * Who attached each photo, parallel to `photos`: written only by
+     * `create`, `attachPhotos` and `detachPhoto`, so the three arrays move
+     * together. `null` for a photo attached before this existed, and absent
+     * on a problem that has none — a report of such a photo names nobody,
+     * rather than guessing the problem's reporter.
+     */
+    photo_uploaders: v.optional(v.array(v.union(v.id("users"), v.null()))),
 
     /** When it has to be sorted by, if anything makes it urgent. */
     due_by: v.optional(v.number()),
@@ -1750,6 +1776,109 @@ export default defineSchema({
   // Written only by `pro:refresh` and `pro:sweep` (convex/pro.ts), from
   // RevenueCat's answer, never from anything a phone says. A person with no
   // entitlement at all has no row.
+  // Reports, blocks and the moderation queue (convex/moderation.ts,
+  // lib/moderation.ts). App Store guideline 1.2: anybody who can see a
+  // message, a problem photo or a face can report it, and block a person.
+  //
+  // A report is a record of what was seen, not a pointer to it: `snapshot` is
+  // copied at report time, so deleting the message does not delete the
+  // evidence, and the file behind a reported photo is held (`report_holds`)
+  // until the report is resolved.
+  reports: defineTable({
+    reporter_id: v.id("users"),
+    home_id: v.id("homes"),
+    kind: v.union(v.literal("message"), v.literal("issuePhoto"), v.literal("avatar")),
+    /**
+     * What the report is about: the message id, or the storage id of the
+     * problem photo or of the face (the face's owner is `target_user_id`).
+     */
+    target_id: v.string(),
+    /** Whose content it is, as far as the server knows. */
+    target_user_id: v.optional(v.id("users")),
+    reason: v.union(
+      v.literal("abuse"),
+      v.literal("harassment"),
+      v.literal("sexual"),
+      v.literal("spam"),
+      v.literal("other"),
+    ),
+    note: v.optional(v.string()),
+    snapshot: v.object({
+      text: v.optional(v.string()),
+      conversation_id: v.optional(v.id("conversations")),
+      message_type: v.optional(v.string()),
+      sent_at: v.optional(v.number()),
+      /** A message's attachment, a problem photo, or the face itself. */
+      storage_id: v.optional(v.id("_storage")),
+      /** A problem photo's board-sized copy, when it is a different file. */
+      thumb_id: v.optional(v.id("_storage")),
+      issue_id: v.optional(v.id("issues")),
+      issue_title: v.optional(v.string()),
+      user_name: v.optional(v.string()),
+    }),
+    status: v.union(v.literal("open"), v.literal("dismissed"), v.literal("actioned")),
+    created: v.number(),
+    resolved_by: v.optional(v.id("users")),
+    resolved_at: v.optional(v.number()),
+    action: v.optional(
+      v.union(
+        v.literal("deleted"),
+        v.literal("removedFromHome"),
+        v.literal("suspended"),
+        v.literal("none"),
+      ),
+    ),
+    /** When `moderation:nudgeStale` reminded the moderators, once. */
+    nudged_at: v.optional(v.number()),
+  })
+    // The queue: open reports, newest first.
+    .index("by_status_created", ["status", "created"])
+    // The stale nudge: open, never nudged, older than twelve hours.
+    .index("by_status_nudged_created", ["status", "nudged_at", "created"])
+    // Dedupe: one open report per person per thing.
+    .index("by_reporter_kind_target", ["reporter_id", "kind", "target_id"])
+    // The daily cap.
+    .index("by_reporter_created", ["reporter_id", "created"])
+    // Deleting a thing settles every open report about it, whoever filed it.
+    .index("by_kind_target_status", ["kind", "target_id", "status"])
+    // Taking somebody out of a home answers every open report about them there.
+    .index("by_target_user_home_status", ["target_user_id", "home_id", "status"]),
+
+  // A file a report still needs. Every path that deletes a stored file asks
+  // first (`discardFile`, lib/moderation.ts); a held file is marked
+  // `deferred_delete` instead, and goes when its last report is resolved.
+  report_holds: defineTable({
+    report_id: v.id("reports"),
+    storage_id: v.id("_storage"),
+    deferred_delete: v.optional(v.boolean()),
+  })
+    .index("by_storage", ["storage_id"])
+    .index("by_report", ["report_id"]),
+
+  // What one person has reported and so no longer sees. Per person: the rest
+  // of the house sees it until a moderator decides. `conversation_id` is set
+  // for a message so a thread's read needs only that thread's hides.
+  hidden_content: defineTable({
+    user_id: v.id("users"),
+    kind: v.union(v.literal("message"), v.literal("issuePhoto"), v.literal("avatar")),
+    target_id: v.string(),
+    conversation_id: v.optional(v.id("conversations")),
+    created: v.number(),
+  })
+    .index("by_user_kind_target", ["user_id", "kind", "target_id"])
+    .index("by_user_conversation", ["user_id", "conversation_id"]),
+
+  // One person blocking another. Read both ways: the blocker's reads drop the
+  // blocked person's messages, and a push from the blocked person skips the
+  // blocker.
+  blocks: defineTable({
+    blocker_id: v.id("users"),
+    blocked_id: v.id("users"),
+    created: v.number(),
+  })
+    .index("by_blocker_blocked", ["blocker_id", "blocked_id"])
+    .index("by_blocked", ["blocked_id"]),
+
   pro_entitlements: defineTable({
     user_id: v.id("users"),
     /** When access ends, ms. `null` is lifetime. Includes any billing grace. */

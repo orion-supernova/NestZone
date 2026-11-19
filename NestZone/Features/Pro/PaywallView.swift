@@ -24,6 +24,7 @@ struct PaywallView: View {
                     hero
                     ProPreview(feature: store.feature)
                     benefits
+                    seeEverything
                     coverage
                     if store.isCovered {
                         covered
@@ -88,6 +89,24 @@ struct PaywallView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// The short list above is a taste; the page behind this has every line.
+    /// Pushed on the paywall's own stack, so Back lands on the plans.
+    private var seeEverything: some View {
+        NavigationLink {
+            PlusDetailsView(status: store.status, homeNames: store.homeNames)
+        } label: {
+            HStack(spacing: 6) {
+                Text(L10n.plusSeeEverything)
+                Image(systemName: "chevron.forward").font(.caption.weight(.bold))
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(theme.accent)
+            .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
     }
 
     private func benefit(_ symbol: String, _ tint: Color, _ text: LocalizedStringResource) -> some View {

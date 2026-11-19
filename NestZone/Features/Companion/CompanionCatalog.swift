@@ -441,10 +441,13 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
         self.price = price
     }
 
-    /// The four packs, before any store prices them: 300, 1,000, 2,200 and
-    /// 5,000 (still open in Docs/Companion/HANDOFF.md). The test store
-    /// compares them at example prices, which it never shows or charges.
-    public static let shelf: [SparklePack] = zip([300, 1_000, 2_200, 5_000], [Decimal(string: "2.99"), Decimal(string: "8.99"), Decimal(string: "17.99"), Decimal(string: "34.99")]).map {
+    /// The six packs, before any store prices them: 100, 300, 550, 1,000,
+    /// 2,200 and 5,000 (still open in Docs/Companion/HANDOFF.md). The test
+    /// store compares them at example prices, which it never shows or charges.
+    public static let shelf: [SparklePack] = zip(
+        [100, 300, 550, 1_000, 2_200, 5_000],
+        ["0.99", "2.99", "4.99", "8.99", "17.99", "34.99"].map { Decimal(string: $0) }
+    ).map {
         SparklePack(id: "com.walhallaa.NestZone.sparkles.\($0)", sparkles: $0, displayPrice: nil, price: $1)
     }
 
@@ -461,6 +464,28 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
         guard priced.count == packs.count, packs.count > 1 else { return nil }
         return priced.min { $0.1 < $1.1 }?.0
     }
+
+    /// How many percent more Sparkles each pack gives per unit of money than
+    /// the 300 pack, rounded; only the packs that give more appear. Worked out
+    /// from the store's own prices, never declared, and priced in whatever
+    /// currency the storefront uses because both sides of the ratio are.
+    public static func bonuses(_ packs: [SparklePack]) -> [SparklePack.ID: Int] {
+        guard let base = packs.first(where: { $0.sparkles == 300 }), let basePrice = base.price, basePrice > 0 else { return [:] }
+        let perBase = basePrice / Decimal(base.sparkles)
+        var result: [SparklePack.ID: Int] = [:]
+        for pack in packs where pack.id != base.id {
+            guard let price = pack.price, price > 0 else { continue }
+            let more = (perBase / (price / Decimal(pack.sparkles)) - 1) * 100
+            var rounded = Decimal()
+            var value = more
+            NSDecimalRound(&rounded, &value, 0, .plain)
+            let percent = NSDecimalNumber(decimal: rounded).intValue
+            // Under 5% is rounding, not a reason to pick a pack (the starter
+            // pack works out at +1%), so it is not shown.
+            if percent >= 5 { result[pack.id] = percent }
+        }
+        return result
+    }
 }
 
 // MARK: - Which catalog this is
@@ -473,5 +498,5 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
 /// line is rewritten by `Docs/Companion/tools/catalog_export/export_catalog.sh`
 /// when it regenerates `companionData.ts`; do not edit it by hand.
 public enum CatalogVersion {
-    public static let exported = "79790c743d93-r1"
+    public static let exported = "0c345e747c08-r1"
 }
