@@ -2270,3 +2270,14 @@ export const purgeHome = internalMutation({
     return { deleted: 0, done: true };
   },
 });
+
+// MARK: - Exported for other modules
+
+/**
+ * The growth ledger's own write path, for convex/demo.ts: a screenshot
+ * household's history is credited through the same `putEntry` and recounted
+ * by the same `recount` as a real one, so its points, days, bank and stage
+ * payments are what the house would have earned. Nothing else uses these.
+ */
+export type GrowthEntry = Entry;
+export const __growth = { putEntry, recount, choreEntry };

@@ -238,6 +238,13 @@ export default defineSchema({
     home_id: v.optional(v.array(v.id("homes"))), // PB maxSelect=999 -> array
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
+    /**
+     * Set only on the made-up members of an App Store screenshot household
+     * (convex/demo.ts), naming the seed that made them. They have no auth
+     * account and no email, and `demo:purgeScreenshotHome` deletes only users
+     * carrying this. Absent on every real person.
+     */
+    demo_seed: v.optional(v.string()),
   })
     .index("email", ["email"])
     .index("by_pbId", ["pbId"]),
@@ -296,8 +303,17 @@ export default defineSchema({
     invite_code: v.optional(v.string()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
+    /**
+     * Set only on an App Store screenshot household (convex/demo.ts): which
+     * seed made it, e.g. `screenshots-tr`. `demo:purgeScreenshotHome` refuses
+     * any home without it. Absent on every real household.
+     */
+    demo_seed: v.optional(v.string()),
   }).index("by_pbId", ["pbId"])
-    .index("by_invite_code", ["invite_code"]),
+    .index("by_invite_code", ["invite_code"])
+    // `demo:listScreenshotHomes`: every real home sits under `undefined`, so
+    // a range over strings is exactly the demo ones.
+    .index("by_demo_seed", ["demo_seed"]),
 
   tasks: defineTable({
     pbId: v.optional(v.string()),
