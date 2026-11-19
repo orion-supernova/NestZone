@@ -84,7 +84,7 @@ public enum SpeciesPack: String, CaseIterable, Codable, Identifiable, Sendable {
     case forestFriends, snowFriends
 
     public var id: String { rawValue }
-    public var price: Price { .sparkles(400) }
+    public var price: Price { .sparkles(900) }
     public var species: [Species] { Species.allCases.filter { $0.access == .pack(self) } }
 }
 
@@ -109,10 +109,10 @@ extension Species {
         case .pomegranate, .goldfish: .buy(.leaves(300))
         case .hamster: .buy(.leaves(350))
         case .turtle: .buy(.leaves(400))
-        case .rose: .buy(.sparkles(150))
-        case .lemon: .buy(.sparkles(180))
-        case .orchid: .buy(.sparkles(200))
-        case .bonsai, .puppy: .buy(.sparkles(250))
+        case .rose: .buy(.sparkles(350))
+        case .lemon: .buy(.sparkles(400))
+        case .orchid: .buy(.sparkles(450))
+        case .bonsai, .puppy: .buy(.sparkles(600))
         case .fox, .owl, .deer: .pack(.forestFriends)
         case .penguin, .snowFox, .polarCub: .pack(.snowFriends)
         case .cherry: .season(.spring)
@@ -154,15 +154,15 @@ extension DecorItem {
         case .birdFeeder: .buy(.leaves(200))
         case .kilim: .buy(.leaves(250))
         case .balcony: .buy(.leaves(300))
-        case .paperLantern: .buy(.sparkles(60))
-        case .dusk: .buy(.sparkles(80))
-        case .goldPot: .buy(.sparkles(120))
-        case .starryRooftop: .buy(.sparkles(250))
-        case .giftBox: .holidaySale(.sparkles(50))
-        case .pumpkin, .bats, .treeStar: .holidaySale(.sparkles(60))
-        case .ornaments: .holidaySale(.sparkles(75))
-        case .fullMoon, .winterSky: .holidaySale(.sparkles(100))
-        case .watermelon: .seasonSale(.sparkles(60), .summer)
+        case .paperLantern: .buy(.sparkles(120))
+        case .dusk: .buy(.sparkles(160))
+        case .goldPot: .buy(.sparkles(240))
+        case .starryRooftop: .buy(.sparkles(500))
+        case .giftBox: .holidaySale(.sparkles(100))
+        case .pumpkin, .bats, .treeStar: .holidaySale(.sparkles(120))
+        case .ornaments: .holidaySale(.sparkles(150))
+        case .fullMoon, .winterSky: .holidaySale(.sparkles(200))
+        case .watermelon: .seasonSale(.sparkles(120), .summer)
         case .partyHat: .reward(.birthday)
         case .tinyCrown: .reward(.grownAll)
         default: .holiday
@@ -441,28 +441,20 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
         self.price = price
     }
 
-    /// The five packs on sale, before any store prices them: 100, 300, 550,
-    /// 1,000 and 2,200. The test store compares them at example prices, which
-    /// it never shows or charges. Priced so a decoration is about a dollar
-    /// and a pet two or three: 2,200 already buys nearly everything sold for
-    /// Sparkles, so 5,000 left the shelf (2026-11-19).
+    /// The six packs, before any store prices them: 100, 300, 550, 1,000,
+    /// 2,200 and 5,000 (still open in Docs/Companion/HANDOFF.md). The test
+    /// store compares them at example prices, which it never shows or charges.
     public static let shelf: [SparklePack] = zip(
-        [100, 300, 550, 1_000, 2_200],
-        ["0.99", "2.99", "4.99", "8.99", "17.99"].map { Decimal(string: $0) }
+        [100, 300, 550, 1_000, 2_200, 5_000],
+        ["0.99", "2.99", "4.99", "8.99", "17.99", "34.99"].map { Decimal(string: $0) }
     ).map {
         SparklePack(id: "com.walhallaa.NestZone.sparkles.\($0)", sparkles: $0, displayPrice: nil, price: $1)
     }
 
-    /// Packs no longer sold but still credited: an older build, or a purchase
-    /// that was interrupted, can still settle one. Never shelved.
-    public static let retired: [SparklePack] = [
-        SparklePack(id: "com.walhallaa.NestZone.sparkles.5000", sparkles: 5_000, displayPrice: nil, price: Decimal(string: "34.99")),
-    ]
-
     /// How many Sparkles a product id stands for: the number it ends in, and
     /// `0` for an id that is not a pack.
     public static func sparkles(inProduct id: String) -> Int {
-        (shelf + retired).first { $0.id == id }?.sparkles ?? 0
+        shelf.first { $0.id == id }?.sparkles ?? 0
     }
 
     /// The one pack that is cheapest per Sparkle, if the store priced them
@@ -506,5 +498,5 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
 /// line is rewritten by `Docs/Companion/tools/catalog_export/export_catalog.sh`
 /// when it regenerates `companionData.ts`; do not edit it by hand.
 public enum CatalogVersion {
-    public static let exported = "7d48ff36aab3-r1"
+    public static let exported = "0c345e747c08-r1"
 }
