@@ -18,28 +18,28 @@ export type DemoRecipe = {
 export const DEMO_RECIPES_TR: DemoRecipe[] = [
   {
     "key": "authentic_carbonara",
-    "title": "Otantik Carbonara",
-    "description": "Yumurta, pecorino ve guanciale ile klasik Roma makarnası",
+    "title": "Spagetti Carbonara",
+    "description": "Yumurta, pecorino ve guanciale ile yapılan gerçek Roma makarnası",
     "ingredients": [
       "400g spagetti",
-      "150g guanciale veya pancetta, küp doğranmış",
+      "150g guanciale ya da pancetta, küp doğranmış",
       "4 büyük yumurta sarısı",
       "1 bütün yumurta",
       "100g rendelenmiş Pecorino Romano",
       "Taze çekilmiş karabiber",
-      "Makarna suyu için tuz"
+      "Makarna suyuna tuz"
     ],
     "steps": [
-      "Makarna için büyük bir tencerede tuzlu suyu kaynatın",
-      "Spagettiyi al dente olana kadar pişirin",
-      "Bu arada, geniş bir tavada guancialeyi çıtır olana kadar pişirin",
-      "Yumurta sarılarını, bütün yumurtayı ve pecorinoyu bir kapta çırpın",
-      "Yumurta karışımına bolca karabiber ekleyin",
-      "1 su bardağı makarna suyunu ayırın, sonra makarnayı süzün",
-      "Sıcak makarnayı guanciale ile tavaya ekleyin",
-      "Ocaktan alın ve yumurta karışımıyla hızlıca karıştırın",
-      "Kremalı olana kadar azar azar makarna suyu ekleyin",
-      "Hemen ekstra pecorino ve karabiberle servis yapın"
+      "Büyük bir tencerede tuzlu suyu kaynat",
+      "Spagettiyi al dente olana kadar haşla",
+      "Bu arada geniş bir tavada guancialeyi çıtır çıtır olana kadar kavur",
+      "Yumurta sarılarını, bütün yumurtayı ve pecorinoyu bir kapta çırp",
+      "Yumurtalı karışıma bolca karabiber ekle",
+      "Bir su bardağı makarna suyunu ayır, sonra makarnayı süz",
+      "Sıcak makarnayı guancialeli tavaya al",
+      "Ocaktan al, yumurtalı karışımı ekleyip hızlıca karıştır",
+      "Kremsi kıvamı yakalayana kadar azar azar makarna suyu ekle",
+      "Üzerine biraz daha pecorino ve karabiber koyup hemen servis et"
     ],
     "tags": [
       "pasta",
@@ -52,32 +52,32 @@ export const DEMO_RECIPES_TR: DemoRecipe[] = [
   },
   {
     "key": "turkish_kuru_fasulye",
-    "title": "Türk Kuru Fasulye",
-    "description": "Domates soslu doyurucu beyaz fasulye yemeği",
+    "title": "Kuru Fasulye",
+    "description": "Salçalı, etsiz, tane tane kuru fasulye",
     "ingredients": [
-      "500g kuru beyaz fasulye, bir gece önceden ıslatılmış",
-      "1 büyük soğan, küp doğranmış",
-      "3 diş sarımsak, kıyılmış",
+      "500g kuru fasulye, akşamdan ıslatılmış",
+      "1 büyük kuru soğan, küçük küçük doğranmış",
+      "3 diş sarımsak, ezilmiş",
       "2 yemek kaşığı domates salçası",
       "400g konserve domates",
-      "1 çay kaşığı kırmızı biber",
+      "1 çay kaşığı pul biber",
       "1/2 çay kaşığı kimyon",
       "3 yemek kaşığı zeytinyağı",
-      "2 su bardağı sebze suyu",
-      "Damak tadına göre tuz ve karabiber",
-      "Süslemek için taze maydanoz"
+      "2 su bardağı sıcak su",
+      "Tuz ve karabiber",
+      "Üzeri için taze maydanoz"
     ],
     "steps": [
-      "Islatılmış fasulyeleri süzün ve durulayın",
-      "Fasulyeleri taze suda 45 dakika kadar yumuşayana kadar haşlayın",
-      "Geniş bir tencerede zeytinyağını ısıtın",
-      "Soğanı şeffaflaşana kadar soteleyin, sarımsağı ekleyin",
-      "Domates salçasını karıştırın ve 2 dakika pişirin",
-      "Konserve domatesleri, kırmızı biber ve kimyonu ekleyin",
-      "Haşlanmış fasulyeleri ve suyu ekleyin",
-      "Sos koyulaşana kadar 15-20 dakika kaynatın",
-      "Tuz ve karabiberle tatlandırın",
-      "Maydanozla süsleyin ve pilavla servis yapın"
+      "Islattığın fasulyeleri süz, durula",
+      "Fasulyeleri taze suda yaklaşık 45 dakika, yumuşayana kadar haşla",
+      "Geniş bir tencerede zeytinyağını kızdır",
+      "Soğanı pembeleşene kadar kavur, sarımsağı ekle",
+      "Salçayı ekle, 2 dakika kavur",
+      "Konserve domatesi, pul biberi ve kimyonu ekle",
+      "Haşlanmış fasulyeleri ve suyu ekle",
+      "Sos koyulaşana kadar 15-20 dakika kaynat",
+      "Tuz ve karabiberle tadını ayarla",
+      "Maydanozla süsle, yanında pilavla ye"
     ],
     "tags": [
       "dinner",
@@ -91,13 +91,13 @@ export const DEMO_RECIPES_TR: DemoRecipe[] = [
   {
     "key": "shakshuka",
     "title": "Şakşuka",
-    "description": "Baharatlı domates sosunda haşlanmış Kuzey Afrika yumurtası",
+    "description": "Baharatlı domates sosunda pişen yumurta, Kuzey Afrika usulü",
     "ingredients": [
       "2 yemek kaşığı zeytinyağı",
-      "1 büyük soğan, küp doğranmış",
-      "1 kırmızı dolmalık biber, küp doğranmış",
-      "4 diş sarımsak, kıyılmış",
-      "1 çay kaşığı kırmızı biber",
+      "1 büyük soğan, küçük küçük doğranmış",
+      "1 kırmızı kapya biber, küçük küçük doğranmış",
+      "4 diş sarımsak, ezilmiş",
+      "1 çay kaşığı pul biber",
       "1/2 çay kaşığı kimyon",
       "1/4 çay kaşığı acı biber",
       "800g konserve domates",
@@ -108,18 +108,18 @@ export const DEMO_RECIPES_TR: DemoRecipe[] = [
       "Tuz ve karabiber"
     ],
     "steps": [
-      "Geniş dökme demir tavada yağı ısıtın",
-      "Soğanı yumuşayana kadar soteleyin",
-      "Biberi ekleyin ve 5 dakika pişirin",
-      "Sarımsak, kırmızı biber, kimyon, acı biberi ekleyin",
-      "Kokusu çıkana kadar yaklaşık 1 dakika pişirin",
-      "Domatesleri ve şekeri ekleyin, tuz/karabiberle tatlandırın",
-      "Koyulaşana kadar 10-15 dakika kaynatın",
-      "Sosta yumurtalar için yuvalar açın",
-      "Yumurtaları yuvalara kırın",
-      "Kapağını kapatın ve yumurtalar katılaşana kadar 8-12 dakika pişirin",
-      "Üzerine beyaz peynir serpin",
-      "Otlarla süsleyin ve ekmekle servis yapın"
+      "Geniş bir tavada zeytinyağını kızdır",
+      "Soğanı yumuşayana kadar kavur",
+      "Biberi ekle, 5 dakika pişir",
+      "Sarımsağı, pul biberi, kimyonu ve acı biberi ekle",
+      "Kokusu çıkana kadar yaklaşık 1 dakika pişir",
+      "Domatesi ve şekeri ekle, tuz ve karabiberle tadını ayarla",
+      "Koyulaşana kadar 10-15 dakika kaynat",
+      "Sosun içinde yumurtalar için küçük çukurlar aç",
+      "Yumurtaları çukurlara kır",
+      "Kapağını kapat, yumurtalar tutana kadar 8-12 dakika pişir",
+      "Üzerine beyaz peynir ufala",
+      "Otlarla süsle, ekmekle servis et"
     ],
     "tags": [
       "breakfast",
@@ -133,30 +133,30 @@ export const DEMO_RECIPES_TR: DemoRecipe[] = [
   },
   {
     "key": "classic_brownies",
-    "title": "Klasik Brownie",
-    "description": "Çatlak yüzeyli, yoğun çikolatalı brownie",
+    "title": "Brownie",
+    "description": "Üstü çatlak, içi yoğun çikolatalı brownie",
     "ingredients": [
       "200g bitter çikolata, doğranmış",
       "175g tereyağı",
       "200g toz şeker",
       "3 büyük yumurta",
       "75g un",
-      "25g kakao tozu",
+      "25g kakao",
       "1/2 çay kaşığı tuz",
-      "100g çikolata parçacıkları (isteğe bağlı)"
+      "100g damla çikolata (istersen)"
     ],
     "steps": [
-      "Fırını 180°C'ye (350°F) ısıtın",
-      "8 inç kare tepsiyi parşömen kağıdıyla kaplayın",
-      "Çikolata ve tereyağını benmari usulü eritin",
-      "Şekeri ekleyip karışana kadar çırpın",
-      "Yumurtaları tek tek çırparak ekleyin",
-      "Un, kakao ve tuzu birlikte eleyin",
-      "Kuru malzemeleri çikolatalı karışıma katlayın",
-      "İsteğe bağlı olarak çikolata parçacıkları ekleyin",
-      "Hazırlanan tepsiye dökün",
-      "Kürdan temiz çıkana kadar 30-35 dakika pişirin",
-      "Dilimlemeden önce tamamen soğumaya bırakın"
+      "Fırını 180°C'ye ısıt",
+      "20 cm'lik kare bir kalıbı yağlı kağıtla kapla",
+      "Çikolatayı ve tereyağını benmari usulüyle erit",
+      "Şekeri ekleyip karışana kadar çırp",
+      "Yumurtaları tek tek ekleyip çırp",
+      "Unu, kakaoyu ve tuzu birlikte ele",
+      "Kuru malzemeleri çikolatalı karışıma yedirerek karıştır",
+      "İstersen damla çikolataları da ekle",
+      "Hazırladığın kalıba dök",
+      "Kürdan temiz çıkana kadar 30-35 dakika pişir",
+      "Dilimlemeden önce tamamen soğumasını bekle"
     ],
     "tags": [
       "dessert"
@@ -168,12 +168,12 @@ export const DEMO_RECIPES_TR: DemoRecipe[] = [
   },
   {
     "key": "thai_green_curry",
-    "title": "Yeşil Tay Körisi",
-    "description": "Aromatik hindistan cevizli körili tavuk",
+    "title": "Tay Yeşil Köri",
+    "description": "Hindistan cevizi sütlü, aromatik tavuklu köri",
     "ingredients": [
       "500g tavuk eti",
       "400ml hindistan cevizi sütü",
-      "3 yemek kaşığı yeşil köri pasti",
+      "3 yemek kaşığı yeşil köri ezmesi",
       "1 patlıcan, doğranmış",
       "1 kırmızı biber",
       "Tay fesleğeni",
@@ -182,14 +182,14 @@ export const DEMO_RECIPES_TR: DemoRecipe[] = [
       "Basmati pirinç"
     ],
     "steps": [
-      "Hindistan cevizi sütünün kalın kısmını tavaya alın",
-      "Köri pastını ekleyin ve kızartın",
-      "Tavuk etini ekleyin ve pişirin",
-      "Kalan hindistan cevizi sütünü ekleyin",
-      "Sebzeleri ekleyin ve kaynatın",
-      "Balık sosu ve şekerle tatlandırın",
-      "Tay fesleğeni ekleyin",
-      "Pirinçle servis yapın"
+      "Hindistan cevizi sütünün koyu kısmını tavaya al",
+      "Köri ezmesini ekle, kokusu çıkana kadar kavur",
+      "Tavuk etini ekle, pişir",
+      "Kalan hindistan cevizi sütünü ekle",
+      "Sebzeleri ekle, kaynat",
+      "Balık sosu ve şekerle tadını ayarla",
+      "Tay fesleğenini ekle",
+      "Basmati pilavla servis et"
     ],
     "tags": [
       "dinner"
@@ -202,25 +202,25 @@ export const DEMO_RECIPES_TR: DemoRecipe[] = [
   {
     "key": "greek_salad",
     "title": "Yunan Salatası",
-    "description": "Taze sebze ve beyaz peynirli Akdeniz salatası",
+    "description": "Taze sebzeler ve beyaz peynirle hazırlanan Akdeniz salatası",
     "ingredients": [
       "3 büyük domates, dilimlenmiş",
       "1 salatalık, dilimlenmiş",
       "1 kırmızı soğan, ince dilimlenmiş",
-      "200g feta peyniri, küp doğranmış",
-      "1/2 su bardağı kalamata zeytini",
+      "200g beyaz peynir, küp doğranmış",
+      "1/2 su bardağı siyah zeytin",
       "1/4 su bardağı zeytinyağı",
-      "2 yemek kaşığı kırmızı sirke",
+      "2 yemek kaşığı kırmızı şarap sirkesi",
       "1 çay kaşığı kekik",
       "Tuz ve karabiber"
     ],
     "steps": [
-      "Domates, salatalık ve soğanı büyük bir kapta birleştirin",
-      "Feta peyniri ve zeytinleri ekleyin",
-      "Zeytinyağı, sirke, kekik, tuz ve karabiberi karıştırın",
-      "Salatayla sosu karıştırın",
-      "30 dakika dinlendirin",
-      "Pita ekmeği ile servis yapın"
+      "Domatesi, salatalığı ve soğanı geniş bir kapta birleştir",
+      "Beyaz peyniri ve zeytinleri ekle",
+      "Zeytinyağını, sirkeyi, kekiği, tuzu ve karabiberi karıştırıp sos yap",
+      "Sosu salatanın üzerine dök, karıştır",
+      "30 dakika dinlendir",
+      "Pide ya da ekmekle servis et"
     ],
     "tags": [
       "lunch",

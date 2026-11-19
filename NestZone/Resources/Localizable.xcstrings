@@ -13777,7 +13777,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ şu an devam ediyor"
+            "value": "Şu an: %@"
           }
         }
       }
@@ -13794,7 +13794,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ tamir bekliyor"
+            "value": "Tamir bekleyen: %@"
           }
         }
       }
@@ -13845,7 +13845,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Akşama %@"
+            "value": "Akşam yemeği: %@"
           }
         }
       }
