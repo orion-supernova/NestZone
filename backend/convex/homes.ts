@@ -2,7 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
-import { cascadeDeleteHome } from "./lib/relations";
+import { departHome } from "./lib/membership";
 import { publicUsers } from "./lib/users";
 import { internal } from "./_generated/api";
 
@@ -197,24 +197,61 @@ export const leave = mutation({
   handler: async (ctx, { homeId }) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
-    const remaining = (home.members ?? []).filter((m) => m !== user._id);
+    // Last member out takes the home with them (lib/membership.ts).
+    const departure = await departHome(ctx, home, user._id);
+    return { ok: true, ...departure };
+  },
+});
 
-    // Last member out takes the home and everything in it. Otherwise the rows
-    // survive with nobody able to satisfy requireHomeMember — permanently
-    // unreadable data that no code path could ever reach or clean up again.
-    if (remaining.length === 0) {
-      const removed = await cascadeDeleteHome(ctx, homeId);
-      return { ok: true, deletedHome: true, removed };
-    }
+/**
+ * Takes another member out of a home.
+ *
+ * Houses are invite-only, so this is the house's answer to somebody who
+ * should no longer be in it (App Review asks for one where people share
+ * messages and photos). Any member may do it — there is no owner — and never
+ * to themselves: that is `leave`, which may delete the home, and this never
+ * can, because the caller stays.
+ *
+ * Idempotent: somebody already gone is `removed: false`, not an error, so a
+ * retry or two phones doing it at once land the same. What they wrote stays
+ * with the household, exactly as when somebody leaves.
+ */
+export const removeMember = mutation({
+  args: { homeId: v.id("homes"), userId: v.id("users") },
+  returns: v.object({ ok: v.boolean(), removed: v.boolean() }),
+  handler: async (ctx, { homeId, userId }) => {
+    const caller = await requireUser(ctx);
+    const home = await requireHomeMember(ctx, homeId);
+    if (userId === caller._id) throw new Error("To leave a home yourself, use leave");
+    if (!(home.members ?? []).includes(userId)) return { ok: true, removed: false };
 
-    await ctx.db.patch(homeId, { members: remaining, updated: Date.now() });
-    await ctx.db.patch(user._id, {
-      home_id: (user.home_id ?? []).filter((h) => h !== homeId),
+    const removedUser = await ctx.db.get(userId);
+    await departHome(ctx, home, userId);
+
+    const homeName = home.name ?? "Your home";
+    // The person removed hears it as a push only: the home's feed is no
+    // longer theirs to read, so no row is filed for them (no `homeId`).
+    await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
+      userIds: [userId],
+      actor: caller._id,
+      title: homeName,
+      body: caller.name
+        ? `${caller.name} removed you from the home`
+        : "You were removed from the home",
+      category: "home",
     });
-    // Nestie's vote may have been waiting only on the one who just left: ask
-    // "has everyone answered?" again of who is left. Scheduled, so leaving
-    // never waits on it or fails for it; a house with no open vote is a no-op.
-    await ctx.scheduler.runAfter(0, internal.companion.membersChanged, { homeId });
-    return { ok: true, deletedHome: false };
+    // And the house is told, so a removal is never silent to the people
+    // still living there.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId,
+      actor: caller._id,
+      title: homeName,
+      body:
+        caller.name && removedUser?.name
+          ? `${caller.name} removed ${removedUser.name} from the home`
+          : "Someone was removed from the home",
+      category: "home",
+    });
+    return { ok: true, removed: true };
   },
 });
