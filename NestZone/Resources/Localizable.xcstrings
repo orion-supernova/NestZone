@@ -625,7 +625,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hoş geldin, burası %@"
+            "value": "%@'a hoş geldin"
           }
         }
       }
@@ -14917,7 +14917,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaten bu evin bir üyesisiniz"
+            "value": "Zaten bu evdesin"
           }
         }
       }
@@ -14934,7 +14934,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev adı boş olamaz"
+            "value": "Eve bir ad ver"
           }
         }
       }
@@ -14951,7 +14951,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geçersiz davet kodu"
+            "value": "Bu davet kodu tutmadı"
           }
         }
       }
@@ -14968,7 +14968,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Davet kodu boş olamaz"
+            "value": "Davet kodunu yaz"
           }
         }
       }
@@ -21271,7 +21271,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evi Yönet"
+            "value": "Evi yönet"
           }
         }
       }
@@ -27980,7 +27980,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film ararken yetişkin sonuçlarını da dahil eder."
+            "value": "Film ararken yetişkinlere yönelik sonuçlar da çıkar."
           }
         }
       }
@@ -27997,7 +27997,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yetişkin içeriklerine izin ver"
+            "value": "Yetişkin içerikleri göster"
           }
         }
       }
@@ -28048,7 +28048,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "App Store'a ulaşılamadı. Birazdan tekrar deneyin."
+            "value": "App Store'a ulaşamadık. Birazdan tekrar dene."
           }
         }
       }
@@ -28065,7 +28065,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Güncellemeleri denetle"
+            "value": "Güncelleme var mı bak"
           }
         }
       }
@@ -28082,7 +28082,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ itibarıyla denetlendi"
+            "value": "Son bakış: %@"
           }
         }
       }
@@ -28099,7 +28099,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mevcut Ev"
+            "value": "Şu anki ev"
           }
         }
       }
@@ -28116,7 +28116,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün ekranını özelleştirin"
+            "value": "Bugün ekranını düzenle"
           }
         }
       }
@@ -28235,7 +28235,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu kodu evdeki kişilerle paylaşarak evinize katılmalarını sağlayın"
+            "value": "Bu kodu evdekilerle paylaş, evine katılsınlar"
           }
         }
       }
@@ -28303,7 +28303,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çıkış Yap"
+            "value": "Çıkış yap"
           }
         }
       }
@@ -28378,7 +28378,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ için bildirimler kapalı. Ayarlar'dan aç."
+            "value": "%@ bildirimleri kapalı. Ayarlar'dan açabilirsin."
           }
         }
       }
@@ -28429,7 +28429,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kayıt başarısız"
+            "value": "Kaydedilemedi"
           }
         }
       }
@@ -28480,7 +28480,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biri görev, alışveriş maddesi, not, tarif ya da film eklediğinde, akşam yemeğini planladığında, bir görevi bitirdiğinde veya eve katıldığında bildirim alın."
+            "value": "Biri görev, alışveriş, not, tarif ya da film eklediğinde, akşam yemeğini planladığında, bir işi bitirdiğinde ya da eve katıldığında haberin olsun."
           }
         }
       }
@@ -28548,7 +28548,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple bu hesaba kayıtlı tüm cihazları reddetti, o yüzden kayıtları kaldırıldı. Bu cihazı yeniden kaydetmek için %@ uygulamasını tekrar aç."
+            "value": "Apple bu hesaptaki cihazların hepsini reddetti, biz de kayıtlarını sildik. Bu telefonu yeniden kaydetmek için %@'u kapatıp tekrar aç."
           }
         }
       }
@@ -28565,7 +28565,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bunu alacak kayıtlı bir cihaz yok. %@ uygulamayı bir dahaki açışında yeniden deneyecek."
+            "value": "Bunu alacak kayıtlı cihaz yok. Uygulamayı bir dahaki açışında %@ tekrar deneyecek."
           }
         }
       }
@@ -28616,7 +28616,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deneyimini kişiselleştir"
+            "value": "Uygulamayı kendine göre ayarla"
           }
         }
       }
@@ -28718,7 +28718,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En son sürümü kullanıyorsunuz"
+            "value": "En son sürümdesin"
           }
         }
       }
@@ -30641,7 +30641,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En avantajlı"
+            "value": "En kârlısı"
           }
         }
       }
@@ -31219,7 +31219,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu, işi tamamlama kredini de siler; katkı dağılımı değişir. Geri alınamaz."
+            "value": "Bu işi bitirdiğin için yazılan pay da gider, katkı dağılımı değişir. Geri dönüşü yok."
           }
         }
       }
@@ -31236,7 +31236,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu, %@ adlı kişinin işi tamamlama kredisini de siler; katkı dağılımı değişir. Geri alınamaz."
+            "value": "%@ bu işi bitirdiği için aldığı payı da kaybeder, katkı dağılımı değişir. Geri dönüşü yok."
           }
         }
       }
@@ -31253,7 +31253,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu, katkı dağılımından da kaldırır. Geri alınamaz."
+            "value": "Katkı dağılımından da çıkar. Geri dönüşü yok."
           }
         }
       }
@@ -31287,7 +31287,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tamamlanan işler, işaretlemenden %lld gün sonra buraya taşınır."
+            "value": "Biten işler, tik attıktan %lld gün sonra buraya taşınır."
           }
         }
       }
@@ -31321,7 +31321,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld günden önce tamamlanan işler ve erkenden kaldırdıkların. Katkılara sayılmaya devam ederler — bunu değiştiren tek şey silmektir."
+            "value": "%lld günden eski işler ve erkenden kaldırdıkların burada. Katkıya sayılmaya devam ederler; bunu sadece silmek değiştirir."
           }
         }
       }
@@ -35646,7 +35646,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profilin ve her evdeki yerin kalıcı olarak silinir. Son üyesi olduğun ev, içindeki her şeyle birlikte silinir. Ev için yazdıkların diğerleri için kalır. Sonra Apple senden onay isteyecek."
+            "value": "Profilin ve bütün evlerdeki yerin kalıcı olarak silinir. Son üyesi olduğun ev de içindekilerle birlikte gider. Eve yazdıkların diğerlerinde kalır. Sıradaki adımda Apple onay isteyecek."
           }
         }
       }
@@ -35663,7 +35663,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu, giriş yaptığın Apple Kimliği değil. Hiçbir şey silinmedi. Aynı hesapla tekrar dene."
+            "value": "Bu, giriş yaptığın Apple Hesabı değil. Hiçbir şey silinmedi; aynı hesapla tekrar dene."
           }
         }
       }
@@ -35731,7 +35731,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ artık bu eve giremeyecek. Ev için yazdıkları kalır."
+            "value": "%@ bu eve artık giremeyecek. Yazdıkları evde kalır."
           }
         }
       }
@@ -35799,7 +35799,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu, NestZone Plus'a dahil."
+            "value": "Bunun için NestZone Plus lazım."
           }
         }
       }
@@ -35833,7 +35833,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvim Plus'a dahil"
+            "value": "Takvim Plus'la açılır"
           }
         }
       }
@@ -35850,7 +35850,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para işleri Plus'a dahil"
+            "value": "Finans Plus'la açılır"
           }
         }
       }
@@ -35867,7 +35867,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reyonlara göre alışveriş Plus'a dahil"
+            "value": "Reyon reyon alışveriş Plus'la açılır"
           }
         }
       }
@@ -35884,7 +35884,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kendi film listelerin Plus'a dahil"
+            "value": "Kendi film listelerin Plus'la gelir"
           }
         }
       }
@@ -35901,7 +35901,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hemen arşivle Plus'a dahil"
+            "value": "Erken arşivleme Plus'la açılır"
           }
         }
       }
@@ -35918,7 +35918,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etkinlik eklemek Plus'a dahil"
+            "value": "Etkinlik eklemek için Plus lazım"
           }
         }
       }
@@ -35935,7 +35935,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Harcama girmek Plus'a dahil"
+            "value": "Harcama girmek için Plus lazım"
           }
         }
       }
@@ -35953,7 +35953,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evdeki sorunlar Plus'a dahil"
+            "value": "Ev sorunları Plus'la açılır"
           }
         }
       }
@@ -35971,7 +35971,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Birden fazla ev Plus'a dahil"
+            "value": "İkinci ev için Plus lazım"
           }
         }
       }
@@ -35989,7 +35989,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yetişkin içerikler Plus'a dahil"
+            "value": "Yetişkin içerik Plus'la açılır"
           }
         }
       }
@@ -36006,7 +36006,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bütün ev için Plus"
+            "value": "Plus bütün evin"
           }
         }
       }
@@ -36023,7 +36023,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şimdiye kadar yazdığın her şey senin kalır ve okunur, ne seçersen seç."
+            "value": "Ne seçersen seç, şimdiye kadar yazdıkların senin; hepsini okumaya devam edersin."
           }
         }
       }
@@ -36040,7 +36040,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tek abonelik, %@ içindeki herkese yeter"
+            "value": "Tek abonelik yeter, %@ hep birlikte kullanır"
           }
         }
       }
@@ -36057,7 +36057,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu evin Plus'ı %@ sayesinde açık."
+            "value": "%@ sağ olsun, bu evde Plus açık."
           }
         }
       }
@@ -36074,7 +36074,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu evin Plus'ı senin aboneliğinle açık."
+            "value": "Senin sayende bu evde Plus açık."
           }
         }
       }
@@ -36091,7 +36091,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvim ve etkinlikler: parti, hatırlatma, kim geliyor"
+            "value": "Takvim ve etkinlikler: davetler, hatırlatmalar, kim geliyor"
           }
         }
       }
@@ -36108,7 +36108,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para: ortak harcamalar, faturalar, hesaplaşma"
+            "value": "Finans: ortak harcamalar, faturalar, kim kime ne borçlu"
           }
         }
       }
@@ -36125,7 +36125,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alışveriş reyonlara göre, reyonu tek seferde temizle"
+            "value": "Reyon reyon alışveriş, bir reyonu tek dokunuşla temizle"
           }
         }
       }
@@ -36142,7 +36142,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kendi film listelerin, bitmiş işler için hemen arşivle"
+            "value": "Kendi film listelerin, biten işleri erkenden arşivleme"
           }
         }
       }
@@ -36159,7 +36159,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En avantajlı"
+            "value": "En kârlısı"
           }
         }
       }
@@ -36210,7 +36210,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yılda %@"
+            "value": "%@/yıl"
           }
         }
       }
@@ -36227,7 +36227,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ayda %@"
+            "value": "%@/ay"
           }
         }
       }
@@ -36244,7 +36244,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aylığı %@ gibi"
+            "value": "Ayda %@ ediyor"
           }
         }
       }
@@ -36261,7 +36261,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@, sonra %@"
+            "value": "%1$@, sonra %2$@"
           }
         }
       }
@@ -36394,7 +36394,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Satın alımları geri yükle"
+            "value": "Satın alınanları geri yükle"
           }
         }
       }
@@ -36411,7 +36411,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ödeme, onayladığında Apple ID'nden alınır. Aboneliği dönem bitmeden en az 24 saat önce iptal etmezsen kendiliğinden yenilenir; Apple ID ayarlarından istediğin zaman yönetebilir ya da iptal edebilirsin. Ücretsiz deneme bittiğinde ücretli aboneliğe dönüşür."
+            "value": "Ödeme, onayladığın anda Apple Hesabı'ndan alınır. Dönem bitmeden en az 24 saat önce iptal etmezsen abonelik kendiliğinden yenilenir. Apple Hesabı ayarlarından istediğin zaman yönetebilir ya da iptal edebilirsin. Ücretsiz deneme bitince ücretli aboneliğe geçer."
           }
         }
       }
@@ -36428,7 +36428,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Planlar şu an yok"
+            "value": "Planlar şu an açılmıyor"
           }
         }
       }
@@ -36445,7 +36445,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yüklenemedi. Bağlantını kontrol edip tekrar dene."
+            "value": "Yükleyemedik. Bağlantına bakıp tekrar dene."
           }
         }
       }
@@ -36462,7 +36462,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Satın alman onay bekliyor. Onaylanır onaylanmaz Plus açılır."
+            "value": "Satın alma onay bekliyor. Onaylanınca Plus hemen açılır."
           }
         }
       }
@@ -36479,7 +36479,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ödeme tamam ama Plus'ın görünmesi biraz sürüyor. Uygulamaya her döndüğünde tekrar bakıyoruz, istersen Satın alımları geri yükle'ye de dokunabilirsin."
+            "value": "Ödeme geçti ama Plus'ın gelmesi biraz sürüyor. Uygulamaya her dönüşünde tekrar bakıyoruz; istersen Satın alınanları geri yükle'ye de dokunabilirsin."
           }
         }
       }
@@ -36496,7 +36496,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu Apple ID'de Plus aboneliği yok."
+            "value": "Bu Apple Hesabı'nda Plus aboneliği bulamadık."
           }
         }
       }
@@ -36513,7 +36513,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hazırsın"
+            "value": "Tamamdır!"
           }
         }
       }
@@ -36530,7 +36530,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plus bütün ev için açık."
+            "value": "Plus artık bütün evde açık."
           }
         }
       }
@@ -36564,7 +36564,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone Plus gerekiyor. Planları açar."
+            "value": "Bunun için NestZone Plus lazım. Dokununca planlar açılır."
           }
         }
       }
@@ -36581,7 +36581,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plus'a bak"
+            "value": "Plus'a göz at"
           }
         }
       }
@@ -36598,7 +36598,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiçbir şey kaybolmaz. Plus bunu evdeki herkes için açar."
+            "value": "Hiçbir şey kaybolmaz. Plus'la evdeki herkes kullanır."
           }
         }
       }
@@ -36615,7 +36615,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece okunur. Yenisini eklemek için Plus lazım."
+            "value": "Şu an sadece okuyabilirsin. Eklemek için Plus lazım."
           }
         }
       }
@@ -36632,7 +36632,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yükselt"
+            "value": "Plus'a geç"
           }
         }
       }
@@ -36734,7 +36734,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ tarihinde biter"
+            "value": "%@ tarihinde bitiyor"
           }
         }
       }
@@ -36802,7 +36802,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plus geri geldi"
+            "value": "Plus yeniden açık"
           }
         }
       }
@@ -36836,7 +36836,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple aboneliği, Apple ID ayarlarından iptal edene kadar ücretlendirmeye devam eder."
+            "value": "Apple aboneliğini ayrıca iptal etmen lazım: Apple Hesabı ayarlarından iptal edene kadar ücret alınmaya devam eder."
           }
         }
       }
