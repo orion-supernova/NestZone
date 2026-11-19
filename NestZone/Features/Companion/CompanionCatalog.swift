@@ -441,12 +441,14 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
         self.price = price
     }
 
-    /// The six packs, before any store prices them: 100, 300, 550, 1,000,
-    /// 2,200 and 5,000 (still open in Docs/Companion/HANDOFF.md). The test
-    /// store compares them at example prices, which it never shows or charges.
+    /// The six packs, before any store prices them: 150, 300, 550, 1,000,
+    /// 2,200 and 5,000, at $0.99, 1.99, 2.99, 4.99, 9.99 and 19.99 (lowered
+    /// 2026-11-19: Sparkles are small change next to Plus, so a decoration is
+    /// about a dollar and a pet about three). The test store compares them at
+    /// these example prices, which it never shows or charges.
     public static let shelf: [SparklePack] = zip(
-        [100, 300, 550, 1_000, 2_200, 5_000],
-        ["0.99", "2.99", "4.99", "8.99", "17.99", "34.99"].map { Decimal(string: $0) }
+        [150, 300, 550, 1_000, 2_200, 5_000],
+        ["0.99", "1.99", "2.99", "4.99", "9.99", "19.99"].map { Decimal(string: $0) }
     ).map {
         SparklePack(id: "com.walhallaa.NestZone.sparkles.\($0)", sparkles: $0, displayPrice: nil, price: $1)
     }
@@ -498,5 +500,5 @@ public struct SparklePack: Equatable, Identifiable, Sendable {
 /// line is rewritten by `Docs/Companion/tools/catalog_export/export_catalog.sh`
 /// when it regenerates `companionData.ts`; do not edit it by hand.
 public enum CatalogVersion {
-    public static let exported = "0c345e747c08-r1"
+    public static let exported = "ab9210929585-r1"
 }

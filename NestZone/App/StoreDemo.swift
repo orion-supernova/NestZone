@@ -94,7 +94,7 @@ enum StoreDemo {
     /// only: NestZone.storekit carries USD prices alone and a real build asks
     /// the store. Yearly, monthly, then the six Sparkle packs in shelf order.
     private static let lira = (yearly: "749.99", monthly: "109.99",
-                               packs: ["39.99", "119.99", "219.99", "399.99", "849.99", "1999.99"])
+                               packs: ["39.99", "79.99", "119.99", "199.99", "399.99", "849.99"])
 
     /// Formats an amount like a store product's `displayPrice`: lira with
     /// Turkish separators in Turkey, dollars in this phone's locale elsewhere.
