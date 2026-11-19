@@ -24,9 +24,17 @@ public struct MessagesView: View {
                         Image(systemName: "square.and.pencil")
                     }
                     .accessibilityLabel(Text(L10n.messagesNewMessageButton))
+                    .proLocked(.messages)
                 }
             }
             .task { await store.send(.task).finish() }
+            // A house without Plus: locked when there is nothing here,
+            // read-only under a banner when there is.
+            .proModule(
+                .messages,
+                hasData: !store.conversations.isEmpty,
+                isLoaded: !store.isLoading
+            )
             .hostedSheet(item: $store.scope(
                 state: \.destination?.compose, action: \.destination.compose
             )) { NewConversationSheet(store: $0) }
@@ -116,6 +124,7 @@ struct ChatView: View {
 
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Shared(.pro) private var pro
     @FocusState private var isComposerFocused: Bool
     /// Measured, so the bar can be aligned to a bubble edge and kept on screen.
     @State private var barSize: CGSize = .zero
@@ -224,7 +233,11 @@ struct ChatView: View {
         // Swipe the keyboard down; a tap anywhere in the thread does the same,
         // through `dismissEverything`.
         .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom) { composer }
+        .safeAreaInset(edge: .bottom) {
+            // Read-only for a house without Plus: the thread stays readable and
+            // the way to the plans takes the composer's place.
+            if pro.isPro { composer } else { ProReadOnlyBanner(feature: .messages) }
+        }
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

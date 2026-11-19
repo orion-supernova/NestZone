@@ -36426,6 +36426,96 @@
         }
       }
     },
+    "paywall_title_messages": {
+      "comment": "Headline of the paywall and of the locked Messages screen, shown to a house without Plus.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages are part of Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesajlaşma Plus'la açılır"
+          }
+        }
+      }
+    },
+    "paywall_benefit_messages": {
+      "comment": "A line in the paywall's list of what Plus includes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages: chat with the house, group chats and polls"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesajlar: evle sohbet, grup sohbetleri ve anketler"
+          }
+        }
+      }
+    },
+    "pro_preview_message_bread": {
+      "comment": "Sample chat bubble inside the Plus paywall's Messages preview, a decorative miniature. A housemate says they bought bread.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got bread 🥖"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekmek aldım 🥖"
+          }
+        }
+      }
+    },
+    "pro_preview_message_movie": {
+      "comment": "Sample chat bubble inside the Plus paywall's Messages preview, a decorative miniature. A housemate proposes a film.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movie at 8 tonight?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akşam 8'de film?"
+          }
+        }
+      }
+    },
+    "pro_preview_message_yes": {
+      "comment": "Sample chat bubble inside the Plus paywall's Messages preview, the viewer's own reply.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sounds good!"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olur!"
+          }
+        }
+      }
+    },
     "paywall_title_issues": {
       "comment": "Headline of the paywall and of the locked Problems screen, shown to a house without Plus.",
       "extractionState": "manual",

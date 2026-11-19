@@ -83,6 +83,7 @@ struct PaywallView: View {
                 benefit("calendar.badge.clock", Palette.hotPink, L10n.paywallBenefitCalendar)
                 benefit("dollarsign.circle.fill", Palette.indigo, L10n.paywallBenefitMoney)
                 benefit("cart.fill", Palette.success, L10n.paywallBenefitShopping)
+                benefit("bubble.left.and.bubble.right.fill", Palette.amber, L10n.paywallBenefitMessages)
                 benefit("film.stack.fill", Palette.violet, L10n.paywallBenefitMore)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

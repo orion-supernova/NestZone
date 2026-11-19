@@ -45,6 +45,10 @@ struct ProPreview: View {
         case .issues:
             issueRow(L10n.proPreviewTap, L10n.proPreviewUrgent, tint: Palette.danger)
             issueRow(L10n.proPreviewBulb, L10n.proPreviewOpen, tint: Palette.warning)
+        case .messages:
+            bubble(L10n.proPreviewMessageBread, mine: false)
+            bubble(L10n.proPreviewMessageMovie, mine: false)
+            bubble(L10n.proPreviewMessageYes, mine: true)
         case .multipleHomes:
             homeCard(L10n.proPreviewHomeFlat, current: true)
             homeCard(L10n.proPreviewHomeCabin, current: false)
@@ -127,6 +131,22 @@ struct ProPreview: View {
                 .padding(.vertical, 3)
                 .foregroundStyle(tint)
                 .background(tint.opacity(0.14), in: .capsule)
+        }
+    }
+
+    private func bubble(_ text: LocalizedStringResource, mine: Bool) -> some View {
+        HStack {
+            if mine { Spacer(minLength: 40) }
+            Text(text)
+                .font(.subheadline)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .foregroundStyle(mine ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+                .background(
+                    mine ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.primary.opacity(0.08)),
+                    in: .rect(cornerRadius: 16, style: .continuous)
+                )
+            if !mine { Spacer(minLength: 40) }
         }
     }
 
