@@ -72,14 +72,14 @@
       "translations": [
         {
           "language": "tr",
-          "title": "NestZone Plus: bütün ev için tek abonelik",
-          "body": "Takvim, Para, reyonlara göre alışveriş, kendi film listelerin ve \"Hemen arşivle\" artık NestZone Plus'ta. Biri abone olunca evdeki herkes kullanıyor; yıllık planda ilk hafta bedava. Geri kalan her şey bedava kalıyor, yazdığın hiçbir şey de gitmiyor: Plus bir gün biterse hepsini okumaya devam edersin.",
+          "title": "NestZone Plus geldi: bütün eve tek abonelik",
+          "body": "Takvim, Finans, ev sorunları, reyon reyon alışveriş, kendi film listelerin ve birkaç ekstra artık NestZone Plus'ta. Evden biri abone oluyor, herkes kullanıyor. Yıllık planda ilk hafta bedava. Gerisi bedava kalıyor, şimdiye kadar yazdıkların da hiçbir yere gitmiyor: Plus bir gün biterse hepsini okumaya devam edersin.",
           "highlights": [
-            "Tek abonelik bütün eve yeter, kim ödediği fark etmez",
-            "Plus'ta: takvim ve etkinlikler, para ve faturalar, reyonlara göre alışveriş, kendi film listelerin, hemen arşivle",
-            "Hep bedava: işler, alışveriş listeleri, notlar, mesajlar, tarifler ve yemekler, film gecesi, ev sorunları, Nestie",
+            "Biri abone olsun, bütün ev kullansın",
+            "Plus'ta: takvim ve etkinlikler, finans ve faturalar, ev sorunları, reyon reyon alışveriş, kendi film listelerin, erken arşivleme, ikinci bir ev",
+            "Hep bedava: görevler, alışveriş listesi, notlar, mesajlar, tarifler ve yemekler, film gecesi, Nestie",
             "Yıllık planda ilk hafta bedava",
-            "Plus yokken Takvim ve Para'da zaten olanlar okunmaya devam eder",
+            "Plus olmasa da Takvim, Finans ve Sorunlar'dakiler okunmaya devam eder",
             "Ayarlar'dan istediğin zaman yönet ya da geri yükle"
           ]
         }
@@ -102,15 +102,15 @@
       "translations": [
         {
           "language": "tr",
-          "title": "Nestie geldi: evinizin bitkisi ya da minik dostu",
-          "body": "Eve hediye geldi! Artık hep birlikte bir bitki ya da evcil hayvan büyütüyorsunuz, Bugün ekranında yaşıyor. İşleri bitirdikçe, alışveriş yaptıkça, yemek planladıkça büyüyor. Sula, giydir, süsle, büyüttüklerini albümde sakla; hava ve bayramlarla birlikte hali de değişiyor. Nestie bedava. Paket paket alınan Işıltılar sadece yeni süsler ve dostlar gibi ekstralar için.",
+          "title": "Nestie geldi: evin kendi bitkisi ya da minik dostu",
+          "body": "Eve hediye geldi! Artık hep birlikte bir bitki ya da minik bir dost büyütüyorsunuz, Bugün ekranında yaşıyor. İşleri bitirdikçe, alışveriş yaptıkça, yemek planladıkça büyüyor. Sula, süsle, büyüttüklerini albümde biriktir; hava değiştikçe, bayramlar geldikçe o da değişiyor. Nestie bedava. Işıltılar paket paket satılıyor, onlar da sadece yeni süsler, yeni dostlar gibi ekstralar için.",
           "highlights": [
-            "Bir bitki ya da hayvan seç, birlikte büyütün, bedava",
-            "Evdeki herkes iş yaptıkça büyümesine yardım ediyor",
-            "Sula, süsle, büyüttüklerini albümde sakla",
-            "Yapraklar evin emeğiyle kazanılıyor; Işıltılar istersen, ekstralar için",
-            "Bayramlar bedava süsler getiriyor, mevsim de görünüşünü değiştiriyor",
-            "Hazır olunca ve yenisi için oy zamanı gelince Nestie haber veriyor"
+            "Bir bitki ya da minik dost seç, birlikte büyütün. Bedava",
+            "Evde kim iş yaparsa Nestie büyür",
+            "Sula, süsle, büyüttüklerini albümde biriktir",
+            "Yapraklar evin emeğiyle gelir; Işıltılar isteğe bağlı, ekstralar için",
+            "Bayramlarda bedava süsler var, mevsim değişince görünüşü de değişiyor",
+            "Hazır olunca da, yenisine oy verme zamanı gelince de Nestie haber veriyor"
           ]
         }
       ]
@@ -131,12 +131,12 @@
         {
           "language": "tr",
           "title": "Düzeltmeler ve iyileştirmeler",
-          "body": "Uygulamayı daha keyifli yapan ufak şeyler.",
+          "body": "Uygulamayı daha keyifli yapan ufak dokunuşlar.",
           "highlights": [
-            "Animasyonlar ve titreşimler elden geçti",
-            "Borçlar kapanınca artık \"Hesap kapandı\" damgası basılıyor",
+            "Animasyonlar ve titreşimler baştan sona elden geçti",
+            "Hesaplaşınca artık \"Hesap kapandı\" damgası basılıyor",
             "Bazı dokunuşlarda iki kere titreşme düzeldi",
-            "Yanlış ev kodunda alanın iki kere sallanması düzeldi"
+            "Yanlış ev kodu girince alanın iki kere sallanması düzeldi"
           ]
         }
       ]
