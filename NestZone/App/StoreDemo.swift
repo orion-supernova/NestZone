@@ -1,8 +1,9 @@
 import Foundation
+import os
 
 /// Launch arguments for taking App Store screenshots without a live store
 /// (`-storeDemo 1`, `-openPaywall calendar`, `-openSparkleStore 1`,
-/// `-forceFreeHouse 1`). Compiled only under `DEBUG || MEASURE`: a release
+/// `-forceFreeHouse 1`, `-screenshotPersona <Name>`). Compiled only under `DEBUG || MEASURE`: a release
 /// build has these as constants that say no, so nothing reads the defaults.
 enum StoreDemo {
     #if DEBUG || MEASURE
@@ -22,6 +23,47 @@ enum StoreDemo {
 
     /// The house is treated as without Plus, to photograph what a lock looks like.
     static var forcesFreeHouse: Bool { defaults.bool(forKey: "forceFreeHouse") }
+
+    /// `-screenshotPersona <Name>`: the signed-in account is shown as this
+    /// person, with the initials avatar, so a real name and face stay out of
+    /// store screenshots. Applied where `User` documents arrive, so every
+    /// screen follows.
+    static var persona: String? {
+        guard let name = defaults.string(forKey: "screenshotPersona"),
+              !name.isEmpty else { return nil }
+        return name
+    }
+
+    /// The signed-in user's id, learnt from `users:me`, which is the only read
+    /// that says who "me" is. Guarded by a lock: streams deliver off the main actor.
+    private static let meID = OSAllocatedUnfairLock<String?>(initialState: nil)
+
+    /// `user` as the persona when it is the signed-in account; others untouched.
+    private static func masked(_ user: User, isMe: Bool) -> User {
+        guard let persona, isMe || meID.withLock({ $0 }) == user.id.rawValue else { return user }
+        var copy = user
+        copy.name = persona
+        copy.avatar = nil
+        copy.avatarURL = nil
+        return copy
+    }
+
+    /// For `users:me`: remembers the id, then masks.
+    static func maskedMe(_ user: User?) -> User? {
+        guard persona != nil, let user else { return user }
+        meID.withLock { $0 = user.id.rawValue }
+        return masked(user, isMe: true)
+    }
+
+    static func masked(_ user: User) -> User { masked(user, isMe: false) }
+
+    static func masked(_ users: [User]) -> [User] {
+        persona == nil ? users : users.map { masked($0, isMe: false) }
+    }
+
+    /// Whether the notifications pre-prompt, and anything else that pops up
+    /// by itself on a first launch, is held back for a clean screenshot.
+    static var suppressesPrompts: Bool { persona != nil }
 
     /// Whether the demo prices in lira, the way a Turkish storefront would.
     private static var pricesInLira: Bool {
@@ -78,6 +120,11 @@ enum StoreDemo {
     }
     #else
     static var isOn: Bool { false }
+    static var persona: String? { nil }
+    static var suppressesPrompts: Bool { false }
+    static func maskedMe(_ user: User?) -> User? { user }
+    static func masked(_ user: User) -> User { user }
+    static func masked(_ users: [User]) -> [User] { users }
     static var paywallFeature: ProFeature?? { nil }
     static var opensSparkleStore: Bool { false }
     static var forcesFreeHouse: Bool { false }

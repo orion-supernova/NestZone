@@ -36,4 +36,22 @@ extension AsyncThrowingStream where Element: Sendable, Failure == any Error {
             continuation.onTermination = { _ in task.cancel() }
         }
     }
+
+    /// Passes every payload through `transform`. Used by the screenshot persona
+    /// (`StoreDemo`) to rename the signed-in user at the source.
+    func transforming(
+        _ transform: @escaping @Sendable (Element) -> Element
+    ) -> AsyncThrowingStream<Element, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    for try await value in self { continuation.yield(transform(value)) }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
 }

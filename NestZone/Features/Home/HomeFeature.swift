@@ -599,7 +599,8 @@ public struct HomeFeature: Sendable {
             // tab — and it is the first screen where the ask means something,
             // because there is finally a household to be notified about.
             case .askForNotificationsIfNeeded:
-                guard !state.hasAskedForNotifications else { return .none }
+                guard !state.hasAskedForNotifications, !StoreDemo.suppressesPrompts
+                else { return .none }
                 return .run { send in
                     // A permission sheet over a tab that has not finished
                     // drawing reads as an ambush.

@@ -32,11 +32,11 @@ extension UsersClient: DependencyKey {
     public static let liveValue = UsersClient(
         byIDs: { ids in
             guard !ids.isEmpty else { return [] }
-            let users = try await ConvexConnection.shared.first(
+            let users = StoreDemo.masked(try await ConvexConnection.shared.first(
                 "users:byIds",
                 args: ["ids": ids.map { $0 as ConvexEncodable? }],
                 as: [User].self
-            )
+            ))
             // Message authors and comment authors arrive here and nowhere else.
             // Recording them is what lets an avatar in a chat bubble find a
             // photo without the bubble knowing anything about photos.
@@ -56,14 +56,14 @@ extension UsersClient: DependencyKey {
         },
 
         setAvatar: { storageID in
-            let user = try await ConvexConnection.shared.mutate(
+            let user = StoreDemo.masked(try await ConvexConnection.shared.mutate(
                 "users:setAvatar",
                 // An explicit null, not an omitted argument: `setAvatar` has to
                 // be able to say "take it off", and a missing field can only
                 // say "not mentioned".
                 args: ["storageId": storageID as ConvexEncodable?],
                 as: User.self
-            )
+            ))
             AvatarDirectory.record(user)
             return user
         }
