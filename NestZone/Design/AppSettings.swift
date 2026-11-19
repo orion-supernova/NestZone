@@ -115,10 +115,12 @@ extension SharedKey where Self == AppStorageKey<Bool>.Default {
         Self[.appStorage("appIncludeAdultTitles"), default: false]
     }
 
-    /// Shopping list grouped by category (the default) versus one flat list.
-    /// Remembered, because people reliably prefer one or the other.
+    /// Shopping list grouped by category versus one flat list (the default).
+    /// Remembered, because people reliably prefer one or the other. Only a
+    /// house with Plus ever sees it as it is stored: read it through
+    /// `ShoppingFeature.State.effectiveGrouped`.
     public static var shoppingGrouped: Self {
-        Self[.appStorage("appShoppingGrouped"), default: true]
+        Self[.appStorage("appShoppingGrouped"), default: false]
     }
 
     /// Set once Today's getting-started checklist has been finished or put

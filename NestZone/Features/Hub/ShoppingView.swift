@@ -7,9 +7,10 @@ public struct ShoppingView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isComposerFocused: Bool
-    /// Aisles are Plus: a house without it gets the flat list, no picker and
-    /// no switch. The server writes the plain category for it either way.
-    @Shared(.pro) private var pro
+    /// Aisles are Plus: a house without it gets the flat list with the
+    /// Categories option locked, and no picker. The server writes the plain
+    /// category for it either way. Every aisle decision reads
+    /// `store.effectiveGrouped`, never the stored choice.
 
     /// Things this person ticked off here, for the haptic. Counted at the tap,
     /// not read off the item: an item also changes when somebody else buys it,
@@ -43,11 +44,10 @@ public struct ShoppingView: View {
             eventSections
             partSections
             mealSections
-            // Shown to every house; a free one sees it locked and the paywall
-            // on a tap, with the list itself staying flat.
+            // Shown to every house; a free one sees List chosen and
+            // Categories locked, the paywall on a tap.
             viewModeToggle
-                .proLocked(.shoppingCategories)
-            if store.isGrouped, pro.isPro {
+            if store.effectiveGrouped {
                 pendingSections
             } else {
                 flatSection
@@ -238,14 +238,15 @@ public struct ShoppingView: View {
                         ? L10n.shoppingCategoriesViewMode
                         : L10n.shoppingListViewMode),
                     symbol: grouped ? "rectangle.3.group" : "list.bullet",
-                    isSelected: store.isGrouped == grouped
+                    isSelected: store.effectiveGrouped == grouped
                 ) {
                     store.send(.viewModeToggled(grouped: grouped))
                 }
+                .proLocked(if: grouped ? .shoppingCategories : nil)
             }
             Spacer(minLength: 0)
         }
-        .animation(Motion.spring, value: store.isGrouped)
+        .animation(Motion.spring, value: store.effectiveGrouped)
         .glassListRow(insets: headerInsets)
     }
 
@@ -254,7 +255,7 @@ public struct ShoppingView: View {
         ForEach(store.pendingFlat) { item in
             ShoppingRow(
                 item: item,
-                showsCategory: true,
+                showsCategory: store.pro.isPro,
                 onToggle: { toggle(item) }
             )
             .glassListRow()
@@ -458,22 +459,23 @@ public struct ShoppingView: View {
     /// scrolling back up or reopening a sheet.
     private var composer: some View {
         HStack(spacing: 10) {
-            Menu {
-                Picker(selection: $store.draftCategory) {
-                    ForEach(ShoppingItem.Category.allCases, id: \.self) { category in
-                        Label { Text(category.title) } icon: {
-                            Image(systemName: category.symbol)
+            if store.pro.isPro {
+                Menu {
+                    Picker(selection: $store.draftCategory) {
+                        ForEach(ShoppingItem.Category.allCases, id: \.self) { category in
+                            Label { Text(category.title) } icon: {
+                                Image(systemName: category.symbol)
+                            }
+                            .tag(category)
                         }
-                        .tag(category)
-                    }
-                } label: { EmptyView() }
-            } label: {
-                Image(systemName: store.draftCategory.symbol)
-                    .font(.body.weight(.semibold))
-                    .frame(width: 40, height: 40)
+                    } label: { EmptyView() }
+                } label: {
+                    Image(systemName: store.draftCategory.symbol)
+                        .font(.body.weight(.semibold))
+                        .frame(width: 40, height: 40)
             }
             .accessibilityLabel(Text(store.draftCategory.title))
-            .proLocked(.shoppingCategories)
+            }
 
             TextField(text: $store.draft) {
                 Text(L10n.shoppingAddPlaceholder)
