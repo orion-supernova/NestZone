@@ -103,8 +103,8 @@ private struct ChooseView: View {
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 20)
-                group(L10n.choosePlants, Species.allCases.filter { !$0.isPet }, shop, jar: true)
-                group(L10n.choosePets, Species.allCases.filter(\.isPet), shop)
+                group(L10n.choosePlants, Species.onShelf.filter { !$0.isPet }, shop, jar: true)
+                group(L10n.choosePets, Species.onShelf.filter(\.isPet), shop)
             }
             .padding(.vertical, 12)
         }
@@ -113,12 +113,12 @@ private struct ChooseView: View {
         // The pets' shapes, built off the main thread before their tiles
         // scroll in.
         .task {
-            let plans = Species.allCases.filter(\.isPet).compactMap(CritterPlan.of)
+            let plans = Species.onShelf.filter(\.isPet).compactMap(CritterPlan.of)
             await Task.detached(priority: .utility) { plans.forEach(CritterGeometry.prepare) }.value
             let seed = "\(store.homeID.rawValue)-\(store.house.albumCount)"
             let big = typeSize.isAccessibilitySize
             let shop = store.shop
-            let order = shelved(Species.allCases.filter { !$0.isPet }, shop) + shelved(Species.allCases.filter(\.isPet), shop)
+            let order = shelved(Species.onShelf.filter { !$0.isPet }, shop) + shelved(Species.onShelf.filter(\.isPet), shop)
             await StillCache.warm(order.map { kind in
                 let portrait = SpeciesPortrait(species: kind, seed: seed, hour: stage.portraitHour)
                 return (portrait.still(big: big), AnyView(portrait))
@@ -412,7 +412,7 @@ private struct DecorateView: View {
         for raw in store.available.sorted() {
             if let decor = Decor(rawValue: raw), decor.kind == spot.kind, seen.insert(raw).inserted { list.append(decor) }
         }
-        for item in DecorItem.allCases
+        for item in DecorItem.onShelf
         where item.kind == spot.kind && !seen.contains(item.rawValue) && shop.standing(of: item).price != nil {
             list.append(.item(item))
         }

@@ -1267,23 +1267,17 @@ In order — each step can go to testers on its own:
 
 ## Before the next release
 
-The motion pass isn't behind `CompanionFlag`. The micro-animations, the
-"All square" stamp, the ring that settles, and the double-buzz and
-double-shake fixes reach every household with the next version, whatever it
-turns out to be. It has no changelog entry yet, because no version number
-has been chosen (`stage` is 1.11.0, and so is `MARKETING_VERSION`). When it
-is, add a `<version>-fixes` entry (kind `improvement`) in the same commit
-as the bump. Draft, to be read once more:
-
-- EN: "Fixes and improvements" — "Small things that make the app nicer to
-  use." Highlights: "Improved animations and haptics all over the app",
-  "Settling up now ends with an "All square" stamp", "Fixed taps that
-  buzzed twice", "Fixed a wrong home code shaking twice".
-- TR: "Düzeltmeler ve iyileştirmeler" — "Uygulamayı daha keyifli yapan
-  ufak şeyler." Highlights: "Animasyonlar ve titreşimler elden geçti",
-  "Borçlar kapanınca artık "Hesap kapandı" damgası basılıyor", "Bazı
-  dokunuşlarda iki kere titreşme düzeldi", "Yanlış ev kodunda alanın iki
-  kere sallanması düzeldi".
+**Done for 1.12.0.** The motion pass (micro-animations, the "All square"
+stamp, the ring that settles, the double-buzz and double-shake fixes) is the
+`1.12.0-fixes` entry in `backend/changelog.json`, written from the draft that
+was here, and Nestie itself is the `1.12.0-nestie` feature entry. Nestie ships
+in 1.12.0, free: `CompanionFlag` is on in every build, the Lab and the
+launch-argument tooling stay Debug-only, and a release build offers only what
+is drawn (`Species.onShelf`, `DecorItem.onShelf`; today that is everything,
+the gate only catches a future species or decoration added before its art).
+At the release, set the backend env: `APPLE_APP_ID=6749852085`,
+`JAR_ENVIRONMENTS=Production,Sandbox` while in review and then `Production`,
+`COMPANION_NOTIFY=on`.
 
 ## Things learned the hard way
 
