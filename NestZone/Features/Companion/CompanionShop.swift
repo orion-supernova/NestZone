@@ -146,7 +146,7 @@ struct ShopView: View {
         let shop = store.shop
         TabView(selection: shelfSelection) {
             page { decor(shop) }.tag(Shelf.decor)
-            page { species(Species.allCases.filter { !$0.isPet }, shop) }.tag(Shelf.plants)
+            page { species(Species.onShelf.filter { !$0.isPet }, shop) }.tag(Shelf.plants)
             page { pets(shop) }.tag(Shelf.pets)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
@@ -155,7 +155,7 @@ struct ShopView: View {
         // dropped frame.
         .task(id: shelf) {
             let stills = stills(on: shelf)
-            let pets: [Species] = shelf == .pets ? Species.allCases.filter(\.isPet) : shelf == .decor ? DecorPortrait.pets : []
+            let pets: [Species] = shelf == .pets ? Species.onShelf.filter(\.isPet) : shelf == .decor ? DecorPortrait.pets : []
             await Task.detached(priority: .utility) { pets.compactMap(CritterPlan.of).forEach(CritterGeometry.prepare) }.value
             await StillCache.warm(stills)
         }
@@ -210,14 +210,14 @@ struct ShopView: View {
         switch shelf {
         case .decor:
             // In the order the shelf lays them out, so the ones on screen come first.
-            let everyday = DecorItem.allCases.filter { $0.access != .holiday }
-            let ordered = Self.kinds.flatMap { kind, _ in everyday.filter { $0.kind == kind } } + DecorItem.allCases.filter { $0.access == .holiday }
+            let everyday = DecorItem.onShelf.filter { $0.access != .holiday }
+            let ordered = Self.kinds.flatMap { kind, _ in everyday.filter { $0.kind == kind } } + DecorItem.onShelf.filter { $0.access == .holiday }
             return ordered.map { item in
                 let portrait = DecorPortrait(decor: .item(item), hour: stage.portraitHour)
                 return (portrait.still(big: big), AnyView(portrait))
             }
-        case .plants: return species(shelved(Species.allCases.filter { !$0.isPet }, store.shop))
-        case .pets: return species(shelved(Species.allCases.filter(\.isPet), store.shop))
+        case .plants: return species(shelved(Species.onShelf.filter { !$0.isPet }, store.shop))
+        case .pets: return species(shelved(Species.onShelf.filter(\.isPet), store.shop))
         }
     }
 
@@ -236,12 +236,12 @@ struct ShopView: View {
 
     @ViewBuilder
     private func decor(_ shop: ShopContext) -> some View {
-        let everyday = DecorItem.allCases.filter { $0.access != .holiday }
+        let everyday = DecorItem.onShelf.filter { $0.access != .holiday }
         ForEach(Self.kinds, id: \.0) { kind, title in
             let items = everyday.filter { $0.kind == kind }
             if !items.isEmpty { section(title, items, shop) }
         }
-        section(L10n.shopShelfHolidays, DecorItem.allCases.filter { $0.access == .holiday }, shop)
+        section(L10n.shopShelfHolidays, DecorItem.onShelf.filter { $0.access == .holiday }, shop)
     }
 
     private func section(_ title: LocalizedStringResource, _ items: [DecorItem], _ shop: ShopContext) -> some View {
@@ -285,7 +285,7 @@ struct ShopView: View {
     /// Pets on their own, then each pack under its name and its one price.
     @ViewBuilder
     private func pets(_ shop: ShopContext) -> some View {
-        species(Species.allCases.filter { species in
+        species(Species.onShelf.filter { species in
             guard species.isPet else { return false }
             if case .pack = species.access { return false }
             return true
@@ -293,7 +293,7 @@ struct ShopView: View {
         ForEach(SpeciesPack.allCases) { pack in
             VStack(alignment: .leading, spacing: 12) {
                 SectionHeader(pack.title) { PriceTag(price: pack.price) }
-                species(pack.species, shop)
+                species(pack.species.filter(\.isShippable), shop)
             }
         }
     }
@@ -1358,7 +1358,7 @@ struct SparkleStoreView: View {
                 .disabled(store.buyingPack != nil && !isBuying)
                 .allowsHitTesting(!isBuying)
                 .shake(on: note.map { $0.kind == .failed || $0.kind == .unverified ? 1 : 0 } ?? 0)
-                .accessibilityLabel(Text(verbatim: "\(Price.sparkles(pack.sparkles).spoken), \(pack.displayPrice ?? String(localized: L10n.storeTestPrice))"))
+                .accessibilityLabel(Text(verbatim: "\(Price.sparkles(pack.sparkles).spoken), \(pack.displayPrice ?? Self.noPrice)"))
                 .accessibilityIdentifier("Pack.\(pack.sparkles)")
         }
         .padding(.horizontal, 14)
@@ -1388,7 +1388,17 @@ struct SparkleStoreView: View {
         if let price = pack.displayPrice {
             Text(verbatim: price).monospacedDigit()
         } else {
-            Text(L10n.storeTestPrice)
+            Text(verbatim: Self.noPrice)
         }
+    }
+
+    /// What a pack without a store price says. Only the Debug test store has
+    /// none ("Free test"); a release build never shows a price it was not given.
+    private static var noPrice: String {
+        #if DEBUG
+        String(localized: L10n.storeTestPrice)
+        #else
+        "–"
+        #endif
     }
 }

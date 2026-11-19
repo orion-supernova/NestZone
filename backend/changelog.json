@@ -86,6 +86,62 @@
       ]
     },
     {
+      "slug": "1.12.0-nestie",
+      "version": "1.12.0",
+      "kind": "feature",
+      "title": "Meet Nestie, your house's plant or pet",
+      "body": "Your house now grows something together: a plant or a pet that lives on Today. Doing things around the house, like finishing chores, shopping and planning meals, helps it grow. Water it, dress it up, collect the ones you've grown in the album, and watch it change with the weather and the holidays. Nestie is free. Sparkles, bought in packs, are only for extras like new decorations and pets.",
+      "highlights": [
+        "Pick a plant or a pet and grow it together, free",
+        "Everyone in the house helps it grow, just by getting things done",
+        "Water it, decorate it, and keep every one you've grown in the album",
+        "Leaves are earned by the house; Sparkles are optional, for extras",
+        "Holidays bring free decorations, and the season changes how it looks",
+        "Nestie tells you when it's ready, and when it's time to vote on the next one"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Nestie geldi: evinizin bitkisi ya da minik dostu",
+          "body": "Eve hediye geldi! Artık hep birlikte bir bitki ya da evcil hayvan büyütüyorsunuz, Bugün ekranında yaşıyor. İşleri bitirdikçe, alışveriş yaptıkça, yemek planladıkça büyüyor. Sula, giydir, süsle, büyüttüklerini albümde sakla; hava ve bayramlarla birlikte hali de değişiyor. Nestie bedava. Paket paket alınan Işıltılar sadece yeni süsler ve dostlar gibi ekstralar için.",
+          "highlights": [
+            "Bir bitki ya da hayvan seç, birlikte büyütün, bedava",
+            "Evdeki herkes iş yaptıkça büyümesine yardım ediyor",
+            "Sula, süsle, büyüttüklerini albümde sakla",
+            "Yapraklar evin emeğiyle kazanılıyor; Işıltılar istersen, ekstralar için",
+            "Bayramlar bedava süsler getiriyor, mevsim de görünüşünü değiştiriyor",
+            "Hazır olunca ve yenisi için oy zamanı gelince Nestie haber veriyor"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.12.0-fixes",
+      "version": "1.12.0",
+      "kind": "improvement",
+      "title": "Fixes and improvements",
+      "body": "Small things that make the app nicer to use.",
+      "highlights": [
+        "Improved animations and haptics all over the app",
+        "Settling up now ends with an \"All square\" stamp",
+        "Fixed taps that buzzed twice",
+        "Fixed a wrong home code shaking twice"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Düzeltmeler ve iyileştirmeler",
+          "body": "Uygulamayı daha keyifli yapan ufak şeyler.",
+          "highlights": [
+            "Animasyonlar ve titreşimler elden geçti",
+            "Borçlar kapanınca artık \"Hesap kapandı\" damgası basılıyor",
+            "Bazı dokunuşlarda iki kere titreşme düzeldi",
+            "Yanlış ev kodunda alanın iki kere sallanması düzeldi"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.11.0-new-tabs",
       "version": "1.11.0",
       "kind": "feature",

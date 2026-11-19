@@ -169,8 +169,13 @@ A plant or pet the house grows from what it already does, on Today. The plan,
 the decisions and what's next are in `Docs/Companion/HANDOFF.md` — read it
 before changing anything here.
 
-- **An MVP on Debug builds only** (`CompanionFlag`). Release builds compile it and
-  never draw it; turning it on is part of shipping it, with its changelog entry.
+- **Ships from 1.12.0, free** (`CompanionFlag` is on in every build). The Lab,
+  the bench and every launch-argument hook stay Debug-only, reached from
+  Settings → Developer. A release build offers only what is drawn
+  (`Species.onShelf`, `DecorItem.onShelf`), never the emoji stand-ins. At the
+  release set the backend env: `APPLE_APP_ID=6749852085`,
+  `JAR_ENVIRONMENTS=Production,Sandbox` while the build is in review and then
+  `Production`, and `COMPANION_NOTIFY=on`.
 - **The Lab (Debug only, `Features/Companion/Lab/`) has a master switch,
   "Pretend house", off by default.** Off, the card is the real house and the
   Lab only changes how it looks (`LabLook`: mood, hour and day, birthday,

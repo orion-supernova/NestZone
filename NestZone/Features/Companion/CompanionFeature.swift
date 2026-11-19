@@ -2190,14 +2190,10 @@ extension CompanionHouse {
     }
 }
 
-/// Whether the companion shows. On for development builds only while it is an
-/// MVP: a release build compiles it and never draws it.
+/// Whether the companion shows. On everywhere from 1.12.0; the Lab and the
+/// launch-argument tooling stay in Debug builds.
 public enum CompanionFlag {
-    #if DEBUG || MEASURE
     public static let isEnabled = true
-    #else
-    public static let isEnabled = false
-    #endif
 }
 
 /// One answer for a write, from whichever side gets there first. Resumes its

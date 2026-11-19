@@ -63,6 +63,21 @@ public enum Species: String, CaseIterable, Codable, Identifiable, Sendable {
         }
     }
 
+    /// Whether a house may be offered it. A species still drawn as its emoji
+    /// is shown in Debug builds for the art pass and never in a release: it
+    /// cannot be chosen, bought or listed. One already grown (from testing)
+    /// still draws, as its sketch.
+    var isShippable: Bool {
+#if DEBUG
+        true
+#else
+        art != .sketch
+#endif
+    }
+
+    /// Every species a shelf may list.
+    static let onShelf: [Species] = allCases.filter(\.isShippable)
+
     public var symbol: String {
         switch self {
         case .magnolia: "🌸"
@@ -566,6 +581,18 @@ public enum DecorItem: String, CaseIterable, Codable, Sendable {
             .floor
         }
     }
+
+    /// Whether a house may be offered it: a release lists only what is drawn.
+    var isShippable: Bool {
+#if DEBUG
+        true
+#else
+        isDrawn
+#endif
+    }
+
+    /// Every decoration a shelf may list.
+    static let onShelf: [DecorItem] = allCases.filter(\.isShippable)
 
     /// Snow and the like, left out where December is summer.
     var isWintry: Bool { self == .snowfall || self == .winterSky }
