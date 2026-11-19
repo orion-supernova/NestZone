@@ -60,6 +60,7 @@ struct MessageBubble: View, Equatable {
     }
 
     @Environment(\.theme) private var theme
+    @Environment(\.chatMenuRegistry) private var menuRegistry
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the bubble has to be dragged for letting go to mean "reply".
@@ -205,10 +206,19 @@ struct MessageBubble: View, Equatable {
 
         if canHold {
             // The system lays the menu out and gives the lift and the haptic;
-            // UIKit's interaction (a background, so the swipe, the tap and the
-            // quote's button above it keep their touches) lets the blur behind
-            // the menu be told when it opens.
-            positioned(tappable.background { MessageContextMenu(model: menuModel, preview: previewImage) })
+            // The thread's one UIKit interaction (`MessageMenuInteraction`) asks
+            // the registry what is under the finger; the bubble reports where
+            // it is and what its menu holds.
+            positioned(
+                tappable
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                        menuRegistry?.setFrame(message.id, $0)
+                    }
+                    .onChange(of: self, initial: true) { _, bubble in
+                        menuRegistry?.setMenu(message.id, model: bubble.menuModel, preview: bubble.previewImage)
+                    }
+                    .onDisappear { menuRegistry?.remove(message.id) }
+            )
         } else {
             positioned(tappable)
         }

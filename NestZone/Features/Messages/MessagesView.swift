@@ -137,6 +137,8 @@ struct ChatView: View {
     @State private var reactionTaps = 0
     /// Taps on a quote or a pin whose message is not loaded.
     @State private var missTaps = 0
+    /// Where the bubbles are, for the one long-press interaction on the thread.
+    @State private var menuRegistry = ChatMenuRegistry()
 
     var body: some View {
         // Sorted once per render. `startsGroup` used to reach for `ordered`
@@ -188,6 +190,8 @@ struct ChatView: View {
                             .contentShape(.rect)
                             .onTapGesture { dismissEverything() }
                     }
+                    .background { MessageMenuInteraction(registry: menuRegistry) }
+                    .environment(\.chatMenuRegistry, menuRegistry)
                 }
             }
             // Opens on the newest message. `defaultScrollAnchor` is resolved
