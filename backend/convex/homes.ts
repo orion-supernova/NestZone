@@ -1,6 +1,7 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
-import { Doc } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
+import { homeProStatus, proEnforced, proRequired, userHasPro } from "./lib/pro";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { departHome } from "./lib/membership";
 import { purgeHomeBatch } from "./lib/relations";
@@ -74,6 +75,8 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    // A second home is Plus, carried by the person (lib/pro.ts).
+    if (!(await mayAddHome(ctx, user))) throw proRequired("multipleHomes");
     const now = Date.now();
     const inviteCode = crypto.randomUUID().toUpperCase();
     const homeId = await ctx.db.insert("homes", {
@@ -112,6 +115,29 @@ export const create = mutation({
     return await ctx.db.get(homeId);
   },
 });
+
+/**
+ * Whether this person may take on one more home: always while `PRO_ENFORCE`
+ * is off, when they belong to no other home, or when they carry Plus
+ * themselves (`userHasPro`; a Plus house they are in does not count — Plus
+ * for a second home is the person's). Never takes a home away: somebody
+ * already in two keeps both, and leaving stays free.
+ */
+async function mayAddHome(
+  ctx: MutationCtx,
+  user: Doc<"users">,
+  joining?: Id<"homes">,
+): Promise<boolean> {
+  if (!proEnforced()) return true;
+  let count = 0;
+  for (const id of user.home_id ?? []) {
+    if (id === joining) continue;
+    const home = await ctx.db.get(id);
+    if (home && (home.members ?? []).includes(user._id)) count += 1;
+  }
+  if (count === 0) return true;
+  return await userHasPro(ctx, user._id);
+}
 
 /** The built-in movie lists, in the order the Movies screen shows them. */
 const PRESET_LISTS = [
@@ -168,6 +194,16 @@ export const join = mutation({
     if (!home) throw new Error("Invalid invite code");
 
     const wasAlreadyMember = (home.members ?? []).some((m) => m === user._id);
+    // A second home is Plus: the person's own, or the house being joined
+    // already has it (the house pays). Re-entering a code for a home you are
+    // in is not a second home.
+    if (
+      !wasAlreadyMember &&
+      !(await mayAddHome(ctx, user, home._id)) &&
+      !(await homeProStatus(ctx, home)).pro
+    ) {
+      throw proRequired("multipleHomes");
+    }
 
     const members = new Set([...(home.members ?? []), user._id]);
     await ctx.db.patch(home._id, { members: [...members], updated: Date.now() });
