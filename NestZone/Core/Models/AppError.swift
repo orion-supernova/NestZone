@@ -24,6 +24,9 @@ public enum AppError: Error, Equatable, Sendable {
     /// paywall instead of an alert; `nil` is a feature this build has no name
     /// for.
     case proRequired(ProFeature?)
+    /// The server said no on purpose, with a reason a person can act on (a
+    /// blocked chat, a paused chat, a reaction it does not have).
+    case refused(ServerRefusal)
     case unknown(String)
 
     public init(_ error: any Error) {
@@ -69,6 +72,8 @@ extension AppError: LocalizedError {
             nil
         case .proRequired:
             String(localized: L10n.proRequiredMessage)
+        case let .refused(refusal):
+            String(localized: refusal.copy)
         case .unknown:
             String(localized: "error.unknown", defaultValue: "Something went wrong. Try again.")
         }
@@ -96,6 +101,7 @@ extension AppError: LocalizedError {
         case let .validation(m): "validation: \(m)"
         case .cancelled: "cancelled"
         case let .proRequired(feature): "proRequired: \(feature?.rawValue ?? "?")"
+        case let .refused(refusal): "refused: \(refusal.rawValue)"
         case let .unknown(m): "unknown: \(m)"
         }
     }
@@ -127,7 +133,7 @@ extension AppError {
     public var isTransport: Bool {
         switch self {
         case .offline, .cancelled, .notAuthenticated: true
-        case .noHomeSelected, .server, .decoding, .validation, .proRequired, .unknown: false
+        case .noHomeSelected, .server, .decoding, .validation, .proRequired, .refused, .unknown: false
         }
     }
 }

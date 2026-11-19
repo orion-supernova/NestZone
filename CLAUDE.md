@@ -509,7 +509,12 @@ makes fixing a typo in an old note free.
   mirror of the server, filled inside the clients for the three reads a `User`
   arrives through (`users:me`, `homes:members`, `users:byIds`), so there is no
   path by which one arrives and the directory misses it. It holds no optimistic
-  state and is cleared on sign-out. Faces load through `RemoteImage` with
+  state and is cleared on sign-out.
+  Anybody else's user reaches a phone as `publicUser` (lib/users.ts), an
+  allow-list of `_id`, `_creationTime`, `name`, `avatar` and `avatar_url`; only
+  `users:me` (`ownUser`) carries the person's own email and phone, and a row that
+  names somebody (contributions, the ledger, the archive) sends `email` only on
+  the caller's own row (`emailFor`), so a housemate with no name reads "Someone". Faces load through `RemoteImage` with
   `persistence: .disk`, and `AvatarPhoto.renderSize` rounds the app's eight
   drawn sizes onto two so a member is one decoded bitmap, not eight.
   Tapping one opens it full screen, everywhere, off the same lookup — the
@@ -804,6 +809,23 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   a signed URL and only the storage id reaches a mutation. `issues:detail`
   returns `photo_refs` — ids *and* URLs — because the screen has to draw a photo
   and delete it, and a signed URL is not an identity.
+- **A row that owns a file frees it when it goes, through `discardFile`**
+  (a file a report holds is deferred, not deleted): `issues:remove` and the
+  house purge free a problem's photos and thumbnails, the purge and
+  `messages:remove` a message's attachment, account deletion the face.
+  **A file belongs to the house (or, for a face, the person) that first
+  attached it** (`file_claims`, lib/files.ts): every writer that takes a
+  storage id calls `claimFile` and a foreign or unknown id is `NOT_FOUND`, so
+  an id read off a signed URL cannot be attached and then deleted elsewhere.
+  `tasks`/`notes`/`recipes.image` are freed only when their claim is the
+  house's (`discardHomeFile`). `storage:reapReport` (weekly, Sun 04:30
+  UTC) finds files over a week old that no `v.id("_storage")` field or hold
+  names and logs count and bytes, deleting them only with `STORAGE_REAP=on`.
+  A new file field goes into its `REF_TABLES`, or its files read as orphans.
+  Settled reports are deleted a year after `resolved_at`
+  (`moderation:sweepReports`, daily 03:30, holds released first; open
+  reports never), and `moderation:sweepHidden` (weekly) drops hides whose
+  message or file is gone.
 - `convex/crons.ts` runs `finance:sweepReminders` daily at 08:00 UTC. It is
   idempotent by design — every nudge is recorded against
   `<due_date>:<daysBefore>` before it is sent, because a duplicate reminder is
@@ -877,7 +899,14 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
 - **Household Pro is the house's, carried by a person.** A house is Pro while
   any current member has an unexpired `pro_entitlements` row (lib/pro.ts);
   there is no plan field on the home, so a payer who leaves takes Pro with
-  them. Rows are written only from RevenueCat's answer (`pro:refresh`, the
+  them. **One person's Plus covers at most two homes** (`PLUS_HOMES_PER_PERSON`):
+  the first two they are still a member of, in the order of their `home_id`
+  mirror, which every join appends to and every departure filters, so it is
+  join order. A third home is allowed and gets nothing from them (it is Plus
+  only if another member there has room), so one subscription cannot carry
+  every house its owner walks into; comped people follow the same cap, and
+  `pro:status` says which homes the caller's own Plus covers (`coverage`).
+  Rows are written only from RevenueCat's answer (`pro:refresh`, the
   6-hourly `pro:sweep`), never from what a phone says; the RevenueCat app
   user id is the Convex user id. `pro:status` is the app's live read.
   Every gate goes through `requirePro` (a `ConvexError` with
@@ -929,9 +958,42 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   mirrors at once; its rows then drain in bounded batches
   (`homes:purgeHomeData`, logged per batch, an error past 200 batches).
   Removing a member rotates the invite code.
+- **Reports, blocking and moderation** (`moderation.ts`, `lib/moderation.ts`,
+  App Store guideline 1.2). Anybody who can see a message, a problem photo or
+  a face can report it (`moderation:report`, twenty a day, `REPORT_LIMIT`); it
+  is hidden from them at once (`hidden_content`) and the report keeps a
+  `snapshot` of what was seen, so deleting the thing never deletes the
+  evidence. A face's report is keyed on the photo, not the person, and a
+  problem photo's names who attached it (`issues.photo_uploaders`, parallel
+  to `photos` like `photo_thumbs`) or nobody, never the problem's reporter. **Every stored file is deleted through `discardFile`**, which
+  defers the delete while a report holds the file (`report_holds`) and lets it
+  go when the report is settled — a new path that deletes a file goes through
+  it too. Moderators are `MODERATOR_USER_IDS`, by id, deliberately not the
+  admins (admins write release notes; moderators read private chat); unset is
+  nobody, and everyone else gets `FORBIDDEN`, never data. They hear of a report
+  by push with no `homeId`, so it lands in no household's feed, and once more
+  after twelve hours (`moderation:nudgeStale`, every three). What they can do
+  — dismiss, delete through the member's own code path, remove from the home
+  through `departHome` with a new invite code, suspend chat
+  (`users.chat_suspended_at`, `CHAT_SUSPENDED` on every chat write) — is the
+  only power here that crosses homes, and it lives in those functions alone.
+  A block is one person's: their message reads drop the other's messages,
+  `push` skips them (feed row included for addressed notifications), and a
+  1:1 either way is refused (`BLOCKED`); in a group it only hides.
 - `convex/lib/auth.ts` has the permission helpers. Prefer `requireDocHome` over
   a conditional `home_id` check — every `home_id` is optional in the schema, so
   the conditional form silently skips both the membership check and auth.
+- **Chat is a house's chat, not a chat app** (lib/chat.ts): reactions, replies,
+  one pin and mentions, and never read receipts, typing or last seen. All four
+  are optional fields on documents that already exist (`messages.reactions`,
+  `reply_to`, `mentions`; `conversations.pinned`), so a thread costs the reads
+  it always did. Quotes and pins are snapshots copied at write time; a deleted
+  message's pin is cleared by `refreshPreview(ctx, id, removed)`, which every
+  delete must pass. `messages:react` touches nothing but `reactions` (not
+  `updated`, `read_by` or the preview) and sends no push; a mention swaps the
+  person's push for "mentioned you" through `notifyUsers`' `variant`, never a
+  second push, and the feed keeps one row. React and pin are Plus writes;
+  unpin and every read stay open.
 
 ## graphify
 

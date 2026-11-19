@@ -8,6 +8,7 @@ import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
 import { requirePro } from "./lib/pro";
+import { requireChatAllowed } from "./lib/moderation";
 
 const pollType = v.union(v.literal("movie"), v.literal("recipe"), v.literal("generic"));
 const pollStatus = v.union(v.literal("draft"), v.literal("active"), v.literal("closed"));
@@ -117,7 +118,10 @@ export const create = mutation({
     // A `generic` poll is a chat poll, which is Messages, which is Plus.
     // Nestie's vote is never made here (companion.ts opens it), so every
     // `generic` create is a member's. Movie and recipe rounds stay free.
-    if (args.type === "generic") await requirePro(ctx, args.homeId, "messages");
+    if (args.type === "generic") {
+      requireChatAllowed(user);
+      await requirePro(ctx, args.homeId, "messages");
+    }
     const now = Date.now();
     const pollId = await ctx.db.insert("polls", {
       home_id: args.homeId,
@@ -294,6 +298,8 @@ export const addItem = mutation({
     }
     await refuseCompanionVote(ctx, poll);
     await requireChatPollPro(ctx, poll);
+    // Adding an option to a chat poll is writing in chat.
+    if (await isChatPoll(ctx, poll)) requireChatAllowed(await requireUser(ctx));
     const now = Date.now();
     return await ctx.db.insert("poll_items", { poll_id: pollId, ...rest, created: now, updated: now });
   },

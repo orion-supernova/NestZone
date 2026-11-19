@@ -210,6 +210,8 @@ struct MainView: View {
         .task { await store.send(.now(.task)).finish() }
         // Whether this house has Plus, for the life of the tab bar.
         .task { await store.send(.proStatus(.task)).finish() }
+        // What this person has reported and blocked, for the same life.
+        .task { await store.send(.moderation(.task)).finish() }
         // A gated control, or a refusal from the server, asking for the paywall.
         .task {
             for await feature in PaywallBroker.shared.requests() {

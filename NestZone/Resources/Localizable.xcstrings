@@ -37674,6 +37674,2388 @@
           }
         }
       }
+    },
+    "plus_details_title": {
+      "comment": "Title of the full Plus details page, reached from the paywall and from Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything in Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus'ta neler var"
+          }
+        }
+      }
+    },
+    "plus_details_subtitle": {
+      "comment": "One-line intro at the top of the Plus details page.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus is one subscription for the whole house. Here is everything it adds."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus, bütün ev için tek abonelik. Getirdiği her şey burada."
+          }
+        }
+      }
+    },
+    "plus_see_everything": {
+      "comment": "Link under the paywall's short benefit list, and a row in Settings, that opens the Plus details page.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See everything in Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus'taki her şeye bak"
+          }
+        }
+      }
+    },
+    "plus_group_plan": {
+      "comment": "Section title on the Plus details page for the calendar features.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan together"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birlikte planla"
+          }
+        }
+      }
+    },
+    "plus_group_money": {
+      "comment": "Section title on the Plus details page for the money features.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Money"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para"
+          }
+        }
+      }
+    },
+    "plus_group_house": {
+      "comment": "Section title on the Plus details page for problems, chat, shopping aisles and archiving.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Around the house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev hayatı"
+          }
+        }
+      }
+    },
+    "plus_group_movies": {
+      "comment": "Section title on the Plus details page for the movie features.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movies"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filmler"
+          }
+        }
+      }
+    },
+    "plus_group_homes": {
+      "comment": "Section title on the Plus details page for the second-home feature.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than one home"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birden fazla ev"
+          }
+        }
+      }
+    },
+    "plus_feature_calendar_title": {
+      "comment": "Plus details row title: the calendar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ortak takvim"
+          }
+        }
+      }
+    },
+    "plus_feature_calendar_text": {
+      "comment": "Plus details row text: what the calendar does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One calendar for the house. Invite housemates, see who's coming and get a reminder before it starts."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evin tek takvimi. Ev arkadaşlarını davet et, kimlerin geleceğini gör, başlamadan önce hatırlatma al."
+          }
+        }
+      }
+    },
+    "plus_feature_event_title": {
+      "comment": "Plus details row title: making an event from outside the Calendar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add events from anywhere"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her yerden etkinlik ekle"
+          }
+        }
+      }
+    },
+    "plus_feature_event_text": {
+      "comment": "Plus details row text: events made from the dinner sheet, the dock's + button (Add anything).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn a dinner into an occasion, or file an event from the + button, without opening the Calendar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir yemeği davete çevir ya da Takvim'i açmadan alttaki + düğmesinden etkinlik ekle."
+          }
+        }
+      }
+    },
+    "plus_feature_money_title": {
+      "comment": "Plus details row title: the Money module.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared money"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ortak harcamalar"
+          }
+        }
+      }
+    },
+    "plus_feature_money_text": {
+      "comment": "Plus details row text: what Money does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log shared expenses, see who owes whom, settle up, and keep track of bills and budgets."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ortak harcamaları gir, kim kime ne kadar borçlu gör, hesaplaş; fatura ve bütçeleri takip et."
+          }
+        }
+      }
+    },
+    "plus_feature_expense_title": {
+      "comment": "Plus details row title: logging an expense from outside Money.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log money from anywhere"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her yerden harcama ekle"
+          }
+        }
+      }
+    },
+    "plus_feature_expense_text": {
+      "comment": "Plus details row text: expenses made from the + button (Add anything) or from a house problem.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an expense from the + button or from a problem's cost, not only from Money."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harcamayı yalnızca Finans'tan değil, + düğmesinden ya da bir sorunun maliyetinden de ekleyebilirsin."
+          }
+        }
+      }
+    },
+    "plus_feature_issues_title": {
+      "comment": "Plus details row title: the Problems module.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House problems"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev sorunları"
+          }
+        }
+      }
+    },
+    "plus_feature_issues_text": {
+      "comment": "Plus details row text: what house problems do.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep track of what's broken. Add photos, costs and parts, hand it to someone and book a visit."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evde neyin bozuk olduğunu takip et. Fotoğraf, maliyet ve parça ekle, birine ver, tamirci ayarla."
+          }
+        }
+      }
+    },
+    "plus_feature_messages_title": {
+      "comment": "Plus details row title: Messages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House chat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev sohbeti"
+          }
+        }
+      }
+    },
+    "plus_feature_messages_text": {
+      "comment": "Plus details row text: what Messages does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk with the whole house or in smaller groups, and put a question to a vote with a poll."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bütün evle ya da küçük gruplarla yazış, bir konuyu anketle oylamaya aç."
+          }
+        }
+      }
+    },
+    "plus_feature_shopping_title": {
+      "comment": "Plus details row title: shopping categories.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping by aisle"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reyonlara göre alışveriş"
+          }
+        }
+      }
+    },
+    "plus_feature_shopping_text": {
+      "comment": "Plus details row text: shopping list grouped by category.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group the shopping list by aisle, and clear a whole aisle at once."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alışveriş listesini reyonlara göre grupla, bir reyonu tek dokunuşla temizle."
+          }
+        }
+      }
+    },
+    "plus_feature_archive_title": {
+      "comment": "Plus details row title: archiving finished chores by hand.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hemen arşivle"
+          }
+        }
+      }
+    },
+    "plus_feature_archive_text": {
+      "comment": "Plus details row text: archive finished chores manually.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put finished chores away yourself, instead of waiting for them to move to the Archive on their own."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biten görevleri kendin arşive kaldır, kendiliğinden taşınmasını bekleme."
+          }
+        }
+      }
+    },
+    "plus_feature_lists_title": {
+      "comment": "Plus details row title: custom movie lists.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own movie lists"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi film listelerin"
+          }
+        }
+      }
+    },
+    "plus_feature_lists_text": {
+      "comment": "Plus details row text: custom movie lists.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make lists beyond Watchlist and Watched, like Friday night picks."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzlenecekler ve İzlenenler'in dışında kendi listelerini yap, mesela Cuma akşamı filmleri."
+          }
+        }
+      }
+    },
+    "plus_feature_mature_title": {
+      "comment": "Plus details row title: adult titles in the movie catalogue.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mature titles"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yetişkin içerikler"
+          }
+        }
+      }
+    },
+    "plus_feature_mature_text": {
+      "comment": "Plus details row text: adult titles in browse, search and the game.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include mature titles when you browse and search for movies, and in the movie game."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film ararken, göz atarken ve film oyununda yetişkin içerikler de çıksın."
+          }
+        }
+      }
+    },
+    "plus_feature_homes_title": {
+      "comment": "Plus details row title: a second home.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than one home"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birden fazla ev"
+          }
+        }
+      }
+    },
+    "plus_feature_homes_text": {
+      "comment": "Plus details row text: the second-home feature; also states the two-home cap.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create or join a second home. One subscription covers up to two homes."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İkinci bir ev kur ya da birine katıl. Tek abonelik en fazla iki evi kapsar."
+          }
+        }
+      }
+    },
+    "plus_coverage": {
+      "comment": "Quiet line on the Plus details page and in Settings, shown only to the person who pays. First number is homes covered, second is the cap, then the home names, comma-separated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Plus covers %lld of %lld homes: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus'ın şu an %1$lld evi kapsıyor (en fazla %2$lld): %3$@"
+          }
+        }
+      }
+    },
+    "plus_coverage_count": {
+      "comment": "Same line as plus_coverage when none of the covered homes can be named.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Plus covers %lld of %lld homes."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus'ın şu an %1$lld evi kapsıyor (en fazla %2$lld)."
+          }
+        }
+      }
+    },
+    "plus_free_title": {
+      "comment": "Section title on the Plus details page for what a house without Plus keeps.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What stays free"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunlar hep bedava"
+          }
+        }
+      }
+    },
+    "plus_free_readable": {
+      "comment": "Plus details free row: existing data stays readable.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything you've already written stays yours and readable, even without Plus."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazdıkların yerinde kalır, Plus olmasa da okumaya devam edersin."
+          }
+        }
+      }
+    },
+    "plus_free_tasks": {
+      "comment": "Plus details free row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks and chores"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görevler ve ev işleri"
+          }
+        }
+      }
+    },
+    "plus_free_notes": {
+      "comment": "Plus details free row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notlar"
+          }
+        }
+      }
+    },
+    "plus_free_recipes": {
+      "comment": "Plus details free row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes and Meals"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifler ve Yemekler"
+          }
+        }
+      }
+    },
+    "plus_free_movies": {
+      "comment": "Plus details free row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movie Watchlist and Watched, and the movie game"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzlenecekler, izlenenler ve film oyunu"
+          }
+        }
+      }
+    },
+    "plus_free_nestie": {
+      "comment": "Plus details free row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nestie, your house's plant or pet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nestie, evin bitkisi ya da minik dostu"
+          }
+        }
+      }
+    },
+    "store_bonus": {
+      "comment": "Sparkles store: how many percent more Sparkles per unit of money this pack gives than the 300 pack. Computed from store prices, shown only when above zero.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld%% more"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%%%lld daha fazla"
+          }
+        }
+      }
+    },
+    "store_starter": {
+      "comment": "Sparkles store: quiet tag on the smallest pack.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starter"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlangıç"
+          }
+        }
+      }
+    },
+    "refusal_invalid_reaction": {
+      "comment": "Error alert: the server did not recognise the emoji (only six reactions exist)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That reaction isn't available."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu tepkiyi kullanamazsın."
+          }
+        }
+      }
+    },
+    "refusal_reply_elsewhere": {
+      "comment": "Error alert: reply target belongs to a different conversation",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can only reply to a message in the same chat."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece aynı sohbetteki bir mesaja yanıt verebilirsin."
+          }
+        }
+      }
+    },
+    "refusal_not_found": {
+      "comment": "Error alert: the message/photo/person no longer exists",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's gone. It may have been deleted."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu artık yok, silinmiş olabilir."
+          }
+        }
+      }
+    },
+    "refusal_blocked": {
+      "comment": "Error alert: a 1:1 chat where either side has blocked the other. Do not say who blocked whom",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't message this person"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kişiye mesaj gönderemezsin"
+          }
+        }
+      }
+    },
+    "refusal_chat_suspended": {
+      "comment": "Error alert: a moderator suspended this person's chat writing; reading still works",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your chat is paused by a moderator. You can still read."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir moderatör sohbetini durdurdu. Okumaya devam edebilirsin."
+          }
+        }
+      }
+    },
+    "refusal_block_limit": {
+      "comment": "Error alert: the block list is full (200 people)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've blocked as many people as you can. Unblock someone first."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engelleyebileceğin kişi sayısına ulaştın. Önce birinin engelini kaldır."
+          }
+        }
+      }
+    },
+    "refusal_forbidden": {
+      "comment": "Error alert: server refused for permission reasons (shown rarely; moderator screens close instead)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't do that."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu yapamazsın."
+          }
+        }
+      }
+    },
+    "refusal_last_member": {
+      "comment": "Moderator error: removing the last member of a house would delete it",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They're the only person left in that house, so they can't be removed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evde sadece o kaldı, o yüzden çıkarılamaz."
+          }
+        }
+      }
+    },
+    "refusal_invalid": {
+      "comment": "Error alert: server said the request is not valid, e.g. reporting your own message or blocking yourself",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That isn't possible here."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu işlem yapılamıyor."
+          }
+        }
+      }
+    },
+    "report_title": {
+      "comment": "Title of the sheet where somebody reports a message, a photo or a face",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayet et"
+          }
+        }
+      }
+    },
+    "report_send": {
+      "comment": "Button that sends the report, top right of the report sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gönder"
+          }
+        }
+      }
+    },
+    "report_subject_header": {
+      "comment": "Section header above the text of the message being reported",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're reporting"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayet ettiğin içerik"
+          }
+        }
+      }
+    },
+    "report_reason_header": {
+      "comment": "Section header above the list of reasons (abuse, harassment...)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's wrong?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorun ne?"
+          }
+        }
+      }
+    },
+    "report_reason_abuse": {
+      "comment": "Report reason: abusive content",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abuse"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hakaret"
+          }
+        }
+      }
+    },
+    "report_reason_harassment": {
+      "comment": "Report reason: harassment",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harassment"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taciz"
+          }
+        }
+      }
+    },
+    "report_reason_sexual": {
+      "comment": "Report reason: sexual content",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sexual content"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cinsel içerik"
+          }
+        }
+      }
+    },
+    "report_reason_spam": {
+      "comment": "Report reason: spam",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
+          }
+        }
+      }
+    },
+    "report_reason_other": {
+      "comment": "Report reason: something else",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer"
+          }
+        }
+      }
+    },
+    "report_note_header": {
+      "comment": "Section header above the optional note field of the report sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anything else? (optional)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eklemek istediğin bir şey var mı? (isteğe bağlı)"
+          }
+        }
+      }
+    },
+    "report_note_placeholder": {
+      "comment": "Placeholder of the optional note field of the report sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a note"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not ekle"
+          }
+        }
+      }
+    },
+    "report_footer": {
+      "comment": "Footer of the report sheet: what happens after sending",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A moderator will look at this within 24 hours. It's hidden for you right away."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir moderatör 24 saat içinde bakacak. Senin için hemen gizlenir."
+          }
+        }
+      }
+    },
+    "report_thanks": {
+      "comment": "Quiet confirmation shown for a few seconds after a report was filed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thanks. A moderator will look within 24 hours."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sağ ol! Bir moderatör 24 saat içinde bakacak."
+          }
+        }
+      }
+    },
+    "report_limited": {
+      "comment": "Quiet note after a report when the person hit the daily limit of reports: nothing was filed but the thing is hidden for them",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've reported a lot today; it's hidden for you."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün epey şikayet gönderdin. Bu da senin için gizlendi."
+          }
+        }
+      }
+    },
+    "report_photo": {
+      "comment": "Accessibility label and title of the flag button over a problem photo or a full-screen profile photo",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report photo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğrafı şikayet et"
+          }
+        }
+      }
+    },
+    "messages_photo": {
+      "comment": "What a reply quote or a pinned bar says when the quoted message was a picture",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraf"
+          }
+        }
+      }
+    },
+    "messages_reply": {
+      "comment": "Action in the message menu: reply to this message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yanıtla"
+          }
+        }
+      }
+    },
+    "messages_copy": {
+      "comment": "Action in the message menu: copy the message text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyala"
+          }
+        }
+      }
+    },
+    "messages_pin": {
+      "comment": "Action in the message menu: pin this message to the top of the chat",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitle"
+          }
+        }
+      }
+    },
+    "messages_unpin": {
+      "comment": "Action in the message menu: take the pin off this message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlemeyi kaldır"
+          }
+        }
+      }
+    },
+    "messages_report": {
+      "comment": "Action in the menu of somebody else's message: report it to a moderator",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayet et"
+          }
+        }
+      }
+    },
+    "reaction_chip": {
+      "comment": "VoiceOver: a reaction chip under a message, emoji then how many people chose it",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld"
+          }
+        }
+      }
+    },
+    "reaction_chip_mine": {
+      "comment": "VoiceOver: a reaction chip that includes the listener's own reaction",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld, you reacted"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld, sen de tepki verdin"
+          }
+        }
+      }
+    },
+    "reaction_picker_add": {
+      "comment": "VoiceOver: one emoji in the reaction bar of the message menu",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "React with %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ile tepki ver"
+          }
+        }
+      }
+    },
+    "reaction_picker_mine": {
+      "comment": "VoiceOver: an emoji in the reaction bar that the listener already chose; tapping removes it",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove your %@ reaction"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tepkini kaldır"
+          }
+        }
+      }
+    },
+    "reply_quote_accessibility": {
+      "comment": "VoiceOver: the quote inside a reply bubble. First the name of who was quoted, then the quoted words",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to %@: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yanıtlanan %@: %@"
+          }
+        }
+      }
+    },
+    "chat_replying_to": {
+      "comment": "Line above the composer while answering a message; the name is who wrote it",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replying to %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yanıtlanan: %@"
+          }
+        }
+      }
+    },
+    "pinned_bar_accessibility": {
+      "comment": "VoiceOver: the bar under the navigation bar showing the pinned message. Name, then the words",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned message from %@: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenen mesaj, yazan %@: %@"
+          }
+        }
+      }
+    },
+    "pinned_bar_unpin": {
+      "comment": "VoiceOver: the cross button on the pinned bar that takes the pin down",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin message"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlemeyi kaldır"
+          }
+        }
+      }
+    },
+    "chat_search": {
+      "comment": "Menu item that opens the search field in a chat",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search in chat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbette ara"
+          }
+        }
+      }
+    },
+    "chat_search_placeholder": {
+      "comment": "Placeholder of the search field in a chat",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search messages"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesajlarda ara"
+          }
+        }
+      }
+    },
+    "chat_search_close": {
+      "comment": "VoiceOver: the cross that closes the chat search field",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close search"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aramayı kapat"
+          }
+        }
+      }
+    },
+    "chat_search_no_results": {
+      "comment": "Shown when a chat search finds nothing. The search only covers messages already loaded on the phone",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing here matches. Only the latest messages are searched."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşen yok. Arama sadece son mesajlarda yapılıyor."
+          }
+        }
+      }
+    },
+    "chat_mention_accessibility": {
+      "comment": "VoiceOver: a person in the list that appears when typing @ in the composer",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mention %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiketle: %@"
+          }
+        }
+      }
+    },
+    "chat_block": {
+      "comment": "Menu item: block the other person of a 1:1 chat (also in Settings member menu)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engelle"
+          }
+        }
+      }
+    },
+    "chat_unblock": {
+      "comment": "Menu item and button: lift a block",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unblock"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engeli kaldır"
+          }
+        }
+      }
+    },
+    "chat_block_title": {
+      "comment": "Title of the confirmation before blocking somebody; the name is the person",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block %@?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ engellensin mi?"
+          }
+        }
+      }
+    },
+    "chat_block_message": {
+      "comment": "Body of the confirmation before blocking somebody",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You won't see their messages or hear from them, and you can't message each other. You can undo this in Settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesajlarını görmeyeceksin, bildirimleri de gelmeyecek, birbirinize mesaj atamayacaksınız. Ayarlar'dan geri alabilirsin."
+          }
+        }
+      }
+    },
+    "chat_block_confirm": {
+      "comment": "Destructive button of the block confirmation",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engelle"
+          }
+        }
+      }
+    },
+    "chat_blocked_banner": {
+      "comment": "Shown where the composer would be in a 1:1 with somebody the person blocked",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You blocked %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engelledin: %@"
+          }
+        }
+      }
+    },
+    "settings_privacy_title": {
+      "comment": "Settings section header above the Blocked people row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy and safety"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlilik ve güvenlik"
+          }
+        }
+      }
+    },
+    "settings_blocked_people": {
+      "comment": "Settings row that opens the list of blocked people",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked people"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engellenenler"
+          }
+        }
+      }
+    },
+    "settings_blocked_people_help": {
+      "comment": "Footer of the Privacy and safety section in Settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People you block can't message you, and you won't see what they write."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engellediğin kişiler sana mesaj atamaz, yazdıklarını da görmezsin."
+          }
+        }
+      }
+    },
+    "blocked_people_title": {
+      "comment": "Title of the sheet listing blocked people",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked people"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engellenenler"
+          }
+        }
+      }
+    },
+    "blocked_people_empty_title": {
+      "comment": "Empty state title of the blocked people list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody blocked"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kimse engellenmedi"
+          }
+        }
+      }
+    },
+    "blocked_people_empty_message": {
+      "comment": "Empty state message of the blocked people list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People you block from a chat or from Settings show up here."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir sohbetten ya da Ayarlar'dan engellediklerin burada görünür."
+          }
+        }
+      }
+    },
+    "blocked_people_footer": {
+      "comment": "Footer of the blocked people list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unblocking lets you message each other again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engeli kaldırırsan tekrar mesajlaşabilirsiniz."
+          }
+        }
+      }
+    },
+    "blocked_people_unblock_accessibility": {
+      "comment": "VoiceOver: the Unblock button on a row of the blocked people list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unblock %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engeli kaldır: %@"
+          }
+        }
+      }
+    },
+    "moderation_open": {
+      "comment": "Menu item in the notification panel that opens the moderators' queue. Only two people ever see it",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayetler"
+          }
+        }
+      }
+    },
+    "moderation_title": {
+      "comment": "Title of the moderators' queue screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayetler"
+          }
+        }
+      }
+    },
+    "moderation_queue_empty_title": {
+      "comment": "Empty state title of the moderators' queue",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All clear"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hepsi tamam"
+          }
+        }
+      }
+    },
+    "moderation_queue_empty_message": {
+      "comment": "Empty state message of the moderators' queue",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reports are waiting."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekleyen şikayet yok."
+          }
+        }
+      }
+    },
+    "moderation_kind_message": {
+      "comment": "What kind of thing was reported: a chat message",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesaj"
+          }
+        }
+      }
+    },
+    "moderation_kind_photo": {
+      "comment": "What kind of thing was reported: a photo on a house problem",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem photo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorun fotoğrafı"
+          }
+        }
+      }
+    },
+    "moderation_kind_face": {
+      "comment": "What kind of thing was reported: somebody's profile photo",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile photo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profil fotoğrafı"
+          }
+        }
+      }
+    },
+    "moderation_row_who": {
+      "comment": "Moderator queue row: the person who reported, an arrow, the person reported",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@"
+          }
+        }
+      }
+    },
+    "moderation_overdue": {
+      "comment": "VoiceOver: a report older than twelve hours, drawn in red",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting more than 12 hours"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 saatten fazladır bekliyor"
+          }
+        }
+      }
+    },
+    "moderation_note_header": {
+      "comment": "Header above the optional note the reporter wrote",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note from the reporter"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayet edenin notu"
+          }
+        }
+      }
+    },
+    "moderation_photo_accessibility": {
+      "comment": "VoiceOver label of the reported picture in the moderator detail screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reported photo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayet edilen fotoğraf"
+          }
+        }
+      }
+    },
+    "moderation_on_problem": {
+      "comment": "Moderator detail: which house problem a reported photo belongs to",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the problem “%@”"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorun: %@"
+          }
+        }
+      }
+    },
+    "moderation_already_gone": {
+      "comment": "Moderator detail status line: the reported content no longer exists",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This has already been deleted."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu zaten silinmiş."
+          }
+        }
+      }
+    },
+    "moderation_not_in_home": {
+      "comment": "Moderator detail status line: the reported person has left the house",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They're not in the house any more."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artık evde değiller."
+          }
+        }
+      }
+    },
+    "moderation_chat_paused": {
+      "comment": "Moderator detail status line: the reported person's chat is suspended",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their chat is paused."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbetleri durdurulmuş."
+          }
+        }
+      }
+    },
+    "moderation_dismiss": {
+      "comment": "Moderator action: nothing to do, close the report",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şikayeti kapat"
+          }
+        }
+      }
+    },
+    "moderation_delete": {
+      "comment": "Moderator action: delete the reported message or photo",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete content"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçeriği sil"
+          }
+        }
+      }
+    },
+    "moderation_delete_title": {
+      "comment": "Title of the confirmation before a moderator deletes reported content",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu silinsin mi?"
+          }
+        }
+      }
+    },
+    "moderation_delete_message": {
+      "comment": "Body of the confirmation before a moderator deletes reported content",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It's removed for everyone and can't be brought back. Every open report about it is closed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herkes için silinir ve geri getirilemez. Bununla ilgili açık şikayetlerin hepsi kapanır."
+          }
+        }
+      }
+    },
+    "moderation_remove": {
+      "comment": "Moderator action: take the reported person out of the house",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from home"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evden çıkar"
+          }
+        }
+      }
+    },
+    "moderation_remove_title": {
+      "comment": "Title of the confirmation before a moderator removes somebody from a house",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from home?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evden çıkarılsın mı?"
+          }
+        }
+      }
+    },
+    "moderation_remove_message": {
+      "comment": "Body of the confirmation before removing somebody from a house. First the person's name, then the house's name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is removed from %@ and the invite code changes. The house is told someone was removed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evden çıkarılacak: %@ (ev: %@). Davet kodu değişir ve eve haber verilir."
+          }
+        }
+      }
+    },
+    "moderation_suspend": {
+      "comment": "Moderator action: stop the reported person writing in chat",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suspend chat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbeti durdur"
+          }
+        }
+      }
+    },
+    "moderation_suspend_title": {
+      "comment": "Title of the confirmation before suspending somebody's chat",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause their chat?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbetleri durdurulsun mu?"
+          }
+        }
+      }
+    },
+    "moderation_suspend_message": {
+      "comment": "Body of the confirmation before suspending somebody's chat",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They can still read, but can't send messages in any house until you unsuspend them."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okuyabilirler ama sen açana kadar hiçbir evde mesaj gönderemezler."
+          }
+        }
+      }
+    },
+    "moderation_unsuspend": {
+      "comment": "Moderator action: let a suspended person write in chat again",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsuspend chat"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbeti aç"
+          }
+        }
+      }
+    },
+    "moderation_unsuspend_title": {
+      "comment": "Title of the confirmation before lifting a chat suspension",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let them write again?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekrar yazabilsinler mi?"
+          }
+        }
+      }
+    },
+    "moderation_unsuspend_message": {
+      "comment": "Body of the confirmation before lifting a chat suspension",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their chat works again right away."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sohbetleri hemen tekrar çalışır."
+          }
+        }
+      }
+    },
+    "moderation_resolved_by": {
+      "comment": "Moderator detail of a report that was already decided; the name is the moderator",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handled by %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlgilenen: %@"
+          }
+        }
+      }
+    },
+    "chat_search_results": {
+      "comment": "VoiceOver: how many loaded messages match the chat search (plural)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld result"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld results"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sonuç"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sonuç"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "chat_message_not_loaded": {
+      "comment": "Brief note when a reply quote or the pinned bar points at a message older than the part of the chat loaded on the phone",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That message is older than what's loaded."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu mesaj yüklenenlerden daha eski."
+          }
+        }
+      }
+    },
+    "chat_go_to_quoted": {
+      "comment": "VoiceOver action on a reply bubble: scroll to the message it quotes",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to quoted message"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alıntılanan mesaja git"
+          }
+        }
+      }
+    },
+    "messages_block_sender": {
+      "comment": "Menu item in the message menu of somebody else's message: block the person who wrote it (also in group chats); the name is the sender",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engelle: %@"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

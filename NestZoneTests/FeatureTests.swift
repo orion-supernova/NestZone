@@ -3298,7 +3298,7 @@ struct MessagesTests {
     @Test("A sent message is on screen before the server has heard of it")
     func sendIsOptimistic() async {
         let store = TestStore(initialState: chat(draft: "hello")) { ChatFeature() } withDependencies: {
-            $0.messages.send = { _, _ in "m1" }
+            $0.messages.send = { _, _, _, _ in "m1" }
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
@@ -3330,7 +3330,7 @@ struct MessagesTests {
         // and does arrive first.
         let reply = AsyncStream<Void>.makeStream()
         let store = TestStore(initialState: chat(draft: "hi")) { ChatFeature() } withDependencies: {
-            $0.messages.send = { _, _ in
+            $0.messages.send = { _, _, _, _ in
                 for await _ in reply.stream { break }
                 return "m1"
             }
@@ -3356,7 +3356,7 @@ struct MessagesTests {
     func failedSendKeepsTheText() async {
         let attempts = LockIsolated(0)
         let store = TestStore(initialState: chat(draft: "important")) { ChatFeature() } withDependencies: {
-            $0.messages.send = { _, _ in
+            $0.messages.send = { _, _, _, _ in
                 let n = attempts.withValue { $0 += 1; return $0 }
                 if n == 1 { throw AppError.server("nope") }
                 return "m1"
@@ -3521,37 +3521,7 @@ struct MessagesTests {
         #expect(state.title(for: group) != " Chat")
     }
 
-    @Test("Holding a bubble opens its actions, and only its own")
-    func bubbleActions() async {
-        var state = chat()
-        state.messages = [
-            Message(id: "m1", senderID: "me", content: "mine", readBy: ["me"]),
-            Message(id: "m2", senderID: "them", content: "theirs", readBy: ["them"]),
-        ]
-
-        let store = TestStore(initialState: state) { ChatFeature() }
-        store.exhaustivity = .off(showSkippedAssertions: false)
-
-        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
-        // Holding it again puts the bar away rather than reopening it.
-        await store.send(.bubbleHeld("m1")) { $0.actionsFor = nil }
-
-        // Somebody else's message has nothing to offer.
-        await store.send(.bubbleHeld("m2"))
-        #expect(store.state.actionsFor == nil)
-
-        // Acting on the bar closes it.
-        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
-        await store.send(.editTapped("m1"))
-        #expect(store.state.actionsFor == nil)
-        #expect(store.state.editing == MessageID("m1"))
-
-        await store.send(.editCancelled)
-        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
-        await store.send(.actionsDismissed) { $0.actionsFor = nil }
-    }
-
-    @Test("Tapping the thread backs out of the editor as well as the bar")
+    @Test("Tapping the thread backs out of the editor")
     func backgroundTapClosesEverything() async {
         var state = chat()
         state.messages = [Message(id: "m1", senderID: "me", content: "mine", readBy: ["me"])]
@@ -3559,36 +3529,20 @@ struct MessagesTests {
         let store = TestStore(initialState: state) { ChatFeature() }
         store.exhaustivity = .off(showSkippedAssertions: false)
 
-        await store.send(.bubbleHeld("m1")) { $0.actionsFor = "m1" }
         await store.send(.editTapped("m1"))
         #expect(store.state.isEditing)
 
         await store.send(.backgroundTapped)
         // The banner and its half-typed text go together; leaving the editor
-        // running once the bar and the keyboard had gone read as stuck.
+        // running once the keyboard had gone read as stuck.
         #expect(!store.state.isEditing)
         #expect(store.state.draft.isEmpty)
-        #expect(store.state.actionsFor == nil)
 
         // With nothing open it is just a keyboard dismissal, and must not
         // disturb a draft that was being written from scratch.
         await store.send(.binding(.set(\.draft, "half a thought")))
         await store.send(.backgroundTapped)
         #expect(store.state.draft == "half a thought")
-    }
-
-    @Test("A bar left open over a message that is gone closes itself")
-    func actionsFollowTheirMessage() async {
-        var state = chat()
-        state.messages = [Message(id: "m1", senderID: "me", content: "mine", readBy: ["me"])]
-        state.actionsFor = "m1"
-
-        let store = TestStore(initialState: state) { ChatFeature() }
-        store.exhaustivity = .off(showSkippedAssertions: false)
-
-        // Deleted from another device.
-        await store.send(.messagesUpdated([]))
-        #expect(store.state.actionsFor == nil)
     }
 
     @Test("Editing rewrites the bubble, and puts it back if the server refuses")

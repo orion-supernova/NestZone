@@ -28,6 +28,7 @@ import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
 import { requireMembers, requireRef, requireSameHome } from "./lib/relations";
 import { requirePro } from "./lib/pro";
+import { emailFor } from "./lib/users";
 
 const financeCategory = v.union(
   v.literal("groceries"),
@@ -440,7 +441,7 @@ export const summary = query({
     currency: v.optional(v.string()),
   },
   handler: async (ctx, { homeId, year, month, tzOffsetMinutes, currency: wanted }) => {
-    await requireUser(ctx);
+    const caller = await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
     const offset = tzOffsetMinutes ?? 0;
 
@@ -591,7 +592,8 @@ export const summary = query({
       .map(({ id, doc }) => ({
         userId: id,
         name: doc?.name ?? null,
-        email: doc?.email ?? null,
+        // Only the caller's own: an email is never a housemate's to read.
+        email: emailFor(caller, doc),
         isMember: isMember.has(id),
         paid: paidAll.get(id) ?? 0,
         owed: owedAll.get(id) ?? 0,

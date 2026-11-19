@@ -9420,6 +9420,18 @@ public enum L10n {
         r("store_pack_unit", "Sparkles")
     }
 
+    // MARK: - Sparkles store · pack cards
+
+    /// +%lld% more
+    public static func storeBonus(_ a0: Int) -> LocalizedStringResource {
+        r("store_bonus", "+\(a0)% more")
+    }
+
+    /// Starter
+    public static var storeStarter: LocalizedStringResource {
+        r("store_starter", "Starter")
+    }
+
     // MARK: - Companion · best value
 
     /// Best value
@@ -10292,6 +10304,201 @@ public enum L10n {
         r("plus_restored_on", "Plus is back on")
     }
 
+    /// Everything in Plus
+    public static var plusDetailsTitle: LocalizedStringResource {
+        r("plus_details_title", "Everything in Plus")
+    }
+
+    /// Plus is one subscription for the whole house. Here is everything it adds.
+    public static var plusDetailsSubtitle: LocalizedStringResource {
+        r("plus_details_subtitle", "Plus is one subscription for the whole house. Here is everything it adds.")
+    }
+
+    /// See everything in Plus
+    public static var plusSeeEverything: LocalizedStringResource {
+        r("plus_see_everything", "See everything in Plus")
+    }
+
+    /// Plan together
+    public static var plusGroupPlan: LocalizedStringResource {
+        r("plus_group_plan", "Plan together")
+    }
+
+    /// Money
+    public static var plusGroupMoney: LocalizedStringResource {
+        r("plus_group_money", "Money")
+    }
+
+    /// Around the house
+    public static var plusGroupHouse: LocalizedStringResource {
+        r("plus_group_house", "Around the house")
+    }
+
+    /// Movies
+    public static var plusGroupMovies: LocalizedStringResource {
+        r("plus_group_movies", "Movies")
+    }
+
+    /// More than one home
+    public static var plusGroupHomes: LocalizedStringResource {
+        r("plus_group_homes", "More than one home")
+    }
+
+    /// Shared calendar
+    public static var plusFeatureCalendarTitle: LocalizedStringResource {
+        r("plus_feature_calendar_title", "Shared calendar")
+    }
+
+    /// One calendar for the house. Invite housemates, see who's coming and get a reminder before it starts.
+    public static var plusFeatureCalendarText: LocalizedStringResource {
+        r("plus_feature_calendar_text", "One calendar for the house. Invite housemates, see who's coming and get a reminder before it starts.")
+    }
+
+    /// Add events from anywhere
+    public static var plusFeatureEventTitle: LocalizedStringResource {
+        r("plus_feature_event_title", "Add events from anywhere")
+    }
+
+    /// Turn a dinner into an occasion, or file an event from the + button, without opening the Calendar.
+    public static var plusFeatureEventText: LocalizedStringResource {
+        r("plus_feature_event_text", "Turn a dinner into an occasion, or file an event from the + button, without opening the Calendar.")
+    }
+
+    /// Shared money
+    public static var plusFeatureMoneyTitle: LocalizedStringResource {
+        r("plus_feature_money_title", "Shared money")
+    }
+
+    /// Log shared expenses, see who owes whom, settle up, and keep track of bills and budgets.
+    public static var plusFeatureMoneyText: LocalizedStringResource {
+        r("plus_feature_money_text", "Log shared expenses, see who owes whom, settle up, and keep track of bills and budgets.")
+    }
+
+    /// Log money from anywhere
+    public static var plusFeatureExpenseTitle: LocalizedStringResource {
+        r("plus_feature_expense_title", "Log money from anywhere")
+    }
+
+    /// Add an expense from the + button or from a problem's cost, not only from Money.
+    public static var plusFeatureExpenseText: LocalizedStringResource {
+        r("plus_feature_expense_text", "Add an expense from the + button or from a problem's cost, not only from Money.")
+    }
+
+    /// House problems
+    public static var plusFeatureIssuesTitle: LocalizedStringResource {
+        r("plus_feature_issues_title", "House problems")
+    }
+
+    /// Keep track of what's broken. Add photos, costs and parts, hand it to someone and book a visit.
+    public static var plusFeatureIssuesText: LocalizedStringResource {
+        r("plus_feature_issues_text", "Keep track of what's broken. Add photos, costs and parts, hand it to someone and book a visit.")
+    }
+
+    /// House chat
+    public static var plusFeatureMessagesTitle: LocalizedStringResource {
+        r("plus_feature_messages_title", "House chat")
+    }
+
+    /// Talk with the whole house or in smaller groups, and put a question to a vote with a poll.
+    public static var plusFeatureMessagesText: LocalizedStringResource {
+        r("plus_feature_messages_text", "Talk with the whole house or in smaller groups, and put a question to a vote with a poll.")
+    }
+
+    /// Shopping by aisle
+    public static var plusFeatureShoppingTitle: LocalizedStringResource {
+        r("plus_feature_shopping_title", "Shopping by aisle")
+    }
+
+    /// Group the shopping list by aisle, and clear a whole aisle at once.
+    public static var plusFeatureShoppingText: LocalizedStringResource {
+        r("plus_feature_shopping_text", "Group the shopping list by aisle, and clear a whole aisle at once.")
+    }
+
+    /// Archive now
+    public static var plusFeatureArchiveTitle: LocalizedStringResource {
+        r("plus_feature_archive_title", "Archive now")
+    }
+
+    /// Put finished chores away yourself, instead of waiting for them to move to the Archive on their own.
+    public static var plusFeatureArchiveText: LocalizedStringResource {
+        r("plus_feature_archive_text", "Put finished chores away yourself, instead of waiting for them to move to the Archive on their own.")
+    }
+
+    /// Your own movie lists
+    public static var plusFeatureListsTitle: LocalizedStringResource {
+        r("plus_feature_lists_title", "Your own movie lists")
+    }
+
+    /// Make lists beyond Watchlist and Watched, like Friday night picks.
+    public static var plusFeatureListsText: LocalizedStringResource {
+        r("plus_feature_lists_text", "Make lists beyond Watchlist and Watched, like Friday night picks.")
+    }
+
+    /// Mature titles
+    public static var plusFeatureMatureTitle: LocalizedStringResource {
+        r("plus_feature_mature_title", "Mature titles")
+    }
+
+    /// Include mature titles when you browse and search for movies, and in the movie game.
+    public static var plusFeatureMatureText: LocalizedStringResource {
+        r("plus_feature_mature_text", "Include mature titles when you browse and search for movies, and in the movie game.")
+    }
+
+    /// More than one home
+    public static var plusFeatureHomesTitle: LocalizedStringResource {
+        r("plus_feature_homes_title", "More than one home")
+    }
+
+    /// Create or join a second home. One subscription covers up to two homes.
+    public static var plusFeatureHomesText: LocalizedStringResource {
+        r("plus_feature_homes_text", "Create or join a second home. One subscription covers up to two homes.")
+    }
+
+    /// Your Plus covers %lld of %lld homes: %@
+    public static func plusCoverage(_ a0: Int, _ a1: Int, _ a2: String) -> LocalizedStringResource {
+        r("plus_coverage", "Your Plus covers \(a0) of \(a1) homes: \(a2)")
+    }
+
+    /// Your Plus covers %lld of %lld homes.
+    public static func plusCoverageCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("plus_coverage_count", "Your Plus covers \(a0) of \(a1) homes.")
+    }
+
+    /// What stays free
+    public static var plusFreeTitle: LocalizedStringResource {
+        r("plus_free_title", "What stays free")
+    }
+
+    /// Everything you've already written stays yours and readable, even without Plus.
+    public static var plusFreeReadable: LocalizedStringResource {
+        r("plus_free_readable", "Everything you've already written stays yours and readable, even without Plus.")
+    }
+
+    /// Tasks and chores
+    public static var plusFreeTasks: LocalizedStringResource {
+        r("plus_free_tasks", "Tasks and chores")
+    }
+
+    /// Notes
+    public static var plusFreeNotes: LocalizedStringResource {
+        r("plus_free_notes", "Notes")
+    }
+
+    /// Recipes and Meals
+    public static var plusFreeRecipes: LocalizedStringResource {
+        r("plus_free_recipes", "Recipes and Meals")
+    }
+
+    /// Movie Watchlist and Watched, and the movie game
+    public static var plusFreeMovies: LocalizedStringResource {
+        r("plus_free_movies", "Movie Watchlist and Watched, and the movie game")
+    }
+
+    /// Nestie, your house's plant or pet
+    public static var plusFreeNestie: LocalizedStringResource {
+        r("plus_free_nestie", "Nestie, your house's plant or pet")
+    }
+
     /// One subscription covers everyone in the house.
     public static var plusFooter: LocalizedStringResource {
         r("plus_footer", "One subscription covers everyone in the house.")
@@ -10302,4 +10509,457 @@ public enum L10n {
         r("settings_delete_account_subscription_note", "An Apple subscription keeps billing until you cancel it in your Apple ID settings.")
     }
 
+    // MARK: - Chat, reporting, blocking and moderation
+
+    /// That reaction isn't available.
+    public static var refusalInvalidReaction: LocalizedStringResource {
+        r("refusal_invalid_reaction", "That reaction isn't available.")
+    }
+
+    /// You can only reply to a message in the same chat.
+    public static var refusalReplyElsewhere: LocalizedStringResource {
+        r("refusal_reply_elsewhere", "You can only reply to a message in the same chat.")
+    }
+
+    /// That's gone. It may have been deleted.
+    public static var refusalNotFound: LocalizedStringResource {
+        r("refusal_not_found", "That's gone. It may have been deleted.")
+    }
+
+    /// You can't message this person
+    public static var refusalBlocked: LocalizedStringResource {
+        r("refusal_blocked", "You can't message this person")
+    }
+
+    /// Your chat is paused by a moderator. You can still read.
+    public static var refusalChatSuspended: LocalizedStringResource {
+        r("refusal_chat_suspended", "Your chat is paused by a moderator. You can still read.")
+    }
+
+    /// You've blocked as many people as you can. Unblock someone first.
+    public static var refusalBlockLimit: LocalizedStringResource {
+        r("refusal_block_limit", "You've blocked as many people as you can. Unblock someone first.")
+    }
+
+    /// You can't do that.
+    public static var refusalForbidden: LocalizedStringResource {
+        r("refusal_forbidden", "You can't do that.")
+    }
+
+    /// They're the only person left in that house, so they can't be removed.
+    public static var refusalLastMember: LocalizedStringResource {
+        r("refusal_last_member", "They're the only person left in that house, so they can't be removed.")
+    }
+
+    /// That isn't possible here.
+    public static var refusalInvalid: LocalizedStringResource {
+        r("refusal_invalid", "That isn't possible here.")
+    }
+
+    /// Report
+    public static var reportTitle: LocalizedStringResource {
+        r("report_title", "Report")
+    }
+
+    /// Send
+    public static var reportSend: LocalizedStringResource {
+        r("report_send", "Send")
+    }
+
+    /// You're reporting
+    public static var reportSubjectHeader: LocalizedStringResource {
+        r("report_subject_header", "You're reporting")
+    }
+
+    /// What's wrong?
+    public static var reportReasonHeader: LocalizedStringResource {
+        r("report_reason_header", "What's wrong?")
+    }
+
+    /// Abuse
+    public static var reportReasonAbuse: LocalizedStringResource {
+        r("report_reason_abuse", "Abuse")
+    }
+
+    /// Harassment
+    public static var reportReasonHarassment: LocalizedStringResource {
+        r("report_reason_harassment", "Harassment")
+    }
+
+    /// Sexual content
+    public static var reportReasonSexual: LocalizedStringResource {
+        r("report_reason_sexual", "Sexual content")
+    }
+
+    /// Spam
+    public static var reportReasonSpam: LocalizedStringResource {
+        r("report_reason_spam", "Spam")
+    }
+
+    /// Other
+    public static var reportReasonOther: LocalizedStringResource {
+        r("report_reason_other", "Other")
+    }
+
+    /// Anything else? (optional)
+    public static var reportNoteHeader: LocalizedStringResource {
+        r("report_note_header", "Anything else? (optional)")
+    }
+
+    /// Add a note
+    public static var reportNotePlaceholder: LocalizedStringResource {
+        r("report_note_placeholder", "Add a note")
+    }
+
+    /// A moderator will look at this within 24 hours. It's hidden for you right away.
+    public static var reportFooter: LocalizedStringResource {
+        r("report_footer", "A moderator will look at this within 24 hours. It's hidden for you right away.")
+    }
+
+    /// Thanks. A moderator will look within 24 hours.
+    public static var reportThanks: LocalizedStringResource {
+        r("report_thanks", "Thanks. A moderator will look within 24 hours.")
+    }
+
+    /// You've reported a lot today; it's hidden for you.
+    public static var reportLimited: LocalizedStringResource {
+        r("report_limited", "You've reported a lot today; it's hidden for you.")
+    }
+
+    /// Report photo
+    public static var reportPhoto: LocalizedStringResource {
+        r("report_photo", "Report photo")
+    }
+
+    /// Photo
+    public static var messagesPhoto: LocalizedStringResource {
+        r("messages_photo", "Photo")
+    }
+
+    /// Reply
+    public static var messagesReply: LocalizedStringResource {
+        r("messages_reply", "Reply")
+    }
+
+    /// Copy
+    public static var messagesCopy: LocalizedStringResource {
+        r("messages_copy", "Copy")
+    }
+
+    /// Pin
+    public static var messagesPin: LocalizedStringResource {
+        r("messages_pin", "Pin")
+    }
+
+    /// Unpin
+    public static var messagesUnpin: LocalizedStringResource {
+        r("messages_unpin", "Unpin")
+    }
+
+    /// Report
+    public static var messagesReport: LocalizedStringResource {
+        r("messages_report", "Report")
+    }
+
+    /// %@ %lld
+    public static func reactionChip(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("reaction_chip", "\(a0) \(a1)")
+    }
+
+    /// %@ %lld, you reacted
+    public static func reactionChipMine(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("reaction_chip_mine", "\(a0) \(a1), you reacted")
+    }
+
+    /// React with %@
+    public static func reactionPickerAdd(_ a0: String) -> LocalizedStringResource {
+        r("reaction_picker_add", "React with \(a0)")
+    }
+
+    /// Remove your %@ reaction
+    public static func reactionPickerMine(_ a0: String) -> LocalizedStringResource {
+        r("reaction_picker_mine", "Remove your \(a0) reaction")
+    }
+
+    /// Reply to %@: %@
+    public static func replyQuoteAccessibility(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("reply_quote_accessibility", "Reply to \(a0): \(a1)")
+    }
+
+    /// Replying to %@
+    public static func chatReplyingTo(_ a0: String) -> LocalizedStringResource {
+        r("chat_replying_to", "Replying to \(a0)")
+    }
+
+    /// Pinned message from %@: %@
+    public static func pinnedBarAccessibility(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("pinned_bar_accessibility", "Pinned message from \(a0): \(a1)")
+    }
+
+    /// Unpin message
+    public static var pinnedBarUnpin: LocalizedStringResource {
+        r("pinned_bar_unpin", "Unpin message")
+    }
+
+    /// Search in chat
+    public static var chatSearch: LocalizedStringResource {
+        r("chat_search", "Search in chat")
+    }
+
+    /// Search messages
+    public static var chatSearchPlaceholder: LocalizedStringResource {
+        r("chat_search_placeholder", "Search messages")
+    }
+
+    /// Close search
+    public static var chatSearchClose: LocalizedStringResource {
+        r("chat_search_close", "Close search")
+    }
+
+    /// Nothing here matches. Only the latest messages are searched.
+    public static var chatSearchNoResults: LocalizedStringResource {
+        r("chat_search_no_results", "Nothing here matches. Only the latest messages are searched.")
+    }
+
+    /// Mention %@
+    public static func chatMentionAccessibility(_ a0: String) -> LocalizedStringResource {
+        r("chat_mention_accessibility", "Mention \(a0)")
+    }
+
+    /// Block
+    public static var chatBlock: LocalizedStringResource {
+        r("chat_block", "Block")
+    }
+
+    /// Unblock
+    public static var chatUnblock: LocalizedStringResource {
+        r("chat_unblock", "Unblock")
+    }
+
+    /// Block %@?
+    public static func chatBlockTitle(_ a0: String) -> LocalizedStringResource {
+        r("chat_block_title", "Block \(a0)?")
+    }
+
+    /// You won't see their messages or hear from them, and you can't message each other. You can undo this in Settings.
+    public static var chatBlockMessage: LocalizedStringResource {
+        r("chat_block_message", "You won't see their messages or hear from them, and you can't message each other. You can undo this in Settings.")
+    }
+
+    /// Block
+    public static var chatBlockConfirm: LocalizedStringResource {
+        r("chat_block_confirm", "Block")
+    }
+
+    /// You blocked %@
+    public static func chatBlockedBanner(_ a0: String) -> LocalizedStringResource {
+        r("chat_blocked_banner", "You blocked \(a0)")
+    }
+
+    /// Privacy and safety
+    public static var settingsPrivacyTitle: LocalizedStringResource {
+        r("settings_privacy_title", "Privacy and safety")
+    }
+
+    /// Blocked people
+    public static var settingsBlockedPeople: LocalizedStringResource {
+        r("settings_blocked_people", "Blocked people")
+    }
+
+    /// People you block can't message you, and you won't see what they write.
+    public static var settingsBlockedPeopleHelp: LocalizedStringResource {
+        r("settings_blocked_people_help", "People you block can't message you, and you won't see what they write.")
+    }
+
+    /// Blocked people
+    public static var blockedPeopleTitle: LocalizedStringResource {
+        r("blocked_people_title", "Blocked people")
+    }
+
+    /// Nobody blocked
+    public static var blockedPeopleEmptyTitle: LocalizedStringResource {
+        r("blocked_people_empty_title", "Nobody blocked")
+    }
+
+    /// People you block from a chat or from Settings show up here.
+    public static var blockedPeopleEmptyMessage: LocalizedStringResource {
+        r("blocked_people_empty_message", "People you block from a chat or from Settings show up here.")
+    }
+
+    /// Unblocking lets you message each other again.
+    public static var blockedPeopleFooter: LocalizedStringResource {
+        r("blocked_people_footer", "Unblocking lets you message each other again.")
+    }
+
+    /// Unblock %@
+    public static func blockedPeopleUnblockAccessibility(_ a0: String) -> LocalizedStringResource {
+        r("blocked_people_unblock_accessibility", "Unblock \(a0)")
+    }
+
+    /// Reports
+    public static var moderationOpen: LocalizedStringResource {
+        r("moderation_open", "Reports")
+    }
+
+    /// Reports
+    public static var moderationTitle: LocalizedStringResource {
+        r("moderation_title", "Reports")
+    }
+
+    /// All clear
+    public static var moderationQueueEmptyTitle: LocalizedStringResource {
+        r("moderation_queue_empty_title", "All clear")
+    }
+
+    /// No reports are waiting.
+    public static var moderationQueueEmptyMessage: LocalizedStringResource {
+        r("moderation_queue_empty_message", "No reports are waiting.")
+    }
+
+    /// Message
+    public static var moderationKindMessage: LocalizedStringResource {
+        r("moderation_kind_message", "Message")
+    }
+
+    /// Problem photo
+    public static var moderationKindPhoto: LocalizedStringResource {
+        r("moderation_kind_photo", "Problem photo")
+    }
+
+    /// Profile photo
+    public static var moderationKindFace: LocalizedStringResource {
+        r("moderation_kind_face", "Profile photo")
+    }
+
+    /// %@ → %@
+    public static func moderationRowWho(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("moderation_row_who", "\(a0) → \(a1)")
+    }
+
+    /// Waiting more than 12 hours
+    public static var moderationOverdue: LocalizedStringResource {
+        r("moderation_overdue", "Waiting more than 12 hours")
+    }
+
+    /// Note from the reporter
+    public static var moderationNoteHeader: LocalizedStringResource {
+        r("moderation_note_header", "Note from the reporter")
+    }
+
+    /// The reported photo
+    public static var moderationPhotoAccessibility: LocalizedStringResource {
+        r("moderation_photo_accessibility", "The reported photo")
+    }
+
+    /// On the problem “%@”
+    public static func moderationOnProblem(_ a0: String) -> LocalizedStringResource {
+        r("moderation_on_problem", "On the problem “\(a0)”")
+    }
+
+    /// This has already been deleted.
+    public static var moderationAlreadyGone: LocalizedStringResource {
+        r("moderation_already_gone", "This has already been deleted.")
+    }
+
+    /// They're not in the house any more.
+    public static var moderationNotInHome: LocalizedStringResource {
+        r("moderation_not_in_home", "They're not in the house any more.")
+    }
+
+    /// Their chat is paused.
+    public static var moderationChatPaused: LocalizedStringResource {
+        r("moderation_chat_paused", "Their chat is paused.")
+    }
+
+    /// Dismiss
+    public static var moderationDismiss: LocalizedStringResource {
+        r("moderation_dismiss", "Dismiss")
+    }
+
+    /// Delete content
+    public static var moderationDelete: LocalizedStringResource {
+        r("moderation_delete", "Delete content")
+    }
+
+    /// Delete this?
+    public static var moderationDeleteTitle: LocalizedStringResource {
+        r("moderation_delete_title", "Delete this?")
+    }
+
+    /// It's removed for everyone and can't be brought back. Every open report about it is closed.
+    public static var moderationDeleteMessage: LocalizedStringResource {
+        r("moderation_delete_message", "It's removed for everyone and can't be brought back. Every open report about it is closed.")
+    }
+
+    /// Remove from home
+    public static var moderationRemove: LocalizedStringResource {
+        r("moderation_remove", "Remove from home")
+    }
+
+    /// Remove from home?
+    public static var moderationRemoveTitle: LocalizedStringResource {
+        r("moderation_remove_title", "Remove from home?")
+    }
+
+    /// %@ is removed from %@ and the invite code changes. The house is told someone was removed.
+    public static func moderationRemoveMessage(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("moderation_remove_message", "\(a0) is removed from \(a1) and the invite code changes. The house is told someone was removed.")
+    }
+
+    /// Suspend chat
+    public static var moderationSuspend: LocalizedStringResource {
+        r("moderation_suspend", "Suspend chat")
+    }
+
+    /// Pause their chat?
+    public static var moderationSuspendTitle: LocalizedStringResource {
+        r("moderation_suspend_title", "Pause their chat?")
+    }
+
+    /// They can still read, but can't send messages in any house until you unsuspend them.
+    public static var moderationSuspendMessage: LocalizedStringResource {
+        r("moderation_suspend_message", "They can still read, but can't send messages in any house until you unsuspend them.")
+    }
+
+    /// Unsuspend chat
+    public static var moderationUnsuspend: LocalizedStringResource {
+        r("moderation_unsuspend", "Unsuspend chat")
+    }
+
+    /// Let them write again?
+    public static var moderationUnsuspendTitle: LocalizedStringResource {
+        r("moderation_unsuspend_title", "Let them write again?")
+    }
+
+    /// Their chat works again right away.
+    public static var moderationUnsuspendMessage: LocalizedStringResource {
+        r("moderation_unsuspend_message", "Their chat works again right away.")
+    }
+
+    /// Handled by %@
+    public static func moderationResolvedBy(_ a0: String) -> LocalizedStringResource {
+        r("moderation_resolved_by", "Handled by \(a0)")
+    }
+
+    /// %lld results
+    public static func chatSearchResults(_ a0: Int) -> LocalizedStringResource {
+        r("chat_search_results", "\(a0) results")
+    }
+
+    // MARK: - Chat menu additions
+
+    /// That message is older than what's loaded.
+    public static var chatMessageNotLoaded: LocalizedStringResource {
+        r("chat_message_not_loaded", "That message is older than what's loaded.")
+    }
+
+    /// Go to quoted message
+    public static var chatGoToQuoted: LocalizedStringResource {
+        r("chat_go_to_quoted", "Go to quoted message")
+    }
+
+    /// Block %@
+    public static func messagesBlockSender(_ a0: String) -> LocalizedStringResource {
+        r("messages_block_sender", "Block \(a0)")
+    }
 }

@@ -15,8 +15,10 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
+import { emailFor } from "./lib/users";
 import { openTasks, outstandingItems } from "./lib/pending";
 import { READ_WINDOW } from "./messages";
+import { blockedBy } from "./lib/moderation";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -119,9 +121,17 @@ export const forHome = query({
           .take(READ_WINDOW),
       ),
     );
+    // Nobody the caller blocked counts: their messages are not drawn for
+    // them. One indexed read, nearly always empty.
+    const blocked = await blockedBy(ctx, user._id);
     const unreadMessages = recent
       .flat()
-      .filter((m) => m.sender_id !== user._id && !(m.read_by ?? []).includes(user._id))
+      .filter(
+        (m) =>
+          m.sender_id !== user._id &&
+          !blocked.has(m.sender_id) &&
+          !(m.read_by ?? []).includes(user._id),
+      )
       .length;
 
     return {
@@ -237,7 +247,7 @@ export const contributions = query({
     tzOffsetMinutes: v.optional(v.number()),
   },
   handler: async (ctx, { homeId, windowDays, tzOffsetMinutes }) => {
-    await requireUser(ctx);
+    const caller = await requireUser(ctx);
     const home = await requireHomeMember(ctx, homeId);
 
     const offset = tzOffsetMinutes ?? 0;
@@ -335,7 +345,8 @@ export const contributions = query({
         {
           userId: user._id,
           name: user.name ?? null,
-          email: user.email ?? null,
+          // Only the caller's own: an email is never a housemate's to read.
+          email: emailFor(caller, user),
           completed: completed.get(id) ?? 0,
           openAssigned: openAssigned.get(id) ?? 0,
           overdue: overdue.get(id) ?? 0,

@@ -2,6 +2,8 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { claimFile } from "./lib/files";
+import { discardHomeFile } from "./lib/moderation";
 
 // Shown as the notification title; the body carries what actually changed.
 const NOTIFY_TITLE = "New note";
@@ -27,6 +29,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
+    // Only a file this house uploaded (lib/files.ts).
+    if (args.image) {
+      await claimFile(ctx, args.image, { homeId: args.homeId, userId: user._id, kind: "note_image" });
+    }
     const now = Date.now();
     const createdId = await ctx.db.insert("notes", {
       home_id: args.homeId,
@@ -60,11 +66,19 @@ export const update = mutation({
     image: v.optional(v.id("_storage")),
   },
   handler: async (ctx, { id, ...fields }) => {
-    await requireUser(ctx);
+    const user = await requireUser(ctx);
     const note = await ctx.db.get(id);
     if (!note) throw new Error("Note not found");
-    await requireDocHome(ctx, note, "Note");
+    const home = await requireDocHome(ctx, note, "Note");
+    // Only a file this house uploaded (lib/files.ts).
+    if (fields.image) {
+      await claimFile(ctx, fields.image, { homeId: home._id, userId: user._id, kind: "note_image" });
+    }
     await ctx.db.patch(id, { ...fields, updated: Date.now() });
+    // A replaced picture is reclaimed, if it was this house's.
+    if (fields.image && note.image && note.image !== fields.image) {
+      await discardHomeFile(ctx, note.image, home._id);
+    }
     return await ctx.db.get(id);
   },
 });
@@ -74,8 +88,10 @@ export const remove = mutation({
   handler: async (ctx, { id }) => {
     const note = await ctx.db.get(id);
     if (!note) return { ok: true };
-    await requireDocHome(ctx, note, "Note");
+    const home = await requireDocHome(ctx, note, "Note");
     await ctx.db.delete(id);
+    // Its picture goes with it, if it was this house's (lib/files.ts).
+    await discardHomeFile(ctx, note.image, home._id);
     return { ok: true };
   },
 });

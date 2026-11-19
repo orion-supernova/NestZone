@@ -16,6 +16,8 @@ public struct PaywallFeature: Sendable {
         /// or a refusal for something this build has no name for).
         public var feature: ProFeature?
         public var houseName: String
+        /// The homes the app already has, by id, for the coverage line.
+        public var homeNames: [HomeID: String]
         public var packages: [PlusPackage] = []
         public var selectedID: PlusPackage.ID?
         public var isLoading = true
@@ -32,9 +34,10 @@ public struct PaywallFeature: Sendable {
         public var message: Message?
         @Shared(.pro) public var status: ProStatus
 
-        public init(feature: ProFeature?, houseName: String = "") {
+        public init(feature: ProFeature?, houseName: String = "", homeNames: [HomeID: String] = [:]) {
             self.feature = feature
             self.houseName = houseName
+            self.homeNames = homeNames
         }
 
         /// A line under the plans: not an alert, because nothing here is an

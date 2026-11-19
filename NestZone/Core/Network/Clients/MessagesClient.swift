@@ -12,12 +12,23 @@ public struct MessagesClient: Sendable {
     /// round trip finishes, and this id is what tells it which bubble the live
     /// subscription has since echoed back — without it a confirmed message and
     /// its optimistic twin sit side by side.
-    public var send: @Sendable (ConversationID, String) async throws -> MessageID
+    ///
+    /// `replyTo` is the message this one answers (in the same conversation) and
+    /// `mentions` the people it names; the server drops any that are not in the
+    /// thread.
+    public var send: @Sendable (ConversationID, String, MessageID?, [UserID]) async throws -> MessageID
     public var markRead: @Sendable (ConversationID) async throws -> Void
     /// Rewrites one of your own messages.
     public var edit: @Sendable (MessageID, String) async throws -> Void
     /// Deletes one of your own messages.
     public var delete: @Sendable (MessageID) async throws -> Void
+    /// Sets one of your reactions on or off. `on` is explicit, never a toggle:
+    /// a retry or a double tap must land on the state the person chose.
+    public var react: @Sendable (MessageID, String, Bool) async throws -> Void
+    /// Pins a message to the top of its thread, replacing any pin.
+    public var pin: @Sendable (ConversationID, MessageID) async throws -> Void
+    /// Takes the pin down.
+    public var unpin: @Sendable (ConversationID) async throws -> Void
     /// Renames a thread. An empty title clears it, putting the conversation back
     /// on its default name.
     public var rename: @Sendable (ConversationID, String) async throws -> Conversation
@@ -45,7 +56,7 @@ extension MessagesClient: DependencyKey {
                 as: [Message].self
             )
         },
-        send: { conversationID, content in
+        send: { conversationID, content, replyTo, mentions in
             let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else {
                 throw AppError.validation(String(
@@ -53,10 +64,17 @@ extension MessagesClient: DependencyKey {
                     defaultValue: "Type a message first."
                 ))
             }
+            var args: [String: ConvexEncodable?] = [
+                "conversationId": conversationID,
+                "content": trimmed,
+                "messageType": "text",
+            ]
+            if let replyTo { args["replyToId"] = replyTo }
+            if !mentions.isEmpty {
+                args["mentions"] = mentions.map { $0 as ConvexEncodable? }
+            }
             return try await ConvexConnection.shared.mutate(
-                "messages:send",
-                args: ["conversationId": conversationID, "content": trimmed, "messageType": "text"],
-                as: MessageID.self
+                "messages:send", args: args, as: MessageID.self
             )
         },
         markRead: { conversationID in
@@ -79,6 +97,23 @@ extension MessagesClient: DependencyKey {
         delete: { messageID in
             try await ConvexConnection.shared.mutate(
                 "messages:remove", args: ["messageId": messageID]
+            )
+        },
+        react: { messageID, emoji, on in
+            try await ConvexConnection.shared.mutate(
+                "messages:react",
+                args: ["messageId": messageID, "emoji": emoji, "on": on]
+            )
+        },
+        pin: { conversationID, messageID in
+            try await ConvexConnection.shared.mutate(
+                "conversations:pin",
+                args: ["conversationId": conversationID, "messageId": messageID]
+            )
+        },
+        unpin: { conversationID in
+            try await ConvexConnection.shared.mutate(
+                "conversations:unpin", args: ["conversationId": conversationID]
             )
         },
         rename: { conversationID, title in

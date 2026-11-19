@@ -313,6 +313,9 @@ public enum Palette {
     /// A control floating over a photograph, which may be any brightness.
     public static let viewerControl = Color.black.opacity(0.45)
 
+    /// Behind the words a chat search found, in the bubble that holds them.
+    public static let searchHighlight = Color.yellow.opacity(0.45)
+
     /// The ring drawn around the crop circle, so its edge is visible against a
     /// photo of any brightness.
     public static let cropRing = Color.white.opacity(0.9)

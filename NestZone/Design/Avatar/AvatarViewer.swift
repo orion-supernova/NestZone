@@ -31,6 +31,10 @@ struct AvatarViewer: View {
     /// backdrop's fade, so the photo looks like it is being lifted off it.
     @State private var dismissOffset: CGFloat = 0
 
+    /// The report sheet is up, and what was said after it.
+    @State private var isReporting = false
+    @State private var notice: ReportNotice?
+
     @GestureState private var pinch: CGFloat = 1
     @GestureState private var pan: CGSize = .zero
 
@@ -62,7 +66,34 @@ struct AvatarViewer: View {
 
             photo
         }
-        .overlay(alignment: .top) { AvatarViewerBar(name: subject.name, close: close) }
+        .overlay(alignment: .top) {
+            AvatarViewerBar(
+                name: subject.name,
+                report: canReport ? { isReporting = true } : nil,
+                close: close
+            )
+        }
+        .overlay(alignment: .bottom) {
+            if let notice {
+                ReportNoticeToast(notice: notice)
+                    .padding(.bottom, 24)
+                    .transition(AnyTransition.move(edge: .bottom).combined(with: .opacity).reduced(reduceMotion))
+            }
+        }
+        .animation(Motion.spring, value: notice)
+        // Leaves once the thanks has been read, and not at all if the viewer
+        // is closed first: tied to the view, not a loose task.
+        .task(id: notice) {
+            guard notice != nil else { return }
+            try? await Task.sleep(for: .seconds(1.6))
+            if !Task.isCancelled { dismiss() }
+        }
+        .sheet(isPresented: $isReporting) {
+            ReportSheetHost(subject: reportSubject) { outcome in
+                isReporting = false
+                reported(outcome)
+            }
+        }
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
             viewport = size
             zoom.viewport = size
@@ -151,6 +182,28 @@ struct AvatarViewer: View {
 
     private func close() {
         dismiss()
+    }
+
+    /// Somebody else's face, in a house this person is in: the two things the
+    /// server needs to take the report.
+    private var canReport: Bool {
+        let directory = ModerationDirectory.shared
+        return directory.homeID != nil && directory.userID?.rawValue != subject.seed
+    }
+
+    private var reportSubject: ReportSubject {
+        ReportSubject(
+            kind: .avatar,
+            targetID: subject.seed,
+            homeID: ModerationDirectory.shared.homeID
+        )
+    }
+
+    /// The face is hidden at once, whatever the server answered, and the
+    /// viewer says so before it goes: an empty circle would be the only sign.
+    private func reported(_ outcome: ReportOutcome) {
+        ModerationDirectory.shared.hideFace(subject.seed)
+        notice = ReportNotice(outcome)
     }
 
     /// VoiceOver's swipe-up/down, which is the only way to zoom without a pinch.

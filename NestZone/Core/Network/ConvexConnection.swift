@@ -234,7 +234,7 @@ public final class ConvexConnection: @unchecked Sendable {
         // Deterministic, or somebody else's job: `.notAuthenticated` is the
         // session machinery's to resolve, and a decode failure will fail
         // identically on every attempt.
-        case .notAuthenticated, .decoding, .validation, .noHomeSelected, .cancelled, .proRequired:
+        case .notAuthenticated, .decoding, .validation, .noHomeSelected, .cancelled, .proRequired, .refused:
             false
         }
     }
@@ -420,6 +420,8 @@ public final class ConvexConnection: @unchecked Sendable {
                 // other thrown `ConvexError` is a server answer.
                 if let refusal = ProRefusal.feature(inConvexErrorData: data) {
                     .proRequired(refusal)
+                } else if let refusal = ServerRefusal.parse(convexErrorData: data) {
+                    .refused(refusal)
                 } else {
                     .server(data)
                 }

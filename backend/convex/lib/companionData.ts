@@ -9,7 +9,7 @@
 
 import type { CatalogData } from "./companionTypes";
 
-export const CATALOG_VERSION = "79790c743d93";
+export const CATALOG_VERSION = "ab9210929585";
 
 export const CATALOG: CatalogData = {
   "decor" : [
@@ -3311,8 +3311,20 @@ export const CATALOG: CatalogData = {
   ],
   "sparklePacks" : [
     {
+      "id" : "com.walhallaa.NestZone.sparkles.100",
+      "sparkles" : 100
+    },
+    {
+      "id" : "com.walhallaa.NestZone.sparkles.150",
+      "sparkles" : 150
+    },
+    {
       "id" : "com.walhallaa.NestZone.sparkles.300",
       "sparkles" : 300
+    },
+    {
+      "id" : "com.walhallaa.NestZone.sparkles.550",
+      "sparkles" : 550
     },
     {
       "id" : "com.walhallaa.NestZone.sparkles.1000",

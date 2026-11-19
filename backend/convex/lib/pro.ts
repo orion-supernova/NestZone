@@ -2,8 +2,10 @@
 //
 // A house is Pro while any current member holds an unexpired `pro`
 // entitlement (a `pro_entitlements` row, written from RevenueCat's answer by
-// convex/pro.ts). Read per member: a house is a handful of people, so this is
-// a handful of indexed point reads, never a scan.
+// convex/pro.ts) — and the house is among the first `PLUS_HOMES_PER_PERSON`
+// homes that member joined, so one subscription cannot carry every house its
+// owner walks into. Read per member: a house is a handful of people, so this
+// is a handful of indexed point reads, never a scan.
 //
 // Three switches, all deployment env vars:
 //   PRO_ENFORCE        "on" makes `requirePro` refuse and the coercions
@@ -84,12 +86,92 @@ export async function entitlementOf(
 }
 
 /**
+ * How many homes one person's Plus covers. A house is Plus through a member,
+ * so without a cap one subscription that joins five houses makes all five
+ * Plus. With it, a person's Plus covers the first homes they joined, in join
+ * order, and any further home they are in gets nothing from them (it is still
+ * Plus if another member there carries Plus with room to spare). Nobody is
+ * refused a home or taken out of one for it: a third home is simply not
+ * covered. Comped people follow the same cap.
+ */
+export const PLUS_HOMES_PER_PERSON = 2;
+
+/**
+ * The homes a person's own Plus covers, in join order: the first
+ * `PLUS_HOMES_PER_PERSON` homes in their `home_id` mirror that they are still
+ * a member of.
+ *
+ * Join order is the order of `users.home_id`. Every writer appends on join
+ * (`homes.create`, `homes.join`, `demo.seedHousehold`: a `Set` of the old
+ * array plus the new id, which keeps the order and puts the new one last) and
+ * every remover filters (`departHome`, `cascadeDeleteHome`), which keeps the
+ * order of what is left; leaving and coming back is a new join, at the end.
+ * There is no join timestamp to prefer. A mirror entry for a home that is
+ * gone or no longer lists the person is skipped, so a stale entry can never
+ * take a slot.
+ *
+ * Says nothing about whether the person carries Plus; ask `userHasPro`.
+ */
+export async function coveredHomes(
+  ctx: QueryCtx | MutationCtx,
+  user: Doc<"users">,
+): Promise<Id<"homes">[]> {
+  const covered: Id<"homes">[] = [];
+  for (const id of user.home_id ?? []) {
+    if (covered.length >= PLUS_HOMES_PER_PERSON) break;
+    if (covered.includes(id)) continue;
+    const home = await ctx.db.get(id);
+    if (home && (home.members ?? []).includes(user._id)) covered.push(id);
+  }
+  return covered;
+}
+
+/**
+ * Whether this member's Plus, if they carry it, reaches `home`: whether
+ * `home` is among the first `PLUS_HOMES_PER_PERSON` homes they are a member
+ * of. Walks their mirror only up to `home` or the cap, whichever comes
+ * first, so a person in one or two homes costs one or two reads.
+ *
+ * A member whose mirror lacks `home` (it should never, but the two are
+ * separate documents) is treated as having joined it last.
+ */
+async function coversHome(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<"users">,
+  home: Doc<"homes">,
+): Promise<boolean> {
+  if (!(home.members ?? []).includes(userId)) return false;
+  const user = await ctx.db.get(userId);
+  if (!user) return false;
+  const seen = new Set<Id<"homes">>();
+  let before = 0;
+  for (const id of user.home_id ?? []) {
+    if (id === home._id) return true; // reached it with a slot still free
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const other = await ctx.db.get(id);
+    if (other && (other.members ?? []).includes(userId)) {
+      before += 1;
+      if (before >= PLUS_HOMES_PER_PERSON) return false;
+    }
+  }
+  // Not in the mirror at all: it counts after every home that is.
+  return before < PLUS_HOMES_PER_PERSON;
+}
+
+/**
  * Whether `home` is Pro, and who carries it.
+ *
+ * A member carries it for this home only when they hold Plus (an active
+ * entitlement, or the comp list) *and* this home is one their Plus covers
+ * (`PLUS_HOMES_PER_PERSON`, in join order). Coverage is checked only for
+ * members who hold Plus, and only until one is found, so a house nobody pays
+ * for costs what it always did: one indexed read per member.
  *
  * `prefer` names the member to credit when several carry it — the caller,
  * so "your Pro covers this house" is said to the person who pays rather than
  * to whoever sorts first. Otherwise lifetime beats a date, and the latest
- * date wins.
+ * date wins; a comped member comes after every paying one.
  */
 export async function homeProStatus(
   ctx: QueryCtx | MutationCtx,
@@ -112,23 +194,35 @@ export async function homeProStatus(
   const active = rows.filter(
     (r): r is Doc<"pro_entitlements"> => r !== null && entitlementActive(r, now),
   );
+  const compedMembers = members.filter((m) => comped.has(m));
+  if (active.length === 0 && compedMembers.length === 0) return { pro: false };
 
-  // The caller first, paid or comped; then whoever else carries it.
+  // The caller first, paid or comped, when their Plus reaches this home.
   const isMember = prefer !== undefined && members.includes(prefer);
-  const own = isMember ? active.find((r) => r.user_id === prefer) : undefined;
-  if (own) return describe(own);
-  if (isMember && comped.has(prefer!)) return compedStatus(prefer!);
-
-  if (active.length > 0) {
-    const best = active.reduce((a, b) => {
-      if (a.expires_at === null) return a;
-      if (b.expires_at === null) return b;
-      return b.expires_at > a.expires_at ? b : a;
-    });
-    return describe(best);
+  if (isMember) {
+    const own = active.find((r) => r.user_id === prefer);
+    if ((own || comped.has(prefer!)) && (await coversHome(ctx, prefer!, home))) {
+      return own ? describe(own) : compedStatus(prefer!);
+    }
   }
-  const compedMember = members.find((m) => comped.has(m));
-  return compedMember ? compedStatus(compedMember) : { pro: false };
+
+  // Then whoever else carries it with room for this home: lifetime first,
+  // then the latest end.
+  const ranked = [...active].sort((a, b) => {
+    if (a.expires_at === null) return b.expires_at === null ? 0 : -1;
+    if (b.expires_at === null) return 1;
+    return b.expires_at - a.expires_at;
+  });
+  for (const row of ranked) {
+    if (isMember && row.user_id === prefer) continue;
+    if (await coversHome(ctx, row.user_id, home)) return describe(row);
+  }
+  for (const m of compedMembers) {
+    if (isMember && m === prefer) continue;
+    if (active.some((r) => r.user_id === m)) continue; // already judged above
+    if (await coversHome(ctx, m, home)) return compedStatus(m);
+  }
+  return { pro: false };
 }
 
 function describe(row: Doc<"pro_entitlements">): ProStatus {
@@ -143,8 +237,9 @@ function describe(row: Doc<"pro_entitlements">): ProStatus {
 /**
  * Whether this one person carries Plus themselves: their own active
  * entitlement, or the comp list. Not "is any house of theirs Plus" — that is
- * `homeProStatus`. For what Plus grants a person rather than a house (more
- * than one home).
+ * `homeProStatus` — and not capped: a person past `PLUS_HOMES_PER_PERSON`
+ * homes still has Plus, it just covers only the first ones. For what Plus
+ * grants a person rather than a house (more than one home, mature titles).
  */
 export async function userHasPro(
   ctx: QueryCtx | MutationCtx,

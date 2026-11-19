@@ -1,0 +1,330 @@
+<title>Backend Data Integrity</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Same look as Docs/Launch/index.html: one reading column, sticky index, tables scroll in their own boxes. */
+:root{
+  --bg:#f5f7f6; --surface:#ffffff; --ink:#15211d; --muted:#5b6b65; --line:#dbe3df;
+  --accent:#1f7a5c; --accent-soft:#e1f1ea; --pro:#7a4fd6; --pro-soft:#efe8fc;
+  --block:#c0392b; --block-soft:#fbe6e3; --warn:#b26b00; --warn-soft:#fdf0d9; --ok:#1f7a5c;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --surface:#161e1b; --ink:#e4ece8; --muted:#94a59e; --line:#26322d;
+  --accent:#4cc79b; --accent-soft:#183128; --pro:#a989f0; --pro-soft:#251d3a;
+  --block:#ff7b6b; --block-soft:#3a1d19; --warn:#f0b04d; --warn-soft:#33270f; --ok:#4cc79b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --surface:#161e1b; --ink:#e4ece8; --muted:#94a59e; --line:#26322d;
+  --accent:#4cc79b; --accent-soft:#183128; --pro:#a989f0; --pro-soft:#251d3a;
+  --block:#ff7b6b; --block-soft:#3a1d19; --warn:#f0b04d; --warn-soft:#33270f; --ok:#4cc79b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:13px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 0 4px 12px;border-left:2px solid var(--line)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+main{min-width:0}
+header.hero{display:grid;gap:12px;padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(32px,5vw,48px)/1.05 var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font:700 26px/1.2 var(--display);margin:56px 0 12px;text-wrap:balance}
+h3{font:600 17px/1.3 var(--display);margin:28px 0 8px}
+p{margin:0 0 12px;max-width:68ch}
+.lede{font-size:17px;color:var(--muted);max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;font:13px var(--mono);color:var(--muted)}
+code{font:13px var(--mono);background:var(--accent-soft);padding:1px 5px;border-radius:4px;word-break:break-word}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card h4{margin:0 0 6px;font:600 15px var(--display)}
+.card p{font-size:14px;margin:0;color:var(--muted)}
+.stat{font:700 30px/1 var(--display);margin-bottom:6px}
+.pill{display:inline-block;font:600 11px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:999px;white-space:nowrap}
+.pill.block{background:var(--block-soft);color:var(--block)}
+.pill.high{background:var(--warn-soft);color:var(--warn)}
+.pill.med{background:var(--accent-soft);color:var(--accent)}
+.pill.low{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.pro{background:var(--pro-soft);color:var(--pro)}
+.pill.free{background:var(--accent-soft);color:var(--accent)}
+.tbl{overflow-x:auto;margin:12px 0 20px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+ol.steps,ul.list{margin:0 0 16px;padding-left:22px;max-width:72ch}
+ol.steps li,ul.list li{margin:6px 0}
+.phase{display:grid;grid-template-columns:56px minmax(0,1fr);gap:16px;padding:20px 0;border-top:1px solid var(--line)}
+.phase .num{font:700 34px/1 var(--display);color:var(--accent)}
+.phase h3{margin-top:0}
+.callout{border:1px solid var(--line);border-left:4px solid var(--pro);background:var(--surface);border-radius:8px;padding:14px 16px;margin:16px 0}
+.callout.warn{border-left-color:var(--warn)}
+.callout p:last-child{margin-bottom:0}
+pre.code{font:13px/1.5 var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto}
+a{color:var(--accent)}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr);gap:16px}nav.toc{display:none}}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sections">
+  <a href="#summary">Where it stands</a>
+  <a href="#live">Live numbers</a>
+  <a href="#refs">Reference map</a>
+  <a href="#cascade">Cascade map</a>
+  <a href="#findings">Findings</a>
+  <a href="#growth">What grows</a>
+  <a href="#hygiene">Schema hygiene</a>
+  <a href="#nets">Safety nets</a>
+  <a href="#monkeyhub">From MonkeyHub</a>
+  <a href="#plan">Phased plan</a>
+</nav>
+<main>
+
+<header class="hero">
+  <span class="eyebrow">NestZone · backend · audit (read-only)</span>
+  <h1>Data integrity: making the backend last for years</h1>
+  <p class="lede">Convex has no foreign keys. This is what "proper relations" means here: every reference typed and indexed, every delete deciding on purpose what happens to the children, nothing growing without a plan, and a way to notice drift before a household does.</p>
+  <div class="meta"><span>Written 2026-11-19</span><span>Branch: dev @ 04a0aee + uncommitted moderation / Plus cap</span><span>Deployment: self-hosted, Oracle Ampere ARM, SQLite</span></div>
+</header>
+
+<section id="summary">
+<h2>Where it stands</h2>
+<p>The data model is in better shape than most. Every relation is a typed <code>v.id(...)</code>, every child table that is deleted with its parent has an index to find it by, home deletion drains in bounded self-scheduling batches, account deletion is a bounded step machine, and links that must survive (money, shopping) are detached rather than deleted on purpose, with the reason written beside the code.</p>
+<p>What is missing is the layer around it: <strong>no off-box backup</strong>, <strong>no tests</strong>, <strong>no integrity check</strong>, <strong>files that are never deleted</strong> when their row goes, <strong>auth tokens that are never cleaned</strong>, and a handful of reads that grow with a household's age and will hit Convex's limits in a busy house after a few years. None of it needs an app release; all of it can ship backend-only and stay safe for every old build.</p>
+<div class="grid">
+  <div class="card"><div class="stat">49</div><p>tables (43 own + Convex Auth). Every relation typed <code>v.id</code>; four polymorphic string ids, all deliberate.</p></div>
+  <div class="card"><div class="stat">0</div><p>tests, integrity checks or recurring backups.</p></div>
+  <div class="card"><div class="stat">1,493</div><p>auth refresh-token rows for 26 sessions and 13 users. The largest table today, and growing fastest.</p></div>
+  <div class="card"><div class="stat">0</div><p>drift found live: no rows on a missing home, no membership-mirror mismatches, no unreferenced files.</p></div>
+</div>
+</section>
+
+<section id="live">
+<h2>Live numbers (production, 2026-11-19)</h2>
+<p>Taken with a read-only one-off query. Small today: 7 homes, 13 users. The value is in the ratios.</p>
+<div class="tbl"><table>
+<thead><tr><th>Table</th><th>Rows</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td><code>authRefreshTokens</code></td><td class="n">1,493</td><td>57 per session. Never cleaned (finding 3).</td></tr>
+<tr><td><code>poll_votes</code> / <code>poll_items</code></td><td class="n">474 / 459</td><td>From 18 polls. Fastest-growing household tables (movie and recipe rounds).</td></tr>
+<tr><td><code>companion_growth</code></td><td class="n">97</td><td>One row per credited act, forever.</td></tr>
+<tr><td><code>expenses</code> / <code>settlements</code></td><td class="n">96 / 32</td><td>Read in full by <code>finance:summary</code> (finding 4).</td></tr>
+<tr><td><code>tasks</code> / <code>task_completions</code></td><td class="n">66 / 47</td><td></td></tr>
+<tr><td><code>home_activity</code></td><td class="n">56</td><td>90-day retention already in place.</td></tr>
+<tr><td><code>events</code></td><td class="n">38</td><td>None with <code>series_end</code> past 50 years yet.</td></tr>
+<tr><td><code>authSessions</code> / <code>push_tokens</code></td><td class="n">26 / 26</td><td></td></tr>
+<tr><td><code>messages</code></td><td class="n">21</td><td></td></tr>
+<tr><td><code>_storage</code></td><td class="n">1 file, 110 KB</td><td>0 unreferenced. Issue photos have barely been used yet, which is why the file leak (finding 2) has not shown.</td></tr>
+<tr><td>moderation tables</td><td class="n">0</td><td>Not deployed yet.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="refs">
+<h2>Reference map</h2>
+<p>Every field that points at another row. "Index" is the index a cleanup or reader uses to find children by that field. All are typed <code>v.id</code> unless marked.</p>
+<div class="tbl"><table>
+<thead><tr><th>Table.field</th><th>Target</th><th>Index on the field</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td><code>users.home_id[]</code></td><td>homes</td><td>none (array)</td><td>Mirror of <code>homes.members</code>. Name is singular, value is an array.</td></tr>
+<tr><td><code>users.avatar</code></td><td>_storage</td><td>none</td><td>Discarded on replace and on account delete.</td></tr>
+<tr><td><code>homes.members[]</code></td><td>users</td><td>none (array)</td><td>The authority for membership.</td></tr>
+<tr><td><code>push_tokens.user_id</code></td><td>users</td><td><code>by_user</code></td><td></td></tr>
+<tr><td><code>tasks.home_id</code> · <code>created_by</code> · <code>updated_by</code> · <code>assigned_to</code> · <code>completed_by</code></td><td>homes · users</td><td><code>by_home</code>, <code>by_home_completed</code></td><td>User refs are history (no index needed).</td></tr>
+<tr><td><code>tasks.issue_id</code></td><td>issues</td><td>none</td><td>Left dangling on problem delete, by design.</td></tr>
+<tr><td><code>tasks.image</code> · <code>notes.image</code> · <code>recipes.image</code> · <code>messages.file</code></td><td>_storage</td><td>none</td><td>No upload path exists for these; never discarded.</td></tr>
+<tr><td><code>task_completions.home_id</code> · <code>task_id</code> · <code>user_id</code></td><td>homes · tasks · users</td><td><code>by_home</code>, <code>by_task</code></td><td></td></tr>
+<tr><td><code>shopping_items.home_id</code> · <code>recipe_id</code> · <code>event_id</code> · <code>issue_id</code></td><td>homes · recipes · events · issues</td><td><code>by_home</code>, <code>by_event</code>, <code>by_issue</code>; <strong>no</strong> <code>by_recipe</code></td><td>Title denormalised next to each link.</td></tr>
+<tr><td><code>notes.home_id</code> · <code>created_by</code></td><td>homes · users</td><td><code>by_home</code></td><td></td></tr>
+<tr><td><code>conversations.home_id</code> · <code>participants[]</code></td><td>homes · users</td><td><code>by_home</code></td><td>Participants never pruned on leave.</td></tr>
+<tr><td><code>messages.conversation_id</code> · <code>sender_id</code> · <code>read_by[]</code></td><td>conversations · users</td><td><code>by_conversation</code></td><td>No <code>home_id</code>; purge goes through the conversation.</td></tr>
+<tr><td><code>recipes.home_id</code> · <code>created_by</code></td><td>homes · users</td><td><code>by_home</code></td><td></td></tr>
+<tr><td><code>meal_plans.home_id</code> · <code>recipe_id</code> · <code>event_id</code> · <code>planned_by</code></td><td>homes · recipes · events · users</td><td><code>by_home</code>, <code>by_home_date</code>, <code>by_event</code>; no <code>by_recipe</code></td><td></td></tr>
+<tr><td><code>polls.home_id</code> · <code>owner_id</code></td><td>homes · users</td><td><code>by_home</code></td><td></td></tr>
+<tr><td><code>poll_items.poll_id</code> · <code>poll_votes.poll_id</code> · <code>user_id</code></td><td>polls · users</td><td><code>by_poll</code>, <code>by_poll_user_target</code></td><td><code>target_external_id</code> is a string key into items, by design.</td></tr>
+<tr><td><code>movies.home_id</code> · <code>list_id</code></td><td>homes · movie_lists</td><td><code>by_home</code>, <code>by_list</code></td><td></td></tr>
+<tr><td><code>movie_lists.home_id</code></td><td>homes</td><td><code>by_home</code></td><td></td></tr>
+<tr><td><code>expenses.home_id</code> · <code>paid_by</code> · <code>splits[].user_id</code> · <code>weights[].user_id</code> · <code>bill_id</code> · <code>event_id</code> · <code>issue_id</code> · <code>created_by</code></td><td>homes · users · bills · events · issues</td><td><code>by_home</code>, <code>by_home_spent</code>, <code>by_event</code>, <code>by_issue</code>; no <code>by_bill</code></td><td>Bills are archived, never deleted, so no index needed yet.</td></tr>
+<tr><td><code>settlements.home_id</code> · <code>from_user</code> · <code>to_user</code> · <code>created_by</code></td><td>homes · users</td><td><code>by_home</code></td><td></td></tr>
+<tr><td><code>bills</code> / <code>budgets</code> <code>.home_id</code> · <code>responsible</code> · <code>created_by</code></td><td>homes · users</td><td><code>by_home</code></td><td></td></tr>
+<tr><td><code>events.home_id</code> · <code>recipe_ids[]</code> · <code>attendees[]</code> · <code>rsvps[].user_id</code> · <code>created_by</code></td><td>homes · recipes · users</td><td><code>by_home</code>, <code>by_home_series_end</code></td><td>Recipe ids left dangling on recipe delete.</td></tr>
+<tr><td><code>issues.home_id</code> · <code>reported_by</code> · <code>assigned_to</code> · <code>resolved_by</code> · <code>me_too[]</code> · <code>task_id</code> · <code>event_id</code></td><td>homes · users · tasks · events</td><td><code>by_home</code>, <code>by_home_open</code></td><td><code>task_id</code>, <code>event_id</code> dangle on delete, by design.</td></tr>
+<tr><td><code>issues.photos[]</code> · <code>photo_thumbs[]</code></td><td>_storage</td><td>none</td><td>Parallel arrays. Not discarded on problem or home delete.</td></tr>
+<tr><td><code>issue_comments.issue_id</code> · <code>home_id</code> · <code>author_id</code></td><td>issues · homes · users</td><td><code>by_issue</code>, <code>by_home</code></td><td></td></tr>
+<tr><td><code>home_activity.home_id</code> · <code>actor</code> · <code>audience[]</code></td><td>homes · users</td><td><code>by_home</code> (+3)</td><td></td></tr>
+<tr><td><code>activity_reads.user_id</code> · <code>home_id</code></td><td>users · homes</td><td><code>by_user_home</code>, <code>by_home</code></td><td></td></tr>
+<tr><td><code>app_updates.author</code> · <code>update_reads.user_id</code></td><td>users</td><td><code>by_user</code></td><td></td></tr>
+<tr><td><code>companion_homes.home_id</code> · <code>current_id</code></td><td>homes · companions</td><td><code>by_home</code></td><td></td></tr>
+<tr><td><code>companions.home_id</code> · <code>follows</code> · <code>vote_id</code></td><td>homes · companions · companion_votes</td><td><code>by_home_status_graduated</code></td><td></td></tr>
+<tr><td><code>companion_votes.home_id</code> · <code>poll_id</code> · <code>companion_id</code> · <code>after_id</code> · <code>closed_by</code></td><td>homes · polls · companions · users</td><td><code>by_poll</code>, <code>by_home_opened</code></td><td><code>polls:remove</code> refuses Nestie's poll.</td></tr>
+<tr><td><code>companion_growth</code> / <code>companion_days</code> <code>.home_id</code> · <code>companion_id</code> · <code>user_id</code></td><td>homes · companions · users</td><td><code>by_home</code>, <code>by_companion_*</code></td><td></td></tr>
+<tr><td><code>jar_ledger.home_id</code> · <code>user_id</code> · <code>companion_id</code></td><td>homes · users · companions</td><td><code>by_home_created</code></td><td></td></tr>
+<tr><td><code>jar_purchases.home_id</code> · <code>user_id</code></td><td>homes · users</td><td><code>by_transaction_environment</code></td><td>Outlives the house on purpose (receipt replay).</td></tr>
+<tr><td><code>reports.reporter_id</code> · <code>home_id</code> · <code>target_user_id</code> · <code>snapshot.*</code></td><td>users · homes · conversations · issues · _storage</td><td><code>by_reporter_*</code>; no <code>by_home</code></td><td><code>target_id</code> is a string (message id, storage id or user id). Moderator record: outlives account and house.</td></tr>
+<tr><td><code>report_holds.report_id</code> · <code>storage_id</code></td><td>reports · _storage</td><td><code>by_report</code>, <code>by_storage</code></td><td>Keeps evidence files alive.</td></tr>
+<tr><td><code>hidden_content.user_id</code> · <code>conversation_id</code></td><td>users · conversations</td><td><code>by_user_*</code></td><td><code>target_id</code> is a string, polymorphic.</td></tr>
+<tr><td><code>blocks.blocker_id</code> · <code>blocked_id</code> · <code>pro_entitlements.user_id</code></td><td>users</td><td><code>by_blocker_blocked</code>, <code>by_blocked</code>, <code>by_user</code></td><td></td></tr>
+</tbody></table></div>
+<p>Index order is right everywhere a range is read (equality fields first, the ranged field last). No reference is stored as a bare string where a <code>v.id</code> would fit, apart from the four polymorphic <code>target_id</code> / <code>target_external_id</code> fields, which cannot be one type.</p>
+</section>
+
+<section id="cascade">
+<h2>Cascade map</h2>
+<p>What each delete does to the children. "Written down" means the reason is in a code comment or CLAUDE.md.</p>
+<div class="tbl"><table>
+<thead><tr><th>Parent deleted</th><th>Deleted</th><th>Detached (link cleared)</th><th>Left pointing at nothing</th><th>Written down</th></tr></thead>
+<tbody>
+<tr><td>Home (last member leaves)<br><code>lib/relations.ts:178</code></td><td>home row, members' mirror, companion_homes now; 16 tables + movie lists, polls (items, votes), conversations (messages) in batches; companion tables via <code>companion:purgeHome</code></td><td>—</td><td><strong>issue photo files</strong>; <code>reports.home_id</code>; <code>jar_purchases.home_id</code> (on purpose)</td><td>yes, except files and reports</td></tr>
+<tr><td>Account<br><code>users.ts:195</code></td><td>sessions + tokens, auth accounts + codes, push tokens, activity_reads, update_reads, pro row, blocks both ways, hidden_content, avatar file</td><td>leaves each home (<code>departHome</code>)</td><td>everything they wrote in a shared home (author ids), reports</td><td>yes</td></tr>
+<tr><td>Member leaves / removed<br><code>lib/membership.ts:27</code></td><td>—</td><td>members list, own mirror</td><td><code>conversations.participants</code>, <code>events.attendees/rsvps</code>, <code>tasks.assigned_to</code>, <code>bills.responsible</code>, <code>issues.assigned_to/me_too</code>, their <code>activity_reads</code> row</td><td>only "what they wrote stays"; assignments not covered</td></tr>
+<tr><td>House problem<br><code>issues.ts:1056</code></td><td>timeline entries</td><td>shopping parts, expenses</td><td><code>tasks.issue_id</code> (on purpose); <strong>photo and thumbnail files</strong></td><td>yes, except files</td></tr>
+<tr><td>Event<br><code>events.ts:1133</code></td><td>—</td><td>expenses, shopping items, meal plans (<code>unlinkEvent</code>)</td><td><code>issues.event_id</code></td><td>mostly</td></tr>
+<tr><td>Task (open / finished)<br><code>tasks.ts:534, 571</code></td><td>its completion row (finished only, behind a dialog)</td><td>—</td><td><code>issues.task_id</code></td><td>yes</td></tr>
+<tr><td>Recipe<br><code>recipes.ts:93</code></td><td>—</td><td>—</td><td><code>meal_plans.recipe_id</code>, <code>events.recipe_ids</code>, <code>shopping_items.recipe_id</code> (title kept)</td><td>only the shopping one</td></tr>
+<tr><td>Poll<br><code>polls.ts:309</code></td><td>items, votes (one transaction, <code>.collect()</code>)</td><td>—</td><td>— (Nestie's poll refused)</td><td>yes</td></tr>
+<tr><td>Movie list<br><code>movies.ts:167</code></td><td>its movies (one transaction)</td><td>—</td><td>—</td><td>yes</td></tr>
+<tr><td>Message<br><code>messages.ts:205</code></td><td>the row</td><td>conversation preview refreshed</td><td><code>messages.file</code>; any <code>hidden_content</code> rows for it</td><td>no</td></tr>
+<tr><td>Comment / photo<br><code>issues.ts:1130, 1237</code></td><td>the entry; the photo and thumb (through <code>discardFile</code>, held while reported)</td><td>—</td><td>—</td><td>yes</td></tr>
+<tr><td>Conversation</td><td colspan="3">No delete path exists. <code>cascadeDeleteConversation</code> (<code>lib/relations.ts:64</code>) has no caller.</td><td>—</td></tr>
+</tbody></table></div>
+<p><strong>Denormalised copies and what keeps them in step:</strong> <code>homes.members</code> ↔ <code>users.home_id</code> (same transaction everywhere, 0 mismatches live, nothing checks it); <code>issues.is_open</code> ↔ <code>status</code> (only <code>setStatus</code> and two plan mutations write it); <code>tasks.completed_at</code> ↔ <code>task_completions</code> (cleared on reopen); <code>photo_thumbs</code> ↔ <code>photos</code> (only <code>attachPhotos</code> / <code>detachPhoto</code>); <code>task_completions.title</code> (kept by <code>tasks:update</code>); <code>*_title</code> on shopping items (cleared with the link); <code>conversations.last_message</code> (refreshed on remove); <code>companion_homes.album_count</code>, jar balances vs <code>jar_ledger</code>. All are correct by construction today; none is verified by anything, so a future bug would drift silently.</p>
+</section>
+
+<section id="findings">
+<h2>Findings, ranked</h2>
+<div class="tbl"><table>
+<thead><tr><th>#</th><th>Severity</th><th>Where</th><th>What goes wrong</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><span class="pill block">critical</span></td><td>Backend-Deploy-Runbook.md:389</td><td>No recurring backup, and the one snapshot (<code>/home/ubuntu/pre-retire-backup</code>, 2026-09-10) is on the same VM. A lost boot volume or a bad Convex upgrade loses every household, every Sparkle balance and the receipt table that stops double credits.</td><td>Nightly consistent copy of the deployment volume (<code>sqlite3 .backup</code> of <code>db.sqlite3</code> plus the storage directory, or <code>npx convex export --include-file-storage</code>) pushed off the box (Oracle Object Storage or Backblaze), 7 daily / 4 weekly / 12 monthly. A restore drill into a scratch deployment once a quarter. Back up before every Convex image upgrade.</td></tr>
+<tr><td>2</td><td><span class="pill high">high</span></td><td><code>issues.ts:1056</code>, <code>lib/relations.ts:254</code>, <code>issues.ts:1174</code>, <code>users.ts:65</code></td><td>Files are never deleted with their row. Deleting a problem leaves its photos and thumbnails; deleting a house leaves all of them; an upload URL used but never attached (app killed mid-upload) leaves the bytes forever. Photos are what dominate disk.</td><td>Route both deletes through <code>discardFile</code> (so reported files stay held); the home purge collects <code>photos</code> and <code>photo_thumbs</code> before deleting each issue. Then a weekly reaper over the <code>_storage</code> system table: any file older than 24 h that no field or hold references is logged, and deleted only once an env flag is on.</td></tr>
+<tr><td>3</td><td><span class="pill high">high</span></td><td><code>@convex-dev/auth</code> 0.0.87, <code>refreshTokens.js</code>, <code>sessions.js</code></td><td>Every token refresh (hourly access token) inserts a new <code>authRefreshTokens</code> row; the library deletes them only when the whole session is deleted (sign-out, account delete). Sessions expire after 30 days but expired ones are never removed. Live: 1,493 rows for 26 sessions. At ~700 rows per active device per month this becomes the largest table by far. <code>deleteAllRefreshTokens</code> also <code>.collect()</code>s a session's tokens in one go, and <code>loadActiveRefreshToken</code> filters all of them on each refresh.</td><td>Daily bounded sweep (own module, internal): sessions with <code>expirationTime</code> more than a day past, their tokens deleted page by page by the <code>sessionId</code> index, the session row last. Second step, within live sessions: delete tokens whose <code>firstUsedTime</code> is more than a day old, never the active one (no <code>firstUsedTime</code>) and never its parent. The library accepts a used token again for only 10 s, so a day's margin is far past the reuse window; a replayed older token already fails. Dry-run counts first.</td></tr>
+<tr><td>4</td><td><span class="pill high">high</span></td><td><code>finance.ts:452–455</code> (<code>finance:summary</code>)</td><td>The live Finance query reads every expense and settlement the house has ever recorded on every push. Balances are all-time on purpose, but the read is the time bomb: a busy house reaches Convex's ~16k-read / 1 s limits in a few years and the Finance screen stops loading for good. Same pattern, smaller: <code>finance.ts:411</code> (all settlements).</td><td>A <code>finance_balances</code> table (home, currency, user, net), written in the same mutation as every expense, edit, delete and settlement, plus a one-off backfill. Summary reads balances plus the month range. Same output, so no app change. Keep the old path behind a flag for one release and compare.</td></tr>
+<tr><td>5</td><td><span class="pill med">medium</span></td><td><code>events.ts:1243</code></td><td>The 15-minute reminder sweep reads every event in the deployment whose <code>series_end</code> is still ahead. "Forever" series never leave that range, so the read grows with every household that ever made a weekly event, 96 times a day.</td><td>A denormalised <code>next_reminder_at</code> with an index, recomputed when the event is written and when a reminder is sent; the sweep reads <code>[now, now + 15 min]</code>. Backfill in batches.</td></tr>
+<tr><td>6</td><td><span class="pill med">medium</span></td><td><code>lib/membership.ts:27</code></td><td>Leaving keeps the person in conversation participants, event attendees and RSVPs, chore and problem assignments, bill responsibility and me-too lists. A chore can stay "assigned" to somebody who cannot see it; a bill reminder can name a non-member.</td><td>Decide per field and write it in CLAUDE.md: clear assignments and responsibility (they are current state), keep participants and RSVPs as history. Clearing is bounded per home by existing indexes.</td></tr>
+<tr><td>7</td><td><span class="pill med">medium</span></td><td><code>users.ts:249</code></td><td>Account deletion walks the <code>users.home_id</code> mirror, not <code>homes.members</code> (arrays cannot be indexed). If the mirror ever drifts, the deleted id stays in a house's member list for good, counted by every membership and Plus check. 0 mismatches today; nothing would notice one.</td><td>The integrity check (phase 2) compares both directions; a repair mutation fixes from <code>homes.members</code>.</td></tr>
+<tr><td>8</td><td><span class="pill med">medium</span></td><td>whole backend</td><td>No tests and no reference rules. About 210 functions, none tested; about 60 have <code>returns</code> validators. Every cascade above is correct because someone was careful, and the next table added has nothing to remind its author to add it to <code>HOME_TABLES</code>.</td><td><code>convex-test</code> + <code>vitest</code> (MonkeyHub's config works as is). A reference-rules table with a schema-walker test that fails when a <code>v.id</code> field has no rule, or a cascade rule has no index. First tests: home purge, account delete, problem delete, task ledger.</td></tr>
+<tr><td>9</td><td><span class="pill med">medium</span></td><td><code>polls.ts:66</code>, <code>lib/relations.ts:78</code></td><td>Polls and their items and votes are never cleaned. 18 polls already carry 933 child rows. <code>polls:listByHome</code> collects every poll ever; deleting a big round collects all its children in one transaction.</td><td>Retention for closed movie and recipe rounds (for example 90 days after closing: items and votes go, the poll row stays with its winner). Bound the list by status or date. Make <code>cascadeDeletePoll</code> batched like the home purge.</td></tr>
+<tr><td>10</td><td><span class="pill med">medium</span></td><td><code>messages.ts:216</code></td><td><code>markRead</code> patches up to 200 message rows each time a chat opens, and each patch re-publishes the row. Write amplification that grows with group size.</td><td>A per-conversation read watermark (like <code>activity_reads</code>) beside <code>read_by</code>. Keep writing <code>read_by</code> until the census shows no build reads it.</td></tr>
+<tr><td>11</td><td><span class="pill low">low</span></td><td><code>recipes.ts:93</code>, <code>events.ts:1133</code>, <code>tasks.ts:534</code></td><td>Links left pointing at nothing (<code>meal_plans.recipe_id</code>, <code>events.recipe_ids</code>, <code>issues.event_id</code>, <code>issues.task_id</code>). Readers tolerate them via <code>get</code>, but the choice is not written down in one place and an event's menu keeps dead ids forever.</td><td>Record each as a rule (history / soft link). Prune dead ids from <code>events.recipe_ids</code> on recipe delete if cheap.</td></tr>
+<tr><td>12</td><td><span class="pill low">low</span></td><td><code>messages.ts:205</code>, <code>notes.ts:25</code>, <code>recipes.ts:40</code></td><td><code>tasks/notes/recipes.image</code> and <code>messages.file</code> accept any storage id but have no upload path and are never discarded. Dead today; a client could point one at another house's photo id.</td><td>Either remove from the args when the census allows, or check the file belongs to the caller's house. Discard on delete.</td></tr>
+<tr><td>13</td><td><span class="pill low">low</span></td><td><code>schema.ts</code> 13× <code>by_pbId</code></td><td>The PocketBase importer is retired and no code reads <code>pbId</code> (0 leftovers live). Thirteen indexes still cost a write each.</td><td>Drop the indexes and the field. Server-only; no app reads them.</td></tr>
+<tr><td>14</td><td><span class="pill low">low</span></td><td><code>schema.ts:593, 594, 680, 712</code></td><td><code>v.any()</code> on <code>recipes.ingredients/steps</code>, <code>poll_items.payload</code>, <code>movies.genres</code>. Anything can be stored and the client decodes whatever arrives.</td><td>Read the real shapes, tighten the table validator to them (with a lenient union), keep the argument validators wide until the census allows.</td></tr>
+<tr><td>15</td><td><span class="pill low">low</span></td><td><code>schema.ts:1777</code></td><td>Reports keep a <code>home_id</code> that points at a deleted house and have no retention or <code>by_home</code> index; their held files live as long as the report is open.</td><td>Write the rule (moderator record, kept N months after resolution) and add a sweep when there is volume.</td></tr>
+<tr><td>16</td><td><span class="pill low">low</span></td><td>schema, several tables</td><td><code>by_home</code> is a prefix of another index on tasks, shopping items, issues, expenses, meal plans, events, budgets and activity. Each costs a write. The purge finds rows by the name <code>by_home</code>.</td><td>Optional: point the purge at the longer index and drop the duplicates. Only worth it once writes matter.</td></tr>
+</tbody></table></div>
+<div class="callout warn"><p><strong>Aside, outside this audit:</strong> Convex Auth's default session cap is 30 days from sign-in (<code>totalDurationMs</code>), and <code>convex/auth.ts</code> does not set it. Check whether people are being asked to sign in again every month; if so, set <code>session.totalDurationMs</code> longer. A longer cap makes the token sweep in finding 3 more important.</p></div>
+</section>
+
+<section id="growth">
+<h2>What grows, and what dominates after years</h2>
+<div class="tbl"><table>
+<thead><tr><th>Table</th><th>Grows with</th><th>Retention today</th><th>Plan</th></tr></thead>
+<tbody>
+<tr><td><code>_storage</code> (bytes)</td><td>problem photos (two copies each), avatars</td><td>only on explicit removal</td><td>Finding 2. Dominates disk once photos are used.</td></tr>
+<tr><td><code>authRefreshTokens</code>, <code>authSessions</code></td><td>every hour a phone is in use</td><td>none</td><td>Finding 3. Dominates row count today.</td></tr>
+<tr><td><code>poll_items</code>, <code>poll_votes</code></td><td>every movie or recipe round (~25 items, a vote per member per item)</td><td>none</td><td>Finding 9.</td></tr>
+<tr><td><code>messages</code></td><td>chat</td><td>none (it is the household's)</td><td>Keep. Reads are already bounded (200 newest).</td></tr>
+<tr><td><code>companion_growth</code>, <code>companion_days</code>, <code>jar_ledger</code></td><td>daily house activity</td><td>none</td><td>Keep the ledger (money). Growth rows older than the current companion's life could be rolled into <code>companion_days</code>; low priority.</td></tr>
+<tr><td><code>task_completions</code>, <code>expenses</code>, <code>settlements</code></td><td>chores and money</td><td>none, deliberately</td><td>Keep; fix the all-history read (finding 4).</td></tr>
+<tr><td><code>home_activity</code></td><td>every notification</td><td>90 days</td><td>Done.</td></tr>
+<tr><td><code>hidden_content</code>, <code>reports</code></td><td>moderation</td><td>none</td><td>Finding 15.</td></tr>
+<tr><td><code>push_tokens</code></td><td>devices</td><td>410 from APNs drops a token</td><td>Fine. Optionally drop tokens not seen for a year.</td></tr>
+</tbody></table></div>
+<p>Rough shape for one active three-person house per year, with nothing changed: about 25k auth-token rows, 5k messages, 3k companion rows, 2k poll rows, 1.5k completions, under 1k expenses, and whatever photos they take. With the token sweep and poll retention, a house's yearly rows fall by roughly two thirds and what is left is the household's own record.</p>
+</section>
+
+<section id="hygiene">
+<h2>Schema hygiene</h2>
+<ul class="list">
+<li><strong>Schema validation is on</strong> (the default; no <code>schemaValidation: false</code>). Good: a push that does not fit the data fails instead of drifting.</li>
+<li><strong>Optional vs required</strong> is deliberate and documented at the top of <code>schema.ts</code>. Every <code>home_id</code> on household tables is required now, which makes the CLAUDE.md note about "every <code>home_id</code> is optional" out of date: the advice to use <code>requireDocHome</code> still holds.</li>
+<li><strong>Union literals</strong> are used for every fixed set except <code>home_activity.category</code> (a free string on purpose, explained) and <code>reports.snapshot.message_type</code>.</li>
+<li><strong>Written, never read:</strong> <code>pbId</code> everywhere; <code>created</code> / <code>updated</code> duplicate <code>_creationTime</code> on most tables (harmless, and clients read some).</li>
+<li><strong>Dead code:</strong> <code>cascadeDeleteConversation</code> has no caller.</li>
+<li><strong>Index count:</strong> highest are <code>companion_growth</code> (5), <code>reports</code> (5), <code>home_activity</code> (4), <code>tasks</code> (3 with <code>by_pbId</code>). Reasonable.</li>
+<li><strong><code>returns</code> validators</strong> exist in companion, moderation, pro, jar, demo; missing in most of the older modules. Add them only with a test that exercises the real output, because a wrong one breaks the screen for every build.</li>
+</ul>
+</section>
+
+<section id="nets">
+<h2>Safety nets</h2>
+<div class="tbl"><table>
+<thead><tr><th>Net</th><th>Today</th><th>Wanted</th></tr></thead>
+<tbody>
+<tr><td>Backups</td><td>One manual snapshot, on the same VM</td><td>Nightly, off-box, rotated, restore-tested (finding 1)</td></tr>
+<tr><td>Tests</td><td>None (<code>package.json</code> has no test runner)</td><td><code>convex-test</code> + <code>vitest</code>, run by <code>deploy.sh</code> before the backend push</td></tr>
+<tr><td>Integrity check</td><td>None</td><td>Weekly paged scan: rows on a missing home, dangling required refs, mirror drift, <code>is_open</code> vs <code>status</code>, <code>photos</code> vs <code>photo_thumbs</code> lengths, jar balance vs ledger sum, unreferenced files, token counts. Writes one small result row; read it with <code>npx convex run</code>.</td></tr>
+<tr><td>Purge watchdog</td><td>Home purge logs and stops on error; "run it again" by hand</td><td>The integrity scan lists deleted houses with rows left, so a stalled purge is seen within a week</td></tr>
+<tr><td>Image pins</td><td>Convex images pinned by digest (good)</td><td>Keep; back up before every upgrade</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="monkeyhub">
+<h2>What to borrow from MonkeyHub</h2>
+<p>MonkeyHub (also Convex, self-hosted) ran a seven-phase integrity programme in October 2026. Its scale is chat-app scale; NestZone is a household app with an order of magnitude less data per user. Take the mechanisms, not the machinery.</p>
+<div class="tbl"><table>
+<thead><tr><th>MonkeyHub piece</th><th>Take it?</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><code>schemaRefs.ts</code> + <code>referenceRules.ts</code> + its test (every <code>v.id</code> path gets cascade / setNull / history / softRef / file, and a cascade needs an index)</td><td>Yes, as is</td><td>Small, pure, and it is what turns "proper relations" into something enforced. NestZone has ~110 reference paths.</td></tr>
+<tr><td><code>integrity.ts</code>: weekly paged scan with counters, resumed if stalled</td><td>Yes, simplified</td><td>At NestZone's size one action paging each table is enough; keep the "expected dangling vs violation" split.</td></tr>
+<tr><td><code>sweep.ts</code> (<code>continueSweep</code>, chain cap)</td><td>Yes</td><td>The self-scheduling pattern NestZone already uses, made reusable, with a cap so a sweep can never loop forever.</td></tr>
+<tr><td><code>retention.ts</code> and its tests</td><td>Yes, the pattern</td><td>For poll rounds, auth tokens, reports.</td></tr>
+<tr><td>vitest + <code>convex-test</code>, <code>edge-runtime</code> environment</td><td>Yes, as is</td><td>Drop-in config.</td></tr>
+<tr><td>Deletion engine with tombstones, per-row sub-transactions, 5-minute re-drive</td><td>No</td><td>NestZone's home purge and account steps already do the important part (access removed at once, rows drained in batches). Add the integrity scan as the watchdog instead.</td></tr>
+<tr><td><code>fileRefs</code> ledger with reference counts, epochs, enforce flags</td><td>No</td><td>Built for files shared across rooms, forwards and stickers. NestZone has two upload paths and one hold table; a reaper that checks known fields is enough. Keep its safety idea: the reaper only logs until an env flag says otherwise.</td></tr>
+<tr><td>Presence and profile tables</td><td>No</td><td>Different problem.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="plan">
+<h2>Phased plan</h2>
+<p>Every phase is backend-only and safe for every app version in use: new tables, fields and indexes are added; nothing an old build sends or reads is narrowed; data changes run as self-scheduling batches (or <code>@convex-dev/migrations</code>), are idempotent, and are dry-run first. Anything that would narrow an argument waits for <code>inbox:versionCensus</code> and gets a row in <code>DEPRECATIONS.md</code>.</p>
+
+<div class="phase"><div class="num">0</div><div>
+<h3>Safety nets first</h3>
+<ul class="list">
+<li>Nightly off-box backup of the deployment volume, rotated, plus a first restore drill into a scratch deployment.</li>
+<li><code>vitest</code> + <code>convex-test</code> in <code>backend/</code>; tests for home purge, account deletion, problem delete, task ledger. <code>deploy.sh</code> runs them.</li>
+<li>Reference-rules table and the schema-walker test (MonkeyHub's, adapted).</li>
+</ul></div></div>
+
+<div class="phase"><div class="num">1</div><div>
+<h3>Stop new leaks</h3>
+<ul class="list">
+<li><code>issues:remove</code> and the home purge discard photo files through <code>discardFile</code>; <code>messages:remove</code> discards <code>file</code>.</li>
+<li><code>departHome</code> clears assignments and bill responsibility (once decided and written in CLAUDE.md).</li>
+<li><code>cascadeDeletePoll</code> and <code>cascadeDeleteMovieList</code> become batched; remove the unused conversation cascade.</li>
+<li>Drop the 13 <code>by_pbId</code> indexes, then the <code>pbId</code> field (0 rows carry it).</li>
+</ul></div></div>
+
+<div class="phase"><div class="num">2</div><div>
+<h3>Clean up and watch</h3>
+<ul class="list">
+<li>Auth sweep cron: expired sessions and their tokens, then old used tokens in live sessions. Log counts for a week before deleting.</li>
+<li>Storage reaper: weekly, 24 h grace, logs only until <code>STORAGE_REAP=on</code>.</li>
+<li>Weekly integrity scan with a stored result; a repair mutation for the membership mirror.</li>
+<li>Poll retention for closed movie and recipe rounds; reports retention rule written down.</li>
+</ul></div></div>
+
+<div class="phase"><div class="num">3</div><div>
+<h3>Reads that stay flat as houses age</h3>
+<ul class="list">
+<li><code>finance_balances</code> maintained on every money write, backfilled, compared against the old computation for a release, then used by <code>finance:summary</code>.</li>
+<li><code>events.next_reminder_at</code> + index for the 15-minute sweep, backfilled.</li>
+<li>Chat read watermark beside <code>read_by</code> (both written until the census allows dropping <code>read_by</code>).</li>
+<li><code>polls:listByHome</code> bounded.</li>
+</ul></div></div>
+
+<div class="phase"><div class="num">4</div><div>
+<h3>Tighten, when the census allows</h3>
+<ul class="list">
+<li>Table validators for <code>v.any()</code> fields narrowed to the real shapes (argument validators stay wide until no old build sends anything else).</li>
+<li>Unused <code>image</code> / <code>file</code> arguments removed, through <code>DEPRECATIONS.md</code>.</li>
+<li><code>returns</code> validators added module by module, each with a test.</li>
+<li>Optional: drop duplicate <code>by_home</code> indexes.</li>
+</ul></div></div>
+</section>
+
+</main>
+</div>

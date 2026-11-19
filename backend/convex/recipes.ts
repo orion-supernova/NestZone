@@ -1,6 +1,8 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser, requireHomeMember, requireDocHome } from "./lib/auth";
+import { claimFile } from "./lib/files";
+import { discardHomeFile } from "./lib/moderation";
 import { internal } from "./_generated/api";
 
 const difficulty = v.union(v.literal("easy"), v.literal("medium"), v.literal("hard"));
@@ -51,6 +53,10 @@ export const create = mutation({
     const user = await requireUser(ctx);
     await requireHomeMember(ctx, args.homeId);
     const { homeId, dedupeByTitle, ...rest } = args;
+    // Only a file this house uploaded (lib/files.ts).
+    if (rest.image) {
+      await claimFile(ctx, rest.image, { homeId, userId: user._id, kind: "recipe_image" });
+    }
 
     if (dedupeByTitle) {
       const wanted = rest.title.trim().toLowerCase();
@@ -95,8 +101,10 @@ export const remove = mutation({
   handler: async (ctx, { id }) => {
     const recipe = await ctx.db.get(id);
     if (!recipe) return { ok: true };
-    await requireDocHome(ctx, recipe, "Recipe");
+    const home = await requireDocHome(ctx, recipe, "Recipe");
     await ctx.db.delete(id);
+    // Its picture goes with it, if it was this house's (lib/files.ts).
+    await discardHomeFile(ctx, recipe.image, home._id);
     return { ok: true };
   },
 });
@@ -116,6 +124,11 @@ export const removeMany = mutation({
     const present = found.filter((r): r is NonNullable<typeof r> => r !== null);
     await Promise.all(present.map((recipe) => requireDocHome(ctx, recipe, "Recipe")));
     await Promise.all(present.map((recipe) => ctx.db.delete(recipe._id)));
+    // Their pictures go with them, if they were the house's (lib/files.ts).
+    // One at a time: two copies can name the same file.
+    for (const recipe of present) {
+      if (recipe.image && recipe.home_id) await discardHomeFile(ctx, recipe.image, recipe.home_id);
+    }
     return { removed: present.length };
   },
 });

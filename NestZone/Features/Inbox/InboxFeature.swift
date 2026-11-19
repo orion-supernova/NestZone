@@ -77,6 +77,10 @@ public struct InboxFeature: Sendable {
         public var seenUpdatesAt: Timestamp?
 
         @Presents public var admin: InboxAdminFeature.State?
+        /// Whether this account is a moderator, live
+        /// (`moderation:amModerator`). Opens the Reports door in the menu.
+        public var isModerator = false
+        @Presents public var reports: ReportsFeature.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
         public init(homeID: HomeID, currentUserID: UserID? = nil) {
@@ -191,8 +195,11 @@ public struct InboxFeature: Sendable {
 
         case rowTapped(HomeActivity)
         case adminTapped
+        case moderatorUpdated(Bool)
+        case reportsTapped
 
         case admin(PresentationAction<InboxAdminFeature.Action>)
+        case reports(PresentationAction<ReportsFeature.Action>)
         case alert(PresentationAction<Alert>)
         case binding(BindingAction<State>)
         case delegate(Delegate)
@@ -210,9 +217,11 @@ public struct InboxFeature: Sendable {
         case badge
         case feed
         case categories
+        case moderator
     }
 
     @Dependency(\.inbox) var inbox
+    @Dependency(\.moderation) var moderation
 
     public init() {}
 
@@ -225,14 +234,41 @@ public struct InboxFeature: Sendable {
             // MARK: The bell
 
             case .task:
-                return .run { [homeID = state.homeID] send in
-                    for try await badge in inbox.badge(homeID) {
-                        await send(.badgeUpdated(badge))
+                return .merge(
+                    .run { [homeID = state.homeID] send in
+                        for try await badge in inbox.badge(homeID) {
+                            await send(.badgeUpdated(badge))
+                        }
+                    } catch: { error, send in
+                        await send(.badgeFailed(AppError(error)))
                     }
-                } catch: { error, send in
-                    await send(.badgeFailed(AppError(error)))
-                }
-                .cancellable(id: CancelID.badge, cancelInFlight: true)
+                    .cancellable(id: CancelID.badge, cancelInFlight: true),
+
+                    // Whether the menu offers Reports. Silent on failure, like
+                    // the badge: the door just stays shut.
+                    .run { send in
+                        for try await isModerator in moderation.amModerator() {
+                            await send(.moderatorUpdated(isModerator))
+                        }
+                    } catch: { _, _ in }
+                        .cancellable(id: CancelID.moderator, cancelInFlight: true)
+                )
+
+            case let .moderatorUpdated(isModerator):
+                state.isModerator = isModerator
+                // The server stops answering a person who has stopped being
+                // one; the screen goes with it.
+                if !isModerator { state.reports = nil }
+                return .none
+
+            case .reportsTapped:
+                guard state.isModerator else { return .none }
+                state.reports = ReportsFeature.State()
+                return .none
+
+            case .reports(.presented(.delegate(.forbidden))):
+                state.reports = nil
+                return .none
 
             case let .badgeUpdated(badge):
                 state.badge = badge
@@ -437,11 +473,12 @@ public struct InboxFeature: Sendable {
                     .cancel(id: CancelID.categories)
                 )
 
-            case .admin, .alert, .binding, .delegate:
+            case .admin, .reports, .alert, .binding, .delegate:
                 return .none
             }
         }
         .ifLet(\.$admin, action: \.admin) { InboxAdminFeature() }
+        .ifLet(\.$reports, action: \.reports) { ReportsFeature() }
         .ifLet(\.$alert, action: \.alert)
     }
 

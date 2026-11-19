@@ -28,6 +28,7 @@ import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { proEnforced } from "./lib/pro";
+import { blockersOf } from "./lib/moderation";
 
 /// Apple rejects a provider that mints tokens more often than once per 20
 /// minutes, and accepts one for up to an hour. Refreshing at 40 keeps us clear
@@ -148,7 +149,11 @@ export const tokensForHome = internalQuery({
   handler: async (ctx, { homeId, exclude, environment: only }) => {
     const home = await ctx.db.get(homeId);
     if (!home) return [];
-    const recipients = (home.members ?? []).filter((m) => m !== exclude);
+    // Nobody hears from somebody they have blocked (lib/moderation.ts).
+    const blockers = exclude ? await blockersOf(ctx, exclude) : new Set<Id<"users">>();
+    const recipients = (home.members ?? []).filter(
+      (m) => m !== exclude && !blockers.has(m),
+    );
 
     // One round for the whole household. This runs on the way out of every
     // write that notifies, so a sequential scan per member is a cost every
@@ -521,8 +526,26 @@ export const notifyUsers = internalAction({
      */
     homeId: v.optional(v.id("homes")),
     ...alertArgs,
+    /**
+     * A different alert for some of `userIds`: they hear this instead of the
+     * main one, never both. A chat message uses it for the people it
+     * mentions. The feed is untouched: one row, the main alert, the whole
+     * audience. Ids outside `userIds` are ignored.
+     */
+    variant: v.optional(
+      v.object({ userIds: v.array(v.id("users")), title: v.string(), body: v.string() }),
+    ),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { userIds, variant, ...rest }) => {
+    // Nobody hears from somebody they have blocked: not the push, and not the
+    // row in their feed. One indexed read, and only when there is an actor.
+    const blockers: Id<"users">[] = rest.actor
+      ? await ctx.runQuery(internal.push.blockersOfUser, { userId: rest.actor })
+      : [];
+    const args = {
+      ...rest,
+      userIds: blockers.length ? userIds.filter((id) => !blockers.includes(id)) : userIds,
+    };
     // No caller addresses Money or Calendar to people today; the same rule as
     // `notifyHome` holds anyway, so one that starts to cannot leak past it.
     if (args.homeId && (await silencedForPlan(ctx, args.homeId, args.category))) {
@@ -549,14 +572,25 @@ export const notifyUsers = internalAction({
     if (!isConfigured()) return { sent: 0, dropped: 0 };
 
     const recipients = args.userIds.filter((id) => id !== args.actor);
+    // The variant's people come out of the main fan-out, so nobody gets two.
+    const alternate = new Set(variant?.userIds ?? []);
     const devices: Device[] = [];
+    const variantDevices: Device[] = [];
     for (const userId of recipients) {
       const forUser: Device[] = await ctx.runQuery(internal.push.tokensForUser, {
         userId,
       });
-      devices.push(...forUser);
+      (alternate.has(userId) ? variantDevices : devices).push(...forUser);
     }
-    return await fanOut(ctx, devices, args);
+    // One after the other, so the provider token is minted at most once.
+    const main = await fanOut(ctx, devices, args);
+    if (!variant) return main;
+    const other = await fanOut(ctx, variantDevices, {
+      ...args,
+      title: variant.title,
+      body: variant.body,
+    });
+    return { sent: main.sent + other.sent, dropped: main.dropped + other.dropped };
   },
 });
 
@@ -594,6 +628,13 @@ export const currentUserId = internalQuery({
     const user = await requireUser(ctx);
     return user._id;
   },
+});
+
+/** Who has blocked `userId`, for the senders above. */
+export const blockersOfUser = internalQuery({
+  args: { userId: v.id("users") },
+  returns: v.array(v.id("users")),
+  handler: async (ctx, { userId }) => Array.from(await blockersOf(ctx, userId)),
 });
 
 export const tokensForUser = internalQuery({

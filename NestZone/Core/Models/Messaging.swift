@@ -8,6 +8,8 @@ public struct Conversation: Codable, Identifiable, Hashable, Sendable {
     public var title: String?
     public var lastMessage: String?
     public var lastMessageAt: Timestamp?
+    /// The one message pinned to the top of the thread, as a snapshot.
+    public var pinned: PinnedMessage?
     public var created: Timestamp?
     public var updated: Timestamp?
 
@@ -19,6 +21,7 @@ public struct Conversation: Codable, Identifiable, Hashable, Sendable {
         case title
         case lastMessage = "last_message"
         case lastMessageAt = "last_message_at"
+        case pinned
         case created, updated
     }
 
@@ -31,6 +34,8 @@ public struct Conversation: Codable, Identifiable, Hashable, Sendable {
         title = try c.decodeIfPresent(String.self, forKey: .title)
         lastMessage = try c.decodeIfPresent(String.self, forKey: .lastMessage)
         lastMessageAt = try c.decodeIfPresent(Timestamp.self, forKey: .lastMessageAt)
+        // A pin this build cannot read costs the pin bar, not the list.
+        pinned = try? c.decodeIfPresent(PinnedMessage.self, forKey: .pinned)
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
     }
@@ -43,6 +48,7 @@ public struct Conversation: Codable, Identifiable, Hashable, Sendable {
         title: String? = nil,
         lastMessage: String? = nil,
         lastMessageAt: Timestamp? = nil,
+        pinned: PinnedMessage? = nil,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
     ) {
@@ -53,6 +59,7 @@ public struct Conversation: Codable, Identifiable, Hashable, Sendable {
         self.title = title
         self.lastMessage = lastMessage
         self.lastMessageAt = lastMessageAt
+        self.pinned = pinned
         self.created = created
         self.updated = updated
     }
@@ -73,6 +80,12 @@ public struct Message: Codable, Identifiable, Hashable, Sendable {
     public var kind: Kind
     public var file: String?
     public var readBy: [UserID]
+    /// One row per person per emoji. Empty for a message nobody reacted to.
+    public var reactions: [MessageReaction]
+    /// What this message answers, copied when it was sent.
+    public var replyTo: MessageReply?
+    /// People it names, in the thread.
+    public var mentions: [UserID]
     public var created: Timestamp?
     public var updated: Timestamp?
 
@@ -88,6 +101,9 @@ public struct Message: Codable, Identifiable, Hashable, Sendable {
         case kind = "message_type"
         case file
         case readBy = "read_by"
+        case reactions
+        case replyTo = "reply_to"
+        case mentions
         case created, updated
     }
 
@@ -100,6 +116,12 @@ public struct Message: Codable, Identifiable, Hashable, Sendable {
         kind = c.decodeLenient(Kind.self, forKey: .kind, default: .text)
         file = try c.decodeIfPresent(String.self, forKey: .file)
         readBy = try c.decodeIfPresent([UserID].self, forKey: .readBy) ?? []
+        // The chat MVP's fields are all optional on the wire, and a thread is
+        // decoded as one array: one that cannot be read degrades to "none"
+        // rather than blanking every message.
+        reactions = (try? c.decodeIfPresent([MessageReaction].self, forKey: .reactions)) ?? []
+        replyTo = try? c.decodeIfPresent(MessageReply.self, forKey: .replyTo)
+        mentions = (try? c.decodeIfPresent([UserID].self, forKey: .mentions)) ?? []
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
     }
@@ -112,6 +134,9 @@ public struct Message: Codable, Identifiable, Hashable, Sendable {
         kind: Kind = .text,
         file: String? = nil,
         readBy: [UserID] = [],
+        reactions: [MessageReaction] = [],
+        replyTo: MessageReply? = nil,
+        mentions: [UserID] = [],
         created: Timestamp? = nil,
         updated: Timestamp? = nil
     ) {
@@ -122,6 +147,9 @@ public struct Message: Codable, Identifiable, Hashable, Sendable {
         self.kind = kind
         self.file = file
         self.readBy = readBy
+        self.reactions = reactions
+        self.replyTo = replyTo
+        self.mentions = mentions
         self.created = created
         self.updated = updated
     }

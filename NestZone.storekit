@@ -3,7 +3,27 @@
   "nonRenewingSubscriptions": [],
   "products": [
     {
-      "displayPrice": "2.99",
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "6741200005",
+      "localizations": [
+        {
+          "description": "150 Sparkles for the house jar",
+          "displayName": "150 Sparkles",
+          "locale": "en_US"
+        },
+        {
+          "description": "Ev kavanozuna 150 Sparkle",
+          "displayName": "150 Sparkle",
+          "locale": "tr"
+        }
+      ],
+      "productID": "com.walhallaa.NestZone.sparkles.150",
+      "referenceName": "Sparkles 150",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "1.99",
       "familyShareable": false,
       "internalID": "6741200001",
       "localizations": [
@@ -23,7 +43,27 @@
       "type": "Consumable"
     },
     {
-      "displayPrice": "8.99",
+      "displayPrice": "2.99",
+      "familyShareable": false,
+      "internalID": "6741200006",
+      "localizations": [
+        {
+          "description": "550 Sparkles for the house jar",
+          "displayName": "550 Sparkles",
+          "locale": "en_US"
+        },
+        {
+          "description": "Ev kavanozuna 550 Sparkle",
+          "displayName": "550 Sparkle",
+          "locale": "tr"
+        }
+      ],
+      "productID": "com.walhallaa.NestZone.sparkles.550",
+      "referenceName": "Sparkles 550",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
       "familyShareable": false,
       "internalID": "6741200002",
       "localizations": [
@@ -43,7 +83,7 @@
       "type": "Consumable"
     },
     {
-      "displayPrice": "17.99",
+      "displayPrice": "9.99",
       "familyShareable": false,
       "internalID": "6741200003",
       "localizations": [
@@ -63,7 +103,7 @@
       "type": "Consumable"
     },
     {
-      "displayPrice": "34.99",
+      "displayPrice": "19.99",
       "familyShareable": false,
       "internalID": "6741200004",
       "localizations": [

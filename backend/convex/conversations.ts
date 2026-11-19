@@ -1,10 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { QueryCtx, MutationCtx } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { requireMembers } from "./lib/relations";
 import { requirePro } from "./lib/pro";
+import { blockedBy, blockedEitherWay, requireChatAllowed } from "./lib/moderation";
+import { pinnedValidator, snippetOf } from "./lib/chat";
 
 /** Conversations in a home that the current user participates in. */
 export const listByHome = query({
@@ -16,7 +18,43 @@ export const listByHome = query({
       .query("conversations")
       .withIndex("by_home", (q) => q.eq("home_id", homeId))
       .collect();
-    return convos.filter((c) => (c.participants ?? []).some((p) => p === user._id));
+    const mine = convos.filter((c) => (c.participants ?? []).some((p) => p === user._id));
+
+    // A preview quoting somebody the caller blocked, or a message they
+    // reported, is left off for them alone: `last_message` is omitted, which
+    // every build already reads as optional, and `last_message_at` stays so
+    // the order does not move. Two indexed reads, both nearly always empty;
+    // only then one newest-message read per thread.
+    const [blocked, hiddenRows] = await Promise.all([
+      blockedBy(ctx, user._id),
+      ctx.db
+        .query("hidden_content")
+        .withIndex("by_user_kind_target", (q) => q.eq("user_id", user._id).eq("kind", "message"))
+        .take(500),
+    ]);
+    if (blocked.size === 0 && hiddenRows.length === 0) return mine;
+    const hidden = new Set(hiddenRows.map((h) => h.target_id));
+    return await Promise.all(
+      mine.map(async (raw) => {
+        // A pin quoting somebody the caller blocked, or a message they
+        // reported, is left off for them alone. The pin carries its sender,
+        // so this costs no read.
+        const pin = raw.pinned;
+        const c =
+          pin && ((pin.sender_id && blocked.has(pin.sender_id)) || hidden.has(pin.message_id))
+            ? (({ pinned: _pin, ...rest }) => rest)(raw)
+            : raw;
+        if (c.last_message === undefined) return c;
+        const newest = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversation_id", c._id))
+          .order("desc")
+          .first();
+        if (!newest || (!blocked.has(newest.sender_id) && !hidden.has(newest._id))) return c;
+        const { last_message: _quoted, ...rest } = c;
+        return rest;
+      }),
+    );
   },
 });
 
@@ -44,7 +82,8 @@ export const rename = mutation({
     title: v.optional(v.string()),
   },
   handler: async (ctx, { conversationId, title }) => {
-    const { convo } = await assertParticipant(ctx, conversationId);
+    const { user, convo } = await assertParticipant(ctx, conversationId);
+    requireChatAllowed(user);
     // Messages is Plus (lib/pro.ts); renaming a thread is using it.
     await requirePro(ctx, convo.home_id, "messages");
     const trimmed = title?.trim();
@@ -86,6 +125,17 @@ export const create = mutation({
       throw new Error("A conversation needs somebody else in it");
     }
     const isGroupChat = args.isGroupChat ?? participants.length > 2;
+    requireChatAllowed(user);
+
+    // A 1:1 between two people either of whom has blocked the other is
+    // refused, reopening an old one included. Groups are not: in a group a
+    // block only hides that person's messages from the one who blocked.
+    if (!isGroupChat && participants.length === 2) {
+      const other = participants.find((p) => p !== user._id)!;
+      if (await blockedEitherWay(ctx, user._id, other)) {
+        throw new ConvexError({ code: "BLOCKED" });
+      }
+    }
 
     // Messaging the same person twice reopens the thread you already have with
     // them instead of stacking a second empty one beside it — two 1:1 threads
@@ -113,5 +163,62 @@ export const create = mutation({
       updated: now,
     });
     return await ctx.db.get(id);
+  },
+});
+
+/**
+ * Pins a message to the top of its conversation, replacing any pin it had.
+ * One pin per conversation, stored as a snapshot (lib/chat.ts) so drawing it
+ * needs no read; deleting the message clears it in the same write.
+ *
+ * Any participant may pin. Messages is Plus, so this refuses for a free house
+ * (`PRO_REQUIRED`); unpinning never does. A suspended person may not pin
+ * (`CHAT_SUSPENDED`): it puts words at the top of everybody's thread. A 1:1
+ * either side has blocked is closed (`BLOCKED`).
+ */
+export const pin = mutation({
+  args: { conversationId: v.id("conversations"), messageId: v.id("messages") },
+  returns: pinnedValidator,
+  handler: async (ctx, { conversationId, messageId }) => {
+    const { user, convo } = await assertParticipant(ctx, conversationId);
+    requireChatAllowed(user);
+    if (!convo.is_group_chat) {
+      const other = (convo.participants ?? []).find((p) => p !== user._id);
+      if (other && (await blockedEitherWay(ctx, user._id, other))) {
+        throw new ConvexError({ code: "BLOCKED" });
+      }
+    }
+    await requirePro(ctx, convo.home_id, "messages");
+    const message = await ctx.db.get(messageId);
+    if (!message || message.conversation_id !== conversationId) {
+      throw new ConvexError({ code: "NOT_FOUND" });
+    }
+    const pinned = {
+      message_id: message._id,
+      sender_id: message.sender_id,
+      snippet: snippetOf(message),
+      message_type: message.message_type,
+      pinned_by: user._id,
+      pinned_at: Date.now(),
+    };
+    // Re-pinning what is already pinned changes nothing; a retry is a no-op.
+    if (convo.pinned?.message_id === message._id) return convo.pinned;
+    await ctx.db.patch(conversationId, { pinned, updated: pinned.pinned_at });
+    return pinned;
+  },
+});
+
+/**
+ * Takes the pin down. Any participant; open to a free house and to a
+ * suspended person, like every other removal. A no-op when nothing is pinned.
+ */
+export const unpin = mutation({
+  args: { conversationId: v.id("conversations") },
+  returns: v.null(),
+  handler: async (ctx, { conversationId }) => {
+    const { convo } = await assertParticipant(ctx, conversationId);
+    if (convo.pinned === undefined) return null;
+    await ctx.db.patch(conversationId, { pinned: undefined, updated: Date.now() });
+    return null;
   },
 });

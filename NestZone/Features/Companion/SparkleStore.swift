@@ -3,7 +3,7 @@ import Foundation
 
 /// Where Sparkles for the house jar are bought.
 ///
-/// The live one is StoreKit 2 (`SparkleStoreKit`): it lists the four packs at
+/// The live one is StoreKit 2 (`SparkleStoreKit`): it lists the six packs at
 /// the person's storefront prices, and a Sparkle reaches the jar only once the
 /// server has verified the transaction (`jar:topUp`). The test store, kept for
 /// Debug builds (`-sparkleStore test`), charges nothing and hands the Sparkles
@@ -73,7 +73,7 @@ extension SparkleStoreClient: DependencyKey {
     public static let testValue = SparkleStoreClient()
 
     #if DEBUG
-    /// Lists the four packs unpriced, charges nothing, and hands the Sparkles
+    /// Lists the six packs unpriced, charges nothing, and hands the Sparkles
     /// over after a moment. Debug builds only: a Release build carries no fake
     /// store.
     static let test = SparkleStoreClient(

@@ -57,6 +57,7 @@ public struct SettingsView: View {
             appearanceSection
             notificationsSection
             preferencesSection
+            privacySection
             aboutSection
             accountSection
             #if DEBUG
@@ -72,6 +73,9 @@ public struct SettingsView: View {
         }
         .hostedSheet(item: $store.scope(state: \.destination?.manageHomes, action: \.destination.manageHomes)) {
             ManageHomesSheet(store: $0)
+        }
+        .hostedSheet(item: $store.scope(state: \.destination?.blockedPeople, action: \.destination.blockedPeople)) {
+            BlockedPeopleView(store: $0)
         }
         .alert($store.scope(state: \.alert, action: \.alert))
         .confirmationDialog(
@@ -286,6 +290,15 @@ public struct SettingsView: View {
                                     // Home's, and deleting yourself is below.
                                     if member.id != store.user?.id {
                                         Menu {
+                                            Button(role: .destructive) {
+                                                store.send(.blockMemberTapped(member))
+                                            } label: {
+                                                Label {
+                                                    Text(L10n.chatBlock)
+                                                } icon: {
+                                                    Image(systemName: "hand.raised")
+                                                }
+                                            }
                                             Button(role: .destructive) {
                                                 store.send(.removeMemberTapped(member))
                                             } label: {
@@ -652,6 +665,10 @@ public struct SettingsView: View {
     /// The house's subscription: whether it is on, whose it is, when it
     /// renews, and the two things the App Store wants within reach — managing
     /// it and restoring it.
+    private var plusHomeNames: [HomeID: String] {
+        Dictionary(store.homes.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+    }
+
     private var plusSection: some View {
         let status = store.pro
         return Section {
@@ -681,6 +698,17 @@ public struct SettingsView: View {
                 } else {
                     Text(L10n.plusNoEnd).font(.subheadline).foregroundStyle(.secondary)
                 }
+            }
+
+            // What Plus includes stays one tap away whether or not the house
+            // has it: the paywall's sheet is gone once it is bought.
+            NavigationLink {
+                PlusDetailsView(status: status, homeNames: plusHomeNames)
+            } label: {
+                Label { Text(L10n.plusSeeEverything) } icon: { Image(systemName: "list.bullet.rectangle") }
+            }
+            if let line = status.coverageLine(homeNames: plusHomeNames) {
+                Text(line).font(.subheadline).foregroundStyle(.secondary)
             }
 
             if status.isPro, status.mine {
@@ -713,6 +741,32 @@ public struct SettingsView: View {
             Text(L10n.proFullName)
         } footer: {
             Text(L10n.plusFooter)
+        }
+    }
+
+    /// What this person has chosen not to see: the way back from a block.
+    private var privacySection: some View {
+        Section {
+            Button { store.send(.blockedPeopleTapped) } label: {
+                LabeledContent {
+                    HStack(spacing: 6) {
+                        if !store.blocked.isEmpty {
+                            Text(store.blocked.count, format: .number)
+                        }
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Palette.accessory)
+                    }
+                } label: {
+                    Label { Text(L10n.settingsBlockedPeople) } icon: {
+                        Image(systemName: "hand.raised.fill")
+                    }
+                }
+            }
+        } header: {
+            Text(L10n.settingsPrivacyTitle)
+        } footer: {
+            Text(L10n.settingsBlockedPeopleHelp)
         }
     }
 
