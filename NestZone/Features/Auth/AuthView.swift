@@ -29,19 +29,22 @@ public struct AuthView: View {
             // clips); the button and the legal line stay put under them. The
             // hero takes a share of the height instead of a fixed size, so a
             // tall phone is filled and a small one is not crowded.
-            ScrollView {
-                VStack(spacing: 28) {
-                    AuthHero()
-                        .containerRelativeFrame(.vertical) { height, _ in
-                            min(max(height * 0.44, 260), 420)
-                        }
-                    headline.appear(6)
+            // The block is centred in the room left above the button, so a tall
+            // phone has no empty band between the words and the button; at a
+            // large type size it simply scrolls.
+            GeometryReader { proxy in
+                ScrollView {
+                    VStack(spacing: 32) {
+                        AuthHero()
+                            .frame(height: min(max(proxy.size.height * 0.56, 260), 560))
+                        headline.appear(6)
+                    }
+                    .padding(.horizontal, Metrics.screenPadding)
+                    .padding(.vertical, 16)
+                    .frame(minHeight: proxy.size.height)
                 }
-                .padding(.horizontal, Metrics.screenPadding)
-                .padding(.top, 12)
-                .padding(.bottom, 16)
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .scrollBounceBehavior(.basedOnSize)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 14) {
