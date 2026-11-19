@@ -130,7 +130,9 @@ a{color:var(--accent)}
 <tbody>
 <tr><td>Tasks</td><td>Everything, including the Done list and the automatic Archive (after 30 days) and restoring from it</td><td><span class="pill pro">Pro</span> "Archive now", the swipe that puts a finished chore away early</td></tr>
 <tr><td>Shopping</td><td>A plain list. Items grouped under their event, recipe or problem stay</td><td><span class="pill pro">Pro</span> Categories: picking one, grouping by aisle, clearing an aisle. A free house still sees the Categories/List toggle and the picker, locked; a tap opens the paywall</td></tr>
-<tr><td>Notes, Messages, polls</td><td>Everything</td><td>—</td></tr>
+<tr><td>Notes</td><td>Everything</td><td>—</td></tr>
+<tr><td>Messages</td><td>—</td><td><span class="pill pro">Pro</span> The whole module: sending, editing, new conversations and chat polls. A free house keeps reading its conversations; deleting your own message and marking read stay</td></tr>
+<tr><td>Movie night polls, Nestie's vote</td><td>Everything, wherever they appear (dock, Today, Movies)</td><td>—</td></tr>
 <tr><td>Recipes and Meals, Dinner</td><td>Everything</td><td><span class="pill pro">Pro</span> "Make it an occasion" (it creates a calendar event)</td></tr>
 <tr><td>Movies and Movie night</td><td>Watchlist, Watched, the swipe game, search</td><td><span class="pill pro">Pro</span> Custom lists: creating one, adding to one. Mature titles: the Settings switch is locked, and a free house always gets the family-safe catalogue (the stored choice is kept for an upgrade)</td></tr>
 <tr><td>Calendar</td><td>—</td><td><span class="pill pro">Pro</span> The whole module, event detail, history, "Up next" on Today, events in the dock, event reminders</td></tr>
@@ -189,7 +191,7 @@ flowchart LR
 <ul class="list">
 <li><code>PurchasesClient</code> (<code>@DependencyClient</code>): configure, offerings, purchase, restore, customer-info stream. RevenueCat's <code>appUserID</code> is the Convex user id, set at sign-in and logged out at sign-out.</li>
 <li><code>ProClient</code>: subscribes to <code>pro:status</code> for the current home and calls <code>pro:refresh</code>. The server's answer is the only one the app trusts.</li>
-<li><code>ProFeature</code> enum, the registry: <code>calendar, finance, shoppingCategories, customMovieLists, archiveNow, eventFromElsewhere, expenseFromElsewhere, issues, multipleHomes, matureContent</code>. Every gate asks it; changing what is Pro is one line.</li>
+<li><code>ProFeature</code> enum, the registry: <code>calendar, finance, shoppingCategories, customMovieLists, archiveNow, eventFromElsewhere, expenseFromElsewhere, issues, messages, multipleHomes, matureContent</code>. Every gate asks it; changing what is Pro is one line.</li>
 <li><code>PaywallFeature</code> takes the <code>ProFeature</code> that was reached for, so the sheet opens on what the person wanted.</li>
 <li><code>ProGate</code> view modifiers: <code>.proLocked(_:)</code> for a control (lock glyph, tap opens the paywall), <code>ProLockedScreen</code> for a whole module, <code>ProReadOnlyBanner</code> for lapse.</li>
 </ul>
@@ -203,6 +205,7 @@ flowchart LR
 <tbody>
 <tr><td>Calendar module</td><td>Segment shows a lock; choosing it shows <code>ProLockedScreen</code> with a preview. <code>MainFeature.open</code> turns <code>.module(.calendar)</code>, <code>.event</code>, <code>.occurrence</code> into the paywall. Plans opens on Meals for a free house.</td><td>Refuse <code>events:create/update/rsvp/stockUp/addItems</code>. Allow <code>remove</code>. Queries stay open (read-only on lapse).</td></tr>
 <tr><td>Money module</td><td>Same as Calendar.</td><td>Refuse every <code>finance</code> create, update, settle, pay and budget write. Allow the removes. Queries open.</td></tr>
+<tr><td>Messages module</td><td>Like Money: the Messages tab shows <code>ProLockedScreen</code> with a preview when there are no conversations; with some it is read-only, and each chat swaps its composer for the banner. New chat and Edit are locked and open the paywall. A chat notification opens the read-only conversation.</td><td>Refuse <code>messages</code> send, edit, new conversation and chat polls (feature string <code>messages</code>). Allow delete and mark read. Queries open.</td></tr>
 <tr><td>Today</td><td>Skip the <code>events:upcoming</code> and <code>finance:bills</code> reads; hide Up next, bill alarms and the event clauses in the day's sentence; the events tile in At a glance becomes a teaser.</td><td>—</td></tr>
 <tr><td>The dock</td><td>Pass no events; dinner, movie round and <code>+</code> stay.</td><td>—</td></tr>
 <tr><td>Add anything</td><td>Event, Expense and Problem chips carry a lock; choosing one opens the paywall instead of the composer.</td><td>Covered by the module refusals.</td></tr>

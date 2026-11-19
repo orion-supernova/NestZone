@@ -21,6 +21,9 @@ public enum ProFeature: String, CaseIterable, Identifiable, Sendable {
     /// House problems, as a whole: reporting, moving along, commenting, and
     /// everything a problem's plan books (a visit, parts, a chore).
     case issues
+    /// Messages, as a whole: sending, editing, a new conversation. A free house
+    /// keeps reading what it has said, and deleting its own words stays.
+    case messages
     /// A second home, created or joined. Someone already in two keep them.
     case multipleHomes
     /// Adult titles in the movie catalogue, in search and in the game.
@@ -42,6 +45,7 @@ public enum ProFeature: String, CaseIterable, Identifiable, Sendable {
         case .customMovieLists: "film.stack.fill"
         case .archiveNow: "archivebox.fill"
         case .issues: "wrench.adjustable.fill"
+        case .messages: "bubble.left.and.bubble.right.fill"
         case .multipleHomes: "house.fill"
         case .matureContent: "eye.trianglebadge.exclamationmark"
         }

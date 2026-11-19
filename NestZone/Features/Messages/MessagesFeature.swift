@@ -112,6 +112,10 @@ public struct MessagesFeature: Sendable {
 
     @Dependency(\.messages) var messagesClient
     @Dependency(\.homes) var homesClient
+    @Dependency(\.paywall) var paywall
+    /// Messages are Plus: a house without it reads what is there, and the
+    /// controls that write ask for the paywall instead.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -166,6 +170,7 @@ public struct MessagesFeature: Sendable {
                 return .none
 
             case .composeTapped:
+                guard pro.isPro else { return .run { _ in paywall.request(.messages) } }
                 state.destination = .compose(NewConversationFeature.State(
                     homeID: state.homeID,
                     currentUserID: state.currentUserID,
@@ -379,6 +384,10 @@ public struct ChatFeature: Sendable {
     private enum CancelID { case messages }
 
     @Dependency(\.messages) var messagesClient
+    @Dependency(\.paywall) var paywall
+    /// Messages are Plus: sending and editing ask a free house for the paywall.
+    /// Reading, deleting your own words and the read receipt stay.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -436,6 +445,8 @@ public struct ChatFeature: Sendable {
 
             case .sendTapped:
                 guard state.canSend else { return .none }
+                // Nothing optimistic is drawn for a write that will be refused.
+                guard pro.isPro else { return .run { _ in paywall.request(.messages) } }
                 let text = state.draft.trimmingCharacters(in: .whitespacesAndNewlines)
 
                 // The composer is rewriting an existing message rather than
@@ -467,6 +478,7 @@ public struct ChatFeature: Sendable {
 
             case let .retryTapped(local):
                 guard let entry = state.pending[id: local], entry.failed else { return .none }
+                guard pro.isPro else { return .run { _ in paywall.request(.messages) } }
                 state.pending[id: local]?.failed = false
                 return send(entry.content, local: local, in: state.conversation.id)
 
@@ -516,6 +528,10 @@ public struct ChatFeature: Sendable {
             case let .editTapped(id):
                 guard let message = state.messages[id: id], state.canModify(message) else {
                     return .none
+                }
+                guard pro.isPro else {
+                    state.actionsFor = nil
+                    return .run { _ in paywall.request(.messages) }
                 }
                 state.actionsFor = nil
                 state.editing = id

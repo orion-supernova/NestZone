@@ -40,10 +40,10 @@ struct ProTests {
     func registry() {
         for name in ["calendar", "finance", "shoppingCategories", "customMovieLists",
                      "archiveNow", "eventFromElsewhere", "expenseFromElsewhere", "issues",
-                     "multipleHomes", "matureContent"] {
+                     "messages", "multipleHomes", "matureContent"] {
             #expect(ProFeature(serverName: name) != nil)
         }
-        #expect(ProFeature.allCases.count == 10)
+        #expect(ProFeature.allCases.count == 11)
     }
 
     @Test("The end date is checked on the phone as well as on the server")
@@ -245,6 +245,51 @@ struct ProTests {
         await store.receive(\.paywallRequested)
         #expect(store.state.paywall?.feature == .issues)
         #expect(store.state.today.path.isEmpty)
+    }
+
+    @Test("A chat notification for a free house opens the Messages tab, read-only, not a paywall")
+    func messagesTapOpensTheTab() async {
+        @Shared(.pro) var pro: ProStatus
+        $pro.withLock { $0.isPro = false }
+        let store = TestStore(initialState: MainFeature.State(homeID: "h1")) { MainFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.inbox(.delegate(.open(.messages))))
+        #expect(store.state.selectedTab == .messages)
+        #expect(store.state.paywall == nil)
+    }
+
+    @Test("A free house asks for the paywall instead of opening a new conversation")
+    func composeAsksForPaywall() async {
+        @Shared(.pro) var pro: ProStatus
+        $pro.withLock { $0.isPro = false }
+        let asked = LockIsolated<[ProFeature?]>([])
+        let store = TestStore(initialState: MessagesFeature.State(homeID: "h1")) { MessagesFeature() } withDependencies: {
+            $0.paywall.request = { feature in asked.withValue { $0.append(feature) } }
+        }
+
+        await store.send(.composeTapped)
+        #expect(store.state.destination == nil)
+        #expect(asked.value == [.messages])
+    }
+
+    @Test("A free house's send never draws a bubble that will be refused")
+    func sendAsksForPaywall() async {
+        @Shared(.pro) var pro: ProStatus
+        $pro.withLock { $0.isPro = false }
+        let asked = LockIsolated<[ProFeature?]>([])
+        var chat = ChatFeature.State(
+            conversation: Conversation(id: "c1"), title: "", currentUserID: "u1", members: []
+        )
+        chat.draft = "hello"
+        let store = TestStore(initialState: chat) { ChatFeature() } withDependencies: {
+            $0.paywall.request = { feature in asked.withValue { $0.append(feature) } }
+        }
+
+        await store.send(.sendTapped)
+        #expect(store.state.pending.isEmpty)
+        #expect(store.state.draft == "hello")
+        #expect(asked.value == [.messages])
     }
 
     @Test("The Problems module opens on its own tab, where its locked screen is")

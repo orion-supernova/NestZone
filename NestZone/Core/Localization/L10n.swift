@@ -9828,6 +9828,31 @@ public enum L10n {
         r("paywall_title_issues", "Problems are part of Plus")
     }
 
+    /// Messages are part of Plus
+    public static var paywallTitleMessages: LocalizedStringResource {
+        r("paywall_title_messages", "Messages are part of Plus")
+    }
+
+    /// Chat with the house: messages, group chats and polls
+    public static var paywallBenefitMessages: LocalizedStringResource {
+        r("paywall_benefit_messages", "Messages: chat with the house, group chats and polls")
+    }
+
+    /// Got bread
+    public static var proPreviewMessageBread: LocalizedStringResource {
+        r("pro_preview_message_bread", "Got bread 🥖")
+    }
+
+    /// Movie at 8?
+    public static var proPreviewMessageMovie: LocalizedStringResource {
+        r("pro_preview_message_movie", "Movie at 8 tonight?")
+    }
+
+    /// Sounds good
+    public static var proPreviewMessageYes: LocalizedStringResource {
+        r("pro_preview_message_yes", "Sounds good!")
+    }
+
     /// More than one home is part of Plus
     public static var paywallTitleMultipleHomes: LocalizedStringResource {
         r("paywall_title_multiple_homes", "More than one home is part of Plus")

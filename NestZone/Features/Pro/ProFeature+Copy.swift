@@ -12,6 +12,7 @@ extension ProFeature {
         case .eventFromElsewhere: L10n.paywallTitleEventFromElsewhere
         case .expenseFromElsewhere: L10n.paywallTitleExpenseFromElsewhere
         case .issues: L10n.paywallTitleIssues
+        case .messages: L10n.paywallTitleMessages
         case .multipleHomes: L10n.paywallTitleMultipleHomes
         case .matureContent: L10n.paywallTitleMatureContent
         }
