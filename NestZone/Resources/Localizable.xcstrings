@@ -72,7 +72,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oyuncu adı (örn., Tom Hanks)"
+            "value": "Oyuncu adı (örn. Tom Hanks)"
           }
         }
       }
@@ -89,7 +89,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Favori oyuncunuzun adını girin"
+            "value": "Favori oyuncunun adını yaz"
           }
         }
       }
@@ -198,7 +198,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple bir giriş anahtarı döndürmedi. Lütfen tekrar dene."
+            "value": "Apple'dan giriş bilgisi gelmedi. Tekrar dene."
           }
         }
       }
@@ -217,7 +217,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple geçerli bir giriş anahtarı döndürmedi. Lütfen tekrar dene."
+            "value": "Apple'dan geçerli bir giriş bilgisi gelmedi. Tekrar dene."
           }
         }
       }
@@ -234,7 +234,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu Apple girişi doğrulanamadı. Lütfen tekrar dene."
+            "value": "Bu Apple girişi doğrulanamadı. Tekrar dene."
           }
         }
       }
@@ -251,7 +251,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geri yüklenecek kayıtlı oturum yok."
+            "value": "Kayıtlı bir oturum bulunamadı."
           }
         }
       }
@@ -268,7 +268,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Giriş başarısız. Lütfen tekrar dene."
+            "value": "Giriş yapılamadı. Tekrar dene."
           }
         }
       }
@@ -285,7 +285,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lütfen önce şifreyi girin"
+            "value": "Önce şifreni yaz"
           }
         }
       }
@@ -319,7 +319,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şifrenizi tekrar girin"
+            "value": "Şifreni tekrar gir"
           }
         }
       }
@@ -353,7 +353,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hesabınızı oluşturun ✨"
+            "value": "Hesabını oluştur ✨"
           }
         }
       }
@@ -404,7 +404,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "E-posta adresinizi girin"
+            "value": "E-posta adresini gir"
           }
         }
       }
@@ -438,7 +438,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tam adınızı girin"
+            "value": "Adını ve soyadını yaz"
           }
         }
       }
@@ -489,7 +489,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şifrenizi girin"
+            "value": "Şifreni gir"
           }
         }
       }
@@ -523,7 +523,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şifre uygun!"
+            "value": "Şifre tamam!"
           }
         }
       }
@@ -574,7 +574,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Devam etmek için giriş yapın ✨"
+            "value": "Devam etmek için giriş yap ✨"
           }
         }
       }
@@ -693,7 +693,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mevcut bir fotoğrafı seç"
+            "value": "Galerinden bir fotoğraf seç"
           }
         }
       }
@@ -778,7 +778,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fotoğrafı sürükleyerek taşı, sıkıştırarak yakınlaştır."
+            "value": "Taşımak için sürükle, yakınlaştırmak için iki parmağınla aç."
           }
         }
       }
@@ -795,7 +795,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Taşı ve Ölçekle"
+            "value": "Taşı ve Yakınlaştır"
           }
         }
       }
@@ -897,7 +897,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kamerayı şimdi kullan"
+            "value": "Kamerayı aç"
           }
         }
       }
@@ -965,7 +965,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ kişisinin fotoğrafı"
+            "value": "Fotoğraf: %@"
           }
         }
       }
@@ -1085,7 +1085,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alınacak bir şey ekleyin"
+            "value": "Alınacak bir şey ekle"
           }
         }
       }
@@ -1170,7 +1170,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geliyor musunuz?"
+            "value": "Geliyor musun?"
           }
         }
       }
@@ -1204,7 +1204,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu etkinliğe kaydettiğiniz her harcama buraya sayılır."
+            "value": "Bu etkinlik için kaydettiğin her harcama buraya sayılır."
           }
         }
       }
@@ -1306,7 +1306,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yalnızca bu tarihi ayarlar — diğer tekrarlar açık kalır."
+            "value": "Sadece bu tarih için olur, diğer tekrarlar boş kalır."
           }
         }
       }
@@ -1374,7 +1374,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir yemek, bir doğum günü, bir konser — evin bilmesi gereken her şeyi ekleyin."
+            "value": "Bir yemek, bir doğum günü, bir konser… evin bilmesi gereken ne varsa ekle."
           }
         }
       }
@@ -1629,7 +1629,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İşler"
+            "value": "Resmi işler"
           }
         }
       }
@@ -1731,7 +1731,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etkinlikler bittiğinde, neye mal olduklarıyla birlikte buraya gelir."
+            "value": "Biten etkinlikler, tutarlarıyla birlikte buraya düşer."
           }
         }
       }
@@ -1867,7 +1867,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld sa sonra"
+            "value": "%lld saat sonra"
           }
         }
       }
@@ -1935,7 +1935,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "O günün yemeği"
+            "value": "O günün akşam yemeği"
           }
         }
       }
@@ -1952,7 +1952,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ yemeği"
+            "value": "%@ akşam yemeği"
           }
         }
       }
@@ -2207,7 +2207,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Özel gün"
+            "value": "Tatil"
           }
         }
       }
@@ -2394,7 +2394,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "“%@” için alınmayan her şey listeden çıkar. Hâlâ gereken bir şey olursa yeniden eklenebilir."
+            "value": "“%@” için alınmayan her şey listeden çıkar. Lazım olan olursa tekrar eklersin."
           }
         }
       }
@@ -2462,7 +2462,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "O günün yemeği yap"
+            "value": "O günün akşam yemeği olsun"
           }
         }
       }
@@ -2479,7 +2479,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ günü yemeği yap"
+            "value": "%@ akşam yemeği olsun"
           }
         }
       }
@@ -2717,7 +2717,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buradaki her etkinlik bir filtreyle gizlenmiş."
+            "value": "Filtreler yüzünden hiçbir etkinlik görünmüyor."
           }
         }
       }
@@ -2751,7 +2751,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Önce bir tarif kaydedin, burada görünecek."
+            "value": "Önce bir tarif kaydet, burada görünsün."
           }
         }
       }
@@ -2802,7 +2802,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir şey yok"
+            "value": "Plan yok"
           }
         }
       }
@@ -2938,7 +2938,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Planlayın"
+            "value": "Planla"
           }
         }
       }
@@ -2955,7 +2955,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bütçe, menü, alışveriş listesi veya bilet bağlantısı ekleyin — ev hepsini görebilir."
+            "value": "Bütçe, menü, alışveriş listesi veya bilet bağlantısı ekle, ev hepsini görür."
           }
         }
       }
@@ -3805,7 +3805,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu aralıkta yazdığınla eşleşen bir şey yok."
+            "value": "Bu aralıkta yazdığına uyan bir şey yok."
           }
         }
       }
@@ -3931,7 +3931,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece ekstralar — menünün malzemeleri kaydettikten sonra tek dokunuş uzağınızda."
+            "value": "Sadece ekstralar. Menünün malzemelerini kaydedince tek dokunuşla ekleyebilirsin."
           }
         }
       }
@@ -4067,7 +4067,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimse sohbette geriye doğru aramasın diye burada durur."
+            "value": "Kimse sohbeti kaydırıp bilet aramasın diye burada dursun."
           }
         }
       }
@@ -4101,7 +4101,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne oluyor?"
+            "value": "Ne yapıyoruz?"
           }
         }
       }
@@ -4203,7 +4203,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld tarif tariflerinize kaydedilecek"
+            "value": "Tariflerine %lld tarif kaydedilecek"
           }
         }
       }
@@ -4237,7 +4237,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifleriniz"
+            "value": "Tariflerin"
           }
         }
       }
@@ -4489,7 +4489,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne yapılacağını yazın"
+            "value": "Ne yapılacağını yaz"
           }
         }
       }
@@ -4523,7 +4523,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerisini açılan formda tamamlarsınız"
+            "value": "Gerisini açılan formda tamamlarsın"
           }
         }
       }
@@ -4540,7 +4540,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne eklemek istiyorsunuz?"
+            "value": "Ne eklemek istiyorsun?"
           }
         }
       }
@@ -4693,7 +4693,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Süt, yumurta… aklınıza ne gelirse"
+            "value": "Süt, yumurta… aklına ne gelirse"
           }
         }
       }
@@ -6019,7 +6019,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Günlük etkinlik"
+            "value": "Günlük aktivite"
           }
         }
       }
@@ -6070,7 +6070,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev işlerinin neredeyse tamamı tek kişiye kalıyor."
+            "value": "Ev işlerinin neredeyse hepsi tek kişinin üstünde."
           }
         }
       }
@@ -6087,7 +6087,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evi bir kişi taşıyor"
+            "value": "Evi tek kişi sırtlıyor"
           }
         }
       }
@@ -6104,7 +6104,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dağılım kayıyor. Birkaç görev atamak dengeyi kurar."
+            "value": "Denge biraz kayıyor. Birkaç görev atarsan toparlanır."
           }
         }
       }
@@ -6196,7 +6196,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir görevi tamamlayın, burası dolsun."
+            "value": "Bir görevi tamamla, burası dolsun."
           }
         }
       }
@@ -6213,7 +6213,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Henüz bir şey yapılmadı"
+            "value": "Henüz bir şey tamamlanmadı"
           }
         }
       }
@@ -6438,7 +6438,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tüm zamanlar"
+            "value": "Tümü"
           }
         }
       }
@@ -6506,7 +6506,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adres (İsteğe Bağlı)"
+            "value": "Adres (isteğe bağlı)"
           }
         }
       }
@@ -6523,7 +6523,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev adresini girin"
+            "value": "Ev adresini yaz"
           }
         }
       }
@@ -6540,7 +6540,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev Oluştur"
+            "value": "Evi oluştur"
           }
         }
       }
@@ -6557,7 +6557,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev Adı"
+            "value": "Evin adı"
           }
         }
       }
@@ -6574,7 +6574,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev adını girin"
+            "value": "Evin adını yaz"
           }
         }
       }
@@ -6591,7 +6591,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paylaşılan yaşam alanınızı kurun"
+            "value": "Ortak yaşam alanını kur"
           }
         }
       }
@@ -6608,7 +6608,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev Oluşturuldu!"
+            "value": "Ev hazır!"
           }
         }
       }
@@ -6625,7 +6625,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Açıklama (İsteğe Bağlı)"
+            "value": "Açıklama (isteğe bağlı)"
           }
         }
       }
@@ -6642,7 +6642,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu listenin ne için olduğunu açıklayın..."
+            "value": "Bu liste ne için, kısaca yaz..."
           }
         }
       }
@@ -6659,7 +6659,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liste Adı"
+            "value": "Liste adı"
           }
         }
       }
@@ -6676,7 +6676,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "örn., Korku Klasikleri, Romantik Komedi Favorileri"
+            "value": "örn. Korku klasikleri, Romantik komedi favorileri"
           }
         }
       }
@@ -6693,7 +6693,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Filmleri temaya, türe veya istediğiniz herhangi bir kritere göre düzenleyin"
+            "value": "Filmleri tür, tema ya da aklına gelen her şeye göre ayır"
           }
         }
       }
@@ -6710,7 +6710,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film Listesi Oluştur"
+            "value": "Film listesi oluştur"
           }
         }
       }
@@ -7033,7 +7033,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acil onarımları ve birkaç gün içinde ödenecek faturaları gösterir."
+            "value": "Acil tamirleri ve birkaç gün içinde ödenecek faturaları gösterir."
           }
         }
       }
@@ -7050,7 +7050,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yalnızca bir şey bekleyen sayıları gösterir, alınacaklar gibi. Her zaman seçilirse bütün sayılar görünür."
+            "value": "Sadece ilgilenmen gereken sayaçları gösterir, mesela alınacaklar. Her zaman'ı seçersen hepsi görünür."
           }
         }
       }
@@ -7067,7 +7067,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zamanı gelen görevleri, sizinkileri ve henüz kimsenin üstlenmediklerini gösterir."
+            "value": "Günü gelen, sana ait ve henüz kimsenin almadığı görevleri gösterir."
           }
         }
       }
@@ -7101,7 +7101,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvimde sırada ne varsa gösterir."
+            "value": "Takvimde sıradaki şeyi gösterir."
           }
         }
       }
@@ -7152,7 +7152,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otomatik, bir bölümü yalnızca içinde bir şey olduğunda gösterir. Sıralamak için sürükleyin. Bir bölümü kapatmak hiçbir şeyi silmez: hepsi Listeler, Planlar ve Ev sekmelerinde duruyor."
+            "value": "Otomatik'te bir bölüm sadece içinde bir şey olduğunda görünür. Sıralamak için sürükle. Bir bölümü kapatman hiçbir şeyi silmez, hepsi Listeler, Planlar ve Ev sekmelerinde durur."
           }
         }
       }
@@ -7237,7 +7237,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d'ler Anketi Oluştur"
+            "value": "%d anketi oluştur"
           }
         }
       }
@@ -7254,7 +7254,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anket Oluşturuluyor..."
+            "value": "Anket oluşturuluyor..."
           }
         }
       }
@@ -7271,7 +7271,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seçilen On Yıl"
+            "value": "Seçilen on yıl"
           }
         }
       }
@@ -7288,7 +7288,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Belirli bir on yıldan filmler seçin"
+            "value": "Belirli bir on yıldan filmler seç"
           }
         }
       }
@@ -7305,7 +7305,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "On Yıla Göre Ara"
+            "value": "On yıla göre ara"
           }
         }
       }
@@ -7577,7 +7577,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ flamaları"
+            "value": "Bayraklar: %@"
           }
         }
       }
@@ -8325,7 +8325,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takımı komple kur"
+            "value": "Tüm seti kur"
           }
         }
       }
@@ -8495,7 +8495,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne yapıyorsunuz?"
+            "value": "Ne var menüde?"
           }
         }
       }
@@ -8512,7 +8512,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artıklar, makarna, buzdolabında ne varsa"
+            "value": "Dünden kalanlar, makarna, dolapta ne varsa"
           }
         }
       }
@@ -8546,7 +8546,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir şeyler pişirin, sipariş verin ya da dışarı çıkın."
+            "value": "Evde pişir, sipariş ver ya da dışarı çık."
           }
         }
       }
@@ -8699,7 +8699,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mutfağı ve nereye gideceğinizi seç"
+            "value": "Mutfağı ve nereye gidileceğini seç"
           }
         }
       }
@@ -8716,7 +8716,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bunu bir etkinliğe dönüştür"
+            "value": "Akşamı etkinliğe çevir"
           }
         }
       }
@@ -8733,7 +8733,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bunu bir etkinliğe dönüştür"
+            "value": "Etkinlik yap"
           }
         }
       }
@@ -8750,7 +8750,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Menüsüyle takvime ekler; böylece alışveriş listesi ve bütçe taşıyabilir."
+            "value": "Menüyle birlikte takvime ekler, böylece alışveriş listesi ve bütçesi de olabilir."
           }
         }
       }
@@ -8920,7 +8920,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu, oylamayı herkes için kapatır ve akşam yemeğini kararsız bırakır."
+            "value": "Oylama herkes için kapanır ve yemek belirsiz kalır."
           }
         }
       }
@@ -8971,7 +8971,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oyunu vermek için aç."
+            "value": "Oy vermek için aç."
           }
         }
       }
@@ -9073,7 +9073,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev adına karar ver — oylama yok."
+            "value": "Ev adına sen karar ver, oylama yok."
           }
         }
       }
@@ -9090,7 +9090,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nasıl karar veriyorsunuz?"
+            "value": "Nasıl karar verelim?"
           }
         }
       }
@@ -9141,7 +9141,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yemek bu"
+            "value": "Yemek bu olsun"
           }
         }
       }
@@ -9175,7 +9175,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev adına karar ver — oylama yok."
+            "value": "Ev adına sen karar ver, oylama yok."
           }
         }
       }
@@ -9226,7 +9226,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifleriniz"
+            "value": "Tariflerin"
           }
         }
       }
@@ -9260,7 +9260,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yönetmen Anketi Oluştur"
+            "value": "Yönetmen anketi oluştur"
           }
         }
       }
@@ -9277,7 +9277,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anket Oluşturuluyor..."
+            "value": "Anket oluşturuluyor..."
           }
         }
       }
@@ -9294,7 +9294,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yönetmen adı (örn., Christopher Nolan)"
+            "value": "Yönetmen adı (örn. Christopher Nolan)"
           }
         }
       }
@@ -9311,7 +9311,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir film yönetmeninin adını girin"
+            "value": "Bir film yönetmeninin adını yaz"
           }
         }
       }
@@ -9328,7 +9328,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yönetmene Göre Ara"
+            "value": "Yönetmene göre ara"
           }
         }
       }
@@ -9345,7 +9345,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir şey ekleyin…"
+            "value": "Bir şey ekle…"
           }
         }
       }
@@ -9379,7 +9379,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kaydırıp oy verin"
+            "value": "Kaydır, oy ver"
           }
         }
       }
@@ -9685,7 +9685,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir tutar en fazla bu kadar uzun olabilir."
+            "value": "Tutar bundan uzun olamaz."
           }
         }
       }
@@ -9923,7 +9923,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ bütçenin %1$@ kadarı"
+            "value": "%1$@ / %2$@"
           }
         }
       }
@@ -10161,7 +10161,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her ay bağlanan"
+            "value": "Her ay sabit giden"
           }
         }
       }
@@ -10348,7 +10348,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvim silinir. Ödenmiş harcamalar kayıtta kalır."
+            "value": "Ödeme planı silinir, ödenmiş olanlar kayıtta kalır."
           }
         }
       }
@@ -10416,7 +10416,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sonraki vade"
+            "value": "Sonraki ödeme günü"
           }
         }
       }
@@ -10651,7 +10651,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paylar %1$@ ediyor, %2$@ değil."
+            "value": "Paylar %1$@ ediyor, ama %2$@ olmalı."
           }
         }
       }
@@ -10896,7 +10896,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dağıtılacak kalan"
+            "value": "Dağıtılacak tutar"
           }
         }
       }
@@ -11073,7 +11073,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ödendi işaretle"
+            "value": "Ödendi say"
           }
         }
       }
@@ -11226,7 +11226,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu ay hiçbir şey yok"
+            "value": "Bu ay harcama yok"
           }
         }
       }
@@ -11478,7 +11478,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu ay ödeyenler"
+            "value": "Bu ay ödenenler"
           }
         }
       }
@@ -12291,7 +12291,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sana borçlular"
+            "value": "Alacağın var"
           }
         }
       }
@@ -12359,7 +12359,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ kişisine borçlusun"
+            "value": "Borcun var: %@"
           }
         }
       }
@@ -12886,7 +12886,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yetişkin İçerik Dahil Et"
+            "value": "Yetişkin içerik de olsun"
           }
         }
       }
@@ -12903,7 +12903,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yetişkin temaları ve içeriği olan filmleri dahil et"
+            "value": "Yetişkinlere yönelik filmler de listeye girsin"
           }
         }
       }
@@ -12920,7 +12920,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Devam etmek için en az bir tür seçin"
+            "value": "Devam etmek için en az bir tür seç"
           }
         }
       }
@@ -12954,7 +12954,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film anketiniz için bir veya daha fazla tür seçin"
+            "value": "Film anketin için bir veya daha fazla tür seç"
           }
         }
       }
@@ -12971,7 +12971,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film Türlerinizi Seçin"
+            "value": "Film Türlerini Seç"
           }
         }
       }
@@ -13005,7 +13005,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Merak ve nefes kesen"
+            "value": "Gerilim dolu, nefes kesen"
           }
         }
       }
@@ -13039,7 +13039,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ son gün %2$@"
+            "value": "%1$@ için son gün: %2$@"
           }
         }
       }
@@ -14621,7 +14621,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ evindeki son üyesin. Ayrılırsan ev ve içindeki her şey silinir — görevler, notlar, listeler, tarifler ve mesajlar. Bu geri alınamaz."
+            "value": "Evin (%@) son üyesisin. Ayrılırsan ev ve içindeki her şey silinir: görevler, notlar, listeler, tarifler ve mesajlar. Bunu geri alamazsın."
           }
         }
       }
@@ -14655,7 +14655,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu akşamın yemeği yap"
+            "value": "Bu akşamın yemeği olsun"
           }
         }
       }
@@ -14815,7 +14815,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "siz ilgileniyorsunuz"
+            "value": "sen ilgileniyorsun"
           }
         }
       }
@@ -14900,7 +14900,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu evden ayrıl?"
+            "value": "Bu evden ayrılıyor musun?"
           }
         }
       }
@@ -14951,7 +14951,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu davet kodu tutmadı"
+            "value": "Bu davet kodu geçersiz"
           }
         }
       }
@@ -15002,7 +15002,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu akşam ne izleyeceğinize karar veremiyor musunuz? Hadi küçük bir oyunla seçelim!"
+            "value": "Bu akşam ne izleyeceğine karar veremedin mi? Küçük bir oyunla seçelim!"
           }
         }
       }
@@ -15077,7 +15077,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Açık bir tur var, oy vermeye gidin"
+            "value": "Açık bir tur var, oy ver"
           }
         }
       }
@@ -15162,7 +15162,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sizi bekleyenler"
+            "value": "Seni bekleyenler"
           }
         }
       }
@@ -15264,7 +15264,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni bir başlangıç yapın ve aile üyelerini davet edin"
+            "value": "Sıfırdan başla, evdekileri davet et"
           }
         }
       }
@@ -15298,7 +15298,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün ekranında ne görüneceğini seçin"
+            "value": "Bugün'de neyin görüneceğini seç"
           }
         }
       }
@@ -15315,7 +15315,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu akşamın yemeğine karar verin"
+            "value": "Bu akşam ne yiyeceğini seç"
           }
         }
       }
@@ -15332,7 +15332,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk görevinizi ekleyin"
+            "value": "İlk görevini ekle"
           }
         }
       }
@@ -15349,7 +15349,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev arkadaşlarınızı davet edin"
+            "value": "Ev arkadaşlarını davet et"
           }
         }
       }
@@ -15366,7 +15366,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir aile üyesinden davet kodu kullanın"
+            "value": "Evdekilerden aldığın davet koduyla katıl"
           }
         }
       }
@@ -15383,7 +15383,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mevcut Eve Katıl"
+            "value": "Bir Eve Katıl"
           }
         }
       }
@@ -15400,7 +15400,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evinizi kuralım"
+            "value": "Evini kuralım"
           }
         }
       }
@@ -15468,7 +15468,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün ekranını düzenleyin"
+            "value": "Bugün'ü düzenle"
           }
         }
       }
@@ -15604,7 +15604,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün zamanı gelen görev yok"
+            "value": "Bugün yapılacak görev yok"
           }
         }
       }
@@ -15740,7 +15740,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir bakışta"
+            "value": "Evin durumu"
           }
         }
       }
@@ -15859,7 +15859,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Burada yazdığınız sürüm notları herkesin Güncellemeler sekmesinde görünür."
+            "value": "Burada yazdığın sürüm notları herkesin Güncellemeler sekmesinde görünür."
           }
         }
       }
@@ -15893,7 +15893,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne değiştiğini yazın."
+            "value": "Ne değiştiğini yaz."
           }
         }
       }
@@ -15910,7 +15910,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Önce güncellemeye bir başlık verin."
+            "value": "Önce güncellemeye bir başlık ver."
           }
         }
       }
@@ -16216,7 +16216,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sürüm notları backend/changelog.json içinde yaşar ve dağıtımda eşitlenir. Buraya yazılanlar tek seferliktir."
+            "value": "Sürüm notları backend/changelog.json dosyasında durur, yayına alırken eşitlenir. Buraya yazdıkların tek seferliktir."
           }
         }
       }
@@ -16284,7 +16284,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Boş bırakırsanız yukarıdaki İngilizce metin kullanılır"
+            "value": "Boş bırakırsan yukarıdaki İngilizce metin görünür"
           }
         }
       }
@@ -16318,7 +16318,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bunun çıkacağı uygulama sürümü. Daha eski bir sürümdekiler bunu “yakında” olarak görür. Siz %@ kullanıyorsunuz."
+            "value": "Bunun çıkacağı uygulama sürümü. Daha eski bir sürümdekiler bunu “yakında” olarak görür. Sen %@ sürümünü kullanıyorsun."
           }
         }
       }
@@ -16335,7 +16335,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hesap kimliğiniz"
+            "value": "Hesap kimliğin"
           }
         }
       }
@@ -16352,7 +16352,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ sürümünde geliyor — siz %2$@ kullanıyorsunuz"
+            "value": "%1$@ sürümünde geliyor, sen %2$@ sürümünü kullanıyorsun"
           }
         }
       }
@@ -16403,7 +16403,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hane"
+            "value": "Ev"
           }
         }
       }
@@ -16573,7 +16573,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İşler"
+            "value": "Görevler"
           }
         }
       }
@@ -16658,7 +16658,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biri alışverişe bir şey eklediğinde, bir işi bitirdiğinde ya da bir sorun bildirdiğinde burada görünür."
+            "value": "Biri alışverişe bir şey eklediğinde, bir görevi tamamladığında ya da bir sorun bildirdiğinde burada görünür."
           }
         }
       }
@@ -16845,7 +16845,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geliştirme"
+            "value": "İyileştirme"
           }
         }
       }
@@ -17080,7 +17080,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "s%@"
+            "value": "v%@"
           }
         }
       }
@@ -17097,7 +17097,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ sürümünü kullanıyorsunuz"
+            "value": "%@ sürümünü kullanıyorsun"
           }
         }
       }
@@ -17114,7 +17114,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Albümde %lld tane kocaman olunca açılır."
+            "value": "Albümde %lld tanesi büyüyünce açılır."
           }
         }
       }
@@ -17182,7 +17182,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bedava bitki ve minik dostların hepsini büyütünce."
+            "value": "Bedava bitkilerin ve dostların hepsini büyütünce açılır."
           }
         }
       }
@@ -17318,7 +17318,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onarıldı işaretle"
+            "value": "Onarıldı olarak işaretle"
           }
         }
       }
@@ -17461,7 +17461,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bildirilen her sorun halledildi. Tadını çıkarın."
+            "value": "Bildirilen her sorun halledildi. Tadını çıkar."
           }
         }
       }
@@ -17563,7 +17563,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dış cephe"
+            "value": "Dış alan"
           }
         }
       }
@@ -17767,7 +17767,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sizi bekliyor"
+            "value": "Seni bekliyor"
           }
         }
       }
@@ -18056,7 +18056,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir not ekleyin…"
+            "value": "Bir not ekle…"
           }
         }
       }
@@ -18073,7 +18073,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ bütçenin %@ kadarı"
+            "value": "%1$@ / %2$@"
           }
         }
       }
@@ -18393,7 +18393,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir şey bozulduğunda buraya yazın. Ev halkı görsün, kimsenin aklında kalmasın."
+            "value": "Bir şey bozulduğunda buraya yaz. Evdekiler görsün, kimsenin aklında kalmasın."
           }
         }
       }
@@ -18427,7 +18427,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Önce bir şeyler yazın."
+            "value": "Önce bir şeyler yaz."
           }
         }
       }
@@ -18444,7 +18444,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Önce sorunun ne olduğunu yazın."
+            "value": "Önce sorunun ne olduğunu yaz."
           }
         }
       }
@@ -18563,7 +18563,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Duruma göre süz"
+            "value": "Duruma göre filtrele"
           }
         }
       }
@@ -18672,7 +18672,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evin durumu"
+            "value": "Evin hali"
           }
         }
       }
@@ -18825,7 +18825,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarih, maliyet, kimi arayacağınız"
+            "value": "Tarih, maliyet, aranacak kişi"
           }
         }
       }
@@ -18893,7 +18893,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Süzgeçlere uyan bir sorun yok."
+            "value": "Filtrene uyan bir sorun yok."
           }
         }
       }
@@ -19353,7 +19353,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir fotoğraf bir paragraf eder — tesisatçı da zaten isteyecek"
+            "value": "Bir fotoğraf bin söze bedel, tesisatçı da zaten isteyecek"
           }
         }
       }
@@ -19955,7 +19955,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İşlerin nerede ters gittiği"
+            "value": "Nerede ne ters gidiyor"
           }
         }
       }
@@ -20091,7 +20091,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Göze batıyor ama hiçbir şey çalışmaz hâle gelmedi."
+            "value": "Göze batıyor ama bir şey bozulmadı."
           }
         }
       }
@@ -20193,7 +20193,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beklemeyin. Tehlikeli, yayılıyor ya da paraya mal oluyor."
+            "value": "Bekleme. Tehlikeli, yayılıyor ya da paraya mal oluyor."
           }
         }
       }
@@ -20414,7 +20414,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Boş bırakabilirsiniz — değişiklik yine de kaydedilir."
+            "value": "Boş bırakabilirsin, değişiklik yine de kaydedilir."
           }
         }
       }
@@ -20448,7 +20448,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eklemek istediğiniz bir şey?"
+            "value": "Eklemek istediğin bir şey var mı?"
           }
         }
       }
@@ -20584,7 +20584,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Birine ad koyun, iş yürümeye başlasın"
+            "value": "Birine ver, iş yürümeye başlasın"
           }
         }
       }
@@ -20652,7 +20652,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu ev ne tutuyor"
+            "value": "Bu ev ne kadar tutuyor"
           }
         }
       }
@@ -20761,7 +20761,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimi arayacaksınız"
+            "value": "Kimi arayacaksın"
           }
         }
       }
@@ -20829,7 +20829,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biri bu iş için görevi tamamladı. Sorun gerçekten çözüldü mü?"
+            "value": "Biri bunun görevini tamamladı. Sorun gerçekten çözüldü mü?"
           }
         }
       }
@@ -20931,7 +20931,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev halkına hatırlat"
+            "value": "Evdekilere hatırlat"
           }
         }
       }
@@ -21016,7 +21016,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimse para ödemeden önce bilinmeli"
+            "value": "Para ödemeden önce bilmekte fayda var"
           }
         }
       }
@@ -21084,7 +21084,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aslında: bunun için kimi ararsınız"
+            "value": "Yani: bunun için kimi ararsın"
           }
         }
       }
@@ -21220,7 +21220,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Davet kodunu girin"
+            "value": "Davet kodunu gir"
           }
         }
       }
@@ -21237,7 +21237,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eve Katılındı!"
+            "value": "Eve katıldın!"
           }
         }
       }
@@ -21356,7 +21356,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her şeyi tek yerden yönetin! ✨"
+            "value": "Her şey tek yerde! ✨"
           }
         }
       }
@@ -21458,7 +21458,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "\"%@\"'yi Kazanan Olarak Seç"
+            "value": "Kazanan olarak seç: \"%@\""
           }
         }
       }
@@ -21492,7 +21492,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anketi Bitir ve Tüm Sonuçları Gör"
+            "value": "Anketi Bitir, Sonuçları Gör"
           }
         }
       }
@@ -21509,7 +21509,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu filmler ev üyelerinizden olumlu oy aldı"
+            "value": "Bu filmler evdekilerden olumlu oy aldı"
           }
         }
       }
@@ -21526,7 +21526,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "🎉 Eşleşmeler Bulundu! 🎉"
+            "value": "🎉 Eşleşme çıktı! 🎉"
           }
         }
       }
@@ -21560,7 +21560,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev üyelerinden olumlu oy alan filmler"
+            "value": "Evdekilerden olumlu oy alan filmler"
           }
         }
       }
@@ -21635,7 +21635,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İşleri başlatmak için ilk mesajınızı gönderin"
+            "value": "İlk mesajı sen at, sohbet başlasın"
           }
         }
       }
@@ -21652,7 +21652,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sohbeti başlatın"
+            "value": "Sohbeti başlat"
           }
         }
       }
@@ -21720,7 +21720,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir mesaj yazın..."
+            "value": "Mesaj yaz..."
           }
         }
       }
@@ -21771,7 +21771,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gönderim başarısız"
+            "value": "Gönderilemedi"
           }
         }
       }
@@ -21839,7 +21839,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Direkt Mesaj"
+            "value": "Özel Mesaj"
           }
         }
       }
@@ -21958,7 +21958,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evinizle bağlantıda kalmak için grup sohbeti oluşturun"
+            "value": "Evdekilerle sohbet etmek için bir grup sohbeti aç"
           }
         }
       }
@@ -22111,7 +22111,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu sohbet %@'nin tüm %d üyesini içerecek"
+            "value": "Bu sohbete ev halkının hepsi eklenecek (%2$@, %1$d kişi)"
           }
         }
       }
@@ -22128,7 +22128,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu sohbet tüm ev üyelerini içerecek"
+            "value": "Bu sohbete evdeki herkes eklenecek"
           }
         }
       }
@@ -22196,7 +22196,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evinize merhaba deyin..."
+            "value": "Evdekilere merhaba de..."
           }
         }
       }
@@ -22230,7 +22230,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d ev üyesi bu sohbete eklenecek"
+            "value": "Evdeki %d kişi bu sohbete eklenecek"
           }
         }
       }
@@ -22264,7 +22264,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "örn., Aile Sohbeti, Ev Güncellemeleri..."
+            "value": "örn. Aile, Ev Haberleri..."
           }
         }
       }
@@ -22553,7 +22553,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d listesine eklendi"
+            "value": "%d listeye eklendi"
           }
         }
       }
@@ -22706,7 +22706,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Genel Bakış"
+            "value": "Özet"
           }
         }
       }
@@ -22927,7 +22927,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ listenizi film ekleyerek oluşturmaya başlayın"
+            "value": "Film ekleyerek %@ listeni oluşturmaya başla"
           }
         }
       }
@@ -22995,7 +22995,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "\"%@\" filmini bu listeden kaldırmak istiyor musunuz?"
+            "value": "\"%@\" bu listeden kaldırılsın mı?"
           }
         }
       }
@@ -23012,7 +23012,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk Listenizi Oluşturun"
+            "value": "İlk Listeni Oluştur"
           }
         }
       }
@@ -23097,7 +23097,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "\"Korku Filmleri\" veya \"Romantik Komedi Klasikleri\" gibi temalı koleksiyonlar oluşturun"
+            "value": "\"Korku Filmleri\" ya da \"Romantik Komedi Klasikleri\" gibi temalı listeler oluştur"
           }
         }
       }
@@ -23131,7 +23131,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film izleme listelerinizi ve koleksiyonlarınızı düzenleyin"
+            "value": "İzleme listelerini ve koleksiyonlarını düzenle"
           }
         }
       }
@@ -23165,7 +23165,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaten izlediğiniz filmler"
+            "value": "Zaten izlediğin filmler"
           }
         }
       }
@@ -23182,7 +23182,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İzlediğiniz filmler"
+            "value": "İzlediğin filmler"
           }
         }
       }
@@ -23216,7 +23216,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir gün izlemek istediğiniz filmler"
+            "value": "Bir gün izlemek istediğin filmler"
           }
         }
       }
@@ -23233,7 +23233,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İzlemek istediğiniz filmler"
+            "value": "İzlemek istediğin filmler"
           }
         }
       }
@@ -23318,7 +23318,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turu bitirmek onu tüm ev için kapatır. Hâlâ seçim yapanlar olduğu yerde kalır."
+            "value": "Turu bitirirsen herkes için kapanır. Hâlâ kaydıranlar olduğu yerde kalır."
           }
         }
       }
@@ -23369,7 +23369,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$lld kişiden %1$lld tanesi bitirdi"
+            "value": "%2$lld kişiden %1$lld kişi bitirdi"
           }
         }
       }
@@ -24134,7 +24134,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evdeki herkes için kaybolur."
+            "value": "Evdeki herkes için silinir."
           }
         }
       }
@@ -24202,7 +24202,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk aile notunuzu oluşturun\nve düşüncelerinizi paylaşmaya başlayın"
+            "value": "İlk notunu yaz,\nevdekilerle paylaş"
           }
         }
       }
@@ -24372,7 +24372,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Biri görev, alışveriş maddesi ya da not eklediğinde veya akşam yemeğini planladığında bildirim alın. Bunu istediğiniz zaman Ayarlar'dan değiştirebilirsiniz."
+            "value": "Biri görev, alışveriş maddesi ya da not eklediğinde veya akşam yemeği planladığında haber alırsın. İstediğin zaman Ayarlar'dan değiştirebilirsin."
           }
         }
       }
@@ -24406,7 +24406,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evden haberdar olun mu?"
+            "value": "Evden haberin olsun mu?"
           }
         }
       }
@@ -24848,7 +24848,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni Filmler Al"
+            "value": "Yeni Filmler Getir"
           }
         }
       }
@@ -24899,7 +24899,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evinizin nasıl oy verdiği"
+            "value": "Evdekiler nasıl oy verdi"
           }
         }
       }
@@ -25001,7 +25001,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oyuncu Anketi: %d"
+            "value": "Oyuncu Anketi: %@"
           }
         }
       }
@@ -25035,7 +25035,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yönetmen Anketi: %d"
+            "value": "Yönetmen Anketi: %@"
           }
         }
       }
@@ -25052,7 +25052,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tür Anketi: %d"
+            "value": "Tür Anketi: %@"
           }
         }
       }
@@ -25188,7 +25188,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Belirli oyuncuların olduğu filmleri seçin"
+            "value": "Belli oyuncuların filmlerini seç"
           }
         }
       }
@@ -25222,7 +25222,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir on yıldan filmler"
+            "value": "Bir on yılın filmleri"
           }
         }
       }
@@ -25256,7 +25256,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yönetmene göre film seçin"
+            "value": "Yönetmene göre film seç"
           }
         }
       }
@@ -25290,7 +25290,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Türe göre film seçin"
+            "value": "Türe göre film seç"
           }
         }
       }
@@ -25324,7 +25324,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şu anda sinemalarda olan filmler"
+            "value": "Şu an sinemada olan filmler"
           }
         }
       }
@@ -25358,7 +25358,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şu anda en popüler filmler"
+            "value": "Şu an en popüler filmler"
           }
         }
       }
@@ -25375,7 +25375,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Birlikte filmleri nasıl keşfetmek istediğinizi seçin"
+            "value": "Birlikte film bulmanın yolunu seç"
           }
         }
       }
@@ -25392,7 +25392,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film Anketi Oluştur"
+            "value": "Film Anketi Kur"
           }
         }
       }
@@ -25494,7 +25494,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Belirli bir yıldan filmler"
+            "value": "Belli bir yılın filmleri"
           }
         }
       }
@@ -25511,7 +25511,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimse anlaşamadı — en iyisi %2$lld kişiden %1$lld"
+            "value": "Ortak film çıkmadı, en yüksek oy %2$lld kişiden %1$lld"
           }
         }
       }
@@ -25545,7 +25545,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Silme Hatası"
+            "value": "Silinemedi"
           }
         }
       }
@@ -25562,7 +25562,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu anketi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+            "value": "Bu anket silinsin mi? Geri alınamaz."
           }
         }
       }
@@ -25579,7 +25579,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Önceki Anket Yok"
+            "value": "Henüz Anket Yok"
           }
         }
       }
@@ -25596,7 +25596,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tamamlanmış film anketleriniz burada görünecek"
+            "value": "Biten film anketlerin burada görünecek"
           }
         }
       }
@@ -25647,7 +25647,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kazanan belirlenmedi"
+            "value": "Kazanan çıkmadı"
           }
         }
       }
@@ -25664,7 +25664,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimse hiçbir şeye sağa kaydırmadı"
+            "value": "Kimse sağa kaydırmadı"
           }
         }
       }
@@ -25834,7 +25834,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kimlik doğrulama eksik."
+            "value": "Oturum açman gerekiyor."
           }
         }
       }
@@ -26004,7 +26004,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her malzemeyi topladıkça işaretleyin"
+            "value": "Topladığın malzemeleri işaretle"
           }
         }
       }
@@ -26038,7 +26038,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifi Pişir"
+            "value": "Pişirmeye Başla"
           }
         }
       }
@@ -26157,7 +26157,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pişirmeyi bırakmak istediğinizden emin misiniz? İlerlemeniz kaybolacak."
+            "value": "Pişirmeyi bırakmak istediğine emin misin? İlerlemen kaybolacak."
           }
         }
       }
@@ -26426,7 +26426,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "'%@' tarifini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+            "value": "'%@' tarifi silinecek. Bu işlem geri alınamaz."
           }
         }
       }
@@ -26579,7 +26579,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Talimatlar"
+            "value": "Yapılışı"
           }
         }
       }
@@ -26596,7 +26596,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$lld malzemeden %1$lld tanesi listenizde"
+            "value": "%2$lld malzemeden %1$lld tanesi listende"
           }
         }
       }
@@ -26800,7 +26800,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk tarifinizi ekleyin ve yemek planlamaya başlayın!"
+            "value": "İlk tarifini ekle, yemek planlamaya başla!"
           }
         }
       }
@@ -27181,7 +27181,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daha fazla tarif görmek için filtrelerinizi ayarlayın"
+            "value": "Daha fazla tarif görmek için filtreleri biraz gevşet"
           }
         }
       }
@@ -27266,7 +27266,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dünya favorileri ve Türk klasiklerini keşfedin"
+            "value": "Dünyadan favoriler, bir de Türk klasikleri"
           }
         }
       }
@@ -27283,7 +27283,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Özenle seçildi ✨"
+            "value": "Seçtiklerimiz ✨"
           }
         }
       }
@@ -27317,7 +27317,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ailenizin favori yemeklerini kaydedin ve düzenleyin"
+            "value": "Evin favori yemeklerini kaydet, düzenle"
           }
         }
       }
@@ -27453,7 +27453,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etiketler, zamanlama, malzemeler ve adımlarla yeni bir tarif ekleyin."
+            "value": "Etiketler, süreler, malzemeler ve adımlarla yeni bir tarif ekle."
           }
         }
       }
@@ -27470,7 +27470,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lezzetli Oluştur ✨"
+            "value": "Yeni bir lezzet ✨"
           }
         }
       }
@@ -27606,7 +27606,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En fazla %d etiket seçebilirsiniz."
+            "value": "En fazla %d etiket seçebilirsin."
           }
         }
       }
@@ -27674,7 +27674,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "örn., Spagetti Carbonara"
+            "value": "örn. Spagetti Carbonara"
           }
         }
       }
@@ -27895,7 +27895,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Listenize eklemek için film arayın..."
+            "value": "Listene eklemek için film ara..."
           }
         }
       }
@@ -28320,7 +28320,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tekrar girmek için yeniden Apple ile giriş yapman gerekecek."
+            "value": "Geri girmek için Apple ile tekrar giriş yapman gerekecek."
           }
         }
       }
@@ -28548,7 +28548,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple bu hesaptaki cihazların hepsini reddetti, biz de kayıtlarını sildik. Bu telefonu yeniden kaydetmek için %@'u kapatıp tekrar aç."
+            "value": "Apple bu hesaptaki cihazların hepsini reddetti, biz de kayıtlarını sildik. Bu telefonu yeniden kaydetmek için %@ uygulamasını kapatıp tekrar aç."
           }
         }
       }
@@ -29026,7 +29026,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Açıklama (İsteğe Bağlı)"
+            "value": "Açıklama (isteğe bağlı)"
           }
         }
       }
@@ -29315,7 +29315,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld malzeme kaldırılsın mı?"
+            "value": "%lld ürün kaldırılsın mı?"
           }
         }
       }
@@ -29349,7 +29349,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu ürünü silmek istediğinizden emin misiniz?"
+            "value": "Bu ürünü silmek istediğine emin misin?"
           }
         }
       }
@@ -29400,7 +29400,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk alışveriş öğenizi ekleyin!"
+            "value": "İlk ürününü ekle!"
           }
         }
       }
@@ -29502,7 +29502,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İhtiyacınız olan her şeyi temin edelim! ✨"
+            "value": "İhtiyacın olan her şeyi alalım! ✨"
           }
         }
       }
@@ -30369,7 +30369,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tepe"
+            "value": "Tepede"
           }
         }
       }
@@ -31848,7 +31848,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tamamlandı işaretle"
+            "value": "Bitti olarak işaretle"
           }
         }
       }
@@ -32107,7 +32107,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bilinmeyen Kullanıcı"
+            "value": "Bilinmeyen kişi"
           }
         }
       }
@@ -32141,7 +32141,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etkinliğe bir ad verin."
+            "value": "Etkinliğe bir ad ver."
           }
         }
       }
@@ -32908,7 +32908,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film anketiniz oluşturuluyor..."
+            "value": "Film anketin hazırlanıyor..."
           }
         }
       }
@@ -32925,7 +32925,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kişiselleştirilmiş film seçiminizi hazırlarken biraz zaman alabilir"
+            "value": "Film seçkisini hazırlarken biraz sürebilir"
           }
         }
       }
@@ -32959,7 +32959,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evet için sağa, Hayır için sola kaydırın"
+            "value": "Evet için sağa, hayır için sola kaydır"
           }
         }
       }
@@ -32993,7 +32993,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anketiniz için film detayları getiriliyor..."
+            "value": "Anket için film bilgileri getiriliyor..."
           }
         }
       }
@@ -33010,7 +33010,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anketler oluşturun ve birlikte filmler keşfedin"
+            "value": "Anket aç, filmleri birlikte keşfet"
           }
         }
       }
@@ -33044,7 +33044,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tüm filmler incelendi"
+            "value": "Bütün filmlere bakıldı"
           }
         }
       }
@@ -33146,7 +33146,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oylama istatistikleri bekleniyor..."
+            "value": "Sonuçlar bekleniyor..."
           }
         }
       }
@@ -33180,7 +33180,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu film evinizdeki en çok oyu aldı!"
+            "value": "Bu film evde en çok oyu aldı!"
           }
         }
       }
@@ -33265,7 +33265,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Belirli bir yıldan filmler seçin"
+            "value": "Belli bir yılın filmlerini seç"
           }
         }
       }
@@ -35424,7 +35424,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leylak inci"
+            "value": "Leylak incisi"
           }
         }
       }
@@ -36040,7 +36040,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tek abonelik yeter, %@ hep birlikte kullanır"
+            "value": "Tek abonelik herkese yeter: %@"
           }
         }
       }
@@ -36142,7 +36142,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kendi film listelerin, biten işleri erkenden arşivleme"
+            "value": "Kendi film listelerin ve biten görevleri hemen arşive atma"
           }
         }
       }
@@ -36598,7 +36598,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiçbir şey kaybolmaz. Plus'la evdeki herkes kullanır."
+            "value": "Yazdıkların yerinde kalır. Plus'ı açınca evdeki herkes kullanabilir."
           }
         }
       }
