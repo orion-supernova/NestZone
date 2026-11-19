@@ -172,6 +172,21 @@ type Copy = {
   party: { title: string; notes: string; location: string; budget: number };
   birthday: { title: string; who: number };
   movieNight: string;
+  /**
+   * The rest of the calendar: one-offs around today. `day` is days from today,
+   * or "sunday" for the coming Sunday; an all-day event ignores the hours.
+   */
+  calendar: {
+    title: string;
+    kind: NonNullable<Doc<"events">["kind"]>;
+    day: number | "sunday";
+    hour: number;
+    minute?: number;
+    hours: number;
+    allDay?: boolean;
+    by: number;
+    location?: string;
+  }[];
   plumber: { title: string; vendor: string; phone: string; location: string };
   issues: {
     tap: { title: string; details: string; estimate: number; comments: [string, string, string]; booked: string };
@@ -181,6 +196,13 @@ type Copy = {
   /** Expenses: title, category, payer slot, amount (minor units), fraction of the month so far. */
   expenses: { title: string; category: NonNullable<Doc<"expenses">["category"]>; by: number; amount: number; at: number; link?: "tap" | "light" | "internet" }[];
   settlement: { amount: number; note: string };
+  /**
+   * The five months before this one, oldest first: how much of this month's
+   * everyday spending (not the one-off repairs) each of them came to. Each
+   * month is squared up at its end, so history never moves today's balances.
+   */
+  history: [number, number, number, number, number];
+  squareUp: string;
   bills: { internet: { title: string; amount: number }; rent: { title: string; amount: number } };
   budgets: { groceries: number; dining: number };
   wishlist: string;
@@ -264,6 +286,18 @@ const TR: Copy = {
   },
   birthday: { title: "Deniz'in doğum günü 🎂", who: 3 },
   movieNight: "Film gecesi 🍿",
+  calendar: [
+    { title: "Konser 🎶", kind: "concert", day: -11, hour: 21, hours: 3, by: 2, location: "Zorlu PSM" },
+    { title: "Ev toplantısı", kind: "general", day: -6, hour: 20, hours: 1, by: 1, location: "Ev" },
+    { title: "Pilates 🧘", kind: "sports", day: 0, hour: 19, hours: 1, by: 0 },
+    { title: "Annemler geliyor", kind: "visit", day: 2, hour: 13, hours: 4, by: 0 },
+    { title: "Pazar kahvaltısı 🥐", kind: "dining", day: "sunday", hour: 10, minute: 30, hours: 2, by: 1 },
+    { title: "Diş hekimi — Mert", kind: "appointment", day: 5, hour: 15, minute: 30, hours: 1, by: 2 },
+    { title: "Pilates 🧘", kind: "sports", day: 7, hour: 19, hours: 1, by: 0 },
+    { title: "Halı yıkama", kind: "chore", day: 9, hour: 10, hours: 2, by: 3 },
+    { title: "Sinemaya gidiyoruz 🎬", kind: "cinema", day: 12, hour: 20, minute: 30, hours: 3, by: 3 },
+    { title: "Kira günü", kind: "deadline", day: 16, hour: 0, hours: 24, allDay: true, by: 0 },
+  ],
   plumber: { title: "Tesisatçı — mutfak musluğu", vendor: "Usta Hakan", phone: "0500 000 00 01", location: "Mutfak" },
   issues: {
     tap: {
@@ -284,17 +318,19 @@ const TR: Copy = {
     },
   },
   expenses: [
-    { title: "Market alışverişi", category: "groceries", by: 0, amount: 184_750, at: 0.15 },
-    { title: "Elektrik faturası", category: "utilities", by: 1, amount: 123_000, at: 0.25 },
+    { title: "Market alışverişi", category: "groceries", by: 0, amount: 71_000, at: 0.15 },
+    { title: "Elektrik faturası", category: "utilities", by: 1, amount: 122_500, at: 0.25 },
     { title: "İnternet", category: "utilities", by: 2, amount: 64_990, at: 0.3, link: "internet" },
-    { title: "Pazar alışverişi", category: "groceries", by: 2, amount: 64_200, at: 0.45 },
-    { title: "Temizlik malzemeleri", category: "household", by: 1, amount: 41_575, at: 0.55 },
-    { title: "Ampul", category: "household", by: 2, amount: 18_990, at: 0.6, link: "light" },
-    { title: "Pizza gecesi", category: "dining", by: 3, amount: 92_000, at: 0.7 },
+    { title: "Pazar alışverişi", category: "groceries", by: 2, amount: 100_000, at: 0.45 },
+    { title: "Temizlik malzemeleri", category: "household", by: 1, amount: 42_500, at: 0.55 },
+    { title: "Ampul", category: "household", by: 0, amount: 18_990, at: 0.6, link: "light" },
+    { title: "Pizza gecesi", category: "dining", by: 3, amount: 62_000, at: 0.7 },
     { title: "Dizi aboneliği", category: "subscriptions", by: 3, amount: 22_999, at: 0.8 },
-    { title: "Tesisatçı keşif ücreti", category: "household", by: 0, amount: 75_000, at: 0.95, link: "tap" },
+    { title: "Tesisatçı keşif ücreti", category: "household", by: 1, amount: 75_000, at: 0.95, link: "tap" },
   ],
   settlement: { amount: 30_000, note: "Market payı" },
+  history: [1.12, 1.4, 1.65, 1.25, 1.5],
+  squareUp: "Ay sonu hesaplaşma",
   bills: { internet: { title: "İnternet", amount: 64_990 }, rent: { title: "Kira", amount: 2_500_000 } },
   budgets: { groceries: 800_000, dining: 300_000 },
   wishlist: "İzlenecekler",
@@ -397,6 +433,18 @@ const EN: Copy = {
   },
   birthday: { title: "Sam's birthday 🎂", who: 3 },
   movieNight: "Movie night 🍿",
+  calendar: [
+    { title: "Concert 🎶", kind: "concert", day: -11, hour: 21, hours: 3, by: 2, location: "The Fillmore" },
+    { title: "House meeting", kind: "general", day: -6, hour: 20, hours: 1, by: 1, location: "Home" },
+    { title: "Yoga 🧘", kind: "sports", day: 0, hour: 19, hours: 1, by: 0 },
+    { title: "Mum's visiting", kind: "visit", day: 2, hour: 13, hours: 4, by: 0 },
+    { title: "Sunday brunch 🥐", kind: "dining", day: "sunday", hour: 10, minute: 30, hours: 2, by: 1 },
+    { title: "Dentist — Leo", kind: "appointment", day: 5, hour: 15, minute: 30, hours: 1, by: 2 },
+    { title: "Yoga 🧘", kind: "sports", day: 7, hour: 19, hours: 1, by: 0 },
+    { title: "Carpet cleaning", kind: "chore", day: 9, hour: 10, hours: 2, by: 3 },
+    { title: "Cinema trip 🎬", kind: "cinema", day: 12, hour: 20, minute: 30, hours: 3, by: 3 },
+    { title: "Rent day", kind: "deadline", day: 16, hour: 0, hours: 24, allDay: true, by: 0 },
+  ],
   plumber: { title: "Plumber — kitchen tap", vendor: "Dave's Plumbing", phone: "(555) 010-0001", location: "Kitchen" },
   issues: {
     tap: {
@@ -417,17 +465,19 @@ const EN: Copy = {
     },
   },
   expenses: [
-    { title: "Groceries", category: "groceries", by: 0, amount: 14_230, at: 0.15 },
+    { title: "Groceries", category: "groceries", by: 0, amount: 10_270, at: 0.15 },
     { title: "Electricity", category: "utilities", by: 1, amount: 8_640, at: 0.25 },
     { title: "Internet", category: "utilities", by: 2, amount: 5_999, at: 0.3, link: "internet" },
-    { title: "Farmers market", category: "groceries", by: 2, amount: 3_820, at: 0.45 },
+    { title: "Farmers market", category: "groceries", by: 2, amount: 8_220, at: 0.45 },
     { title: "Cleaning supplies", category: "household", by: 1, amount: 2_780, at: 0.55 },
-    { title: "Light bulbs", category: "household", by: 2, amount: 1_249, at: 0.6, link: "light" },
-    { title: "Pizza night", category: "dining", by: 3, amount: 4_875, at: 0.7 },
+    { title: "Light bulbs", category: "household", by: 0, amount: 1_249, at: 0.6, link: "light" },
+    { title: "Pizza night", category: "dining", by: 3, amount: 7_670, at: 0.7 },
     { title: "Streaming", category: "subscriptions", by: 3, amount: 1_549, at: 0.8 },
-    { title: "Plumber call-out", category: "household", by: 0, amount: 6_500, at: 0.95, link: "tap" },
+    { title: "Plumber call-out", category: "household", by: 1, amount: 6_500, at: 0.95, link: "tap" },
   ],
   settlement: { amount: 2_500, note: "Groceries" },
+  history: [0.6, 0.75, 0.9, 0.7, 0.8],
+  squareUp: "End-of-month square-up",
   bills: { internet: { title: "Internet", amount: 5_999 }, rent: { title: "Rent", amount: 240_000 } },
   budgets: { groceries: 60_000, dining: 20_000 },
   wishlist: "Wishlist",
@@ -649,6 +699,37 @@ export const seedHousehold = internalMutation({
       created: now - 1 * DAY,
       updated: now - 1 * DAY,
     });
+
+    // The rest of the month: one-offs, so every reminder is a single key to mark sent.
+    const toSunday = (7 - c.dow) % 7 || 7;
+    for (const [i, e] of text.calendar.entries()) {
+      const day = e.day === "sunday" ? toSunday : e.day;
+      const start = e.allDay ? at(c, day, 0) : at(c, day, e.hour, e.minute ?? 0);
+      const end = e.allDay ? at(c, day + 1, 0) : start + e.hours * HOUR;
+      const reminders = e.allDay ? [1440] : [60];
+      const attendees = e.kind === "appointment" ? [who(e.by)] : people;
+      const createdAt = Math.min(start, now) - (3 + (i % 4)) * DAY;
+      await ctx.db.insert("events", {
+        home_id: homeId,
+        title: e.title,
+        kind: e.kind,
+        location: e.location,
+        starts_at: start,
+        ends_at: end,
+        is_all_day: e.allDay ?? false,
+        tz_offset: tzOffset,
+        series_end: end,
+        attendees,
+        rsvps: attendees.length > 1
+          ? attendees.filter((_, slot) => slot !== (e.by + 2) % 4).map((id) => ({ user_id: id, status: "going" as const }))
+          : [{ user_id: who(e.by), status: "going" as const }],
+        reminders,
+        reminded: remindedFor(start, reminders),
+        created_by: who(e.by),
+        created: createdAt,
+        updated: createdAt,
+      });
+    }
 
     // --- House problems --------------------------------------------------------
     const tapReported = past(c, at(c, -2, 23, 10));
@@ -1085,6 +1166,69 @@ export const seedHousehold = internalMutation({
         updated: spentAt,
       });
     }
+    // This month leaves the owner owing Ayşe/Maya and the others square-ups of
+    // their own; the plan finance:summary draws is three transfers, the
+    // owner's first.
+
+    // The five months before: the same everyday spending, scaled, payers
+    // rotated, each month squared up on the 28th the way finance:summary's
+    // plan would, so the history chart has a shape and today's balances are
+    // only this month's.
+    const step = text.currency === "TRY" ? 1_000 : 10;
+    for (const [n, factor] of text.history.entries()) {
+      const back = text.history.length - n;
+      const start = Date.UTC(c.y, c.m - back, 1) - tzOffset * MINUTE;
+      const net = new Map<Id<"users">, number>();
+      const bump = (id: Id<"users">, by: number) => net.set(id, (net.get(id) ?? 0) + by);
+      for (const e of text.expenses) {
+        if (e.link === "tap" || e.link === "light") continue;
+        const fixed = e.link === "internet" || e.category === "subscriptions";
+        const amount = fixed ? e.amount : Math.round((e.amount * factor) / step) * step;
+        const payer = who((e.by + back) % people.length);
+        const spentAt = start + Math.floor(e.at * 25) * DAY + 12 * HOUR;
+        const splits = evenly(amount);
+        bump(payer, amount);
+        for (const s of splits) bump(s.user_id, -s.amount);
+        await ctx.db.insert("expenses", {
+          home_id: homeId,
+          title: e.title,
+          amount,
+          currency: text.currency,
+          category: e.category,
+          paid_by: payer,
+          splits,
+          split_mode: "equal",
+          spent_at: spentAt,
+          bill_id: e.link === "internet" ? internetId : undefined,
+          created_by: payer,
+          created: spentAt,
+          updated: spentAt,
+        });
+      }
+      const squaredAt = start + 27 * DAY + 20 * HOUR;
+      const creditors = [...net].filter(([, a]) => a > 0).map(([id, a]) => ({ id, a })).sort((x, y) => y.a - x.a);
+      const debtors = [...net].filter(([, a]) => a < 0).map(([id, a]) => ({ id, a: -a })).sort((x, y) => y.a - x.a);
+      for (let ci = 0, di = 0; ci < creditors.length && di < debtors.length; ) {
+        const take = Math.min(creditors[ci].a, debtors[di].a);
+        await ctx.db.insert("settlements", {
+          home_id: homeId,
+          from_user: debtors[di].id,
+          to_user: creditors[ci].id,
+          amount: take,
+          currency: text.currency,
+          note: text.squareUp,
+          settled_at: squaredAt,
+          created_by: debtors[di].id,
+          created: squaredAt,
+          updated: squaredAt,
+        });
+        creditors[ci].a -= take;
+        debtors[di].a -= take;
+        if (creditors[ci].a === 0) ci++;
+        if (debtors[di].a === 0) di++;
+      }
+    }
+
     const settledAt = monthStart + Math.round(sinceMonth * 0.5);
     await ctx.db.insert("settlements", {
       home_id: homeId,
