@@ -72,6 +72,7 @@ public struct MoviesView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.moviesNewListTitle))
+                .proLocked(.customMovieLists)
             }
         }
         .task { await store.send(.task).finish() }
@@ -241,6 +242,7 @@ struct MovieListView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.movieListDetailAddMovies))
+                .proLocked(if: store.list.kind == .custom ? .customMovieLists : nil)
             }
         }
         .task { await store.send(.task).finish() }
@@ -535,6 +537,8 @@ struct MovieInfoSheet: View {
                             ) {
                                 store.send(.listToggled(list))
                             }
+                            .proLocked(if: list.kind == .custom && !store.state.isSaved(in: list)
+                                ? .customMovieLists : nil)
                         }
                     }
                     .padding(.horizontal, 2)

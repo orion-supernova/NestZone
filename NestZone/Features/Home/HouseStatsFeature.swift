@@ -15,6 +15,7 @@ public struct HouseStatsFeature: Sendable {
         public var upcoming: [EventOccurrence] = []
         public var statsLoaded = false
         public var eventsLoaded = false
+        @Shared(.pro) public var pro: ProStatus
 
         public init(homeID: HomeID) {
             self.homeID = homeID
@@ -52,6 +53,15 @@ public struct HouseStatsFeature: Sendable {
             switch action {
             case .task:
                 let homeID = state.homeID
+                // The calendar is Plus: a house without it has no count to read.
+                let events: Effect<Action> = state.pro.isPro
+                    ? .run { send in
+                        for try await events in eventsClient.upcoming(homeID, 20) {
+                            await send(.upcomingUpdated(events))
+                        }
+                    } catch: { _, _ in }
+                        .cancellable(id: CancelID.events, cancelInFlight: true)
+                    : .send(.upcomingUpdated([]))
                 return .merge(
                     .run { send in
                         for try await stats in statsClient.forHome(homeID) {
@@ -59,12 +69,7 @@ public struct HouseStatsFeature: Sendable {
                         }
                     } catch: { _, _ in }
                         .cancellable(id: CancelID.stats, cancelInFlight: true),
-                    .run { send in
-                        for try await events in eventsClient.upcoming(homeID, 20) {
-                            await send(.upcomingUpdated(events))
-                        }
-                    } catch: { _, _ in }
-                        .cancellable(id: CancelID.events, cancelInFlight: true)
+                    events
                 )
 
             case let .statsUpdated(stats):

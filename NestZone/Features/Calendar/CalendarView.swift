@@ -109,6 +109,13 @@ public struct CalendarView: View {
         .animation(Motion.spring, value: isSearching)
         .task { await store.send(.task).finish() }
         .stagedBuild(3)
+        // A house without Plus: locked when there is nothing here, read-only
+        // under a banner when there is.
+        .proModule(
+            .calendar,
+            hasData: store.sawEvents || !store.occurrences.isEmpty,
+            isLoaded: store.hasLoadedOnce
+        )
         .alert($store.scope(state: \.alert, action: \.alert))
         .sheet(item: $store.scope(
             state: \.destination?.compose,
@@ -145,6 +152,7 @@ public struct CalendarView: View {
             Image(systemName: "plus")
         }
         .accessibilityLabel(Text(L10n.calendarAddEvent))
+        .proLocked(.calendar)
     }
 
     private var searchToggle: some View {

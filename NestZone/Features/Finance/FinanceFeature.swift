@@ -125,7 +125,7 @@ public struct FinanceFeature: Sendable {
             if id == currentUserID { return String(localized: L10n.financeYou) }
             return members[id: id]?.displayName
                 ?? summary.members.first { $0.userID == id }?.displayName
-                ?? String(localized: L10n.financeSomeone)
+                ?? String(localized: L10n.memberDeleted)
         }
 
         /// The viewer's own balance: positive if the household owes them.
@@ -489,7 +489,11 @@ public struct FinanceFeature: Sendable {
 
     @Dependency(\.finance) var finance
     @Dependency(\.homes) var homes
+    @Dependency(\.paywall) var paywall
     @Dependency(\.continuousClock) var clock
+    /// Money is Plus: a house without it reads what is there, and the
+    /// controls that write ask for the paywall instead.
+    @Shared(.pro) var pro: ProStatus
 
     public init() {}
 
@@ -497,6 +501,9 @@ public struct FinanceFeature: Sendable {
         BindingReducer()
 
         Reduce { state, action in
+            if !pro.isPro, Self.writes(action) {
+                return .run { _ in paywall.request(.finance) }
+            }
             switch action {
             case .task:
                 let homeID = state.homeID
@@ -970,3 +977,15 @@ public struct FinanceFeature: Sendable {
 // Navigation state is `Equatable` so parent states compare cleanly; declared
 // here rather than via the deprecated `@Reducer(state:)` argument.
 extension FinanceFeature.Destination.State: Equatable {}
+
+extension FinanceFeature {
+    /// The actions that start writing money, which a house without Plus is
+    /// stopped at. Removing stays free, like the server's removes.
+    static func writes(_ action: Action) -> Bool {
+        switch action {
+        case .addExpenseTapped, .addBillTapped, .addBudgetTapped, .payBillTapped,
+             .quickPayTapped, .settleUpTapped: true
+        default: false
+        }
+    }
+}

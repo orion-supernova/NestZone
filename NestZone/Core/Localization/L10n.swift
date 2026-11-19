@@ -9770,4 +9770,287 @@ public enum L10n {
         default: r("companion_colour_generic", "Colour \(colour)")
         }
     }
+
+    // MARK: - NestZone Plus
+
+    /// That's part of NestZone Plus.
+    public static var proRequiredMessage: LocalizedStringResource {
+        r("pro_required_message", "That's part of NestZone Plus.")
+    }
+
+    /// Deleted member
+    public static var memberDeleted: LocalizedStringResource {
+        r("member_deleted", "Deleted member")
+    }
+
+    /// The calendar is part of Plus
+    public static var paywallTitleCalendar: LocalizedStringResource {
+        r("paywall_title_calendar", "The calendar is part of Plus")
+    }
+
+    /// Money is part of Plus
+    public static var paywallTitleFinance: LocalizedStringResource {
+        r("paywall_title_finance", "Money is part of Plus")
+    }
+
+    /// Shopping by aisle is part of Plus
+    public static var paywallTitleShoppingCategories: LocalizedStringResource {
+        r("paywall_title_shopping_categories", "Shopping by aisle is part of Plus")
+    }
+
+    /// Your own movie lists are part of Plus
+    public static var paywallTitleCustomMovieLists: LocalizedStringResource {
+        r("paywall_title_custom_movie_lists", "Your own movie lists are part of Plus")
+    }
+
+    /// Archive now is part of Plus
+    public static var paywallTitleArchiveNow: LocalizedStringResource {
+        r("paywall_title_archive_now", "Archive now is part of Plus")
+    }
+
+    /// Adding events is part of Plus
+    public static var paywallTitleEventFromElsewhere: LocalizedStringResource {
+        r("paywall_title_event_elsewhere", "Adding events is part of Plus")
+    }
+
+    /// Logging money is part of Plus
+    public static var paywallTitleExpenseFromElsewhere: LocalizedStringResource {
+        r("paywall_title_expense_elsewhere", "Logging money is part of Plus")
+    }
+
+    /// Plus for the whole house
+    public static var paywallTitleGeneral: LocalizedStringResource {
+        r("paywall_title_general", "Plus for the whole house")
+    }
+
+    /// Everything you've already written stays yours and readable, whatever you choose.
+    public static var paywallSubtitle: LocalizedStringResource {
+        r("paywall_subtitle", "Everything you've already written stays yours and readable, whatever you choose.")
+    }
+
+    /// One subscription covers everyone in %@
+    public static func paywallCoversHouse(_ a0: String) -> LocalizedStringResource {
+        r("paywall_covers_house", "One subscription covers everyone in \(a0)")
+    }
+
+    /// %@'s Plus covers this house.
+    public static func paywallCarriedBy(_ a0: String) -> LocalizedStringResource {
+        r("paywall_carried_by", "\(a0)'s Plus covers this house.")
+    }
+
+    /// Your Plus covers this house.
+    public static var paywallCarriedByYou: LocalizedStringResource {
+        r("paywall_carried_by_you", "Your Plus covers this house.")
+    }
+
+    /// Calendar and events: parties, reminders, who's coming
+    public static var paywallBenefitCalendar: LocalizedStringResource {
+        r("paywall_benefit_calendar", "Calendar and events: parties, reminders, who's coming")
+    }
+
+    /// Money: shared expenses, bills and settling up
+    public static var paywallBenefitMoney: LocalizedStringResource {
+        r("paywall_benefit_money", "Money: shared expenses, bills and settling up")
+    }
+
+    /// Shopping by aisle, and clearing a whole aisle at once
+    public static var paywallBenefitShopping: LocalizedStringResource {
+        r("paywall_benefit_shopping", "Shopping by aisle, and clearing a whole aisle at once")
+    }
+
+    /// Your own movie lists, and Archive now for finished chores
+    public static var paywallBenefitMore: LocalizedStringResource {
+        r("paywall_benefit_more", "Your own movie lists, and Archive now for finished chores")
+    }
+
+    /// Best value
+    public static var paywallBestValue: LocalizedStringResource {
+        r("paywall_best_value", "Best value")
+    }
+
+    /// Yearly
+    public static var paywallYearly: LocalizedStringResource {
+        r("paywall_yearly", "Yearly")
+    }
+
+    /// Monthly
+    public static var paywallMonthly: LocalizedStringResource {
+        r("paywall_monthly", "Monthly")
+    }
+
+    /// %@ a year
+    public static func paywallPricePerYear(_ a0: String) -> LocalizedStringResource {
+        r("paywall_price_per_year", "\(a0) a year")
+    }
+
+    /// %@ a month
+    public static func paywallPricePerMonth(_ a0: String) -> LocalizedStringResource {
+        r("paywall_price_per_month", "\(a0) a month")
+    }
+
+    /// That's %@ a month
+    public static func paywallThatIsPerMonth(_ a0: String) -> LocalizedStringResource {
+        r("paywall_that_is_per_month", "That's \(a0) a month")
+    }
+
+    /// %@, then %@
+    public static func paywallTrialThen(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("paywall_trial_then", "\(a0), then \(a1)")
+    }
+
+    /// %lld week free
+    public static func paywallWeeksFree(_ a0: Int) -> LocalizedStringResource {
+        r("paywall_weeks_free", "\(a0) week free")
+    }
+
+    /// %lld day free
+    public static func paywallDaysFree(_ a0: Int) -> LocalizedStringResource {
+        r("paywall_days_free", "\(a0) day free")
+    }
+
+    /// Try it free
+    public static var paywallStartTrial: LocalizedStringResource {
+        r("paywall_start_trial", "Try it free")
+    }
+
+    /// Subscribe
+    public static var paywallSubscribe: LocalizedStringResource {
+        r("paywall_subscribe", "Subscribe")
+    }
+
+    /// Restore purchases
+    public static var paywallRestore: LocalizedStringResource {
+        r("paywall_restore", "Restore purchases")
+    }
+
+    /// Payment is charged to your Apple ID when you confirm. The subscription renews by itself...
+    public static var paywallDisclosure: LocalizedStringResource {
+        r("paywall_disclosure", "Payment is charged to your Apple ID when you confirm. The subscription renews by itself unless you cancel it at least 24 hours before the period ends, and you can manage or cancel it any time in your Apple ID settings. A free trial turns into a paid subscription when it ends.")
+    }
+
+    /// Plans aren't available right now
+    public static var paywallUnavailableTitle: LocalizedStringResource {
+        r("paywall_unavailable_title", "Plans aren't available right now")
+    }
+
+    /// We couldn't load them. Check your connection and try again.
+    public static var paywallUnavailableMessage: LocalizedStringResource {
+        r("paywall_unavailable_message", "We couldn't load them. Check your connection and try again.")
+    }
+
+    /// Your purchase is waiting for approval. Plus turns on as soon as it's approved.
+    public static var paywallPending: LocalizedStringResource {
+        r("paywall_pending", "Your purchase is waiting for approval. Plus turns on as soon as it's approved.")
+    }
+
+    /// Your payment went through, but Plus is taking a moment to show up. It turns on by itsel...
+    public static var paywallNotYetCredited: LocalizedStringResource {
+        r("paywall_not_yet_credited", "Your payment went through, but Plus is taking a moment to show up. It turns on by itself, or tap Restore purchases.")
+    }
+
+    /// There's no Plus subscription on this Apple ID.
+    public static var paywallNothingToRestore: LocalizedStringResource {
+        r("paywall_nothing_to_restore", "There's no Plus subscription on this Apple ID.")
+    }
+
+    /// You're all set
+    public static var paywallSuccessTitle: LocalizedStringResource {
+        r("paywall_success_title", "You're all set")
+    }
+
+    /// Plus is on for the whole house.
+    public static var paywallSuccessMessage: LocalizedStringResource {
+        r("paywall_success_message", "Plus is on for the whole house.")
+    }
+
+    /// Close
+    public static var paywallClose: LocalizedStringResource {
+        r("paywall_close", "Close")
+    }
+
+    /// Needs NestZone Plus. Opens the plans.
+    public static var proLockedHint: LocalizedStringResource {
+        r("pro_locked_hint", "Needs NestZone Plus. Opens the plans.")
+    }
+
+    /// See Plus
+    public static var proLockedUpgrade: LocalizedStringResource {
+        r("pro_locked_upgrade", "See Plus")
+    }
+
+    /// Nothing is lost. Plus turns it on for everyone in the house.
+    public static var proLockedSubtitle: LocalizedStringResource {
+        r("pro_locked_subtitle", "Nothing is lost. Plus turns it on for everyone in the house.")
+    }
+
+    /// Read-only. Adding more needs Plus.
+    public static var proReadOnlyBanner: LocalizedStringResource {
+        r("pro_read_only_banner", "Read-only. Adding more needs Plus.")
+    }
+
+    /// Upgrade
+    public static var proReadOnlyUpgrade: LocalizedStringResource {
+        r("pro_read_only_upgrade", "Upgrade")
+    }
+
+    /// Plus
+    public static var proTeaserValue: LocalizedStringResource {
+        r("pro_teaser_value", "Plus")
+    }
+
+    /// Subscription
+    public static var plusSettingsTitle: LocalizedStringResource {
+        r("plus_settings_title", "Subscription")
+    }
+
+    /// On
+    public static var plusStatusOn: LocalizedStringResource {
+        r("plus_status_on", "On")
+    }
+
+    /// Not on
+    public static var plusStatusOff: LocalizedStringResource {
+        r("plus_status_off", "Not on")
+    }
+
+    /// Renews %@
+    public static func plusRenews(_ a0: String) -> LocalizedStringResource {
+        r("plus_renews", "Renews \(a0)")
+    }
+
+    /// Ends %@
+    public static func plusEnds(_ a0: String) -> LocalizedStringResource {
+        r("plus_ends", "Ends \(a0)")
+    }
+
+    /// No end date
+    public static var plusNoEnd: LocalizedStringResource {
+        r("plus_no_end", "No end date")
+    }
+
+    /// Manage subscription
+    public static var plusManage: LocalizedStringResource {
+        r("plus_manage", "Manage subscription")
+    }
+
+    /// See plans
+    public static var plusSeePlans: LocalizedStringResource {
+        r("plus_see_plans", "See plans")
+    }
+
+    /// Plus is back on
+    public static var plusRestoredOn: LocalizedStringResource {
+        r("plus_restored_on", "Plus is back on")
+    }
+
+    /// One subscription covers everyone in the house.
+    public static var plusFooter: LocalizedStringResource {
+        r("plus_footer", "One subscription covers everyone in the house.")
+    }
+
+    /// An Apple subscription keeps billing until you cancel it in your Apple ID settings.
+    public static var settingsDeleteAccountSubscriptionNote: LocalizedStringResource {
+        r("settings_delete_account_subscription_note", "An Apple subscription keeps billing until you cancel it in your Apple ID settings.")
+    }
+
 }

@@ -56,6 +56,10 @@ public struct CaptureFeature: Sendable {
         /// The chip last used to add something, as the fallback when nothing
         /// in the line says otherwise. Per device, like every habit.
         @Shared(.captureLastKind) public var lastKind: String
+        /// Whether the house has Plus. Without it the Event and Expense chips
+        /// are locked: the line is never filed there, and tapping one opens the
+        /// paywall.
+        @Shared(.pro) public var pro: ProStatus
 
         @Presents public var composer: Composer.State?
         @Presents public var alert: AlertState<Action.Alert>?
@@ -82,7 +86,9 @@ public struct CaptureFeature: Sendable {
             // Read through a second handle: `self.lastKind` is an access on
             // `self`, and `self` is not whole yet.
             @Shared(.captureLastKind) var remembered: String
-            self.kind = kind ?? CaptureKind(rawValue: remembered) ?? .shopping
+            @Shared(.pro) var pro: ProStatus
+            let habit = CaptureKind(rawValue: remembered) ?? .shopping
+            self.kind = kind ?? (habit.proFeature != nil && !pro.isPro ? .shopping : habit)
         }
 
         /// Whether the Add button does anything.
@@ -140,6 +146,7 @@ public struct CaptureFeature: Sendable {
     @Dependency(\.shopping) var shopping
     @Dependency(\.tasks) var tasks
     @Dependency(\.notes) var notes
+    @Dependency(\.paywall) var paywall
     @Dependency(\.captureClassifier) var classifier
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var now
@@ -168,6 +175,9 @@ public struct CaptureFeature: Sendable {
                 return askModel(state)
 
             case let .kindTapped(kind):
+                if let feature = kind.proFeature, !state.pro.isPro {
+                    return .run { _ in paywall.request(feature) }
+                }
                 state.kind = kind
                 state.isKindLocked = true
                 return .cancel(id: CancelID.model)
@@ -246,6 +256,13 @@ public struct CaptureFeature: Sendable {
     /// Rules when they are sure, then the model, then the rules' lean, then
     /// habit.
     static func suggestedKind(_ state: State) -> CaptureKind {
+        let kind = readKind(state)
+        // A locked chip is never the guess: the line goes where it can.
+        guard kind.proFeature != nil, !state.pro.isPro else { return kind }
+        return .shopping
+    }
+
+    private static func readKind(_ state: State) -> CaptureKind {
         let draft = state.draft
         if draft.confidence == .strong, let kind = draft.kind { return kind }
         if let model = state.modelKind { return model }
@@ -280,6 +297,9 @@ public struct CaptureFeature: Sendable {
 
     private func add(_ state: inout State) -> Effect<Action> {
         guard state.canAdd else { return .none }
+        if let feature = state.kind.proFeature, !state.pro.isPro {
+            return .run { _ in paywall.request(feature) }
+        }
         let draft = state.draft
         let homeID = state.homeID
 

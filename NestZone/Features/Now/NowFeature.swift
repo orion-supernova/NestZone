@@ -37,6 +37,8 @@ public struct NowFeature: Sendable {
         /// The clock the dock reads, moved on by a timer so "in 12 min" and
         /// the switch to the evening happen without anybody touching anything.
         public var now: Date
+        /// Whether the house has Plus; without it the dock reads no events.
+        @Shared(.pro) public var pro: ProStatus
 
         @Presents public var dinner: DinnerFeature.State?
         /// The event composer, opened to turn a dinner that has already been
@@ -99,6 +101,8 @@ public struct NowFeature: Sendable {
         case decideDinnerTapped
         case dinnerSuggestionAccepted
         case makeOccasionTapped
+        /// Plus turned on or off: the dock starts or stops reading events.
+        case proChanged(Bool)
         case occasionLinked
         case writeFailed(AppError)
         case dinner(PresentationAction<DinnerFeature.Action>)
@@ -126,10 +130,20 @@ public struct NowFeature: Sendable {
     @Dependency(\.homes) var homesClient
     @Dependency(\.polls) var pollsClient
     @Dependency(\.stats) var statsClient
+    @Dependency(\.paywall) var paywall
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var currentDate
 
     public init() {}
+
+    private func eventsEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await events in eventsClient.upcoming(homeID, 10) {
+                await send(.upcomingUpdated(events))
+            }
+        } catch: { _, _ in }
+            .cancellable(id: CancelID.events, cancelInFlight: true)
+    }
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -148,12 +162,8 @@ public struct NowFeature: Sendable {
                     }
                     .cancellable(id: CancelID.meals, cancelInFlight: true),
 
-                    .run { send in
-                        for try await events in eventsClient.upcoming(homeID, 10) {
-                            await send(.upcomingUpdated(events))
-                        }
-                    } catch: { _, _ in }
-                        .cancellable(id: CancelID.events, cancelInFlight: true),
+                    // The dock carries no events for a house without Plus.
+                    state.pro.isPro ? eventsEffect(homeID) : .none,
 
                     .run { send in
                         for try await members in homesClient.members(homeID) {
@@ -280,8 +290,19 @@ public struct NowFeature: Sendable {
             // The composer rather than a silent write: an occasion needs a
             // time, and once it is open it may as well carry the budget, the
             // shopping and the guest list too.
+            case let .proChanged(isPro):
+                guard isPro else {
+                    state.upcoming = []
+                    return .cancel(id: CancelID.events)
+                }
+                return eventsEffect(state.homeID)
+
             case .makeOccasionTapped:
                 guard let plan = state.tonight, plan.event == nil else { return .none }
+                // An occasion is an event, and events are Plus.
+                guard state.pro.isPro else {
+                    return .run { _ in paywall.request(.eventFromElsewhere) }
+                }
                 let title = plan.headline ?? String(localized: L10n.dinnerOccasionFallbackTitle)
                 state.occasion = EventComposerFeature.State(
                     homeID: state.homeID,

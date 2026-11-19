@@ -1,5 +1,6 @@
 import AuthenticationServices
 import ComposableArchitecture
+import StoreKit
 import SwiftUI
 
 /// Settings, rebuilt on `Form`.
@@ -24,6 +25,8 @@ public struct SettingsView: View {
     /// change — there is no way to add a row without it — so the content fades
     /// instead of springing.
     private var disclosure: Animation { reduceMotion ? Motion.fade : Motion.spring }
+
+    @State private var showsManageSubscription = false
 
     #if DEBUG
     /// `GlassListLab` opens from here, with local state rather than through the
@@ -50,6 +53,7 @@ public struct SettingsView: View {
         Form {
             profileSection
             homeSection
+            plusSection
             appearanceSection
             notificationsSection
             preferencesSection
@@ -82,8 +86,12 @@ public struct SettingsView: View {
             }
             Button(role: .cancel) {} label: { Text(L10n.commonCancel) }
         } message: {
-            Text(L10n.settingsDeleteAccountMessage)
+            // An Apple subscription is not ours to cancel: deleting the account
+            // does not stop it billing.
+            Text(String(localized: L10n.settingsDeleteAccountMessage)
+                + "\n\n" + String(localized: L10n.settingsDeleteAccountSubscriptionNote))
         }
+        .manageSubscriptionsSheet(isPresented: $showsManageSubscription)
         #if DEBUG
         .sheet(isPresented: $showsGlassLab) {
             NavigationStack {
@@ -632,6 +640,75 @@ public struct SettingsView: View {
                         .foregroundStyle(Palette.emerald)
                 }
             }
+        }
+    }
+
+    // MARK: - NestZone Plus
+
+    /// The house's subscription: whether it is on, whose it is, when it
+    /// renews, and the two things the App Store wants within reach — managing
+    /// it and restoring it.
+    private var plusSection: some View {
+        let status = store.pro
+        return Section {
+            LabeledContent {
+                Text(status.isPro ? L10n.plusStatusOn : L10n.plusStatusOff)
+                    .foregroundStyle(status.isPro ? Palette.success : Color.secondary)
+            } label: {
+                Label { Text(L10n.proFullName) } icon: { Image(systemName: "sparkles") }
+            }
+
+            if status.isPro, status.isLoaded {
+                if let carrier = status.carrier {
+                    Text(status.mine
+                        ? L10n.paywallCarriedByYou
+                        : L10n.paywallCarriedBy(carrier.name ?? User.displayName(name: nil, email: nil)))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                if let end = status.expiresAt {
+                    // A subscription that is switched off says when it ends, not
+                    // that it "won't renew"; lifetime has no date at all.
+                    Text(status.willRenew == false
+                        ? L10n.plusEnds(end.formatted(date: .abbreviated, time: .omitted))
+                        : L10n.plusRenews(end.formatted(date: .abbreviated, time: .omitted)))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(L10n.plusNoEnd).font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+
+            if status.isPro, status.mine {
+                Button { showsManageSubscription = true } label: {
+                    Label { Text(L10n.plusManage) } icon: { Image(systemName: "creditcard") }
+                }
+            } else if !status.isPro {
+                Button { PaywallBroker.shared.request(nil) } label: {
+                    Label { Text(L10n.plusSeePlans) } icon: { Image(systemName: "lock.open.fill") }
+                }
+            }
+
+            Button { store.send(.plusRestoreTapped) } label: {
+                HStack {
+                    Label { Text(L10n.paywallRestore) } icon: { Image(systemName: "arrow.clockwise") }
+                    if store.isRestoringPlus {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(store.isRestoringPlus)
+
+            if let result = store.plusRestoreResult {
+                Text(result == .restored ? L10n.plusRestoredOn : L10n.paywallNothingToRestore)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text(L10n.proFullName)
+        } footer: {
+            Text(L10n.plusFooter)
         }
     }
 

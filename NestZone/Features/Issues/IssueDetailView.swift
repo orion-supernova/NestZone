@@ -425,7 +425,8 @@ public struct IssueDetailView: View {
             actionTitle: upcoming ? L10n.issuesPlanMoveVisit : L10n.issuesPlanBookVisit,
             actionSymbol: upcoming ? "calendar.badge.clock" : nil,
             glass: glass,
-            onOpen: store.detail?.event != nil ? { store.send(.openEventTapped) } : nil
+            onOpen: store.detail?.event != nil ? { store.send(.openEventTapped) } : nil,
+            lockedBy: .eventFromElsewhere
         ) {
             store.send(.scheduleVisitTapped)
         }
@@ -471,7 +472,8 @@ public struct IssueDetailView: View {
             actionTitle: L10n.issuesPlanLogCost,
             progress: store.detail?.estimateProgress,
             isOver: store.detail?.isOverEstimate ?? false,
-            glass: glass
+            glass: glass,
+            lockedBy: .expenseFromElsewhere
         ) {
             store.send(.logCostTapped)
         }
@@ -726,6 +728,8 @@ private struct PlanRow: View {
     let glass: Namespace.ID
     /// Present when the arranged thing lives somewhere else worth going to.
     var onOpen: (() -> Void)? = nil
+    /// Set when the control's action needs NestZone Plus: it wears a lock.
+    var lockedBy: ProFeature? = nil
     let action: () -> Void
 
     var body: some View {
@@ -785,6 +789,7 @@ private struct PlanRow: View {
             }
             .buttonStyle(.pressable)
             .accessibilityLabel(Text(actionTitle))
+            .proLocked(if: lockedBy)
         }
         .glassRow()
         .glassEffectID("plan-\(symbol)", in: glass)

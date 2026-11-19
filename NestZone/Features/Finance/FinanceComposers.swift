@@ -899,7 +899,7 @@ public struct SettleUpFeature: Sendable {
             if id == currentUserID { return String(localized: L10n.financeYou) }
             return members[id: id]?.displayName
                 ?? balances.first { $0.userID == id }?.displayName
-                ?? String(localized: L10n.financeSomeone)
+                ?? String(localized: L10n.memberDeleted)
         }
 
         /// The suggestions still worth showing.

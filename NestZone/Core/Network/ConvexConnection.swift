@@ -234,7 +234,7 @@ public final class ConvexConnection: @unchecked Sendable {
         // Deterministic, or somebody else's job: `.notAuthenticated` is the
         // session machinery's to resolve, and a decode failure will fail
         // identically on every attempt.
-        case .notAuthenticated, .decoding, .validation, .noHomeSelected, .cancelled:
+        case .notAuthenticated, .decoding, .validation, .noHomeSelected, .cancelled, .proRequired:
             false
         }
     }
@@ -414,7 +414,14 @@ public final class ConvexConnection: @unchecked Sendable {
             // argument list, a query that overran its second. All of these mean
             // the request reached the backend, so none of them are an outage.
             case let .ServerError(msg): .server(msg)
-            case let .ConvexError(data): .server(data)
+            case let .ConvexError(data):
+                // A Plus refusal opens the paywall wherever it surfaced; every
+                // other thrown `ConvexError` is a server answer.
+                if let refusal = ProRefusal.feature(inConvexErrorData: data) {
+                    .proRequired(refusal)
+                } else {
+                    .server(data)
+                }
             // Everything the transport itself can go wrong with. `ClientError`
             // has no offline case — the three above are all of it — so a phone
             // in a lift produced `.server` and the app told the household
@@ -428,6 +435,7 @@ public final class ConvexConnection: @unchecked Sendable {
             mapped = AppError(error)
         }
         log.error("\(name, privacy: .public) failed: \(mapped.diagnostic, privacy: .public)")
+        if case let .proRequired(feature) = mapped { PaywallBroker.shared.request(feature) }
         return mapped
     }
 }

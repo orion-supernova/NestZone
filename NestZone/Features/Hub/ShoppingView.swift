@@ -7,6 +7,9 @@ public struct ShoppingView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isComposerFocused: Bool
+    /// Aisles are Plus: a house without it gets the flat list, no picker and
+    /// no switch. The server writes the plain category for it either way.
+    @Shared(.pro) private var pro
 
     /// Things this person ticked off here, for the haptic. Counted at the tap,
     /// not read off the item: an item also changes when somebody else buys it,
@@ -40,8 +43,8 @@ public struct ShoppingView: View {
             eventSections
             partSections
             mealSections
-            viewModeToggle
-            if store.isGrouped {
+            if pro.isPro { viewModeToggle }
+            if store.isGrouped, pro.isPro {
                 pendingSections
             } else {
                 flatSection
@@ -452,21 +455,23 @@ public struct ShoppingView: View {
     /// scrolling back up or reopening a sheet.
     private var composer: some View {
         HStack(spacing: 10) {
-            Menu {
-                Picker(selection: $store.draftCategory) {
-                    ForEach(ShoppingItem.Category.allCases, id: \.self) { category in
-                        Label { Text(category.title) } icon: {
-                            Image(systemName: category.symbol)
+            if pro.isPro {
+                Menu {
+                    Picker(selection: $store.draftCategory) {
+                        ForEach(ShoppingItem.Category.allCases, id: \.self) { category in
+                            Label { Text(category.title) } icon: {
+                                Image(systemName: category.symbol)
+                            }
+                            .tag(category)
                         }
-                        .tag(category)
-                    }
-                } label: { EmptyView() }
-            } label: {
-                Image(systemName: store.draftCategory.symbol)
-                    .font(.body.weight(.semibold))
-                    .frame(width: 40, height: 40)
+                    } label: { EmptyView() }
+                } label: {
+                    Image(systemName: store.draftCategory.symbol)
+                        .font(.body.weight(.semibold))
+                        .frame(width: 40, height: 40)
+                }
+                .accessibilityLabel(Text(store.draftCategory.title))
             }
-            .accessibilityLabel(Text(store.draftCategory.title))
 
             TextField(text: $store.draft) {
                 Text(L10n.shoppingAddPlaceholder)

@@ -125,6 +125,9 @@ enum SparkleStoreKit {
             log.error("a transaction did not verify; left alone")
             return
         }
+        // Only Sparkles. NestZone Plus transactions (`...NestZone.plus.`) belong to
+        // `PurchasesClient`, which settles them with `pro:refresh` and finishes
+        // them; this listener never touches them, finished or not.
         guard transaction.productID.hasPrefix(prefix) else { return }
         // Only the signed-in buyer's, left unfinished otherwise so the buyer's
         // own next session finds it. A purchase with no token at all is

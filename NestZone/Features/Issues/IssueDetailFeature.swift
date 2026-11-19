@@ -324,6 +324,10 @@ public struct IssueDetailFeature: Sendable {
     private enum CancelID { case detail }
 
     @Dependency(\.issues) var issuesClient
+    @Dependency(\.paywall) var paywall
+    /// Booking a visit makes an event, and logging a cost makes an expense:
+    /// both are Plus. The estimate and the "spent" figure stay free.
+    @Shared(.pro) var pro: ProStatus
     @Dependency(\.dismiss) var dismiss
 
     public init() {}
@@ -514,6 +518,7 @@ public struct IssueDetailFeature: Sendable {
                 return .none
 
             case .scheduleVisitTapped:
+                guard pro.isPro else { return .run { _ in paywall.request(.eventFromElsewhere) } }
                 // Reopened on the visit already booked, when there is one that
                 // has not happened yet: the second tap on this control is
                 // nearly always "they're coming Thursday now", and a sheet that
@@ -566,6 +571,7 @@ public struct IssueDetailFeature: Sendable {
                 return .none
 
             case .logCostTapped:
+                guard pro.isPro else { return .run { _ in paywall.request(.expenseFromElsewhere) } }
                 let issue = state.current
                 state.expense = ExpenseComposerFeature.State(
                     homeID: state.homeID,
