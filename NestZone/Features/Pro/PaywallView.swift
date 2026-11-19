@@ -125,7 +125,7 @@ struct PaywallView: View {
     @ViewBuilder
     private var plans: some View {
         if store.isLoading {
-            SkeletonList(rows: 2, height: 84)
+            SkeletonList(rows: 2, height: 120)
         } else if store.isUnavailable {
             VStack(spacing: 10) {
                 Text(L10n.paywallUnavailableTitle).font(.headline)
@@ -158,14 +158,26 @@ struct PaywallView: View {
                 Button { store.send(.purchaseTapped) } label: {
                     HStack(spacing: 8) {
                         if store.isPurchasing { ProgressView().tint(.white) }
-                        Text(store.selected?.trialDays != nil ? L10n.paywallStartTrial : L10n.paywallSubscribe)
+                        Text(ctaTitle)
                     }
                 }
                 .buttonStyle(.depth)
                 .disabled(store.isPurchasing || store.isRestoring || store.selected == nil)
                 .accessibilityIdentifier("PaywallSubscribe")
+
+                // Renewal terms stand next to the button, before the tap.
+                Text(L10n.paywallRenewsNote)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
             }
         }
+    }
+
+    private var ctaTitle: LocalizedStringResource {
+        guard let days = store.selected?.trialDays else { return L10n.paywallSubscribe }
+        return L10n.paywallStartTrialDays(days)
     }
 
     private func messageLine(_ message: PaywallFeature.State.Message) -> some View {
@@ -212,8 +224,8 @@ struct PaywallView: View {
             .buttonStyle(.pressable)
             .disabled(store.isPurchasing || store.isRestoring)
 
-            Text(L10n.paywallDisclosure)
-                .font(.caption2)
+            Text(L10n.paywallDisclosureFull)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -275,12 +287,13 @@ private struct PlanCard: View {
                                 .background(theme.accent, in: .capsule)
                         }
                     }
-                    Text(priceLine).font(.subheadline).foregroundStyle(.secondary)
-                    if let perMonth = package.pricePerMonth {
-                        Text(L10n.paywallThatIsPerMonth(perMonth))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    // The billed price and its period lead; anything per month
+                    // is a side note, smaller and quieter (Guideline 3.1.2).
+                    Text(billedLine).font(.system(.title3, design: .rounded, weight: .bold))
+                    if let trial = trialLine {
+                        Text(trial).font(.subheadline.weight(.medium)).foregroundStyle(theme.accent)
                     }
+                    Text(note).font(.footnote).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -294,15 +307,22 @@ private struct PlanCard: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    /// "1 week free, then $19.99 a year", or just the price.
-    private var priceLine: LocalizedStringResource {
-        let per = package.kind == .yearly
+    /// "$19.99/year": the amount that is billed, and how often.
+    private var billedLine: LocalizedStringResource {
+        package.kind == .yearly
             ? L10n.paywallPricePerYear(package.price)
             : L10n.paywallPricePerMonth(package.price)
-        guard let days = package.trialDays else { return per }
-        let trial: LocalizedStringResource = days % 7 == 0
-            ? L10n.paywallWeeksFree(days / 7)
-            : L10n.paywallDaysFree(days)
-        return L10n.paywallTrialThen(String(localized: trial), String(localized: per))
+    }
+
+    /// "7 days free, then $19.99/year", only when the plan starts with a trial.
+    private var trialLine: LocalizedStringResource? {
+        guard let days = package.trialDays else { return nil }
+        return L10n.paywallTrialThen(String(localized: L10n.paywallDaysFree(days)), String(localized: billedLine))
+    }
+
+    private var note: LocalizedStringResource {
+        if package.kind == .monthly { return L10n.paywallBilledMonthlyNote }
+        guard let perMonth = package.pricePerMonth else { return L10n.paywallBilledYearlyPlain }
+        return L10n.paywallBilledYearlyNote(perMonth)
     }
 }
