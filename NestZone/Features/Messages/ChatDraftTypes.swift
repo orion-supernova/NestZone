@@ -33,3 +33,8 @@ public enum PinIntent: Equatable, Sendable {
     case pin(PinnedMessage)
     case unpin
 }
+
+/// The pin the thread showed when a pin write was answered.
+public struct PinSettle: Equatable, Sendable {
+    public var pin: PinnedMessage?
+}

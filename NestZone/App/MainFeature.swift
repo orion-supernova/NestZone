@@ -710,6 +710,15 @@ extension MainFeature.State {
         if CompanionFlag.isEnabled { companion.userID = userID }
         settings.home = home
         inbox.currentUserID = user?.id
+        moderation.userID = userID
+        // The full-screen avatar viewer reads who this is from the directory
+        // (it has no store), so an optimistic launch, which learns the user a
+        // moment after the tabs, has to tell it too or it offers to report
+        // the person's own face.
+        let homeID = self.homeID
+        Task { @MainActor in
+            ModerationDirectory.shared.setSession(userID: userID, homeID: homeID)
+        }
     }
 }
 

@@ -52,12 +52,6 @@ public struct ChatFeature: Sendable {
         /// composer rather than opening an alert: a message can be paragraphs
         /// long, and a one-line alert field is no place to rework it.
         public var editing: MessageID?
-        /// The bubble showing its actions. A hand-built bar rather than
-        /// `.contextMenu`: that one takes half a second to appear, gives no
-        /// feedback while you wait, and previews whatever view it is attached
-        /// to — which for a chat row is the full width of the screen, so the
-        /// menu never looked like it belonged to a particular bubble.
-        public var actionsFor: MessageID?
         /// Deleted here, not yet gone on the server. Filtered out of the thread
         /// and out of incoming pushes, which would otherwise resurrect them
         /// between the mutation landing and the subscription catching up.
@@ -75,6 +69,10 @@ public struct ChatFeature: Sendable {
         /// them for a moment.
         public var reactionIntents: [ReactionIntent: Bool] = [:]
         public var pinIntent: PinIntent?
+        /// Set once the pin write has been answered, with the pin the thread
+        /// showed at that moment: any live change after it is somebody else's
+        /// and retires the laid-over pin even if it is not ours.
+        var pinSettledAgainst: PinSettle?
         /// What was said after a report, for a few seconds.
         public var notice: ReportNotice?
         @Presents public var report: ReportFeature.State?
@@ -181,10 +179,14 @@ public struct ChatFeature: Sendable {
         /// now caught up with.
         public mutating func absorb(_ live: Conversation) {
             conversation = live
-            switch pinIntent {
-            case let .pin(pin) where live.pinned?.messageID == pin.messageID: pinIntent = nil
-            case .unpin where live.pinned == nil: pinIntent = nil
-            default: break
+            let matches: Bool = switch pinIntent {
+            case let .pin(pin): live.pinned?.messageID == pin.messageID
+            case .unpin: live.pinned == nil
+            case nil: false
+            }
+            if matches || (pinSettledAgainst.map { live.pinned != $0.pin } ?? false) {
+                pinIntent = nil
+                pinSettledAgainst = nil
             }
         }
 
@@ -267,7 +269,9 @@ public struct ChatFeature: Sendable {
         case retryTapped(MessageID)
         case sendSucceeded(local: MessageID, server: MessageID)
         case sendFailed(local: MessageID, AppError)
-        case bubbleHeld(MessageID)
+        case blockSenderTapped(MessageID)
+        case messageNotLoaded
+        case pinWriteSucceeded
         case reactionTapped(MessageID, String)
         case reactionFailed(MessageID, String, on: Bool, AppError)
         case replyTapped(MessageID)
@@ -284,7 +288,6 @@ public struct ChatFeature: Sendable {
         case blockFailed(BlockedPerson, AppError)
         case unblockFailed(BlockedPerson, AppError)
         case report(PresentationAction<ReportFeature.Action>)
-        case actionsDismissed
         case backgroundTapped
         case editTapped(MessageID)
         case editCancelled
@@ -354,9 +357,6 @@ public struct ChatFeature: Sendable {
                 if let editing = state.editing, state.messages[id: editing] == nil {
                     state.editing = nil
                     state.draft = ""
-                }
-                if let open = state.actionsFor, state.messages[id: open] == nil {
-                    state.actionsFor = nil
                 }
                 // A reaction the server now shows as chosen stops being laid over it.
                 state.reactionIntents = state.reactionIntents.filter { intent, on in
@@ -466,17 +466,7 @@ public struct ChatFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            // Any message in the thread has a menu now: reacting, replying and
-            // reporting are everybody's; edit and delete are the author's.
-            case let .bubbleHeld(id):
-                guard let message = state.messages[id: id], message.kind != .system else {
-                    return .none
-                }
-                state.actionsFor = state.actionsFor == id ? nil : id
-                return .none
-
             case let .reactionTapped(id, emoji):
-                state.actionsFor = nil
                 guard state.messages[id: id] != nil else { return .none }
                 // Nothing optimistic is drawn for a write that will be refused.
                 guard pro.isPro else { return .run { _ in paywall.request(.messages) } }
@@ -504,8 +494,12 @@ public struct ChatFeature: Sendable {
                 return .none
 
             case let .replyTapped(id):
-                state.actionsFor = nil
                 guard let message = state.messages[id: id] else { return .none }
+                // Nothing to reply into: a blocked 1:1 is closed, and a house
+                // without Plus is read-only, which sends for the paywall just
+                // as the send button does.
+                guard !state.isCounterpartBlocked else { return .none }
+                guard pro.isPro else { return .run { _ in paywall.request(.messages) } }
                 // A reply and a rewrite cannot share the composer.
                 if state.editing != nil {
                     state.editing = nil
@@ -530,12 +524,10 @@ public struct ChatFeature: Sendable {
                 return .none
 
             case let .copyTapped(id):
-                state.actionsFor = nil
                 guard let message = state.messages[id: id] else { return .none }
                 return .run { _ in pasteboard.copy(message.content) }
 
             case let .pinTapped(id):
-                state.actionsFor = nil
                 guard let message = state.messages[id: id], message.kind != .system else {
                     return .none
                 }
@@ -550,31 +542,45 @@ public struct ChatFeature: Sendable {
                     pinnedBy: state.currentUserID
                 )
                 state.pinIntent = .pin(pin)
-                return .run { [conversation = state.conversation.id] _ in
+                state.pinSettledAgainst = nil
+                return .run { [conversation = state.conversation.id] send in
                     try await messagesClient.pin(conversation, id)
+                    await send(.pinWriteSucceeded)
                 } catch: { error, send in
                     await send(.pinFailed(.pin(pin), AppError(error)))
                 }
 
             case .unpinTapped:
-                state.actionsFor = nil
                 guard state.pinned != nil else { return .none }
                 state.pinIntent = .unpin
+                state.pinSettledAgainst = nil
                 // Taking a pin down never needs Plus, like every removal.
-                return .run { [conversation = state.conversation.id] _ in
+                return .run { [conversation = state.conversation.id] send in
                     try await messagesClient.unpin(conversation)
+                    await send(.pinWriteSucceeded)
                 } catch: { error, send in
                     await send(.pinFailed(.unpin, AppError(error)))
                 }
 
+            case .pinWriteSucceeded:
+                // From here the live thread is the truth. If it already says
+                // what was chosen, `absorb` has cleared the overlay; if not,
+                // the next change to the pin, ours or not, will.
+                if state.pinIntent != nil {
+                    state.pinSettledAgainst = PinSettle(pin: state.conversation.pinned)
+                }
+                return .none
+
             case let .pinFailed(intent, error):
-                if state.pinIntent == intent { state.pinIntent = nil }
+                if state.pinIntent == intent {
+                    state.pinIntent = nil
+                    state.pinSettledAgainst = nil
+                }
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
 
             case let .reportTapped(id):
-                state.actionsFor = nil
                 guard let message = state.messages[id: id], !state.isMine(message) else { return .none }
                 state.report = ReportFeature.State(
                     subject: ReportSubject(kind: .message, targetID: id.rawValue),
@@ -603,21 +609,35 @@ public struct ChatFeature: Sendable {
                 state.notice = nil
                 return .none
 
+            // Somebody else's message in any thread, group included: blocking
+            // is not only a 1:1 thing.
+            case let .blockSenderTapped(id):
+                guard let message = state.messages[id: id], !state.isMine(message) else {
+                    return .none
+                }
+                state.alert = Self.confirmBlockAlert(
+                    userID: message.senderID,
+                    name: state.members[id: message.senderID]?.displayName
+                        ?? String(localized: L10n.memberDeleted)
+                )
+                return .none
+
+            // A quote or a pin that points past the loaded window: said, not a
+            // dead tap.
+            case .messageNotLoaded:
+                state.notice = .notLoaded
+                return .run { send in
+                    try await clock.sleep(for: ReportNotice.linger)
+                    await send(.noticeExpired)
+                }
+                .cancellable(id: CancelID.notice, cancelInFlight: true)
+
             case .blockTapped:
                 guard let other = state.directCounterpart else { return .none }
-                let name = state.members[id: other]?.displayName ?? state.title
-                state.alert = AlertState {
-                    TextState(String(localized: L10n.chatBlockTitle(name)))
-                } actions: {
-                    ButtonState(role: .destructive, action: .confirmBlock(other)) {
-                        TextState(String(localized: L10n.chatBlockConfirm))
-                    }
-                    ButtonState(role: .cancel) {
-                        TextState(String(localized: L10n.commonCancel))
-                    }
-                } message: {
-                    TextState(String(localized: L10n.chatBlockMessage))
-                }
+                state.alert = Self.confirmBlockAlert(
+                    userID: other,
+                    name: state.members[id: other]?.displayName ?? state.title
+                )
                 return .none
 
             case let .alert(.presented(.confirmBlock(userID))):
@@ -660,8 +680,6 @@ public struct ChatFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            case .actionsDismissed:
-                state.actionsFor = nil
                 return .none
 
             // Tapping the thread backs out of everything the composer and the
@@ -669,7 +687,6 @@ public struct ChatFeature: Sendable {
             // and the keyboard both went away read as stuck: the banner stayed,
             // the text stayed, and nothing on screen explained why.
             case .backgroundTapped:
-                state.actionsFor = nil
                 guard state.editing != nil else { return .none }
                 state.editing = nil
                 state.draft = ""
@@ -680,10 +697,8 @@ public struct ChatFeature: Sendable {
                     return .none
                 }
                 guard pro.isPro else {
-                    state.actionsFor = nil
-                    return .run { _ in paywall.request(.messages) }
+                        return .run { _ in paywall.request(.messages) }
                 }
-                state.actionsFor = nil
                 state.replying = nil
                 state.editing = id
                 state.draft = message.content
@@ -704,7 +719,6 @@ public struct ChatFeature: Sendable {
                 guard let message = state.messages[id: id], state.canModify(message) else {
                     return .none
                 }
-                state.actionsFor = nil
                 // Gone from the thread now; the subscription makes it official.
                 state.deleting.insert(id)
                 if state.editing == id {
@@ -765,6 +779,21 @@ public struct ChatFeature: Sendable {
         }
         .ifLet(\.$alert, action: \.alert)
         .ifLet(\.$report, action: \.report) { ReportFeature() }
+    }
+
+    private static func confirmBlockAlert(userID: UserID, name: String) -> AlertState<Action.Alert> {
+        AlertState {
+            TextState(String(localized: L10n.chatBlockTitle(name)))
+        } actions: {
+            ButtonState(role: .destructive, action: .confirmBlock(userID)) {
+                TextState(String(localized: L10n.chatBlockConfirm))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: L10n.commonCancel))
+            }
+        } message: {
+            TextState(String(localized: L10n.chatBlockMessage))
+        }
     }
 
     /// How much of a message a reply or a pin quotes, as the server cuts it.

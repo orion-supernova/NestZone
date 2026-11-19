@@ -123,10 +123,9 @@ struct ChatView: View {
     @Bindable var store: StoreOf<ChatFeature>
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Shared(.pro) private var pro
     @FocusState private var isComposerFocused: Bool
-    /// Measured, so the panel can be aligned to a bubble edge and kept on screen.
-    @State private var panelSize: CGSize = .zero
     /// Off until the thread's first delivery has been drawn, so opening a chat
     /// does not slide its whole history in one bubble at a time.
     @State private var isSettled = false
@@ -136,6 +135,8 @@ struct ChatView: View {
     /// Your own reactions, counted — the haptic keys on this and never on the
     /// model, which somebody else's reaction also changes.
     @State private var reactionTaps = 0
+    /// Taps on a quote or a pin whose message is not loaded.
+    @State private var missTaps = 0
 
     var body: some View {
         // Sorted once per render. `startsGroup` used to reach for `ordered`
@@ -144,7 +145,7 @@ struct ChatView: View {
         let term = isSearching ? searchText.trimmingCharacters(in: .whitespacesAndNewlines) : ""
         let thread = term.isEmpty
             ? all
-            : all.filter { $0.content.localizedCaseInsensitiveContains(term) }
+            : all.filter { $0.content.localizedStandardContains(term) }
         // The newest bubble, when it is somebody else's. Arrivals animate on
         // this rather than on the count: a send is animated where it is made,
         // and your bubble's echo replacing its stand-in has to stay a silent
@@ -163,10 +164,8 @@ struct ChatView: View {
                     LazyVStack(spacing: 4) {
                         ForEach(Array(thread.enumerated()), id: \.element.id) { index, message in
                             bubble(for: message, at: index, in: thread, term: term, pin: pin, proxy: proxy)
+                                .equatable()
                                 .id(message.id)
-                                // The open panel overhangs its bubble, and a
-                                // lazy stack draws later rows over earlier ones.
-                                .zIndex(store.actionsFor == message.id ? 1 : 0)
                         }
 
                         if thread.isEmpty, !term.isEmpty {
@@ -183,10 +182,7 @@ struct ChatView: View {
                     // appeared.
                     .animation(isSettled ? Motion.spring : nil, value: arrival)
                     // Catches the taps that land beside a bubble rather than on
-                    // one. Behind the thread, not around it: a gesture on the
-                    // scroll view is simultaneous with the bubbles' own, so the
-                    // finger coming up off a hold counted as a tap too and shut
-                    // the panel in the same breath that opened it.
+                    // one. Behind the thread, not around it.
                     .background {
                         Color.clear
                             .contentShape(.rect)
@@ -203,54 +199,15 @@ struct ChatView: View {
             // The pin and the search sit under the navigation bar, over the
             // thread. Inside the reader so a tap on the pin can scroll to it.
             .safeAreaInset(edge: .top, spacing: 0) {
-                VStack(spacing: 0) {
-                    if isSearching {
-                        ChatSearchBar(
-                            text: $searchText,
-                            resultCount: thread.count,
-                            close: closeSearch
-                        )
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                    if let pin, !isSearching {
-                        PinnedBar(
-                            pin: pin,
-                            senderName: pin.senderID.map { store.state.senderName(forID: $0) }
-                                ?? String(localized: L10n.memberDeleted),
-                            goTo: { scroll(to: pin.messageID, in: all, proxy) },
-                            unpin: { store.send(.unpinTapped) }
-                        )
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                }
-                .animation(Motion.spring, value: isSearching)
-                .animation(Motion.spring, value: pin?.messageID)
+                topBars(resultCount: thread.count, pin: pin, proxy: proxy)
             }
-            .onChange(of: store.state.ordered.last?.id) { _, _ in
-                guard !isSearching else { return }
-                scrollToNewest(proxy)
+            .onChange(of: all.last?.id) { _, newest in
+                guard !isSearching, let newest else { return }
+                withAnimation(Motion.spring) { proxy.scrollTo(newest, anchor: .bottom) }
             }
             .onChange(of: store.isLoading, initial: true) { _, loading in
                 if !loading { isSettled = true }
             }
-        }
-        // Drawn over the scroll view, not inside it: an overlay on the bubble
-        // is clipped by the scroll view's bounds, which sliced the panel in half
-        // whenever the message was near the top of the screen.
-        .overlayPreferenceValue(BubbleActionsAnchorKey.self) { anchor in
-            GeometryReader { proxy in
-                if let anchor, let message = store.messages[id: anchor.id] {
-                    let bubble = proxy[anchor.bounds]
-                    panel(for: message, isMine: anchor.isMine)
-                        .onGeometryChange(for: CGSize.self) { $0.size } action: { panelSize = $0 }
-                        .position(
-                            x: panelX(alongside: bubble, isMine: anchor.isMine, within: proxy.size),
-                            y: panelY(around: bubble, within: proxy.size, insets: proxy.safeAreaInsets)
-                        )
-                        .transition(.scale(scale: 0.85).combined(with: .opacity))
-                }
-            }
-            .animation(Motion.spring, value: store.actionsFor)
         }
         .background(Backdrop(tint: theme.accent))
         // Swipe the keyboard down; a tap anywhere in the thread does the same,
@@ -260,7 +217,7 @@ struct ChatView: View {
             VStack(spacing: 8) {
                 if let notice = store.notice {
                     ReportNoticeToast(notice: notice)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(AnyTransition.move(edge: .bottom).combined(with: .opacity).reduced(reduceMotion))
                 }
                 // Read-only for a house without Plus: the thread stays readable
                 // and the way to the plans takes the composer's place. A 1:1
@@ -276,6 +233,7 @@ struct ChatView: View {
             .animation(Motion.spring, value: store.notice)
         }
         .sensoryFeedback(.impact(weight: .light), trigger: reactionTaps)
+        .sensoryFeedback(.warning, trigger: missTaps)
         .navigationTitle(store.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -302,6 +260,33 @@ struct ChatView: View {
         )
     }
 
+    /// The search field or the pinned bar, under the navigation bar.
+    @ViewBuilder
+    private func topBars(resultCount: Int, pin: PinnedMessage?, proxy: ScrollViewProxy) -> some View {
+        VStack(spacing: 0) {
+            if isSearching {
+                ChatSearchBar(
+                    text: $searchText,
+                    resultCount: resultCount,
+                    close: closeSearch
+                )
+                .transition(AnyTransition.move(edge: .top).combined(with: .opacity).reduced(reduceMotion))
+            }
+            if let pin, !isSearching {
+                PinnedBar(
+                    pin: pin,
+                    senderName: pin.senderID.map { store.state.senderName(forID: $0) }
+                        ?? String(localized: L10n.memberDeleted),
+                    goTo: { scroll(to: pin.messageID, proxy) },
+                    unpin: { store.send(.unpinTapped) }
+                )
+                .transition(AnyTransition.move(edge: .top).combined(with: .opacity).reduced(reduceMotion))
+            }
+        }
+        .animation(Motion.spring, value: isSearching)
+        .animation(Motion.spring, value: pin?.messageID)
+    }
+
     // MARK: Rows
 
     private func bubble(
@@ -311,7 +296,7 @@ struct ChatView: View {
         term: String,
         pin: PinnedMessage?,
         proxy: ScrollViewProxy
-    ) -> some View {
+    ) -> MessageBubble {
         let state = store.state
         let isMine = state.isMine(message)
         let canHold = !state.isPending(message) && message.kind != .system
@@ -328,9 +313,9 @@ struct ChatView: View {
             hasFailed: state.hasFailed(message),
             canModify: state.canModify(message),
             canHold: canHold,
+            canReply: !state.isCounterpartBlocked,
             isPinned: pin?.messageID == message.id,
             isBeingEdited: store.editing == message.id,
-            showsActions: store.actionsFor == message.id,
             me: state.currentUserID,
             reactions: state.reactions(of: message),
             quoteName: message.replyTo.map { state.senderName(forID: $0.senderID) },
@@ -338,7 +323,6 @@ struct ChatView: View {
             highlight: term,
             handlers: MessageHandlers(
                 retry: { store.send(.retryTapped(message.id)) },
-                hold: { store.send(.bubbleHeld(message.id)) },
                 dismiss: dismissEverything,
                 reply: { store.send(.replyTapped(message.id)) },
                 copy: { store.send(.copyTapped(message.id)) },
@@ -346,10 +330,11 @@ struct ChatView: View {
                     store.send(pin?.messageID == message.id ? .unpinTapped : .pinTapped(message.id))
                 },
                 report: { store.send(.reportTapped(message.id)) },
+                blockSender: { store.send(.blockSenderTapped(message.id)) },
                 edit: { store.send(.editTapped(message.id)) },
                 delete: { store.send(.deleteTapped(message.id)) },
                 react: { react($0, on: message.id) },
-                goTo: { scroll(to: $0, in: thread, proxy) }
+                goTo: { scroll(to: $0, proxy) }
             )
         )
     }
@@ -358,27 +343,6 @@ struct ChatView: View {
     private func react(_ emoji: String, on id: MessageID) {
         reactionTaps += 1
         store.send(.reactionTapped(id, emoji))
-    }
-
-    private func panel(for message: Message, isMine: Bool) -> some View {
-        let state = store.state
-        let me = state.currentUserID
-        let mine = Set(state.reactions(of: message).filter { $0.userID == me }.map(\.emoji))
-        let isPinned = state.pinned?.messageID == message.id
-        return MessageActionsPanel(
-            mine: mine,
-            isPinned: isPinned,
-            canModify: state.canModify(message),
-            canReport: !isMine,
-            canCopy: message.kind != .image,
-            react: { react($0, on: message.id) },
-            reply: { store.send(.replyTapped(message.id)) },
-            copy: { store.send(.copyTapped(message.id)) },
-            togglePin: { store.send(isPinned ? .unpinTapped : .pinTapped(message.id)) },
-            edit: { store.send(.editTapped(message.id)) },
-            delete: { store.send(.deleteTapped(message.id)) },
-            report: { store.send(.reportTapped(message.id)) }
-        )
     }
 
     // MARK: Toolbar
@@ -422,52 +386,26 @@ struct ChatView: View {
 
     // MARK: Scrolling
 
-    /// What a plain tap in the thread means: put the keyboard away, close the
-    /// panel, and abandon an edit in progress.
+    /// What a plain tap in the thread means: put the keyboard away and abandon
+    /// an edit in progress.
     private func dismissEverything() {
         isComposerFocused = false
         store.send(.backgroundTapped)
     }
 
-    private func scrollToNewest(_ proxy: ScrollViewProxy) {
-        guard let last = store.state.ordered.last else { return }
-        withAnimation(Motion.spring) { proxy.scrollTo(last.id, anchor: .bottom) }
-    }
-
-    /// To a quoted or pinned message, if it is among the ones loaded; a quote
-    /// of something older does nothing.
-    private func scroll(to id: MessageID, in thread: [Message], _ proxy: ScrollViewProxy) {
-        guard thread.contains(where: { $0.id == id }) else { return }
+    /// To a quoted or pinned message, if it is among the ones loaded. A quote of
+    /// something older says so, rather than doing nothing. Reads the thread as
+    /// it is now: the bubble that asked may have been drawn some renders ago.
+    private func scroll(to id: MessageID, _ proxy: ScrollViewProxy) {
+        guard store.state.ordered.contains(where: { $0.id == id }) else {
+            missTaps += 1
+            store.send(.messageNotLoaded)
+            return
+        }
         isComposerFocused = false
+        // A search may be hiding it: leave the search, then go.
+        if isSearching { closeSearch() }
         withAnimation(Motion.travel) { proxy.scrollTo(id, anchor: .center) }
-    }
-
-    // MARK: Panel placement
-
-    /// Lines the panel up with the bubble's own edge — trailing for yours,
-    /// leading for theirs — then keeps it on screen.
-    private func panelX(alongside bubble: CGRect, isMine: Bool, within size: CGSize) -> CGFloat {
-        let half = panelSize.width / 2
-        let anchored = isMine ? bubble.maxX - half : bubble.minX + half
-        let margin = Metrics.screenPadding + half
-        return min(max(anchored, margin), max(margin, size.width - margin))
-    }
-
-    /// Above the bubble if it fits there, else below it, whichever has the
-    /// room — and never under the navigation bar or the composer.
-    ///
-    /// The scroll view runs edge to edge, so its own top is behind the title —
-    /// clamping to zero left the panel readable only through the toolbar's blur.
-    private func panelY(around bubble: CGRect, within size: CGSize, insets: EdgeInsets) -> CGFloat {
-        let half = panelSize.height / 2
-        let gap: CGFloat = 8
-        let top = insets.top + gap
-        let bottom = size.height - insets.bottom - gap
-        let above = bubble.minY - gap - top
-        let below = bottom - bubble.maxY - gap
-        let wantsAbove = above >= panelSize.height || above >= below
-        let centre = wantsAbove ? bubble.minY - half - gap : bubble.maxY + half + gap
-        return min(max(centre, top + half), max(top + half, bottom - half))
     }
 }
 

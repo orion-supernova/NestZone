@@ -11,18 +11,15 @@ struct ReactionChips: View {
     let toggle: (String) -> Void
 
     @Environment(\.theme) private var theme
-    /// Your own taps, counted: the haptic keys on this and never on the model,
-    /// which another person's reaction also changes.
-    @State private var taps = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let tallies = ReactionTally.tally(reactions, me: me)
         FlowLayout(spacing: 4, lineSpacing: 4) {
             ForEach(tallies) { tally in
-                Button {
-                    taps += 1
-                    toggle(tally.emoji)
-                } label: {
+                // The one haptic for the tap is the thread's (`ChatView.react`),
+                // which every route to a reaction goes through.
+                Button { toggle(tally.emoji) } label: {
                     HStack(spacing: 3) {
                         Text(tally.emoji).font(.caption)
                         Text(tally.count, format: .number)
@@ -46,16 +43,14 @@ struct ReactionChips: View {
                     }
                     .contentShape(Capsule().inset(by: -4))
                 }
-                // The haptic is the tap's own, above.
                 .buttonStyle(.pressableQuiet)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(tally.isMine
                     ? L10n.reactionChipMine(tally.emoji, tally.count)
                     : L10n.reactionChip(tally.emoji, tally.count)))
                 .accessibilityAddTraits(tally.isMine ? .isSelected : [])
-                .transition(.scale(scale: 0.6).combined(with: .opacity))
+                .transition(AnyTransition.scale(scale: 0.6).combined(with: .opacity).reduced(reduceMotion))
             }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 }

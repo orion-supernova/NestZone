@@ -88,6 +88,8 @@ public struct ReportFeature: Sendable {
 public enum ReportNotice: Equatable, Sendable {
     case thanks
     case limited
+    /// A quote or a pin pointed at a message older than what is loaded.
+    case notLoaded
 
     public init(_ outcome: ReportOutcome) {
         self = outcome == .limited ? .limited : .thanks
@@ -97,6 +99,14 @@ public enum ReportNotice: Equatable, Sendable {
         switch self {
         case .thanks: L10n.reportThanks
         case .limited: L10n.reportLimited
+        case .notLoaded: L10n.chatMessageNotLoaded
+        }
+    }
+
+    public var symbol: String {
+        switch self {
+        case .thanks, .limited: "checkmark.shield.fill"
+        case .notLoaded: "clock.arrow.circlepath"
         }
     }
 

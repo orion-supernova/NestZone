@@ -18,7 +18,7 @@ struct ChatComposer: View {
         return VStack(spacing: 6) {
             if !suggestions.isEmpty {
                 mentionList(suggestions)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(AnyTransition.move(edge: .bottom).combined(with: .opacity).reduced(reduceMotion))
             }
 
             // Says what the composer is about to do, and offers the way out.
@@ -133,7 +133,7 @@ struct ChatComposer: View {
         }
         .foregroundStyle(.secondary)
         .padding(.leading, 14)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .transition(AnyTransition.move(edge: .bottom).combined(with: .opacity).reduced(reduceMotion))
     }
 
     /// The thread's other people, as a short list above the field.

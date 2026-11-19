@@ -10945,4 +10945,21 @@ public enum L10n {
     public static func chatSearchResults(_ a0: Int) -> LocalizedStringResource {
         r("chat_search_results", "\(a0) results")
     }
+
+    // MARK: - Chat menu additions
+
+    /// That message is older than what's loaded.
+    public static var chatMessageNotLoaded: LocalizedStringResource {
+        r("chat_message_not_loaded", "That message is older than what's loaded.")
+    }
+
+    /// Go to quoted message
+    public static var chatGoToQuoted: LocalizedStringResource {
+        r("chat_go_to_quoted", "Go to quoted message")
+    }
+
+    /// Block %@
+    public static func messagesBlockSender(_ a0: String) -> LocalizedStringResource {
+        r("messages_block_sender", "Block \(a0)")
+    }
 }

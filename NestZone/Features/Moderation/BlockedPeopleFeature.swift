@@ -37,7 +37,7 @@ public struct BlockedPeopleFeature: Sendable {
                 guard let index = state.people.firstIndex(where: { $0.id == person.id }) else {
                     return .none
                 }
-                state.$people.withLock { $0.remove(at: index) }
+                state.$people.withLock { _ = $0.remove(at: index) }
                 return .run { _ in
                     try await moderation.unblock(person.id)
                 } catch: { error, send in

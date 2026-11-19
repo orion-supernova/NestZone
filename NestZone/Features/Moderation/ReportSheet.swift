@@ -6,6 +6,7 @@ struct ReportSheet: View {
     @Bindable var store: StoreOf<ReportFeature>
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let noteLimit = 500
 
@@ -32,7 +33,7 @@ struct ReportSheet: View {
                                 if store.reason == reason {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundStyle(.tint)
-                                        .transition(.scale.combined(with: .opacity))
+                                        .transition(AnyTransition.scale.combined(with: .opacity).reduced(reduceMotion))
                                 }
                             }
                             .contentShape(.rect)
@@ -115,7 +116,7 @@ struct ReportNoticeToast: View {
                 .font(.footnote.weight(.medium))
                 .multilineTextAlignment(.leading)
         } icon: {
-            Image(systemName: "checkmark.shield.fill")
+            Image(systemName: notice.symbol)
                 .symbolRenderingMode(.hierarchical)
         }
         .foregroundStyle(.primary)

@@ -77,10 +77,17 @@ struct AvatarViewer: View {
             if let notice {
                 ReportNoticeToast(notice: notice)
                     .padding(.bottom, 24)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(AnyTransition.move(edge: .bottom).combined(with: .opacity).reduced(reduceMotion))
             }
         }
         .animation(Motion.spring, value: notice)
+        // Leaves once the thanks has been read, and not at all if the viewer
+        // is closed first: tied to the view, not a loose task.
+        .task(id: notice) {
+            guard notice != nil else { return }
+            try? await Task.sleep(for: .seconds(1.6))
+            if !Task.isCancelled { dismiss() }
+        }
         .sheet(isPresented: $isReporting) {
             ReportSheetHost(subject: reportSubject) { outcome in
                 isReporting = false
@@ -197,10 +204,6 @@ struct AvatarViewer: View {
     private func reported(_ outcome: ReportOutcome) {
         ModerationDirectory.shared.hideFace(subject.seed)
         notice = ReportNotice(outcome)
-        Task {
-            try? await Task.sleep(for: .seconds(1.6))
-            dismiss()
-        }
     }
 
     /// VoiceOver's swipe-up/down, which is the only way to zoom without a pinch.

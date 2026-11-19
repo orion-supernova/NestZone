@@ -29,7 +29,7 @@ struct MessageText: View {
     private var attributed: AttributedString {
         var text = AttributedString(content)
         for name in mentionNames {
-            mark(&text, "@\(name)") { run in
+            mark(&text, "@\(name)", localized: false) { run in
                 run.font = .subheadline.weight(.semibold)
                 if isMine {
                     run.underlineStyle = .single
@@ -39,24 +39,31 @@ struct MessageText: View {
             }
         }
         if !highlight.isEmpty {
-            mark(&text, highlight) { $0.backgroundColor = Palette.searchHighlight }
+            // The same matching the thread's filter uses, so every message the
+            // search keeps has its match marked (Turkish dotted and dotless i
+            // included).
+            mark(&text, highlight, localized: true) { $0.backgroundColor = Palette.searchHighlight }
         }
         return text
     }
 
-    /// Applies `style` to every case-insensitive occurrence of `needle`.
+    /// Applies `style` to every occurrence of `needle`.
     private func mark(
         _ text: inout AttributedString,
         _ needle: String,
+        localized: Bool,
         _ style: (inout AttributeContainer) -> Void
     ) {
         var container = AttributeContainer()
         style(&container)
-        var from = text.startIndex
-        while from < text.endIndex,
-              let range = text[from...].range(of: needle, options: .caseInsensitive) {
+        var from = content.startIndex
+        while from < content.endIndex {
+            let found = localized
+                ? content[from...].localizedStandardRange(of: needle)
+                : content[from...].range(of: needle, options: .caseInsensitive)
+            guard let found, let range = Range(found, in: text) else { break }
             text[range].mergeAttributes(container)
-            from = range.upperBound
+            from = found.upperBound
         }
     }
 }

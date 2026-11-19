@@ -19,6 +19,7 @@ public struct IssueDetailView: View {
     @Shared(.pro) private var pro
     @Namespace private var glass
     private let moderation = ModerationDirectory.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var picked: [PhotosPickerItem] = []
     @FocusState private var isComposing: Bool
 
@@ -139,7 +140,7 @@ public struct IssueDetailView: View {
             if let notice = store.notice {
                 ReportNoticeToast(notice: notice)
                     .padding(.bottom, 12)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(AnyTransition.move(edge: .bottom).combined(with: .opacity).reduced(reduceMotion))
             }
         }
         .animation(Motion.spring, value: store.notice)

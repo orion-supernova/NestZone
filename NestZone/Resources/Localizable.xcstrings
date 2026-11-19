@@ -38426,7 +38426,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu tepki yok."
+            "value": "Bu tepkiyi kullanamazsın."
           }
         }
       }
@@ -38480,7 +38480,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu kişiye mesaj atamazsın"
+            "value": "Bu kişiye mesaj gönderemezsin"
           }
         }
       }
@@ -38498,7 +38498,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sohbetin bir moderatör tarafından durduruldu. Okumaya devam edebilirsin."
+            "value": "Bir moderatör sohbetini durdurdu. Okumaya devam edebilirsin."
           }
         }
       }
@@ -38570,7 +38570,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu burada olmaz."
+            "value": "Bu işlem yapılamıyor."
           }
         }
       }
@@ -38624,7 +38624,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şikayet ettiğin şey"
+            "value": "Şikayet ettiğin içerik"
           }
         }
       }
@@ -38822,7 +38822,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün çok fazla şikayette bulundun; senin için gizlendi."
+            "value": "Bugün epey şikayet gönderdin. Bu da senin için gizlendi."
           }
         }
       }
@@ -39038,7 +39038,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yanıt (%@): %@"
+            "value": "Yanıtlanan %@: %@"
           }
         }
       }
@@ -39074,7 +39074,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sabitlenen mesaj, %@: %@"
+            "value": "Sabitlenen mesaj, yazan %@: %@"
           }
         }
       }
@@ -39164,7 +39164,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eşleşen yok. Sadece son mesajlarda aranıyor."
+            "value": "Eşleşen yok. Arama sadece son mesajlarda yapılıyor."
           }
         }
       }
@@ -39722,7 +39722,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yoksay"
+            "value": "Şikayeti kapat"
           }
         }
       }
@@ -39999,6 +39999,60 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "chat_message_not_loaded": {
+      "comment": "Brief note when a reply quote or the pinned bar points at a message older than the part of the chat loaded on the phone",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That message is older than what's loaded."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu mesaj yüklenenlerden daha eski."
+          }
+        }
+      }
+    },
+    "chat_go_to_quoted": {
+      "comment": "VoiceOver action on a reply bubble: scroll to the message it quotes",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to quoted message"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alıntılanan mesaja git"
+          }
+        }
+      }
+    },
+    "messages_block_sender": {
+      "comment": "Menu item in the message menu of somebody else's message: block the person who wrote it (also in group chats); the name is the sender",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engelle: %@"
           }
         }
       }

@@ -187,7 +187,7 @@ struct ShopView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 // Plain amounts: the toolbar draws the one capsule around them.
                 Button { store.send(.storeTapped) } label: {
-                    JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles)
+                    JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles, showsJar: true)
                 }
                 // A toolbar button draws its label in the tint, whatever the
                 // label asks for: violet numbers on dark glass are ~2:1.
@@ -721,7 +721,7 @@ private struct PurchaseCard: View {
     private func header(_ step: CompanionFeature.State.CardStep) -> some View {
         HStack {
             if step != .about {
-                JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles, opensStore: false)
+                JarAmounts(leaves: store.house.leaves, sparkles: store.house.sparkles, opensStore: false, showsJar: true)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { jarFrame = $0 }
             }
             Spacer()
@@ -852,6 +852,8 @@ private struct PurchaseCard: View {
                 Divider()
                 row(L10n.cardJarAfter) {
                     HStack(spacing: 10) {
+                        // The same jar, as it will stand.
+                        HouseJar(leaves: store.house.leaves - coins.leaves, sparkles: store.house.sparkles - coins.sparkles, height: 34)
                         Amount(.leaves, store.house.leaves - coins.leaves)
                         Amount(.sparkles, store.house.sparkles - coins.sparkles)
                     }
@@ -1159,39 +1161,44 @@ struct SparkleStoreView: View {
         .sensoryFeedback(.success, trigger: arrivals)
     }
 
-    /// The jar's Sparkles, always in view.
+    /// The jar and its Sparkles, always in view: the jar is the drawing, the
+    /// number beside it is what is read.
     private var counter: some View {
-        VStack(spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Image(systemName: Amount.Currency.sparkles.symbol)
-                    .font(.title.weight(.semibold))
-                    .foregroundStyle(Palette.sparkle)
-                    .symbolColorRenderingMode(.gradient)
-                    .symbolEffect(.bounce.up.byLayer, value: reduceMotion ? 0 : arrivals)
-                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { counterFrame = $0 }
-                    .accessibilityHidden(true)
-                Text(store.house.sparkles, format: .number)
-                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                    .monospacedDigit()
-                    .contentTransition(.numericText(value: Double(store.house.sparkles)))
-                    .animation(reduceMotion ? Motion.fade : Motion.settle.delay(0.35), value: store.house.sparkles)
-            }
-            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-            Text(L10n.storeHero)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            // A line kept for "+300 in the jar", so nothing moves when it comes.
-            ZStack {
-                if let landed = store.landed {
-                    Text(L10n.storeLanded(landed))
-                        .font(.subheadline.weight(.semibold))
+        HStack(spacing: 18) {
+            // The coins fly into the jar itself, and the pile rises when they land.
+            HouseJar(leaves: store.house.leaves, sparkles: store.house.sparkles, height: 104, landingDelay: 0.35)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { counterFrame = $0 }
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: Amount.Currency.sparkles.symbol)
+                        .font(.title.weight(.semibold))
                         .foregroundStyle(Palette.sparkle)
-                        .id(store.landedTick)
-                        .transition(.opacity.combined(with: .offset(y: 4)))
+                        .symbolColorRenderingMode(.gradient)
+                        .symbolEffect(.bounce.up.byLayer, value: reduceMotion ? 0 : arrivals)
+                        .accessibilityHidden(true)
+                    Text(store.house.sparkles, format: .number)
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: Double(store.house.sparkles)))
+                        .animation(reduceMotion ? Motion.fade : Motion.settle.delay(0.35), value: store.house.sparkles)
                 }
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                Text(L10n.storeHero)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                // A line kept for "+300 in the jar", so nothing moves when it comes.
+                ZStack(alignment: .leading) {
+                    if let landed = store.landed {
+                        Text(L10n.storeLanded(landed))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Palette.sparkle)
+                            .id(store.landedTick)
+                            .transition(.opacity.combined(with: .offset(y: 4)))
+                    }
+                }
+                .frame(minHeight: 20)
+                .animation(reduceMotion ? Motion.fade : Motion.arrive.delay(0.45), value: store.landedTick)
             }
-            .frame(minHeight: 20)
-            .animation(reduceMotion ? Motion.fade : Motion.arrive.delay(0.45), value: store.landedTick)
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 6)

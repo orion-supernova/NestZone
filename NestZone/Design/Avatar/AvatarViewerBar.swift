@@ -31,10 +31,12 @@ struct AvatarViewerBar: View {
                     .font(.footnote.weight(.bold))
                     .foregroundStyle(.white)
                     .frame(width: 30, height: 30)
+                    .background(Palette.viewerControl, in: .circle)
+                    // The circle stays 30 points; the touch is a full target.
+                    .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
                     .contentShape(.circle)
                 }
                 .buttonStyle(.pressable)
-                .background(Palette.viewerControl, in: .circle)
                 .accessibilityLabel(Text(L10n.reportPhoto))
             }
 

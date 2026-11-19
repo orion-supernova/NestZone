@@ -85,15 +85,19 @@ public struct JarAmounts: View {
     let leaves: Int
     let sparkles: Int
     var opensStore = true
+    /// A small jar ahead of the numbers, showing how full it is.
+    var showsJar = false
 
-    public init(leaves: Int, sparkles: Int, opensStore: Bool = true) {
+    public init(leaves: Int, sparkles: Int, opensStore: Bool = true, showsJar: Bool = false) {
         self.leaves = leaves
         self.sparkles = sparkles
         self.opensStore = opensStore
+        self.showsJar = showsJar
     }
 
     public var body: some View {
         HStack(spacing: 10) {
+            if showsJar { HouseJar(leaves: leaves, sparkles: sparkles, height: 26) }
             Amount(.leaves, leaves, glyphScale: .medium)
             HStack(spacing: 4) {
                 Amount(.sparkles, sparkles, glyphScale: .medium)
