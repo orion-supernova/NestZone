@@ -1,8 +1,9 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { departHome } from "./lib/membership";
+import { purgeHomeBatch } from "./lib/relations";
 import { publicUsers } from "./lib/users";
 import { internal } from "./_generated/api";
 
@@ -203,6 +204,42 @@ export const leave = mutation({
   },
 });
 
+/** Batches after which a purge still running is logged as an error. */
+const PURGE_WARN_ROUNDS = 200;
+
+/**
+ * Drains a deleted home's rows, one bounded batch per transaction, scheduling
+ * the next until nothing is left (lib/relations.ts, `purgeHomeBatch`). The
+ * home document is already gone, so nobody can reach these rows meanwhile.
+ *
+ * Every batch is logged with what it removed, and a purge that keeps going
+ * past 200 batches is logged as an error each time, so one that is stuck or
+ * failing is loud in `npx convex logs` rather than quietly half-done. A batch
+ * that throws is retried by nothing — the error is in the logs with the home
+ * id, and running this again with that id resumes where it stopped.
+ */
+export const purgeHomeData = internalMutation({
+  args: { homeId: v.id("homes"), round: v.optional(v.number()) },
+  returns: v.object({ removed: v.number(), more: v.boolean() }),
+  handler: async (ctx, { homeId, round }) => {
+    const n = round ?? 0;
+    if (await ctx.db.get(homeId)) {
+      console.error(`homes:purgeHomeData refused: home ${homeId} still exists`);
+      return { removed: 0, more: false };
+    }
+    const { removed, more } = await purgeHomeBatch(ctx, homeId);
+    if (n >= PURGE_WARN_ROUNDS) {
+      console.error(`homes:purgeHomeData ${homeId} still running at batch ${n} (removed ${removed})`);
+    } else {
+      console.log(`homes:purgeHomeData ${homeId} batch ${n}: removed ${removed}${more ? ", more to go" : ", done"}`);
+    }
+    if (more) {
+      await ctx.scheduler.runAfter(0, internal.homes.purgeHomeData, { homeId, round: n + 1 });
+    }
+    return { removed, more };
+  },
+});
+
 /**
  * Takes another member out of a home.
  *
@@ -227,6 +264,9 @@ export const removeMember = mutation({
 
     const removedUser = await ctx.db.get(userId);
     await departHome(ctx, home, userId);
+    // A new invite code, or the person just removed could walk straight back
+    // in with the one they already have. Old codes simply stop matching.
+    await ctx.db.patch(homeId, { invite_code: crypto.randomUUID().toUpperCase() });
 
     const homeName = home.name ?? "Your home";
     // The person removed hears it as a push only: the home's feed is no
@@ -247,9 +287,10 @@ export const removeMember = mutation({
       actor: caller._id,
       title: homeName,
       body:
-        caller.name && removedUser?.name
+        (caller.name && removedUser?.name
           ? `${caller.name} removed ${removedUser.name} from the home`
-          : "Someone was removed from the home",
+          : "Someone was removed from the home") +
+        ". The invite code has changed.",
       category: "home",
     });
     return { ok: true, removed: true };
