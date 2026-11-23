@@ -1,62 +1,97 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>NestZone header</title>
+<title>NestZone header and search results</title>
 <style>
-  :root {
-    --violet: #7C3AED; --indigo: #4F46E5;
-    --ink: #0f0820; --ink2: #1d0f3f;
-  }
+  :root { --ink: #0d0620; }
   * { box-sizing: border-box; margin: 0; }
   html, body { overflow: hidden; background: var(--ink); }
-  /* One unit = 1% of the height, or 1/200 of the width on a wider canvas, so
-     the same layout fills 5244x2950 and 3840x1646. The text and the middle of
-     the phones sit in the central ~60% x 65%; the outer phones and the foot of
-     the middle one bleed past it on purpose (App Store Connect crops this
-     image differently on each surface). */
   body { position: relative; width: 100vw; height: 100vh;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; color: #fff;
     background:
       radial-gradient(ellipse 60% 90% at 20% 40%, rgba(124,58,237,.50), transparent 70%),
       radial-gradient(ellipse 55% 80% at 82% 95%, rgba(79,70,229,.45), transparent 70%),
-      linear-gradient(160deg, var(--ink2), var(--ink)); }
-  .stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    width: calc(157 * var(--u)); height: calc(100 * var(--u)); }
-  .copy { position: absolute; left: 0; top: 50%; transform: translateY(-54%); width: calc(50 * var(--u)); color: #fff;
-    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; }
-  .icon { width: calc(15 * var(--u)); height: calc(15 * var(--u)); border-radius: 22.37%;
-    box-shadow: 0 calc(1.4*var(--u)) calc(4*var(--u)) rgba(0,0,0,.45), 0 0 0 calc(.12*var(--u)) rgba(255,255,255,.14); }
-  h1 { margin-top: calc(4 * var(--u)); font-size: calc(10.5 * var(--u)); line-height: 1; font-weight: 700; letter-spacing: -.03em; }
-  .line { margin-top: calc(3 * var(--u)); font-size: calc(5.2 * var(--u)); line-height: 1.18; font-weight: 500; color: #d9ccff; letter-spacing: -.01em; }
-  .mods { margin-top: calc(5 * var(--u)); font-size: calc(2.35 * var(--u)); font-weight: 600; color: rgba(255,255,255,.62); letter-spacing: .01em; }
-  .phone { position: absolute; background: #000; border-radius: calc(5.2 * var(--u)); overflow: hidden;
-    box-shadow: 0 calc(2*var(--u)) calc(7*var(--u)) rgba(0,0,0,.55), 0 0 0 calc(.35*var(--u)) rgba(255,255,255,.16); }
-  .phone img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
-  .p1 { left: calc(58 * var(--u)); top: calc(26 * var(--u)); width: calc(38.6 * var(--u)); height: calc(83.9 * var(--u)); }
-  .p3 { left: calc(119.4 * var(--u)); top: calc(26 * var(--u)); width: calc(38.6 * var(--u)); height: calc(83.9 * var(--u)); }
-  .p2 { left: calc(82 * var(--u)); top: calc(13 * var(--u)); width: calc(44 * var(--u)); height: calc(95.6 * var(--u)); z-index: 2; border-radius: calc(5.8 * var(--u)); }
+      linear-gradient(160deg, #1d0f3f, #0f0820); }
+  body.search { background:
+      radial-gradient(ellipse 55% 80% at 25% 30%, rgba(124,58,237,.60), transparent 70%),
+      radial-gradient(ellipse 50% 70% at 85% 90%, rgba(79,70,229,.55), transparent 70%),
+      linear-gradient(160deg, #1d0f3f, #0c0619); }
+  .stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  body.search .stage { left: 0; top: 0; transform: none; }
+  .copy { position: absolute; }
+  .icon { display: block; border-radius: 22.37%; box-shadow: 0 .06em .2em rgba(0,0,0,.45), 0 0 0 .006em rgba(255,255,255,.14); }
+  h1 { font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+  .line { font-weight: 600; line-height: 1.15; letter-spacing: -.012em; }
+  .mods { font-weight: 600; letter-spacing: .01em; color: rgba(255,255,255,.62); }
+
+  /* The drawn iPhone, same as screenshots/frame/frame.html, in the screenshot's own pixels (1296 x 2712 body). */
+  .ph { position: absolute; transform-origin: 0 0; width: 1296px; height: 2712px;
+    filter: drop-shadow(0 70px 90px rgba(0,0,0,.55)) drop-shadow(0 12px 18px rgba(0,0,0,.45)); }
+  .btn { position: absolute; width: 17px; border-radius: 6px;
+    background: linear-gradient(90deg, #3a3835, #8a867f 45%, #5a5753); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+  .btn.l { left: -9px; }  .btn.r { right: -9px; transform: scaleX(-1); }
+  .action { top: 330px; height: 100px; } .volup { top: 520px; height: 170px; } .voldn { top: 730px; height: 170px; }
+  .power { top: 640px; height: 270px; }
+  .camctl { top: 1560px; height: 190px; width: 14px; right: -7px; background: linear-gradient(90deg,#2e2c2a,#74706a 50%,#45423f); border-radius: 7px; }
+  .body { position: absolute; inset: 0; border-radius: 231px;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 22%, rgba(255,255,255,0) 70%, rgba(255,255,255,.25) 100%),
+      linear-gradient(90deg, #35332f 0%, #8e8a83 5%, #55524d 14%, #44413d 50%, #55524d 86%, #8e8a83 95%, #35332f 100%);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.28), inset 0 0 0 5px rgba(0,0,0,.35), inset 0 0 14px rgba(255,255,255,.18); }
+  .glass { position: absolute; inset: 22px; border-radius: 209px; background: #000; box-shadow: 0 0 0 2px rgba(0,0,0,.55), inset 0 0 0 1.5px rgba(255,255,255,.07); }
+  .screen { position: absolute; left: 45px; top: 45px; width: 1206px; height: 2622px; border-radius: 186px; overflow: hidden; background: #000; }
+  .screen img { display: block; width: 100%; height: 100%; }
+  .island { position: absolute; left: 50%; top: 34px; width: 378px; height: 112px; margin-left: -189px; border-radius: 56px; background: #000; }
+  .sheen { position: absolute; inset: 22px; border-radius: 209px; pointer-events: none;
+    background: linear-gradient(120deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 72%, rgba(255,255,255,.05) 100%); }
+  .apple { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
+  .official .body, .official .glass, .official .btn, .official .sheen, .official .island { display: none; }
+  .official .apple { display: block; }
 </style>
 <body>
-<div class="stage">
-  <div class="copy">
-    <img class="icon" src="assets/icon.png" alt="">
-    <h1>NestZone</h1>
-    <p class="line" id="line"></p>
-    <p class="mods" id="mods"></p>
-  </div>
-  <div class="phone p1"><img id="a" alt=""></div>
-  <div class="phone p3"><img id="c" alt=""></div>
-  <div class="phone p2"><img id="b" alt=""></div>
-</div>
+<div class="stage" id="stage"></div>
 <script>
-  const lang = (location.hash.slice(1) || 'en').split('&')[0];
+  // header.html#<lang>[&search]   (header: 5244x2950 or 3840x1646; search: 3840x2560)
+  const q = new URLSearchParams(location.hash.slice(1));
+  const lang = [...q.keys()].find(k => ['en','tr','sv'].includes(k)) || 'en';
+  const search = q.has('search');
+  document.body.classList.toggle('search', search);
   const T = {
-    en: ['Your home, in one shared app', 'Chores · Shopping · Plans · Money · Chat'],
-    tr: ['Evin her şeyi, tek ortak uygulamada', 'İşler · Alışveriş · Planlar · Para · Sohbet'],
+    en: { line: 'Your home, in one shared app', mods: 'Chores · Shopping · Plans · Money · Chat' },
+    tr: { line: 'Evin her şeyi, tek ortak uygulamada', mods: 'İşler · Alışveriş · Planlar · Para · Sohbet' },
+    sv: { line: 'Hela hemmet i en gemensam app', mods: 'Sysslor · Handla · Planer · Pengar · Chatt' },
   }[lang];
-  document.getElementById('line').textContent = T[0];
-  document.getElementById('mods').textContent = T[1];
-  document.getElementById('a').src = `shots/${lang}_shop.png`;
-  document.getElementById('b').src = `shots/${lang}_today.png`;
-  document.getElementById('c').src = `shots/${lang}_cal.png`;
-  const u = Math.min(innerHeight / 100, innerWidth / 200);
-  document.documentElement.style.setProperty('--u', u + 'px');
+  const shot = n => `../screenshots/raw/${lang}_${n}.png`;
+  const HW = '<div class="btn l action"></div><div class="btn l volup"></div><div class="btn l voldn"></div><div class="btn r power"></div><div class="camctl btn r"></div>';
+  function phone(n, x, y, h, z) {                       // h = body height in canvas px
+    const k = h / 2712, d = document.createElement('div');
+    d.className = 'ph'; d.style.cssText = `left:${x}px;top:${y}px;transform:scale(${k});z-index:${z}`;
+    d.innerHTML = HW + '<div class="body"></div><div class="glass"></div><div class="screen"><img src="' + shot(n) + '"><div class="island"></div></div><div class="sheen"></div><img class="apple" src="../screenshots/frame/apple-bezel.png">';
+    d.querySelector('.apple').onload = () => d.classList.add('official');
+    return d;
+  }
+  function copy(x, y, w, s) {                           // s = font unit in px
+    const c = document.createElement('div'); c.className = 'copy'; c.style.cssText = `left:${x}px;top:${y}px;width:${w}px`;
+    c.innerHTML = `<img class="icon" src="assets/icon.png" style="width:${s*15}px;height:${s*15}px">
+      <h1 style="margin-top:${s*4}px;font-size:${s*search_k(10.5, 12)}px">NestZone</h1>
+      <p class="line" style="margin-top:${s*3}px;font-size:${s*search_k(5.2, 5.8)}px">${T.line}</p>
+      ${search ? '' : `<p class="mods" style="margin-top:${s*5}px;font-size:${s*2.35}px">${T.mods}</p>`}`;
+    return c;
+  }
+  function search_k(a, b) { return search ? b : a; }
+  const W = innerWidth, H = innerHeight, st = document.getElementById('stage');
+  if (!search) {
+    // Header: one layout unit = 1% of the height or 1/200 of the width. Text and the middle phone's top
+    // half sit in the central ~60%; the outer phones and the foot of the middle one bleed on purpose.
+    const u = Math.min(H / 100, W / 200);
+    st.style.cssText = `width:${157*u}px;height:${100*u}px`;
+    st.append(copy(0, 50*u - 33*u, 50*u, u));
+    const body = h => h;                                // body height in px
+    st.append(phone('03', 56*u, 26*u, 84.5*u, 1), phone('04', 118*u, 26*u, 84.5*u, 1), phone('01', 80*u, 12*u, 96*u, 2));
+  } else {
+    // Search results (3:2): big name and one line at the top left, two large phones.
+    const u = H / 100;
+    st.style.cssText = `width:${W}px;height:${H}px`;
+    const c = copy(0.075*W, 0.14*H, 0.4*W, u); c.style.left = 0.07*W + 'px'; st.append(c);
+    st.append(phone('04', 0.485*W, 0.22*H, 0.94*H, 1), phone('01', 0.67*W, 0.07*H, 1.0*H, 2));
+  }
 </script>
