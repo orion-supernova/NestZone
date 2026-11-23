@@ -52,7 +52,7 @@ struct CalendarSettingsView: View {
                     Image(systemName: "calendar.badge.plus")
                 }
             }
-            .proLocked(.calendar)
+            .proLocked(.calendar, placement: .inline)
 
             accessNote
         } footer: {
@@ -156,7 +156,7 @@ struct CalendarSettingsView: View {
             )) {
                 PlusTitle(L10n.calendarCopyReminders)
             }
-            .proLocked(.calendar)
+            .proLocked(.calendar, placement: .inline)
 
             LabeledContent {
                 if store.lastSynced > 0 {
@@ -188,7 +188,7 @@ struct CalendarSettingsView: View {
                     Image(systemName: "person.2.badge.gearshape")
                 }
             }
-            .proLocked(.calendar)
+            .proLocked(.calendar, placement: .inline)
         } header: {
             Text(L10n.calendarShareHeader)
         } footer: {

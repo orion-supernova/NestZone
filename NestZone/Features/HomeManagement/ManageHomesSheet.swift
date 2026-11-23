@@ -104,12 +104,13 @@ struct ManageHomesSheet: View {
     private var addSection: some View {
         Section {
             Button { store.send(.createTapped) } label: {
-                HStack {
-                    Label { Text(L10n.homeSetupCreateHomeTitle) } icon: {
-                        Image(systemName: "house.and.flag")
+                Label {
+                    HStack(alignment: .firstTextBaseline, spacing: 0) {
+                        Text(L10n.homeSetupCreateHomeTitle)
+                        PlusMark(isLocked: !pro.allowsAnotherHome)
                     }
-                    Spacer(minLength: 8)
-                    PlusMark(isLocked: !pro.allowsAnotherHome, font: .footnote)
+                } icon: {
+                    Image(systemName: "house.and.flag")
                 }
             }
             .accessibilityHint(pro.allowsAnotherHome ? "" : String(localized: L10n.proLockedHint))

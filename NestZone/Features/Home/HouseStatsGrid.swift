@@ -102,14 +102,16 @@ struct HouseStatsGrid: View {
                                     .font(.callout.weight(.semibold))
                                     .foregroundStyle(Palette.statEvents)
                                 Spacer()
-                                PlusMark(isLocked: true, font: .caption.weight(.semibold))
                             }
                             Text(L10n.proTeaserValue)
                                 .font(.system(.title, design: .rounded, weight: .bold))
-                            Text(L10n.homeStatsEventsTitle)
-                                .font(.caption)
-                                .foregroundStyle(.secondaryText)
-                                .lineLimit(1)
+                            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                                Text(L10n.homeStatsEventsTitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondaryText)
+                                    .lineLimit(1)
+                                PlusMark(isLocked: true, style: .caption)
+                            }
                         }
                         .padding(Metrics.cardPadding)
                         .frame(maxWidth: .infinity, alignment: .leading)

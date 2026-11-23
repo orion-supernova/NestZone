@@ -53,6 +53,9 @@ enum PlusBadgePlacement {
     /// Inside the control's own bounds, smaller: for a toolbar button, whose
     /// glass capsule clips anything drawn past its edge.
     case inset
+    /// Nothing: the row draws its own mark beside its title (`PlusTitle`),
+    /// lock while locked and tag once unlocked, in one place.
+    case inline
 }
 
 /// What Plus looks like, in one place. Every lock, tag, brand tile, the
@@ -78,6 +81,31 @@ enum PlusStyle {
     static func onTint(_ theme: AppTheme) -> Color { theme.onAccent }
     /// A fill that carries a glyph in `onTint`: the accent as a fill.
     static func fill(_ theme: AppTheme) -> Color { theme.accentFill }
+
+    // MARK: The superscript
+
+    /// Where the label's cap top is below its first-baseline-up, per text
+    /// style: about 0.71 of the point size at the default Dynamic Type size.
+    static func capHeight(_ style: Font.TextStyle) -> CGFloat {
+        switch style {
+        case .largeTitle: 24
+        case .title: 20
+        case .title2: 15.5
+        case .title3: 14
+        case .headline, .body: 12
+        case .callout: 11.5
+        case .subheadline: 10.5
+        case .footnote: 9.5
+        case .caption: 8.5
+        default: 8
+        }
+    }
+    /// The superscript's sizes at the default type size: smaller than any
+    /// caption, since it rides on a label rather than being one.
+    static let superscriptLock: CGFloat = 9
+    static let superscriptTag: CGFloat = 8.5
+    static let superscriptPadding = EdgeInsets(top: 1, leading: 4.5, bottom: 1, trailing: 4.5)
+    static let superscriptGap: CGFloat = 4
 
     // MARK: The tag
 
@@ -114,6 +142,9 @@ enum PlusStyle {
 /// and it is as tall as a line of `caption2` so it never hangs off bounds.
 struct PlusTag: View {
     var font: Font = PlusStyle.tagFont
+    /// Tighter padding for the superscript, where the tag is a few points
+    /// shorter than a line of `caption2`.
+    var padding: EdgeInsets = PlusStyle.tagPadding
     @Environment(\.theme) private var theme
 
     var body: some View {
@@ -123,7 +154,7 @@ struct PlusTag: View {
             .foregroundStyle(.accentText)
             .lineLimit(1)
             .fixedSize()
-            .padding(PlusStyle.tagPadding)
+            .padding(padding)
             .background(PlusStyle.tagWash(theme), in: .capsule)
             .accessibilityLabel(Text(L10n.proName))
     }
@@ -191,8 +222,8 @@ private struct PlusBadgeModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.overlay(alignment: .topTrailing) {
             ZStack {
-                if shown, isLocked {
-                    PlusBadge(isInset: placement == .inset)
+                if shown, isLocked, placement != .inline {
+                    PlusBadge(isInset: placement != .corner)
                         .offset(x: placement == .corner ? 4 : 0, y: placement == .corner ? -4 : 0)
                         .transition(.opacity)
                 }
@@ -209,44 +240,72 @@ private struct PlusBadgeModifier: ViewModifier {
 /// The badge's inline form, for a title or a row's trailing edge where a
 /// corner badge has nothing to sit on: the grey lock while locked, and the
 /// PLUS tag once the house has it. One turns into the other in place.
+///
+/// It is a superscript: its top sits on the cap height of the label it
+/// follows, a little smaller than the label's own caption, with a small gap
+/// from the word. Put it after the text in an
+/// `HStack(alignment: .firstTextBaseline)` and it takes its own place, because
+/// the mark moves its own first-baseline guide down to the label's cap height
+/// (so the label sets the row's height and the mark never grows it, and the
+/// width it takes is reserved in the row, not hung off the end). `style` is
+/// the label's text style: the cap height and the mark both scale with it.
+/// At an accessibility size a superscript is too small to read, so the mark
+/// stays at its size and sits on the baseline like a word.
 struct PlusMark: View {
     let isLocked: Bool
-    /// The lock's size. The tag has its own.
-    var font: Font = .caption2.weight(.bold)
+    /// The text style of the label this follows.
+    var style: Font.TextStyle = .body
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric private var capHeight: CGFloat
+    @ScaledMetric private var lockSize: CGFloat
+    @ScaledMetric private var tagSize: CGFloat
+
+    init(isLocked: Bool, style: Font.TextStyle = .body) {
+        self.isLocked = isLocked
+        self.style = style
+        _capHeight = ScaledMetric(wrappedValue: PlusStyle.capHeight(style), relativeTo: style)
+        _lockSize = ScaledMetric(wrappedValue: PlusStyle.superscriptLock, relativeTo: style)
+        _tagSize = ScaledMetric(wrappedValue: PlusStyle.superscriptTag, relativeTo: style)
+    }
 
     var body: some View {
-        ZStack {
+        // Lock and tag share one top-leading corner, so the cross-fade between
+        // them happens in place.
+        ZStack(alignment: .topLeading) {
             if isLocked {
                 Image(systemName: PlusStyle.lockedSymbol)
-                    .font(font)
+                    .font(.system(size: lockSize, weight: .bold))
                     .foregroundStyle(.secondaryText)
                     .transition(.opacity)
             } else {
-                PlusTag().transition(.opacity)
+                PlusTag(font: .system(size: tagSize, weight: .heavy), padding: PlusStyle.superscriptPadding)
+                    .transition(.opacity)
             }
+        }
+        .padding(.leading, PlusStyle.superscriptGap)
+        .alignmentGuide(.firstTextBaseline) { d in
+            typeSize.isAccessibilitySize ? d[.bottom] : capHeight
         }
         .animation(reduceMotion ? nil : Motion.fade, value: isLocked)
         .accessibilityHidden(true)
     }
 }
 
-/// A row's title with the PLUS tag after it while the house has Plus. For a
-/// Plus row whose lock hangs off its corner while locked (`proLocked`): the
-/// tag is the same mark, where there is text to put it beside.
+/// A row's title with the Plus mark after it: the lock while the house has no
+/// Plus, the PLUS tag once it has. For a Plus row wearing
+/// `proLocked(placement: .inline)`, which draws no corner lock of its own.
 struct PlusTitle: View {
     let title: LocalizedStringResource
     @Shared(.pro) private var pro
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(_ title: LocalizedStringResource) { self.title = title }
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text(title)
-            if pro.isPro { PlusTag().transition(.opacity) }
+            PlusMark(isLocked: !pro.isPro)
         }
-        .animation(reduceMotion ? nil : Motion.fade, value: pro.isPro)
     }
 }
 
@@ -316,7 +375,7 @@ struct ProReadOnlyBanner: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            PlusMark(isLocked: true, font: .footnote.weight(.semibold))
+            PlusMark(isLocked: true, style: .footnote)
             Text(L10n.proReadOnlyBanner)
                 .font(.footnote)
                 .lineLimit(2)

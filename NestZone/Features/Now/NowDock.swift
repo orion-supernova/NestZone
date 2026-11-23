@@ -26,7 +26,12 @@ public struct NowDock: View {
 
     public var body: some View {
         HStack(spacing: 10) {
-            Button { store.send(.dockTapped) } label: {
+            // A tap does the dock's own thing; a long press opens the menu in
+            // place (no lifted preview, which let the tab item behind react
+            // to the same touch). The `+` is outside it and keeps its tap.
+            Menu {
+                dockMenu
+            } label: {
                 HStack(spacing: 10) {
                     if store.dockItem != .add {
                         // Stacked, so the emblem leaving and the one arriving
@@ -56,11 +61,13 @@ public struct NowDock: View {
                     Spacer(minLength: 0)
                 }
                 .contentShape(.rect)
+            } primaryAction: {
+                store.send(.dockTapped)
             }
+            .menuStyle(.button)
             .buttonStyle(.plain)
             .accessibilityIdentifier("Dock")
-            // On the live part only: the `+` keeps its tap and has no menu.
-            .contextMenu { dockMenu }
+            .accessibilityHint(Text(L10n.dockMenuTitle))
 
             Button {
                 adds += 1
@@ -83,6 +90,14 @@ public struct NowDock: View {
         }
         .padding(.leading, 14)
         .padding(.trailing, 6)
+        // The whole capsule is ours to touch: a press in the padding or the
+        // gap never falls through to the tab bar or the screen behind.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(.capsule)
+        // A tap on the gap or the padding is the dock's too, and does nothing:
+        // a shape with no gesture is skipped by hit testing, and the touch
+        // would reach what scrolls underneath the glass.
+        .onTapGesture {}
         .animation(Motion.spring, value: store.dockItem)
         .sensoryFeedback(.selection, trigger: picks)
     }

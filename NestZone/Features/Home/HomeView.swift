@@ -739,8 +739,10 @@ public struct HomeView<Companion: View>: View {
     /// Ways into the things Today summarises, at the bottom — where the "See
     /// all" capsules and the unlabelled chart button on every section header
     /// used to be. Four equal glass pills in a 2x2 grid: a glyph and a short
-    /// label each, and a label that does not fit one line wraps inside its
-    /// pill rather than being cut.
+    /// label each, every label on one line (shrinking a little before it
+    /// would wrap), so the four are always the same height — one pill taller
+    /// than its neighbours read as a mistake. At accessibility sizes the
+    /// labels may wrap, all alike.
     private var shelf: some View {
         GlassGroup(spacing: 10) {
             LazyVGrid(columns: shelfColumns, spacing: 10) {
@@ -782,10 +784,11 @@ public struct HomeView<Companion: View>: View {
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .oneLineUnlessAccessibility()
+                    .minimumScaleFactor(0.8)
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget, alignment: .leading)
             .contentShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))

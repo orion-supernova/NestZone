@@ -504,13 +504,13 @@ private struct SegmentSwitch: View {
                 let isSelected = module == selected
                 Button { pick(module) } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        HStack(alignment: .firstTextBaseline, spacing: 0) {
                             Text(module.title)
                                 .font(.system(.title3, design: .rounded, weight: .bold))
                                 .foregroundStyle(isSelected ? .primary : Palette.textSecondary)
                                 .lineLimit(1)
                             if module.needsPlus {
-                                PlusMark(isLocked: !pro.isPro)
+                                PlusMark(isLocked: !pro.isPro, style: .title3)
                             }
                         }
                             // The name just chosen lands a touch small and

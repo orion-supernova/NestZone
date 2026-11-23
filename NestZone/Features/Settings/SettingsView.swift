@@ -541,7 +541,7 @@ public struct SettingsView: View {
                     Image(systemName: "eye.trianglebadge.exclamationmark")
                 }
             }
-            .proLocked(.matureContent)
+            .proLocked(.matureContent, placement: .inline)
 
             NavigationLink(
                 item: $store.scope(state: \.destination?.calendar, action: \.destination.calendar)
@@ -712,6 +712,7 @@ public struct SettingsView: View {
             } label: {
                 Label { Text(L10n.plusSeeEverything) } icon: { Image(systemName: "list.bullet.rectangle") }
             }
+            .listRowSeparator(.hidden, edges: .bottom)
 
             plusActions(status)
 
@@ -785,16 +786,23 @@ public struct SettingsView: View {
     @ViewBuilder
     private func plusActions(_ status: ProStatus) -> some View {
         if status.isPro {
-            HStack(spacing: 10) {
-                if status.mine {
-                    plusActionButton(L10n.plusManage, symbol: "creditcard", busy: false) {
-                        showsManageSubscription = true
-                    }
+            // Side by side while both labels fit on one line at the same size;
+            // stacked, still identical, when they do not (a longer language,
+            // larger text). Never one scaled down to fit.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    if status.mine { plusManageButton }
+                    plusRestoreButton
                 }
-                plusRestoreButton
+                VStack(spacing: 10) {
+                    if status.mine { plusManageButton }
+                    plusRestoreButton
+                }
             }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            // Inside the card, on its own insets, so its rounded bottom shows
+            // below the buttons; no rule between the link above and them.
+            .listRowSeparator(.hidden, edges: .top)
+            .padding(.vertical, 4)
         } else {
             VStack(spacing: 10) {
                 PrimaryButton(L10n.plusSeePlans, symbol: PlusStyle.unlockSymbol) {
@@ -802,8 +810,14 @@ public struct SettingsView: View {
                 }
                 plusRestoreButton
             }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            .listRowSeparator(.hidden, edges: .top)
+            .padding(.vertical, 4)
+        }
+    }
+
+    private var plusManageButton: some View {
+        plusActionButton(L10n.plusManage, symbol: "creditcard", busy: false) {
+            showsManageSubscription = true
         }
     }
 
@@ -827,7 +841,7 @@ public struct SettingsView: View {
                 } else {
                     Image(systemName: symbol)
                 }
-                Text(title).lineLimit(1).minimumScaleFactor(0.8)
+                Text(title).lineLimit(1)
             }
             .font(.subheadline.weight(.medium))
             .frame(maxWidth: .infinity, minHeight: 28)

@@ -354,7 +354,8 @@ struct SceneSnapshot {
             time: seconds, day: SceneFrame.dayness(hour), hour: hour,
             mood: shownMood(at: date), progress: shownProgress(at: date),
             reduceMotion: reduceMotion, bounce: motion.bounce, wobble: motion.wobble,
-            layout: compact ? SceneLayout() : layout, southern: southern, domeLift: domeLift
+            layout: compact ? SceneLayout() : layout, southern: southern, domeLift: domeLift,
+            keepClear: compact ? nil : SkyKeepClear(scale: max(scale, 0.001))
         )
         return Moment(frame: frame, scale: scale, width: size.width / scale, seconds: seconds, revive: revive)
     }

@@ -57,21 +57,15 @@ private struct SegmentSearchable: ViewModifier {
 
     // In a background rather than around the screen: a modifier that wrapped
     // the screen in an `if` would rebuild it, state and subscriptions and
-    // scroll position, every time the search came and went.
+    // scroll position, every time the search came and went. The minimised
+    // search is left where the system puts it: it was once placed by hand with
+    // a `DefaultToolbarItem`, and that item, rebuilt as the bar re-evaluated
+    // on dismiss, re-presented the field the moment it closed.
     func body(content: Content) -> some View {
         content
             .background {
                 if phase == .onScreen {
                     Color.clear.searchable(text: $text, prompt: prompt)
-                }
-            }
-            // The system puts a minimised search at the far right, past the
-            // bell. Placed by hand it takes its turn among the screen's own
-            // items (this modifier comes before the screen's `segmentToolbar`),
-            // so the bell is the last thing in the bar.
-            .toolbar {
-                if phase == .onScreen {
-                    DefaultToolbarItem(kind: .search, placement: .topBarTrailing)
                 }
             }
     }
