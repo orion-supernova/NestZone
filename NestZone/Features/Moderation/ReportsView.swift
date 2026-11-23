@@ -85,6 +85,7 @@ extension ReportKind {
         case .message: "bubble.left.fill"
         case .issuePhoto: "photo.fill"
         case .avatar: "person.crop.circle.fill"
+        case .calendarItem: "calendar"
         }
     }
 
@@ -93,6 +94,7 @@ extension ReportKind {
         case .message: L10n.moderationKindMessage
         case .issuePhoto: L10n.moderationKindPhoto
         case .avatar: L10n.moderationKindFace
+        case .calendarItem: L10n.moderationKindCalendar
         }
     }
 }

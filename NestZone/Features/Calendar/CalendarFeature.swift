@@ -46,6 +46,19 @@ public struct CalendarFeature: Sendable {
         /// five copies.
         public var dayIndex: [CalendarDay: [EventOccurrence.ID]] = [:]
 
+        /// Housemates' own calendars in the window, as they chose to share them.
+        /// Not events: nothing in this feature edits, answers, plans or counts
+        /// them, and nothing outside the Calendar screen reads them.
+        public var shared: IdentifiedArrayOf<SharedBusyItem> = []
+        /// Reported in this session, ahead of the server's own read dropping
+        /// them. Keyed by row id; the server hides by what the item is, so a
+        /// sync that replaces the rows cannot bring one back.
+        public var sharedHidden: Set<String> = []
+        /// The shared items on each day, after the filters, like `dayIndex`.
+        public var sharedDayIndex: [CalendarDay: [String]] = [:]
+        /// Whether housemates' calendars are drawn at all.
+        @Shared(.calendarShowShared) public var showShared: Bool
+
         public var isLoading = true
         /// Filters. Not persisted, bar the people: narrowing a calendar by kind
         /// or search is a "show me this now", not a preference to be remembered
@@ -284,6 +297,38 @@ public struct CalendarFeature: Sendable {
 
         public func count(on day: CalendarDay) -> Int { dayIndex[day]?.count ?? 0 }
 
+        public func sharedItems(on day: CalendarDay) -> [SharedBusyItem] {
+            (sharedDayIndex[day] ?? []).compactMap { shared[id: $0] }
+        }
+
+        public func sharedCount(on day: CalendarDay) -> Int { sharedDayIndex[day]?.count ?? 0 }
+
+        /// Every shared item that survives the filters, soonest first.
+        public var sharedMatches: [SharedBusyItem] {
+            var seen = Set<String>()
+            var found: [SharedBusyItem] = []
+            for ids in sharedDayIndex.values {
+                for id in ids where seen.insert(id).inserted {
+                    if let item = shared[id: id] { found.append(item) }
+                }
+            }
+            return found.sorted { $0.startsAt < $1.startsAt }
+        }
+
+        /// How many shared items the filters keep. Said beside "x of y", which
+        /// is about house events only: a housemate's item is not an event, and
+        /// folding it into the count would make "3 of 12" mean two things.
+        public var sharedVisibleCount: Int {
+            var seen = Set<String>()
+            for ids in sharedDayIndex.values { seen.formUnion(ids) }
+            return seen.count
+        }
+
+        /// Whether the "their own calendars" switch is worth drawing: there is
+        /// something for it to hide, or it is off and has to be able to come
+        /// back on.
+        public var canToggleShared: Bool { !shared.isEmpty || !showShared }
+
         /// The dots under a day cell: up to three, in the order the events
         /// happen, de-duplicated by colour so a day of four dinners is one
         /// orange dot and not four.
@@ -302,13 +347,14 @@ public struct CalendarFeature: Sendable {
         ///
         /// Forward only. An agenda that opens on the middle of a list has
         /// already lost the argument for being an agenda.
-        public var agendaDays: [(day: CalendarDay, items: [EventOccurrence])] {
-            dayIndex.keys
+        public var agendaDays: [(day: CalendarDay, items: [EventOccurrence], shared: [SharedBusyItem])] {
+            Set(dayIndex.keys).union(sharedDayIndex.keys)
                 .filter { $0 >= selectedDay }
                 .sorted()
                 .compactMap { day in
                     let items = occurrences(on: day)
-                    return items.isEmpty ? nil : (day, items)
+                    let theirs = sharedItems(on: day)
+                    return items.isEmpty && theirs.isEmpty ? nil : (day, items, theirs)
                 }
         }
 
@@ -379,6 +425,7 @@ public struct CalendarFeature: Sendable {
                 || canFilterPeople
                 || canFilterNeedsAnswer
                 || canFilterPlanned
+                || canToggleShared
         }
 
         public func member(_ id: UserID?) -> User? { id.flatMap { members[id: $0] } }
@@ -410,6 +457,8 @@ public struct CalendarFeature: Sendable {
         case compose(EventComposerFeature)
         case detail(EventDetailFeature)
         case history(EventHistoryFeature)
+        /// A housemate's own calendar item: read-only, and reportable.
+        case sharedItem(SharedItemDetailFeature)
     }
 
     public enum Action: BindableAction {
@@ -419,6 +468,9 @@ public struct CalendarFeature: Sendable {
         /// last push from the month you just left lands on the one you are now
         /// looking at.
         case occurrencesUpdated(String, [EventOccurrence])
+        case sharedUpdated(String, [SharedBusyItem])
+        case sharedToggled
+        case sharedItemTapped(String)
         case membersUpdated([User])
         case loadFailed(AppError)
         /// There is something still to come, for a house without Plus.
@@ -469,13 +521,14 @@ public struct CalendarFeature: Sendable {
         public enum Alert: Equatable {}
     }
 
-    private enum CancelID: Hashable { case events, members, undo }
+    private enum CancelID: Hashable { case events, shared, members, undo }
 
     /// How long a delete stays undoable. The same window the ledger and the
     /// shopping list use, so the gesture means one thing app-wide.
     private static let undoWindow: Duration = .seconds(5)
 
     @Dependency(\.events) var events
+    @Dependency(\.calendarShare) var calendarShare
     @Dependency(\.homes) var homes
     @Dependency(\.paywall) var paywall
     @Dependency(\.continuousClock) var clock
@@ -546,6 +599,31 @@ public struct CalendarFeature: Sendable {
                 }
                 return .none
 
+            case let .sharedUpdated(windowID, incoming):
+                guard windowID == state.windowID else { return .none }
+                var array = IdentifiedArray(uniqueElements: incoming)
+                let stillHidden = state.sharedHidden.intersection(array.ids)
+                if stillHidden != state.sharedHidden { state.sharedHidden = stillHidden }
+                for id in stillHidden { array.remove(id: id) }
+                guard array != state.shared else { return .none }
+                state.shared = array
+                reindex(&state)
+                return .none
+
+            case .sharedToggled:
+                state.$showShared.withLock { $0.toggle() }
+                reindex(&state)
+                return .none
+
+            case let .sharedItemTapped(id):
+                guard let item = state.shared[id: id] else { return .none }
+                state.destination = .sharedItem(SharedItemDetailFeature.State(
+                    item: item,
+                    member: state.member(item.userID),
+                    name: state.name(for: item.userID)
+                ))
+                return .none
+
             case let .membersUpdated(members):
                 let incoming = IdentifiedArray(uniqueElements: members)
                 guard incoming != state.members else { return .none }
@@ -578,7 +656,7 @@ public struct CalendarFeature: Sendable {
                         history.detail = detail
                     }
                     state.destination = .history(history)
-                case .none:
+                case .sharedItem, .none:
                     break
                 }
                 return .none
@@ -830,6 +908,18 @@ public struct CalendarFeature: Sendable {
                 restoreRSVPs(&state, series: eventID, to: rsvps)
                 return .none
 
+            // A report hides the item at once, whatever the server answered;
+            // the sheet says thanks and closes itself.
+            case let .destination(.presented(.sharedItem(.delegate(.reported(id))))):
+                state.sharedHidden.insert(id)
+                state.shared.remove(id: id)
+                reindex(&state)
+                return .none
+
+            case .destination(.presented(.sharedItem(.delegate(.finished)))):
+                state.destination = nil
+                return .none
+
             case let .writeFailed(error):
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
@@ -868,6 +958,8 @@ public struct CalendarFeature: Sendable {
         // skeleton covers the gap instead.
         state.occurrences = []
         state.dayIndex = [:]
+        state.shared = []
+        state.sharedDayIndex = [:]
         // A kind filter carried into a month without that kind would be
         // invisible, and therefore impossible to clear.
         state.kindFilter = nil
@@ -890,14 +982,26 @@ public struct CalendarFeature: Sendable {
     ) -> Effect<Action> {
         let window = State.window(for: month, mode: mode)
         let windowID = "\(mode.rawValue)-\(month.id)"
-        return .run { send in
-            for try await occurrences in events.inRange(homeID, window.from, window.to) {
-                await send(.occurrencesUpdated(windowID, occurrences))
+        return .merge(
+            .run { send in
+                for try await occurrences in events.inRange(homeID, window.from, window.to) {
+                    await send(.occurrencesUpdated(windowID, occurrences))
+                }
+            } catch: { error, send in
+                await send(.loadFailed(AppError(error)))
             }
-        } catch: { error, send in
-            await send(.loadFailed(AppError(error)))
-        }
-        .cancellable(id: CancelID.events, cancelInFlight: true)
+            .cancellable(id: CancelID.events, cancelInFlight: true),
+
+            // Housemates' own calendars for the same window. Open to every
+            // house, and never an error worth a screen: the house's events are
+            // the calendar, these are a bonus.
+            .run { send in
+                for try await items in calendarShare.inRange(homeID, window.from, window.to) {
+                    await send(.sharedUpdated(windowID, items))
+                }
+            } catch: { _, _ in }
+            .cancellable(id: CancelID.shared, cancelInFlight: true)
+        )
     }
 
     /// The viewer first, then everybody else by name.
@@ -964,6 +1068,27 @@ public struct CalendarFeature: Sendable {
             }
         }
         state.dayIndex = index
+
+        // Housemates' items follow the same people filter, and are left out
+        // when a filter is about something only a house event has (its kind, an
+        // answer owed, a plan).
+        var sharedIndex: [CalendarDay: [String]] = [:]
+        if state.showShared, kind == nil, !needsAnswer, !withPlan {
+            for item in state.shared {
+                if !people.isEmpty, !people.contains(item.userID) { continue }
+                if !needle.isEmpty {
+                    let matches = (item.shownTitle?.localizedCaseInsensitiveContains(needle) ?? false)
+                        || (item.location?.localizedCaseInsensitiveContains(needle) ?? false)
+                        || item.calendarName.localizedCaseInsensitiveContains(needle)
+                        || state.name(for: item.userID).localizedCaseInsensitiveContains(needle)
+                    if !matches { continue }
+                }
+                for day in item.days(calendar) {
+                    sharedIndex[day, default: []].append(item.id)
+                }
+            }
+        }
+        state.sharedDayIndex = sharedIndex
     }
 
     /// Applies one member's answer across every occurrence of a series.

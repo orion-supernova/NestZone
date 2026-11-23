@@ -10,6 +10,7 @@ extension CalendarMirrorClient: DependencyKey {
             await MirrorEngine.shared.setOverride(home, event, calendars)
         },
         override: { home, event in await MirrorEngine.shared.override(home, event) },
+        copyCalendars: { home, event in await MirrorEngine.shared.copyCalendars(home, event) },
         hasOverrides: { home in await MirrorEngine.shared.hasOverrides(home) },
         isCopy: { id in await MirrorEngine.shared.isCopy(id) },
         copyIdentifiers: { await MirrorEngine.shared.copyIdentifiers() },
@@ -80,6 +81,14 @@ actor MirrorEngine {
 
     func override(_ home: HomeID, _ event: EventID) -> [String]? {
         current().overrides[MirrorMap.overrideKey(home.rawValue, event.rawValue)]
+    }
+
+    func copyCalendars(_ home: HomeID, _ event: EventID) -> [String] {
+        var calendars: Set<String> = []
+        for entry in current().entries.values where entry.homeID == home.rawValue && entry.eventID == event.rawValue {
+            calendars.formUnion(entry.copies.keys)
+        }
+        return calendars.sorted()
     }
 
     func hasOverrides(_ home: HomeID) -> Bool {

@@ -28,6 +28,10 @@ public struct CalendarMirrorClient: Sendable {
     /// one"). Persisted, and announced on `overridesChanged`.
     public var setOverride: @Sendable (_ homeID: HomeID, _ eventID: EventID, _ calendarIDs: [String]?) async -> Void
     public var override: @Sendable (_ homeID: HomeID, _ eventID: EventID) async -> [String]? = { _, _ in nil }
+    /// The calendars that hold a copy of this event right now, whichever way
+    /// it got there (the setting or a pin). What the composer's "Also add to"
+    /// ticks when an event is reopened, so the card says what is true.
+    public var copyCalendars: @Sendable (_ homeID: HomeID, _ eventID: EventID) async -> [String] = { _, _ in [] }
     /// Whether any event in this home is pinned, which is a reason to follow
     /// the house's calendar even with copying off.
     public var hasOverrides: @Sendable (_ homeID: HomeID) async -> Bool = { _ in false }

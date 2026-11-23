@@ -92,6 +92,8 @@ public struct MainFeature: Sendable {
         /// the tab bar: it follows the house whether or not the Calendar screen
         /// is open.
         public var mirror: CalendarMirrorFeature.State
+        /// The person's own calendars shared with this house, for the same life.
+        public var share: CalendarShareFeature.State
 
         /// The paywall, opened on whatever was reached for. Presented by
         /// whichever sheet is on top, or the tab bar when none is
@@ -139,6 +141,7 @@ public struct MainFeature: Sendable {
             self.pro = ProStatusFeature.State(homeID: homeID)
             self.moderation = ModerationSessionFeature.State(homeID: homeID, userID: user?.id)
             self.mirror = CalendarMirrorFeature.State(homeID: homeID, userID: user?.id)
+            self.share = CalendarShareFeature.State(homeID: homeID, userID: user?.id)
         }
 
         /// How many people have to say yes for a movie-night match.
@@ -197,6 +200,7 @@ public struct MainFeature: Sendable {
         case proStatus(ProStatusFeature.Action)
         case moderation(ModerationSessionFeature.Action)
         case mirror(CalendarMirrorFeature.Action)
+        case share(CalendarShareFeature.Action)
         case paywall(PresentationAction<PaywallFeature.Action>)
         /// A gated control, or the server, asked for the paywall.
         case paywallRequested(ProFeature?)
@@ -236,6 +240,7 @@ public struct MainFeature: Sendable {
         Scope(state: \.pro, action: \.proStatus) { ProStatusFeature() }
         Scope(state: \.moderation, action: \.moderation) { ModerationSessionFeature() }
         Scope(state: \.mirror, action: \.mirror) { CalendarMirrorFeature() }
+        Scope(state: \.share, action: \.share) { CalendarShareFeature() }
 
         Reduce { state, action in
             switch action {
@@ -337,7 +342,10 @@ public struct MainFeature: Sendable {
 
             // Where house events are copied to changed.
             case .settings(.delegate(.calendarSettingsChanged)):
-                return .send(.mirror(.settingsChanged))
+                return .merge(
+                    .send(.mirror(.settingsChanged)),
+                    .send(.share(.settingsChanged))
+                )
 
             // Opened over Settings, which stays underneath.
             case .settings(.delegate(.customizeTapped)):
@@ -446,12 +454,14 @@ public struct MainFeature: Sendable {
                     .send(.now(.proChanged(isPro))),
                     // Copying into the person's calendars is Plus: it starts
                     // with it and stops creating and updating without it.
-                    .send(.mirror(.settingsChanged))
+                    .send(.mirror(.settingsChanged)),
+                    // Sharing is Plus too: it starts and stops with it.
+                    .send(.share(.settingsChanged))
                 )
 
             case .home, .today, .lists, .plans, .house, .messages,
                  .settings, .inbox, .customize, .capture, .companion,
-                 .proStatus, .moderation, .mirror, .paywall:
+                 .proStatus, .moderation, .mirror, .share, .paywall:
                 return .none
             }
         }
@@ -727,6 +737,7 @@ extension MainFeature.State {
         inbox.currentUserID = user?.id
         moderation.userID = userID
         mirror.userID = userID
+        share.userID = userID
         // The full-screen avatar viewer reads who this is from the directory
         // (it has no store), so an optimistic launch, which learns the user a
         // moment after the tabs, has to tell it too or it offers to report

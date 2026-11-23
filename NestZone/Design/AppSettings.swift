@@ -254,6 +254,36 @@ extension SharedKey where Self == AppStorageKey<Double>.Default {
     }
 }
 
+extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// Which of this phone's calendars are shared with which house, and how
+    /// much of each: `CalendarShareChoices` as JSON. Per device, because the
+    /// calendars are on this phone.
+    public static var calendarShareChoicesRaw: Self {
+        Self[.appStorage("appCalendarShareChoices"), default: ""]
+    }
+
+    /// What a calendar that turns up after sharing was set up gets: `off`,
+    /// `busy` or `details`. Busy only, which shows when and never what.
+    public static var calendarShareDefaultLevelRaw: Self {
+        Self[.appStorage("appCalendarShareDefaultLevel"), default: CalendarShareLevel.busy.rawValue]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Int>.Default {
+    /// How many weeks ahead the phone shares: 4, 8 or 12.
+    public static var calendarShareWeeks: Self {
+        Self[.appStorage("appCalendarShareWeeks"), default: 8]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Bool>.Default {
+    /// Whether housemates' own calendars are drawn in the Calendar, beside the
+    /// house's events. On: a person who shares a calendar means it to be seen.
+    public static var calendarShowShared: Self {
+        Self[.appStorage("appCalendarShowShared"), default: true]
+    }
+}
+
 /// Reads and writes the lists above, which are strings because app storage
 /// holds scalars. Ids never contain a comma (users) or a newline (calendars).
 public enum CalendarLists {

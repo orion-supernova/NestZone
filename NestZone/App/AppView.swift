@@ -215,6 +215,8 @@ struct MainView: View {
         // House events copied into the person's own calendars, for the same
         // life: it must not stop because Calendar is closed.
         .task { await store.send(.mirror(.task)).finish() }
+        // And the person's own calendars, shared with the house.
+        .task { await store.send(.share(.task)).finish() }
         // A gated control, or a refusal from the server, asking for the paywall.
         .task {
             for await feature in PaywallBroker.shared.requests() {

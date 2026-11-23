@@ -6,6 +6,8 @@ public typealias ReportID = ConvexID<ReportsTable>
 /// What can be reported (App Store guideline 1.2).
 public enum ReportKind: String, Codable, Sendable {
     case message, issuePhoto, avatar
+    /// A housemate's shared calendar item, by its row id.
+    case calendarItem
 }
 
 /// The reasons the report sheet offers, in the order it lists them.

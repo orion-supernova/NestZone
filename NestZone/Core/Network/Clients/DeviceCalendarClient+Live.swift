@@ -8,6 +8,8 @@ extension DeviceCalendarClient: DependencyKey {
         access: { DeviceCalendarStore.access() },
         requestAccess: { try await DeviceCalendarStore.shared.requestAccess() },
         calendars: { await DeviceCalendarStore.shared.calendars() },
+        shareableCalendars: { await DeviceCalendarStore.shared.shareableCalendars() },
+        events: { ids, from, to in await DeviceCalendarStore.shared.events(in: ids, from: from, to: to) },
         defaultCalendarID: { await DeviceCalendarStore.shared.defaultCalendarID() },
         save: { draft, calendarID, existingID in
             try await DeviceCalendarStore.shared.save(draft, calendarID: calendarID, existingID: existingID)
@@ -84,6 +86,47 @@ actor DeviceCalendarStore {
                     account: Self.account(calendar.source)
                 )
             }
+    }
+
+    func shareableCalendars() -> [DeviceCalendar] {
+        guard Self.access() == .granted else { return [] }
+        return store.calendars(for: .event)
+            .filter { $0.type != .birthday }
+            .sorted { (lhs: EKCalendar, rhs: EKCalendar) -> Bool in
+                if lhs.source.title != rhs.source.title { return lhs.source.title < rhs.source.title }
+                return lhs.title < rhs.title
+            }
+            .map { calendar in
+                DeviceCalendar(
+                    id: calendar.calendarIdentifier,
+                    title: calendar.title,
+                    colorHex: Self.hex(calendar.cgColor),
+                    accountTitle: calendar.source.title,
+                    account: Self.account(calendar.source)
+                )
+            }
+    }
+
+    func events(in calendarIDs: [String], from: Date, to: Date) -> [DeviceEvent] {
+        guard Self.access() == .granted, !calendarIDs.isEmpty, from < to else { return [] }
+        let wanted = Set(calendarIDs)
+        let calendars = store.calendars(for: .event).filter { wanted.contains($0.calendarIdentifier) }
+        guard !calendars.isEmpty else { return [] }
+        let predicate = store.predicateForEvents(withStart: from, end: to, calendars: calendars)
+        return store.events(matching: predicate).compactMap { event in
+            guard event.status != .canceled,
+                  let identifier = event.eventIdentifier,
+                  let calendarID = event.calendar?.calendarIdentifier else { return nil }
+            return DeviceEvent(
+                eventIdentifier: identifier,
+                calendarID: calendarID,
+                start: event.startDate,
+                end: event.endDate,
+                isAllDay: event.isAllDay,
+                title: event.title ?? "",
+                location: event.location
+            )
+        }
     }
 
     func defaultCalendarID() -> String? {

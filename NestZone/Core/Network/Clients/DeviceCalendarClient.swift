@@ -20,6 +20,13 @@ public struct DeviceCalendarClient: Sendable {
     /// The calendars a copy can be written into: writable ones only, across
     /// every account. Empty without full access.
     public var calendars: @Sendable () async -> [DeviceCalendar] = { [] }
+    /// Every calendar worth offering to share, writable or not (a family
+    /// calendar someone else owns is still the person's own to show), across
+    /// every account. Birthdays are left out. Empty without full access.
+    public var shareableCalendars: @Sendable () async -> [DeviceCalendar] = { [] }
+    /// The events in `from...to` in these calendars, one per occurrence, off the
+    /// main thread. Empty without full access.
+    public var events: @Sendable (_ calendarIDs: [String], _ from: Date, _ to: Date) async -> [DeviceEvent] = { _, _, _ in [] }
     /// The calendar the phone itself would put a new event in, if there is one.
     public var defaultCalendarID: @Sendable () async -> String?
     /// Writes `draft` into `calendarID`: a new event when `existingID` is `nil`

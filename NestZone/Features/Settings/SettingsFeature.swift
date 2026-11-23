@@ -505,7 +505,7 @@ public struct SettingsFeature: Sendable {
                 return .send(.delegate(.customizeTapped))
 
             case .calendarRowTapped:
-                state.destination = .calendar(CalendarSettingsFeature.State())
+                state.destination = .calendar(CalendarSettingsFeature.State(homeID: state.homeID))
                 return .none
 
             case .destination(.presented(.calendar(.delegate(.changed)))):

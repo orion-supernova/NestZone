@@ -79,6 +79,9 @@ public struct DayCell: View, Equatable {
     private let day: CalendarDay
     private let kinds: [EventKind]
     private let extra: Int
+    /// Items from housemates' own calendars on this day. Drawn as an outlined
+    /// dot, never a filled one: they are not events.
+    private let shared: Int
     private let isInMonth: Bool
     private let isSelected: Bool
     private let isToday: Bool
@@ -92,6 +95,7 @@ public struct DayCell: View, Equatable {
         day: CalendarDay,
         kinds: [EventKind],
         extra: Int = 0,
+        shared: Int = 0,
         isInMonth: Bool,
         isSelected: Bool,
         isToday: Bool,
@@ -101,6 +105,7 @@ public struct DayCell: View, Equatable {
         self.day = day
         self.kinds = kinds
         self.extra = extra
+        self.shared = shared
         self.isInMonth = isInMonth
         self.isSelected = isSelected
         self.isToday = isToday
@@ -123,6 +128,7 @@ public struct DayCell: View, Equatable {
         lhs.day == rhs.day
             && lhs.kinds == rhs.kinds
             && lhs.extra == rhs.extra
+            && lhs.shared == rhs.shared
             && lhs.isInMonth == rhs.isInMonth
             && lhs.isSelected == rhs.isSelected
             && lhs.isToday == rhs.isToday
@@ -168,6 +174,12 @@ public struct DayCell: View, Equatable {
                             )
                             .zIndex(Double(index))
                     }
+                    if shared > 0, kinds.count < 3 {
+                        Circle()
+                            .strokeBorder(.secondary, lineWidth: 1)
+                            .frame(width: 5, height: 5)
+                            .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+                    }
                     if extra > 0 {
                         Text("+\(extra)")
                             .font(.system(size: 8, weight: .bold, design: .rounded))
@@ -176,6 +188,7 @@ public struct DayCell: View, Equatable {
                 }
                 .frame(height: 6)
                 .animation(Motion.spring, value: kinds)
+                .animation(Motion.spring, value: shared > 0)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
@@ -185,9 +198,9 @@ public struct DayCell: View, Equatable {
         .opacity(isInMonth ? 1 : 0.5)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(DayLabels.text(for: day)))
-        .accessibilityValue(kinds.isEmpty
+        .accessibilityValue(kinds.isEmpty && shared == 0
             ? Text(L10n.calendarNothingOn)
-            : Text(L10n.calendarEventCount(kinds.count + extra)))
+            : Text(L10n.calendarEventCount(kinds.count + extra + shared)))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
@@ -396,7 +409,12 @@ public struct EventRow: View {
 public struct DayTimeline: View {
     private let day: CalendarDay
     private let occurrences: [EventOccurrence]
+    /// Housemates' own calendar items for the day, drawn as outlines in the
+    /// lanes beside the house's events.
+    private let shared: [SharedBusyItem]
+    private let sharedName: (UserID) -> String
     private let action: (EventOccurrence) -> Void
+    private let sharedAction: (SharedBusyItem) -> Void
 
     @Environment(\.theme) private var theme
 
@@ -408,15 +426,38 @@ public struct DayTimeline: View {
     public init(
         day: CalendarDay,
         occurrences: [EventOccurrence],
-        action: @escaping (EventOccurrence) -> Void
+        shared: [SharedBusyItem] = [],
+        sharedName: @escaping (UserID) -> String = { _ in "" },
+        action: @escaping (EventOccurrence) -> Void,
+        sharedAction: @escaping (SharedBusyItem) -> Void = { _ in }
     ) {
         self.day = day
         self.occurrences = occurrences
+        self.shared = shared
+        self.sharedName = sharedName
         self.action = action
+        self.sharedAction = sharedAction
+    }
+
+    /// A house event or a housemate's item, to the one thing the layout needs
+    /// of either: when it is, and a key.
+    private struct Entry {
+        let id: String
+        let start: Date
+        let end: Date
+        let house: EventOccurrence?
+        let shared: SharedBusyItem?
     }
 
     private var allDay: [EventOccurrence] { occurrences.filter(\.isAllDay) }
-    private var timed: [EventOccurrence] { occurrences.filter { !$0.isAllDay } }
+    private var allDayShared: [SharedBusyItem] { shared.filter(\.isAllDay) }
+    private var timed: [Entry] {
+        occurrences.filter { !$0.isAllDay }.map {
+            Entry(id: $0.id, start: $0.start, end: $0.end, house: $0, shared: nil)
+        } + shared.filter { !$0.isAllDay }.map {
+            Entry(id: "shared-" + $0.id, start: $0.start, end: $0.end, house: nil, shared: $0)
+        }
+    }
 
     /// The hours actually worth drawing.
     ///
@@ -428,10 +469,10 @@ public struct DayTimeline: View {
         let calendar = Calendar.current
         var lower = 8
         var upper = 22
-        for occurrence in timed {
-            lower = min(lower, calendar.component(.hour, from: occurrence.start))
-            let endHour = calendar.component(.hour, from: occurrence.end)
-            let endMinute = calendar.component(.minute, from: occurrence.end)
+        for entry in timed {
+            lower = min(lower, calendar.component(.hour, from: entry.start))
+            let endHour = calendar.component(.hour, from: entry.end)
+            let endMinute = calendar.component(.minute, from: entry.end)
             upper = max(upper, endMinute > 0 ? endHour + 1 : endHour)
         }
         return max(0, lower - 1)...min(24, max(upper + 1, lower + 4))
@@ -439,7 +480,7 @@ public struct DayTimeline: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if !allDay.isEmpty {
+            if !allDay.isEmpty || !allDayShared.isEmpty {
                 allDayBand
             }
             timeline
@@ -473,7 +514,38 @@ public struct DayTimeline: View {
                 }
                 .buttonStyle(.pressable)
             }
+
+            ForEach(allDayShared) { item in
+                sharedBand(item)
+            }
         }
+    }
+
+    /// An all-day item of a housemate's: the outline of the row, thinner.
+    private func sharedBand(_ item: SharedBusyItem) -> some View {
+        let tint = MemberTint.color(for: item.userID.rawValue)
+        let name = sharedName(item.userID)
+        return Button { sharedAction(item) } label: {
+            HStack(spacing: 8) {
+                Text(item.shownTitle ?? String(localized: L10n.calendarSharedBusyLine(name)))
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Text(L10n.calendarAllDay)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(tint.opacity(0.8), style: StrokeStyle(lineWidth: 1.2, dash: [4, 3]))
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
     }
 
     private var timeline: some View {
@@ -499,7 +571,7 @@ public struct DayTimeline: View {
             }
 
             // The blocks.
-            ForEach(laidOut, id: \.occurrence.id) { placed in
+            ForEach(laidOut, id: \.entry.id) { placed in
                 block(placed, origin: hours.first ?? 0)
             }
 
@@ -532,49 +604,89 @@ public struct DayTimeline: View {
     private func block(_ placed: Placed, origin: Int) -> some View {
         let calendar = Calendar.current
         let startOfDay = day.date(calendar)
-        let minutes = placed.occurrence.start.timeIntervalSince(startOfDay) / 60
+        let entry = placed.entry
+        let minutes = entry.start.timeIntervalSince(startOfDay) / 60
         let top = (minutes / 60 - Double(origin)) * hourHeight
         // A fifteen-minute event still needs to be readable and still needs to
         // be tappable, so blocks have a floor rather than a true height.
-        let raw = placed.occurrence.duration / 3600 * Double(hourHeight)
+        let raw = entry.end.timeIntervalSince(entry.start) / 3600 * Double(hourHeight)
         let height = max(28, raw - 2)
 
         return GeometryReader { proxy in
             let usable = proxy.size.width - gutter
             let width = usable / CGFloat(placed.lanes)
-            Button { action(placed.occurrence) } label: {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(placed.occurrence.title)
-                        .font(.caption.weight(.semibold))
-                        .lineLimit(height > 40 ? 2 : 1)
-                    if height > 40 {
-                        Text(placed.occurrence.timeText)
-                            .font(.system(size: 10))
-                            .opacity(0.8)
-                            .monospacedDigit()
-                    }
+            Group {
+                if let occurrence = entry.house {
+                    houseBlock(occurrence, height: height)
+                } else if let item = entry.shared {
+                    sharedBlock(item, height: height)
                 }
-                .foregroundStyle(placed.occurrence.kind.tint)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 5)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .background(
-                    placed.occurrence.kind.tint.opacity(0.16),
-                    in: .rect(cornerRadius: 8, style: .continuous)
-                )
-                .overlay(alignment: .leading) {
-                    Capsule()
-                        .fill(placed.occurrence.kind.tint)
-                        .frame(width: 3)
-                        .padding(.vertical, 3)
-                }
-                .contentShape(.rect)
             }
-            .buttonStyle(.pressable)
             .frame(width: max(40, width - 3), height: height)
             .offset(x: gutter + width * CGFloat(placed.lane), y: max(0, top))
         }
         .frame(height: 0, alignment: .topLeading)
+    }
+
+    private func houseBlock(_ occurrence: EventOccurrence, height: CGFloat) -> some View {
+        Button { action(occurrence) } label: {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(occurrence.title)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(height > 40 ? 2 : 1)
+                if height > 40 {
+                    Text(occurrence.timeText)
+                        .font(.system(size: 10))
+                        .opacity(0.8)
+                        .monospacedDigit()
+                }
+            }
+            .foregroundStyle(occurrence.kind.tint)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 5)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(
+                occurrence.kind.tint.opacity(0.16),
+                in: .rect(cornerRadius: 8, style: .continuous)
+            )
+            .overlay(alignment: .leading) {
+                Capsule()
+                    .fill(occurrence.kind.tint)
+                    .frame(width: 3)
+                    .padding(.vertical, 3)
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
+    }
+
+    /// A housemate's item: no fill and no rail, a dashed outline in their tint.
+    private func sharedBlock(_ item: SharedBusyItem, height: CGFloat) -> some View {
+        let tint = MemberTint.color(for: item.userID.rawValue)
+        let name = sharedName(item.userID)
+        return Button { sharedAction(item) } label: {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(item.shownTitle ?? String(localized: L10n.calendarSharedBusyLine(name)))
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(height > 40 ? 2 : 1)
+                if height > 40 {
+                    Text(item.timeText)
+                        .font(.system(size: 10))
+                        .opacity(0.8)
+                        .monospacedDigit()
+                }
+            }
+            .foregroundStyle(tint)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 5)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(tint.opacity(0.8), style: StrokeStyle(lineWidth: 1.2, dash: [4, 3]))
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.pressable)
     }
 
     private func label(for hour: Int) -> String {
@@ -598,7 +710,7 @@ public struct DayTimeline: View {
     }
 
     private struct Placed {
-        let occurrence: EventOccurrence
+        let entry: Entry
         /// Which column of the overlap group it sits in.
         let lane: Int
         /// How many columns that group needs.
@@ -610,39 +722,40 @@ public struct DayTimeline: View {
     /// A greedy sweep rather than anything cleverer: events arrive sorted, a
     /// group is a run of them that overlaps, and each takes the first free
     /// column. Two events at six o'clock become two half-width blocks instead
-    /// of one hiding under the other, which is the entire requirement.
+    /// of one hiding under the other, which is the entire requirement. A
+    /// housemate's item takes a column like any other.
     private var laidOut: [Placed] {
-        let sorted = timed.sorted { $0.startsAt < $1.startsAt }
+        let sorted = timed.sorted { $0.start < $1.start }
         var out: [Placed] = []
-        var group: [EventOccurrence] = []
+        var group: [Entry] = []
         var groupEnd: Date?
 
         func flush() {
             guard !group.isEmpty else { return }
             var lanes: [Date] = []          // when each column becomes free
             var assignment: [Int] = []
-            for occurrence in group {
-                if let free = lanes.firstIndex(where: { $0 <= occurrence.start }) {
-                    lanes[free] = occurrence.end
+            for entry in group {
+                if let free = lanes.firstIndex(where: { $0 <= entry.start }) {
+                    lanes[free] = entry.end
                     assignment.append(free)
                 } else {
-                    lanes.append(occurrence.end)
+                    lanes.append(entry.end)
                     assignment.append(lanes.count - 1)
                 }
             }
-            for (occurrence, lane) in zip(group, assignment) {
-                out.append(Placed(occurrence: occurrence, lane: lane, lanes: lanes.count))
+            for (entry, lane) in zip(group, assignment) {
+                out.append(Placed(entry: entry, lane: lane, lanes: lanes.count))
             }
             group = []
             groupEnd = nil
         }
 
-        for occurrence in sorted {
-            if let end = groupEnd, occurrence.start >= end {
+        for entry in sorted {
+            if let end = groupEnd, entry.start >= end {
                 flush()
             }
-            group.append(occurrence)
-            groupEnd = max(groupEnd ?? occurrence.end, occurrence.end)
+            group.append(entry)
+            groupEnd = max(groupEnd ?? entry.end, entry.end)
         }
         flush()
         return out

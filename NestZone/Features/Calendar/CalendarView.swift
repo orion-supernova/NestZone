@@ -135,6 +135,12 @@ public struct CalendarView: View {
         )) { store in
             EventHistorySheet(store: store)
         }
+        .hostedSheet(item: $store.scope(
+            state: \.destination?.sharedItem,
+            action: \.destination.sharedItem
+        )) { store in
+            SharedItemSheet(store: store)
+        }
     }
 
     // MARK: - Chrome
@@ -362,6 +368,18 @@ public struct CalendarView: View {
                         peopleChips
                     }
 
+                    // Housemates' own calendars: on shows them beside the house's
+                    // events, off is a house-only view.
+                    if store.state.canToggleShared {
+                        Chip(
+                            String(localized: L10n.calendarFilterTheirs),
+                            symbol: "person.crop.rectangle.stack",
+                            isSelected: store.showShared
+                        ) {
+                            store.send(.sharedToggled)
+                        }
+                    }
+
                     if store.state.canFilterNeedsAnswer || store.needsAnswer {
                         Chip(
                             String(localized: L10n.calendarFilterNeedsAnswer),
@@ -421,9 +439,17 @@ public struct CalendarView: View {
             // real data, because "just mine" counts events you created and in
             // most households that is all of them.
             if store.state.isFiltering {
-                Text(L10n.calendarFilterCount(
-                    store.state.visibleCount, store.state.totalCount
-                ))
+                // "x of y" is house events only; a housemate's items are not
+                // events, so they are said apart instead of folded in.
+                HStack(spacing: 6) {
+                    Text(L10n.calendarFilterCount(
+                        store.state.visibleCount, store.state.totalCount
+                    ))
+                    if store.state.sharedVisibleCount > 0 {
+                        Text("·")
+                        Text(L10n.calendarFilterCountShared(store.state.sharedVisibleCount))
+                    }
+                }
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
@@ -525,6 +551,7 @@ public struct CalendarView: View {
                     day: day,
                     kinds: kinds,
                     extra: max(0, store.state.count(on: day) - kinds.count),
+                    shared: store.state.sharedCount(on: day),
                     isInMonth: grid.isInMonth(day),
                     isSelected: day == store.selectedDay,
                     isToday: day == .today,
@@ -559,6 +586,7 @@ public struct CalendarView: View {
     /// What is on the selected day, under the grid.
     private var dayPanel: some View {
         let items = store.state.occurrences(on: store.selectedDay)
+        let theirs = store.state.sharedItems(on: store.selectedDay)
         return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -586,13 +614,15 @@ public struct CalendarView: View {
 
             if store.isLoading {
                 SkeletonList(rows: 2, height: 72)
-            } else if items.isEmpty {
+            } else if items.isEmpty, theirs.isEmpty {
                 emptyDay
             } else {
-                eventList(items, showsDate: false)
+                if !items.isEmpty { eventList(items, showsDate: false) }
+                if !theirs.isEmpty { sharedList(theirs, showsDate: false) }
             }
         }
         .animation(Motion.spring, value: items.map(\.id))
+        .animation(Motion.spring, value: theirs.map(\.id))
     }
 
     /// Everything the active filters keep, wherever it falls in the window.
@@ -603,11 +633,12 @@ public struct CalendarView: View {
     /// and neither of them can show a match that is not on the selected day.
     private var resultsPage: some View {
         let results = store.state.matches
+        let theirs = store.state.sharedMatches
         return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             if store.isLoading {
                 SkeletonList(rows: 4, height: 76)
                     .padding(.horizontal, Metrics.screenPadding)
-            } else if results.isEmpty {
+            } else if results.isEmpty, theirs.isEmpty {
                 EmptyStateView(
                     title: L10n.calendarNoMatches,
                     message: store.state.isSearchActive
@@ -624,7 +655,7 @@ public struct CalendarView: View {
                 .padding(.top, 12)
             } else {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(L10n.calendarSearchResults(results.count))
+                    Text(L10n.calendarSearchResults(results.count + theirs.count))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -640,11 +671,18 @@ public struct CalendarView: View {
 
                 // Dated, because a match three weeks out is the normal case and
                 // "Thursday" alone does not say which Thursday.
-                eventList(results, showsDate: true)
-                    .padding(.horizontal, Metrics.screenPadding)
+                if !results.isEmpty {
+                    eventList(results, showsDate: true)
+                        .padding(.horizontal, Metrics.screenPadding)
+                }
+                if !theirs.isEmpty {
+                    sharedList(theirs, showsDate: true)
+                        .padding(.horizontal, Metrics.screenPadding)
+                }
             }
         }
         .animation(Motion.spring, value: results.map(\.id))
+        .animation(Motion.spring, value: theirs.map(\.id))
     }
 
     private var emptyDay: some View {
@@ -675,10 +713,12 @@ public struct CalendarView: View {
                 } else {
                     DayTimeline(
                         day: store.selectedDay,
-                        occurrences: store.state.occurrences(on: store.selectedDay)
-                    ) { occurrence in
-                        store.send(.eventTapped(occurrence.id))
-                    }
+                        occurrences: store.state.occurrences(on: store.selectedDay),
+                        shared: store.state.sharedItems(on: store.selectedDay),
+                        sharedName: { store.state.name(for: $0) },
+                        action: { occurrence in store.send(.eventTapped(occurrence.id)) },
+                        sharedAction: { item in store.send(.sharedItemTapped(item.id)) }
+                    )
                 }
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -689,7 +729,7 @@ public struct CalendarView: View {
         HStack(spacing: 4) {
             ForEach(store.state.visibleWeek) { day in
                 let isSelected = day == store.selectedDay
-                let count = store.state.count(on: day)
+                let count = store.state.count(on: day) + store.state.sharedCount(on: day)
                 Button { store.send(.daySelected(day)) } label: {
                     VStack(spacing: 4) {
                         Text(weekdayLetter(day))
@@ -774,9 +814,10 @@ public struct CalendarView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Spacer(minLength: 0)
-                            Badge("\(section.items.count)", tint: theme.accent)
+                            Badge("\(section.items.count + section.shared.count)", tint: theme.accent)
                         }
-                        eventList(section.items, showsDate: false)
+                        if !section.items.isEmpty { eventList(section.items, showsDate: false) }
+                        if !section.shared.isEmpty { sharedList(section.shared, showsDate: false) }
                     }
                     .padding(.horizontal, Metrics.screenPadding)
                     .appear(index + 1)
@@ -980,6 +1021,31 @@ public struct CalendarView: View {
                     }
                 }
                 .appear(index)
+                .transition(.opacity.combined(with: .offset(y: 8)))
+            }
+        }
+    }
+
+    /// Housemates' own calendar items: outlines under a small heading, so they
+    /// are never read as house events. Tapping one opens it read-only.
+    private func sharedList(_ items: [SharedBusyItem], showsDate: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.calendarSharedHeading)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
+                .padding(.top, 4)
+
+            ForEach(items) { item in
+                let name = store.state.name(for: item.userID)
+                SharedItemRow(
+                    item: item,
+                    name: name,
+                    initials: store.state.member(item.userID)?.initials ?? User.initials(from: name),
+                    showsDate: showsDate
+                ) {
+                    store.send(.sharedItemTapped(item.id))
+                }
                 .transition(.opacity.combined(with: .offset(y: 8)))
             }
         }

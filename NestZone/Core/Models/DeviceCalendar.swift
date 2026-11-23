@@ -35,6 +35,9 @@ public struct DeviceCalendar: Equatable, Hashable, Identifiable, Sendable {
     /// The account it lives in: "iCloud", "Gmail", "Work".
     public var accountTitle: String
     public var account: Account
+    /// What the server knows this calendar by when it is shared
+    /// (`CalendarShareKey`): a hash of `id`, never the id itself.
+    public let key: String
 
     public enum Account: String, Equatable, Hashable, Sendable {
         case local, iCloud, exchange, calDAV, other
@@ -51,6 +54,7 @@ public struct DeviceCalendar: Equatable, Hashable, Identifiable, Sendable {
         self.title = title
         self.colorHex = colorHex
         self.color = Color(hex: colorHex)
+        self.key = CalendarShareKey.key(for: id)
         self.accountTitle = accountTitle
         self.account = account
     }
@@ -67,6 +71,39 @@ extension Sequence<DeviceCalendar> {
             groups[calendar.accountTitle, default: []].append(calendar)
         }
         return order.map { ($0, groups[$0] ?? []) }
+    }
+}
+
+/// One event on the person's phone, as the share engine reads it. Never leaves
+/// the engine as it is: what is uploaded is a `SharedItemUpload`, with the title
+/// and location left behind unless the calendar is shared at Details.
+public struct DeviceEvent: Equatable, Sendable {
+    /// `EKEvent.eventIdentifier`. The same for every occurrence of a series,
+    /// which is what lets one entry in the mirror's map cover all of them.
+    public var eventIdentifier: String
+    public var calendarID: String
+    public var start: Date
+    public var end: Date
+    public var isAllDay: Bool
+    public var title: String
+    public var location: String?
+
+    public init(
+        eventIdentifier: String,
+        calendarID: String,
+        start: Date,
+        end: Date,
+        isAllDay: Bool,
+        title: String,
+        location: String? = nil
+    ) {
+        self.eventIdentifier = eventIdentifier
+        self.calendarID = calendarID
+        self.start = start
+        self.end = end
+        self.isAllDay = isAllDay
+        self.title = title
+        self.location = location
     }
 }
 

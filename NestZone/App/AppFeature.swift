@@ -426,7 +426,8 @@ public struct AppFeature: Sendable {
                     : .merge(
                         .send(.main(.proStatus(.becameActive))),
                         // The copies' window slides forward and catches up.
-                        .send(.main(.mirror(.becameActive)))
+                        .send(.main(.mirror(.becameActive))),
+                        .send(.main(.share(.becameActive)))
                     )
                 guard state.status == .authenticated,
                       !state.pushRegistration.isRegistered

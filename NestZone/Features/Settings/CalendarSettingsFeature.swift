@@ -3,17 +3,25 @@ import Foundation
 
 /// Settings → Calendar: what the person's own calendars get from the house.
 ///
-/// Today that is one thing, copying house events into calendars the person
-/// chooses. The page is a form of sections so the next one (sharing the
-/// person's calendars with the house) is one more `Section` under these.
+/// Two things: copying house events into calendars the person chooses, and the
+/// other way round, sharing some of the person's own calendars with this house.
 ///
 /// Everything here is per device: the calendars are on this phone, and a second
-/// phone of the same person chooses for itself. Copying is Plus; a house
-/// without it sees the controls locked and the paywall at the tap.
+/// phone of the same person chooses for itself. Sharing is also per house (what
+/// is shown to a partner and to flatmates are different things), which is why
+/// this page knows which house it was opened from. Both are Plus; a house
+/// without it sees the controls locked and the paywall at the tap. Nothing is
+/// shared until the person picks it: turning sharing on marks every calendar
+/// as seen and not shared.
 @Reducer
 public struct CalendarSettingsFeature: Sendable {
     @ObservableState
     public struct State: Equatable {
+        public var homeID: HomeID
+
+        @Shared(.calendarShareChoicesRaw) public var shareChoicesRaw: String
+        @Shared(.calendarShareDefaultLevelRaw) public var shareDefaultLevelRaw: String
+        @Shared(.calendarShareWeeks) public var shareWeeks: Int
         @Shared(.calendarCopyMode) public var mode: CalendarCopyMode
         @Shared(.calendarCopyTargetsRaw) public var targetsRaw: String
         @Shared(.calendarCopyReminders) public var copyReminders: Bool
@@ -30,12 +38,34 @@ public struct CalendarSettingsFeature: Sendable {
         /// pointed at when nothing was chosen.
         public var defaultCalendarID: String?
 
+        /// The calendars sharing can offer: every one but birthdays, grouped by
+        /// account.
+        public var shareGroups: [CalendarGroup] = []
+        /// What the server holds for this person in this house, for "Updated".
+        public var shareRow: CalendarShareRow?
+        /// The explainer was opened by the sharing switch, so its answer turns
+        /// sharing on and not copying.
+        public var isExplainingShare = false
+
         public var isExplaining = false
         public var isConnecting = false
         /// "Remove the copies from your calendars?"
         @Presents public var dialog: ConfirmationDialogState<Action.Dialog>?
 
-        public init() {}
+        public init(homeID: HomeID) {
+            self.homeID = homeID
+        }
+
+        public var shareChoices: CalendarShareChoices { .decode(shareChoicesRaw) }
+        public var isShareOn: Bool { shareChoices.house(homeID).isOn }
+        public var shareDefaultLevel: CalendarShareLevel {
+            CalendarShareLevel(rawValue: shareDefaultLevelRaw) ?? .busy
+        }
+
+        /// The level a calendar is at, or will be given.
+        public func shareLevel(of key: String) -> CalendarShareLevel {
+            shareChoices.house(homeID).level(of: key)
+        }
 
         public var isOn: Bool { mode != .off }
         public var targets: Set<String> { Set(CalendarLists.calendars(targetsRaw)) }
@@ -49,7 +79,12 @@ public struct CalendarSettingsFeature: Sendable {
 
     public enum Action: BindableAction {
         case task
-        case loaded(DeviceCalendarAccess, [DeviceCalendar], defaultID: String?, copies: Int)
+        case loaded(DeviceCalendarAccess, [DeviceCalendar], defaultID: String?, copies: Int, shareable: [DeviceCalendar])
+        case shareToggled(Bool)
+        case shareLevelSelected(String, CalendarShareLevel)
+        case shareDefaultSelected(CalendarShareLevel)
+        case shareWeeksSelected(Int)
+        case shareRowUpdated(CalendarShareRow?)
         case copyToggled(Bool)
         case remindersToggled(Bool)
         case modeSelected(CalendarCopyMode)
@@ -75,6 +110,7 @@ public struct CalendarSettingsFeature: Sendable {
 
     @Dependency(\.deviceCalendar) var deviceCalendar
     @Dependency(\.calendarMirror) var calendarMirror
+    @Dependency(\.calendarShare) var calendarShare
     @Dependency(\.paywall) var paywall
     @Dependency(\.openURL) var openURL
 
@@ -84,7 +120,10 @@ public struct CalendarSettingsFeature: Sendable {
     /// and writing is Plus.
     static func writes(_ action: Action) -> Bool {
         switch action {
-        case .copyToggled(true), .modeSelected, .targetToggled, .connectTapped, .remindersToggled: true
+        case .copyToggled(true), .modeSelected, .targetToggled, .connectTapped, .remindersToggled,
+             .shareToggled(true): true
+        // Off is never gated: stopping is always allowed.
+        case let .shareLevelSelected(_, level): level.isShared
         default: false
         }
     }
@@ -98,9 +137,21 @@ public struct CalendarSettingsFeature: Sendable {
             }
             switch action {
             case .task:
-                return load()
+                let homeID = state.homeID
+                return .merge(
+                    load(),
+                    .run { send in
+                        for try await row in calendarShare.mine(homeID) {
+                            await send(.shareRowUpdated(row))
+                        }
+                    } catch: { _, _ in }
+                )
 
-            case let .loaded(access, calendars, defaultID, copies):
+            case let .shareRowUpdated(row):
+                state.shareRow = row
+                return .none
+
+            case let .loaded(access, calendars, defaultID, copies, shareable):
                 state.access = access
                 state.calendars = calendars
                 state.groups = calendars.groupedByAccount().map {
@@ -108,7 +159,24 @@ public struct CalendarSettingsFeature: Sendable {
                 }
                 state.copyCount = copies
                 state.defaultCalendarID = defaultID
+                state.shareGroups = shareable.groupedByAccount().map {
+                    State.CalendarGroup(account: $0.account, calendars: $0.calendars)
+                }
                 state.isConnecting = false
+                if access == .granted {
+                    // A calendar that turned up since sharing was set up gets
+                    // the default for new ones, the same as the sync would
+                    // give it.
+                    let homeID = state.homeID
+                    let level = state.shareDefaultLevel
+                    let keys = shareable.map(\.key)
+                    state.$shareChoicesRaw.withLock { raw in
+                        var choices = CalendarShareChoices.decode(raw)
+                        let before = choices
+                        choices.adoptNew(homeID, keys: keys, defaultLevel: level)
+                        if choices != before { raw = choices.raw }
+                    }
+                }
                 // Calendars that have since gone drop out of the choice.
                 let existing = Set(calendars.map(\.id))
                 if access == .granted {
@@ -119,9 +187,77 @@ public struct CalendarSettingsFeature: Sendable {
                 }
                 return .none
 
+            case .shareToggled(true):
+                switch state.access {
+                case .notDetermined:
+                    state.isExplainingShare = true
+                    state.isExplaining = true
+                    return .none
+                case .granted:
+                    let homeID = state.homeID
+                    let keys = state.shareGroups.flatMap { $0.calendars.map(\.key) }
+                    state.$shareChoicesRaw.withLock { raw in
+                        var choices = CalendarShareChoices.decode(raw)
+                        choices.update(homeID) { house in
+                            house.isOn = true
+                            // What is on the phone now is seen and not shared;
+                            // only calendars that come later get the default.
+                            house.known.formUnion(keys)
+                            house.stopAll = false
+                        }
+                        raw = choices.raw
+                    }
+                    return .send(.delegate(.changed))
+                case .writeOnly, .denied, .restricted:
+                    return .none
+                }
+
+            case .shareToggled(false):
+                let homeID = state.homeID
+                guard state.isShareOn else { return .none }
+                // The server is told to forget by the share engine, from this
+                // mark, and tries again until it has.
+                state.$shareChoicesRaw.withLock { raw in
+                    var choices = CalendarShareChoices.decode(raw)
+                    choices.update(homeID) { house in
+                        house.isOn = false
+                        house.stopAll = true
+                    }
+                    raw = choices.raw
+                }
+                return .send(.delegate(.changed))
+
+            case let .shareLevelSelected(key, level):
+                let homeID = state.homeID
+                state.$shareChoicesRaw.withLock { raw in
+                    var choices = CalendarShareChoices.decode(raw)
+                    choices.update(homeID) { house in
+                        house.known.insert(key)
+                        if level.isShared {
+                            house.levels[key] = level
+                            house.stopKeys.remove(key)
+                        } else {
+                            house.levels[key] = nil
+                            house.stopKeys.insert(key)
+                        }
+                    }
+                    raw = choices.raw
+                }
+                return .send(.delegate(.changed))
+
+            case let .shareDefaultSelected(level):
+                state.$shareDefaultLevelRaw.withLock { $0 = level.rawValue }
+                return .none
+
+            case let .shareWeeksSelected(weeks):
+                guard [4, 8, 12].contains(weeks), weeks != state.shareWeeks else { return .none }
+                state.$shareWeeks.withLock { $0 = weeks }
+                return .send(.delegate(.changed))
+
             case .copyToggled(true):
                 switch state.access {
                 case .notDetermined:
+                    state.isExplainingShare = false
                     state.isExplaining = true
                     return .none
                 case .granted:
@@ -152,7 +288,9 @@ public struct CalendarSettingsFeature: Sendable {
             case .connectTapped:
                 state.isExplaining = false
                 state.isConnecting = true
-                return request()
+                let thenShare = state.isExplainingShare
+                state.isExplainingShare = false
+                return request(thenShare: thenShare)
 
             case .openSystemSettingsTapped:
                 return .run { _ in
@@ -186,16 +324,17 @@ public struct CalendarSettingsFeature: Sendable {
 
     /// The system prompt, after the explainer. Its answer turns copying on
     /// when it is a yes.
-    private func request() -> Effect<Action> {
+    private func request(thenShare: Bool) -> Effect<Action> {
         .run { send in
             let access = (try? await deviceCalendar.requestAccess()) ?? deviceCalendar.access()
             await send(.loaded(
                 access,
                 access == .granted ? await deviceCalendar.calendars() : [],
                 defaultID: access == .granted ? await deviceCalendar.defaultCalendarID() : nil,
-                copies: await calendarMirror.copyCount()
+                copies: await calendarMirror.copyCount(),
+                shareable: access == .granted ? await deviceCalendar.shareableCalendars() : []
             ))
-            if access == .granted { await send(.copyToggled(true)) }
+            if access == .granted { await send(thenShare ? .shareToggled(true) : .copyToggled(true)) }
         }
     }
 
@@ -207,7 +346,8 @@ public struct CalendarSettingsFeature: Sendable {
                 access,
                 granted ? await deviceCalendar.calendars() : [],
                 defaultID: granted ? await deviceCalendar.defaultCalendarID() : nil,
-                copies: await calendarMirror.copyCount()
+                copies: await calendarMirror.copyCount(),
+                shareable: granted ? await deviceCalendar.shareableCalendars() : []
             ))
         }
     }

@@ -4655,11 +4655,6 @@ public enum L10n {
         r("calendar_search_placeholder", "Search events")
     }
 
-    /// Just mine
-    public static var calendarOnlyMine: LocalizedStringResource {
-        r("calendar_only_mine", "Just mine")
-    }
-
     /// Today
     public static var calendarToday: LocalizedStringResource {
         r("calendar_today", "Today")
@@ -11007,9 +11002,9 @@ extension L10n {
         r("calendar_access_title", "Use your calendars")
     }
 
-    /// NestZone can put house events in the calendars you choose, like iCloud or Gmail. To offer the choice it looks at your list of calendars, and what it reads stays on your phone.
+    /// NestZone can put house events in the calendars you choose, and show your housemates the calendars you pick to share. Copies stay on your phone. Only calendars you share are sent, and with Busy only that is nothing but the times.
     public static var calendarAccessBody: LocalizedStringResource {
-        r("calendar_access_body", "NestZone can put house events in the calendars you choose, like iCloud or Gmail. To offer the choice it looks at your list of calendars, and what it reads stays on your phone.")
+        r("calendar_access_body", "NestZone can put house events in the calendars you choose, and show your housemates the calendars you pick to share. Copies stay on your phone. Only calendars you share are sent, and with Busy only that is nothing but the times.")
     }
 
     /// Continue
@@ -11120,5 +11115,115 @@ extension L10n {
     /// Keep
     public static var calendarCopyKeep: LocalizedStringResource {
         r("calendar_copy_keep", "Keep")
+    }
+
+    /// Off
+    public static var calendarShareLevelOff: LocalizedStringResource {
+        r("calendar_share_level_off", "Off")
+    }
+
+    /// Busy only
+    public static var calendarShareLevelBusy: LocalizedStringResource {
+        r("calendar_share_level_busy", "Busy only")
+    }
+
+    /// Details
+    public static var calendarShareLevelDetails: LocalizedStringResource {
+        r("calendar_share_level_details", "Details")
+    }
+
+    /// Share my calendars
+    public static var calendarShareToggle: LocalizedStringResource {
+        r("calendar_share_toggle", "Share my calendars")
+    }
+
+    /// Share with the house
+    public static var calendarShareHeader: LocalizedStringResource {
+        r("calendar_share_header", "Share with the house")
+    }
+
+    /// Pick which of your calendars the house sees. Nothing is shared until you choose it.
+    public static var calendarShareOffFooter: LocalizedStringResource {
+        r("calendar_share_off_footer", "Pick which of your calendars the house sees. Nothing is shared until you choose it.")
+    }
+
+    /// Your calendars
+    public static var calendarShareCalendarsHeader: LocalizedStringResource {
+        r("calendar_share_calendars_header", "Your calendars")
+    }
+
+    /// Default for new calendars
+    public static var calendarShareDefaultTitle: LocalizedStringResource {
+        r("calendar_share_default_title", "Default for new calendars")
+    }
+
+    /// How far ahead
+    public static var calendarShareWindowTitle: LocalizedStringResource {
+        r("calendar_share_window_title", "How far ahead")
+    }
+
+    /// %lld weeks
+    public static func calendarShareWeeks(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_share_weeks", "\(a0) weeks")
+    }
+
+    /// Updated
+    public static var calendarShareUpdated: LocalizedStringResource {
+        r("calendar_share_updated", "Updated")
+    }
+
+    /// Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind.
+    public static var calendarShareFooter: LocalizedStringResource {
+        r("calendar_share_footer", "Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind.")
+    }
+
+    /// %@ · busy
+    public static func calendarSharedBusyLine(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_busy_line", "\(a0) · busy")
+    }
+
+    /// %@ is busy
+    public static func calendarSharedBusyIs(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_busy_is", "\(a0) is busy")
+    }
+
+    /// Shared by %@ from their calendar
+    public static func calendarSharedBy(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_by", "Shared by \(a0) from their calendar")
+    }
+
+    /// You can see this, but not change it.
+    public static var calendarSharedReadOnly: LocalizedStringResource {
+        r("calendar_shared_read_only", "You can see this, but not change it.")
+    }
+
+    /// From their calendar
+    public static var calendarSharedSheetTitle: LocalizedStringResource {
+        r("calendar_shared_sheet_title", "From their calendar")
+    }
+
+    /// Report
+    public static var calendarSharedReport: LocalizedStringResource {
+        r("calendar_shared_report", "Report")
+    }
+
+    /// From their own calendars
+    public static var calendarSharedHeading: LocalizedStringResource {
+        r("calendar_shared_heading", "From their own calendars")
+    }
+
+    /// Their own calendars
+    public static var calendarFilterTheirs: LocalizedStringResource {
+        r("calendar_filter_theirs", "Their own calendars")
+    }
+
+    /// +%lld from their calendars
+    public static func calendarFilterCountShared(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_filter_count_shared", "+\(a0) from their calendars")
+    }
+
+    /// Shared calendar item
+    public static var moderationKindCalendar: LocalizedStringResource {
+        r("moderation_kind_calendar", "Shared calendar item")
     }
 }

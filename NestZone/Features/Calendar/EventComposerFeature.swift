@@ -787,7 +787,14 @@ public struct EventComposerFeature: Sendable {
             }
             let calendars = await deviceCalendar.calendars()
             var pinned: [String]?
-            if let editing { pinned = await calendarMirror.override(homeID, editing) }
+            if let editing {
+                // A pin is what will happen; without one, where a copy is now.
+                pinned = await calendarMirror.override(homeID, editing)
+                if pinned == nil {
+                    let held = await calendarMirror.copyCalendars(homeID, editing)
+                    if !held.isEmpty { pinned = held }
+                }
+            }
             await send(.calendarsLoaded(access, calendars, pinned: pinned))
         }
     }

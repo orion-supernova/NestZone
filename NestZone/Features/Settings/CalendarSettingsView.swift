@@ -17,8 +17,12 @@ struct CalendarSettingsView: View {
                 optionsSection
             }
 
-            // Sharing the person's own calendars with the house is one more
-            // Section here, below these.
+            shareSection
+
+            if store.isShareOn, store.access == .granted {
+                shareCalendarsSections
+                shareOptionsSection
+            }
         }
         .scrollContentBackground(.hidden)
         .background(Backdrop(tint: theme.accent))
@@ -166,6 +170,119 @@ struct CalendarSettingsView: View {
             }
         } footer: {
             Text(L10n.calendarCopyRemindersFooter)
+        }
+    }
+
+    // MARK: Sharing
+
+    /// The master switch. Per house: it says which house it is about, because
+    /// the choices below are this house's alone.
+    private var shareSection: some View {
+        Section {
+            Toggle(isOn: Binding(
+                get: { store.isShareOn },
+                set: { store.send(.shareToggled($0)) }
+            )) {
+                Label { Text(L10n.calendarShareToggle) } icon: {
+                    Image(systemName: "person.2.badge.gearshape")
+                }
+            }
+            .proLocked(.calendar)
+        } header: {
+            Text(L10n.calendarShareHeader)
+        } footer: {
+            if !store.isShareOn {
+                Text(L10n.calendarShareOffFooter)
+            }
+        }
+    }
+
+    private var shareCalendarsSections: some View {
+        ForEach(store.shareGroups) { group in
+            Section {
+                ForEach(group.calendars) { calendar in
+                    shareRow(calendar)
+                }
+            } header: {
+                shareHeader(group)
+            }
+        }
+    }
+
+    private func shareRow(_ calendar: DeviceCalendar) -> some View {
+        let level = Binding<CalendarShareLevel>(
+            get: { store.state.shareLevel(of: calendar.key) },
+            set: { store.send(.shareLevelSelected(calendar.key, $0)) }
+        )
+        return LabeledContent {
+            Picker(selection: level) {
+                ForEach(CalendarShareLevel.allCases) { option in
+                    Text(option.title).tag(option)
+                }
+            } label: {
+                Text(verbatim: calendar.title)
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+        } label: {
+            HStack(spacing: 10) {
+                Circle().fill(calendar.color).frame(width: 12, height: 12)
+                Text(verbatim: calendar.title)
+            }
+        }
+    }
+
+    /// The first account carries the section's name, so "Your calendars" reads
+    /// once and the accounts under it are plain headings.
+    @ViewBuilder
+    private func shareHeader(_ group: CalendarSettingsFeature.State.CalendarGroup) -> some View {
+        if group.id == store.shareGroups.first?.id {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.calendarShareCalendarsHeader)
+                Text(verbatim: group.account).font(.caption).foregroundStyle(.secondary)
+            }
+        } else {
+            Text(verbatim: group.account)
+        }
+    }
+
+    private var shareOptionsSection: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { store.shareDefaultLevel },
+                set: { store.send(.shareDefaultSelected($0)) }
+            )) {
+                ForEach(CalendarShareLevel.allCases) { level in
+                    Text(level.title).tag(level)
+                }
+            } label: {
+                Text(L10n.calendarShareDefaultTitle)
+            }
+
+            Picker(selection: Binding(
+                get: { store.shareWeeks },
+                set: { store.send(.shareWeeksSelected($0)) }
+            )) {
+                ForEach([4, 8, 12], id: \.self) { weeks in
+                    Text(L10n.calendarShareWeeks(weeks)).tag(weeks)
+                }
+            } label: {
+                Text(L10n.calendarShareWindowTitle)
+            }
+
+            LabeledContent {
+                if let syncedAt = store.shareRow?.syncedAt {
+                    Text(syncedAt.date, format: .relative(presentation: .named, unitsStyle: .wide))
+                        .environment(\.locale, L10n.locale)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondary)
+                }
+            } label: {
+                Text(L10n.calendarShareUpdated)
+            }
+        } footer: {
+            Text(L10n.calendarShareFooter)
         }
     }
 }

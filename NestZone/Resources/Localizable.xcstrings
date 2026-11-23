@@ -3470,23 +3470,6 @@
         }
       }
     },
-    "calendar_only_mine": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Just mine"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sadece benim"
-          }
-        }
-      }
-    },
     "calendar_over_budget": {
       "extractionState": "manual",
       "localizations": {
@@ -40208,13 +40191,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone can put house events in the calendars you choose, like iCloud or Gmail. To offer the choice it looks at your list of calendars, and what it reads stays on your phone."
+            "value": "NestZone can put house events in the calendars you choose, and show your housemates the calendars you pick to share. Copies stay on your phone. Only calendars you share are sent, and with Busy only that is nothing but the times."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone ev etkinliklerini seçtiğin takvimlere ekleyebilir, mesela iCloud ya da Gmail'e. Seçenekleri gösterebilmek için takvim listene bakar, okuduğu şey telefonundan çıkmaz."
+            "value": "NestZone ev etkinliklerini seçtiğin takvimlere ekleyebilir, istersen seçtiğin takvimleri evdekilere de gösterebilir. Kopyalar telefonunda kalır. Sadece paylaşmayı seçtiğin takvimler gönderilir; Sadece meşgul seçersen yalnızca saatler gider."
           }
         }
       }
@@ -40611,6 +40594,402 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kalsın"
+          }
+        }
+      }
+    },
+    "calendar_share_level_off": {
+      "comment": "Share level: not shared",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "calendar_share_level_busy": {
+      "comment": "Share level: times only",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy only"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece meşgul"
+          }
+        }
+      }
+    },
+    "calendar_share_level_details": {
+      "comment": "Share level: title and place too",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrıntılı"
+          }
+        }
+      }
+    },
+    "calendar_share_toggle": {
+      "comment": "Settings switch",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share my calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerimi paylaş"
+          }
+        }
+      }
+    },
+    "calendar_share_header": {
+      "comment": "Settings section header",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share with the house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdekilerle paylaş"
+          }
+        }
+      }
+    },
+    "calendar_share_off_footer": {
+      "comment": "Footer while sharing is off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick which of your calendars the house sees. Nothing is shared until you choose it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdekilerin hangi takvimlerini göreceğini sen seçersin. Sen seçmeden hiçbir şey paylaşılmaz."
+          }
+        }
+      }
+    },
+    "calendar_share_calendars_header": {
+      "comment": "Settings section header",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerin"
+          }
+        }
+      }
+    },
+    "calendar_share_default_title": {
+      "comment": "Settings row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default for new calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni takvimler için varsayılan"
+          }
+        }
+      }
+    },
+    "calendar_share_window_title": {
+      "comment": "Settings row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How far ahead"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne kadar ilerisi"
+          }
+        }
+      }
+    },
+    "calendar_share_weeks": {
+      "comment": "Settings picker option",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld weeks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hafta"
+          }
+        }
+      }
+    },
+    "calendar_share_updated": {
+      "comment": "Settings row: when the house last got your calendars",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellendi"
+          }
+        }
+      }
+    },
+    "calendar_share_footer": {
+      "comment": "Footer under the sharing options",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece meşgul seçersen evdekiler ne zaman dolu olduğunu görür, ne için olduğunu görmez. Ayrıntılı seçersen başlık ve konum da görünür; notlar, katılımcılar ve linkler asla gitmez. NestZone açıkken güncellenir, o yüzden biraz geriden gelebilir."
+          }
+        }
+      }
+    },
+    "calendar_shared_busy_line": {
+      "comment": "A housemate's busy time on the calendar",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · busy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · meşgul"
+          }
+        }
+      }
+    },
+    "calendar_shared_busy_is": {
+      "comment": "Title of a busy-only item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is busy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ meşgul"
+          }
+        }
+      }
+    },
+    "calendar_shared_by": {
+      "comment": "Under the name on a shared item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared by %@ from their calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kendi takviminden paylaştı"
+          }
+        }
+      }
+    },
+    "calendar_shared_read_only": {
+      "comment": "Note on a shared item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can see this, but not change it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu görebilirsin ama değiştiremezsin."
+          }
+        }
+      }
+    },
+    "calendar_shared_sheet_title": {
+      "comment": "Shared item sheet title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From their calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi takviminden"
+          }
+        }
+      }
+    },
+    "calendar_shared_report": {
+      "comment": "Menu item on a shared item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildir"
+          }
+        }
+      }
+    },
+    "calendar_shared_heading": {
+      "comment": "Heading over housemates' items",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From their own calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi takvimlerinden"
+          }
+        }
+      }
+    },
+    "calendar_filter_theirs": {
+      "comment": "Filter chip: housemates' calendars on or off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their own calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi takvimleri"
+          }
+        }
+      }
+    },
+    "calendar_filter_count_shared": {
+      "comment": "Beside the filter count",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld from their calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld kendi takvimlerinden"
+          }
+        }
+      }
+    },
+    "moderation_kind_calendar": {
+      "comment": "Moderators' queue: what was reported",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared calendar item"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paylaşılan takvim öğesi"
           }
         }
       }
