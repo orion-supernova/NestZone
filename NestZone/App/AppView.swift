@@ -258,6 +258,9 @@ struct MainView: View {
     /// so there are never two text fields stacked over the tab bar. (Only on
     /// iOS 26.1 and later; 26.0 cannot hide an accessory once it is shown.)
     private var showsDock: Bool {
+        // Switched off in Customize: no bar anywhere, and Add anything is the
+        // `+` in each tab's top bar instead (`sessionToolbar`).
+        if !store.now.showsDock { return false }
         // The movie game lays its swipe buttons out over the whole screen, so
         // the accessory would sit on top of them.
         let top = store.state[stack: store.selectedTab].path.last
@@ -644,6 +647,16 @@ extension View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 InboxBell(store: store.scope(state: \.inbox, action: \.inbox))
+            }
+            // With the dock off, this is how Add anything is reached.
+            if !store.now.showsDock {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { store.send(.now(.addTapped)) } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(Text(L10n.dockAddPlaceholder))
+                    .accessibilityIdentifier("ToolbarAdd")
+                }
             }
         }
     }

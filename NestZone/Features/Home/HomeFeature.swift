@@ -224,7 +224,8 @@ public struct HomeFeature: Sendable {
         /// The event the dock is showing, if it is showing one.
         var dockEvent: EventOccurrence? {
             switch dock {
-            case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence): occurrence
+            case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence),
+                 let .nextEvent(occurrence): occurrence
             default: nil
             }
         }

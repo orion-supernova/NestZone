@@ -268,7 +268,7 @@ public struct MainFeature: Sendable {
                 case .openMovieNight: return open(.movieNight, from: .today, &state)
                 case .openStats: return open(.stats, from: .today, &state)
                 case .openCustomize:
-                    state.customize = CustomizeFeature.State()
+                    state.customize = CustomizeFeature.State(homeID: state.homeID)
                     return .none
                 case .addChore:
                     state.presentCapture(kind: .chore)
@@ -325,6 +325,8 @@ public struct MainFeature: Sendable {
                 case .capture:
                     state.presentCapture()
                     return .none
+                case let .openModule(module):
+                    return open(.module(module), from: state.selectedTab, &state)
                 }
 
             // Tonight and the clock, handed to the two screens that draw them.
@@ -349,7 +351,7 @@ public struct MainFeature: Sendable {
 
             // Opened over Settings, which stays underneath.
             case .settings(.delegate(.customizeTapped)):
-                state.customize = CustomizeFeature.State()
+                state.customize = CustomizeFeature.State(homeID: state.homeID)
                 return .none
 
             #if DEBUG
@@ -367,6 +369,9 @@ public struct MainFeature: Sendable {
 
             case .customize(.presented(.delegate(.finished))):
                 state.customize = nil
+                // The dock setting may have just changed, and only `now`
+                // actions hand the dock's item down to Today.
+                state.propagateNow()
                 return .none
 
             // Closed by the sheet itself, with what was written — or with

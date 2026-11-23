@@ -205,7 +205,7 @@ struct InboxPanel: View {
     /// Sibling glass in a `GlassGroup` so the system merges the two capsules
     /// rather than compositing them separately, and the selected one carries
     /// its own unread count — which is the whole reason this is not a plain
-    /// `Picker`: "3" beside House and "1" beside Updates is the answer to the
+    /// `Picker`: "3" beside Activity and "1" beside Updates is the answer to the
     /// question that made somebody tap the bell.
     private var switcher: some View {
         GlassGroup(spacing: 10) {
@@ -391,7 +391,7 @@ struct InboxPanel: View {
         } else if !store.sections.isEmpty {
             Text(L10n.inboxRetentionNote(store.retentionDays))
                 .font(.caption)
-                .foregroundStyle(.tertiaryText)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 8)
         }
@@ -445,7 +445,7 @@ struct InboxPanel: View {
 
                         Text(L10n.inboxVersionFooter(AppVersion.current.raw))
                             .font(.caption)
-                            .foregroundStyle(.tertiaryText)
+                            .foregroundStyle(.secondaryText)
                             .padding(.top, 8)
                     }
                     .padding(.horizontal, Metrics.screenPadding)
@@ -464,6 +464,11 @@ struct InboxPanel: View {
 /// Its own small view rather than a branch inside the list, so SwiftUI compares
 /// one row's stored values instead of re-evaluating the whole section's body
 /// when a single timestamp label ticks over.
+///
+/// Face first, then one sentence with the person in bold, then the module as a
+/// glyph in its own tint beside the detail. Colour is the glyph's alone: the
+/// words stay in the label colours, and "new" is a dot and a wash inside the
+/// row, never something hung off its corner.
 private struct ActivityRow: View {
     let row: HomeActivity
     let isNew: Bool
@@ -474,48 +479,55 @@ private struct ActivityRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private var actorName: String? {
+        guard let actor = row.actor else { return nil }
+        let name = StoreDemo.personaName(for: actor) ?? row.actorName
+        return (name?.isEmpty == false) ? name : nil
+    }
+
+    /// "**Murat** finished Dishes". The name is dropped from the title when the
+    /// server already wrote it there, so it is never said twice.
+    private var sentence: Text {
+        guard let name = actorName else { return Text(row.title).fontWeight(.semibold) }
+        let rest = row.title.hasPrefix(name)
+            ? String(row.title.dropFirst(name.count)).trimmingCharacters(in: .whitespaces)
+            : row.title
+        return Text(name).fontWeight(.bold) + Text(verbatim: " ") + Text(rest)
+    }
+
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .top, spacing: 12) {
-                glyph
+            HStack(alignment: .center, spacing: 12) {
+                face
 
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(row.title)
-                            .font(.subheadline.weight(isNew ? .bold : .semibold))
-                            .lineLimit(1)
-                        Spacer(minLength: 4)
-                        RelativeTimeText(row.created)
-                            .font(.caption)
-                            .foregroundStyle(.secondaryText)
-                            .layoutPriority(1)
-                    }
+                    sentence
+                        .font(.subheadline)
+                        .lineLimit(1)
 
-                    if !row.body.isEmpty {
-                        Text(row.body)
+                    HStack(spacing: 6) {
+                        Image(systemName: row.category.symbol)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(row.category.tint)
+                        Text(row.body.isEmpty ? String(localized: row.category.label) : row.body)
                             .font(.footnote)
                             .foregroundStyle(.secondaryText)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
+                            .lineLimit(1)
                     }
+                }
 
-                    if let actor = row.actor,
-                       let name = StoreDemo.personaName(for: actor) ?? row.actorName, !name.isEmpty {
-                        HStack(spacing: 5) {
-                            // `viewable: false`: this whole row is a control
-                            // that goes somewhere else, and a tappable face
-                            // inside it would swallow the tap that matters.
-                            Avatar(
-                                initials: User.initials(from: name),
-                                seed: actor.rawValue,
-                                size: 16,
-                                viewable: false
-                            )
-                            Text(name)
-                                .font(.caption)
-                                .foregroundStyle(.secondaryText)
-                        }
-                        .padding(.top, 1)
+                Spacer(minLength: 4)
+
+                VStack(alignment: .trailing, spacing: 5) {
+                    RelativeTimeText(row.created)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
+                    if isNew {
+                        Circle()
+                            .fill(theme.accent)
+                            .frame(width: 8, height: 8)
+                            .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+                            .accessibilityHidden(true)
                     }
                 }
 
@@ -523,7 +535,6 @@ private struct ActivityRow: View {
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(Palette.accessory)
-                        .padding(.top, 3)
                 }
             }
             .padding(.vertical, 11)
@@ -548,29 +559,21 @@ private struct ActivityRow: View {
         .accessibilityAddTraits(row.category.isRoutable ? .isButton : [])
     }
 
-    /// The category's glyph, with the unread dot on it.
-    ///
-    /// The dot sits on the icon rather than in the margin because the icon is
-    /// already where the eye lands going down a list, and a separate column for
-    /// it would cost twelve points of width on every row to say something about
-    /// three of them.
-    private var glyph: some View {
-        Image(systemName: row.category.symbol)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(row.category.tint)
-            .frame(width: 32, height: 32)
-            .background(row.category.tint.opacity(0.16), in: .circle)
-            .overlay(alignment: .topTrailing) {
-                if isNew {
-                    Circle()
-                        .fill(theme.accent)
-                        .frame(width: 8, height: 8)
-                        .overlay(Circle().strokeBorder(.background, lineWidth: 1.5))
-                        .offset(x: 2, y: -2)
-                        // Shrinks away into the icon when it is read.
-                        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
-                }
-            }
+    /// Who did it. The module's own glyph stands in when the app did it by
+    /// itself (a nightly sweep finding an overdue bill).
+    @ViewBuilder
+    private var face: some View {
+        if let actor = row.actor, let name = actorName {
+            // `viewable: false`: this whole row is a control that goes
+            // somewhere else, and a tappable face would swallow that tap.
+            Avatar(initials: User.initials(from: name), seed: actor.rawValue, size: 36, viewable: false)
+        } else {
+            Image(systemName: row.category.symbol)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(row.category.tint)
+                .frame(width: 36, height: 36)
+                .background(row.category.tint.opacity(0.16), in: .circle)
+        }
     }
 }
 
@@ -578,26 +581,31 @@ private struct ActivityRow: View {
 
 /// A changelog entry.
 ///
-/// Full-width and deliberately unlike the timeline rows beside it: a version, a
-/// kind, a headline, a paragraph and its bullets. Somebody should be able to
-/// tell the two feeds apart from across the room.
+/// Full-width and deliberately unlike the timeline rows beside it. Top to
+/// bottom: what kind of note it is, the headline, a few lines of the story
+/// (with "More" when there is more), the bullets, and the version and date as
+/// quiet meta. "Coming soon" and "New" are badges inside the card's own top
+/// row, never on its edge.
 private struct UpdateCard: View {
     let update: AppUpdate
     let isNew: Bool
 
     @Environment(\.theme) private var theme
+    @State private var isExpanded = false
 
-    private var availability: UpdateAvailability { update.availability() }
-    private var isComingSoon: Bool { availability == .comingSoon }
+    private var isComingSoon: Bool { update.availability() == .comingSoon }
 
     /// The words, in the language this app is set to — which is `L10n.locale`
-    /// and not the device's, because the app has its own picker and a changelog
-    /// that ignored it would be the one screen in a Turkish household reading
-    /// English.
+    /// and not the device's, because the app has its own picker. English when
+    /// that language was never written (`AppUpdate.text`).
     private var text: LocalizedUpdate { update.text() }
 
+    /// A body of this size runs past three lines at the card's width; a shorter
+    /// one has nothing to expand, so no button.
+    private var isLong: Bool { text.body.count > 130 || text.body.contains("\n") }
+
     var body: some View {
-        GlassCard(tint: cardTint) {
+        GlassCard(tint: isComingSoon ? Palette.amber.opacity(0.10) : nil) {
             VStack(alignment: .leading, spacing: 10) {
                 header
 
@@ -605,20 +613,35 @@ private struct UpdateCard: View {
                     .font(.system(.title3, design: .rounded, weight: .bold))
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text(text.body)
-                    .font(.callout)
-                    .foregroundStyle(.secondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(text.body)
+                        .font(.callout)
+                        .foregroundStyle(.secondaryText)
+                        .lineLimit(isExpanded ? nil : 3)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if isLong {
+                        Button {
+                            withAnimation(Motion.spring) { isExpanded.toggle() }
+                        } label: {
+                            Text(isExpanded ? L10n.inboxShowLess : L10n.commonMore)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.accentText)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
 
                 if !text.highlights.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 7) {
                         ForEach(Array(text.highlights.enumerated()), id: \.offset) { _, line in
-                            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Image(systemName: "checkmark")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(update.kind.tint)
+                            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                Circle()
+                                    .fill(update.kind.tint)
+                                    .frame(width: 6, height: 6)
+                                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
                                 Text(line)
-                                    .font(.footnote)
+                                    .font(.subheadline)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
@@ -631,13 +654,9 @@ private struct UpdateCard: View {
         }
     }
 
-    /// The very lightest tint, and only when there is something to say about
-    /// the card as a whole. Glass stops reading as glass when everything is
-    /// coloured.
-    private var cardTint: Color? {
-        isComingSoon ? Palette.amber.opacity(0.10) : nil
-    }
-
+    /// The kind with its glyph on the left; on the right the one state that
+    /// matters most, "Coming soon" ahead of "New" because a note this build
+    /// cannot show yet is the thing to be clear about.
     private var header: some View {
         HStack(spacing: 8) {
             Badge(
@@ -645,16 +664,6 @@ private struct UpdateCard: View {
                 tint: update.kind.tint,
                 symbol: update.kind.symbol
             )
-
-            if let version = update.version, !version.isEmpty {
-                Text(L10n.inboxVersionChip(version))
-                    .font(.caption.weight(.semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondaryText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Palette.inset, in: .capsule)
-            }
 
             if update.isPinned {
                 Image(systemName: "pin.fill")
@@ -681,32 +690,31 @@ private struct UpdateCard: View {
         }
     }
 
-    /// The date, and — when it applies — the honest note that this build does
-    /// not have the thing described above it.
-    ///
-    /// The whole reason release notes carry a version. Publishing happens when
-    /// the work lands on the server; a build reaches a phone days later and some
-    /// phones never take it. Saying "coming soon" is the difference between a
-    /// changelog and a changelog that sends people hunting for a button that is
-    /// not there.
+    /// Version and date, quietly. A note for a version this build does not have
+    /// says so in words: publishing happens when the work lands on the server,
+    /// a build reaches a phone days later, and "coming soon" is the difference
+    /// between a changelog and one that sends people hunting for a button that
+    /// is not there.
     @ViewBuilder
     private var footer: some View {
-        if isComingSoon, let version = update.version {
-            HStack(spacing: 6) {
+        HStack(spacing: 6) {
+            if isComingSoon, let version = update.version {
                 Image(systemName: "arrow.down.circle")
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                 Text(L10n.inboxArrivesIn(version, AppVersion.current.raw))
                     .font(.caption)
-            }
-            .foregroundStyle(Palette.amber)
-            .padding(.top, 2)
-        } else {
-            HStack(spacing: 6) {
+            } else {
+                if let version = update.version, !version.isEmpty {
+                    Text(L10n.inboxVersionChip(version))
+                        .font(.caption.weight(.semibold))
+                        .monospacedDigit()
+                    Text(verbatim: "·")
+                }
                 RelativeTimeText(update.displayDate)
                     .font(.caption)
-                    .foregroundStyle(.tertiaryText)
             }
-            .padding(.top, 2)
         }
+        .foregroundStyle(.secondaryText)
+        .padding(.top, 2)
     }
 }

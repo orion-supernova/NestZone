@@ -6763,9 +6763,9 @@ public enum L10n {
         r("inbox_nothing_new", "Nothing new")
     }
 
-    /// House
+    /// Activity
     public static var inboxTabActivity: LocalizedStringResource {
-        r("inbox_tab_activity", "House")
+        r("inbox_tab_activity", "Activity")
     }
 
     /// Updates
@@ -6918,19 +6918,19 @@ public enum L10n {
         r("inbox_category_other", "Other")
     }
 
-    /// New
+    /// Feature
     public static var inboxKindFeature: LocalizedStringResource {
-        r("inbox_kind_feature", "New")
+        r("inbox_kind_feature", "Feature")
     }
 
-    /// Better
+    /// Improvement
     public static var inboxKindImprovement: LocalizedStringResource {
-        r("inbox_kind_improvement", "Better")
+        r("inbox_kind_improvement", "Improvement")
     }
 
-    /// Fixed
+    /// Fix
     public static var inboxKindFix: LocalizedStringResource {
-        r("inbox_kind_fix", "Fixed")
+        r("inbox_kind_fix", "Fix")
     }
 
     /// News
@@ -7160,7 +7160,7 @@ public enum L10n {
 
     /// Leave blank to fall back to the English above
     public static var inboxAdminTranslationNote: LocalizedStringResource {
-        r("inbox_admin_translation_note", "Leave blank to fall back to the English above")
+        r("inbox_admin_translation_note", "Leave blank to show the English version instead")
     }
 
     /// In %@
@@ -7457,6 +7457,106 @@ public enum L10n {
     /// Swipe to vote
     public static var dockMovieRoundSubtitle: LocalizedStringResource {
         r("dock_movie_round_subtitle", "Swipe to vote")
+    }
+
+    /// Dock
+    public static var dockSettingTitle: LocalizedStringResource {
+        r("dock_setting_title", "Dock")
+    }
+
+    /// Show in the dock
+    public static var dockSettingLabel: LocalizedStringResource {
+        r("dock_setting_label", "Show in the dock")
+    }
+
+    /// Which one
+    public static var dockThingLabel: LocalizedStringResource {
+        r("dock_thing_label", "Which one")
+    }
+
+    /// Automatic
+    public static var dockModeAutomatic: LocalizedStringResource {
+        r("dock_mode_automatic", "Automatic")
+    }
+
+    /// Always the same thing
+    public static var dockModeAlways: LocalizedStringResource {
+        r("dock_mode_always", "Always the same thing")
+    }
+
+    /// Only Add anything
+    public static var dockModeAddOnly: LocalizedStringResource {
+        r("dock_mode_add_only", "Only Add anything")
+    }
+
+    /// Off
+    public static var dockModeOff: LocalizedStringResource {
+        r("dock_mode_off", "Off")
+    }
+
+    /// Dinner
+    public static var dockThingDinner: LocalizedStringResource {
+        r("dock_thing_dinner", "Dinner")
+    }
+
+    /// Next event
+    public static var dockThingEvent: LocalizedStringResource {
+        r("dock_thing_event", "Next event")
+    }
+
+    /// Movie night
+    public static var dockThingMovieRound: LocalizedStringResource {
+        r("dock_thing_movie_round", "Movie night")
+    }
+
+    /// Shows what's on right now: an event, tonight's dinner or a movie round.
+    public static var dockMeaningAutomatic: LocalizedStringResource {
+        r("dock_meaning_automatic", "Shows what's on right now: an event, tonight's dinner or a movie round.")
+    }
+
+    /// Always shows this one. When there's nothing yet, it asks instead.
+    public static var dockMeaningAlways: LocalizedStringResource {
+        r("dock_meaning_always", "Always shows this one. When there's nothing yet, it asks instead.")
+    }
+
+    /// Just the bar with the +, nothing else.
+    public static var dockMeaningAddOnly: LocalizedStringResource {
+        r("dock_meaning_add_only", "Just the bar with the +, nothing else.")
+    }
+
+    /// No bar. Add anything moves to the + at the top.
+    public static var dockMeaningOff: LocalizedStringResource {
+        r("dock_meaning_off", "No bar. Add anything moves to the + at the top.")
+    }
+
+    /// The next event is a Plus thing. Until then the dock stays automatic.
+    public static var dockNeedsPlus: LocalizedStringResource {
+        r("dock_needs_plus", "The next event is a Plus thing. Until then the dock stays automatic.")
+    }
+
+    /// Saved on this phone, for this house only.
+    public static var dockSettingFooter: LocalizedStringResource {
+        r("dock_setting_footer", "Saved on this phone, for this house only.")
+    }
+
+    /// Nothing planned yet
+    public static var dockNoEventTitle: LocalizedStringResource {
+        r("dock_no_event_title", "Nothing planned yet")
+    }
+
+    /// Open the calendar
+    public static var dockNoEventSubtitle: LocalizedStringResource {
+        r("dock_no_event_subtitle", "Open the calendar")
+    }
+
+    /// No movie night yet
+    public static var dockNoMovieTitle: LocalizedStringResource {
+        r("dock_no_movie_title", "No movie night yet")
+    }
+
+    /// Start one
+    public static var dockNoMovieSubtitle: LocalizedStringResource {
+        r("dock_no_movie_subtitle", "Start one")
     }
 
     /// %@ morning
@@ -7796,6 +7896,11 @@ public enum L10n {
     /// Nestie
     public static var companionBrand: LocalizedStringResource {
         r("companion_brand", "Nestie")
+    }
+
+    /// %@, stage %lld of %lld
+    public static func companionStageOf(_ a0: String, _ a1: Int, _ a2: Int) -> LocalizedStringResource {
+        r("companion_stage_of", "\(a0), stage \(a1) of \(a2)")
     }
 
     /// Meet %@
@@ -11480,5 +11585,20 @@ extension L10n {
     /// Turn all on
     public static var holidaysTurnAllOn: LocalizedStringResource {
         r("holidays_turn_all_on", "Turn all on")
+    }
+
+    /// Less
+    public static var inboxShowLess: LocalizedStringResource {
+        r("inbox_show_less", "Less")
+    }
+
+    /// Written
+    public static var inboxAdminLangWritten: LocalizedStringResource {
+        r("inbox_admin_lang_written", "Written")
+    }
+
+    /// Not written yet
+    public static var inboxAdminLangMissing: LocalizedStringResource {
+        r("inbox_admin_lang_missing", "Not written yet")
     }
 }

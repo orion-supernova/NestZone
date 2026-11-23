@@ -16765,6 +16765,40 @@
         }
       }
     },
+    "inbox_admin_lang_missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not written yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz yazılmadı"
+          }
+        }
+      }
+    },
+    "inbox_admin_lang_written": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Written"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazıldı"
+          }
+        }
+      }
+    },
     "inbox_admin_new": {
       "extractionState": "manual",
       "localizations": {
@@ -16992,13 +17026,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leave blank to fall back to the English above"
+            "value": "Leave blank to show the English version instead"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Boş bırakırsan yukarıdaki İngilizce metin görünür"
+            "value": "Boş bırakırsan İngilizce hali görünür"
           }
         }
       }
@@ -17519,13 +17553,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New"
+            "value": "Feature"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni"
+            "value": "Yenilik"
           }
         }
       }
@@ -17536,7 +17570,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fixed"
+            "value": "Fix"
           }
         },
         "tr": {
@@ -17553,7 +17587,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Better"
+            "value": "Improvement"
           }
         },
         "tr": {
@@ -17690,19 +17724,36 @@
         }
       }
     },
+    "inbox_show_less": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha az"
+          }
+        }
+      }
+    },
     "inbox_tab_activity": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "House"
+            "value": "Activity"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev"
+            "value": "Hareketler"
           }
         }
       }
@@ -41862,6 +41913,363 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu evde açık"
+          }
+        }
+      }
+    },
+    "dock_setting_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alt çubuk"
+          }
+        }
+      }
+    },
+    "dock_setting_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in the dock"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alt çubukta"
+          }
+        }
+      }
+    },
+    "dock_thing_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which one"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hangisi"
+          }
+        }
+      }
+    },
+    "dock_mode_automatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik"
+          }
+        }
+      }
+    },
+    "dock_mode_always": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always the same thing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hep aynı şey"
+          }
+        }
+      }
+    },
+    "dock_mode_add_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only Add anything"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece Bir şey ekle"
+          }
+        }
+      }
+    },
+    "dock_mode_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "dock_thing_dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akşam yemeği"
+          }
+        }
+      }
+    },
+    "dock_thing_event": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next event"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıradaki etkinlik"
+          }
+        }
+      }
+    },
+    "dock_thing_movie_round": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movie night"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film gecesi"
+          }
+        }
+      }
+    },
+    "dock_meaning_automatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what's on right now: an event, tonight's dinner or a movie round."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O an ne varsa onu gösterir: bir etkinlik, bu akşamın yemeği ya da film gecesi."
+          }
+        }
+      }
+    },
+    "dock_meaning_always": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always shows this one. When there's nothing yet, it asks instead."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hep bunu gösterir. Henüz bir şey yoksa sorar."
+          }
+        }
+      }
+    },
+    "dock_meaning_add_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just the bar with the +, nothing else."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece + olan çubuk, başka bir şey yok."
+          }
+        }
+      }
+    },
+    "dock_meaning_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bar. Add anything moves to the + at the top."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çubuk yok. Bir şey ekle, üstteki + düğmesine taşınır."
+          }
+        }
+      }
+    },
+    "dock_needs_plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next event is a Plus thing. Until then the dock stays automatic."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıradaki etkinlik Plus'a özel. O zamana kadar çubuk otomatik kalır."
+          }
+        }
+      }
+    },
+    "dock_setting_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved on this phone, for this house only."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece bu telefonda, sadece bu ev için kaydedilir."
+          }
+        }
+      }
+    },
+    "dock_no_event_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing planned yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz plan yok"
+          }
+        }
+      }
+    },
+    "dock_no_event_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimi aç"
+          }
+        }
+      }
+    },
+    "dock_no_movie_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No movie night yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz film gecesi yok"
+          }
+        }
+      }
+    },
+    "dock_no_movie_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start one"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birini başlat"
+          }
+        }
+      }
+    },
+    "companion_stage_of": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, stage %lld of %lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld/%lld. aşama"
           }
         }
       }

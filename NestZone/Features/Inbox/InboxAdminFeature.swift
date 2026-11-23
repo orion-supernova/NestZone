@@ -199,6 +199,10 @@ public struct InboxComposerFeature: Sendable {
     public struct State: Equatable, Identifiable {
         public let id = UUID()
         public var draft: UpdateDraft
+        /// Which language the fields show. English is the base fields of the
+        /// entry; every other language is a row in `translations`. The editor
+        /// opens on the base because that is the one a save requires.
+        public var language: AppLanguage = AppLanguage.base
         public var isSaving = false
         @Presents public var alert: AlertState<Action.Alert>?
 
@@ -248,6 +252,15 @@ public struct InboxComposerFeature: Sendable {
             case let .highlightRemoved(index):
                 guard state.draft.highlights.indices.contains(index) else { return .none }
                 state.draft.highlights.remove(at: index)
+                // The translated bullets track the English ones by position, so
+                // the same slot goes from each, or every later line would slide
+                // under the wrong English bullet.
+                for code in Array(state.draft.translations.keys) {
+                    guard var text = state.draft.translations[code],
+                          text.highlights.indices.contains(index) else { continue }
+                    text.highlights.remove(at: index)
+                    state.draft.translations[code] = text
+                }
                 return .none
 
             case let .saveTapped(publish):

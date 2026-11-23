@@ -258,12 +258,9 @@ struct InboxComposerSheet: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
-                        kindPicker
-                        fields
-                        highlights
-                        ForEach(AppLanguage.translatable) { language in
-                            translation(language)
-                        }
+                        languagePicker
+                        languageText
+                        details
                         options
                     }
                     .padding(Metrics.screenPadding)
@@ -334,13 +331,175 @@ struct InboxComposerSheet: View {
         }
     }
 
-    private var fields: some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+    /// "English · Türkçe", one segment per language the editor offers.
+    ///
+    /// A hand-built control rather than a `Picker`, because each segment
+    /// carries a mark for whether that language is written yet, and a system
+    /// segmented control draws a label and nothing else. Driven by
+    /// `UpdateDraft.editableLanguages`, so a third language is a third
+    /// segment.
+    private var languagePicker: some View {
+        HStack(spacing: 6) {
+            ForEach(UpdateDraft.editableLanguages) { language in
+                languageSegment(language)
+            }
+        }
+        .padding(4)
+        .glassCard(cornerRadius: Metrics.tightRadius + 4)
+    }
+
+    private func languageSegment(_ language: AppLanguage) -> some View {
+        let isSelected = store.language == language
+        let isFilled = store.draft.isFilled(language)
+        return Button {
+            store.send(.binding(.set(\.language, language)))
+        } label: {
+            HStack(spacing: 6) {
+                Text(verbatim: language.endonym)
+                    .font(.subheadline.weight(.semibold))
+                // Filled when a save would keep this language, a ring when it
+                // would not. Shape rather than colour carries it.
+                Image(systemName: isFilled ? "circle.fill" : "circle")
+                    .font(.system(size: 8, weight: .bold))
+                    .accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 36)
+            .foregroundStyle(isSelected ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
+            .background {
+                if isSelected {
+                    Capsule().fill(theme.accentFill)
+                }
+            }
+            .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .animation(Motion.fade, value: isSelected)
+        .accessibilityLabel(Text(verbatim: language.endonym))
+        .accessibilityValue(isFilled ? Text(L10n.inboxAdminLangWritten) : Text(L10n.inboxAdminLangMissing))
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+    }
+
+    /// A binding to the selected language's words: the entry's own fields for
+    /// English, a row of `translations` for any other.
+    private var textBinding: Binding<LocalizedUpdate> {
+        let language = store.language
+        return Binding(
+            get: { store.draft.text(in: language) },
+            set: { $store.draft.wrappedValue.setText($0, in: language) }
+        )
+    }
+
+    /// Title, body and bullets of the language the picker is on.
+    private var languageText: some View {
+        let binding = textBinding
+        let isBase = store.language == AppLanguage.base
+        return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            if !isBase {
+                Text(L10n.inboxAdminTranslationNote)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
+                    .padding(.horizontal, 4)
+            }
+
             GlassTextField(
                 L10n.inboxAdminFieldTitle,
-                text: $store.draft.title,
+                text: binding.title,
                 symbol: "textformat"
             )
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.inboxAdminFieldBody)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondaryText)
+                    .padding(.horizontal, 4)
+                TextEditor(text: binding.body)
+                    .font(.callout)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 120)
+                    .padding(10)
+                    .glassCard(cornerRadius: Metrics.tightRadius)
+            }
+
+            highlights(binding, isBase: isBase)
+        }
+    }
+
+    /// The bullets. English owns the list (add, remove); another language
+    /// shows exactly as many slots as there are English bullets, because a
+    /// translated bullet with no English counterpart has nowhere to be drawn.
+    private func highlights(_ text: Binding<LocalizedUpdate>, isBase: Bool) -> some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            SectionHeader(
+                L10n.inboxAdminHighlights,
+                subtitle: isBase ? L10n.inboxAdminHighlightsNote : nil,
+                symbol: "checklist"
+            ) {
+                if isBase {
+                    Button { store.send(.highlightAdded) } label: {
+                        Image(systemName: "plus")
+                            .font(.footnote.weight(.semibold))
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                    .accessibilityLabel(Text(L10n.inboxAdminHighlightAdd))
+                }
+            }
+
+            ForEach(Array(store.draft.highlights.enumerated()), id: \.offset) { index, english in
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(store.draft.kind.tint)
+                    TextField(
+                        isBase || english.isEmpty
+                            ? String(localized: L10n.inboxAdminHighlightPlaceholder)
+                            : english,
+                        text: highlightBinding(text, index)
+                    )
+                    .font(.footnote)
+                    if isBase {
+                        Button { store.send(.highlightRemoved(index)) } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.footnote)
+                                .foregroundStyle(Palette.accessory)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text(L10n.commonDelete))
+                    }
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 44)
+                .glassCard(cornerRadius: Metrics.tightRadius)
+            }
+        }
+    }
+
+    /// A binding into one bullet, padding the array out to reach it. A person
+    /// may fill in the third translated bullet before the first, and writing
+    /// straight to `highlights[index]` would trap on a short array.
+    private func highlightBinding(
+        _ text: Binding<LocalizedUpdate>,
+        _ index: Int
+    ) -> Binding<String> {
+        Binding(
+            get: {
+                let all = text.wrappedValue.highlights
+                return all.indices.contains(index) ? all[index] : ""
+            },
+            set: { value in
+                var all = text.wrappedValue.highlights
+                while all.count <= index { all.append("") }
+                all[index] = value
+                text.wrappedValue.highlights = all
+            }
+        )
+    }
+
+    /// What does not change with the language: the kind and the version.
+    private var details: some View {
+        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
+            kindPicker
 
             GlassTextField(
                 L10n.inboxAdminFieldVersion,
@@ -354,154 +513,7 @@ struct InboxComposerSheet: View {
                 .font(.caption)
                 .foregroundStyle(.secondaryText)
                 .padding(.horizontal, 4)
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.inboxAdminFieldBody)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondaryText)
-                    .padding(.horizontal, 4)
-                TextEditor(text: $store.draft.body)
-                    .font(.callout)
-                    .scrollContentBackground(.hidden)
-                    .frame(minHeight: 120)
-                    .padding(10)
-                    .glassCard(cornerRadius: Metrics.tightRadius)
-            }
         }
-    }
-
-    private var highlights: some View {
-        VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            SectionHeader(
-                L10n.inboxAdminHighlights,
-                subtitle: L10n.inboxAdminHighlightsNote,
-                symbol: "checklist"
-            ) {
-                Button { store.send(.highlightAdded) } label: {
-                    Image(systemName: "plus")
-                        .font(.footnote.weight(.semibold))
-                }
-                .buttonStyle(.glass)
-                .controlSize(.small)
-                .accessibilityLabel(Text(L10n.inboxAdminHighlightAdd))
-            }
-
-            ForEach(Array(store.draft.highlights.enumerated()), id: \.offset) { index, _ in
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(store.draft.kind.tint)
-                    TextField(
-                        String(localized: L10n.inboxAdminHighlightPlaceholder),
-                        text: $store.draft.highlights[index]
-                    )
-                    .font(.footnote)
-                    Button { store.send(.highlightRemoved(index)) } label: {
-                        Image(systemName: "minus.circle.fill")
-                            .font(.footnote)
-                            .foregroundStyle(Palette.accessory)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(L10n.commonDelete))
-                }
-                .padding(.horizontal, 12)
-                .frame(height: 44)
-                .glassCard(cornerRadius: Metrics.tightRadius)
-            }
-        }
-    }
-
-    /// The same note in one other language.
-    ///
-    /// Driven by `AppLanguage.translatable` rather than a hardcoded Turkish
-    /// section, so adding a language to the app adds it to this form without
-    /// anybody remembering to. Leaving one blank is fine and is the normal
-    /// case — an untranslated note falls back to the English above it.
-    private func translation(_ language: AppLanguage) -> some View {
-        // Built by hand rather than with a defaulted dictionary subscript: the
-        // store's dynamic member lookup does not reach through one, and a
-        // missing entry has to read as an empty note rather than as nothing to
-        // bind to.
-        let code = language.rawValue
-        let binding = Binding<LocalizedUpdate>(
-            get: { store.draft.translations[code] ?? LocalizedUpdate(title: "", body: "") },
-            set: { $store.draft.translations.wrappedValue[code] = $0 }
-        )
-        return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
-            SectionHeader(
-                L10n.inboxAdminTranslation(language.endonym),
-                subtitle: L10n.inboxAdminTranslationNote,
-                symbol: "character.bubble"
-            ) {
-                Text(verbatim: language.flag)
-            }
-
-            GlassTextField(
-                L10n.inboxAdminFieldTitle,
-                text: binding.title,
-                symbol: "textformat"
-            )
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.inboxAdminFieldBody)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondaryText)
-                    .padding(.horizontal, 4)
-                TextEditor(text: binding.body)
-                    .font(.callout)
-                    .scrollContentBackground(.hidden)
-                    .frame(minHeight: 100)
-                    .padding(10)
-                    .glassCard(cornerRadius: Metrics.tightRadius)
-            }
-
-            // Bullets track the English ones by position, so the form shows
-            // exactly as many slots as there are bullets to translate — one
-            // more would be a bullet with no counterpart, which the card has
-            // nowhere to draw.
-            ForEach(Array(store.draft.highlights.enumerated()), id: \.offset) { index, english in
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(store.draft.kind.tint)
-                    TextField(
-                        english.isEmpty
-                            ? String(localized: L10n.inboxAdminHighlightPlaceholder)
-                            : english,
-                        text: highlightBinding(binding, index)
-                    )
-                    .font(.footnote)
-                }
-                .padding(.horizontal, 12)
-                .frame(height: 44)
-                .glassCard(cornerRadius: Metrics.tightRadius)
-            }
-        }
-    }
-
-    /// A binding into one bullet of one language, padding the array out to
-    /// reach it.
-    ///
-    /// The translated bullets are a parallel array to the English ones, and a
-    /// person may well fill in the third before the first. Writing straight to
-    /// `highlights[index]` would trap on an array that is still empty, so the
-    /// setter grows it with blanks and the getter treats "not there yet" as "".
-    private func highlightBinding(
-        _ translation: Binding<LocalizedUpdate>,
-        _ index: Int
-    ) -> Binding<String> {
-        Binding(
-            get: {
-                let all = translation.wrappedValue.highlights
-                return all.indices.contains(index) ? all[index] : ""
-            },
-            set: { value in
-                var all = translation.wrappedValue.highlights
-                while all.count <= index { all.append("") }
-                all[index] = value
-                translation.wrappedValue.highlights = all
-            }
-        )
     }
 
     private var options: some View {

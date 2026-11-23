@@ -635,6 +635,46 @@ public struct UpdateDraft: Equatable, Sendable {
             && !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    /// The languages the editor offers, base first.
+    ///
+    /// Derived from `AppLanguage`, so a third language in the app is a third
+    /// segment here without anybody remembering to add it.
+    public static var editableLanguages: [AppLanguage] {
+        [AppLanguage.base] + AppLanguage.translatable
+    }
+
+    /// Whether `language` has a note that would be stored: a title and a body.
+    /// The same bar the server applies, so a dot on the picker says what a
+    /// save will actually keep.
+    public func isFilled(_ language: AppLanguage) -> Bool {
+        func filled(_ title: String, _ body: String) -> Bool {
+            !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        if language == AppLanguage.base { return filled(title, body) }
+        guard let text = translations[language.rawValue] else { return false }
+        return filled(text.title, text.body)
+    }
+
+    /// One language's words as a single value, for the editor to bind to.
+    public func text(in language: AppLanguage) -> LocalizedUpdate {
+        language == AppLanguage.base
+            ? LocalizedUpdate(title: title, body: body, highlights: highlights)
+            : (translations[language.rawValue] ?? LocalizedUpdate(title: "", body: ""))
+    }
+
+    /// Writes one language's words back. English is the base fields; every
+    /// other language lives in `translations`.
+    public mutating func setText(_ text: LocalizedUpdate, in language: AppLanguage) {
+        if language == AppLanguage.base {
+            title = text.title
+            body = text.body
+            highlights = text.highlights
+        } else {
+            translations[language.rawValue] = text
+        }
+    }
+
     /// The same draft, headed for the shelf or for everybody's phone.
     ///
     /// A copy rather than a mutation because the value is about to cross into

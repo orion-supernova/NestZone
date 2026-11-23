@@ -183,20 +183,22 @@ struct CompanionCard: View {
             }
             .clipShape(.rect(topLeadingRadius: Metrics.cardRadius, topTrailingRadius: Metrics.cardRadius, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 14) {
                 if stacked {
                     HolidayChip(store: store)
                     CareButton(store: store, small: false)
                 }
-                (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 10))) {
-                    CardTitle(store: store, font: .headline, detail: .footnote)
+                (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .top, spacing: 10))) {
+                    CardTitle(store: store, font: .system(.title3, design: .rounded, weight: .semibold), detail: .footnote, showsStage: false)
                     if !stacked { Spacer(minLength: 0) }
                     CardJar(store: store, covered: isCovered)
                 }
                 CardFooter(store: store)
                 actions
             }
-            .padding(14)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 12)
         }
         .glassCard()
         .accessibilityIdentifier("Companion")
@@ -211,10 +213,12 @@ struct CompanionCard: View {
         return sheet == .decorate || sheet == .shop || sheet.isMoment || detent == .large
     }
 
-    /// Equal tiles, the icon over a one-line label, so a long word in one
-    /// language ("Özel günler") never wraps or pushes the others aside.
+    /// Three equal tiles on one line: the icon in the accent over a one-line
+    /// label, so a long word in one language ("Özel günler") never wraps or
+    /// pushes the others aside. The tiles are quiet insets, not glass — the
+    /// card around them already is.
     private var actions: some View {
-        (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 4))) {
+        (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6)) : AnyLayout(HStackLayout(spacing: 8))) {
             action(L10n.companionDecorate, "paintbrush.pointed.fill") { store.send(.decorateTapped) }
             action(L10n.companionAlbum, "book.closed.fill") { store.send(.albumTapped) }
             action(L10n.companionHolidays, "calendar") { store.send(.holidaysTapped) }
@@ -225,10 +229,9 @@ struct CompanionCard: View {
         let listed = typeSize.isAccessibilitySize
         return Button(action: perform) {
             (listed ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 4))) {
-                // The icon carries the theme; the word is the label colour.
                 Image(systemName: symbol)
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(theme.ink)
+                    .foregroundStyle(.accentText)
                     .frame(width: listed ? actionIcon : nil, height: actionIcon)
                 Text(title)
                     .font(listed ? .body.weight(.semibold) : .caption.weight(.semibold))
@@ -236,8 +239,11 @@ struct CompanionCard: View {
                     .oneLineUnlessAccessibility()
                 if listed { Spacer(minLength: 0) }
             }
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: listed ? .leading : .center)
-            .contentShape(.rect)
+            .padding(.horizontal, listed ? 14 : 4)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 56, alignment: listed ? .leading : .center)
+            .background(Palette.inset, in: .rect(cornerRadius: 16, style: .continuous))
+            .contentShape(.rect(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.pressable)
     }
@@ -345,11 +351,14 @@ struct CardScene: View {
     }
 }
 
-/// "Magnolia", and under it "Sapling · thirsty · day 4".
+/// "Magnolia", and under it how it is: "content · day 29". On the strip the
+/// stage stays in the line ("Sapling · content · day 4"), because the strip
+/// has no track to say it.
 private struct CardTitle: View {
     let store: StoreOf<CompanionFeature>
     let font: Font
     let detail: Font
+    var showsStage = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -364,11 +373,35 @@ private struct CardTitle: View {
                     .font(font)
                     .oneLineUnlessAccessibility()
             }
-            Text(subtitle)
+            if showsStage || store.isUndecided {
+                Text(subtitle)
+                    .font(detail)
+                    .foregroundStyle(.secondaryText)
+                    .contentTransition(.numericText())
+                    .oneLineUnlessAccessibility()
+            } else {
+                HStack(spacing: 5) {
+                    Image(systemName: Self.symbol(store.mood))
+                        .foregroundStyle(.accentText)
+                        .accessibilityHidden(true)
+                    Text(verbatim: "\(String(localized: store.mood.title(isPet: store.isPet))) · \(String(localized: L10n.companionDay(store.day)))")
+                        .foregroundStyle(.secondaryText)
+                        .contentTransition(.numericText())
+                }
                 .font(detail)
-                .foregroundStyle(.secondaryText)
-                .contentTransition(.numericText())
                 .oneLineUnlessAccessibility()
+            }
+        }
+    }
+
+    /// A glyph for how the house has been, so the word is not the only way
+    /// to read it.
+    static func symbol(_ mood: Mood) -> String {
+        switch mood {
+        case .bright: "sun.max.fill"
+        case .content: "face.smiling"
+        case .thirsty: "drop.fill"
+        case .dozing: "moon.zzz.fill"
         }
     }
 
@@ -396,10 +429,11 @@ private struct CardFooter: View {
     }
 }
 
-/// The little bar to the next stage, or the way to the ceremony.
+/// The stage track, or the way to the ceremony once it is ready.
 private struct CardProgress: View {
     let store: StoreOf<CompanionFeature>
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
@@ -420,26 +454,47 @@ private struct CardProgress: View {
         .animation(Motion.spring, value: store.isReady)
     }
 
+    /// The stages as a row of segments: the ones behind are filled, the one
+    /// it is in fills with the way to the next, and the word under it names
+    /// where it is and what comes after.
     private var bar: some View {
         let isPet = store.isPet
+        let count = CompanionMath.stageCount(isPet: isPet)
         let share = CompanionMath.nextStageShare(progress: store.progress, isPet: isPet)
-        let next = min(store.stage + 1, CompanionMath.stageCount(isPet: isPet))
-        return VStack(alignment: .leading, spacing: 5) {
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Palette.inset)
-                    Capsule().fill(theme.accent)
-                        .frame(width: max(8, geometry.size.width * share))
+        let current = min(store.stage, count - 1)
+        let next = min(store.stage + 1, count)
+        let name = CompanionMath.stageTitle(
+            store.stage, isPet: isPet, isReady: false, potted: store.isPotted, species: store.species
+        )
+        let upcoming = caption(next: next, isPet: isPet, potted: store.isPotted, species: store.species)
+        return VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 4) {
+                ForEach(0..<count, id: \.self) { index in
+                    StageSegment(
+                        fill: index < current ? 1 : index == current ? share : 0,
+                        fillStyle: theme.accent
+                    )
                 }
             }
             .frame(height: 6)
-            .animation(Motion.arrive, value: share)
-            Text(caption(next: next, isPet: isPet, potted: store.isPotted, species: store.species))
-                .font(.caption)
-                .foregroundStyle(.secondaryText)
-                .oneLineUnlessAccessibility()
+            .animation(reduceMotion ? nil : Motion.arrive, value: share)
+            .animation(reduceMotion ? nil : Motion.arrive, value: current)
+            HStack(spacing: 8) {
+                Text(name)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .oneLineUnlessAccessibility()
+                Spacer(minLength: 0)
+                Text(upcoming)
+                    .font(.footnote)
+                    .foregroundStyle(.secondaryText)
+                    .oneLineUnlessAccessibility()
+            }
         }
-        .accessibilityElement(children: .combine)
+        // One sentence for VoiceOver: where it is, and what is next.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(L10n.companionStageOf(String(localized: name), current + 1, count)))
+        .accessibilityValue(Text(upcoming))
     }
 
     /// What comes next — or, when the points are all there and only the days
@@ -454,6 +509,25 @@ private struct CardProgress: View {
     }
 }
 
+/// One stage of the track: an inset capsule with the accent growing across it.
+/// The fill is a transform of a solid shape, so easing it costs no layout.
+private struct StageSegment: View {
+    let fill: Double
+    let fillStyle: Color
+
+    var body: some View {
+        Capsule()
+            .fill(Palette.inset)
+            .overlay(alignment: .leading) {
+                Rectangle()
+                    .fill(fillStyle)
+                    .scaleEffect(x: max(fill, 0), anchor: .leading)
+                    .opacity(fill > 0 ? 1 : 0)
+            }
+            .clipShape(.capsule)
+    }
+}
+
 /// The house jar — Leaves and Sparkles side by side — with a "+10" that
 /// drops into it when it is paid. It opens the shop.
 private struct CardJar: View {
@@ -463,12 +537,22 @@ private struct CardJar: View {
     var body: some View {
         let jar = store.jar
         Button { store.send(.shopTapped) } label: {
-            JarAmounts(leaves: jar.leaves, sparkles: jar.sparkles, opensStore: false)
-                .padding(.horizontal, 12)
-                .frame(minHeight: Metrics.minTapTarget)
-                .glassControl()
+            // A quiet pill with a chevron: it reads as a way in, and does not
+            // compete with the name beside it.
+            HStack(spacing: 6) {
+                JarAmounts(leaves: jar.leaves, sparkles: jar.sparkles, opensStore: false)
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.accentText)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(Palette.inset, in: .capsule)
+            .frame(minHeight: Metrics.minTapTarget)
+            .contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressableQuiet)
         .overlay(alignment: .top) {
             // Under a sheet nobody would see it land; it waits for nothing.
             if let pay = store.lastPay, !covered {

@@ -83,6 +83,14 @@ extension SharedKey where Self == AppStorageKey<String>.Default {
     }
 }
 
+extension SharedKey where Self == AppStorageKey<DockSettings>.Default {
+    /// What the dock above the tab bar shows, per house, on this phone. Read
+    /// it through `DockSettings`' subscript by `HomeID`.
+    public static var dockSettings: Self {
+        Self[.appStorage("appDockSettings"), default: DockSettings()]
+    }
+}
+
 extension SharedKey where Self == FileStorageKey<[Home]>.Default {
     /// The household list as it stood at the end of the last session.
     ///

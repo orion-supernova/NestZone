@@ -20,6 +20,7 @@ public struct CustomizeView: View {
 
     public var body: some View {
         List {
+            if store.homeID != nil { dockSection }
             todaySection
             Section {
                 Button(role: .destructive) { store.send(.resetTapped) } label: {
@@ -41,6 +42,61 @@ public struct CustomizeView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button { store.send(.doneTapped) } label: { Text(L10n.commonDone) }
                     .accessibilityIdentifier("CustomizeDone")
+            }
+        }
+    }
+
+    /// The dock above the tab bar: what it shows, per house on this phone.
+    private var dockSection: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { store.dock.mode },
+                set: {
+                    picks += 1
+                    store.send(.dockModePicked($0), animation: Motion.spring)
+                }
+            )) {
+                ForEach(DockMode.allCases) { mode in
+                    Label { Text(mode.title) } icon: { Image(systemName: mode.symbol) }.tag(mode)
+                }
+            } label: {
+                Label { Text(L10n.dockSettingLabel) } icon: { Image(systemName: "dock.rectangle") }
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("Customize.dockMode")
+
+            if store.dock.mode == .always {
+                Picker(selection: Binding(
+                    get: { store.dock.thing },
+                    set: {
+                        picks += 1
+                        store.send(.dockThingPicked($0), animation: Motion.spring)
+                    }
+                )) {
+                    ForEach(DockThing.allCases) { thing in
+                        Label {
+                            Text(thing.title)
+                        } icon: {
+                            Image(systemName: thing.needsPlus ? PlusStyle.symbol(isLocked: !store.pro.isPro) : thing.symbol)
+                        }
+                        .tag(thing)
+                    }
+                } label: {
+                    Label { Text(L10n.dockThingLabel) } icon: { Image(systemName: store.dock.thing.symbol) }
+                }
+                .pickerStyle(.menu)
+                .transition(reduceMotion ? AnyTransition.opacity : AnyTransition(.blurReplace))
+                .accessibilityIdentifier("Customize.dockThing")
+            }
+        } header: {
+            Text(L10n.dockSettingTitle)
+        } footer: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(store.dock.mode.meaning)
+                if store.dock.mode == .always, store.dock.thing.needsPlus, !store.pro.isPro {
+                    Text(L10n.dockNeedsPlus)
+                }
+                Text(L10n.dockSettingFooter)
             }
         }
     }

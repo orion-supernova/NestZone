@@ -38,7 +38,7 @@ public struct NowDock: View {
                     VStack(alignment: .leading, spacing: 0) {
                         title
                             .font(.subheadline.weight(store.dockItem == .add ? .regular : .semibold))
-                            .foregroundStyle(store.dockItem == .add ? Palette.textSecondary : .primary)
+                            .foregroundStyle(store.dockItem == .add ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.primary))
                             .lineLimit(1)
                             // The live thing changing — tonight's dinner giving
                             // way to the movie round, one event to the next —
@@ -89,10 +89,12 @@ public struct NowDock: View {
     /// else taking the dock blurs across to its own.
     private var emblemKey: String {
         switch store.dockItem {
-        case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence):
+        case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence),
+             let .nextEvent(occurrence):
             occurrence.id
         case .dinner, .dinnerUndecided: "dinner"
-        case .movieRound: "movieRound"
+        case .movieRound, .noMovieRound: "movieRound"
+        case .noEvent: "noEvent"
         case .add: "add"
         }
     }
@@ -105,8 +107,12 @@ public struct NowDock: View {
                 .bounces(when: store.dockItem == .happening(occurrence))
         case .dinner, .dinnerUndecided:
             symbol("fork.knife", tint: Palette.eventFood)
-        case .movieRound:
+        case .movieRound, .noMovieRound:
             symbol("popcorn.fill", tint: Palette.violet)
+        case let .nextEvent(occurrence):
+            symbol(occurrence.kind.symbol, tint: occurrence.kind.tint)
+        case .noEvent:
+            symbol("calendar", tint: Palette.eventGeneral)
         case .add:
             EmptyView()
         }
@@ -132,6 +138,12 @@ public struct NowDock: View {
             Text(L10n.dinnerEmptyTitle)
         case .movieRound:
             Text(L10n.dockMovieRoundTitle)
+        case let .nextEvent(occurrence):
+            Text(occurrence.title)
+        case .noEvent:
+            Text(L10n.dockNoEventTitle)
+        case .noMovieRound:
+            Text(L10n.dockNoMovieTitle)
         case .add:
             Text(L10n.dockAddPlaceholder)
         }
@@ -153,6 +165,14 @@ public struct NowDock: View {
             Text(L10n.dinnerEmptySubtitle)
         case .movieRound:
             Text(L10n.dockMovieRoundSubtitle)
+        case let .nextEvent(occurrence):
+            Text(occurrence.start.formatted(
+                Date.FormatStyle().weekday(.abbreviated).hour().minute().locale(L10n.locale)
+            ))
+        case .noEvent:
+            Text(L10n.dockNoEventSubtitle)
+        case .noMovieRound:
+            Text(L10n.dockNoMovieSubtitle)
         case .add:
             nil
         }
