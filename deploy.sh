@@ -198,7 +198,7 @@ if [[ -n "$BUMP" ]]; then
   set_marketing_version "$CURRENT" "$NEXT"
 fi
 
-VERSION="$(marketing_version)"
+VERSION="${NEXT:-$(marketing_version)}"
 BUILD="$(build_number)"
 
 # Every build is its own version (owner's rule, 2026-11-23): never two builds
