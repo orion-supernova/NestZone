@@ -415,14 +415,10 @@ private struct SegmentedRoot: View {
         // switch: the names of the modules are what the top of a tab is for.
         .searchToolbarBehavior(.minimize)
         .safeAreaBar(edge: .top) {
-            HStack(spacing: 10) {
-                SegmentSwitch(
-                    modules: group.modules,
-                    selected: store.selected ?? group.defaultModule
-                ) { store.send(.segmentPicked($0)) }
-
-                Spacer(minLength: 0)
-            }
+            SegmentSwitch(
+                modules: group.modules,
+                selected: store.selected ?? group.defaultModule
+            ) { store.send(.segmentPicked($0)) }
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, 4)
         }
@@ -495,23 +491,71 @@ private struct SegmentSwitch: View {
     /// How far the underline is drawn out while it travels — 1 at rest, about
     /// 30pt over its 18 at full stretch.
     @State private var stretch: CGFloat = 1
+    /// One per tap on a name, for the tick.
+    @State private var taps = 0
 
     private static let underlineWidth: CGFloat = 18
     private static let stretchedWidth: CGFloat = 30
 
     var body: some View {
+        // Never an ellipsis, in any language or Dynamic Type size: the names
+        // at title size if they fit, all three one step smaller (a step is
+        // 0.85, so the hierarchy holds and the siblings stay the same size)
+        // if not, and a row that scrolls, kept on the chosen name, past that.
+        // The Plus mark is inside each name, so it counts in the width.
+        ViewThatFits(in: .horizontal) {
+            names(.title3)
+            names(.headline)
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal) {
+                    names(.headline)
+                }
+                .scrollIndicators(.hidden)
+                .scrollClipDisabled()
+                .onAppear { proxy.scrollTo(selected, anchor: .center) }
+                .onChange(of: selected) { _, now in
+                    withAnimation(reduceMotion ? nil : Motion.spring) {
+                        proxy.scrollTo(now, anchor: .center)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .animation(Motion.spring, value: selected)
+        .onChange(of: selected) { _, _ in
+            // Under Reduce Motion the underline only moves; it does not also
+            // stretch.
+            guard !reduceMotion else { return }
+            // Drawn out as it leaves, gathered back in as it lands — the way
+            // a drop of ink travels.
+            withAnimation(.easeOut(duration: 0.14)) {
+                stretch = Self.stretchedWidth / Self.underlineWidth
+            } completion: {
+                withAnimation(Motion.release) { stretch = 1 }
+            }
+        }
+        // The tick is the person's own tap; a segment restored at launch or
+        // opened by a link changes `selected` and stays silent.
+        .sensoryFeedback(.selection, trigger: taps)
+    }
+
+    private func names(_ style: Font.TextStyle) -> some View {
         HStack(spacing: 18) {
             ForEach(modules) { module in
                 let isSelected = module == selected
-                Button { pick(module) } label: {
+                Button {
+                    guard !isSelected else { return }
+                    taps += 1
+                    pick(module)
+                } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 0) {
                             Text(module.title)
-                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .font(.system(style, design: .rounded, weight: .bold))
                                 .foregroundStyle(isSelected ? .primary : Palette.textSecondary)
                                 .lineLimit(1)
                             if module.needsPlus {
-                                PlusMark(isLocked: !pro.isPro, style: .title3)
+                                PlusMark(isLocked: !pro.isPro, style: style)
                             }
                         }
                             // The name just chosen lands a touch small and
@@ -543,24 +587,12 @@ private struct SegmentSwitch: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .id(module)
                 .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
                 .accessibilityIdentifier("Segment.\(module.rawValue)")
             }
         }
-        .animation(Motion.spring, value: selected)
-        .onChange(of: selected) { _, _ in
-            // Under Reduce Motion the underline only moves; it does not also
-            // stretch.
-            guard !reduceMotion else { return }
-            // Drawn out as it leaves, gathered back in as it lands — the way
-            // a drop of ink travels.
-            withAnimation(.easeOut(duration: 0.14)) {
-                stretch = Self.stretchedWidth / Self.underlineWidth
-            } completion: {
-                withAnimation(Motion.release) { stretch = 1 }
-            }
-        }
-        .sensoryFeedback(.selection, trigger: selected)
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 

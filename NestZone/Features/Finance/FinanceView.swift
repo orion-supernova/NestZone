@@ -196,7 +196,7 @@ public struct FinanceView: View {
 
             Button { store.send(.monthSelected(.current)) } label: {
                 VStack(spacing: 1) {
-                    Text(store.month.date, format: .dateTime.month(.wide).year())
+                    Text(store.month.date, format: .startOfLine(.dateTime.month(.wide).year()))
                         .font(.headline)
                         .contentTransition(.numericText())
                     if !store.month.isCurrent {
@@ -1082,7 +1082,7 @@ private struct DayHeader: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(day, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
+            Text(day, format: .startOfLine(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
                 .font(.subheadline.weight(.semibold))
             if Calendar.current.isDateInToday(day) {
                 Badge(String(localized: L10n.financeToday), tint: Palette.textSecondary)

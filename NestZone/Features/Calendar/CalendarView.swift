@@ -25,6 +25,11 @@ public struct CalendarView: View {
     @State private var gridFrame: CGRect?
     /// Your own answers on the next-up card — see `RSVPTaps`.
     @State private var rsvpTaps = RSVPTaps()
+    /// The person's own month steps (arrows, the name, a swipe) and day taps,
+    /// counted for the ticks: a month or a day that moves for any other reason
+    /// (a link opening an event, a month step that also moves the day) is silent.
+    @State private var scrubs = 0
+    @State private var dayTaps = 0
 
     public init(store: StoreOf<CalendarFeature>) {
         self.store = store
@@ -170,9 +175,12 @@ public struct CalendarView: View {
         HStack(spacing: 4) {
             stepper(-1, symbol: "chevron.left", label: L10n.calendarPreviousMonth)
 
-            Button { store.send(.todayTapped) } label: {
+            Button {
+                scrubs += 1
+                store.send(.todayTapped)
+            } label: {
                 VStack(spacing: 1) {
-                    Text(store.month.date, format: .dateTime.month(.wide).year())
+                    Text(store.month.date, format: .startOfLine(.dateTime.month(.wide).year()))
                         .font(.headline)
                         .contentTransition(.numericText())
                     if !store.month.isCurrent {
@@ -194,7 +202,7 @@ public struct CalendarView: View {
         .glassEffect(.regular.interactive(), in: .capsule)
         .padding(.horizontal, Metrics.screenPadding)
         .animation(Motion.spring, value: store.month)
-        .sensoryFeedback(.selection, trigger: store.month)
+        .sensoryFeedback(.selection, trigger: scrubs)
     }
 
     private func stepper(
@@ -202,7 +210,10 @@ public struct CalendarView: View {
         symbol: String,
         label: LocalizedStringResource
     ) -> some View {
-        Button { store.send(.monthStepped(by: step)) } label: {
+        Button {
+            scrubs += 1
+            store.send(.monthStepped(by: step))
+        } label: {
             Image(systemName: symbol)
                 .font(.footnote.weight(.bold))
                 .foregroundStyle(Palette.accessoryStrong)
@@ -456,13 +467,14 @@ public struct CalendarView: View {
                     isToday: day == .today,
                     namespace: daySelection
                 ) {
+                    dayTaps += 1
                     store.send(.daySelected(day))
                 }
                 .equatable()
             }
         }
         .animation(Motion.spring, value: store.selectedDay)
-        .sensoryFeedback(.selection, trigger: store.selectedDay)
+        .sensoryFeedback(.selection, trigger: dayTaps)
         .onGeometryChange(for: CGRect.self) {
             $0.frame(in: .named(monthFaceSpace))
         } action: { gridFrame = $0 }
@@ -478,6 +490,7 @@ public struct CalendarView: View {
                 let horizontal = value.translation.width
                 guard abs(horizontal) > abs(value.translation.height) * 1.5,
                       abs(horizontal) > 50 else { return }
+                scrubs += 1
                 store.send(.monthStepped(by: horizontal < 0 ? 1 : -1))
             }
     }
@@ -635,7 +648,10 @@ public struct CalendarView: View {
             ForEach(store.state.visibleWeek) { day in
                 let isSelected = day == store.selectedDay
                 let count = store.state.count(on: day) + store.state.sharedCount(on: day)
-                Button { store.send(.daySelected(day)) } label: {
+                Button {
+                    dayTaps += 1
+                    store.send(.daySelected(day))
+                } label: {
                     VStack(spacing: 4) {
                         Text(weekdayLetter(day))
                             .font(.caption.weight(.semibold))
@@ -671,7 +687,7 @@ public struct CalendarView: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 16, style: .continuous))
         .padding(.horizontal, Metrics.screenPadding)
         .animation(Motion.spring, value: store.selectedDay)
-        .sensoryFeedback(.selection, trigger: store.selectedDay)
+        .sensoryFeedback(.selection, trigger: dayTaps)
     }
 
     // MARK: - Agenda

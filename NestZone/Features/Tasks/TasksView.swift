@@ -301,7 +301,10 @@ private struct TaskListRow: View {
                         }
                     }
 
-                HStack(spacing: 8) {
+                // Wraps between the pieces, never inside one: in Swedish the kind,
+                // the name and "för 3 dagar sedan" no longer fit one line, and a
+                // line-wrapped "Städ-ning" read as two words.
+                FlowLayout(spacing: 8, lineSpacing: 2) {
                     Label {
                         Text(task.kind.title)
                     } icon: {

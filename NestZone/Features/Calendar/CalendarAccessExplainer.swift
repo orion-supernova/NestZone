@@ -38,6 +38,7 @@ struct CalendarAccessExplainer: View {
         .frame(maxWidth: .infinity)
         .background(Backdrop(tint: theme.accent))
         .presentationDetents([.height(380), .large])
+        .presentationContentInteraction(.scrolls)
         .presentationDragIndicator(.visible)
     }
 }

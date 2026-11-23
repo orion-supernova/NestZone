@@ -31,6 +31,46 @@ struct InnerSwitch<Option: Hashable>: View {
     @State private var taps = 0
 
     var body: some View {
+        // Never an ellipsis: equal slots at caption size when the names fit,
+        // one step smaller for all of them when not, and a row that scrolls
+        // (kept on the chosen name) past that. Siblings always share a size.
+        ViewThatFits(in: .horizontal) {
+            track(.caption, scrolls: false)
+            track(.caption2, scrolls: false)
+            track(.caption2, scrolls: true)
+        }
+        .padding(.horizontal, inset)
+        // Under Reduce Motion the pill still moves to its slot, with no spring
+        // and no stretch; the tick stays.
+        .animation(reduceMotion ? Motion.fade : Motion.spring, value: selected)
+        .sensoryFeedback(.selection, trigger: taps)
+        .accessibilityElement(children: .contain)
+    }
+
+    @ViewBuilder
+    private func track(_ style: Font.TextStyle, scrolls: Bool) -> some View {
+        if scrolls {
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal) { slots(style, scrolls: true) }
+                    .scrollIndicators(.hidden)
+                    .onAppear { proxy.scrollTo(selected, anchor: .center) }
+                    .onChange(of: selected) { _, now in
+                        withAnimation(reduceMotion ? nil : Motion.spring) {
+                            proxy.scrollTo(now, anchor: .center)
+                        }
+                    }
+                    .clipShape(.capsule)
+                    .padding(3)
+                    .glassEffect(.regular, in: .capsule)
+            }
+        } else {
+            slots(style, scrolls: false)
+                .padding(3)
+                .glassEffect(.regular, in: .capsule)
+        }
+    }
+
+    private func slots(_ style: Font.TextStyle, scrolls: Bool) -> some View {
         HStack(spacing: 2) {
             ForEach(options, id: \.self) { option in
                 let isSelected = option == selected
@@ -48,18 +88,20 @@ struct InnerSwitch<Option: Hashable>: View {
                                 .bounces(when: isSelected)
                         }
                         Text(title(option))
-                            .font(.caption.weight(.semibold))
+                            .font(.system(style, weight: .semibold))
                             .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+                            .fixedSize(horizontal: true, vertical: false)
                     }
                     .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
                     .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 10)
+                    .frame(maxWidth: scrolls ? nil : .infinity)
                     // Each slot only marks where the pill can land.
                     .matchedGeometryEffect(id: option, in: pill)
                     .contentShape(.capsule)
                 }
                 .buttonStyle(.plain)
+                .id(option)
                 .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
             }
         }
@@ -82,13 +124,5 @@ struct InnerSwitch<Option: Hashable>: View {
                     SpringKeyframe(1, duration: 0.28, spring: .init(duration: 0.3, bounce: 0.3))
                 }
         }
-        .padding(3)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, inset)
-        // Under Reduce Motion the pill still moves to its slot, with no spring
-        // and no stretch; the tick stays.
-        .animation(reduceMotion ? Motion.fade : Motion.spring, value: selected)
-        .sensoryFeedback(.selection, trigger: taps)
-        .accessibilityElement(children: .contain)
     }
 }

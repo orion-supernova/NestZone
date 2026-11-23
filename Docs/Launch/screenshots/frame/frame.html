@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Store screenshot frame</title>
+<style>
+  /* One reusable layer: a drawn iPhone 17/18 Pro. Everything inside .dev is in
+     the simulator screenshot's own pixels (1206 x 2622 = 402 x 874 pt at @3x),
+     so the screen needs no rescaling and the bezel is measured against it:
+       screen corner radius 62 pt = 186 px
+       black glass 23 px, titanium rim 22 px  (about 1.3 mm and 1.2 mm of a 71.9 mm body)
+       Dynamic Island 126 x 37 pt, 11 pt from the top
+     If frame/apple-bezel.png exists it is used instead of the drawn body: it
+     must be the device with a transparent screen, any size (it is fitted to the
+     body box). */
+  :root { --u: 1; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100vw; height: 100vh; overflow: hidden; background: #0e0620; }
+  body { position: relative;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; color: #fff; }
+  .bg { position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 38% at 50% 78%, rgba(124,58,237,.55), transparent 70%),
+      radial-gradient(ellipse 90% 40% at 50% 0%, rgba(79,70,229,.30), transparent 70%),
+      linear-gradient(180deg, #1b0d3b 0%, #120828 55%, #0d0620 100%); }
+  .copy { position: absolute; left: 0; right: 0; top: 150px; text-align: center; padding: 0 90px; }
+  h1 { font-size: 100px; line-height: 1.04; font-weight: 700; letter-spacing: -.035em; }
+  p  { margin-top: 26px; font-size: 52px; line-height: 1.2; font-weight: 500; color: #cfc0fb; letter-spacing: -.01em; }
+
+  .stage { position: absolute; left: 50%; top: 560px; width: 1296px; height: 2712px;
+    transform-origin: 50% 0; transform: translateX(-50%) scale(var(--s)); }
+  .dev { position: absolute; inset: 0; filter: drop-shadow(0 70px 90px rgba(0,0,0,.55)) drop-shadow(0 12px 18px rgba(0,0,0,.45)); }
+
+  /* side hardware: sits behind the body, a few px proud of it */
+  .btn { position: absolute; width: 17px; border-radius: 6px;
+    background: linear-gradient(90deg, #3a3835, #8a867f 45%, #5a5753); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+  .btn.l { left: -9px; }  .btn.r { right: -9px; transform: scaleX(-1); }
+  .action { top: 330px;  height: 100px; }
+  .volup  { top: 520px;  height: 170px; }
+  .voldn  { top: 730px;  height: 170px; }
+  .power  { top: 640px;  height: 270px; }
+  .camctl { top: 1560px; height: 190px; width: 14px; right: -7px; background: linear-gradient(90deg,#2e2c2a,#74706a 50%,#45423f); border-radius: 7px; }
+
+  .body { position: absolute; inset: 0; border-radius: 231px;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 22%, rgba(255,255,255,0) 70%, rgba(255,255,255,.25) 100%),
+      linear-gradient(90deg, #35332f 0%, #8e8a83 5%, #55524d 14%, #44413d 50%, #55524d 86%, #8e8a83 95%, #35332f 100%);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.28), inset 0 0 0 5px rgba(0,0,0,.35), inset 0 0 14px rgba(255,255,255,.18); }
+  .glass { position: absolute; inset: 22px; border-radius: 209px; background: #000;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.55), inset 0 0 0 1.5px rgba(255,255,255,.07); }
+  .screen { position: absolute; left: 45px; top: 45px; width: 1206px; height: 2622px; border-radius: 186px; overflow: hidden; background: #000; }
+  .screen img { display: block; width: 100%; height: 100%; }
+  .island { position: absolute; left: 50%; top: 34px; width: 378px; height: 112px; margin-left: -189px; border-radius: 56px; background: #000; }
+  .sheen { position: absolute; inset: 22px; border-radius: 209px; pointer-events: none;
+    background: linear-gradient(120deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 72%, rgba(255,255,255,.05) 100%); }
+  .apple { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
+  .official .body, .official .glass, .official .btn, .official .sheen { display: none; }
+  .official .apple { display: block; }
+  .official .island { display: none; }
+</style>
+<div class="bg"></div>
+<div class="copy"><h1 id="t"></h1><p id="s"></p></div>
+<div class="stage" id="stage"><div class="dev" id="dev">
+  <div class="btn l action"></div><div class="btn l volup"></div><div class="btn l voldn"></div>
+  <div class="btn r power"></div><div class="camctl btn r"></div>
+  <div class="body"></div><div class="glass"></div>
+  <div class="screen"><img id="shot" alt=""><div class="island"></div></div>
+  <div class="sheen"></div>
+  <img class="apple" id="apple" alt="">
+</div></div>
+<script>
+  // frame.html#img=<path>&t=<title>&s=<subline>   (all URI-encoded)
+  const q = new URLSearchParams(location.hash.slice(1));
+  document.getElementById('t').textContent = q.get('t') || '';
+  document.getElementById('s').textContent = q.get('s') || '';
+  document.getElementById('shot').src = q.get('img');
+  // The body is 1296 px wide; leave about 100 px of canvas each side for the hardware and the shadow.
+  document.documentElement.style.setProperty('--s', Math.min((innerWidth - 190) / 1296, 1));
+  const a = document.getElementById('apple');
+  a.onload = () => document.getElementById('dev').classList.add('official');
+  a.src = 'apple-bezel.png';
+</script>

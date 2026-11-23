@@ -251,7 +251,11 @@
         "Added a small badge that shows which features are part of NestZone Plus",
         "Improved how screens open: an event or a problem opened from Today now opens on its own, with Back going to where you were",
         "Improved the top bar: each screen's buttons sit next to the bell, with the add button closest to it",
-        "Added search to Tasks, Movies and Calendar in the top bar"
+        "Added search to Tasks, Movies and Calendar in the top bar",
+        "Sheets scroll first and only close from the top",
+        "Long names never get cut off, in any language",
+        "Notifications grouped by version, and busy stretches folded into one line",
+        "Soft taps you can feel when you switch tabs, months and views"
       ],
       "translations": [
         {
@@ -263,7 +267,11 @@
             "Hangi özelliklerin NestZone Plus'ta olduğunu gösteren küçük bir rozet eklendi",
             "Bugün'den açtığın etkinlik ya da sorun artık tek başına açılıyor, Geri de geldiğin yere götürüyor",
             "Üstteki çubuk düzeldi: her ekranın düğmeleri zilin yanında, ekle düğmesi en yakında",
-            "Görevler, Filmler ve Takvim'e üst çubukta arama eklendi"
+            "Görevler, Filmler ve Takvim'e üst çubukta arama eklendi",
+            "Açılan sayfalar önce kayar, sadece en üstteyken kapanır",
+            "Uzun isimler artık hiçbir dilde kesilmiyor",
+            "Bildirimler sürüme göre gruplandı, art arda gelenler tek satırda toplanıyor",
+            "Sekme, ay ve görünüm değiştirirken hafif bir titreşim hissedeceksin"
           ]
         },
         {
@@ -275,7 +283,11 @@
             "Lagt till en liten märkning som visar vad som ingår i NestZone Plus",
             "Skärmar öppnas bättre: en händelse eller ett fel du öppnar från Idag öppnas för sig, och Tillbaka tar dig dit du var",
             "Toppfältet är bättre: varje skärms knappar sitter bredvid klockan, med lägg till-knappen närmast",
-            "Lagt till sök i toppfältet i Sysslor, Film och Kalender"
+            "Lagt till sök i toppfältet i Sysslor, Film och Kalender",
+            "Ark scrollar först och stängs bara från toppen",
+            "Långa namn klipps aldrig av, på något språk",
+            "Notiserna grupperas per version, och mycket på en gång blir en rad",
+            "En lätt vibration när du byter flik, månad eller vy"
           ]
         }
       ]

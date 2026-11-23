@@ -121,6 +121,7 @@ public struct IssueDetailView: View {
                 onCancel: { store.send(.binding(.set(\.partsDraft, nil))) }
             )
             .presentationDetents([.medium, .large])
+            .presentationContentInteraction(.scrolls)
         }
         .hostedSheet(item: $store.visitDraft) { presented in
             VisitSheet(
@@ -129,6 +130,7 @@ public struct IssueDetailView: View {
                 onCancel: { store.send(.binding(.set(\.visitDraft, nil))) }
             )
             .presentationDetents([.medium, .large])
+            .presentationContentInteraction(.scrolls)
         }
         .hostedSheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
             ExpenseComposerSheet(store: store)
@@ -441,8 +443,8 @@ public struct IssueDetailView: View {
             tint: Palette.statEvents,
             title: L10n.issuesPlanVisit,
             detail: store.detail?.event.map { event in
-                Text(event.startsAt.date, format: .dateTime.weekday(.abbreviated).day()
-                    .month(.abbreviated).hour().minute())
+                Text(event.startsAt.date, format: .startOfLine(.dateTime.weekday(.abbreviated).day()
+                    .month(.abbreviated).hour().minute()))
             },
             state: store.detail?.event.map { $0.hasHappened ? .done : .active } ?? .empty,
             actionTitle: upcoming ? L10n.issuesPlanMoveVisit : L10n.issuesPlanBookVisit,

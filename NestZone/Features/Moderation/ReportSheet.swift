@@ -91,6 +91,7 @@ struct ReportSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
     }
 }
 

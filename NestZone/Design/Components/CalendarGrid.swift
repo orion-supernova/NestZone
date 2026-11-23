@@ -421,7 +421,8 @@ public struct DayTimeline: View {
     /// Tall enough that a half-hour block still has room for a title, short
     /// enough that a working day is one scroll.
     private let hourHeight: CGFloat = 52
-    private let gutter: CGFloat = 46
+    /// The hour labels' column grows with the type, so "10:00" never clips.
+    @ScaledMetric(relativeTo: .caption) private var gutter: CGFloat = 46
 
     public init(
         day: CalendarDay,
