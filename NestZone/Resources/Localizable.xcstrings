@@ -10390,7 +10390,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acil tamirleri ve birkaç gün içinde ödenecek faturaları gösterir."
+            "value": "Acil tamirler ve birkaç gün içinde ödenecek faturalar burada görünür."
           }
         },
         "sv": {
@@ -10413,7 +10413,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece ilgilenmen gereken sayaçları gösterir, mesela alınacaklar. Her zaman'ı seçersen hepsi görünür."
+            "value": "Sadece ilgilenmen gereken sayaçlar görünür, mesela alınacaklar. Her zaman'ı seçersen hepsi çıkar."
           }
         },
         "sv": {
@@ -10436,7 +10436,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Günü gelen, sana ait ve henüz kimsenin almadığı işleri gösterir."
+            "value": "Günü gelen, sana ait ve henüz kimsenin almadığı işler burada görünür."
           }
         },
         "sv": {
@@ -10482,7 +10482,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvimde sıradaki şeyi gösterir."
+            "value": "Takvimde sıradaki şey burada görünür."
           }
         },
         "sv": {
@@ -43943,7 +43943,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En son %lld tanesi gösteriliyor."
+            "value": "En son %lld tanesi burada."
           }
         },
         "sv": {
@@ -57175,7 +57175,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gösterir"
+            "value": "Ne görünsün"
           }
         },
         "sv": {
@@ -57382,7 +57382,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "O an ne varsa onu gösterir: bir etkinlik, bu akşamın yemeği ya da film gecesi."
+            "value": "O an ne varsa o görünür: bir etkinlik, bu akşamın yemeği ya da film gecesi."
           }
         },
         "sv": {
@@ -57405,7 +57405,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hep bunu gösterir. Henüz bir şey yoksa sorar."
+            "value": "Hep bu görünür. Henüz bir şey yoksa sorar."
           }
         },
         "sv": {
@@ -57957,7 +57957,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evin sabitlediği notları gösterir."
+            "value": "Evin sabitlediği notlar burada görünür."
           }
         },
         "sv": {
