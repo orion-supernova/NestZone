@@ -100,10 +100,12 @@ a{color:var(--accent)}
 <section id="upnext">
 <h2>Up next</h2>
 <p>The working list. Tick a line off by deleting it; add new ones at the bottom of their group.</p>
-<h3>Now (in review since 2026-11-19 22:40)</h3>
+<h3>Now (1.13.0 in review since 2026-11-23 20:05)</h3>
 <ul>
-<li>1.12.0 (11) is in App Review with the NestZone Plus group (Yearly, Monthly) and the six Sparkle packs (150, 300, 550, 1000, 2200, 5000): 10 items, submitted 2026-11-20. It replaced the build 7 submission. Up to 48 hours; Apple emails the result. Builds 8–10 are unused.</li>
-<li>If Apple asks anything, answer in App Store Connect → App Review. Keep <code>JAR_ENVIRONMENTS</code> with Sandbox and <code>PRO_SANDBOX=on</code> until then, or the reviewer's purchases won't land.</li>
+<li>1.13.0 build 11 (Xcode Cloud numbers builds by its run count; it is the commit "Release 1.13.0 (build 13)") was submitted 2026-11-23 with: calendar copies/sharing/person filter, copying a housemate's calendar with consent (thanks, Micke), notification settings and quiet hours, the new navigation, dock setting, Plus mark, readability pass, Holidays and bell redesigns, and Swedish throughout. App Store: EN/TR/SV listings, EN/TR preview videos and headers (SV falls back to EN). Up to 48 hours; Apple emails the result.</li>
+<li>Keep <code>JAR_ENVIRONMENTS</code> with Sandbox and <code>PRO_SANDBOX=on</code> until it is approved, or the reviewer's purchases won't land.</li>
+<li>Not yet run on a device: calendar copies (house events and housemates'), quiet hours, Swedish. Try them on TestFlight build 11 while it is in review.</li>
+<li>Later: a Swedish preview video and header (the scripts in Docs/Launch/preview and header take a language); server-written push notifications are still English only.</li>
 </ul>
 <h3>The day it is approved</h3>
 <ul>
