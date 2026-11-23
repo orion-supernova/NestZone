@@ -301,26 +301,24 @@ private struct TaskListRow: View {
                         }
                     }
 
-                // Wraps between the pieces, never inside one: in Swedish the kind,
-                // the name and "för 3 dagar sedan" no longer fit one line, and a
-                // line-wrapped "Städ-ning" read as two words.
-                FlowLayout(spacing: 8, lineSpacing: 2) {
-                    Label {
-                        Text(task.kind.title)
-                    } icon: {
-                        Image(systemName: task.kind.symbol)
+                // One line when it fits; otherwise the date goes under the kind
+                // and the name. Never a wrap inside a piece: in Swedish the kind,
+                // the name and "för 3 dagar sedan" don't fit one line, and a
+                // line-wrapped "Städ-ning" read as two words. (A FlowLayout here
+                // answered the row's zero-width probe with one piece per line and
+                // made every row ~160 pt tall.)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        kindLabel
+                        assigneeText
+                        dueText
                     }
-                    .font(.caption)
-                    .foregroundStyle(.secondaryText)
-
-                    if let assignee {
-                        Text(assignee).font(.caption).foregroundStyle(.secondaryText)
-                    }
-
-                    if let due = task.dueDate {
-                        Text(due.date, format: .relative(presentation: .named))
-                            .font(.caption)
-                            .foregroundStyle(task.isOverdue ? Palette.dangerText : Palette.textSecondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 8) {
+                            kindLabel
+                            assigneeText
+                        }
+                        dueText
                     }
                 }
             }
@@ -336,6 +334,35 @@ private struct TaskListRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(task.isCompleted ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction(named: Text(L10n.tasksToggleAction), toggle)
+    }
+
+    private var kindLabel: some View {
+        Label {
+            Text(task.kind.title)
+        } icon: {
+            Image(systemName: task.kind.symbol)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondaryText)
+        .lineLimit(1)
+        .fixedSize()
+    }
+
+    @ViewBuilder private var assigneeText: some View {
+        if let assignee {
+            Text(assignee).font(.caption).foregroundStyle(.secondaryText)
+                .lineLimit(1)
+        }
+    }
+
+    @ViewBuilder private var dueText: some View {
+        if let due = task.dueDate {
+            Text(due.date, format: .relative(presentation: .named))
+                .font(.caption)
+                .foregroundStyle(task.isOverdue ? Palette.dangerText : Palette.textSecondary)
+                .lineLimit(1)
+                .fixedSize()
+        }
     }
 
     /// Only ticking pops; reopening a chore is a correction, not an event.

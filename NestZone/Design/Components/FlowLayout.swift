@@ -24,12 +24,19 @@ public struct FlowLayout: Layout {
         subviews: Subviews,
         cache: inout ()
     ) -> CGSize {
-        let width = proposal.width ?? .infinity
+        // Never narrower than the widest piece: a stack probes its children
+        // with a zero width to learn their minimum, and answering that with
+        // one piece per row reported a tower of rows — chore rows ~160 pt
+        // tall, problem chips broken mid-word. A piece is never squeezed below
+        // its own width; the layout only wraps between pieces.
+        let widest = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        let width = max(proposal.width ?? .infinity, widest)
         let rows = layout(subviews: subviews, width: width)
         let height = rows.reduce(into: CGFloat.zero) { total, row in
             total += row.height + (total > 0 ? lineSpacing : 0)
         }
-        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: height)
+        let used = rows.map(\.width).max() ?? 0
+        return CGSize(width: proposal.width.map { max($0, widest) } ?? used, height: height)
     }
 
     public func placeSubviews(
@@ -39,7 +46,8 @@ public struct FlowLayout: Layout {
         cache: inout ()
     ) {
         var y = bounds.minY
-        for row in layout(subviews: subviews, width: bounds.width) {
+        let widest = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        for row in layout(subviews: subviews, width: max(bounds.width, widest)) {
             var x = alignment == .trailing ? bounds.maxX - row.width : bounds.minX
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.unspecified)

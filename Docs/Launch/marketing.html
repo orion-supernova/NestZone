@@ -55,6 +55,14 @@
 </div>
 <p class="small">Name, line and the middle phone's top half sit in the central ~60% of the width and ~65% of the height; the outer phones bleed past it on purpose. PNG, opaque, sRGB. Assumptions are in <code>header/README.md</code>.</p>
 
+<h2>Store screenshots (1.13)</h2>
+<p class="small">Twenty-four framed screens in <code>Docs/Launch/screenshots/</code> (6.9", 1320 x 2868) and <code>screenshots/6.3/</code> (1206 x 2622): <code>en_</code>, <code>tr_</code>, <code>sv_</code> 01 to 08 (Today, Tasks, Shopping, Calendar agenda with the people filter, Money, chat, Movie night, Problems). The phone is drawn in code (<code>screenshots/frame/frame.html</code>: titanium band, black glass, 186 px screen corners, Dynamic Island, side hardware, shadow). Put Apple's own bezel at <code>screenshots/frame/apple-bezel.png</code> (device with a transparent screen) and the pipeline uses it instead. Houses: en "Our Place" (persona Emma), tr "Bizim Ev" (Elif), sv "Hemma hos oss" (Sara).</p>
+<pre>
+cd Docs/Launch/screenshots
+./shoot.sh en          # or tr, sv; add subject numbers to retake some: ./shoot.sh sv 02 08
+./compose.sh en        # frames raw/ + captions.tsv into both sizes (edit captions in captions.tsv)
+./contact.sh en /tmp/contact_en.png   # one sheet to review
+</pre>
 <h2>Upload checklist (App Store Connect)</h2>
 <ul>
 <li><span class="box">&#9744;</span> <strong>English (U.S.) listing, iPhone 6.9" App Previews:</strong> <code>Docs/Launch/preview/preview-en.mp4</code>. Poster frame: <strong>00:17.8</strong> (the Money screen, still and clean; the Today shot is scrolling at its start). Each preview takes its own poster; <code>poster-en.png</code> is that frame for reference.</li>
