@@ -128,7 +128,7 @@ struct SparklePackCard: View {
                 .fixedSize()
                 .padding(.horizontal, 10)
                 .padding(.vertical, 3)
-                .background(theme.accent, in: .capsule)
+                .background(theme.accentFill, in: .capsule)
                 .offset(y: -12)
         } else if isStarter {
             Text(L10n.storeStarter)

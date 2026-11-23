@@ -375,7 +375,7 @@ private struct ShelfSwitch: View {
                     .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget)
                     .background {
                         if isOn {
-                            Capsule().fill(theme.accent).matchedGeometryEffect(id: "thumb", in: thumb)
+                            Capsule().fill(theme.accentFill).matchedGeometryEffect(id: "thumb", in: thumb)
                         }
                     }
                     .contentShape(.capsule)

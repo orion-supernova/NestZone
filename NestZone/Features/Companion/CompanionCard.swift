@@ -225,15 +225,17 @@ struct CompanionCard: View {
         let listed = typeSize.isAccessibilitySize
         return Button(action: perform) {
             (listed ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 4))) {
+                // The icon carries the theme; the word is the label colour.
                 Image(systemName: symbol)
                     .font(.body.weight(.semibold))
+                    .foregroundStyle(theme.ink)
                     .frame(width: listed ? actionIcon : nil, height: actionIcon)
                 Text(title)
                     .font(listed ? .body.weight(.semibold) : .caption.weight(.semibold))
+                    .foregroundStyle(.primary)
                     .oneLineUnlessAccessibility()
                 if listed { Spacer(minLength: 0) }
             }
-            .foregroundStyle(theme.ink)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: listed ? .leading : .center)
             .contentShape(.rect)
         }
@@ -283,7 +285,7 @@ struct CompanionCard: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.glassProminent)
-            .tint(theme.accent)
+            .tint(theme.accentFill)
             .accessibilityIdentifier("CompanionChoose")
         }
         .padding(Metrics.cardPadding)
@@ -409,7 +411,7 @@ private struct CardProgress: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
-                .tint(theme.accent)
+                .tint(theme.accentFill)
                 .accessibilityIdentifier("CompanionCelebrate")
             } else {
                 bar
@@ -534,7 +536,7 @@ private struct HolidayChip: View {
                         .foregroundStyle(theme.onAccent)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(theme.accent, in: .capsule)
+                        .background(theme.accentFill, in: .capsule)
                         .fixedSize()
                 }
                 .font(.caption.weight(.semibold))

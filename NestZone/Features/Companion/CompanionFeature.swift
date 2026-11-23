@@ -909,6 +909,8 @@ public struct CompanionFeature: Sendable {
         case holidaysTapped
         case holidayToggled(Holiday.ID)
         case holidaysReset
+        /// A whole family's days on or off in one write.
+        case holidaysSetFamily(Holiday.Family, on: Bool)
         /// The card's "put out the Diwali things", straight into the scene.
         case dressTapped(Holiday.ID)
 
@@ -1487,6 +1489,14 @@ public struct CompanionFeature: Sendable {
                 var ids = state.celebrated
                 if blockedByLab(&state) { return .none }
                 if ids.contains(id) { ids.remove(id) } else { ids.insert(id) }
+                return setHolidays(Holiday.all.map(\.id).filter(ids.contains).map(\.rawValue), state: &state)
+
+            case let .holidaysSetFamily(family, on):
+                if blockedByLab(&state) { return .none }
+                var ids = state.celebrated
+                for holiday in Holiday.all where holiday.family == family {
+                    if on { ids.insert(holiday.id) } else { ids.remove(holiday.id) }
+                }
                 return setHolidays(Holiday.all.map(\.id).filter(ids.contains).map(\.rawValue), state: &state)
 
             case .holidaysReset:
