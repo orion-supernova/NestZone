@@ -395,6 +395,12 @@ before changing anything here.
 ./deploy.sh --local      # archive and upload from this Mac instead
 ```
 
+**Every build is its own version (owner's rule, 2026-11-23).** Never two
+builds of one version: each release is `./deploy.sh --bump patch` (or minor)
+with its own changelog entry, and the script refuses a version `stage`
+already carries. The build number still increments, but nobody reasons in
+build numbers any more.
+
 **Two branches, and `stage` is not a copy of the code.** `dev` is where work
 happens; `stage` is a pointer at the commit being released, moved only by this
 script, one push per release. **Xcode Cloud watches `stage`** and does the
