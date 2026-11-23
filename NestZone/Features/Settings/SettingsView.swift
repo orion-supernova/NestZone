@@ -676,7 +676,7 @@ public struct SettingsView: View {
                 Text(status.isPro ? L10n.plusStatusOn : L10n.plusStatusOff)
                     .foregroundStyle(status.isPro ? Palette.success : Color.secondary)
             } label: {
-                Label { Text(L10n.proFullName) } icon: { Image(systemName: "sparkles") }
+                Label { Text(L10n.proFullName) } icon: { Image(systemName: PlusStyle.symbol) }
             }
 
             if status.isPro, status.isLoaded {
@@ -717,7 +717,7 @@ public struct SettingsView: View {
                 }
             } else if !status.isPro {
                 Button { PaywallBroker.shared.request(nil) } label: {
-                    Label { Text(L10n.plusSeePlans) } icon: { Image(systemName: "lock.open.fill") }
+                    Label { Text(L10n.plusSeePlans) } icon: { Image(systemName: PlusStyle.unlockSymbol) }
                 }
             }
 

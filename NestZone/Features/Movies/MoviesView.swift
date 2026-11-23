@@ -537,8 +537,12 @@ struct MovieInfoSheet: View {
                             ) {
                                 store.send(.listToggled(list))
                             }
-                            .proLocked(if: list.kind == .custom && !store.state.isSaved(in: list)
-                                ? .customMovieLists : nil)
+                            // Taking a film off a custom list stays free, so
+                            // only adding is locked; Plus sees the mark either way.
+                            .proLocked(
+                                if: list.kind == .custom ? .customMovieLists : nil,
+                                gated: !store.state.isSaved(in: list)
+                            )
                         }
                     }
                     .padding(.horizontal, 2)

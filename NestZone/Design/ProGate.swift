@@ -20,6 +20,30 @@ extension View {
         if let feature { proLocked(feature) } else { self }
     }
 
+    /// A Plus control that is open to everyone in some states (taking a film
+    /// off a custom list is free). A Plus house always sees the mark; a free
+    /// house sees the lock only while `gated`, and nothing otherwise.
+    @ViewBuilder
+    func proLocked(if feature: ProFeature?, gated: Bool) -> some View {
+        if let feature { modifier(ProLockedModifier(feature: feature, gated: gated)) } else { self }
+    }
+
+    /// The Plus badge in a control's top corner: the lock, or the mark once
+    /// the house has Plus. For a control that gates itself (its reducer asks
+    /// for the paywall); `proLocked` wears this for the rest.
+    /// `shown: false` draws nothing, for a list of controls only some of
+    /// which are Plus.
+    func plusBadge(isLocked: Bool, shown: Bool = true) -> some View {
+        overlay(alignment: .topTrailing) {
+            if shown {
+                PlusBadge(isLocked: isLocked)
+                    .offset(x: 4, y: -4)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+
     /// A module that is Plus as a whole. A free house with nothing in it sees
     /// the locked screen; one with data sees it read-only under a banner.
     /// Loaded-ness is the screen's to say, so nothing flashes shut mid-load.
@@ -28,12 +52,71 @@ extension View {
     }
 }
 
+/// What Plus looks like, in one place. Every badge, mark, the Settings row,
+/// the paywall and the locked screens read these, so changing the mark or its
+/// colour (to purple sparkles, say) is an edit here and nowhere else.
+enum PlusStyle {
+    /// Plus itself.
+    static let symbol = "sparkles"
+    /// A Plus thing a house without Plus cannot use yet.
+    static let lockedSymbol = "lock.fill"
+    /// The way in: "see the plans", "get Plus".
+    static let unlockSymbol = "lock.open.fill"
+
+    /// The colour of Plus: today the theme's accent, so it suits every theme.
+    static func tint(_ theme: AppTheme) -> Color { theme.accent }
+    /// What is drawn on a fill of `tint`.
+    static func onTint(_ theme: AppTheme) -> Color { theme.onAccent }
+
+    static func symbol(isLocked: Bool) -> String { isLocked ? lockedSymbol : symbol }
+}
+
+/// The mark every Plus feature wears, with Plus or without, so a house that
+/// pays sees what it pays for. Without: a lock on frosted glass. With: the
+/// same circle in the theme's accent, carrying Plus's sparkles. One shape in
+/// one place, so an upgrade is the lock turning into the mark where it sits.
+struct PlusBadge: View {
+    let isLocked: Bool
+    @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Image(systemName: PlusStyle.symbol(isLocked: isLocked))
+            .font(.system(size: 8.5, weight: .bold))
+            .foregroundStyle(isLocked ? AnyShapeStyle(.secondary) : AnyShapeStyle(PlusStyle.onTint(theme)))
+            .contentTransition(.symbolEffect(.replace))
+            .frame(width: 16, height: 16)
+            .background(isLocked ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(PlusStyle.tint(theme)), in: .circle)
+            .animation(reduceMotion ? Motion.fade : Motion.pop, value: isLocked)
+    }
+}
+
+/// The badge's inline form, for a title or a row's trailing edge where a
+/// corner badge has nothing to sit on: the bare glyph, grey while locked and
+/// in the accent once open.
+struct PlusMark: View {
+    let isLocked: Bool
+    var font: Font = .caption2.weight(.bold)
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Image(systemName: PlusStyle.symbol(isLocked: isLocked))
+            .font(font)
+            .foregroundStyle(isLocked ? AnyShapeStyle(.secondary) : AnyShapeStyle(PlusStyle.tint(theme)))
+            .contentTransition(.symbolEffect(.replace))
+            .accessibilityHidden(true)
+    }
+}
+
 private struct ProLockedModifier: ViewModifier {
     let feature: ProFeature
+    var gated = true
     @Shared(.pro) private var pro
 
     func body(content: Content) -> some View {
         if pro.isPro {
+            content.plusBadge(isLocked: false)
+        } else if !gated {
             content
         } else {
             content
@@ -44,16 +127,7 @@ private struct ProLockedModifier: ViewModifier {
                 .accessibilityHint(Text(L10n.proLockedHint))
                 .accessibilityAction(.default) { PaywallBroker.shared.request(feature) }
                 .overlay { ProLockTap(feature: feature) }
-                .overlay(alignment: .topTrailing) {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.secondary)
-                        .padding(3)
-                        .background(.thinMaterial, in: .circle)
-                        .offset(x: 4, y: -4)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
+                .plusBadge(isLocked: true)
         }
     }
 }
@@ -97,10 +171,7 @@ struct ProReadOnlyBanner: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "lock.fill")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
+            PlusMark(isLocked: true, font: .footnote.weight(.semibold))
             Text(L10n.proReadOnlyBanner)
                 .font(.footnote)
                 .lineLimit(2)
@@ -141,7 +212,7 @@ struct ProLockedScreen: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                PrimaryButton(L10n.proLockedUpgrade, symbol: "lock.open.fill") {
+                PrimaryButton(L10n.proLockedUpgrade, symbol: PlusStyle.unlockSymbol) {
                     PaywallBroker.shared.request(feature)
                 }
                 .frame(maxWidth: 320)

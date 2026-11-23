@@ -60,7 +60,7 @@ struct PaywallView: View {
 
     private var hero: some View {
         VStack(spacing: 10) {
-            Image(systemName: store.feature?.symbol ?? "sparkles")
+            Image(systemName: store.feature?.symbol ?? PlusStyle.symbol)
                 .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(theme.accent)
                 .frame(width: 72, height: 72)

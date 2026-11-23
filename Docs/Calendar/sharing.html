@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar sharing plan</title>
+<style>
+  :root{--bg:#f4f2f8;--card:#fff;--ink:#17121f;--muted:#6b6577;--line:#00000014;--accent:#7C3AED;--soft:#7C3AED14;--warn:#b45309;--warnbg:#f59e0b1a;--ok:#047857}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0c16;--card:#1b1724;--ink:#f3f0f8;--muted:#a39cb2;--line:#ffffff14;--accent:#a78bfa;--soft:#a78bfa1f;--warn:#fbbf24;--warnbg:#fbbf241a;--ok:#34d399}}
+  :root[data-theme="dark"]{--bg:#0f0c16;--card:#1b1724;--ink:#f3f0f8;--muted:#a39cb2;--line:#ffffff14;--accent:#a78bfa;--soft:#a78bfa1f;--warn:#fbbf24;--warnbg:#fbbf241a;--ok:#34d399}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+  main{max-width:860px;margin:0 auto;padding:32px 16px 72px}
+  h1{font:700 28px/1.2 ui-rounded,-apple-system,system-ui;margin:0 0 6px}
+  h2{font:700 19px/1.3 ui-rounded,-apple-system,system-ui;margin:40px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
+  h3{font:600 15px/1.3 -apple-system,system-ui;margin:22px 0 6px}
+  .lead{color:var(--muted);max-width:64ch}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+  nav a{font-size:13px;color:var(--accent);text-decoration:none;background:var(--soft);padding:4px 10px;border-radius:999px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:12px 0}
+  .decide{border-left:3px solid var(--accent)}
+  .warn{background:var(--warnbg);border-color:transparent}
+  .warn b{color:var(--warn)}
+  code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--line);padding:1px 5px;border-radius:5px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-top:0}
+  ul,ol{padding-left:20px} li{margin:4px 0}
+  .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--accent);vertical-align:middle}
+  /* phone sketches */
+  .phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0}
+  .phone{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:16px 14px}
+  .phone .t{font-weight:700;font-size:14px;margin-bottom:10px;text-align:center}
+  .grp{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:12px 4px 6px}
+  .opt{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:var(--soft);margin:5px 0;font-size:14px}
+  .opt .dot{width:10px;height:10px;border-radius:50%}
+  .opt .ck{margin-left:auto;color:var(--accent);font-weight:700}
+  .opt .sub{font-size:12px;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:13px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);display:inline-flex;gap:6px;align-items:center}
+  .chip.on{background:var(--accent);color:#fff;border-color:transparent}
+  .av{width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+  .ev{font-size:13px;padding:7px 10px;border-radius:10px;margin:5px 0;display:flex;gap:8px;align-items:center}
+  .ev.house{background:var(--soft)}
+  .ev.mine{border:1.5px dashed var(--line)}
+  .ev .when{color:var(--muted);font-size:12px;min-width:42px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Calendar: your own calendars, and whose is whose</h1>
+  <p class="lead">A plan, nothing built yet. Three parts: put house events into your own calendars (iCloud, Gmail, work), share chosen calendars of your own with the house, and filter the calendar by person. Calendar is already Plus, so this is more reason to pay, not a new paywall.</p>
+  <nav><a href="#how">How it connects</a><a href="#out">House → my calendars</a><a href="#in">My calendars → house</a><a href="#filter">Filter by person</a><a href="#server">Server</a><a href="#privacy">Privacy and review</a><a href="#plus">Plus</a><a href="#steps">Order of work</a><a href="#decide">Decisions</a></nav>
+
+  <h2 id="how">How it connects: through the phone, not through Google</h2>
+  <p>iOS already has every calendar account the person added in Settings: iCloud, Google/Gmail, Exchange, Outlook, Yahoo, CalDAV. Apple's EventKit sees all of them as one list of calendars, each tagged with its account. NestZone asks for calendar access once, then offers "iCloud · Home", "Gmail · Personal", "Work · Calendar" side by side. No Google sign-in, no Google app verification, no tokens on our server.</p>
+  <div class="card decide"><b>Recommendation:</b> EventKit only. Connecting Google directly (OAuth on the server) would mean a Google security review for the calendar scope, storing refresh tokens, and a second path for Outlook. Almost everyone who uses Gmail on an iPhone has already added the account in Settings, and if not, it takes a minute and then works for every app.</div>
+  <div class="card warn"><b>The catch:</b> a phone only syncs while NestZone runs (opened, or a background refresh iOS schedules when it wants). So the copies in your calendars and the calendars you share update when you open the app, often a few times a day, but not to the second. The doc and the app both say this plainly ("Updated 2 h ago").</div>
+  <p><b>Permission.</b> Choosing among several calendars needs <em>full</em> calendar access (iOS's write-only access can only use the default calendar and can't list the others). It means a new <code>NSCalendarsFullAccessUsageDescription</code>, localized in <code>InfoPlist.xcstrings</code> as the camera one is. We ask the first time someone turns either direction on, never at launch, after a short NestZone screen that says what we read and what stays on the phone.</p>
+
+  <h2 id="out">House → my calendars</h2>
+  <h3>When you add an event</h3>
+  <p>The event composer gets one more row, "Also add to", under the time. It lists your calendars grouped by account, more than one can be ticked, and it remembers your last choice on this phone. That's the "ask which ones" moment: not an alert after saving, but a choice right there, already filled in.</p>
+  <div class="phones">
+    <div class="phone">
+      <div class="t">New event · Also add to</div>
+      <div class="grp">iCloud</div>
+      <div class="opt"><span class="dot" style="background:#3b82f6"></span>Home<span class="ck">✓</span></div>
+      <div class="opt"><span class="dot" style="background:#f59e0b"></span>Family<span class="ck"></span></div>
+      <div class="grp">Gmail · murat@…</div>
+      <div class="opt"><span class="dot" style="background:#10b981"></span>Personal<span class="ck">✓</span></div>
+      <div class="grp">Work (Exchange)</div>
+      <div class="opt"><span class="dot" style="background:#ef4444"></span>Calendar<span class="ck"></span></div>
+      <div class="opt" style="background:none"><span class="sub">Only on this phone. Housemates choose their own.</span></div>
+    </div>
+    <div class="phone">
+      <div class="t">Settings · Calendar</div>
+      <div class="grp">Put house events in my calendars</div>
+      <div class="opt">Off<span class="ck"></span></div>
+      <div class="opt">Only the ones I add<span class="ck">✓</span></div>
+      <div class="opt">Everything I'm in<span class="ck"></span></div>
+      <div class="opt">Everything in the house<span class="ck"></span></div>
+      <div class="grp">Into</div>
+      <div class="opt">iCloud · Home, Gmail · Personal<span class="ck">›</span></div>
+    </div>
+  </div>
+  <ul>
+    <li><b>Four settings for what is copied:</b> Off, Only the ones I add, Everything I'm in (I'm an attendee or I answered, or the event names nobody, which means the whole house; the same rule as today's "Mine" filter), Everything. The default after turning it on is "Only the ones I add", the least surprising.</li>
+    <li><b>Copies follow the house event.</b> Changed time, new title, cancelled date, deleted event: the copy follows the next time the app syncs. Each copy is remembered on the phone (NestZone event id ↔ the calendar's own event id), so it is updated, never added twice.</li>
+    <li><b>The house is the source of truth.</b> Editing the copy in Google Calendar doesn't change the house event; the next sync puts it back, and the copy's notes say "Edit this in NestZone" with a link. Two-way editing between two calendars is where duplicates and lost changes come from.</li>
+    <li><b>Repeats</b> become a real repeating event (EventKit recurrence rules), and skipped dates become exceptions, so a weekly cleaning day is one series in Google, not fifty-two events.</li>
+    <li><b>Reminders</b> are copied as alarms only if the person wants ("Copy reminders", off by default), or every event alerts twice.</li>
+    <li><b>Turning it off</b> asks: "Remove the copies from your calendars?" Yes / Keep them.</li>
+  </ul>
+
+  <h2 id="in">My calendars → house</h2>
+  <p>The other direction: you pick which of your own calendars your housemates can see in NestZone, and how much of each.</p>
+  <div class="phones">
+    <div class="phone">
+      <div class="t">Share my calendars with the house</div>
+      <div class="grp">iCloud</div>
+      <div class="opt"><span class="dot" style="background:#3b82f6"></span>Home<span class="ck">Details</span></div>
+      <div class="opt"><span class="dot" style="background:#f59e0b"></span>Family<span class="ck">Off</span></div>
+      <div class="grp">Gmail</div>
+      <div class="opt"><span class="dot" style="background:#10b981"></span>Personal<span class="ck">Busy only</span></div>
+      <div class="grp">Work</div>
+      <div class="opt"><span class="dot" style="background:#ef4444"></span>Calendar<span class="ck">Busy only</span></div>
+      <div class="opt" style="background:none"><span class="sub">The next 8 weeks. Updated when you open NestZone. Last: 12 min ago.</span></div>
+    </div>
+  </div>
+  <ul>
+    <li><b>Each calendar: Off, Busy only, or Details.</b> Busy only sends start, end and all-day, nothing else, and housemates see "Murat · busy". Details adds the title and location, never notes, attendees or links. Default for a newly shared calendar is Busy only.</li>
+    <li><b>Per house.</b> Someone in two homes picks separately for each, because what you share with your partner and with your flatmates are different things.</li>
+    <li><b>A window, not a history.</b> The phone sends the next 8 weeks (a setting is not needed) and replaces it on each sync. Nothing past is kept; the server drops what's over.</li>
+    <li><b>Never a NestZone event.</b> Shared events are drawn differently (outlined, the person's colour, a small avatar), can't be edited, RSVP'd, planned or budgeted, and don't count on Today or in stats. Tapping one shows the person, time, title if shared, and "From Murat's calendar".</li>
+    <li><b>NestZone's own copies are never sent back.</b> The phone skips anything that is a copy it made, or the house would see every event twice.</li>
+    <li><b>Stopping</b> (calendar Off, sharing Off, leaving the house, deleting the account) deletes that person's shared rows from the server at once.</li>
+  </ul>
+
+  <h2 id="filter">Filter by person</h2>
+  <p>Today there's one "Mine" chip. It becomes a row of people at the start of the filter chips: Everyone, then each member's avatar. Tap one to see only them, tap more to see several, tap Everyone to clear.</p>
+  <div class="phones">
+    <div class="phone">
+      <div class="t">Calendar · filter</div>
+      <div class="chips" style="margin-bottom:12px">
+        <span class="chip">Everyone</span>
+        <span class="chip on"><span class="av" style="background:#7c3aed">M</span>Me</span>
+        <span class="chip on"><span class="av" style="background:#ec4899">Z</span>Zeynep</span>
+        <span class="chip"><span class="av" style="background:#0ea5e9">A</span>Ali</span>
+      </div>
+      <div class="ev house"><span class="when">19:00</span>Movie night <span class="av" style="background:#7c3aed">M</span><span class="av" style="background:#ec4899">Z</span></div>
+      <div class="ev mine"><span class="when">09–17</span>Zeynep · busy</div>
+      <div class="ev house"><span class="when">All day</span>Cleaning day · whole house</div>
+    </div>
+  </div>
+  <ul>
+    <li><b>Whose an event is:</b> its attendees and whoever answered; an event naming nobody is the whole house's and shows for everyone picked. Same rule as <code>isMine</code>, widened to anyone, so "Me" is exactly today's "Mine" chip, which it replaces.</li>
+    <li><b>Shared calendars</b> show under their person, so picking Zeynep shows the house events she's in and her shared busy times. A second small toggle, "Their own calendars", hides those rows for a house-only view.</li>
+    <li><b>Remembered on this phone</b> (<code>@Shared</code> app storage, like the tab segments), and the count line ("12 of 31") keeps saying what's hidden, as the filters do now.</li>
+    <li><b>Members only,</b> sorted me first, then by name. A member who left drops out of the row; their past events still show under Everyone.</li>
+    <li>This part is phone-only and can ship first, by itself, with no server change.</li>
+  </ul>
+
+  <h2 id="server">Server (add, never remove)</h2>
+  <table>
+    <tr><th>New</th><th>What</th></tr>
+    <tr><td><code>calendar_shares</code></td><td>One row per person and home: which calendars (a hashed key, the name the person sees, colour, <code>busy</code> | <code>details</code>), <code>synced_at</code>. Only its owner reads the list.</td></tr>
+    <tr><td><code>shared_busy</code></td><td>The shared events: <code>home_id</code>, <code>user_id</code>, <code>calendar_key</code>, <code>starts_at</code>, <code>ends_at</code>, <code>is_all_day</code>, <code>title?</code>, <code>location?</code>. Index <code>by_home_ends</code> so a month is one range, like <code>events.by_home_series_end</code>.</td></tr>
+    <tr><td><code>calendarShare:replace</code></td><td>The phone sends the whole window for one calendar; the server deletes that calendar's rows in the window and writes the new ones in one transaction. Idempotent, so a retry after a dropped connection is harmless. Bounded (e.g. 500 rows per calendar).</td></tr>
+    <tr><td><code>calendarShare:stop</code></td><td>Drops one calendar, or all of the caller's, in one home.</td></tr>
+    <tr><td><code>calendarShare:inRange</code></td><td>Housemates' shared rows for the screen's window, a live subscription beside <code>events:inRange</code>.</td></tr>
+    <tr><td><code>departHome</code>, account deletion, <code>purgeHomeData</code></td><td>Delete the person's shares and rows. Added to the same code paths, so leaving, being removed and deleting an account all clear it.</td></tr>
+    <tr><td>Daily cron</td><td>Deletes rows that ended more than a day ago, and every row of a share not synced for 30 days (a phone that's gone shouldn't keep saying "busy").</td></tr>
+  </table>
+  <p>No change to <code>events</code>, so every app version keeps working. Copies into the person's own calendars need nothing on the server: the id map is on the phone.</p>
+
+  <h2 id="privacy">Privacy and App Review</h2>
+  <ul>
+    <li>Reading the person's calendars is new data leaving the phone. The App Privacy label gains "Other user content" (shared calendar events, linked to the user, app functionality); the privacy page on walhallaa.com gets a paragraph; the permission text says it plainly: "NestZone puts house events in the calendars you choose, and shows your housemates the calendars you choose to share. Nothing is shared until you pick it."</li>
+    <li>Only what was picked is read, per calendar. Busy only means the title never leaves the phone.</li>
+    <li>The reviewer needs to see it work: a note in Review Notes on where it is (Settings → Calendar) and that it asks permission first.</li>
+    <li>Reports: a shared title is text another member can see, so it goes through the existing report flow like a message (one more report kind), and a hidden row stays hidden.</li>
+  </ul>
+
+  <h2 id="plus">Plus</h2>
+  <ul>
+    <li><b>Filter by person: free.</b> It's a read, and reads are never Plus. A free house with old events can still filter them.</li>
+    <li><b>Copy to my calendars and share my calendars: Plus</b> (<code>calendar</code> feature, the same gate as adding events). Both settings rows wear the Plus badge. On the server, <code>calendarShare:replace</code> goes through <code>requirePro</code>; if a house loses Plus, the rows stop updating and the 30-day cleanup clears them, and copies already in people's calendars stay as they are.</li>
+    <li>The paywall's calendar benefit line gains "in your iCloud and Google calendars too", which is the line that sells it.</li>
+  </ul>
+
+  <h2 id="steps">Order of work</h2>
+  <ol>
+    <li><b>Filter by person</b> (phone only). Small, ships in the next build, replaces the "Mine" chip.</li>
+    <li><b>House → my calendars.</b> EventKit, the permission screen, "Also add to" in the composer, the Settings page, the id map, sync on launch and on every change the house subscription delivers. Phone only, no server.</li>
+    <li><b>My calendars → house.</b> The two tables, three functions, cleanup cron, departure paths, then the phone side and the outlined drawing on every calendar mode. Backend deploys first (CLAUDE.md "Backend first").</li>
+    <li>Privacy label, the privacy page and the changelog entry ("Your iCloud and Google calendars, in NestZone"), in the release that ships step 3.</li>
+  </ol>
+  <p>Needs a real phone to test: the simulator has no Google account. Use your own iPhone with a test calendar, never Zeynep's.</p>
+
+  <h2 id="decide">Decisions for you</h2>
+  <div class="card decide">
+    <ol>
+      <li><b>EventKit only, no Google sign-in?</b> Recommended yes (above).</li>
+      <li><b>Default for "Put house events in my calendars"</b>: "Only the ones I add" (recommended), or "Everything I'm in"?</li>
+      <li><b>Default share level for a newly shared calendar</b>: Busy only (recommended) or Details?</li>
+      <li><b>Window</b>: 8 weeks ahead (recommended) or longer for planning holidays (12 weeks)?</li>
+      <li><b>Ship the person filter first, alone?</b> Recommended yes.</li>
+    </ol>
+  </div>
+</main>
+</body>
+</html>

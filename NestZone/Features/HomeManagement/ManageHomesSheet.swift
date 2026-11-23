@@ -108,12 +108,7 @@ struct ManageHomesSheet: View {
                         Image(systemName: "house.and.flag")
                     }
                     Spacer(minLength: 8)
-                    if !pro.allowsAnotherHome {
-                        Image(systemName: "lock.fill")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .accessibilityHidden(true)
-                    }
+                    PlusMark(isLocked: !pro.allowsAnotherHome, font: .footnote)
                 }
             }
             .accessibilityHint(pro.allowsAnotherHome ? "" : String(localized: L10n.proLockedHint))

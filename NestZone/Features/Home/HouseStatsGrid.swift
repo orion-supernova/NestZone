@@ -102,9 +102,7 @@ struct HouseStatsGrid: View {
                                     .font(.callout.weight(.semibold))
                                     .foregroundStyle(Palette.statEvents)
                                 Spacer()
-                                Image(systemName: "lock.fill")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                                PlusMark(isLocked: true, font: .caption.weight(.semibold))
                             }
                             Text(L10n.proTeaserValue)
                                 .font(.system(.title, design: .rounded, weight: .bold))

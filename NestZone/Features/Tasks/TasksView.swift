@@ -217,7 +217,7 @@ public struct TasksView: View {
                             // The lock is the glyph itself: a swipe button is
                             // not a view a badge can sit on.
                             Label { Text(L10n.tasksArchiveAction) } icon: {
-                                Image(systemName: pro.isPro ? "archivebox" : "lock.fill")
+                                Image(systemName: pro.isPro ? "archivebox" : PlusStyle.lockedSymbol)
                             }
                         }
                         .tint(Palette.warning)

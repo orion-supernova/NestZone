@@ -92,20 +92,9 @@ struct CaptureView: View {
                     ) {
                         store.send(.kindTapped(kind), animation: Motion.spring)
                     }
-                    // Event, Expense and Problem are Plus; the lock is the chip's own
-                    // and a tap opens the paywall (the reducer asks for it).
-                    .overlay(alignment: .topTrailing) {
-                        if kind.proFeature != nil, !store.pro.isPro {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(.secondary)
-                                .padding(3)
-                                .background(.thinMaterial, in: .circle)
-                                .offset(x: 4, y: -4)
-                                .allowsHitTesting(false)
-                                .accessibilityHidden(true)
-                        }
-                    }
+                    // Event, Expense and Problem are Plus; the badge is the chip's own
+                    // and, locked, a tap opens the paywall (the reducer asks for it).
+                    .plusBadge(isLocked: !store.pro.isPro, shown: kind.proFeature != nil)
                 }
             }
         }

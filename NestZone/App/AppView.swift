@@ -502,11 +502,8 @@ private struct SegmentSwitch: View {
                                 .font(.system(.title3, design: .rounded, weight: .bold))
                                 .foregroundStyle(isSelected ? .primary : .secondary)
                                 .lineLimit(1)
-                            if module.needsPlus, !pro.isPro {
-                                Image(systemName: "lock.fill")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(.secondary)
-                                    .accessibilityHidden(true)
+                            if module.needsPlus {
+                                PlusMark(isLocked: !pro.isPro)
                             }
                         }
                             // The name just chosen lands a touch small and
