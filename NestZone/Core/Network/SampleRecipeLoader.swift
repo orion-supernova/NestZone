@@ -11,7 +11,7 @@ enum SampleRecipeLoader {
 
     static func load() async -> [Recipe] {
         let language = await MainActor.run { L10n.locale.language.languageCode?.identifier ?? "en" }
-        let code = ["en", "tr"].contains(language) ? language : "en"
+        let code = ["en", "tr", "sv"].contains(language) ? language : "en"
         if let cached = await cache.recipes(for: code) { return cached }
 
         guard let url = Bundle.main.url(

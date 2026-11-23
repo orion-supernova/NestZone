@@ -10,6 +10,12 @@
             "state" : "new",
             "value" : "NestZone"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NestZone"
+          }
         }
       }
     },
@@ -20,6 +26,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "NestZone"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "NestZone"
           }
         }
@@ -39,6 +51,12 @@
             "state" : "translated",
             "value" : "NestZone, ev etkinliklerini seçtiğin takvimlere ekler ve ev arkadaşlarına paylaşmayı seçtiğin takvimleri gösterir. Sen seçmeden hiçbir şey paylaşılmaz."
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NestZone lägger hemmets händelser i de kalendrar du väljer och visar de du bor med de kalendrar du väljer att dela. Inget delas förrän du väljer det."
+          }
         }
       }
     },
@@ -55,6 +73,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NestZone'dan çıkmadan profil fotoğrafı çekebilmen için. Kamera yalnızca Fotoğraf Çek'e dokunduğunda açılır."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Så att du kan ta en profilbild utan att lämna NestZone. Kameran öppnas bara när du trycker på Ta en bild."
           }
         }
       }

@@ -230,6 +230,7 @@ struct MainView: View {
         .task { await store.send(.mirror(.task)).finish() }
         // And the person's own calendars, shared with the house.
         .task { await store.send(.share(.task)).finish() }
+        .task { await store.send(.sharedCopy(.task)).finish() }
         // A gated control, or a refusal from the server, asking for the paywall.
         .task {
             for await feature in PaywallBroker.shared.requests() {

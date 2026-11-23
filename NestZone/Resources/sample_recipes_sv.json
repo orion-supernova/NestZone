@@ -1,0 +1,1015 @@
+[
+    {
+        "id": "menemen",
+        "title": "Menemen",
+        "description": "Turkisk äggröra med tomat och paprika – riktig tröstfrukost",
+        "ingredients": [
+            "4 stora ägg",
+            "2 mogna tomater, tärnade",
+            "1 grön paprika, tärnad",
+            "1 liten gul lök, tärnad",
+            "3 msk olivolja",
+            "1 tsk flingsalt",
+            "1/2 tsk nymald svartpeppar",
+            "1/2 tsk chiliflakes (gärna turkisk pul biber)",
+            "2 msk hackad färsk persilja",
+            "Bröd till"
+        ],
+        "steps": [
+            "Värm olivoljan i en stor stekpanna på medelvärme",
+            "Fräs löken tills den blir mjuk och genomskinlig, 3–4 minuter",
+            "Lägg i paprikan och låt den bli mjuk, ca 5 minuter",
+            "Tillsätt tomaterna, salt, peppar och chiliflakes",
+            "Låt puttra tills tomaterna fallit sönder och det blivit en tjock sås, 8–10 minuter",
+            "Vispa upp äggen i en skål och häll ner i pannan",
+            "Rör försiktigt ihop äggen med grönsakerna med en träslev",
+            "Dra av pannan när äggen precis stelnat men fortfarande är krämiga",
+            "Strö över persilja och ät direkt med varmt bröd"
+        ],
+        "tags": [
+            "breakfast",
+            "healthy"
+        ],
+        "prepTime": 10,
+        "cookTime": 15,
+        "servings": 2,
+        "difficulty": "easy"
+    },
+    {
+        "id": "fluffy_pancakes",
+        "title": "Fluffiga amerikanska pannkakor",
+        "description": "Tjocka, luftiga pannkakor – perfekt till helgfrukosten",
+        "ingredients": [
+            "5 dl vetemjöl",
+            "2 msk socker",
+            "2 tsk bakpulver",
+            "1 tsk salt",
+            "2 stora ägg",
+            "4 dl mjölk",
+            "4 msk smält smör + lite till att steka i",
+            "1 tsk vaniljsocker",
+            "Lönnsirap till",
+            "Färska bär (om du vill)"
+        ],
+        "steps": [
+            "Blanda mjöl, socker, bakpulver och salt i en stor bunke",
+            "Vispa ihop ägg, mjölk, smält smör och vaniljsocker i en annan skål",
+            "Häll det blöta i det torra",
+            "Rör bara tills allt blandats – lite klumpar gör inget, rör inte för mycket",
+            "Värm en stekpanna på medelvärme",
+            "Häll ca 0,5 dl smet per pannkaka",
+            "Stek tills det bildas bubblor på ytan, 2–3 minuter",
+            "Vänd och stek tills de är gyllene, 1–2 minuter till",
+            "Servera direkt med lönnsirap och färska bär"
+        ],
+        "tags": [
+            "breakfast",
+            "quick"
+        ],
+        "prepTime": 10,
+        "cookTime": 15,
+        "servings": 4,
+        "difficulty": "easy"
+    },
+    {
+        "id": "overnight_oats",
+        "title": "Overnight oats",
+        "description": "Nyttig frukost som står klar i kylen när du vaknar",
+        "ingredients": [
+            "5 dl havregryn",
+            "5 dl mandeldryck",
+            "2 msk chiafrön",
+            "2 msk honung",
+            "1 tsk vaniljsocker",
+            "1/2 tsk kanel",
+            "Till toppning: färsk frukt, nötter, kokosflingor"
+        ],
+        "steps": [
+            "Blanda havregryn, mandeldryck, chiafrön, honung, vaniljsocker och kanel i en stor skål",
+            "Fördela i burkar eller matlådor",
+            "Ställ i kylen minst 4 timmar, gärna över natten",
+            "Rör om innan du äter",
+            "Toppa med frukt, nötter och kokos",
+            "Ät kallt"
+        ],
+        "tags": [
+            "breakfast",
+            "healthy",
+            "quick"
+        ],
+        "prepTime": 10,
+        "cookTime": 0,
+        "servings": 4,
+        "difficulty": "easy"
+    },
+    {
+        "id": "caesar_salad",
+        "title": "Klassisk caesarsallad",
+        "description": "Krispig romansallad med klassisk caesardressing",
+        "ingredients": [
+            "2 stora romansallatshuvuden, skurna",
+            "1 dl riven parmesan",
+            "2 brödskivor, i tärningar (till krutongerna)",
+            "Till dressingen: 3 msk majonnäs",
+            "2 vitlöksklyftor, finhackade",
+            "2 msk citronsaft",
+            "1 tsk dijonsenap",
+            "4 ansjovisfiléer (om du vill)",
+            "Salt och peppar"
+        ],
+        "steps": [
+            "Rosta brödtärningarna i en panna tills de är gyllene",
+            "Mixa allt till dressingen slätt",
+            "Lägg salladen i en stor skål",
+            "Vänd runt med dressingen så allt blir täckt",
+            "Strö över parmesan och krutonger",
+            "Servera direkt"
+        ],
+        "tags": [
+            "lunch",
+            "healthy",
+            "quick"
+        ],
+        "prepTime": 15,
+        "cookTime": 5,
+        "servings": 2,
+        "difficulty": "easy"
+    },
+    {
+        "id": "chicken_teriyaki",
+        "title": "Kyckling teriyaki",
+        "description": "Söt och salt kyckling på japanskt vis",
+        "ingredients": [
+            "4 kycklingbröstfiléer",
+            "0,5 dl japansk soja",
+            "2 msk honung",
+            "2 msk mirin",
+            "1 msk majsstärkelse (Maizena)",
+            "2 vitlöksklyftor, finhackade",
+            "1 tsk riven färsk ingefära",
+            "2 msk neutral olja",
+            "Sesamfrön och salladslök till"
+        ],
+        "steps": [
+            "Salta och peppra kycklingen",
+            "Blanda soja, honung, mirin, majsstärkelse, vitlök och ingefära",
+            "Värm oljan i en stor stekpanna",
+            "Bryn kycklingen gyllene på båda sidor",
+            "Häll i teriyakisåsen",
+            "Låt puttra tills såsen tjocknat och kycklingen är genomstekt, 5–7 minuter",
+            "Strö över sesamfrön och salladslök innan du serverar"
+        ],
+        "tags": [
+            "dinner",
+            "quick"
+        ],
+        "prepTime": 10,
+        "cookTime": 20,
+        "servings": 4,
+        "difficulty": "easy"
+    },
+    {
+        "id": "vegetable_stir_fry",
+        "title": "Wokade grönsaker",
+        "description": "Färgglada grönsaker – snabbt, gott och nyttigt",
+        "ingredients": [
+            "5 dl broccolibuketter",
+            "1 röd paprika, strimlad",
+            "1 morot, i tunna stavar",
+            "200 g champinjoner, skivade",
+            "2 vitlöksklyftor, finhackade",
+            "3 msk japansk soja",
+            "1 msk sesamolja",
+            "2 msk neutral olja"
+        ],
+        "steps": [
+            "Hetta upp en wokpanna eller stor stekpanna på hög värme",
+            "Häll i oljan och fräs vitlöken i 30 sekunder",
+            "Lägg i broccoli och morot och woka i 3 minuter",
+            "Lägg i paprika och champinjoner och woka 2 minuter till",
+            "Häll i soja och sesamolja",
+            "Woka ytterligare en minut",
+            "Servera med ris eller nudlar"
+        ],
+        "tags": [
+            "dinner",
+            "healthy",
+            "vegetarian",
+            "quick"
+        ],
+        "prepTime": 15,
+        "cookTime": 10,
+        "servings": 3,
+        "difficulty": "easy"
+    },
+    {
+        "id": "greek_salad",
+        "title": "Grekisk sallad",
+        "description": "Fräsch medelhavssallad med grönsaker och fetaost",
+        "ingredients": [
+            "3 stora tomater, i bitar",
+            "1 gurka, i bitar",
+            "1 rödlök, tunt skivad",
+            "200 g fetaost, i tärningar",
+            "1 dl kalamataoliver",
+            "0,5 dl olivolja",
+            "2 msk rödvinsvinäger",
+            "1 tsk torkad oregano",
+            "Salt och peppar"
+        ],
+        "steps": [
+            "Blanda tomat, gurka och lök i en stor skål",
+            "Lägg i fetaost och oliver",
+            "Vispa ihop olivolja, vinäger, oregano, salt och peppar",
+            "Vänd salladen med dressingen",
+            "Låt dra i 30 minuter",
+            "Servera med pitabröd"
+        ],
+        "tags": [
+            "lunch",
+            "healthy",
+            "vegetarian"
+        ],
+        "prepTime": 15,
+        "cookTime": 0,
+        "servings": 4,
+        "difficulty": "easy"
+    },
+    {
+        "id": "chicken_soup",
+        "title": "Klassisk kycklingsoppa",
+        "description": "Värmande kycklingsoppa – precis vad du behöver när du är krasslig",
+        "ingredients": [
+            "1 hel kyckling",
+            "2 morötter, i bitar",
+            "2 selleristjälkar, i bitar",
+            "1 gul lök, hackad",
+            "3 vitlöksklyftor",
+            "2 lagerblad",
+            "2,5 dl liten pasta eller äggnudlar",
+            "Färsk persilja",
+            "Salt och peppar"
+        ],
+        "steps": [
+            "Koka hela kycklingen i en stor gryta i 1 timme",
+            "Lyft upp kycklingen och dra isär köttet",
+            "Sila buljongen och häll tillbaka den i grytan",
+            "Lägg i grönsakerna och låt puttra i 20 minuter",
+            "Tillsätt pastan och koka i 10 minuter",
+            "Lägg tillbaka kycklingköttet",
+            "Smaka av med salt, peppar och persilja",
+            "Servera varm"
+        ],
+        "tags": [
+            "soup",
+            "dinner",
+            "healthy"
+        ],
+        "prepTime": 20,
+        "cookTime": 90,
+        "servings": 6,
+        "difficulty": "medium"
+    },
+    {
+        "id": "beef_tacos",
+        "title": "Tacos med köttfärs",
+        "description": "Kryddig köttfärs i tacoskal med fräscha tillbehör",
+        "ingredients": [
+            "500 g nötfärs",
+            "8 tacoskal",
+            "1 gul lök, hackad",
+            "2 vitlöksklyftor, finhackade",
+            "1 tsk spiskummin",
+            "1 tsk chilipulver",
+            "Sallad, tomat och riven ost till",
+            "Gräddfil",
+            "Avokado"
+        ],
+        "steps": [
+            "Bryn färsen i en stor stekpanna",
+            "Lägg i lök och vitlök och fräs tills de mjuknat",
+            "Tillsätt kryddorna och låt puttra i 10 minuter",
+            "Värm tacoskalen",
+            "Fyll skalen med färsen",
+            "Toppa med sallad, tomat och ost",
+            "Avsluta med gräddfil och avokado"
+        ],
+        "tags": [
+            "dinner",
+            "quick"
+        ],
+        "prepTime": 15,
+        "cookTime": 15,
+        "servings": 4,
+        "difficulty": "easy"
+    },
+    {
+        "id": "salmon_quinoa_bowl",
+        "title": "Laxbowl med quinoa",
+        "description": "Mättande och nyttig bowl med lax",
+        "ingredients": [
+            "4 laxfiléer",
+            "2,5 dl quinoa",
+            "5 dl färsk spenat",
+            "1 avokado, skivad",
+            "2,5 dl körsbärstomater",
+            "0,5 dl fetaost",
+            "Citronvinägrett",
+            "Olivolja",
+            "Salt och peppar"
+        ],
+        "steps": [
+            "Koka quinoan enligt förpackningen",
+            "Salta och peppra laxen",
+            "Stek laxen i olivolja 4–5 minuter per sida",
+            "Fördela quinoan i skålar",
+            "Lägg på spenat, avokado och tomater",
+            "Toppa med laxen och fetaost",
+            "Ringla över citronvinägrett"
+        ],
+        "tags": [
+            "lunch",
+            "healthy",
+            "dinner"
+        ],
+        "prepTime": 20,
+        "cookTime": 25,
+        "servings": 4,
+        "difficulty": "medium"
+    },
+    {
+        "id": "mac_and_cheese",
+        "title": "Mac and cheese",
+        "description": "Krämig ostmakaroner – ren tröstmat",
+        "ingredients": [
+            "500 g makaroner",
+            "1 liter mjölk",
+            "4 msk smör",
+            "4 msk vetemjöl",
+            "7 dl riven ost",
+            "1 tsk senapspulver",
+            "Salt och peppar",
+            "Ströbröd till toppen"
+        ],
+        "steps": [
+            "Koka makaronerna enligt förpackningen",
+            "Smält smöret i en stor kastrull och rör ner mjölet",
+            "Vispa i mjölken lite i taget tills såsen är slät",
+            "Tillsätt osten och senapen och rör tills osten smält",
+            "Blanda såsen med makaronerna",
+            "Häll över i en ugnsform",
+            "Strö över ströbröd",
+            "Gratinera i 20 minuter tills det är gyllene"
+        ],
+        "tags": [
+            "dinner"
+        ],
+        "prepTime": 15,
+        "cookTime": 35,
+        "servings": 6,
+        "difficulty": "medium"
+    },
+    {
+        "id": "chocolate_chip_cookies",
+        "title": "Chocolate chip cookies",
+        "description": "Sega kakor med krispig kant och kladdig choklad i mitten",
+        "ingredients": [
+            "5,5 dl vetemjöl",
+            "1 tsk bikarbonat",
+            "1 tsk salt",
+            "225 g rumsvarmt smör",
+            "1,5 dl farinsocker",
+            "1 dl strösocker",
+            "2 stora ägg",
+            "2 tsk vaniljsocker",
+            "5 dl chokladknappar"
+        ],
+        "steps": [
+            "Sätt ugnen på 190°C",
+            "Blanda mjöl, bikarbonat och salt",
+            "Vispa smör och socker pösigt",
+            "Vispa i äggen och vaniljsockret",
+            "Rör ner mjölblandningen lite i taget",
+            "Vänd ner chokladknapparna",
+            "Klicka ut skedar av degen på en plåt med bakplåtspapper",
+            "Grädda i 9–11 minuter tills de är gyllene"
+        ],
+        "tags": [
+            "dessert"
+        ],
+        "prepTime": 15,
+        "cookTime": 11,
+        "servings": 36,
+        "difficulty": "easy"
+    },
+    {
+        "id": "thai_green_curry",
+        "title": "Thailändsk grön curry",
+        "description": "Doftande kokoscurry med kyckling",
+        "ingredients": [
+            "500 g kycklinglårfilé, i bitar",
+            "400 ml kokosmjölk",
+            "3 msk grön currypasta",
+            "1 aubergine, tärnad",
+            "1 röd paprika, strimlad",
+            "Thaibasilika",
+            "Fisksås",
+            "Socker",
+            "Jasminris till"
+        ],
+        "steps": [
+            "Värm den tjocka delen av kokosmjölken i en wok",
+            "Fräs currypastan tills det doftar",
+            "Lägg i kycklingen och stek tills den nästan är klar",
+            "Häll i resten av kokosmjölken och låt puttra",
+            "Lägg i grönsakerna och låt koka tills de är mjuka",
+            "Smaka av med fisksås och socker",
+            "Rör ner thaibasilikan",
+            "Servera med jasminris"
+        ],
+        "tags": [
+            "dinner"
+        ],
+        "prepTime": 20,
+        "cookTime": 25,
+        "servings": 4,
+        "difficulty": "medium"
+    },
+    {
+        "id": "banana_smoothie",
+        "title": "Banansmoothie",
+        "description": "Snabb och nyttig frukostsmoothie",
+        "ingredients": [
+            "2 mogna bananer",
+            "2,5 dl mjölk",
+            "1 msk jordnötssmör",
+            "1 msk honung",
+            "1/2 tsk vaniljsocker",
+            "2,5 dl isbitar",
+            "Kanel (om du vill)"
+        ],
+        "steps": [
+            "Lägg allt i en mixer",
+            "Mixa tills det är slätt och krämigt",
+            "Häll upp i glas",
+            "Strö över lite kanel om du vill"
+        ],
+        "tags": [
+            "breakfast",
+            "healthy",
+            "quick"
+        ],
+        "prepTime": 5,
+        "cookTime": 0,
+        "servings": 2,
+        "difficulty": "easy"
+    },
+    {
+        "id": "grilled_cheese_sandwich",
+        "title": "Grilled cheese",
+        "description": "Krispigt bröd med smält ost – en klassiker",
+        "ingredients": [
+            "4 brödskivor",
+            "4 skivor cheddar",
+            "4 msk smör",
+            "1 tomat (om du vill)"
+        ],
+        "steps": [
+            "Bred smör på utsidan av brödskivorna",
+            "Lägg osten på den osmörade sidan",
+            "Lägg på tomat om du vill",
+            "Lägg ihop till smörgåsar",
+            "Stek i en panna på medelvärme i 3–4 minuter",
+            "Vänd och stek andra sidan",
+            "Servera när osten har smält"
+        ],
+        "tags": [
+            "lunch",
+            "quick"
+        ],
+        "prepTime": 5,
+        "cookTime": 8,
+        "servings": 2,
+        "difficulty": "easy"
+    },
+    {
+        "id": "authentic_carbonara",
+        "title": "Äkta carbonara",
+        "description": "Romersk klassiker med ägg, pecorino och guanciale – ingen grädde!",
+        "ingredients": [
+            "400 g spaghetti eller spaghettoni",
+            "150 g guanciale eller pancetta, tärnad",
+            "4 stora äggulor",
+            "1 helt stort ägg",
+            "100 g nyriven pecorino romano",
+            "Nymald svartpeppar",
+            "Grovt salt till pastavattnet"
+        ],
+        "steps": [
+            "Koka upp en stor kastrull saltat vatten",
+            "Koka spaghettin al dente (kolla tiden på paketet)",
+            "Stek under tiden guancialen i en stor stekpanna på medelvärme tills den är gyllene och krispig",
+            "Vispa ihop äggulor, ägg och riven pecorino i en skål",
+            "Mal ner rikligt med svartpeppar i äggblandningen",
+            "Spara 2,5 dl av pastavattnet innan du häller av",
+            "Lägg den varma pastan i pannan med guancialen",
+            "Dra av pannan från värmen och vänd snabbt runt pastan med äggblandningen",
+            "Häll i pastavatten lite i taget och vänd tills det blir krämigt och blankt",
+            "Servera direkt med extra pecorino och svartpeppar"
+        ],
+        "tags": [
+            "pasta",
+            "dinner"
+        ],
+        "prepTime": 10,
+        "cookTime": 15,
+        "servings": 4,
+        "difficulty": "medium"
+    },
+    {
+        "id": "margherita_pizza",
+        "title": "Pizza margherita",
+        "description": "Klassisk napolitansk pizza med San Marzano-tomater och färsk mozzarella",
+        "ingredients": [
+            "1 pizzadeg (köpt eller hemgjord)",
+            "200 g San Marzano-tomater, krossade för hand",
+            "150 g buffelmozzarella, i bitar",
+            "10–12 färska basilikablad",
+            "2 msk olivolja",
+            "1 vitlöksklyfta, finhackad",
+            "En nypa flingsalt",
+            "Durumvetemjöl att strö"
+        ],
+        "steps": [
+            "Sätt ugnen på högsta värme (250°C), med baksten om du har",
+            "Blanda de krossade tomaterna med vitlök och salt",
+            "Kavla eller tryck ut degen till en ca 30 cm stor rund botten på mjölat bord",
+            "Lägg över på bakplåtspapper eller pizzaspade med lite durumvetemjöl",
+            "Bred ut ett tunt lager tomatsås och lämna en kant på ca 2 cm",
+            "Fördela mozzarellabitarna jämnt",
+            "Ringla över olivolja",
+            "Grädda 10–12 minuter tills kanten är gyllene och osten bubblar",
+            "Ta ut och lägg på basilikan direkt",
+            "Låt svalna i 2 minuter, skär och servera"
+        ],
+        "tags": [
+            "dinner"
+        ],
+        "prepTime": 120,
+        "cookTime": 12,
+        "servings": 2,
+        "difficulty": "medium"
+    },
+    {
+        "id": "chicken_tikka_masala",
+        "title": "Chicken tikka masala",
+        "description": "Krämig och doftande brittisk-indisk curry med mör marinerad kyckling",
+        "ingredients": [
+            "500 g kycklinglårfilé, i bitar",
+            "2 dl turkisk yoghurt",
+            "2 msk tikka masala-pasta",
+            "1 stor gul lök, finhackad",
+            "3 vitlöksklyftor, finhackade",
+            "2–3 cm färsk ingefära, riven",
+            "400 g krossade tomater",
+            "2 dl vispgrädde",
+            "2 msk ghee eller neutral olja",
+            "1 tsk garam masala",
+            "Salt",
+            "Färsk koriander till",
+            "Basmatiris till"
+        ],
+        "steps": [
+            "Marinera kycklingen i yoghurt och 1 msk tikkapasta i minst 30 minuter",
+            "Värm oljan i en stor, tjockbottnad panna på ganska hög värme",
+            "Bryn kycklingen runt om, lyft upp och ställ åt sidan",
+            "Fräs löken gyllenbrun i samma panna, 8–10 minuter",
+            "Lägg i vitlök och ingefära och fräs tills det doftar, ca 1 minut",
+            "Tillsätt resten av tikkapastan och fräs 1 minut",
+            "Häll i tomaterna och låt puttra i 10 minuter tills det tjocknat",
+            "Mixa såsen slät och häll tillbaka den i pannan",
+            "Rör ner grädden och garam masala",
+            "Lägg tillbaka kycklingen och låt puttra 10–15 minuter",
+            "Strö över koriander och servera med basmatiris"
+        ],
+        "tags": [
+            "dinner"
+        ],
+        "prepTime": 45,
+        "cookTime": 30,
+        "servings": 4,
+        "difficulty": "medium"
+    },
+    {
+        "id": "turkish_kuru_fasulye",
+        "title": "Turkisk vitbönsgryta",
+        "description": "Mustig gryta på vita bönor i tomatsås – kuru fasulye",
+        "ingredients": [
+            "500 g torkade vita bönor, blötlagda över natten",
+            "1 stor gul lök, hackad",
+            "3 vitlöksklyftor, finhackade",
+            "2 msk tomatpuré",
+            "400 g krossade tomater",
+            "1 tsk paprikapulver",
+            "1/2 tsk spiskummin",
+            "3 msk olivolja",
+            "5 dl grönsaksbuljong",
+            "Salt och peppar",
+            "Färsk persilja till"
+        ],
+        "steps": [
+            "Häll av och skölj de blötlagda bönorna",
+            "Koka bönorna i nytt vatten tills de är mjuka, ca 45 minuter",
+            "Värm olivoljan i en stor gryta",
+            "Fräs löken mjuk och genomskinlig, lägg sedan i vitlöken",
+            "Rör ner tomatpurén och fräs i 2 minuter",
+            "Tillsätt krossade tomater, paprikapulver och spiskummin",
+            "Lägg i de kokta bönorna och buljongen",
+            "Låt puttra tills såsen tjocknat, 15–20 minuter",
+            "Smaka av med salt och peppar",
+            "Strö över persilja och servera med ris"
+        ],
+        "tags": [
+            "dinner",
+            "healthy"
+        ],
+        "prepTime": 20,
+        "cookTime": 60,
+        "servings": 6,
+        "difficulty": "easy"
+    },
+    {
+        "id": "japanese_ramen",
+        "title": "Japansk ramen",
+        "description": "Mustig tonkotsubuljong med färska nudlar",
+        "ingredients": [
+            "2 portioner färska ramennudlar",
+            "1 liter mustig fläsk- eller kycklingbuljong",
+            "2 löskokta ägg, halverade",
+            "100 g chashu (bräserad fläsksida), skivad",
+            "2 salladslökar, hackade",
+            "1 nori-ark",
+            "1 msk misopasta",
+            "1 tsk sesamolja",
+            "Bambuskott",
+            "Böngroddar"
+        ],
+        "steps": [
+            "Koka äggen löskokta (6,5 minuter), skala dem och lägg i marinad",
+            "Koka upp buljongen i en stor kastrull",
+            "Koka nudlarna enligt förpackningen",
+            "Vispa ut misopastan i lite av den varma buljongen",
+            "Fördela misoblandningen i två skålar",
+            "Häll på den varma buljongen",
+            "Lägg i de avrunna nudlarna",
+            "Toppa med chashu, ägg och salladslök",
+            "Lägg på nori, bambuskott och böngroddar",
+            "Ringla över sesamolja och ät direkt"
+        ],
+        "tags": [
+            "soup",
+            "dinner"
+        ],
+        "prepTime": 60,
+        "cookTime": 180,
+        "servings": 2,
+        "difficulty": "hard"
+    },
+    {
+        "id": "tacos_al_pastor",
+        "title": "Tacos al pastor",
+        "description": "Mexikanska fläsktacos med ananas och koriander",
+        "ingredients": [
+            "500 g fläskkarré eller fläskhals, tunt skivad",
+            "3 torkade guajillochilis",
+            "2 torkade anchochilis",
+            "0,5 dl achiotepasta",
+            "0,5 dl apelsinjuice",
+            "2 vitlöksklyftor",
+            "1 tsk oregano",
+            "1/2 tsk spiskummin",
+            "Majstortillas",
+            "1/2 ananas, tärnad",
+            "1/2 vit lök, hackad",
+            "Färsk koriander till",
+            "Limeklyftor"
+        ],
+        "steps": [
+            "Blötlägg chilin i varmt vatten i 15 minuter",
+            "Mixa chilin med achiote, apelsinjuice, vitlök, oregano och spiskummin",
+            "Marinera fläsket i chiliblandningen i minst 30 minuter",
+            "Hetta upp en stor stekpanna på hög värme",
+            "Stek fläsket i omgångar tills det är brynt och genomstekt",
+            "Värm tortillorna i en torr stekpanna",
+            "Fyll tortillorna med fläsket",
+            "Toppa med ananas, lök och koriander",
+            "Servera med limeklyftor och salsa verde"
+        ],
+        "tags": [
+            "dinner"
+        ],
+        "prepTime": 30,
+        "cookTime": 20,
+        "servings": 4,
+        "difficulty": "medium"
+    },
+    {
+        "id": "pad_thai",
+        "title": "Pad thai",
+        "description": "Sötsura wokade risnudlar på thailändskt vis",
+        "ingredients": [
+            "200 g breda risnudlar",
+            "2 msk tamarindpasta",
+            "2 msk fisksås",
+            "2 msk palmsocker (eller farinsocker)",
+            "2 ägg",
+            "100 g fast tofu, tärnad",
+            "2 vitlöksklyftor, finhackade",
+            "2 salladslökar, hackade",
+            "2,5 dl böngroddar",
+            "50 g rostade jordnötter, grovhackade",
+            "Limeklyftor",
+            "3 msk neutral olja"
+        ],
+        "steps": [
+            "Lägg risnudlarna i ljummet vatten tills de mjuknat",
+            "Blanda tamarindpasta, fisksås och palmsocker till en sås",
+            "Hetta upp wokpannan på hög värme",
+            "Fräs vitlöken i 30 sekunder",
+            "Lägg i tofun och stek tills den är gyllene",
+            "Skjut åt sidan och rör ihop äggen på andra sidan",
+            "Lägg i de avrunna nudlarna och såsen",
+            "Woka ihop allt i 2–3 minuter",
+            "Lägg i böngroddar och salladslök",
+            "Woka ytterligare en minut",
+            "Toppa med jordnötter och servera med limeklyftor"
+        ],
+        "tags": [
+            "dinner"
+        ],
+        "prepTime": 25,
+        "cookTime": 15,
+        "servings": 2,
+        "difficulty": "medium"
+    },
+    {
+        "id": "french_onion_soup",
+        "title": "Fransk löksoppa",
+        "description": "Bistroklassiker med karamelliserad lök och gratinerad gruyère",
+        "ingredients": [
+            "6 stora gula lökar, tunt skivade",
+            "4 msk smör",
+            "2 msk olivolja",
+            "1 tsk salt",
+            "1/2 tsk socker",
+            "1 dl torrt vitt vin",
+            "1,5 liter mustig köttbuljong",
+            "2 lagerblad",
+            "4 kvistar färsk timjan",
+            "4 tjocka skivor baguette",
+            "200 g riven gruyère"
+        ],
+        "steps": [
+            "Värm smör och olja i en stor tjockbottnad gryta",
+            "Lägg i löken, saltet och sockret",
+            "Låt löken fräsa på låg till medelvärme i 45–60 minuter, rör om då och då",
+            "Löken ska bli ordentligt karamelliserad och gyllenbrun",
+            "Häll i vinet och skrapa loss det som fastnat i botten",
+            "Tillsätt buljong, lagerblad och timjan",
+            "Låt puttra i 20 minuter så smakerna går ihop",
+            "Sätt ugnen på grill och rosta brödskivorna gyllene",
+            "Ös upp soppan i ugnssäkra skålar",
+            "Lägg en brödskiva i varje och strö över rikligt med ost",
+            "Gratinera tills osten bubblar och fått färg"
+        ],
+        "tags": [
+            "soup",
+            "dinner"
+        ],
+        "prepTime": 20,
+        "cookTime": 90,
+        "servings": 4,
+        "difficulty": "medium"
+    },
+    {
+        "id": "turkish_baklava",
+        "title": "Baklava",
+        "description": "Turkiskt smördegsbakverk i lager med pistage och honungslag",
+        "ingredients": [
+            "1 paket filodeg, tinad",
+            "400 g pistagenötter, finhackade",
+            "200 g smält smör",
+            "1 tsk kanel",
+            "Till sockerlagen: 5 dl socker",
+            "3,5 dl vatten",
+            "1 dl honung",
+            "1 tsk citronsaft",
+            "1 kanelstång"
+        ],
+        "steps": [
+            "Sätt ugnen på 175°C",
+            "Blanda de hackade pistagenötterna med kanel",
+            "Pensla en ugnsform med smält smör",
+            "Lägg i hälften av filoarken, pensla vart och ett med smör",
+            "Bred ut pistageblandningen jämnt",
+            "Lägg på resten av filoarken och pensla varje ark",
+            "Skär baklavan i romber med en vass kniv",
+            "Grädda i 45 minuter tills den är gyllenbrun",
+            "Koka under tiden ihop allt till sockerlagen i 10 minuter",
+            "Häll den varma lagen över den varma baklavan",
+            "Låt svalna helt innan du serverar, helst över natten"
+        ],
+        "tags": [
+            "dessert"
+        ],
+        "prepTime": 60,
+        "cookTime": 45,
+        "servings": 12,
+        "difficulty": "hard"
+    },
+    {
+        "id": "sushi_rolls_california",
+        "title": "California rolls",
+        "description": "Inside-out-sushi med krabba och avokado",
+        "ingredients": [
+            "5 dl sushiris, kokt och smaksatt",
+            "4 nori-ark",
+            "200 g surimi (krabbstavar), strimlade",
+            "1 avokado, skivad",
+            "1 gurka, i tunna stavar",
+            "Sesamfrön att rulla i",
+            "Japansk soja till",
+            "Wasabi och inlagd ingefära"
+        ],
+        "steps": [
+            "Klä en bambumatta med plastfolie",
+            "Lägg noriarket med blanka sidan nedåt på mattan",
+            "Bred ut ett tunt lager ris över noriarket",
+            "Strö sesamfrön över riset",
+            "Vänd så att noriarket hamnar uppåt",
+            "Lägg surimi, avokado och gurka i mitten",
+            "Rulla tätt med hjälp av bambumattan",
+            "Blöt kniven och skär rullen i 8 bitar",
+            "Gör likadant med resten",
+            "Servera med soja, wasabi och ingefära"
+        ],
+        "tags": [
+            "dinner",
+            "healthy"
+        ],
+        "prepTime": 45,
+        "cookTime": 0,
+        "servings": 4,
+        "difficulty": "hard"
+    },
+    {
+        "id": "avocado_toast_deluxe",
+        "title": "Avokadotoast deluxe",
+        "description": "Krämig avokado på surdegsbröd med lyxiga toppingar",
+        "ingredients": [
+            "2 tjocka skivor surdegsbröd",
+            "1 stor mogen avokado",
+            "1 msk färskpressad citronsaft",
+            "1/2 tsk flingsalt",
+            "1/4 tsk nymald svartpeppar",
+            "1 liten tomat, tärnad",
+            "2 msk smulad fetaost",
+            "1 msk olivolja",
+            "En nypa chiliflakes",
+            "Skott eller groddar till"
+        ],
+        "steps": [
+            "Rosta brödet gyllene och krispigt",
+            "Mosa avokadon med citronsaft, salt och peppar i en skål",
+            "Bred ut rikligt med avokadoröra på det varma brödet",
+            "Toppa med tomat och smulad feta",
+            "Ringla över olivolja",
+            "Strö över chiliflakes",
+            "Lägg på skotten",
+            "Ät direkt medan brödet är varmt"
+        ],
+        "tags": [
+            "breakfast",
+            "healthy"
+        ],
+        "prepTime": 10,
+        "cookTime": 5,
+        "servings": 2,
+        "difficulty": "easy"
+    },
+    {
+        "id": "classic_brownies",
+        "title": "Klassiska brownies",
+        "description": "Kladdiga brownies med sprucken yta",
+        "ingredients": [
+            "200 g mörk choklad, hackad",
+            "175 g smör",
+            "200 g farinsocker",
+            "3 stora ägg",
+            "75 g vetemjöl",
+            "25 g kakao",
+            "1/2 tsk salt",
+            "100 g chokladknappar (om du vill)"
+        ],
+        "steps": [
+            "Sätt ugnen på 180°C",
+            "Klä en fyrkantig form, ca 20x20 cm, med bakplåtspapper",
+            "Smält choklad och smör i vattenbad",
+            "Vispa i sockret",
+            "Vispa i äggen ett i taget",
+            "Sikta ihop mjöl, kakao och salt",
+            "Vänd ner det torra i chokladsmeten",
+            "Rör ner chokladknapparna om du har",
+            "Häll smeten i formen",
+            "Grädda 30–35 minuter, tills en sticka kommer ut ren",
+            "Låt svalna helt innan du skär"
+        ],
+        "tags": [
+            "dessert"
+        ],
+        "prepTime": 15,
+        "cookTime": 35,
+        "servings": 16,
+        "difficulty": "easy"
+    },
+    {
+        "id": "turkish_lahmacun",
+        "title": "Lahmacun",
+        "description": "Tunt, krispigt turkiskt bröd med kryddig färs",
+        "ingredients": [
+            "Till degen: 500 g vetemjöl, 1 tsk torrjäst, 1 tsk salt, ljummet vatten",
+            "Till fyllningen: 300 g lamm- eller nötfärs",
+            "2 tomater, finhackade",
+            "1 gul lök, finhackad",
+            "3 vitlöksklyftor, finhackade",
+            "2 msk tomatpuré",
+            "1 tsk paprikapulver",
+            "1/2 tsk spiskummin",
+            "0,5 dl hackad persilja",
+            "Salt och peppar",
+            "Citronklyftor till"
+        ],
+        "steps": [
+            "Gör en deg av mjöl, jäst, salt och ljummet vatten",
+            "Knåda den smidig och låt jäsa i 1 timme",
+            "Blanda allt till fyllningen i en skål",
+            "Smaka av ordentligt med salt och peppar",
+            "Sätt ugnen på högsta värme",
+            "Dela degen i 6 bitar",
+            "Kavla ut varje bit riktigt tunt, nästan genomskinligt",
+            "Bred ut ett tunt lager färs över",
+            "Grädda 8–10 minuter tills kanterna är krispiga",
+            "Servera varmt med citronklyftor och färska örter"
+        ],
+        "tags": [
+            "dinner"
+        ],
+        "prepTime": 45,
+        "cookTime": 12,
+        "servings": 6,
+        "difficulty": "medium"
+    },
+    {
+        "id": "shakshuka",
+        "title": "Shakshuka",
+        "description": "Nordafrikanska ägg som sjuder i kryddig tomatsås",
+        "ingredients": [
+            "2 msk olivolja",
+            "1 stor gul lök, hackad",
+            "1 röd paprika, tärnad",
+            "4 vitlöksklyftor, finhackade",
+            "1 tsk paprikapulver",
+            "1/2 tsk spiskummin",
+            "1/4 tsk cayennepeppar",
+            "800 g krossade tomater",
+            "1/2 tsk socker",
+            "6 ägg",
+            "100 g fetaost",
+            "Färsk persilja och koriander",
+            "Salt och peppar"
+        ],
+        "steps": [
+            "Värm oljan i en stor gjutjärnspanna",
+            "Fräs löken mjuk",
+            "Lägg i paprikan och fräs i 5 minuter",
+            "Tillsätt vitlök, paprikapulver, spiskummin och cayenne",
+            "Fräs tills det doftar, ca 1 minut",
+            "Häll i tomaterna och sockret, salta och peppra",
+            "Låt puttra tills såsen tjocknat, 10–15 minuter",
+            "Gör gropar i såsen till äggen",
+            "Knäck ner ett ägg i varje grop",
+            "Lägg på lock och låt sjuda tills äggen stelnat, 8–12 minuter",
+            "Smula över fetaosten",
+            "Strö över örter och servera med bröd"
+        ],
+        "tags": [
+            "breakfast",
+            "dinner",
+            "healthy"
+        ],
+        "prepTime": 15,
+        "cookTime": 25,
+        "servings": 4,
+        "difficulty": "medium"
+    }
+]

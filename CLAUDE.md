@@ -363,7 +363,7 @@ before changing anything here.
   `@AppStorage` as a string). `StoreDemoLaunch` opens screens ~3 s after
   launch, waiting for their data: `-openConversation first` (first group chat,
   else first chat), `-openMovieNight 1`, `-openRecipe first`, `-openIssue first`
-  (first open problem), `-calendarMode agenda|week|month`.
+  (first open problem), `-calendarMode agenda|week|month`. `-switchHome "Our Place"` opens a house by name (remembered on the device; it is how a recording gets into a screenshot house), and `-todayGlide 1` drifts Today to its foot once over five seconds, for App Store preview video (`Docs/Launch/marketing.html`).
 - **The shop is an ordinary NestZone screen that happens to sell things.**
   Glass cards on the Backdrop, the theme's accent, the app's type, SF Symbols.
   Money is `Amount` (`leaf.fill` and `sparkle`, colour on the glyph only via
@@ -1075,6 +1075,18 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   The house is the source of truth; a copy edited elsewhere is put back on
   the next sync. Nothing a NestZone copy produced is ever uploaded as busy
   time.
+- **A housemate's shared calendar can be copied, with the sharer's yes**
+  (1.13.0; `allow_copy` on `calendar_shares`, off by default, set by
+  `setCalendars`' optional `allowCopy`, absent keeps the stored value;
+  `inRange` returns it per item and `calendarShare:housemates` lists who
+  shares and whether they allow it). The server is the source of truth: a
+  copier's phone (`SharedCopyFeature`, `SharedCopyEngine`) copies only items
+  whose owner says `allow_copy`, into one dedicated calendar per housemate,
+  "NestZone · Name", and takes everything out at its next sync when the answer
+  says no. Copies are keyed by the item's fingerprint
+  (`<home>/<owner>/<calendarKey>/<startMs>-<endMs>`, marker
+  `nestzone://shared/...`, same scheme so uploads skip them); a calendar the
+  person deletes by hand is the switch going off, never recreated.
 
 ## graphify
 

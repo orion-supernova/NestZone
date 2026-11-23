@@ -1962,6 +1962,9 @@ export default defineSchema({
       }),
     ),
     window_days: v.number(),
+    /** The sharer lets housemates copy these calendars into their own phone
+     *  calendars. Absent is off; only the sharer ever sets it. */
+    allow_copy: v.optional(v.boolean()),
     /** Last `calendarShare:replace`. Absent until the first one. */
     synced_at: v.optional(v.number()),
     updated: v.number(),

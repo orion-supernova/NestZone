@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>NestZone header</title>
+<style>
+  :root {
+    --violet: #7C3AED; --indigo: #4F46E5;
+    --ink: #0f0820; --ink2: #1d0f3f;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { overflow: hidden; background: var(--ink); }
+  /* One unit = 1% of the height, or 1/200 of the width on a wider canvas, so
+     the same layout fills 5244x2950 and 3840x1646. The text and the middle of
+     the phones sit in the central ~60% x 65%; the outer phones and the foot of
+     the middle one bleed past it on purpose (App Store Connect crops this
+     image differently on each surface). */
+  body { position: relative; width: 100vw; height: 100vh;
+    background:
+      radial-gradient(ellipse 60% 90% at 20% 40%, rgba(124,58,237,.50), transparent 70%),
+      radial-gradient(ellipse 55% 80% at 82% 95%, rgba(79,70,229,.45), transparent 70%),
+      linear-gradient(160deg, var(--ink2), var(--ink)); }
+  .stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: calc(157 * var(--u)); height: calc(100 * var(--u)); }
+  .copy { position: absolute; left: 0; top: 50%; transform: translateY(-54%); width: calc(50 * var(--u)); color: #fff;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; }
+  .icon { width: calc(15 * var(--u)); height: calc(15 * var(--u)); border-radius: 22.37%;
+    box-shadow: 0 calc(1.4*var(--u)) calc(4*var(--u)) rgba(0,0,0,.45), 0 0 0 calc(.12*var(--u)) rgba(255,255,255,.14); }
+  h1 { margin-top: calc(4 * var(--u)); font-size: calc(10.5 * var(--u)); line-height: 1; font-weight: 700; letter-spacing: -.03em; }
+  .line { margin-top: calc(3 * var(--u)); font-size: calc(5.2 * var(--u)); line-height: 1.18; font-weight: 500; color: #d9ccff; letter-spacing: -.01em; }
+  .mods { margin-top: calc(5 * var(--u)); font-size: calc(2.35 * var(--u)); font-weight: 600; color: rgba(255,255,255,.62); letter-spacing: .01em; }
+  .phone { position: absolute; background: #000; border-radius: calc(5.2 * var(--u)); overflow: hidden;
+    box-shadow: 0 calc(2*var(--u)) calc(7*var(--u)) rgba(0,0,0,.55), 0 0 0 calc(.35*var(--u)) rgba(255,255,255,.16); }
+  .phone img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .p1 { left: calc(58 * var(--u)); top: calc(26 * var(--u)); width: calc(38.6 * var(--u)); height: calc(83.9 * var(--u)); }
+  .p3 { left: calc(119.4 * var(--u)); top: calc(26 * var(--u)); width: calc(38.6 * var(--u)); height: calc(83.9 * var(--u)); }
+  .p2 { left: calc(82 * var(--u)); top: calc(13 * var(--u)); width: calc(44 * var(--u)); height: calc(95.6 * var(--u)); z-index: 2; border-radius: calc(5.8 * var(--u)); }
+</style>
+<body>
+<div class="stage">
+  <div class="copy">
+    <img class="icon" src="assets/icon.png" alt="">
+    <h1>NestZone</h1>
+    <p class="line" id="line"></p>
+    <p class="mods" id="mods"></p>
+  </div>
+  <div class="phone p1"><img id="a" alt=""></div>
+  <div class="phone p3"><img id="c" alt=""></div>
+  <div class="phone p2"><img id="b" alt=""></div>
+</div>
+<script>
+  const lang = (location.hash.slice(1) || 'en').split('&')[0];
+  const T = {
+    en: ['Your home, in one shared app', 'Chores · Shopping · Plans · Money · Chat'],
+    tr: ['Evin her şeyi, tek ortak uygulamada', 'İşler · Alışveriş · Planlar · Para · Sohbet'],
+  }[lang];
+  document.getElementById('line').textContent = T[0];
+  document.getElementById('mods').textContent = T[1];
+  document.getElementById('a').src = `shots/${lang}_shop.png`;
+  document.getElementById('b').src = `shots/${lang}_today.png`;
+  document.getElementById('c').src = `shots/${lang}_cal.png`;
+  const u = Math.min(innerHeight / 100, innerWidth / 200);
+  document.documentElement.style.setProperty('--u', u + 'px');
+</script>

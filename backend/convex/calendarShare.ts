@@ -93,6 +93,7 @@ const shareDoc = v.object({
   user_id: v.id("users"),
   calendars: v.array(calendarIn),
   window_days: v.number(),
+  allow_copy: v.optional(v.boolean()),
   synced_at: v.optional(v.number()),
   updated: v.number(),
 });
@@ -107,8 +108,16 @@ const sharedRow = v.object({
   starts_at: v.number(),
   ends_at: v.number(),
   is_all_day: v.boolean(),
+  /** The owner's consent to housemates copying this calendar to their phone. */
+  allow_copy: v.boolean(),
   title: v.optional(v.string()),
   location: v.optional(v.string()),
+});
+
+const housemateShare = v.object({
+  user_id: v.id("users"),
+  allow_copy: v.boolean(),
+  calendars: v.number(),
 });
 
 type Calendar = Doc<"calendar_shares">["calendars"][number];
@@ -175,6 +184,9 @@ export const setCalendars = mutation({
     homeId: v.id("homes"),
     calendars: v.array(calendarIn),
     windowDays: v.number(),
+    // Absent keeps what is stored (off for a new share); never required, so
+    // builds from before it existed keep working.
+    allowCopy: v.optional(v.boolean()),
   },
   returns: shareDoc,
   handler: async (ctx, args) => {
@@ -189,7 +201,12 @@ export const setCalendars = mutation({
     let shareId: Id<"calendar_shares">;
     if (existing) {
       shareId = existing._id;
-      await ctx.db.patch(shareId, { calendars, window_days: windowDays, updated: now });
+      await ctx.db.patch(shareId, {
+        calendars,
+        window_days: windowDays,
+        updated: now,
+        ...(args.allowCopy !== undefined ? { allow_copy: args.allowCopy } : {}),
+      });
       // Scheduled, not inline: twenty calendars of rows would not fit one
       // transaction, and nothing waits on it — `inRange` joins on this row,
       // so a dropped calendar and a dropped title are gone from every screen
@@ -211,6 +228,7 @@ export const setCalendars = mutation({
         calendars,
         window_days: windowDays,
         updated: now,
+        ...(args.allowCopy !== undefined ? { allow_copy: args.allowCopy } : {}),
       });
     }
     const row = await ctx.db.get(shareId);
@@ -500,6 +518,7 @@ export const inRange = query({
             starts_at: r.starts_at,
             ends_at: r.ends_at,
             is_all_day: r.is_all_day === true,
+            allow_copy: share.allow_copy === true,
             ...(details && r.title !== undefined ? { title: r.title } : {}),
             ...(details && r.location !== undefined ? { location: r.location } : {}),
           });
@@ -507,6 +526,37 @@ export const inRange = query({
       }
     }
     return out.sort((a, b) => a.starts_at - b.starts_at);
+  },
+});
+
+/**
+ * Who in this house shares calendars, and whether they let housemates copy
+ * them: one row per current member other than the caller, nothing of a person
+ * the caller blocked. Never refuses for a free house. Feeds Settings'
+ * "Housemates' calendars".
+ */
+export const housemates = query({
+  args: { homeId: v.id("homes") },
+  returns: v.array(housemateShare),
+  handler: async (ctx, { homeId }) => {
+    const user = await requireUser(ctx);
+    const home = await requireHomeMember(ctx, homeId);
+    const members = new Set((home.members ?? []).filter((m) => m !== user._id));
+    if (members.size === 0) return [];
+    const [shares, blocked] = await Promise.all([
+      ctx.db
+        .query("calendar_shares")
+        .withIndex("by_home", (q) => q.eq("home_id", home._id))
+        .take(SHARES_PER_HOME),
+      blockedBy(ctx, user._id),
+    ]);
+    return shares
+      .filter((s) => members.has(s.user_id) && !blocked.has(s.user_id) && s.calendars.length > 0)
+      .map((s) => ({
+        user_id: s.user_id,
+        allow_copy: s.allow_copy === true,
+        calendars: s.calendars.length,
+      }));
   },
 });
 

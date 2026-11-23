@@ -22,6 +22,11 @@ struct CalendarSettingsView: View {
             if store.isShareOn, store.access == .granted {
                 shareCalendarsSections
                 shareOptionsSection
+                allowCopySection
+            }
+
+            if !store.copyRows.isEmpty {
+                housematesSection
             }
         }
         .scrollContentBackground(.hidden)
@@ -244,6 +249,56 @@ struct CalendarSettingsView: View {
             }
         } else {
             Text(verbatim: group.account)
+        }
+    }
+
+    /// The sharer's consent, per house. Off until they say so.
+    private var allowCopySection: some View {
+        Section {
+            Toggle(isOn: Binding(
+                get: { store.allowCopy },
+                set: { store.send(.allowCopyToggled($0)) }
+            )) {
+                PlusTitle(L10n.calendarShareAllowCopy)
+            }
+            .proLocked(.calendar, placement: .inline)
+        } footer: {
+            Text(L10n.calendarShareAllowCopyFooter)
+        }
+    }
+
+    /// Housemates who share a calendar with the house. Those who allow copies
+    /// get a switch; the rest are greyed with the reason.
+    private var housematesSection: some View {
+        Section {
+            ForEach(store.copyRows, id: \.share.id) { row in
+                if row.share.allowCopy {
+                    Toggle(isOn: Binding(
+                        get: { store.state.isCopying(row.share.id) },
+                        set: { store.send(.housemateToggled(row.share.id, $0)) }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: row.name)
+                            Text(L10n.calendarCopyHousemateToggle)
+                                .font(.footnote)
+                                .foregroundStyle(.secondaryText)
+                        }
+                    }
+                    .proLocked(.calendar, placement: .inline)
+                } else {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: row.name)
+                        Text(L10n.calendarCopyHousemateNotAllowed(row.name))
+                            .font(.footnote)
+                    }
+                    .foregroundStyle(.secondaryText)
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        } header: {
+            Text(L10n.calendarCopyHousematesHeader)
+        } footer: {
+            Text(L10n.calendarCopyHousematesFooter)
         }
     }
 

@@ -56,6 +56,77 @@
   ],
   "entries": [
     {
+      "slug": "1.13.0-swedish",
+      "version": "1.13.0",
+      "kind": "feature",
+      "title": "NestZone speaks Swedish",
+      "body": "Hej! The whole app is in Swedish now, written the way people in Sweden actually talk. Pick it in Settings, or let your phone's language decide.",
+      "highlights": [
+        "Every screen, button and message in Swedish",
+        "Starter recipes made for a Swedish kitchen",
+        "Choose the language in Settings, any time"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "NestZone artık İsveççe de konuşuyor",
+          "body": "Hej! Uygulamanın tamamı artık İsveççe, İsveç'te insanların gerçekten konuştuğu gibi yazıldı. Ayarlar'dan seç ya da telefonunun diline bırak.",
+          "highlights": [
+            "Her ekran, düğme ve mesaj İsveççe",
+            "İsveç mutfağına uygun başlangıç tarifleri",
+            "Dili istediğin zaman Ayarlar'dan değiştir"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "NestZone på svenska",
+          "body": "Hej! Hela appen finns nu på svenska, skriven som folk faktiskt pratar. Välj det under Inställningar, eller låt telefonens språk bestämma.",
+          "highlights": [
+            "Varje skärm, knapp och meddelande på svenska",
+            "Recept att börja med, gjorda för ett svenskt kök",
+            "Byt språk under Inställningar när du vill"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.13.0-copy-housemates-calendars",
+      "version": "1.13.0",
+      "kind": "feature",
+      "title": "Put a housemate's calendar in yours",
+      "body": "If a housemate shares their calendar and says it's okay, you can add it to your own phone calendar with one switch. It gets its own calendar, so you can hide it with one tap whenever you like. It's up to the person sharing: it's off until they allow it. Thanks, Micke, for the idea and the help!",
+      "highlights": [
+        "Sharing your calendar? Turn on \"Housemates can add my calendar to theirs\" in Settings > Calendar, and only then can they copy it",
+        "Housemates' calendars in Settings > Calendar: flip \"Add to my calendar\" and it shows up as \"NestZone · Name\"",
+        "Turn it off, or have them turn it off, and the copy goes away",
+        "Thanks, Micke!"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Ev arkadaşının takvimi seninkine gelsin",
+          "body": "Bir ev arkadaşın takvimini paylaşıyor ve izin veriyorsa, tek bir düğmeyle kendi telefon takvimine ekleyebilirsin. Kendi takvimi olur, istediğin an tek dokunuşla gizlersin. Karar paylaşan kişide: o izin vermeden kapalı. Fikir ve yardım için Micke'ye teşekkürler!",
+          "highlights": [
+            "Takvimini paylaşıyorsan Ayarlar > Takvim'de \"Ev arkadaşların takvimimi kendi takvimine ekleyebilsin\"i aç, ancak o zaman kopyalayabilirler",
+            "Ayarlar > Takvim'de Ev arkadaşlarının takvimleri: \"Takvimime ekle\"yi aç, \"NestZone · İsim\" diye gelir",
+            "Sen kapatırsan ya da o kapatırsan kopya silinir",
+            "Micke'ye teşekkürler!"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Lägg in kalendern från någon du bor med",
+          "body": "Om någon du bor med delar sin kalender och säger okej kan du lägga in den i telefonens kalender med en knapp. Den får en egen kalender, så du kan dölja den med ett tryck när du vill. Det är den som delar som bestämmer: av tills de tillåter det. Tack, Micke, för idén och hjälpen!",
+          "highlights": [
+            "Delar du din kalender? Slå på ”De du bor med får lägga in min kalender hos sig” under Inställningar > Kalender, först då kan de kopiera den",
+            "Kalendrar från de du bor med, under Inställningar > Kalender: slå på ”Lägg till i min kalender” så dyker den upp som ”NestZone · Namn”",
+            "Stäng av, eller låt dem stänga av, så försvinner kopian",
+            "Tack, Micke!"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.13.0-pinned-notes",
       "version": "1.13.0",
       "kind": "feature",
@@ -77,6 +148,17 @@
             "Sabit notların Bugün'de yapışkan kağıt gibi görünür (Özelleştir'den kapatabilirsin)",
             "Notlar Ev'e taşındı, Listeler'de artık sadece Görevler ve Alışveriş var",
             "Evdeki herkes sabitleyebilir, kaldırabilir"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Fäst en anteckning, och Anteckningar flyttar till Hemmet",
+          "body": "Håll på en anteckning för att fästa den. Fästa lappar ligger först på tavlan och syns på Idag, så wifi-lösenordet är bara en blick bort. Anteckningar finns nu under Hemmet, bredvid Pengar och Fel & fix.",
+          "highlights": [
+            "Håll på en anteckning och tryck på Fäst: den hamnar överst på tavlan",
+            "Idag visar dina fästa lappar som post-it-lappar (stäng av det i Anpassa)",
+            "Anteckningar har flyttat till Hemmet, och Listor är nu bara Sysslor och Handla",
+            "Alla i hushållet kan fästa och lossa"
           ]
         }
       ]
@@ -106,6 +188,18 @@
             "Takvimi kişiye göre süz: sadece sen, bir ev arkadaşın ya da birkaçı",
             "Sen seçmeden hiçbir şeyin paylaşılmaz"
           ]
+        },
+        {
+          "language": "sv",
+          "title": "Dina iCloud- och Google-kalendrar, i NestZone",
+          "body": "Hemmets händelser kan nu hamna i dina egna kalendrar, de som redan finns i din iPhone, som iCloud, Gmail eller jobbet. Du kan också visa de du bor med när du är upptagen, från de kalendrar du väljer, och se bara en persons planer med ett tryck.",
+          "highlights": [
+            "När du lägger till en händelse väljer du vilka av dina kalendrar den också ska in i",
+            "Ändras tiden eller blir det inställt, så följer dina kopior med",
+            "Dela vilken kalender du vill med hushållet: bara upptagen, eller med rubriker",
+            "Filtrera kalendern på person: bara du, en du bor med eller några stycken",
+            "Inget av ditt delas förrän du själv väljer det"
+          ]
         }
       ]
     },
@@ -131,6 +225,17 @@
             "Grup sohbetlerini sustur, biri senden bahsedince yine haberin olsun",
             "Sessiz saatler: bildirimler sessizce gelir, sabahı bekler",
             "Seçimin tüm telefonlarında ve evlerinde geçerli"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Välj vilka notiser du får",
+          "body": "Nu finns en Notiser-sida i Inställningar. Stäng av det du inte behöver, en i taget eller en hel grupp på en gång, och ställ in tysta timmar så att inget surrar på natten. Klockan sparar fortfarande allt, så du missar inget.",
+          "highlights": [
+            "Slå på eller av varje sort: sysslor, kalender, pengar, fel & fix, chattar, Nestie och mer",
+            "Tysta gruppchattar men märk ändå när någon nämner dig",
+            "Tysta timmar: notiserna kommer tyst och väntar till morgonen",
+            "Det du väljer följer med till alla dina telefoner och hem"
           ]
         }
       ]
@@ -159,6 +264,18 @@
             "Bugün'den açtığın etkinlik ya da sorun artık tek başına açılıyor, Geri de geldiğin yere götürüyor",
             "Üstteki çubuk düzeldi: her ekranın düğmeleri zilin yanında, ekle düğmesi en yakında",
             "Görevler, Filmler ve Takvim'e üst çubukta arama eklendi"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Fixar och förbättringar",
+          "body": "Små grejer som gör appen trevligare att använda.",
+          "highlights": [
+            "Texten är lättare att läsa i alla teman, både ljust och mörkt",
+            "Lagt till en liten märkning som visar vad som ingår i NestZone Plus",
+            "Skärmar öppnas bättre: en händelse eller ett fel du öppnar från Idag öppnas för sig, och Tillbaka tar dig dit du var",
+            "Toppfältet är bättre: varje skärms knappar sitter bredvid klockan, med lägg till-knappen närmast",
+            "Lagt till sök i toppfältet i Sysslor, Film och Kalender"
           ]
         }
       ]
@@ -190,6 +307,19 @@
             "Plus bitse de Takvim, Finans, Sorunlar ve Mesajlar'a yazdıkların yerinde kalır, okumaya devam edersin",
             "Plus'ta neler var, Ayarlar'dan bak; oradan yönet ya da geri yükle"
           ]
+        },
+        {
+          "language": "sv",
+          "title": "NestZone Plus: en prenumeration för hela hushållet",
+          "body": "Kalender, Pengar, Fel & fix, hushållets chatt, inköpslistan efter avdelning, egna filmlistor, ”Arkivera nu”, att vara med i fler än ett hem och barnförbjudna filmer ingår nu i NestZone Plus. En person prenumererar och alla i hushållet får det, och första veckan är gratis på årsplanen. Allt annat är fortfarande gratis, och inget du redan skrivit försvinner: tar Plus slut kan du fortfarande läsa allt.",
+          "highlights": [
+            "En prenumeration räcker för hela hushållet, vem som än betalar, och upp till två hem",
+            "Ingår i Plus: Kalender, Pengar och räkningar, Fel & fix, hushållets chatt, inköpslistan efter avdelning, egna filmlistor, Arkivera nu, ett andra hem, barnförbjudna filmer",
+            "Alltid gratis: sysslor, inköpslistor, anteckningar, recept och mat, filmkväll, Nestie",
+            "Första veckan gratis på årsplanen",
+            "Utan Plus går det som redan finns i Kalender, Pengar, Fel & fix och chatten fortfarande att läsa",
+            "Se allt som ingår i Plus, och hantera eller återställ det, i Inställningar"
+          ]
         }
       ]
     },
@@ -219,6 +349,19 @@
             "Yapraklar evin emeğiyle gelir; Işıltılar isteğe bağlı, ekstralar için",
             "Bayramlarda bedava süsler var, mevsim değişince görünüşü de değişiyor",
             "Hazır olunca da, yenisine oy verme zamanı gelince de Nestie haber veriyor"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Säg hej till Nestie, hemmets egen växt eller lilla djur",
+          "body": "Nu odlar ni något tillsammans: en växt eller ett litet djur som bor på Idag. Allt ni gör hemma, som att bocka av sysslor, handla och planera maten, får den att växa. Vattna den, klä upp den, samla alla ni odlat i albumet och se den ändras med vädret och högtiderna. Nestie är gratis. Gnistor köps i paket och är bara för extra grejer som nytt pynt och nya djur.",
+          "highlights": [
+            "Välj en växt eller ett djur och få den att växa tillsammans, gratis",
+            "Alla i hushållet hjälper till, bara genom att få saker gjorda",
+            "Vattna den, pynta den och spara alla ni odlat i albumet",
+            "Löv tjänar hushållet ihop; Gnistor är frivilliga, för extra grejer",
+            "Högtider ger gratis pynt, och årstiden ändrar hur den ser ut",
+            "Nestie säger till när den är redo, och när det är dags att rösta om nästa"
           ]
         }
       ]
@@ -250,6 +393,19 @@
             "Sohbetin içinde arama yap",
             "Mesajı ya da fotoğrafı şikayet et, birini engelle; şikayetlere 24 saat içinde bakılır"
           ]
+        },
+        {
+          "language": "sv",
+          "title": "Hushållets chatt har blivit bättre",
+          "body": "Reagera på ett meddelande, svara på ett visst, fäst det alla jämt frågar efter och @nämn någon så att bara de får notisen. Och om någon går över gränsen kan du anmäla ett meddelande eller en bild, eller blockera personen.",
+          "highlights": [
+            "Håll på ett meddelande för att reagera med 👍 ❤️ 😂 😮 😢 🙏",
+            "Svep på ett meddelande för att svara på det",
+            "Fäst ett meddelande överst, till exempel wifi-lösenordet",
+            "Skriv @ för att nämna någon; bara de får en notis",
+            "Sök i en chatt",
+            "Anmäl ett meddelande eller en bild, eller blockera någon; anmälningar kollas inom 24 timmar"
+          ]
         }
       ]
     },
@@ -279,6 +435,19 @@
             "Yanlış ev kodu girince alanın iki kere sallanması düzeldi",
             "Işıltı mağazası yenilendi; küçük bir başlangıç paketi ve arada yeni bir paket eklendi",
             "E-posta adresin ve telefonun artık evdekilere gitmiyor"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Fixar och förbättringar",
+          "body": "Små grejer som gör appen trevligare att använda.",
+          "highlights": [
+            "Animationer och vibrationer har fått en översyn i hela appen",
+            "När ni gör upp blir det nu en ”Kvitt!”-stämpel",
+            "Fixat tryck som vibrerade två gånger",
+            "Fixat att en fel hemkod skakade två gånger",
+            "Gnistbutiken är omgjord, med ett litet startpaket och ett nytt mellanpaket",
+            "Din mejladress och ditt telefonnummer delas inte längre med de du bor med"
           ]
         }
       ]
@@ -312,6 +481,20 @@
             "Bugünkü görevleri Bugün ekranından çıkmadan işaretle",
             "Bugün'de ne görüneceğini Ayarlar'dan seç: Otomatik, Her zaman ya da Kapalı"
           ]
+        },
+        {
+          "language": "sv",
+          "title": "Flikar som är logiska, och en lugnare Idag",
+          "body": "Listor, Planer och Hemmet håller ihop det som hör ihop, så inget behöver en egen flik längre. Idag sammanfattar dagen i en mening och visar bara det som faktiskt behöver någon. När det inte finns något att göra säger den bara det.",
+          "highlights": [
+            "Listor: sysslor, inköpslistan och anteckningar, ett tryck ifrån varandra",
+            "Planer: kalendern, maten och filmerna på ett ställe",
+            "Hemmet: pengar, och det som behöver fixas",
+            "Tomma delar på Idag syns inte alls",
+            "Något akut får ett stort kort, med ”Jag fixar det” direkt på",
+            "Bocka av dagens sysslor utan att lämna Idag",
+            "Välj vad Idag visar i Inställningar: Automatiskt, Alltid eller Av"
+          ]
         }
       ]
     },
@@ -340,6 +523,18 @@
             "Akşamları çubuk bu akşam ne yiyeceğinizi soruyor",
             "Bu akşamın yemeğinin Yemekler'in en üstünde kendi kartı da var"
           ]
+        },
+        {
+          "language": "sv",
+          "title": "Lägg till vad som helst, från vilken flik som helst",
+          "body": "Nu finns ett fält ovanför flikarna. Det visar det som händer just nu, som kvällens middag eller händelsen som snart börjar, och med dess + lägger du till vad som helst utan att gå någonstans. Skriv som när du sms:ar de du bor med: ”mjölk, ägg, bröd” hamnar på inköpslistan, ”kranen i badrummet läcker” blir ett fel att fixa.",
+          "highlights": [
+            "Skriv några saker med kommatecken så hamnar alla på listan",
+            "Den fattar datum: ”ta ut soporna imorgon” hamnar på imorgon",
+            "Du ser vart det tar vägen innan det sparas, och ändrar med ett tryck",
+            "På kvällen frågar fältet vad det blir till middag",
+            "Kvällens middag har också ett eget kort överst i Mat"
+          ]
         }
       ]
     },
@@ -361,6 +556,15 @@
           "highlights": [
             "Not, parça ve ziyaret ekranları artık düzgün kapanıyor",
             "Çökmeyi yakalayıp paylaştığı için @goksu.ozahishali'ya teşekkürler!"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Ingen krasch längre när du stänger en anteckning på ett fel",
+          "body": "Appen kunde krascha när du stängde en statusanteckning, en reservdelslista eller ett besök på ett fel i hemmet. Fixat. Stort tack till @goksu.ozahishali som hittade det på TestFlight!",
+          "highlights": [
+            "Anteckningar, reservdelar och besök stängs som de ska",
+            "Tack, @goksu.ozahishali, för att du hittade kraschen och sa till!"
           ]
         }
       ]
@@ -388,6 +592,17 @@
             "Bitmiş etkinlikten kalan alışverişi tek dokunuşla listeden sil",
             "Tekrarlanan etkinliği düzenleyince eski tarihleri artık silinmiyor"
           ]
+        },
+        {
+          "language": "sv",
+          "title": "Tidigare händelser, och vad de kostade",
+          "body": "Öppna en händelse som är över så ser du hur det gick: vad det kostade mot budgeten, vilka som sa att de skulle komma, vad som köptes och vad som stod på menyn. Inget mer pillande med planen för något som redan hänt. Det finns också en ny sida för tidigare händelser i kalendern: allt hushållet gjort i år, och vad varje sak kostade.",
+          "highlights": [
+            "Avslutade händelser kan inte flyttas eller planeras om av misstag",
+            "Kom kvittot efter festen? Du kan fortfarande lägga till det",
+            "Rensa det som blev över på inköpslistan från en gammal händelse med ett tryck",
+            "När du ändrar en återkommande händelse försvinner inte längre de tidigare datumen"
+          ]
         }
       ]
     },
@@ -409,6 +624,15 @@
           "highlights": [
             "Zile dokununca artık hata çıkmıyor",
             "Güncelleme notları uygulamanın dilinde"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Klockan funkar igen, och kan turkiska nu",
+          "body": "Tryckte du på klockan fick du ett felmeddelande i stället för det som hänt hemma. Fixat. Uppdateringsnoterna är också översatta nu, så de visas på det språk appen är inställd på.",
+          "highlights": [
+            "Inget felmeddelande längre när du trycker på klockan",
+            "Uppdateringsnoterna följer appens språk"
           ]
         }
       ]
@@ -436,6 +660,17 @@
             "İşlere, paraya, alışverişe ve diğerlerine göre filtrele",
             "Uygulama haberleri ayrı sekmede, akan musluğun önüne geçmiyor",
             "Kendi yaptıkların rozeti yakmıyor"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Alla dina notiser, på ett ställe",
+          "body": "Notiser försvinner inte längre när du sveper bort dem. Tryck på klockan på Hem-fliken för att bläddra bakåt i vad alla har gjort, filtrera fram det du bryr dig om och se vad som är nytt i appen. Två flöden, en knapp.",
+          "highlights": [
+            "Svept bort en notis? Den finns kvar i klockan",
+            "Filtrera på sysslor, pengar, handla och mer",
+            "Appnyheter får en egen flik, så de aldrig gömmer den läckande kranen",
+            "Det du själv gör tänder inte märket"
           ]
         }
       ]

@@ -11,7 +11,10 @@ import Foundation
 /// newest entry; admin accounts only, and nothing is saved), `-openEvent first`
 /// (the next event, opened from Today as a page), `-pinnedDemo 1` (two made-up
 /// pinned notes on Today, in memory only: nothing is written, and the next push
-/// from the server replaces them).
+/// from the server replaces them), `-switchHome "Our Place"` (opens that home
+/// by name, as the Switch Home sheet would, and stops there: the choice is
+/// remembered on the device, so the next launch starts in it and the other
+/// hooks follow on that launch).
 ///
 /// Data arrives over live subscriptions, so each step waits (up to ten
 /// seconds) for the thing it is about to open rather than guessing a delay.
@@ -19,10 +22,18 @@ import Foundation
 enum StoreDemoLaunch {
     static func run(_ store: StoreOf<MainFeature>) async {
         let defaults = UserDefaults.standard
-        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode", "openSettings", "openCustomize", "dockMode", "openInbox", "openUpdatesEditor", "openEvent", "pinnedDemo", "dockNotice"]
+        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode", "openSettings", "openCustomize", "dockMode", "openInbox", "openUpdatesEditor", "openEvent", "pinnedDemo", "dockNotice", "switchHome"]
             .contains { defaults.object(forKey: $0) != nil }
         guard requested else { return }
         try? await Task.sleep(for: .seconds(3))
+
+        if let name = defaults.string(forKey: "switchHome") {
+            await wait { store.settings.homes.contains { $0.name == name } }
+            if let home = store.settings.homes.first(where: { $0.name == name }) {
+                store.send(.settings(.delegate(.homeSwitched(home.id))))
+            }
+            return
+        }
 
         // `-dockMode auto | always:dinner|event|movie | addOnly | off`
         if let raw = defaults.string(forKey: "dockMode") {

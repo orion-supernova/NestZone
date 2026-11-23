@@ -97,6 +97,8 @@ public struct MainFeature: Sendable {
         public var mirror: CalendarMirrorFeature.State
         /// The person's own calendars shared with this house, for the same life.
         public var share: CalendarShareFeature.State
+        /// Housemates' calendars copied into this person's own calendar app.
+        public var sharedCopy: SharedCopyFeature.State
 
         /// The paywall, opened on whatever was reached for. Presented by
         /// whichever sheet is on top, or the tab bar when none is
@@ -145,6 +147,7 @@ public struct MainFeature: Sendable {
             self.moderation = ModerationSessionFeature.State(homeID: homeID, userID: user?.id)
             self.mirror = CalendarMirrorFeature.State(homeID: homeID, userID: user?.id)
             self.share = CalendarShareFeature.State(homeID: homeID, userID: user?.id)
+            self.sharedCopy = SharedCopyFeature.State(homeID: homeID)
         }
 
         /// How many people have to say yes for a movie-night match.
@@ -207,6 +210,7 @@ public struct MainFeature: Sendable {
         case moderation(ModerationSessionFeature.Action)
         case mirror(CalendarMirrorFeature.Action)
         case share(CalendarShareFeature.Action)
+        case sharedCopy(SharedCopyFeature.Action)
         case paywall(PresentationAction<PaywallFeature.Action>)
         /// A gated control, or the server, asked for the paywall.
         case paywallRequested(ProFeature?)
@@ -249,6 +253,7 @@ public struct MainFeature: Sendable {
         Scope(state: \.moderation, action: \.moderation) { ModerationSessionFeature() }
         Scope(state: \.mirror, action: \.mirror) { CalendarMirrorFeature() }
         Scope(state: \.share, action: \.share) { CalendarShareFeature() }
+        Scope(state: \.sharedCopy, action: \.sharedCopy) { SharedCopyFeature() }
 
         Reduce { state, action in
             switch action {
@@ -364,7 +369,8 @@ public struct MainFeature: Sendable {
             case .settings(.delegate(.calendarSettingsChanged)):
                 return .merge(
                     .send(.mirror(.settingsChanged)),
-                    .send(.share(.settingsChanged))
+                    .send(.share(.settingsChanged)),
+                    .send(.sharedCopy(.settingsChanged))
                 )
 
             // Opened over Settings, which stays underneath.
@@ -492,12 +498,13 @@ public struct MainFeature: Sendable {
                     // with it and stops creating and updating without it.
                     .send(.mirror(.settingsChanged)),
                     // Sharing is Plus too: it starts and stops with it.
-                    .send(.share(.settingsChanged))
+                    .send(.share(.settingsChanged)),
+                    .send(.sharedCopy(.settingsChanged))
                 )
 
             case .home, .today, .lists, .plans, .house, .messages,
                  .settings, .inbox, .customize, .capture, .companion,
-                 .proStatus, .moderation, .mirror, .share, .paywall:
+                 .proStatus, .moderation, .mirror, .share, .sharedCopy, .paywall:
                 return .none
             }
         }

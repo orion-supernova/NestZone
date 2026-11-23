@@ -11,6 +11,7 @@ public enum AppLanguage: String, CaseIterable, Sendable, Codable, Identifiable {
     case system
     case english = "en"
     case turkish = "tr"
+    case swedish = "sv"
 
     public var id: String { rawValue }
 
@@ -20,6 +21,7 @@ public enum AppLanguage: String, CaseIterable, Sendable, Codable, Identifiable {
         case .system: nil
         case .english: Locale(identifier: "en")
         case .turkish: Locale(identifier: "tr")
+        case .swedish: Locale(identifier: "sv")
         }
     }
 
@@ -32,6 +34,7 @@ public enum AppLanguage: String, CaseIterable, Sendable, Codable, Identifiable {
         case .system: String(localized: "language.system", defaultValue: "System", bundle: .main)
         case .english: "English"
         case .turkish: "Türkçe"
+        case .swedish: "Svenska"
         }
     }
 
@@ -54,6 +57,7 @@ public enum AppLanguage: String, CaseIterable, Sendable, Codable, Identifiable {
         case .system: "globe"
         case .english: "🇬🇧"
         case .turkish: "🇹🇷"
+        case .swedish: "🇸🇪"
         }
     }
 }

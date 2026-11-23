@@ -41,6 +41,8 @@ public struct CalendarShareFeature: Sendable {
         /// The list last given to the server in this run, so an unchanged list
         /// is not sent on every pass.
         var declared: [SharedCalendarEntry]?
+        /// The copy consent last given to the server in this run.
+        var declaredAllowCopy: Bool?
         /// When each calendar was last uploaded, and under which settings.
         var uploads: [String: Upload] = [:]
         /// The server refused uploads for Plus: nothing more is tried until
@@ -78,6 +80,7 @@ public struct CalendarShareFeature: Sendable {
 
         public struct Outcome: Equatable, Sendable {
             var declared: [SharedCalendarEntry]?
+            var declaredAllowCopy: Bool?
             var uploads: [String: State.Upload] = [:]
             var blocked = false
             /// When something was held back by the five-minute rule, the time
@@ -168,7 +171,7 @@ public struct CalendarShareFeature: Sendable {
                     }
                     raw = choices.raw
                 }
-                if all { state.declared = nil; state.uploads = [:] }
+                if all { state.declared = nil; state.declaredAllowCopy = nil; state.uploads = [:] }
                 return .none
 
             case let .calendarsLoaded(calendars, trigger):
@@ -199,21 +202,26 @@ public struct CalendarShareFeature: Sendable {
                     SharedCalendarEntry(key: $0.key, name: $0.title, colorHex: $0.colorHex, level: $1)
                 }
                 let previous = state.declared
+                let allowCopy = house.allowCopy
+                let previousAllow = state.declaredAllowCopy
                 let uploads = state.uploads
                 let current = now
 
                 return .run { send in
-                    var result = Action.Outcome(declared: previous, uploads: uploads)
+                    var result = Action.Outcome(
+                        declared: previous, declaredAllowCopy: previousAllow, uploads: uploads
+                    )
                     do {
                         // The list first: the server refuses an upload for a
                         // calendar it has not been told about.
-                        if entries != previous {
+                        if entries != previous || allowCopy != previousAllow {
                             if entries.isEmpty {
                                 try await calendarShare.stop(homeID, nil)
                             } else {
-                                _ = try await calendarShare.setCalendars(homeID, entries, weeks * 7)
+                                _ = try await calendarShare.setCalendars(homeID, entries, weeks * 7, allowCopy)
                             }
                             result.declared = entries
+                            result.declaredAllowCopy = allowCopy
                             // A different list is a different share: everything
                             // is sent again.
                             result.uploads = [:]
@@ -249,7 +257,7 @@ public struct CalendarShareFeature: Sendable {
                             let items = Self.items(byCalendar[calendar.id] ?? [], level: level)
                             let stamp = Self.stamp(calendar, level, weeks: weeks, from: from)
                             do {
-                                _ = try await replace(homeID, calendar.key, from, to, items, entries, weeks)
+                                _ = try await replace(homeID, calendar.key, from, to, items, entries, weeks, allowCopy)
                                 result.uploads[calendar.key] = .init(at: current, stamp: stamp)
                             } catch let error as AppError {
                                 if case .proRequired = error {
@@ -270,6 +278,7 @@ public struct CalendarShareFeature: Sendable {
             case let .finished(result):
                 state.isSyncing = false
                 state.declared = result.declared
+                state.declaredAllowCopy = result.declaredAllowCopy
                 state.uploads = result.uploads
                 if result.blocked { state.isBlocked = true }
                 let again = finishedAgain(&state)
@@ -318,12 +327,13 @@ public struct CalendarShareFeature: Sendable {
         _ to: Date,
         _ items: [SharedItemUpload],
         _ entries: [SharedCalendarEntry],
-        _ weeks: Int
+        _ weeks: Int,
+        _ allowCopy: Bool?
     ) async throws -> Int {
         do {
             return try await calendarShare.replace(homeID, key, from, to, items)
         } catch AppError.refused(.notFound) {
-            _ = try await calendarShare.setCalendars(homeID, entries, weeks * 7)
+            _ = try await calendarShare.setCalendars(homeID, entries, weeks * 7, allowCopy)
             return try await calendarShare.replace(homeID, key, from, to, items)
         }
     }

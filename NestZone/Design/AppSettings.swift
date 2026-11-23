@@ -272,6 +272,12 @@ extension SharedKey where Self == AppStorageKey<String>.Default {
         Self[.appStorage("appCalendarShareChoices"), default: ""]
     }
 
+    /// Which housemates' calendars are copied into this phone's calendar, per
+    /// house: `CalendarCopyChoices` as JSON. Per device, off by default.
+    public static var calendarCopyChoicesRaw: Self {
+        Self[.appStorage("appCalendarCopyChoices"), default: ""]
+    }
+
     /// What a calendar that turns up after sharing was set up gets: `off`,
     /// `busy` or `details`. Busy only, which shows when and never what.
     public static var calendarShareDefaultLevelRaw: Self {
