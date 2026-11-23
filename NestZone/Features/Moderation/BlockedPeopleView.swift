@@ -64,5 +64,6 @@ struct BlockedPeopleView: View {
             .alert($store.scope(state: \.alert, action: \.alert))
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
     }
 }

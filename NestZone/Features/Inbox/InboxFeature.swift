@@ -62,6 +62,10 @@ public struct InboxFeature: Sendable {
         // MARK: The changelog
 
         public var updates: IdentifiedArrayOf<AppUpdate> = []
+        /// The same entries, shelved by version. Stored for the reason
+        /// `sections` is: grouping and ordering do not belong in `body`.
+        public var pinnedUpdates: [AppUpdate] = []
+        public var updateGroups: [UpdateGroup] = []
         public var isLoadingUpdates = true
 
         // MARK: Read state
@@ -313,7 +317,10 @@ public struct InboxFeature: Sendable {
             case .panelTask:
                 return feedEffect(&state)
 
-            case let .activityUpdated(page):
+            case var .activityUpdated(page):
+                #if DEBUG
+                page.rows = InboxRunsDemo.adding(to: page.rows)
+                #endif
                 state.isLoadingActivity = false
                 state.retentionDays = page.retentionDays
 
@@ -349,6 +356,7 @@ public struct InboxFeature: Sendable {
             case let .updatesUpdated(updates):
                 state.isLoadingUpdates = false
                 state.updates = IdentifiedArray(uniqueElements: updates)
+                (state.pinnedUpdates, state.updateGroups) = UpdateGroup.shelve(updates)
                 return markUpdatesRead(&state)
 
             case let .updatesFailed(error):
@@ -582,10 +590,14 @@ public struct ActivitySection: Identifiable, Equatable, Sendable {
     /// Midnight of the day, which is both the identity and the sort key.
     public let id: Date
     public let rows: [HomeActivity]
+    /// The rows with same-person, same-kind stretches folded together
+    /// (`ActivityRun`). Built once with the section, never in `body`.
+    public let runs: [ActivityRun]
 
     public init(id: Date, rows: [HomeActivity]) {
         self.id = id
         self.rows = rows
+        self.runs = ActivityRun.merge(rows)
     }
 
     /// Groups rows that are already newest-first into days, preserving order.

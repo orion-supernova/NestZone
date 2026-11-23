@@ -42,6 +42,7 @@ struct CaptureView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
         // A swipe down is a cancel, and cancelling takes the in-flight write
         // with it: while something is being saved, the sheet stays.
         .interactiveDismissDisabled(store.isSaving)
@@ -226,8 +227,8 @@ struct CaptureView: View {
             .month(.abbreviated)
             .locale(L10n.locale)
         return date.hasTime
-            ? date.date.formatted(day.hour().minute())
-            : date.date.formatted(day)
+            ? date.date.formatted(.startOfLine(day.hour().minute()))
+            : date.date.formatted(.startOfLine(day))
     }
 
     // MARK: Add

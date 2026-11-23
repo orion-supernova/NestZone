@@ -1419,6 +1419,7 @@ struct FinanceDestinations: ViewModifier {
             )) { store in
                 PayBillSheet(store: store)
                     .presentationDetents([.medium, .large])
+                    .presentationContentInteraction(.scrolls)
             }
             .hostedSheet(item: $store.scope(
                 state: \.destination?.settleUp,

@@ -96,6 +96,7 @@ struct EventComposerSheet: View {
             .hostedSheet(item: $store.scope(state: \.picker, action: \.picker)) { store in
                 RecipePickerSheet(store: store)
                     .presentationDetents([.medium, .large])
+                    .presentationContentInteraction(.scrolls)
             }
         }
     }

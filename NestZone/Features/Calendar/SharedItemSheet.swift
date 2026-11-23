@@ -56,6 +56,7 @@ struct SharedItemSheet: View {
             .animation(Motion.spring, value: store.notice)
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
     }
 
     private var tint: Color { MemberTint.color(for: store.item.userID.rawValue) }

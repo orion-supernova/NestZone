@@ -50,6 +50,10 @@ struct CompanionSheet: View {
         #endif
         .presentationDetents(isTall ? [.large] : isLab ? [Self.peek, .medium, .large] : [.medium, .large],
                              selection: isTall ? .constant(.large) : $detent)
+        // Content scrolls before the sheet moves: with the default, a swipe on
+        // the Holidays list at half height resized or closed the sheet and the
+        // list never scrolled. The grabber and the bar still drag it.
+        .presentationContentInteraction(.scrolls)
         // The Lab is for watching the card while it changes: the screen behind
         // it stays live (Today scrolls) up to half height.
         .presentationBackgroundInteraction(isLab ? .enabled(upThrough: .medium) : .automatic)

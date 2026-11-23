@@ -600,7 +600,7 @@ private struct CuisineTile: View {
             .padding(.vertical, 14)
             .contentShape(.rect)
         }
-        .buttonStyle(.pressable)
+        .buttonStyle(.pressableQuiet)
         .background {
             if isSelected {
                 RoundedRectangle(cornerRadius: Metrics.tightRadius, style: .continuous)
@@ -618,7 +618,7 @@ private struct CuisineTile: View {
             }
         }
         .animation(Motion.spring, value: isSelected)
-        .sensoryFeedback(.selection, trigger: isSelected)
+        .sensoryFeedback(.selection, trigger: isSelected) { _, now in now }
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 }
@@ -656,10 +656,10 @@ private struct RecipeChoice: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(.rect)
         }
-        .buttonStyle(.pressable)
+        .buttonStyle(.pressableQuiet)
         .glassCard(cornerRadius: Metrics.tightRadius)
         .animation(Motion.spring, value: isSelected)
-        .sensoryFeedback(.selection, trigger: isSelected)
+        .sensoryFeedback(.selection, trigger: isSelected) { _, now in now }
     }
 }
 

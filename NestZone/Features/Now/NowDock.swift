@@ -90,6 +90,9 @@ public struct NowDock: View {
         }
         .padding(.leading, 14)
         .padding(.trailing, 6)
+        // The dock is a fixed-height accessory, so it cannot grow with the
+        // type the way a row can; capped, its line fits in every language.
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
         // The whole capsule is ours to touch: a press in the padding or the
         // gap never falls through to the tab bar or the screen behind.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -241,7 +244,7 @@ public struct NowDock: View {
             Text(L10n.dockMovieRoundSubtitle)
         case let .nextEvent(occurrence):
             Text(occurrence.start.formatted(
-                Date.FormatStyle().weekday(.abbreviated).hour().minute().locale(L10n.locale)
+                .startOfLine(Date.FormatStyle().weekday(.abbreviated).hour().minute().locale(L10n.locale))
             ))
         case .noEvent:
             Text(L10n.dockNoEventSubtitle)

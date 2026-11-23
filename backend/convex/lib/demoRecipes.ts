@@ -452,3 +452,218 @@ export const DEMO_RECIPES_EN: DemoRecipe[] = [
     "difficulty": "easy"
   }
 ];
+
+// Swedish: the house's own everyday food first (köttbullar, pytt, lax,
+// kladdkaka), written in Swedish rather than taken off the English, then
+// three of the bundled samples (sample_recipes_sv.json) as they read there.
+export const DEMO_RECIPES_SV: DemoRecipe[] = [
+  {
+    key: "kottbullar",
+    title: "Köttbullar med potatismos",
+    description: "Hemmagjorda köttbullar med gräddsås, mos och lingon – som hos mormor",
+    ingredients: [
+      "500 g blandfärs",
+      "1 gul lök, finhackad",
+      "0,5 dl ströbröd",
+      "1 dl mjölk eller grädde",
+      "1 ägg",
+      "Salt och vitpeppar",
+      "Smör till stekning",
+      "1 kg mjölig potatis",
+      "2 dl grädde och 2 dl buljong till såsen",
+      "1 msk soja",
+      "Lingonsylt och pressgurka till"
+    ],
+    steps: [
+      "Blanda ströbröd och mjölk, låt svälla i några minuter",
+      "Fräs löken mjuk i lite smör och låt svalna",
+      "Rör ihop färs, lök, ägg och ströbrödssmeten, smaka av med salt och peppar",
+      "Rulla små bullar med blöta händer",
+      "Stek köttbullarna i smör i omgångar tills de är bruna runt om",
+      "Koka potatisen mjuk, häll av och mosa med smör och varm mjölk",
+      "Häll grädde och buljong i stekpannan, låt koka ihop och smaka av med soja",
+      "Servera med mos, sås, lingonsylt och pressgurka"
+    ],
+    tags: ["dinner"],
+    prep_time: 25,
+    cook_time: 30,
+    servings: 4,
+    difficulty: "medium"
+  },
+  {
+    key: "pytt_i_panna",
+    title: "Pytt i panna",
+    description: "Tärnad potatis, korv och lök i stekpannan, med stekt ägg och rödbetor",
+    ingredients: [
+      "800 g kokt potatis, gärna från igår",
+      "300 g falukorv eller rester av kött",
+      "1 gul lök",
+      "Smör och rapsolja",
+      "4 ägg",
+      "Salt och svartpeppar",
+      "Inlagda rödbetor",
+      "Hackad persilja"
+    ],
+    steps: [
+      "Skär potatis, korv och lök i små tärningar",
+      "Stek potatisen gyllene i smör och olja, det får ta sin tid",
+      "Lägg i lök och korv och stek tills allt har fått fin färg",
+      "Smaka av med salt och peppar",
+      "Stek äggen i en egen panna",
+      "Servera pytten med ett stekt ägg, rödbetor och persilja"
+    ],
+    tags: ["dinner"],
+    prep_time: 15,
+    cook_time: 25,
+    servings: 4,
+    difficulty: "easy"
+  },
+  {
+    key: "ugnslax",
+    title: "Ugnsbakad lax med dillpotatis",
+    description: "Lax i ugnen med citron och dill – vardagsmiddag som känns lite fin",
+    ingredients: [
+      "600 g laxfilé",
+      "1 citron",
+      "1 knippe dill",
+      "800 g fast potatis",
+      "2 dl crème fraiche",
+      "1 tsk dijonsenap",
+      "Salt och svartpeppar"
+    ],
+    steps: [
+      "Sätt ugnen på 175°C",
+      "Koka potatisen i saltat vatten med några dillkvistar",
+      "Lägg laxen i en ugnsform, salta, peppra och lägg på citronskivor",
+      "Baka laxen i mitten av ugnen i cirka 20 minuter",
+      "Rör ihop crème fraiche, senap, hackad dill och lite citronsaft",
+      "Servera laxen med dillpotatis och kall sås"
+    ],
+    tags: ["dinner", "healthy"],
+    prep_time: 10,
+    cook_time: 25,
+    servings: 4,
+    difficulty: "easy"
+  },
+  {
+    key: "kladdkaka",
+    title: "Kladdkaka",
+    description: "Kladdig chokladkaka med vispad grädde – fikats bästa vän",
+    ingredients: [
+      "100 g smör",
+      "2 ägg",
+      "2,5 dl strösocker",
+      "1,5 dl vetemjöl",
+      "4 msk kakao",
+      "2 tsk vaniljsocker",
+      "1 krm salt",
+      "Vispad grädde och bär till"
+    ],
+    steps: [
+      "Sätt ugnen på 175°C",
+      "Smörj och bröa en form med löstagbar kant",
+      "Smält smöret och låt det svalna lite",
+      "Rör ihop ägg och socker, men vispa inte",
+      "Blanda i mjöl, kakao, vaniljsocker och salt",
+      "Rör ner smöret och häll smeten i formen",
+      "Grädda i cirka 15 minuter, den ska vara kladdig i mitten",
+      "Låt kakan stelna i kylen och servera med grädde och bär"
+    ],
+    tags: ["dessert"],
+    prep_time: 10,
+    cook_time: 15,
+    servings: 8,
+    difficulty: "easy"
+  },
+  {
+    key: "authentic_carbonara",
+    title: "Äkta carbonara",
+    description: "Romersk klassiker med ägg, pecorino och guanciale – ingen grädde!",
+    ingredients: [
+      "400 g spaghetti eller spaghettoni",
+      "150 g guanciale eller pancetta, tärnad",
+      "4 stora äggulor",
+      "1 helt stort ägg",
+      "100 g nyriven pecorino romano",
+      "Nymald svartpeppar",
+      "Grovt salt till pastavattnet"
+    ],
+    steps: [
+      "Koka upp en stor kastrull saltat vatten",
+      "Koka spaghettin al dente (kolla tiden på paketet)",
+      "Stek under tiden guancialen i en stor stekpanna på medelvärme tills den är gyllene och krispig",
+      "Vispa ihop äggulor, ägg och riven pecorino i en skål",
+      "Mal ner rikligt med svartpeppar i äggblandningen",
+      "Spara 2,5 dl av pastavattnet innan du häller av",
+      "Lägg den varma pastan i pannan med guancialen",
+      "Dra av pannan från värmen och vänd snabbt runt pastan med äggblandningen",
+      "Häll i pastavatten lite i taget och vänd tills det blir krämigt och blankt",
+      "Servera direkt med extra pecorino och svartpeppar"
+    ],
+    tags: ["pasta", "dinner"],
+    prep_time: 10,
+    cook_time: 15,
+    servings: 4,
+    difficulty: "medium"
+  },
+  {
+    key: "greek_salad",
+    title: "Grekisk sallad",
+    description: "Fräsch medelhavssallad med grönsaker och fetaost",
+    ingredients: [
+      "3 stora tomater, i bitar",
+      "1 gurka, i bitar",
+      "1 rödlök, tunt skivad",
+      "200 g fetaost, i tärningar",
+      "1 dl kalamataoliver",
+      "0,5 dl olivolja",
+      "2 msk rödvinsvinäger",
+      "1 tsk torkad oregano",
+      "Salt och peppar"
+    ],
+    steps: [
+      "Blanda tomat, gurka och lök i en stor skål",
+      "Lägg i fetaost och oliver",
+      "Vispa ihop olivolja, vinäger, oregano, salt och peppar",
+      "Vänd salladen med dressingen",
+      "Låt dra i 30 minuter",
+      "Servera med pitabröd"
+    ],
+    tags: ["lunch", "healthy", "vegetarian"],
+    prep_time: 15,
+    cook_time: 0,
+    servings: 4,
+    difficulty: "easy"
+  },
+  {
+    key: "thai_green_curry",
+    title: "Thailändsk grön curry",
+    description: "Doftande kokoscurry med kyckling",
+    ingredients: [
+      "500 g kycklinglårfilé, i bitar",
+      "400 ml kokosmjölk",
+      "3 msk grön currypasta",
+      "1 aubergine, tärnad",
+      "1 röd paprika, strimlad",
+      "Thaibasilika",
+      "Fisksås",
+      "Socker",
+      "Jasminris till"
+    ],
+    steps: [
+      "Värm den tjocka delen av kokosmjölken i en wok",
+      "Fräs currypastan tills det doftar",
+      "Lägg i kycklingen och stek tills den nästan är klar",
+      "Häll i resten av kokosmjölken och låt puttra",
+      "Lägg i grönsakerna och låt koka tills de är mjuka",
+      "Smaka av med fisksås och socker",
+      "Rör ner thaibasilikan",
+      "Servera med jasminris"
+    ],
+    tags: ["dinner"],
+    prep_time: 20,
+    cook_time: 25,
+    servings: 4,
+    difficulty: "medium"
+  }
+];

@@ -749,6 +749,7 @@ struct PollKindSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
     }
 
     @ViewBuilder
@@ -848,6 +849,7 @@ struct PollSummarySheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
     }
 }
 
@@ -907,6 +909,7 @@ struct PollHistorySheet: View {
             .animation(Motion.spring, value: store.expanded)
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
     }
 }
 

@@ -500,6 +500,7 @@ struct NewConversationSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
     }
 }
 

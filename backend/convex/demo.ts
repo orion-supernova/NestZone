@@ -1,14 +1,15 @@
 // App Store screenshot households.
 //
-// Two made-up homes — "Bizim Ev" in Turkish and "Our Place" in English — each
-// with the owner plus three made-up members, filled so every screen looks
+// Three made-up homes — "Bizim Ev" in Turkish, "Our Place" in English and
+// "Hemma hos oss" in Swedish — each with the owner plus three made-up members, filled so every screen looks
 // lived in: chores and who did them, the shopping list, notes, recipes and
 // this week's dinners, the calendar, the film lists and an open movie round,
 // the money, the house problems, the group chat and Nestie.
 //
 // Internal only: nothing here is reachable from a phone. Run from the CLI:
 //
-//   npx convex run demo:seedScreenshotHomes '{"ownerUserId":"<id>"}'
+//   npx convex run demo:seedScreenshotHomes '{"ownerUserId":"<id>"}'        (tr + en)
+//   npx convex run demo:seedScreenshotHome '{"ownerUserId":"<id>","lang":"sv","tzOffset":180}'
 //   npx convex run demo:listScreenshotHomes '{}'
 //   npx convex run demo:purgeScreenshotHome '{"homeId":"<id>"}'
 //
@@ -21,7 +22,10 @@
 //
 // Every date is relative to the moment of seeding, in the house's offset
 // (`tzOffset`, minutes east of UTC; Istanbul's 180 by default, which is the
-// device the screenshots are taken on). Reminders are configured but already
+// device the screenshots are taken on). The Swedish house is seeded with the
+// same 180 on purpose: its dates have to line up with that device's clock, not
+// with Stockholm's (60 in winter, 120 in summer). Pass 60 only for a phone set
+// to Swedish time. Reminders are configured but already
 // marked sent, so the daily sweeps never nudge the owner about a made-up bill.
 
 import { v, Infer } from "convex/values";
@@ -48,13 +52,13 @@ import {
 } from "./lib/companion";
 import { CATALOG } from "./lib/companionData";
 import { __growth, GrowthEntry } from "./companion";
-import { DEMO_RECIPES_EN, DEMO_RECIPES_TR, DemoRecipe } from "./lib/demoRecipes";
+import { DEMO_RECIPES_EN, DEMO_RECIPES_SV, DEMO_RECIPES_TR, DemoRecipe } from "./lib/demoRecipes";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-const lang = v.union(v.literal("tr"), v.literal("en"));
+const lang = v.union(v.literal("tr"), v.literal("en"), v.literal("sv"));
 type Lang = Infer<typeof lang>;
 
 const film = v.object({
@@ -507,8 +511,157 @@ const EN: Copy = {
   ],
 };
 
-const COPY: Record<Lang, Copy> = { tr: TR, en: EN };
-const RECIPES: Record<Lang, DemoRecipe[]> = { tr: DEMO_RECIPES_TR, en: DEMO_RECIPES_EN };
+// Swedish, written as a Swedish house would write it, not off the English one.
+// Phone numbers are 0-filled like the others: plainly not anybody's.
+const SV: Copy = {
+  home: "Hemma hos oss",
+  region: "SE",
+  currency: "SEK",
+  members: ["Elin", "Oskar", "Linnea"],
+  open: [
+    { title: "Städa badrummet", type: "cleaning", who: 1, due: 0, hour: 20, priority: "medium" },
+    { title: "Ta ut soporna", type: "cleaning", who: 2, due: 0, hour: 21, priority: "high" },
+    { title: "Hänga tvätten", type: "general", who: 0, due: -1, hour: 19, priority: "medium" },
+    { title: "Vattna blommorna", type: "general", who: 3, due: 1, hour: 10, priority: "low" },
+    { title: "Hämta paketet", type: "general", who: 1, due: 1, hour: 18, priority: "medium" },
+    { title: "Byta packningen i kranen", type: "maintenance", who: 3, due: 2, hour: 12, priority: "high", issue: true },
+    { title: "Rensa ur kylen", type: "cleaning", who: null, due: 3, hour: 12, priority: "low" },
+    { title: "Byta filtret i köksfläkten", type: "maintenance", who: 2, due: 5, hour: 12, priority: "medium" },
+  ],
+  done: [
+    { title: "Tömma diskmaskinen", type: "cleaning", who: 1, ago: 0 },
+    { title: "Byta lakan", type: "cleaning", who: 0, ago: 0 },
+    { title: "Dammsuga vardagsrummet", type: "cleaning", who: 3, ago: 1 },
+    { title: "Torka av köksbänken", type: "cleaning", who: 2, ago: 1 },
+    { title: "Storhandla", type: "shopping", who: 0, ago: 2 },
+    { title: "Tvätta mörk tvätt", type: "general", who: 1, ago: 2 },
+    { title: "Sopa balkongen", type: "cleaning", who: 3, ago: 3 },
+    { title: "Putsa badrumsspegeln", type: "cleaning", who: 2, ago: 3 },
+    { title: "Panta burkarna", type: "general", who: 0, ago: 4 },
+    { title: "Byta glödlampan i hallen", type: "maintenance", who: 2, ago: 5 },
+    { title: "Rengöra ugnen", type: "cleaning", who: 1, ago: 5 },
+    { title: "Skaka mattorna", type: "cleaning", who: 3, ago: 6 },
+    { title: "Veckohandla", type: "shopping", who: 1, ago: 7 },
+    { title: "Diska", type: "cleaning", who: 0, ago: 7 },
+    { title: "Damma hyllorna", type: "cleaning", who: 3, ago: 8 },
+    { title: "Rensa golvbrunnen", type: "maintenance", who: 2, ago: 9 },
+    { title: "Ta ut soporna", type: "cleaning", who: 1, ago: 10 },
+    { title: "Våttorka golven", type: "cleaning", who: 0, ago: 11 },
+  ],
+  shopping: [
+    { name: "Havremjölk", category: "groceries", quantity: 2, by: 1 },
+    { name: "Ägg, 12-pack", category: "groceries", by: 0 },
+    { name: "Falukorv", category: "groceries", by: 3 },
+    { name: "Hushållsost", category: "groceries", by: 2 },
+    { name: "Bryggkaffe", category: "groceries", quantity: 2, by: 1 },
+    { name: "Knäckebröd", category: "groceries", bought: true, by: 3 },
+    { name: "Soppåsar", category: "household", by: 0 },
+    { name: "Hushållspapper", category: "household", bought: true, by: 2 },
+    { name: "Diskmedel", category: "cleaning", by: 1 },
+    { name: "Tvättmedel", category: "cleaning", by: 2 },
+  ],
+  eventItem: "Parmesan",
+  issueItem: "Packning till kranen",
+  notes: [
+    { text: "Wi-Fi: HemmaHosOss_5G\nLösenord: kanelbulle-42 🔑", by: 2, ago: 20 },
+    { text: "Hyresvärden, felanmälan: 08-000 00 00\nHyran ska vara betald senast den sista varje månad.", by: 0, ago: 14 },
+    { text: "Tvättstugan: vår tid är tisdag 17–21 🧺\nGlöm inte att torka ur luddfiltret efteråt!", by: 1, ago: 3 },
+  ],
+  tonight: "kottbullar",
+  partyMenu: ["authentic_carbonara", "greek_salad", "kladdkaka"],
+  week: [
+    { kind: "cook", recipe: "pytt_i_panna" },
+    { kind: "order", cuisine: "italian", place: "Pizzerian på hörnet" },
+    { kind: "cook", recipe: "thai_green_curry" },
+    { kind: "out", cuisine: "japanese", place: "Sushistället nere på gatan" },
+    { kind: "order", cuisine: "mexican", place: "Tacostället" },
+    { kind: "cook", recipe: "ugnslax" },
+    { kind: "cook", recipe: "pytt_i_panna" },
+  ],
+  party: {
+    title: "Middag hos oss 🍝",
+    notes: "Ta med en flaska var 🍷 Vi sätter oss vid bordet halv åtta.",
+    location: "Hemma",
+    budget: 120_000,
+  },
+  birthday: { title: "Linneas födelsedag 🎂", who: 3 },
+  movieNight: "Filmkväll 🍿",
+  calendar: [
+    { title: "Konsert 🎶", kind: "concert", day: -11, hour: 21, hours: 3, by: 2, location: "Södra Teatern" },
+    { title: "Middag hos grannarna", kind: "dining", day: -6, hour: 19, hours: 3, by: 1 },
+    { title: "Yoga 🧘", kind: "sports", day: 0, hour: 19, hours: 1, by: 0 },
+    { title: "Mamma och pappa kommer", kind: "visit", day: 2, hour: 13, hours: 4, by: 0 },
+    { title: "Söndagsfika ☕", kind: "dining", day: "sunday", hour: 15, hours: 2, by: 1 },
+    { title: "Tandläkaren – Oskar", kind: "appointment", day: 5, hour: 15, minute: 30, hours: 1, by: 2 },
+    { title: "Yoga 🧘", kind: "sports", day: 7, hour: 19, hours: 1, by: 0 },
+    { title: "IKEA-tur 🛋️", kind: "general", day: 9, hour: 10, hours: 3, by: 3 },
+    { title: "Bio 🎬", kind: "cinema", day: 12, hour: 20, minute: 30, hours: 3, by: 3 },
+    { title: "Hyran ska in", kind: "deadline", day: 16, hour: 0, hours: 24, allDay: true, by: 0 },
+  ],
+  plumber: { title: "Rörmokare – kranen i köket", vendor: "Rör-Janne", phone: "070-000 00 01", location: "Köket" },
+  issues: {
+    tap: {
+      title: "Kranen i köket droppar",
+      details: "Den droppar fast den är avstängd, och man hör det hela natten. Antagligen packningen.",
+      estimate: 150_000,
+      comments: ["Dropp, dropp, dropp hela natten 😩", "Jag köper en ny packning imorgon", "Rörmokaren kommer imorgon kl. 10"],
+      booked: "Besök bokat",
+    },
+    light: {
+      title: "Lampan i hallen har gått",
+      details: "Det händer ingenting när man trycker på knappen.",
+      resolution: "Ny glödlampa, vi tog en LED 💡",
+    },
+    door: {
+      title: "Balkongdörren gnisslar",
+      details: "Den gnisslar varje gång man öppnar den, behöver lite olja.",
+    },
+  },
+  expenses: [
+    { title: "Storhandling", category: "groceries", by: 0, amount: 138_450, at: 0.15 },
+    { title: "Elräkning", category: "utilities", by: 1, amount: 124_500, at: 0.25 },
+    { title: "Bredband", category: "utilities", by: 2, amount: 44_900, at: 0.3, link: "internet" },
+    { title: "Veckohandling", category: "groceries", by: 2, amount: 96_730, at: 0.45 },
+    { title: "Städgrejer", category: "household", by: 1, amount: 23_850, at: 0.55 },
+    { title: "Glödlampor", category: "household", by: 0, amount: 8_990, at: 0.6, link: "light" },
+    { title: "Pizzakväll", category: "dining", by: 3, amount: 52_000, at: 0.7 },
+    { title: "Streamingtjänst", category: "subscriptions", by: 3, amount: 13_900, at: 0.8 },
+    { title: "Rörmokare, utryckning", category: "household", by: 1, amount: 95_000, at: 0.95, link: "tap" },
+  ],
+  settlement: { amount: 25_000, note: "Matpengar" },
+  history: [0.85, 0.95, 1.1, 0.9, 1.0],
+  squareUp: "Månadens avräkning",
+  bills: { internet: { title: "Bredband", amount: 44_900 }, rent: { title: "Hyra", amount: 1_240_000 } },
+  budgets: { groceries: 600_000, dining: 200_000 },
+  wishlist: "Vill se",
+  watched: "Har sett",
+  friday: "Fredagsmys",
+  round: "Animerat",
+  chat: {
+    title: "Hemma 🏡",
+    lines: [
+      { by: 1, text: "Vem äter hemma ikväll? 🍲", ago: 190 },
+      { by: 2, text: "Jag är hemma runt sju", ago: 182 },
+      { by: 0, text: "Jag är hemma, gör köttbullar 😋", ago: 175 },
+      { by: 3, text: "Gött! Ska jag köpa med lingonsylt?", ago: 160 },
+      { by: 1, text: "Ja tack, och havremjölken är slut", ago: 151 },
+      { by: 2, text: "Jag fixar vinet till lördag 🍷", ago: 95 },
+      { by: 3, text: "Förresten, rörmokaren kommer imorgon kl. 10", ago: 40 },
+      { by: 1, text: "Äntligen slut på dropp dropp dropp 🙌", ago: 12 },
+    ],
+  },
+  activity: [
+    { by: 1, category: "tasks", title: "Elin bockade av en syssla", body: "Tömma diskmaskinen", ago: 70 },
+    { by: 3, category: "shopping", title: "Linnea la till på listan", body: "Falukorv", ago: 130 },
+    { by: 2, category: "finance", title: "Oskar la till en utgift", body: "Veckohandling", ago: 300 },
+    { by: 3, category: "issues", title: "Rörmokaren är bokad", body: "Rörmokare – kranen i köket", ago: 420 },
+    { by: 1, category: "calendar", title: "Elin la till en händelse", body: "Middag hos oss 🍝", ago: 1500 },
+    { by: 2, category: "movies", title: "Oskar la till en film", body: "Parasite — Vill se", ago: 2900 },
+  ],
+};
+
+const COPY: Record<Lang, Copy> = { tr: TR, en: EN, sv: SV };
+const RECIPES: Record<Lang, DemoRecipe[]> = { tr: DEMO_RECIPES_TR, en: DEMO_RECIPES_EN, sv: DEMO_RECIPES_SV };
 
 // ---------------------------------------------------------------------------
 // The house's clock: days and hours in its own offset, as the phone counts them.
@@ -740,7 +893,10 @@ export const seedHousehold = internalMutation({
       details: text.issues.tap.details,
       area: "kitchen",
       category: "plumbing",
-      severity: "urgent",
+      // Major, not urgent: Today's big red card is for an urgent problem or a
+      // late bill, and the first screenshot should open on a calm day. The tap
+      // stays the problems board's top open row, booked and someone on it.
+      severity: "major",
       status: "scheduled",
       is_open: true,
       reported_by: who(1),
@@ -1174,7 +1330,9 @@ export const seedHousehold = internalMutation({
     // rotated, each month squared up on the 28th the way finance:summary's
     // plan would, so the history chart has a shape and today's balances are
     // only this month's.
-    const step = text.currency === "TRY" ? 1_000 : 10;
+    // Round scaled amounts the way people's receipts look: whole tens of
+    // lira, whole kronor, ten cents.
+    const step = ({ TRY: 1_000, SEK: 100 } as Record<string, number>)[text.currency] ?? 10;
     for (const [n, factor] of text.history.entries()) {
       const back = text.history.length - n;
       const start = Date.UTC(c.y, c.m - back, 1) - tzOffset * MINUTE;
@@ -1543,7 +1701,11 @@ export const seedScreenshotHome = internalAction({
   },
 });
 
-/** Both screenshot households, Turkish and English, for the same owner. */
+/**
+ * The Turkish and English screenshot households, for the same owner. The
+ * Swedish one is seeded on its own (`seedScreenshotHome` with `lang: "sv"`),
+ * so re-running this never files a second copy of a house already there.
+ */
 export const seedScreenshotHomes = internalAction({
   args: { ownerUserId: v.id("users"), tzOffset: v.optional(v.number()) },
   returns: v.array(seedOneResult),

@@ -20,6 +20,8 @@ public struct NotesView: View {
     /// phone's.
     @State private var savedAt = Date.distantPast
     @State private var thuds = 0
+    /// Pins and unpins the person made, for their own light tap.
+    @State private var pins = 0
 
     public init(store: StoreOf<NotesFeature>) {
         self.store = store
@@ -73,6 +75,7 @@ public struct NotesView: View {
             if !loading, baseline == nil { baseline = Set(store.notes.ids) }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: thuds)
+        .sensoryFeedback(.impact(weight: .light), trigger: pins)
     }
 
     /// Arrived after the board loaded and not yet landed.
@@ -109,7 +112,10 @@ public struct NotesView: View {
                         author: store.state.authorName(for: note),
                         canEdit: store.state.canEdit(note),
                         isNew: fresh,
-                        onPin: { store.send(.pinTapped(note.id)) },
+                        onPin: {
+                            pins += 1
+                            store.send(.pinTapped(note.id))
+                        },
                         onEdit: { store.send(.editTapped(note.id)) },
                         onDelete: { store.send(.deleteTapped(note.id)) }
                     )

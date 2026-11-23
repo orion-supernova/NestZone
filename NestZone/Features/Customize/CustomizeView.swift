@@ -134,7 +134,11 @@ public struct CustomizeView: View {
                 }
                 .accessibilityIdentifier("Customize.\(section.rawValue)")
             }
-            .onMove { store.send(.sectionsMoved(from: $0, to: $1)) }
+            .onMove {
+                // A row set down in a new place, the person's own.
+                picks += 1
+                store.send(.sectionsMoved(from: $0, to: $1))
+            }
         } header: {
             Text(L10n.customizeTodayTitle)
         } footer: {

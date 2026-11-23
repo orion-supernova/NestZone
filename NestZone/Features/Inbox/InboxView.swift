@@ -95,6 +95,12 @@ struct InboxPanel: View {
     @State private var selectionTaps = 0
     /// Your own taps on "Mark all read".
     @State private var markReadTaps = 0
+    /// Stretches the person has opened. Held here, not in the rows, so a lazy
+    /// stack recycling one off screen does not close it behind them.
+    @State private var openRuns: Set<ActivityID> = []
+    /// Versions the person has opened or closed against their default.
+    @State private var versionOverrides: [String: Bool] = [:]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack {
@@ -104,7 +110,7 @@ struct InboxPanel: View {
                 VStack(spacing: 0) {
                     switcher
                         .padding(.horizontal, Metrics.screenPadding)
-                        .padding(.bottom, 12)
+                        .padding(.bottom, 8)
 
                     // Switched on the tab rather than paged, because the two
                     // sides have different scroll positions, different filters
@@ -275,7 +281,7 @@ struct InboxPanel: View {
             } else {
                 let starts = rowStarts(store.sections)
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: Metrics.sectionSpacing, pinnedViews: []) {
+                    LazyVStack(alignment: .leading, spacing: 14, pinnedViews: []) {
                         ForEach(Array(store.sections.enumerated()), id: \.element.id) { index, section in
                             daySection(section, startingAt: starts[index])
                         }
@@ -325,7 +331,7 @@ struct InboxPanel: View {
                 }
             }
             .padding(.horizontal, Metrics.screenPadding)
-            .padding(.bottom, 12)
+            .padding(.bottom, 8)
         }
         .scrollIndicators(.hidden)
         .scrollClipDisabled()
@@ -337,25 +343,64 @@ struct InboxPanel: View {
     /// thirty blur passes for a list that reads perfectly well as a grouped
     /// one, and the day is the unit somebody is actually scanning for.
     private func daySection(_ section: ActivitySection, startingAt start: Int) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(section.title)
                 .groupLabel()
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
-                ForEach(Array(section.rows.enumerated()), id: \.element.id) { index, row in
-                    ActivityRow(
-                        row: row,
-                        isNew: store.state.isNew(row),
-                        order: start + index,
-                        action: { store.send(.rowTapped(row)) }
-                    )
-                    if index < section.rows.count - 1 {
+                let starts = section.runs.reduce(into: [start]) { $0.append($0[$0.count - 1] + $1.rows.count) }
+                ForEach(Array(section.runs.enumerated()), id: \.element.id) { index, run in
+                    runView(run, startingAt: starts[index])
+                    if index < section.runs.count - 1 {
                         Divider().padding(.leading, 60)
                     }
                 }
             }
+            // Clipped so an unread wash stops at the card's corners.
+            .clipShape(.rect(cornerRadius: Metrics.cardRadius, style: .continuous))
             .glassCard()
+        }
+    }
+
+    /// A single row as it always was, or a stretch with its rows under it.
+    @ViewBuilder
+    private func runView(_ run: ActivityRun, startingAt start: Int) -> some View {
+        if run.isMerged {
+            let isOpen = openRuns.contains(run.id)
+            VStack(spacing: 0) {
+                ActivityRunHeader(
+                    run: run,
+                    isNew: run.rows.contains { store.state.isNew($0) },
+                    isOpen: isOpen
+                ) {
+                    withAnimation(reduceMotion ? Motion.fade : Motion.spring) {
+                        if isOpen { openRuns.remove(run.id) } else { openRuns.insert(run.id) }
+                    }
+                }
+
+                if isOpen {
+                    ForEach(Array(run.rows.enumerated()), id: \.element.id) { index, row in
+                        Divider().padding(.leading, 60)
+                        ActivityRow(
+                            row: row,
+                            isNew: store.state.isNew(row),
+                            order: start + index,
+                            inRun: true,
+                            action: { store.send(.rowTapped(row)) }
+                        )
+                    }
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .clipped()
+        } else {
+            ActivityRow(
+                row: run.first,
+                isNew: store.state.isNew(run.first),
+                order: start,
+                action: { store.send(.rowTapped(run.first)) }
+            )
         }
     }
 
@@ -423,7 +468,7 @@ struct InboxPanel: View {
     private var updateFeed: some View {
         Group {
             if store.isLoadingUpdates {
-                SkeletonList(rows: 3, height: 140)
+                SkeletonList(rows: 4, height: 64)
                     .padding(.horizontal, Metrics.screenPadding)
             } else if store.updateRows.isEmpty {
                 EmptyStateView(
@@ -433,20 +478,23 @@ struct InboxPanel: View {
                 )
             } else {
                 ScrollView {
-                    LazyVStack(spacing: Metrics.stackSpacing) {
-                        ForEach(Array(store.updateRows.enumerated()), id: \.element.id) { index, update in
-                            UpdateCard(update: update, isNew: store.state.isNew(update))
-                                // Only the first screenful staggers: a lazy card
-                                // appears when it is scrolled to, and one far down
-                                // waiting out its capped delay read as the feed
-                                // lagging behind the finger.
-                                .appear(index < 8 ? index : 0)
+                    LazyVStack(spacing: 10) {
+                        ForEach(store.pinnedUpdates) { update in
+                            UpdateCard(update: update, isNew: store.state.isNew(update), showsVersion: true)
                         }
 
-                        Text(L10n.inboxVersionFooter(AppVersion.current.raw))
-                            .font(.caption)
-                            .foregroundStyle(.secondaryText)
-                            .padding(.top, 8)
+                        ForEach(Array(store.updateGroups.enumerated()), id: \.element.id) { index, group in
+                            let isOpen = versionOverrides[group.id] ?? opensByDefault(group, at: index)
+                            UpdateGroupView(
+                                group: group,
+                                seenAt: store.seenUpdatesAt,
+                                isOpen: isOpen
+                            ) {
+                                withAnimation(reduceMotion ? Motion.fade : Motion.spring) {
+                                    versionOverrides[group.id] = !isOpen
+                                }
+                            }
+                        }
                     }
                     .padding(.horizontal, Metrics.screenPadding)
                     .padding(.bottom, Metrics.screenPadding)
@@ -455,266 +503,19 @@ struct InboxPanel: View {
             }
         }
     }
-}
 
-// MARK: - One thing that happened
-
-/// A single line of a household's timeline.
-///
-/// Its own small view rather than a branch inside the list, so SwiftUI compares
-/// one row's stored values instead of re-evaluating the whole section's body
-/// when a single timestamp label ticks over.
-///
-/// Face first, then one sentence with the person in bold, then the module as a
-/// glyph in its own tint beside the detail. Colour is the glyph's alone: the
-/// words stay in the label colours, and "new" is a dot and a wash inside the
-/// row, never something hung off its corner.
-private struct ActivityRow: View {
-    let row: HomeActivity
-    let isNew: Bool
-    /// Its place in the whole feed, for the wave "Mark all read" sends down it.
-    let order: Int
-    let action: () -> Void
-
-    @Environment(\.theme) private var theme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var actorName: String? {
-        guard let actor = row.actor else { return nil }
-        let name = StoreDemo.personaName(for: actor) ?? row.actorName
-        return (name?.isEmpty == false) ? name : nil
-    }
-
-    /// "**Murat** finished Dishes". The name is dropped from the title when the
-    /// server already wrote it there, so it is never said twice.
-    private var sentence: Text {
-        guard let name = actorName else { return Text(row.title).fontWeight(.semibold) }
-        let rest = row.title.hasPrefix(name)
-            ? String(row.title.dropFirst(name.count)).trimmingCharacters(in: .whitespaces)
-            : row.title
-        return Text(name).fontWeight(.bold) + Text(verbatim: " ") + Text(rest)
-    }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(alignment: .center, spacing: 12) {
-                face
-
-                VStack(alignment: .leading, spacing: 3) {
-                    sentence
-                        .font(.subheadline)
-                        .lineLimit(1)
-
-                    HStack(spacing: 6) {
-                        Image(systemName: row.category.symbol)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(row.category.tint)
-                        Text(row.body.isEmpty ? String(localized: row.category.label) : row.body)
-                            .font(.footnote)
-                            .foregroundStyle(.secondaryText)
-                            .lineLimit(1)
-                    }
-                }
-
-                Spacer(minLength: 4)
-
-                VStack(alignment: .trailing, spacing: 5) {
-                    RelativeTimeText(row.created)
-                        .font(.caption)
-                        .foregroundStyle(.secondaryText)
-                    if isNew {
-                        Circle()
-                            .fill(theme.accent)
-                            .frame(width: 8, height: 8)
-                            .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
-                            .accessibilityHidden(true)
-                    }
-                }
-
-                if row.category.isRoutable {
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Palette.accessory)
-                }
-            }
-            .padding(.vertical, 11)
-            .padding(.horizontal, Metrics.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isNew ? theme.accent.opacity(0.07) : .clear)
-            // Read, one row after another rather than all at once, so marking
-            // everything read looks like something swept down the list. The
-            // stagger is capped, so a long feed is not still going a second
-            // later; under Reduce Motion the rows fade together.
-            .animation(
-                reduceMotion
-                    ? Motion.fade
-                    : Motion.exit.delay(Motion.stagger(order, step: 0.03, cap: 0.3)),
-                value: isNew
-            )
-            .contentShape(.rect)
+    /// Open without being asked: the newest shelf, anything this build is
+    /// still waiting for, and the newest one it does have.
+    private func opensByDefault(_ group: UpdateGroup, at index: Int) -> Bool {
+        #if DEBUG
+        // `-inboxOpenVersions N` opens the first N shelves and no others, to
+        // look at the closed rows below them.
+        if UserDefaults.standard.object(forKey: "inboxOpenVersions") != nil {
+            return index < UserDefaults.standard.integer(forKey: "inboxOpenVersions")
         }
-        .buttonStyle(.pressable)
-        .disabled(!row.category.isRoutable)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(row.category.isRoutable ? .isButton : [])
-    }
-
-    /// Who did it. The module's own glyph stands in when the app did it by
-    /// itself (a nightly sweep finding an overdue bill).
-    @ViewBuilder
-    private var face: some View {
-        if let actor = row.actor, let name = actorName {
-            // `viewable: false`: this whole row is a control that goes
-            // somewhere else, and a tappable face would swallow that tap.
-            Avatar(initials: User.initials(from: name), seed: actor.rawValue, size: 36, viewable: false)
-        } else {
-            Image(systemName: row.category.symbol)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(row.category.tint)
-                .frame(width: 36, height: 36)
-                .background(row.category.tint.opacity(0.16), in: .circle)
-        }
-    }
-}
-
-// MARK: - One release note
-
-/// A changelog entry.
-///
-/// Full-width and deliberately unlike the timeline rows beside it. Top to
-/// bottom: what kind of note it is, the headline, a few lines of the story
-/// (with "More" when there is more), the bullets, and the version and date as
-/// quiet meta. "Coming soon" and "New" are badges inside the card's own top
-/// row, never on its edge.
-private struct UpdateCard: View {
-    let update: AppUpdate
-    let isNew: Bool
-
-    @Environment(\.theme) private var theme
-    @State private var isExpanded = false
-
-    private var isComingSoon: Bool { update.availability() == .comingSoon }
-
-    /// The words, in the language this app is set to — which is `L10n.locale`
-    /// and not the device's, because the app has its own picker. English when
-    /// that language was never written (`AppUpdate.text`).
-    private var text: LocalizedUpdate { update.text() }
-
-    /// A body of this size runs past three lines at the card's width; a shorter
-    /// one has nothing to expand, so no button.
-    private var isLong: Bool { text.body.count > 130 || text.body.contains("\n") }
-
-    var body: some View {
-        GlassCard(tint: isComingSoon ? Palette.amber.opacity(0.10) : nil) {
-            VStack(alignment: .leading, spacing: 10) {
-                header
-
-                Text(text.title)
-                    .font(.system(.title3, design: .rounded, weight: .bold))
-                    .fixedSize(horizontal: false, vertical: true)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(text.body)
-                        .font(.callout)
-                        .foregroundStyle(.secondaryText)
-                        .lineLimit(isExpanded ? nil : 3)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if isLong {
-                        Button {
-                            withAnimation(Motion.spring) { isExpanded.toggle() }
-                        } label: {
-                            Text(isExpanded ? L10n.inboxShowLess : L10n.commonMore)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.accentText)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                if !text.highlights.isEmpty {
-                    VStack(alignment: .leading, spacing: 7) {
-                        ForEach(Array(text.highlights.enumerated()), id: \.offset) { _, line in
-                            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                Circle()
-                                    .fill(update.kind.tint)
-                                    .frame(width: 6, height: 6)
-                                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
-                                Text(line)
-                                    .font(.subheadline)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-                    }
-                    .padding(.top, 2)
-                }
-
-                footer
-            }
-        }
-    }
-
-    /// The kind with its glyph on the left; on the right the one state that
-    /// matters most, "Coming soon" ahead of "New" because a note this build
-    /// cannot show yet is the thing to be clear about.
-    private var header: some View {
-        HStack(spacing: 8) {
-            Badge(
-                String(localized: update.kind.label),
-                tint: update.kind.tint,
-                symbol: update.kind.symbol
-            )
-
-            if update.isPinned {
-                Image(systemName: "pin.fill")
-                    .font(.caption2)
-                    .foregroundStyle(.secondaryText)
-                    .accessibilityLabel(Text(L10n.inboxPinned))
-            }
-
-            Spacer(minLength: 4)
-
-            if isComingSoon {
-                Badge(
-                    String(localized: L10n.inboxComingSoon),
-                    tint: Palette.amber,
-                    symbol: "clock"
-                )
-            } else if isNew {
-                Badge(
-                    String(localized: L10n.inboxNew),
-                    tint: theme.highlight,
-                    symbol: "sparkle"
-                )
-            }
-        }
-    }
-
-    /// Version and date, quietly. A note for a version this build does not have
-    /// says so in words: publishing happens when the work lands on the server,
-    /// a build reaches a phone days later, and "coming soon" is the difference
-    /// between a changelog and one that sends people hunting for a button that
-    /// is not there.
-    @ViewBuilder
-    private var footer: some View {
-        HStack(spacing: 6) {
-            if isComingSoon, let version = update.version {
-                Image(systemName: "arrow.down.circle")
-                    .font(.caption.weight(.semibold))
-                Text(L10n.inboxArrivesIn(version, AppVersion.current.raw))
-                    .font(.caption)
-            } else {
-                if let version = update.version, !version.isEmpty {
-                    Text(L10n.inboxVersionChip(version))
-                        .font(.caption.weight(.semibold))
-                        .monospacedDigit()
-                    Text(verbatim: "·")
-                }
-                RelativeTimeText(update.displayDate)
-                    .font(.caption)
-            }
-        }
-        .foregroundStyle(.secondaryText)
-        .padding(.top, 2)
+        #endif
+        if group.isComingSoon || index == 0 { return true }
+        let firstAvailable = store.updateGroups.firstIndex { !$0.isComingSoon }
+        return index == firstAvailable
     }
 }

@@ -7118,6 +7118,61 @@ public enum L10n {
         r("inbox_unread_count", "\(a0) unread")
     }
 
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunShoppingAdded(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_shopping_added", "\(a0) added \(a1) things to Shopping")
+    }
+
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunTasksAdded(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_tasks_added", "\(a0) added \(a1) chores")
+    }
+
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunTasksDone(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_tasks_done", "\(a0) finished \(a1) chores")
+    }
+
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunCalendarAdded(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_calendar_added", "\(a0) added \(a1) events")
+    }
+
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunMoviesAdded(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_movies_added", "\(a0) added \(a1) films")
+    }
+
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunRecipesAdded(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_recipes_added", "\(a0) added \(a1) recipes")
+    }
+
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunNotesLeft(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_notes_left", "\(a0) left \(a1) notes")
+    }
+
+    /// A run of two or more by one person. Never one, so no singular form.
+    public static func inboxRunMessages(_ a0: String, _ a1: Int) -> LocalizedStringResource {
+        r("inbox_run_messages", "\(a0) sent \(a1) messages")
+    }
+
+    /// %1$@ did %2$lld things in %3$@
+    public static func inboxRunGeneric(_ a0: String, _ a1: Int, _ a2: String) -> LocalizedStringResource {
+        r("inbox_run_generic", "\(a0) made \(a1) updates in \(a2)")
+    }
+
+    /// %lld updates
+    public static func inboxUpdatesCount(_ a0: Int) -> LocalizedStringResource {
+        r("inbox_updates_count", "\(a0) updates")
+    }
+
+    /// +%lld more
+    public static func inboxMoreCount(_ a0: Int) -> LocalizedStringResource {
+        r("inbox_more_count", "+\(a0) more")
+    }
+
     /// Activity is kept for 1 day
     public static func inboxRetentionNote(_ a0: Int) -> LocalizedStringResource {
         r("inbox_retention_note", "Activity is kept for \(a0) days")
