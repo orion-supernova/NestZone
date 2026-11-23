@@ -50,6 +50,7 @@ public struct SettingsView: View {
     }
 
     public var body: some View {
+        ScrollViewReader { proxy in
         Form {
             profileSection
             homeSection
@@ -59,12 +60,21 @@ public struct SettingsView: View {
             preferencesSection
             privacySection
             aboutSection
-            accountSection
+            accountSection.id("accountSection")
             #if DEBUG
             developerSection
             #endif
         }
         .scrollContentBackground(.hidden)
+        .settingsRows()
+        #if DEBUG
+        // `-settingsScroll 1`: open at the foot, for screenshots of the lower rows.
+        .task {
+            guard UserDefaults.standard.bool(forKey: "settingsScroll") else { return }
+            try? await Task.sleep(for: .seconds(1))
+            proxy.scrollTo("accountSection", anchor: .bottom)
+        }
+        #endif
         .background(Backdrop(tint: theme.accent))
         .navigationTitle(Text(L10n.settingsScreenTitle))
         .task { await store.send(.task).finish() }
@@ -109,6 +119,7 @@ public struct SettingsView: View {
             }
         }
         #endif
+        }
     }
 
     #if DEBUG
@@ -255,7 +266,14 @@ public struct SettingsView: View {
                                 .contentTransition(.symbolEffect(.replace))
                         }
                     } label: {
-                        Label { Text(L10n.settingsInviteCodeTitle) } icon: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.settingsInviteCodeTitle)
+                                Text(L10n.settingsInviteCodeHelpText)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondaryText)
+                            }
+                        } icon: {
                             Image(systemName: "key.fill")
                         }
                     }
@@ -348,10 +366,6 @@ public struct SettingsView: View {
             }
         } header: {
             Text(L10n.settingsHomeManagementTitle)
-        } footer: {
-            if store.home?.inviteCode != nil {
-                Text(L10n.settingsInviteCodeHelpText)
-            }
         }
     }
 
@@ -379,7 +393,14 @@ public struct SettingsView: View {
                     .tag(theme)
                 }
             } label: {
-                Label { Text(L10n.settingsThemeTitle) } icon: {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.settingsThemeTitle)
+                        Text(L10n.settingsAppearanceThemeFooter)
+                            .font(.footnote)
+                            .foregroundStyle(.secondaryText)
+                    }
+                } icon: {
                     Image(systemName: "paintpalette.fill")
                 }
             }
@@ -400,8 +421,6 @@ public struct SettingsView: View {
             .pickerStyle(.navigationLink)
         } header: {
             Text(L10n.settingsAppearanceTitle)
-        } footer: {
-            Text(L10n.settingsAppearanceThemeFooter)
         }
     }
 
@@ -511,7 +530,14 @@ public struct SettingsView: View {
             // Plus: a free house sees it off and locked, and the stored
             // choice waits untouched for an upgrade.
             Toggle(isOn: store.pro.isPro ? $store.includeAdultTitles : .constant(false)) {
-                Label { Text(L10n.settingsAdultTitlesTitle) } icon: {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.settingsAdultTitlesTitle)
+                        Text(L10n.settingsAdultTitlesFooter)
+                            .font(.footnote)
+                            .foregroundStyle(.secondaryText)
+                    }
+                } icon: {
                     Image(systemName: "eye.trianglebadge.exclamationmark")
                 }
             }
@@ -534,8 +560,6 @@ public struct SettingsView: View {
             }
         } header: {
             Text(L10n.settingsGeneralTitle)
-        } footer: {
-            Text(L10n.settingsAdultTitlesFooter)
         }
     }
 
@@ -679,33 +703,7 @@ public struct SettingsView: View {
     private var plusSection: some View {
         let status = store.pro
         return Section {
-            LabeledContent {
-                Text(status.isPro ? L10n.plusStatusOn : L10n.plusStatusOff)
-                    .foregroundStyle(status.isPro ? Palette.successText : Palette.textSecondary)
-            } label: {
-                Label { Text(L10n.proFullName) } icon: { Image(systemName: PlusStyle.symbol) }
-            }
-
-            if status.isPro, status.isLoaded {
-                if let carrier = status.carrier {
-                    Text(status.mine
-                        ? L10n.paywallCarriedByYou
-                        : L10n.paywallCarriedBy(carrier.name ?? User.displayName(name: nil, email: nil)))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondaryText)
-                }
-                if let end = status.expiresAt {
-                    // A subscription that is switched off says when it ends, not
-                    // that it "won't renew"; lifetime has no date at all.
-                    Text(status.willRenew == false
-                        ? L10n.plusEnds(end.formatted(date: .abbreviated, time: .omitted))
-                        : L10n.plusRenews(end.formatted(date: .abbreviated, time: .omitted)))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondaryText)
-                } else {
-                    Text(L10n.plusNoEnd).font(.subheadline).foregroundStyle(.secondaryText)
-                }
-            }
+            plusSummary(status)
 
             // What Plus includes stays one tap away whether or not the house
             // has it: the paywall's sheet is gone once it is bought.
@@ -714,30 +712,8 @@ public struct SettingsView: View {
             } label: {
                 Label { Text(L10n.plusSeeEverything) } icon: { Image(systemName: "list.bullet.rectangle") }
             }
-            if let line = status.coverageLine(homeNames: plusHomeNames) {
-                Text(line).font(.subheadline).foregroundStyle(.secondaryText)
-            }
 
-            if status.isPro, status.mine {
-                Button { showsManageSubscription = true } label: {
-                    Label { Text(L10n.plusManage) } icon: { Image(systemName: "creditcard") }
-                }
-            } else if !status.isPro {
-                Button { PaywallBroker.shared.request(nil) } label: {
-                    Label { Text(L10n.plusSeePlans) } icon: { Image(systemName: PlusStyle.unlockSymbol) }
-                }
-            }
-
-            Button { store.send(.plusRestoreTapped) } label: {
-                HStack {
-                    Label { Text(L10n.paywallRestore) } icon: { Image(systemName: "arrow.clockwise") }
-                    if store.isRestoringPlus {
-                        Spacer()
-                        ProgressView()
-                    }
-                }
-            }
-            .disabled(store.isRestoringPlus)
+            plusActions(status)
 
             if let result = store.plusRestoreResult {
                 Text(result == .restored ? L10n.plusRestoredOn : L10n.paywallNothingToRestore)
@@ -746,9 +722,120 @@ public struct SettingsView: View {
             }
         } header: {
             Text(L10n.proFullName)
-        } footer: {
-            Text(L10n.plusFooter)
         }
+    }
+
+    /// The card's top: the mark, the name, whether it is on, and one quiet
+    /// line that says whose it is, what it covers and when it renews.
+    private func plusSummary(_ status: ProStatus) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Image(systemName: PlusStyle.symbol)
+                    .foregroundStyle(.accentText)
+                Text(L10n.proFullName).font(.headline)
+                Spacer(minLength: 8)
+                Text(status.isPro ? L10n.plusStatusOn : L10n.plusStatusOff)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(status.isPro ? AnyShapeStyle(Palette.successText) : AnyShapeStyle(.secondaryText))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                    .background(
+                        status.isPro ? AnyShapeStyle(Palette.successText.opacity(0.16)) : AnyShapeStyle(Palette.inset),
+                        in: .capsule
+                    )
+            }
+            Text(plusSummaryLine(status))
+                .font(.subheadline)
+                .foregroundStyle(.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// "Yours · Covers Bizim Ev, Yazlık · Renews Dec 20, 2026". A free house
+    /// gets the one thing worth knowing instead.
+    private func plusSummaryLine(_ status: ProStatus) -> String {
+        guard status.isPro, status.isLoaded else { return String(localized: L10n.plusFooter) }
+        var parts: [String] = []
+        if let carrier = status.carrier {
+            parts.append(String(localized: status.mine
+                ? L10n.plusYours
+                : L10n.plusFrom(carrier.name ?? User.displayName(name: nil, email: nil))))
+        }
+        if status.mine, let coverage = status.coverage {
+            let names = coverage.homeIDs.compactMap { plusHomeNames[$0] }.filter { !$0.isEmpty }
+            parts.append(String(localized: names.isEmpty
+                ? L10n.plusCoversCount(coverage.homeIDs.count, coverage.limit)
+                : L10n.plusCoversNames(names.joined(separator: ", "))))
+        } else {
+            parts.append(String(localized: L10n.plusCoversThisHouse))
+        }
+        if let end = status.expiresAt {
+            // A subscription that is switched off says when it ends, not that
+            // it "won't renew"; lifetime has no date at all.
+            let date = end.formatted(date: .abbreviated, time: .omitted)
+            parts.append(String(localized: status.willRenew == false ? L10n.plusEnds(date) : L10n.plusRenews(date)))
+        } else {
+            parts.append(String(localized: L10n.plusNoEnd))
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// The two things the App Store wants within reach, side by side; a free
+    /// house gets the way in instead, with restore small beside it.
+    @ViewBuilder
+    private func plusActions(_ status: ProStatus) -> some View {
+        if status.isPro {
+            HStack(spacing: 10) {
+                if status.mine {
+                    plusActionButton(L10n.plusManage, symbol: "creditcard", busy: false) {
+                        showsManageSubscription = true
+                    }
+                }
+                plusRestoreButton
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+        } else {
+            VStack(spacing: 10) {
+                PrimaryButton(L10n.plusSeePlans, symbol: PlusStyle.unlockSymbol) {
+                    PaywallBroker.shared.request(nil)
+                }
+                plusRestoreButton
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+        }
+    }
+
+    private var plusRestoreButton: some View {
+        plusActionButton(L10n.paywallRestore, symbol: "arrow.clockwise", busy: store.isRestoringPlus) {
+            store.send(.plusRestoreTapped)
+        }
+        .disabled(store.isRestoringPlus)
+    }
+
+    private func plusActionButton(
+        _ title: LocalizedStringResource,
+        symbol: String,
+        busy: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if busy {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Image(systemName: symbol)
+                }
+                Text(title).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .font(.subheadline.weight(.medium))
+            .frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(.glass)
+        .tint(.primary)
     }
 
     /// What this person has chosen not to see: the way back from a block.
@@ -791,6 +878,7 @@ public struct SettingsView: View {
                         ProgressView()
                     }
                 }
+                .labelStyle(.settingsRow(.caution))
             }
             .disabled(store.isSigningOut || store.isDeletingAccount || store.isAuthorizingDelete)
 
@@ -806,6 +894,7 @@ public struct SettingsView: View {
                         ProgressView()
                     }
                 }
+                .labelStyle(.settingsRow(.destructive))
             }
             .disabled(store.isSigningOut || store.isDeletingAccount || store.isAuthorizingDelete)
         } header: {

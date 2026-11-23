@@ -70,7 +70,7 @@ public struct NowDock: View {
                     .rotationEffect(.degrees(reduceMotion ? 0 : Double(adds) * 90))
                     .animation(Motion.release, value: adds)
                     .frame(width: 30, height: 30)
-                    .background(theme.accent, in: .circle)
+                    .background(theme.accentFill, in: .circle)
                     .contentShape(.circle)
             }
             .buttonStyle(.pressable)

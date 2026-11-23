@@ -570,7 +570,7 @@ struct ExpenseComposerSheet: View {
             .padding(.vertical, 7)
             .foregroundStyle(isSelected ? theme.onAccent : theme.ink)
             .background(
-                isSelected ? theme.accent : theme.accent.opacity(0.14),
+                isSelected ? theme.accentFill : theme.accent.opacity(0.14),
                 in: .capsule
             )
             .contentShape(.capsule)
@@ -945,7 +945,7 @@ struct BillComposerSheet: View {
                                 .padding(.vertical, 7)
                                 .foregroundStyle(isOn ? theme.onAccent : Color.primary)
                                 .background(
-                                    isOn ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.quaternary),
+                                    isOn ? AnyShapeStyle(theme.accentFill) : AnyShapeStyle(.quaternary),
                                     in: .capsule
                                 )
                                 .contentShape(.capsule)

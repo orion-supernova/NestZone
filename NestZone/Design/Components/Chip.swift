@@ -52,7 +52,7 @@ public struct Chip: View {
             .foregroundStyle(isSelected ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
             .background {
                 if isSelected {
-                    Capsule().fill(theme.accent)
+                    Capsule().fill(theme.accentFill)
                 }
             }
             .glassEffect(

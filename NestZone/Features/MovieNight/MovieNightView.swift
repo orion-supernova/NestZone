@@ -53,6 +53,7 @@ public struct MovieNightView: View {
                         Button { store.send(.historyTapped) } label: {
                             Image(systemName: "clock.arrow.circlepath")
                         }
+                        .tint(.primary)
                         .accessibilityLabel(Text(L10n.previousPollsTitle))
                     }
                 }
@@ -79,6 +80,7 @@ public struct MovieNightView: View {
                         } label: {
                             Image(systemName: "ellipsis.circle")
                         }
+                        .tint(.primary)
                     }
                 }
             }

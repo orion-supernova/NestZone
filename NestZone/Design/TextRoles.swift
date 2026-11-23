@@ -17,7 +17,7 @@ import SwiftUI
 /// Resolution happens when the style is drawn, from stored colours: nothing is
 /// built in a `body`.
 public struct TextRole: ShapeStyle {
-    enum Role { case secondary, tertiary, accent, onAccent }
+    enum Role { case secondary, tertiary, accent, onAccent, accentFill }
     let role: Role
 
     public func resolve(in environment: EnvironmentValues) -> Color {
@@ -26,6 +26,7 @@ public struct TextRole: ShapeStyle {
         case .tertiary: Palette.textTertiary
         case .accent: environment.theme.ink
         case .onAccent: environment.theme.onAccent
+        case .accentFill: environment.theme.accentFill
         }
     }
 }
@@ -41,6 +42,10 @@ extension ShapeStyle where Self == TextRole {
     public static var accentText: TextRole { TextRole(role: .accent) }
     /// What is written on a fill of the theme's accent.
     public static var onAccent: TextRole { TextRole(role: .onAccent) }
+    /// The accent as a fill that carries words (a bubble, a button, a chip):
+    /// the theme's accent deepened until white reads on it. Pairs with
+    /// `.onAccent`. The pure accent is for glyphs and tints.
+    public static var accentFill: TextRole { TextRole(role: .accentFill) }
 }
 
 extension View {

@@ -49,7 +49,7 @@ public struct PersonChip: View {
             .foregroundStyle(isSelected ? theme.onAccent : Color.primary)
             .background {
                 if isSelected {
-                    Capsule().fill(theme.accent)
+                    Capsule().fill(theme.accentFill)
                 }
             }
             .glassEffect(

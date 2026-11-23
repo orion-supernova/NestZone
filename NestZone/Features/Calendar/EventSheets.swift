@@ -293,7 +293,7 @@ struct EventComposerSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 32)
                                 .background(
-                                    isOn ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.quaternary),
+                                    isOn ? AnyShapeStyle(theme.accentFill) : AnyShapeStyle(.quaternary),
                                     in: .rect(cornerRadius: 8, style: .continuous)
                                 )
                                 .contentShape(.rect)
@@ -809,6 +809,7 @@ struct EventDetailSheet: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
+        .tint(.primary)
         .accessibilityLabel(Text(L10n.commonMore))
     }
 

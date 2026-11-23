@@ -10,22 +10,22 @@ extension View {
     /// house without, a small lock sits on the control and a tap opens the
     /// paywall for `feature` instead of doing the thing. Quiet: never a grey,
     /// dead control.
-    func proLocked(_ feature: ProFeature) -> some View {
-        modifier(ProLockedModifier(feature: feature))
+    func proLocked(_ feature: ProFeature, placement: PlusBadgePlacement = .corner) -> some View {
+        modifier(ProLockedModifier(feature: feature, placement: placement))
     }
 
     /// `proLocked` for a control that is only sometimes Plus.
     @ViewBuilder
-    func proLocked(if feature: ProFeature?) -> some View {
-        if let feature { proLocked(feature) } else { self }
+    func proLocked(if feature: ProFeature?, placement: PlusBadgePlacement = .corner) -> some View {
+        if let feature { proLocked(feature, placement: placement) } else { self }
     }
 
     /// A Plus control that is open to everyone in some states (taking a film
     /// off a custom list is free). A Plus house always sees the mark; a free
     /// house sees the lock only while `gated`, and nothing otherwise.
     @ViewBuilder
-    func proLocked(if feature: ProFeature?, gated: Bool) -> some View {
-        if let feature { modifier(ProLockedModifier(feature: feature, gated: gated)) } else { self }
+    func proLocked(if feature: ProFeature?, gated: Bool, placement: PlusBadgePlacement = .corner) -> some View {
+        if let feature { modifier(ProLockedModifier(feature: feature, gated: gated, placement: placement)) } else { self }
     }
 
     /// The Plus badge in a control's top corner: the lock, or the mark once
@@ -33,11 +33,11 @@ extension View {
     /// for the paywall); `proLocked` wears this for the rest.
     /// `shown: false` draws nothing, for a list of controls only some of
     /// which are Plus.
-    func plusBadge(isLocked: Bool, shown: Bool = true) -> some View {
+    func plusBadge(isLocked: Bool, shown: Bool = true, placement: PlusBadgePlacement = .corner) -> some View {
         overlay(alignment: .topTrailing) {
             if shown {
-                PlusBadge(isLocked: isLocked)
-                    .offset(x: 4, y: -4)
+                PlusBadge(isLocked: isLocked, isInset: placement == .inset)
+                    .offset(x: placement == .corner ? 4 : 0, y: placement == .corner ? -4 : 0)
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
@@ -50,6 +50,15 @@ extension View {
     func proModule(_ feature: ProFeature, hasData: Bool, isLoaded: Bool) -> some View {
         modifier(ProModuleModifier(feature: feature, hasData: hasData, isLoaded: isLoaded))
     }
+}
+
+/// Where the Plus mark sits on its control.
+enum PlusBadgePlacement {
+    /// Hanging off the top corner: for a control that draws freely around it.
+    case corner
+    /// Inside the control's own bounds, smaller: for a toolbar button, whose
+    /// glass capsule clips anything drawn past its edge.
+    case inset
 }
 
 /// What Plus looks like, in one place. Every badge, mark, the Settings row,
@@ -67,6 +76,9 @@ enum PlusStyle {
     static func tint(_ theme: AppTheme) -> Color { theme.accent }
     /// What is drawn on a fill of `tint`.
     static func onTint(_ theme: AppTheme) -> Color { theme.onAccent }
+    /// The mark's own fill: it carries a glyph in `onTint`, so it is the
+    /// accent as a fill.
+    static func fill(_ theme: AppTheme) -> Color { theme.accentFill }
 
     static func symbol(isLocked: Bool) -> String { isLocked ? lockedSymbol : symbol }
 }
@@ -77,16 +89,17 @@ enum PlusStyle {
 /// one place, so an upgrade is the lock turning into the mark where it sits.
 struct PlusBadge: View {
     let isLocked: Bool
+    var isInset = false
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Image(systemName: PlusStyle.symbol(isLocked: isLocked))
-            .font(.system(size: 8.5, weight: .bold))
+            .font(.system(size: isInset ? 7 : 8.5, weight: .bold))
             .foregroundStyle(isLocked ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(PlusStyle.onTint(theme)))
             .contentTransition(.symbolEffect(.replace))
-            .frame(width: 16, height: 16)
-            .background(isLocked ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(PlusStyle.tint(theme)), in: .circle)
+            .frame(width: isInset ? 12 : 16, height: isInset ? 12 : 16)
+            .background(isLocked ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(PlusStyle.fill(theme)), in: .circle)
             .animation(reduceMotion ? Motion.fade : Motion.pop, value: isLocked)
     }
 }
@@ -111,11 +124,12 @@ struct PlusMark: View {
 private struct ProLockedModifier: ViewModifier {
     let feature: ProFeature
     var gated = true
+    var placement: PlusBadgePlacement = .corner
     @Shared(.pro) private var pro
 
     func body(content: Content) -> some View {
         if pro.isPro {
-            content.plusBadge(isLocked: false)
+            content.plusBadge(isLocked: false, placement: placement)
         } else if !gated {
             content
         } else {
@@ -127,7 +141,7 @@ private struct ProLockedModifier: ViewModifier {
                 .accessibilityHint(Text(L10n.proLockedHint))
                 .accessibilityAction(.default) { PaywallBroker.shared.request(feature) }
                 .overlay { ProLockTap(feature: feature) }
-                .plusBadge(isLocked: true)
+                .plusBadge(isLocked: true, placement: placement)
         }
     }
 }

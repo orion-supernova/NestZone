@@ -676,7 +676,7 @@ public struct IssueDetailView: View {
                     }
                 }
                 .frame(width: 32, height: 32)
-                .background(store.canPost ? theme.accent : Color.secondary.opacity(0.35), in: .circle)
+                .background(store.canPost ? theme.accentFill : Color.secondary.opacity(0.35), in: .circle)
                 .contentShape(.circle)
             }
             .buttonStyle(.pressable)
@@ -718,6 +718,7 @@ public struct IssueDetailView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
+        .tint(.primary)
         .accessibilityLabel(Text(L10n.commonMore))
     }
 }

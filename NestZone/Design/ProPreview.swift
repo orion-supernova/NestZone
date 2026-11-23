@@ -142,7 +142,7 @@ struct ProPreview: View {
                 .padding(.vertical, 8)
                 .foregroundStyle(mine ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
                 .background(
-                    mine ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.primary.opacity(0.08)),
+                    mine ? AnyShapeStyle(theme.accentFill) : AnyShapeStyle(.primary.opacity(0.08)),
                     in: .rect(cornerRadius: 16, style: .continuous)
                 )
             if !mine { Spacer(minLength: 40) }

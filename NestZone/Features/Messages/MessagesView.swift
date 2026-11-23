@@ -24,7 +24,7 @@ public struct MessagesView: View {
                         Image(systemName: "square.and.pencil")
                     }
                     .accessibilityLabel(Text(L10n.messagesNewMessageButton))
-                    .proLocked(.messages)
+                    .proLocked(.messages, placement: .inset)
                 }
             }
             .task { await store.send(.task).finish() }
@@ -375,6 +375,8 @@ struct ChatView: View {
         } label: {
             Image(systemName: "ellipsis")
         }
+        // Neutral like Back: only the screen's one primary action takes the accent.
+        .tint(.primary)
         .accessibilityLabel(Text(L10n.commonMore))
     }
 

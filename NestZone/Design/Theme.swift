@@ -46,16 +46,26 @@ public enum AppTheme: String, CaseIterable, Sendable, Codable, Identifiable {
         }
     }
 
-    /// What is written on a fill of the accent: white or a deep ink, whichever
-    /// reads at 4.5:1 or better on that accent (5.7, 5.4, 6.2, 7.6 and 6.7).
-    /// Text in the accent itself on glass over a night sky does not, so a
-    /// label that has to be read in any sky sits on a fill and uses this.
-    public var onAccent: Color {
+    /// The accent as a fill that carries words: a chat bubble, a primary
+    /// button, a selected chip. Each theme keeps its hue and saturation and
+    /// moves only in lightness until white reads on it at 4.5:1 (7:1 under
+    /// Increase Contrast), so the label can be white, which is what people
+    /// expect on a coloured fill. The pure `accent` stays for what carries no
+    /// words: glyphs, switches, progress, rings, the tab bar's selection.
+    /// Reached through `.accentFill`; to go back to the bright fills with a
+    /// dark ink, return `accent` here and `Palette.onAccentDark` below.
+    public var accentFill: Color {
         switch self {
-        case .basic, .deepOcean: Palette.onAccentLight
-        case .cyberpunk, .retroWave, .neonNight: Palette.onAccentDark
+        case .basic: Palette.fillViolet
+        case .cyberpunk: Palette.fillMagenta
+        case .retroWave: Palette.fillPink
+        case .neonNight: Palette.fillEmerald
+        case .deepOcean: Palette.fillBlue
         }
     }
+
+    /// What is written on `accentFill`: white, on every theme.
+    public var onAccent: Color { Palette.onAccentLight }
 
     /// The second hue, for two-stop gradients on hero elements only.
     public var support: Color {
@@ -106,6 +116,13 @@ public enum Palette {
     public static let onAccentLight = Color(hex: "FFFFFF")
     /// Written on a pink, magenta or green fill.
     public static let onAccentDark = Color(hex: "12091F")
+    /// Each theme's accent as a fill under white words (`AppTheme.accentFill`):
+    /// 5.7, 4.6, 4.6, 4.6 and 6.7:1, and 7.1 or better under Increase Contrast.
+    public static let fillViolet = adaptive("7C3AED", "7C3AED", "681CEA", "681CEA")
+    public static let fillMagenta = adaptive("E5006D", "E5006D", "AF0054", "AF0054")
+    public static let fillPink = adaptive("E80053", "E80053", "B10040", "B10040")
+    public static let fillEmerald = adaptive("0C855D", "0C855D", "096446", "096446")
+    public static let fillBlue = adaptive("1D4ED8", "1D4ED8", "1C4BCF", "1C4BCF")
     public static let violet = Color(hex: "7C3AED")
     public static let indigo = Color(hex: "4F46E5")
     public static let magenta = Color(hex: "FF1F8A")

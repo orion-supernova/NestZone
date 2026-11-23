@@ -404,7 +404,7 @@ struct RecipeDetailView: View {
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(theme.onAccent)
                                 .frame(width: 22, height: 22)
-                                .background(theme.accent, in: .circle)
+                                .background(theme.accentFill, in: .circle)
                             Text(step)
                                 .font(.subheadline)
                                 .multilineTextAlignment(.leading)
@@ -744,7 +744,7 @@ struct CookingModeView: View {
                     }
                     .buttonStyle(.glassProminent)
                     .controlSize(.small)
-                    .tint(theme.accent)
+                    .tint(theme.accentFill)
                 }
                 ForEach([5, 10, 20], id: \.self) { minutes in
                     Button { store.send(.timerRequested(seconds: minutes * 60)) } label: {

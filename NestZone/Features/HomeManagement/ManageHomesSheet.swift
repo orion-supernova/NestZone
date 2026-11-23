@@ -21,6 +21,7 @@ struct ManageHomesSheet: View {
                 leaveSection
             }
             .scrollContentBackground(.hidden)
+            .settingsRows()
             .background(Backdrop(tint: theme.accent))
             .navigationTitle(Text(store.homes.count > 1
                 ? L10n.homeSelectionSwitchTitle
@@ -137,6 +138,7 @@ struct ManageHomesSheet: View {
                     } icon: {
                         Image(systemName: destructiveSymbol(for: home))
                     }
+                    .labelStyle(.settingsRow(.destructive))
                 }
             } footer: {
                 Text(isSoleMember(home)

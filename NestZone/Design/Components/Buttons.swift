@@ -50,7 +50,7 @@ public struct PrimaryButton: View {
         }
         .buttonStyle(.glassProminent)
         .controlSize(.large)
-        .tint(role == .destructive ? Palette.answerNo : theme.accent)
+        .tint(role == .destructive ? Palette.answerNo : theme.accentFill)
         // The button stays mounted while work is in flight so the layout never
         // jumps; it just stops accepting taps.
         .disabled(isLoading || !isEnabled)
@@ -168,8 +168,8 @@ public struct DepthButtonStyle: ButtonStyle {
         private func face(pressed: Bool) -> some View {
             if isEnabled {
                 ZStack {
-                    Capsule().fill(pressed ? AnyShapeStyle(theme.accent.shadow(.inner(color: Palette.depthInner, radius: 3, y: 2)))
-                                           : AnyShapeStyle(theme.accent))
+                    Capsule().fill(pressed ? AnyShapeStyle(theme.accentFill.shadow(.inner(color: Palette.depthInner, radius: 3, y: 2)))
+                                           : AnyShapeStyle(theme.accentFill))
                     Capsule().fill(Palette.depthSheen).opacity(pressed ? 0.33 : 1)
                     Capsule().strokeBorder(Palette.depthRim, lineWidth: 0.5)
                 }

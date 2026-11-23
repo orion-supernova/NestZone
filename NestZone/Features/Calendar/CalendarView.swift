@@ -150,6 +150,7 @@ public struct CalendarView: View {
         Button { store.send(.historyTapped) } label: {
             Image(systemName: "clock.arrow.circlepath")
         }
+        .tint(.primary)
         .accessibilityLabel(Text(L10n.calendarHistoryTitle))
     }
 
@@ -158,7 +159,7 @@ public struct CalendarView: View {
             Image(systemName: "plus")
         }
         .accessibilityLabel(Text(L10n.calendarAddEvent))
-        .proLocked(.calendar)
+        .proLocked(.calendar, placement: .inset)
     }
 
     private var searchToggle: some View {
@@ -175,6 +176,7 @@ public struct CalendarView: View {
                 // which is what says the button is a toggle.
                 .contentTransition(.symbolEffect(.replace))
         }
+        .tint(.primary)
         .accessibilityLabel(Text(isSearching ? L10n.commonCancel : L10n.commonSearch))
     }
 
@@ -307,7 +309,7 @@ public struct CalendarView: View {
         // cannot stretch on the way, because nothing lives through the move.
         .background {
             Capsule()
-                .fill(theme.accent)
+                .fill(theme.accentFill)
                 .matchedGeometryEffect(id: store.mode, in: modePill, isSource: false)
                 // Pulled across rather than slid: a quarter wider mid-way,
                 // settling back to its slot as it lands.
@@ -752,7 +754,7 @@ public struct CalendarView: View {
                     .background {
                         if isSelected {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(theme.accent)
+                                .fill(theme.accentFill)
                                 .matchedGeometryEffect(id: "calendarWeekDay", in: daySelection)
                         }
                     }

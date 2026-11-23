@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "holidays_coming_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming up"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaklaşanlar"
+          }
+        }
+      }
+    },
     "pro_preview_dishes": {
       "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
       "extractionState": "manual",
@@ -14887,6 +14904,40 @@
         }
       }
     },
+    "holidays_filter_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hepsi"
+          }
+        }
+      }
+    },
+    "holidays_filter_celebrating": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celebrating"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kutladıklarımız"
+          }
+        }
+      }
+    },
     "holidays_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -14900,6 +14951,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "O gün gelince sahne kendiliğinden süslenir"
+          }
+        }
+      }
+    },
+    "holidays_none_celebrated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing picked yet. Start from the days around where you live."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz seçtiğin bir gün yok. Yaşadığın yere göre önerilenlerle başla."
+          }
+        }
+      }
+    },
+    "holidays_search_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search holidays"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Özel gün ara"
           }
         }
       }
@@ -14934,6 +15019,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bizim günler"
+          }
+        }
+      }
+    },
+    "holidays_turn_all_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn all off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hepsini kapat"
+          }
+        }
+      }
+    },
+    "holidays_turn_all_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn all on"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hepsini aç"
           }
         }
       }
@@ -41653,6 +41772,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "plus_yours": {
+      "comment": "Settings Plus card, first part of the summary line: the subscription is the signed-in person's.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yours"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senin"
+          }
+        }
+      }
+    },
+    "plus_from": {
+      "comment": "Settings Plus card: whose subscription carries the house; the name of a housemate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sağ olsun"
+          }
+        }
+      }
+    },
+    "plus_covers_names": {
+      "comment": "Settings Plus card: the homes this person's Plus covers, comma-separated names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covers %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ için geçerli"
+          }
+        }
+      }
+    },
+    "plus_covers_count": {
+      "comment": "Settings Plus card: homes covered and the cap, when the names are not known.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covers %lld of %lld homes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld ev için geçerli"
+          }
+        }
+      }
+    },
+    "plus_covers_this_house": {
+      "comment": "Settings Plus card: a housemate's Plus covers the open house.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covers this house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu evde açık"
           }
         }
       }

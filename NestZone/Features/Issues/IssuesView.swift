@@ -68,7 +68,7 @@ public struct IssuesView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.issuesReport))
-                .proLocked(.issues)
+                .proLocked(.issues, placement: .inset)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -131,7 +131,7 @@ public struct IssuesView: View {
                     .background {
                         if isSelected {
                             Capsule()
-                                .fill(theme.accent)
+                                .fill(theme.accentFill)
                                 .matchedGeometryEffect(id: "issueSection", in: sectionPill)
                         }
                     }

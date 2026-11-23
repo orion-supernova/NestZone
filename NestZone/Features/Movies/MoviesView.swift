@@ -72,7 +72,7 @@ public struct MoviesView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.moviesNewListTitle))
-                .proLocked(.customMovieLists)
+                .proLocked(.customMovieLists, placement: .inset)
             }
         }
         .task { await store.send(.task).finish() }
@@ -242,7 +242,7 @@ struct MovieListView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.movieListDetailAddMovies))
-                .proLocked(if: store.list.kind == .custom ? .customMovieLists : nil)
+                .proLocked(if: store.list.kind == .custom ? .customMovieLists : nil, placement: .inset)
             }
         }
         .task { await store.send(.task).finish() }
@@ -545,8 +545,12 @@ struct MovieInfoSheet: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 2)
+                    // Room for the Plus badge that hangs off a chip's corner,
+                    // which a scroll view would otherwise cut.
+                    .padding(.horizontal, 8)
+                    .padding(.top, 8)
                 }
+                .scrollClipDisabled()
                 .scrollIndicators(.hidden)
             }
         }

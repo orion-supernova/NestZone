@@ -25,6 +25,7 @@ struct CalendarSettingsView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .settingsRows()
         .background(Backdrop(tint: theme.accent))
         .navigationTitle(Text(L10n.calendarSettingsTitle))
         .navigationBarTitleDisplayMode(.inline)

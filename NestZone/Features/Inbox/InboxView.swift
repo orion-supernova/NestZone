@@ -43,41 +43,21 @@ public struct InboxBell: View {
 
     public var body: some View {
         Button { store.send(.bellTapped) } label: {
-            // The pip is an overlay rather than a sibling so the button's hit
-            // target stays the bell's, and a count of three digits cannot push
-            // the toolbar's layout around.
-            Image(systemName: store.badge.hasUnread ? "bell.badge.fill" : "bell")
+            Image(systemName: "bell")
                 .font(.body.weight(.semibold))
-                // Two-colour so the badge half of the glyph carries the tint
-                // and the bell stays legible against whatever is behind it.
-                .symbolRenderingMode(store.badge.hasUnread ? .palette : .monochrome)
-                .foregroundStyle(pipTint, Color.primary)
-                // The badge grows onto the bell and comes off it, rather than
-                // one glyph cutting to the other.
-                .contentTransition(.symbolEffect(.replace))
+                .foregroundStyle(Color.primary)
                 // Rings when something arrives, and only then. It used to key
                 // on the total itself, so reading things — the count going
                 // *down* — rang it too, as if more had come.
                 .symbolEffect(.wiggle.byLayer, options: .nonRepeating, value: rings)
                 .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
-                .overlay(alignment: .topTrailing) {
-                    if store.badge.hasUnread {
-                        Text(store.badge.pipText)
-                            .font(.system(.caption2, design: .rounded, weight: .bold))
-                            .monospacedDigit()
-                            .contentTransition(.numericText())
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(pipTint, in: .capsule)
-                            .overlay(Capsule().strokeBorder(.background, lineWidth: 1.5))
-                            .offset(x: 6, y: -4)
-                            .transition(.scale.combined(with: .opacity))
-                    }
-                }
                 .contentShape(.circle)
         }
         .buttonStyle(.pressable)
+        // The system's own badge: iOS 26 draws it on the toolbar item, outside
+        // its glass capsule. An overlay offset from the button's corner was cut
+        // by that capsule.
+        .badge(store.badge.hasUnread ? Text(store.badge.pipText) : nil)
         .animation(Motion.spring, value: store.badge.total)
         // Silent under Reduce Motion: the glyph and the pip still change, the
         // bell just does not swing.
@@ -92,17 +72,6 @@ public struct InboxBell: View {
         )
     }
 
-    /// What colour the pip is.
-    ///
-    /// The category of whatever is newest, so the bell says *what kind* of
-    /// thing is waiting before it is opened — a red-orange for a house problem
-    /// reads differently from a green for the shopping, and that is a free
-    /// piece of information. Falls back to the theme accent when the only thing
-    /// waiting is a release note, which belongs to the app rather than to any
-    /// part of the house.
-    private var pipTint: Color {
-        store.badge.latestCategory?.tint ?? theme.accent
-    }
 }
 
 // MARK: - The panel
@@ -279,7 +248,7 @@ struct InboxPanel: View {
             .foregroundStyle(isSelected ? theme.onAccent : Color.primary)
             .background {
                 if isSelected {
-                    Capsule().fill(theme.accent)
+                    Capsule().fill(theme.accentFill)
                         .matchedGeometryEffect(id: "inboxTab", in: switcherGlass)
                 }
             }

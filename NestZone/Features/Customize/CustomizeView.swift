@@ -27,6 +27,7 @@ public struct CustomizeView: View {
                 }
             }
         }
+        .settingsRows()
         // Always reorderable: the handles are the point of the list, and an
         // Edit button to reveal them is one more thing to find.
         .environment(\.editMode, .constant(.active))

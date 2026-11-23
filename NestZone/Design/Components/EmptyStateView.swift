@@ -57,6 +57,7 @@ public struct EmptyStateView: View {
             if let action {
                 Button(action: action.handler) { Text(action.title).foregroundStyle(.onAccent) }
                     .buttonStyle(.glassProminent)
+                    .tint(theme.accentFill)
             }
         }
         .frame(maxHeight: isCompact ? 220 : .infinity)

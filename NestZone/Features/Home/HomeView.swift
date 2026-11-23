@@ -923,6 +923,7 @@ private struct TaskRow: View {
 /// dinner, and evidence is not a reason to write on a household's behalf — so
 /// the way to a different answer stays one tap away underneath.
 private struct SuggestedDinnerCard: View {
+    @Environment(\.theme) private var theme
     let occurrence: EventOccurrence
     let onAccept: () -> Void
     let onDecideOther: () -> Void
@@ -957,6 +958,7 @@ private struct SuggestedDinnerCard: View {
                         .foregroundStyle(.onAccent)
                 }
                 .buttonStyle(.glassProminent)
+                .tint(theme.accentFill)
 
                 Button(action: onDecideOther) {
                     Text(L10n.homeDinnerFromEventOther)

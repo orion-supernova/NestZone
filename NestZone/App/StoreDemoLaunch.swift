@@ -5,7 +5,8 @@ import Foundation
 /// The screenshot launch arguments that open a screen by themselves, a few
 /// seconds after launch, through the same actions a tap would send:
 /// `-openConversation first`, `-openMovieNight 1`, `-openRecipe first`,
-/// `-openIssue first`, `-calendarMode agenda|week|month`.
+/// `-openIssue first`, `-calendarMode agenda|week|month`, `-openSettings 1`
+/// (add `-settingsScroll 1` to start it at the foot).
 ///
 /// Data arrives over live subscriptions, so each step waits (up to ten
 /// seconds) for the thing it is about to open rather than guessing a delay.
@@ -13,7 +14,7 @@ import Foundation
 enum StoreDemoLaunch {
     static func run(_ store: StoreOf<MainFeature>) async {
         let defaults = UserDefaults.standard
-        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode"]
+        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode", "openSettings"]
             .contains { defaults.object(forKey: $0) != nil }
         guard requested else { return }
         try? await Task.sleep(for: .seconds(3))
@@ -22,6 +23,10 @@ enum StoreDemoLaunch {
             store.send(.plans(.delegate(.open(.module(.calendar)))))
             await wait { store.plans.segments[id: .calendar] != nil }
             store.send(.plans(.segments(.element(id: .calendar, action: .screen(.calendar(.modeSelected(mode)))))))
+        }
+
+        if defaults.bool(forKey: "openSettings") {
+            store.send(.settingsButtonTapped)
         }
 
         if defaults.string(forKey: "openConversation") != nil {

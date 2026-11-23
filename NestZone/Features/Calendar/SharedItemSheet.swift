@@ -39,6 +39,7 @@ struct SharedItemSheet: View {
                     } label: {
                         Image(systemName: "ellipsis")
                     }
+                    .tint(.primary)
                     .accessibilityLabel(Text(L10n.commonMore))
                 }
             }

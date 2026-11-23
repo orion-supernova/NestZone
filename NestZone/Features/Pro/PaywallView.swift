@@ -303,7 +303,7 @@ private struct PlanCard: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .foregroundStyle(theme.onAccent)
-                                .background(theme.accent, in: .capsule)
+                                .background(theme.accentFill, in: .capsule)
                         }
                     }
                     // The billed price and its period lead; anything per month

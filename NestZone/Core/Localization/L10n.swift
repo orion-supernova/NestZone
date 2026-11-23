@@ -10449,6 +10449,31 @@ public enum L10n {
         r("plus_feature_homes_text", "Create or join a second home. One subscription covers up to two homes.")
     }
 
+    /// Yours
+    public static var plusYours: LocalizedStringResource {
+        r("plus_yours", "Yours")
+    }
+
+    /// From %@
+    public static func plusFrom(_ a0: String) -> LocalizedStringResource {
+        r("plus_from", "From \(a0)")
+    }
+
+    /// Covers %@
+    public static func plusCoversNames(_ a0: String) -> LocalizedStringResource {
+        r("plus_covers_names", "Covers \(a0)")
+    }
+
+    /// Covers %lld of %lld homes
+    public static func plusCoversCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("plus_covers_count", "Covers \(a0) of \(a1) homes")
+    }
+
+    /// Covers this house
+    public static var plusCoversThisHouse: LocalizedStringResource {
+        r("plus_covers_this_house", "Covers this house")
+    }
+
     /// Your Plus covers %lld of %lld homes: %@
     public static func plusCoverage(_ a0: Int, _ a1: Int, _ a2: String) -> LocalizedStringResource {
         r("plus_coverage", "Your Plus covers \(a0) of \(a1) homes: \(a2)")
@@ -11420,5 +11445,40 @@ extension L10n {
     /// Off
     public static var notifRowOff: LocalizedStringResource {
         r("notif_row_off", "Off")
+    }
+
+    /// Coming up
+    public static var holidaysComingUp: LocalizedStringResource {
+        r("holidays_coming_up", "Coming up")
+    }
+
+    /// All
+    public static var holidaysFilterAll: LocalizedStringResource {
+        r("holidays_filter_all", "All")
+    }
+
+    /// Celebrating
+    public static var holidaysFilterCelebrating: LocalizedStringResource {
+        r("holidays_filter_celebrating", "Celebrating")
+    }
+
+    /// Nothing picked yet. Start from the days around where you live.
+    public static var holidaysNoneCelebrated: LocalizedStringResource {
+        r("holidays_none_celebrated", "Nothing picked yet. Start from the days around where you live.")
+    }
+
+    /// Search holidays
+    public static var holidaysSearchPrompt: LocalizedStringResource {
+        r("holidays_search_prompt", "Search holidays")
+    }
+
+    /// Turn all off
+    public static var holidaysTurnAllOff: LocalizedStringResource {
+        r("holidays_turn_all_off", "Turn all off")
+    }
+
+    /// Turn all on
+    public static var holidaysTurnAllOn: LocalizedStringResource {
+        r("holidays_turn_all_on", "Turn all on")
     }
 }

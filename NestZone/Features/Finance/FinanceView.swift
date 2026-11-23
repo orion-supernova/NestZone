@@ -179,7 +179,7 @@ public struct FinanceView: View {
             Image(systemName: "plus")
         }
         .accessibilityLabel(Text(L10n.commonAdd))
-        .proLocked(.finance)
+        .proLocked(.finance, placement: .inset)
     }
 
     // MARK: - Chrome
@@ -287,7 +287,7 @@ public struct FinanceView: View {
                     .background {
                         if isSelected {
                             Capsule()
-                                .fill(theme.accent)
+                                .fill(theme.accentFill)
                                 .matchedGeometryEffect(id: "financeSection", in: sectionPill)
                         }
                     }

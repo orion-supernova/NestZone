@@ -612,7 +612,7 @@ private struct CuisineTile: View {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption)
-                    .foregroundStyle(theme.onAccent, theme.accent)
+                    .foregroundStyle(theme.onAccent, theme.accentFill)
                     .padding(6)
                     .transition(.scale.combined(with: .opacity))
             }

@@ -34,6 +34,7 @@ struct NotificationSettingsView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .settingsRows()
         .background(Backdrop(tint: theme.accent))
         .navigationTitle(Text(L10n.settingsNotificationsTitle))
         .navigationBarTitleDisplayMode(.inline)

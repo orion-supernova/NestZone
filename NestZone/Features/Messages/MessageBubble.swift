@@ -248,7 +248,7 @@ struct MessageBubble: View, Equatable {
                     // The sender's own bubble is solid so the thread is
                     // readable at a glance; everyone else's is glass.
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(theme.accent)
+                        .fill(theme.accentFill)
                 }
             }
             .glassEffect(
@@ -278,7 +278,7 @@ struct MessageBubble: View, Equatable {
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
             .frame(width: size.width, height: size.height, alignment: .leading)
-            .background(isMine ? AnyShapeStyle(theme.accent) : AnyShapeStyle(Palette.bubblePreview))
+            .background(isMine ? AnyShapeStyle(theme.accentFill) : AnyShapeStyle(Palette.bubblePreview))
             .environment(\.theme, theme)
             .environment(\.colorScheme, scheme)
         let renderer = ImageRenderer(content: flat)

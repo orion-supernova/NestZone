@@ -71,6 +71,7 @@ struct ReportSheet: View {
             }
             .animation(Motion.spring, value: store.reason)
             .sensoryFeedback(.selection, trigger: store.reason)
+            .settingsRows()
             .navigationTitle(Text(L10n.reportTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

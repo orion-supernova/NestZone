@@ -49,6 +49,7 @@ struct BlockedPeopleView: View {
                         }
                     }
                     .scrollContentBackground(.hidden)
+                    .settingsRows()
                 }
             }
             .background(Backdrop(tint: theme.accent))

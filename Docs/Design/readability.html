@@ -137,7 +137,8 @@
   <tr><td>Secondary</td><td><code>.foregroundStyle(.secondaryText)</code></td><td><code>#52525A</code></td><td><code>#C8C8D0</code></td><td>6.4:1 / 7.4:1</td></tr>
   <tr><td>Tertiary</td><td><code>.tertiaryText</code> for skippable metadata only</td><td><code>#66666E</code></td><td><code>#B2B2BA</code></td><td>4.7:1 / 5.8:1</td></tr>
   <tr><td>Accent</td><td><code>.accentText</code> (theme ink)</td><td>per theme</td><td>per theme</td><td>4.7:1 or better</td></tr>
-  <tr><td>On accent</td><td><code>.onAccent</code> on a fill of the accent</td><td colspan="2">white or deep ink per theme</td><td>4.5:1 or better</td></tr>
+  <tr><td>On accent</td><td><code>.onAccent</code> on a fill of the accent</td><td colspan="2">white on every theme (on <code>.accentFill</code>)</td><td>4.5:1 or better</td></tr>
+  <tr><td>Accent fill</td><td><code>.accentFill</code> behind words: bubbles, buttons, selected chips</td><td colspan="2">the accent deepened until white reads</td><td>4.5:1 (7:1 Increase Contrast)</td></tr>
   <tr><td>Status words</td><td><code>Palette.dangerText</code>, <code>Palette.successText</code></td><td><code>#B91C1C</code> / <code>#15803D</code></td><td><code>#FCA5A5</code> / <code>#4ADE80</code></td><td>6:1 or better</td></tr></table>
   <p>Every role has an Increase Contrast face (7:1 on the worst surface). <code>.tertiary</code> and <code>.quaternary</code> remain for hairlines and washes, never words. A caption is secondary at <code>.footnote</code> or <code>.caption</code>, never tertiary at <code>.caption2</code>.</p>
 
@@ -161,6 +162,15 @@
   <tr><td>Neon Night</td><td><code>#10B981</code> dark; <code>#0FA976</code> light (3.0 vs white, was 2.5)</td><td>deep ink 6.4 to 7.6</td><td><code>#0A7552</code> / <code>#12D091</code></td><td><code>#08583D</code> / <code>#7BF4CB</code></td><td>emerald everywhere, one step deeper only where it sat on white</td></tr>
   <tr><td>Deep Ocean</td><td><code>#1D4ED8</code> unchanged</td><td>white 6.7</td><td><code>#1D4ED8</code> / <code>#839FEE</code></td><td><code>#1840B1</code> / <code>#B3C5F5</code></td><td>the blue is already right in light; dark gets a periwinkle (it was 1.8:1)</td></tr></table>
   <p>The gradients, the second hues (<code>support</code>) and <code>highlight</code> are hero-only decoration and untouched. Gradients and washes never sit behind text: the wash fades out by mid-screen and cards carry the floor.</p>
+
+  <h2 id="accentfill">Accent as a fill under white words</h2>
+  <p>People expect white words on a coloured bubble. The bright accents of Retro Wave, Cyberpunk and Neon Night only reach 4.5:1 with a dark ink, which read as black on pink. <code>AppTheme.accentFill</code> (role <code>.accentFill</code>, <code>Palette.fill*</code>) keeps each theme's hue and saturation and lowers only lightness until white passes; <code>onAccent</code> is white everywhere. The pure <code>accent</code> stays for glyphs, switches, progress, rings and the tab bar. Used for outgoing bubbles, <code>PrimaryButton</code>, selected <code>Chip</code>s and pills, <code>DepthButton</code>, the dock's +, the Plus mark and the paywall and shop buttons. To go back, return <code>accent</code> from <code>accentFill</code> and the dark ink from <code>onAccent</code>.</p>
+  <table><tr><th>Theme</th><th>Accent (before)</th><th>White on accent</th><th>accentFill</th><th>White on fill</th><th>Increase Contrast</th><th>White on it</th></tr>
+  <tr><td><b>Basic</b></td><td><code>#7C3AED</code></td><td><span class="r ok">5.70</span></td><td><code>#7C3AED</code></td><td><span class="r ok">5.70</span></td><td><code>#681CEA</code></td><td><span class="r ok">7.14</span></td></tr>
+  <tr><td><b>Cyberpunk</b></td><td><code>#FF1F8A</code></td><td><span class="r bad">3.61</span></td><td><code>#E5006D</code></td><td><span class="r ok">4.61</span></td><td><code>#AF0054</code></td><td><span class="r ok">7.12</span></td></tr>
+  <tr><td><b>Retro Wave</b></td><td><code>#FF4D8D</code></td><td><span class="r bad">3.14</span></td><td><code>#E80053</code></td><td><span class="r ok">4.61</span></td><td><code>#B10040</code></td><td><span class="r ok">7.13</span></td></tr>
+  <tr><td><b>Neon Night</b></td><td><code>#0FA976</code> light / <code>#10B981</code> dark</td><td><span class="r bad">3.02</span> / <span class="r bad">2.54</span></td><td><code>#0C855D</code></td><td><span class="r ok">4.64</span></td><td><code>#096446</code></td><td><span class="r ok">7.18</span></td></tr>
+  <tr><td><b>Deep Ocean</b></td><td><code>#1D4ED8</code></td><td><span class="r ok">6.70</span></td><td><code>#1D4ED8</code></td><td><span class="r ok">6.70</span></td><td><code>#1C4BCF</code></td><td><span class="r ok">7.10</span></td></tr></table>
 
   <h2 id="components">Component rules</h2>
   <ul>

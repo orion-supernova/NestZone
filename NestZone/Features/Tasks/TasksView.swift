@@ -69,6 +69,7 @@ public struct TasksView: View {
                 Button { store.send(.contributionsTapped) } label: {
                     Image(systemName: "chart.pie")
                 }
+                .tint(.primary)
                 .accessibilityLabel(Text(L10n.contributionsSectionTitle))
                 .accessibilityIdentifier("TasksContributionsButton")
             }
