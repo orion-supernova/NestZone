@@ -75,7 +75,15 @@ public struct HomeView<Companion: View>: View {
     #if DEBUG || MEASURE
     /// `-todayScroll 1` flicks Today to the bottom and back, quickly and over
     /// and over, so its scroll can be profiled on a simulator nobody touches.
+    ///
+    /// `-todayGlide 1` is the calm version for an App Store preview: after two
+    /// seconds Today drifts to the bottom over five, once, and stays there.
     private func flickForever() async {
+        if UserDefaults.standard.bool(forKey: "todayGlide") {
+            try? await Task.sleep(for: .seconds(2.5))
+            withAnimation(.easeInOut(duration: 5)) { position.scrollTo(edge: .bottom) }
+            return
+        }
         guard UserDefaults.standard.bool(forKey: "todayScroll") else { return }
         var down = true
         while !Task.isCancelled {
@@ -146,8 +154,17 @@ public struct HomeView<Companion: View>: View {
         case .evening: L10n.homeDayEvening(weekday)
         case .night: L10n.homeDayNight(weekday)
         }
-        guard let name = store.greetingName else { return String(localized: part) }
-        return "\(String(localized: part)) · \(String(localized: L10n.homeHi(name)))"
+        // The line opens with the weekday in some languages, and Swedish (like
+        // Turkish) writes weekdays in lowercase: "tisdag kväll". The start of a
+        // line still takes a capital, whatever the language.
+        let day = Self.capitalizingFirst(String(localized: part))
+        guard let name = store.greetingName else { return day }
+        return "\(day) · \(String(localized: L10n.homeHi(name)))"
+    }
+
+    private static func capitalizingFirst(_ text: String) -> String {
+        guard let first = text.first else { return text }
+        return String(first).uppercased(with: L10n.locale) + text.dropFirst()
     }
 
     private func glanceText(_ clauses: [GlanceClause]) -> Text {

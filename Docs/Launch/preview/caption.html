@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 886px; height: 1920px; background: transparent; }
+  /* The pill sits above the dock (y 1590 on this canvas) and clear of the
+     nav bar, with 48 px side margins: well inside every safe area. */
+  .pill {
+    position: absolute; left: 50%; top: 1418px; transform: translateX(-50%);
+    max-width: 790px; box-sizing: border-box; padding: 26px 48px 28px;
+    border-radius: 80px; text-align: center; white-space: nowrap;
+    background: rgba(24, 14, 48, .80);
+    border: 1.5px solid rgba(255, 255, 255, .16);
+    box-shadow: 0 18px 50px rgba(8, 2, 24, .45);
+    color: #fff; font: 600 50px/1.1 -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+    letter-spacing: -0.4px;
+  }
+</style>
+<div class="pill" id="t"></div>
+<script>document.getElementById('t').textContent = decodeURIComponent(location.hash.slice(1));</script>

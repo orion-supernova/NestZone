@@ -126,6 +126,7 @@ public struct AppFeature: Sendable {
     @Dependency(\.purchases) var purchases
     @Dependency(\.pro) var proClient
     @Dependency(\.calendarMirror) var calendarMirror
+    @Dependency(\.sharedCopy) var sharedCopy
     @Dependency(\.deviceCalendar) var deviceCalendar
 
     public init() {}
@@ -434,7 +435,8 @@ public struct AppFeature: Sendable {
                         .send(.main(.proStatus(.becameActive))),
                         // The copies' window slides forward and catches up.
                         .send(.main(.mirror(.becameActive))),
-                        .send(.main(.share(.becameActive)))
+                        .send(.main(.share(.becameActive))),
+                        .send(.main(.sharedCopy(.becameActive)))
                     )
                 guard state.status == .authenticated,
                       !state.pushRegistration.isRegistered
@@ -585,6 +587,8 @@ public struct AppFeature: Sendable {
             @Shared(.calendarLastSynced) var lastSynced
             @Shared(.calendarPeopleRaw) var people
             @Shared(.calendarShareChoicesRaw) var shareChoices
+            @Shared(.calendarCopyChoicesRaw) var copyChoices
+            $copyChoices.withLock { $0 = "" }
             $copyMode.withLock { $0 = .off }
             $copyTargets.withLock { $0 = "" }
             $composerTargets.withLock { $0 = "" }
@@ -592,8 +596,9 @@ public struct AppFeature: Sendable {
             $lastSynced.withLock { $0 = 0 }
             $people.withLock { $0 = "" }
             $shareChoices.withLock { $0 = "" }
-            calendarCleanup = .run { [calendarMirror, deviceCalendar] _ in
+            calendarCleanup = .run { [calendarMirror, sharedCopy, deviceCalendar] _ in
                 _ = await calendarMirror.removeAll(deviceCalendar, nil, true)
+                _ = await sharedCopy.removeAll(deviceCalendar, nil)
             }
         }
         return .merge(
@@ -623,24 +628,34 @@ public struct AppFeature: Sendable {
     /// choice to share calendars with it (the server deletes what was shared
     /// when somebody leaves; the phone must simply stop sending).
     private func findMissingHomes(keeping live: Set<HomeID>) -> Effect<Action> {
-        .run { [calendarMirror] send in
+        .run { [calendarMirror, sharedCopy] send in
             @Shared(.calendarShareChoicesRaw) var shareChoices
+            @Shared(.calendarCopyChoicesRaw) var copyChoices
             var held = await calendarMirror.knownHomes()
+            held.formUnion(await sharedCopy.knownHomes())
+            for key in CalendarCopyChoices.decode(copyChoices).houses.keys { held.insert(HomeID(key)) }
             for key in CalendarShareChoices.decode(shareChoices).houses.keys { held.insert(HomeID(key)) }
             await send(.homesMissing(held.subtracting(live)))
         }
     }
 
     private func forgetHomes(_ homes: Set<HomeID>) -> Effect<Action> {
-        .run { [calendarMirror, deviceCalendar] _ in
+        .run { [calendarMirror, sharedCopy, deviceCalendar] _ in
             @Shared(.calendarShareChoicesRaw) var shareChoices
+            @Shared(.calendarCopyChoicesRaw) var copyChoices
             $shareChoices.withLock { raw in
                 var choices = CalendarShareChoices.decode(raw)
                 for home in homes { choices.houses[home.rawValue] = nil }
                 raw = choices.raw
             }
+            $copyChoices.withLock { raw in
+                var choices = CalendarCopyChoices.decode(raw)
+                for home in homes { choices.houses[home.rawValue] = nil }
+                raw = choices.raw
+            }
             for home in homes {
                 _ = await calendarMirror.removeAll(deviceCalendar, home, true)
+                _ = await sharedCopy.removeAll(deviceCalendar, home)
             }
         }
     }

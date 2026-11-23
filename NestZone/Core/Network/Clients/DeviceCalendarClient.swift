@@ -53,6 +53,22 @@ public struct DeviceCalendarClient: Sendable {
     /// Which of these events still exist. How the mirror finds out the person
     /// deleted a copy by hand.
     public var existing: @Sendable (_ eventIDs: [String]) async -> Set<String> = { _ in [] }
+    /// Makes a calendar of NestZone's own (a housemate's, "NestZone · Name"),
+    /// in iCloud when the phone has it, else on the phone, and commits at once.
+    /// Answers its identifier. Calendars made here are left out of
+    /// `calendars` and `shareableCalendars`: nothing is copied into one by
+    /// the house's mirror and none is shared back to the house.
+    public var createCalendar: @Sendable (_ title: String, _ colorHex: String) async throws -> String
+    /// Renames and recolours a calendar made by `createCalendar`.
+    public var updateCalendar: @Sendable (_ id: String, _ title: String, _ colorHex: String) async throws -> Void
+    /// Deletes a calendar made by `createCalendar` and everything in it.
+    /// Already gone is fine.
+    public var removeCalendar: @Sendable (_ id: String) async throws -> Void
+    /// Which of these calendars still exist, whoever made them.
+    public var calendarsExist: @Sendable (_ ids: [String]) async -> Set<String> = { _ in [] }
+    /// A calendar of ours with exactly this title, if there is one: how a
+    /// calendar is taken over again when the phone's memory of it was lost.
+    public var findOwnCalendar: @Sendable (_ title: String) async -> String? = { _ in nil }
     /// Fires whenever the phone's calendar database changes, from any app
     /// (`EKEventStoreChanged`): including by the mirror's own writes, which
     /// find nothing to do the second time around.
@@ -64,6 +80,8 @@ public enum DeviceCalendarError: Error, Equatable, Sendable {
     /// The calendar it was meant for is gone (an account removed, say).
     case calendarMissing
     case noAccess
+    /// No account the phone has would take a new calendar.
+    case noSource
 }
 
 extension DependencyValues {

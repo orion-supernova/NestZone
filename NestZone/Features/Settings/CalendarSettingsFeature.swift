@@ -22,6 +22,7 @@ public struct CalendarSettingsFeature: Sendable {
         @Shared(.calendarShareChoicesRaw) public var shareChoicesRaw: String
         @Shared(.calendarShareDefaultLevelRaw) public var shareDefaultLevelRaw: String
         @Shared(.calendarShareWeeks) public var shareWeeks: Int
+        @Shared(.calendarCopyChoicesRaw) public var copyChoicesRaw: String
         @Shared(.calendarCopyMode) public var mode: CalendarCopyMode
         @Shared(.calendarCopyTargetsRaw) public var targetsRaw: String
         @Shared(.calendarCopyReminders) public var copyReminders: Bool
@@ -47,13 +48,39 @@ public struct CalendarSettingsFeature: Sendable {
         /// sharing on and not copying.
         public var isExplainingShare = false
 
+        /// The house's people, to name their calendars.
+        public var members: [User] = []
+        /// Housemates who share calendars with this house, live.
+        public var housemates: [HousemateShare] = []
+        /// The housemate whose "Add to my calendar" opened the explainer.
+        public var explainingOwner: String?
+
         public var isExplaining = false
         public var isConnecting = false
         /// "Remove the copies from your calendars?"
         @Presents public var dialog: ConfirmationDialogState<Action.Dialog>?
 
-        public init(homeID: HomeID) {
+        public init(homeID: HomeID, members: [User] = []) {
             self.homeID = homeID
+            self.members = members
+        }
+
+        /// "Housemates can add my calendar to theirs": this phone's answer, or
+        /// the server's when this phone never gave one.
+        public var allowCopy: Bool { shareChoices.house(homeID).allowCopy ?? shareRow?.allowCopy ?? false }
+
+        public func name(of id: String) -> String? {
+            members.first { $0.id.rawValue == id }?.displayName
+        }
+
+        public func isCopying(_ id: String) -> Bool {
+            CalendarCopyChoices.decode(copyChoicesRaw).house(homeID).owners[id] != nil
+        }
+
+        /// Housemates who share, other than the person, with a name to show.
+        public var copyRows: [(share: HousemateShare, name: String)] {
+            housemates.compactMap { share in name(of: share.id).map { (share, $0) } }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         }
 
         public var shareChoices: CalendarShareChoices { .decode(shareChoicesRaw) }
@@ -85,6 +112,10 @@ public struct CalendarSettingsFeature: Sendable {
         case shareDefaultSelected(CalendarShareLevel)
         case shareWeeksSelected(Int)
         case shareRowUpdated(CalendarShareRow?)
+        case allowCopyToggled(Bool)
+        case housematesUpdated([HousemateShare])
+        case housemateToggled(String, Bool)
+        case housemateRemoved
         case copyToggled(Bool)
         case remindersToggled(Bool)
         case modeSelected(CalendarCopyMode)
@@ -100,6 +131,7 @@ public struct CalendarSettingsFeature: Sendable {
         public enum Dialog: Equatable {
             case removeCopies
             case keepCopies
+            case removeHousemate(String)
         }
 
         public enum Delegate: Equatable {
@@ -110,6 +142,7 @@ public struct CalendarSettingsFeature: Sendable {
 
     @Dependency(\.deviceCalendar) var deviceCalendar
     @Dependency(\.calendarMirror) var calendarMirror
+    @Dependency(\.sharedCopy) var sharedCopy
     @Dependency(\.calendarShare) var calendarShare
     @Dependency(\.paywall) var paywall
     @Dependency(\.openURL) var openURL
@@ -122,7 +155,7 @@ public struct CalendarSettingsFeature: Sendable {
     static func writes(_ action: Action) -> Bool {
         switch action {
         case .copyToggled(true), .modeSelected, .targetToggled, .connectTapped, .remindersToggled,
-             .shareToggled(true): true
+             .shareToggled(true), .allowCopyToggled(true), .housemateToggled(_, true): true
         // Off is never gated: stopping is always allowed.
         case let .shareLevelSelected(_, level): level.isShared
         default: false
@@ -148,8 +181,72 @@ public struct CalendarSettingsFeature: Sendable {
                                 await send(.shareRowUpdated(row))
                             }
                         }
+                    },
+                    .run { send in
+                        await Backoff.retrying(clock: clock) { delivered in
+                            for try await rows in calendarShare.housemates(homeID) {
+                                delivered()
+                                await send(.housematesUpdated(rows))
+                            }
+                        }
                     }
                 )
+
+            case let .housematesUpdated(rows):
+                state.housemates = rows
+                // A housemate who changed their name is called by it in the
+                // calendar's title at the next sync.
+                let homeID = state.homeID
+                let names = Dictionary(uniqueKeysWithValues: state.members.map { ($0.id.rawValue, $0.displayName) })
+                let before = state.copyChoicesRaw
+                state.$copyChoicesRaw.withLock { raw in
+                    var choices = CalendarCopyChoices.decode(raw)
+                    choices.update(homeID) { house in
+                        for (id, owner) in house.owners {
+                            if let name = names[id], name != owner.name { house.owners[id] = .init(name: name) }
+                        }
+                    }
+                    let next = choices.raw
+                    if next != raw { raw = next }
+                }
+                return before == state.copyChoicesRaw ? .none : .send(.delegate(.changed))
+
+            case let .allowCopyToggled(isOn):
+                let homeID = state.homeID
+                state.$shareChoicesRaw.withLock { raw in
+                    var choices = CalendarShareChoices.decode(raw)
+                    choices.update(homeID) { $0.allowCopy = isOn }
+                    raw = choices.raw
+                }
+                return .send(.delegate(.changed))
+
+            case let .housemateToggled(id, true):
+                guard let name = state.name(of: id) else { return .none }
+                switch state.access {
+                case .notDetermined:
+                    state.explainingOwner = id
+                    state.isExplainingShare = false
+                    state.isExplaining = true
+                    return .none
+                case .granted:
+                    let homeID = state.homeID
+                    state.$copyChoicesRaw.withLock { raw in
+                        var choices = CalendarCopyChoices.decode(raw)
+                        choices.update(homeID) { $0.owners[id] = .init(name: name) }
+                        raw = choices.raw
+                    }
+                    return .send(.delegate(.changed))
+                case .writeOnly, .denied, .restricted:
+                    return .none
+                }
+
+            case let .housemateToggled(id, false):
+                guard state.isCopying(id), let name = state.name(of: id) else { return .none }
+                state.dialog = .removeHousemate(id, name: name)
+                return .none
+
+            case .housemateRemoved:
+                return .none
 
             case let .shareRowUpdated(row):
                 state.shareRow = row
@@ -294,7 +391,9 @@ public struct CalendarSettingsFeature: Sendable {
                 state.isConnecting = true
                 let thenShare = state.isExplainingShare
                 state.isExplainingShare = false
-                return request(thenShare: thenShare)
+                let owner = state.explainingOwner
+                state.explainingOwner = nil
+                return request(then: owner.map { .owner($0) } ?? (thenShare ? .share : .copy))
 
             case .openSystemSettingsTapped:
                 return .run { _ in
@@ -310,6 +409,21 @@ public struct CalendarSettingsFeature: Sendable {
 
             case .dialog(.presented(.keepCopies)):
                 return .none
+
+            case let .dialog(.presented(.removeHousemate(id))):
+                let homeID = state.homeID
+                state.$copyChoicesRaw.withLock { raw in
+                    var choices = CalendarCopyChoices.decode(raw)
+                    choices.update(homeID) { $0.owners[id] = nil }
+                    raw = choices.raw
+                }
+                return .merge(
+                    .send(.delegate(.changed)),
+                    .run { send in
+                        _ = await sharedCopy.removeOwner(deviceCalendar, homeID, id)
+                        await send(.housemateRemoved)
+                    }
+                )
 
             case .copiesRemoved:
                 state.copyCount = 0
@@ -328,7 +442,12 @@ public struct CalendarSettingsFeature: Sendable {
 
     /// The system prompt, after the explainer. Its answer turns copying on
     /// when it is a yes.
-    private func request(thenShare: Bool) -> Effect<Action> {
+    private enum Then: Sendable {
+        case copy, share
+        case owner(String)
+    }
+
+    private func request(then: Then) -> Effect<Action> {
         .run { send in
             let access = (try? await deviceCalendar.requestAccess()) ?? deviceCalendar.access()
             await send(.loaded(
@@ -338,7 +457,13 @@ public struct CalendarSettingsFeature: Sendable {
                 copies: await calendarMirror.copyCount(),
                 shareable: access == .granted ? await deviceCalendar.shareableCalendars() : []
             ))
-            if access == .granted { await send(thenShare ? .shareToggled(true) : .copyToggled(true)) }
+            if access == .granted {
+                switch then {
+                case .copy: await send(.copyToggled(true))
+                case .share: await send(.shareToggled(true))
+                case let .owner(id): await send(.housemateToggled(id, true))
+                }
+            }
         }
     }
 
@@ -380,6 +505,23 @@ extension ConfirmationDialogState where Action == CalendarSettingsFeature.Action
             }
         } message: {
             TextState(String(localized: L10n.calendarCopyRemoveMessage))
+        }
+    }
+}
+
+extension ConfirmationDialogState where Action == CalendarSettingsFeature.Action.Dialog {
+    static func removeHousemate(_ id: String, name: String) -> Self {
+        ConfirmationDialogState {
+            TextState(String(localized: L10n.calendarSharedCopyRemoveTitle(name)))
+        } actions: {
+            ButtonState(role: .destructive, action: .removeHousemate(id)) {
+                TextState(String(localized: L10n.calendarSharedCopyRemove))
+            }
+            ButtonState(role: .cancel, action: .keepCopies) {
+                TextState(String(localized: L10n.calendarCopyKeep))
+            }
+        } message: {
+            TextState(String(localized: L10n.calendarSharedCopyRemoveMessage))
         }
     }
 }

@@ -81,18 +81,28 @@ public struct SharedCalendarEntry: Codable, Equatable, Hashable, Sendable {
 public struct CalendarShareRow: Decodable, Equatable, Sendable {
     public var calendars: [SharedCalendarEntry]
     public var windowDays: Int
+    /// Housemates may copy these calendars into their own. Off unless the
+    /// person said so (`allow_copy`; absent on the server is off).
+    public var allowCopy: Bool
     /// When the phone last uploaded, if it ever has.
     public var syncedAt: Timestamp?
 
     enum CodingKeys: String, CodingKey {
         case calendars
         case windowDays = "window_days"
+        case allowCopy = "allow_copy"
         case syncedAt = "synced_at"
     }
 
-    public init(calendars: [SharedCalendarEntry] = [], windowDays: Int = 56, syncedAt: Timestamp? = nil) {
+    public init(
+        calendars: [SharedCalendarEntry] = [],
+        windowDays: Int = 56,
+        allowCopy: Bool = false,
+        syncedAt: Timestamp? = nil
+    ) {
         self.calendars = calendars
         self.windowDays = windowDays
+        self.allowCopy = allowCopy
         self.syncedAt = syncedAt
     }
 
@@ -100,6 +110,7 @@ public struct CalendarShareRow: Decodable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         calendars = (try? c.decodeIfPresent([SharedCalendarEntry].self, forKey: .calendars)) ?? []
         windowDays = c.decodeNumber(forKey: .windowDays, default: 56)
+        allowCopy = (try? c.decodeIfPresent(Bool.self, forKey: .allowCopy)) ?? false
         syncedAt = try? c.decodeIfPresent(Timestamp.self, forKey: .syncedAt)
     }
 }
@@ -119,6 +130,10 @@ public struct SharedBusyItem: Decodable, Identifiable, Equatable, Hashable, Send
     public var startsAt: Timestamp
     public var endsAt: Timestamp
     public var isAllDay: Bool
+    /// The owner lets housemates copy this into their own calendar. Read off
+    /// the owner's share on every answer, so a withdrawn consent reaches the
+    /// copiers at their next sync.
+    public var allowCopy: Bool
     /// Only at `details`.
     public var title: String?
     public var location: String?
@@ -133,6 +148,7 @@ public struct SharedBusyItem: Decodable, Identifiable, Equatable, Hashable, Send
         case startsAt = "starts_at"
         case endsAt = "ends_at"
         case isAllDay = "is_all_day"
+        case allowCopy = "allow_copy"
         case title, location
     }
 
@@ -147,6 +163,7 @@ public struct SharedBusyItem: Decodable, Identifiable, Equatable, Hashable, Send
         startsAt = try c.decode(Timestamp.self, forKey: .startsAt)
         endsAt = try c.decode(Timestamp.self, forKey: .endsAt)
         isAllDay = (try? c.decodeIfPresent(Bool.self, forKey: .isAllDay)) ?? false
+        allowCopy = (try? c.decodeIfPresent(Bool.self, forKey: .allowCopy)) ?? false
         title = try? c.decodeIfPresent(String.self, forKey: .title)
         location = try? c.decodeIfPresent(String.self, forKey: .location)
     }
@@ -160,10 +177,12 @@ public struct SharedBusyItem: Decodable, Identifiable, Equatable, Hashable, Send
         startsAt: Timestamp,
         endsAt: Timestamp,
         isAllDay: Bool = false,
+        allowCopy: Bool = false,
         title: String? = nil,
         location: String? = nil
     ) {
         self.id = id
+        self.allowCopy = allowCopy
         self.userID = userID
         self.calendarKey = calendarKey
         self.calendarName = calendarName
@@ -216,6 +235,30 @@ public struct SharedBusyItem: Decodable, Identifiable, Equatable, Hashable, Send
     }
 }
 
+/// `calendarShare:housemates`: one housemate who shares calendars with this
+/// house, and whether they let it be copied.
+public struct HousemateShare: Decodable, Equatable, Identifiable, Sendable {
+    public var userID: UserID
+    public var allowCopy: Bool
+    public var id: String { userID.rawValue }
+
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case allowCopy = "allow_copy"
+    }
+
+    public init(userID: UserID, allowCopy: Bool) {
+        self.userID = userID
+        self.allowCopy = allowCopy
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userID = try c.decode(UserID.self, forKey: .userID)
+        allowCopy = (try? c.decodeIfPresent(Bool.self, forKey: .allowCopy)) ?? false
+    }
+}
+
 /// One item the phone uploads for one calendar.
 public struct SharedItemUpload: Equatable, Sendable {
     public var startsAt: Date
@@ -264,6 +307,11 @@ public struct CalendarShareChoices: Codable, Equatable, Sendable {
         public var stopAll = false
         /// The same for single calendars set back to Off.
         public var stopKeys: Set<String> = []
+        /// "Housemates can add my calendar to theirs", as this phone last set
+        /// it. `nil` until it is touched here, so a second phone that never
+        /// asked does not overwrite the first one's answer. Optional so
+        /// choices written before it existed still decode.
+        public var allowCopy: Bool?
 
         public init() {}
 

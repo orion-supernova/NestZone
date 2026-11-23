@@ -11723,4 +11723,64 @@ extension L10n {
     public static var calendarAddFirst: LocalizedStringResource {
         r("calendar_add_first", "Add the first event")
     }
+
+    /// Housemates can add my calendar to theirs
+    public static var calendarShareAllowCopy: LocalizedStringResource {
+        r("calendar_share_allow_copy", "Housemates can add my calendar to theirs")
+    }
+
+    /// Off by default. When it is on, a housemate can choose to get a copy of what you share in their own calendar app, kept up to date and at the level you picked. Turn it off and the copies go at their next sync.
+    public static var calendarShareAllowCopyFooter: LocalizedStringResource {
+        r("calendar_share_allow_copy_footer", "Off by default. When it is on, a housemate can choose to get a copy of what you share in their own calendar app, kept up to date and at the level you picked. Turn it off and the copies go at their next sync.")
+    }
+
+    /// Housemates' calendars
+    public static var calendarCopyHousematesHeader: LocalizedStringResource {
+        r("calendar_copy_housemates_header", "Housemates' calendars")
+    }
+
+    /// Each one gets its own calendar on your phone, named “NestZone · Name”, so you can hide it with one tap in any calendar app.
+    public static var calendarCopyHousematesFooter: LocalizedStringResource {
+        r("calendar_copy_housemates_footer", "Each one gets its own calendar on your phone, named “NestZone · Name”, so you can hide it with one tap in any calendar app.")
+    }
+
+    /// Add to my calendar
+    public static var calendarCopyHousemateToggle: LocalizedStringResource {
+        r("calendar_copy_housemate_toggle", "Add to my calendar")
+    }
+
+    /// %@ hasn't allowed copies
+    public static func calendarCopyHousemateNotAllowed(_ a0: String) -> LocalizedStringResource {
+        r("calendar_copy_housemate_not_allowed", "\(a0) hasn't allowed copies")
+    }
+
+    /// NestZone · %@
+    public static func calendarSharedCopyCalendarName(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_copy_calendar_name", "NestZone · \(a0)")
+    }
+
+    /// %@ · busy
+    public static func calendarSharedCopyBusy(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_copy_busy", "\(a0) · busy")
+    }
+
+    /// A copy of %@'s shared calendar. NestZone keeps it up to date.
+    public static func calendarSharedCopyNote(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_copy_note", "A copy of \(a0)'s shared calendar. NestZone keeps it up to date.")
+    }
+
+    /// Remove %@'s calendar from your phone?
+    public static func calendarSharedCopyRemoveTitle(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_copy_remove_title", "Remove \(a0)'s calendar from your phone?")
+    }
+
+    /// The calendar and everything in it goes. You can add it again any time.
+    public static var calendarSharedCopyRemoveMessage: LocalizedStringResource {
+        r("calendar_shared_copy_remove_message", "The calendar and everything in it goes. You can add it again any time.")
+    }
+
+    /// Remove calendar
+    public static var calendarSharedCopyRemove: LocalizedStringResource {
+        r("calendar_shared_copy_remove", "Remove calendar")
+    }
 }

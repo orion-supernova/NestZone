@@ -17,7 +17,13 @@ public struct CalendarShareClient: Sendable {
     public var inRange: @Sendable (HomeID, Date, Date) -> AsyncThrowingStream<[SharedBusyItem], any Error> = { _, _, _ in .never }
     /// Replaces the whole list of calendars shared in this house. An empty list
     /// stops sharing, and is never refused.
-    public var setCalendars: @Sendable (_ homeID: HomeID, _ calendars: [SharedCalendarEntry], _ windowDays: Int) async throws -> CalendarShareRow
+    /// `allowCopy` is whether housemates may copy them into their own
+    /// calendars; `nil` keeps what the server holds (a phone that never chose
+    /// must not undo another phone's answer).
+    public var setCalendars: @Sendable (_ homeID: HomeID, _ calendars: [SharedCalendarEntry], _ windowDays: Int, _ allowCopy: Bool?) async throws -> CalendarShareRow
+    /// Who shares calendars with this house and whether they let them be
+    /// copied, live. Housemates only.
+    public var housemates: @Sendable (HomeID) -> AsyncThrowingStream<[HousemateShare], any Error> = { _ in .never }
     /// Replaces one calendar's items in `from...to` with `items`. Idempotent: a
     /// retry after a dropped connection is harmless. Answers how many it wrote.
     public var replace: @Sendable (_ homeID: HomeID, _ calendarKey: String, _ from: Date, _ to: Date, _ items: [SharedItemUpload]) async throws -> Int
@@ -42,7 +48,7 @@ extension CalendarShareClient: DependencyKey {
                 as: [SharedBusyItem].self
             )
         },
-        setCalendars: { homeID, calendars, windowDays in
+        setCalendars: { homeID, calendars, windowDays, allowCopy in
             let list: [ConvexEncodable?] = calendars.map { entry in
                 var out: [String: ConvexEncodable?] = [
                     "key": entry.key,
@@ -52,17 +58,26 @@ extension CalendarShareClient: DependencyKey {
                 if let color = entry.colorHex { out["color"] = color }
                 return out
             }
+            var args: [String: ConvexEncodable?] = [
+                "homeId": homeID,
+                "calendars": list,
+                "windowDays": windowDays.convexNumber,
+            ]
+            if let allowCopy { args["allowCopy"] = allowCopy }
             return try await ConvexConnection.shared.mutate(
                 "calendarShare:setCalendars",
-                args: [
-                    "homeId": homeID,
-                    "calendars": list,
-                    "windowDays": windowDays.convexNumber,
-                ],
+                args: args,
                 as: CalendarShareRow.self,
                 // Done in the background; a Plus refusal is handled quietly by
                 // the share engine, never as a paywall over something else.
                 presentsPaywall: false
+            )
+        },
+        housemates: { homeID in
+            ConvexConnection.shared.subscribe(
+                to: "calendarShare:housemates",
+                args: ["homeId": homeID],
+                as: [HousemateShare].self
             )
         },
         replace: { homeID, key, from, to, items in

@@ -18,6 +18,11 @@ extension DeviceCalendarClient: DependencyKey {
         remove: { id in try await DeviceCalendarStore.shared.remove(id) },
         commit: { try await DeviceCalendarStore.shared.commit() },
         existing: { ids in await DeviceCalendarStore.shared.existing(ids) },
+        createCalendar: { title, color in try await DeviceCalendarStore.shared.createCalendar(title, color) },
+        updateCalendar: { id, title, color in try await DeviceCalendarStore.shared.updateCalendar(id, title, color) },
+        removeCalendar: { id in try await DeviceCalendarStore.shared.removeCalendar(id) },
+        calendarsExist: { ids in await DeviceCalendarStore.shared.calendarsExist(ids) },
+        findOwnCalendar: { title in await DeviceCalendarStore.shared.findOwnCalendar(title) },
         changes: {
             AsyncStream { continuation in
                 let observer = ObserverBox(
@@ -78,8 +83,12 @@ actor DeviceCalendarStore {
 
     func calendars() -> [DeviceCalendar] {
         guard Self.access() == .granted else { return [] }
+        let ownCalendarIDs = ownCalendarIDs
         return store.calendars(for: .event)
-            .filter { $0.allowsContentModifications && $0.type != .subscription && $0.type != .birthday }
+            .filter {
+                $0.allowsContentModifications && $0.type != .subscription && $0.type != .birthday
+                    && !ownCalendarIDs.contains($0.calendarIdentifier)
+            }
             .sorted { (lhs: EKCalendar, rhs: EKCalendar) -> Bool in
                 if lhs.source.title != rhs.source.title { return lhs.source.title < rhs.source.title }
                 return lhs.title < rhs.title
@@ -97,8 +106,9 @@ actor DeviceCalendarStore {
 
     func shareableCalendars() -> [DeviceCalendar] {
         guard Self.access() == .granted else { return [] }
+        let ownCalendarIDs = ownCalendarIDs
         return store.calendars(for: .event)
-            .filter { $0.type != .birthday }
+            .filter { $0.type != .birthday && !ownCalendarIDs.contains($0.calendarIdentifier) }
             .sorted { (lhs: EKCalendar, rhs: EKCalendar) -> Bool in
                 if lhs.source.title != rhs.source.title { return lhs.source.title < rhs.source.title }
                 return lhs.title < rhs.title
@@ -179,7 +189,9 @@ actor DeviceCalendarStore {
 
         event.title = draft.title
         event.location = draft.location
-        event.notes = Self.notes(draft.notes)
+        // A copy of a housemate's calendar says what it is in its own notes;
+        // the house-event line ("Edit this in NestZone") would be untrue.
+        event.notes = draft.marker?.host == "shared" ? draft.notes : Self.notes(draft.notes)
         event.isAllDay = draft.isAllDay
         event.startDate = draft.start
         event.endDate = draft.end
@@ -239,6 +251,92 @@ actor DeviceCalendarStore {
             if let id = event.eventIdentifier { resolved[token] = id }
         }
         return resolved
+    }
+
+    // MARK: NestZone's own calendars
+
+    /// The identifiers of the calendars `createCalendar` made, kept in the
+    /// defaults: an EKCalendar carries nothing of ours, and these must stay out
+    /// of "copy into" and "share" however the phone renames them.
+    private static let ownKey = "nestZoneOwnCalendarIDs"
+
+    private var ownCalendarIDs: Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: Self.ownKey) ?? [])
+    }
+
+    private func setOwn(_ ids: Set<String>) {
+        UserDefaults.standard.set(ids.sorted(), forKey: Self.ownKey)
+    }
+
+    func createCalendar(_ title: String, _ colorHex: String) throws -> String {
+        guard Self.access() == .granted else { throw DeviceCalendarError.noAccess }
+        // iCloud first (it follows the person to their other devices and to
+        // Google's app through the account), then the phone itself, then
+        // whatever the phone files new events under.
+        var sources: [EKSource] = []
+        if let icloud = store.sources.first(where: { $0.sourceType == .calDAV && $0.title == "iCloud" })
+            ?? store.sources.first(where: { $0.sourceType == .mobileMe }) { sources.append(icloud) }
+        if let local = store.sources.first(where: { $0.sourceType == .local }) { sources.append(local) }
+        if let fallback = store.defaultCalendarForNewEvents?.source,
+           !sources.contains(where: { $0.sourceIdentifier == fallback.sourceIdentifier }) { sources.append(fallback) }
+        guard !sources.isEmpty else { throw DeviceCalendarError.noSource }
+
+        var lastError: (any Error)?
+        for source in sources {
+            let calendar = EKCalendar(for: .event, eventStore: store)
+            calendar.title = title
+            calendar.source = source
+            calendar.cgColor = Self.color(hex: colorHex)
+            do {
+                try store.saveCalendar(calendar, commit: true)
+                setOwn(ownCalendarIDs.union([calendar.calendarIdentifier]))
+                return calendar.calendarIdentifier
+            } catch {
+                store.reset()
+                lastError = error
+            }
+        }
+        throw lastError ?? DeviceCalendarError.noSource
+    }
+
+    func updateCalendar(_ id: String, _ title: String, _ colorHex: String) throws {
+        guard Self.access() == .granted else { throw DeviceCalendarError.noAccess }
+        guard let calendar = store.calendar(withIdentifier: id) else { throw DeviceCalendarError.calendarMissing }
+        calendar.title = title
+        calendar.cgColor = Self.color(hex: colorHex)
+        try store.saveCalendar(calendar, commit: true)
+    }
+
+    func removeCalendar(_ id: String) throws {
+        guard Self.access() == .granted else { throw DeviceCalendarError.noAccess }
+        if let calendar = store.calendar(withIdentifier: id) {
+            try store.removeCalendar(calendar, commit: true)
+        }
+        setOwn(ownCalendarIDs.subtracting([id]))
+    }
+
+    func calendarsExist(_ ids: [String]) -> Set<String> {
+        guard Self.access() == .granted else { return [] }
+        return Set(ids.filter { store.calendar(withIdentifier: $0) != nil })
+    }
+
+    func findOwnCalendar(_ title: String) -> String? {
+        guard Self.access() == .granted else { return nil }
+        let own = ownCalendarIDs
+        return store.calendars(for: .event)
+            .first { own.contains($0.calendarIdentifier) && $0.title == title }?
+            .calendarIdentifier
+    }
+
+    private static func color(hex: String) -> CGColor {
+        var value: UInt64 = 0
+        Scanner(string: hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))).scanHexInt64(&value)
+        return CGColor(
+            red: CGFloat((value >> 16) & 0xFF) / 255,
+            green: CGFloat((value >> 8) & 0xFF) / 255,
+            blue: CGFloat(value & 0xFF) / 255,
+            alpha: 1
+        )
     }
 
     func existing(_ eventIDs: [String]) -> Set<String> {

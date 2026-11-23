@@ -154,6 +154,16 @@
   </table>
   <p>No change to <code>events</code>, so every app version keeps working. Copies into the person's own calendars need nothing on the server: the id map is on the phone.</p>
 
+  <h2 id="copy">Copying a housemate's calendar</h2>
+  <p><b>Status:</b> built on <code>dev</code> for 1.13.0. The sharer decides first; the copier opts in per housemate.</p>
+  <ul>
+    <li><b>Consent, on the sharer's side.</b> Settings → Calendar → Share my calendars → "Housemates can add my calendar to theirs", per house, <b>off by default</b>. Stored as optional <code>allow_copy</code> on <code>calendar_shares</code>; <code>setCalendars</code> takes an optional <code>allowCopy</code> (absent keeps the stored value, so a second phone that never chose cannot undo the first). <code>inRange</code> returns each item's owner <code>allow_copy</code>; <code>calendarShare:housemates</code> lists who shares and whether they allow it.</li>
+    <li><b>The copier's side.</b> Settings → Calendar → "Housemates' calendars": a switch "Add to my calendar" per housemate (per house, per device, off by default); housemates who share without allowing show greyed with "Name hasn't allowed copies".</li>
+    <li><b>A dedicated calendar</b> named "NestZone · Name", made in iCloud when the phone has it, else on the phone, in the housemate's tint, so it hides with one tap in any calendar app. Busy-only items read "Name · busy". Switching off asks, then deletes the calendar. Deleting it in the Calendar app counts as switching off and is never recreated silently.</li>
+    <li><b>Engine.</b> Same pattern as the house-event mirror, a separate map: key <code>&lt;home&gt;/&lt;owner&gt;/&lt;calendarKey&gt;/&lt;startMs&gt;-&lt;endMs&gt;</code>, marker <code>nestzone://shared/...</code> (skipped by uploads like every <code>nestzone://</code> marker). Shared rows have no stable id, so a moved item is a removed copy and a new one; commits are batched. Consent withdrawn removes copies at the next answer; an item simply absent needs two complete answers (or one that saw it go); a truncated or empty answer never deletes. Plus: without it nothing updates and what is there stays.</li>
+    <li>Sync runs from an app-wide <code>inRange</code> subscription that is open only while a copy switch is on, plus foreground, settings and calendar-database changes.</li>
+  </ul>
+
   <h2 id="privacy">Privacy and App Review</h2>
   <ul>
     <li>Reading the person's calendars is new data leaving the phone. The App Privacy label gains "Other user content" (shared calendar events, linked to the user, app functionality); the privacy page on walhallaa.com gets a paragraph; the permission text says it plainly: "NestZone puts house events in the calendars you choose, and shows your housemates the calendars you choose to share. Nothing is shared until you pick it."</li>

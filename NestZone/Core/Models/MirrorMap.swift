@@ -108,6 +108,14 @@ public enum MirrorMarker {
         URL(string: "\(scheme)://event/\(home)/\(copyKey)")
     }
 
+    /// A copy of a housemate's shared item:
+    /// `nestzone://shared/<home>/<owner>/<calendarKey>/<startMs>-<endMs>`.
+    /// The same scheme, so everything that skips NestZone's own events when
+    /// reading the person's calendars (`isMarker`) skips these too.
+    public static func sharedURL(home: String, owner: String, calendarKey: String, item: String) -> URL? {
+        URL(string: "\(scheme)://shared/\(home)/\(owner)/\(calendarKey)/\(item)")
+    }
+
     public static func isMarker(_ url: URL?) -> Bool {
         url?.scheme?.lowercased() == scheme
     }

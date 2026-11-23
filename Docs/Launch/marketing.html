@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App Store marketing assets</title>
+<style>
+  :root{--bg:#f4f2f8;--card:#ffffffcc;--ink:#17121f;--muted:#6b6577;--line:#0000001a;--accent:#7c3aed}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0c16;--card:#1b1724cc;--ink:#f3f0f8;--muted:#a39cb2;--line:#ffffff1a;--accent:#a78bfa}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+  main{max-width:980px;margin:0 auto;padding:32px 16px 64px}
+  h1{font:700 28px/1.2 ui-rounded,-apple-system,system-ui;margin:0 0 6px}
+  h2{font:700 19px/1.3 ui-rounded,-apple-system,system-ui;margin:40px 0 10px}
+  p.lead{color:var(--muted);margin:0 0 20px;max-width:68ch}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  video,img{width:100%;border-radius:14px;display:block;background:#000}
+  .label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  code{font:13px ui-monospace,Menlo,monospace;background:var(--line);padding:1px 5px;border-radius:5px}
+  pre{font:12.5px/1.5 ui-monospace,Menlo,monospace;background:var(--line);padding:12px 14px;border-radius:12px;overflow:auto}
+  table{border-collapse:collapse;width:100%;font-size:14px} th,td{padding:7px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:top} th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  ul{padding-left:20px} li{margin:5px 0} .box{display:inline-block;width:14px}
+  .small{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>App Store marketing assets</h1>
+<p class="lead">The App Preview video and the "Header and Search Results" image for 1.13, in English and Turkish, built from the screenshot houses (made-up members, persona "Emma"). Nothing here shows a real person, face or house.</p>
+
+<h2>App Preview (iPhone 6.9")</h2>
+<div class="row">
+  <div class="card"><p class="label">English, preview-en.mp4</p><video controls preload="metadata" poster="preview/poster-en.png" src="preview/preview-en.mp4"></video></div>
+  <div class="card"><p class="label">Turkish, preview-tr.mp4</p><video controls preload="metadata" poster="preview/poster-tr.png" src="preview/preview-tr.mp4"></video></div>
+</div>
+<p class="small">886 x 1920, H.264 High, 30 fps, 22.6 s, about 6 MB, stereo AAC 48 kHz (a generated soft chord, so nothing to license). Six shots, 0.4 s crossfades; every frame is the app itself captured from the simulator, with one caption per shot.</p>
+
+<table>
+<tr><th>#</th><th>Shot</th><th>Captured with</th><th>EN caption</th><th>TR caption</th></tr>
+<tr><td>1</td><td>Today</td><td><code>-todayGlide 1 -pinnedDemo 1</code></td><td>Your home, today</td><td>Bugün evde ne var?</td></tr>
+<tr><td>2</td><td>Shopping to Tasks</td><td><code>-openTab lists -segmentCycle 4 -shoppingGroupedDemo 1 -appTabSegments "calendar,tasks,finance"</code></td><td>Chores and shopping, shared</td><td>İşler ve alışveriş, ortak</td></tr>
+<tr><td>3</td><td>Calendar to Meals</td><td><code>-openTab plans -segmentCycle 3 -calendarMode month -appTabSegments "calendar,tasks,finance"</code></td><td>Plans and dinner, together</td><td>Planlar ve yemek, birlikte</td></tr>
+<tr><td>4</td><td>House chat</td><td><code>-openConversation first</code></td><td>A chat just for the house</td><td>Sadece evdekilerin sohbeti</td></tr>
+<tr><td>5</td><td>Money</td><td><code>-openTab house -appTabSegments finance</code></td><td>Split costs, settle up</td><td>Masrafı böl, hesabı kapat</td></tr>
+<tr><td>6</td><td>Bell: activity (starts once the rows are drawn)</td><td><code>-openInbox activity</code></td><td>See what happened at home</td><td>Evde ne olmuş, hepsi burada</td></tr>
+</table>
+
+<h2>Header and Search Results</h2>
+<div class="row">
+  <div class="card"><p class="label">English, 3840 x 1646</p><img src="header/header-en-3840x1646.png" alt="NestZone header, English"></div>
+  <div class="card"><p class="label">Turkish, 3840 x 1646</p><img src="header/header-tr-3840x1646.png" alt="NestZone header, Turkish"></div>
+  <div class="card"><p class="label">English, 5244 x 2950</p><img src="header/header-en-5244x2950.png" alt="NestZone header 16:9, English"></div>
+  <div class="card"><p class="label">Turkish, 5244 x 2950</p><img src="header/header-tr-5244x2950.png" alt="NestZone header 16:9, Turkish"></div>
+</div>
+<p class="small">Name, line and the middle phone's top half sit in the central ~60% of the width and ~65% of the height; the outer phones bleed past it on purpose. PNG, opaque, sRGB. Assumptions are in <code>header/README.md</code>.</p>
+
+<h2>Upload checklist (App Store Connect)</h2>
+<ul>
+<li><span class="box">&#9744;</span> <strong>English (U.S.) listing, iPhone 6.9" App Previews:</strong> <code>Docs/Launch/preview/preview-en.mp4</code>. Poster frame: <strong>00:17.8</strong> (the Money screen, still and clean; the Today shot is scrolling at its start). Each preview takes its own poster; <code>poster-en.png</code> is that frame for reference.</li>
+<li><span class="box">&#9744;</span> <strong>Turkish listing, iPhone 6.9" App Previews:</strong> <code>preview-tr.mp4</code>, poster <strong>00:17.8</strong>.</li>
+<li><span class="box">&#9744;</span> Smaller iPhone sizes (6.5", 6.3", 5.5") reuse the 6.9" preview if ASC offers it; if it asks for its own file, add a scaled copy (<code>ffmpeg -i preview-en.mp4 -vf scale=W:H</code>) rather than recapturing.</li>
+<li><span class="box">&#9744;</span> <strong>Header and Search Results</strong> (new section on the product page): upload <code>header-en-5244x2950.png</code> and <code>header-en-3840x1646.png</code> to English, the <code>-tr-</code> pair to Turkish. If ASC accepts one size only, use 5244 x 2950 and check the 3840 x 1646 crop in its preview.</li>
+<li><span class="box">&#9744;</span> <strong>Search Results:</strong> in the preview ASC shows, confirm the name and the middle phone stay clear of every crop. Pick the video as the Search Results asset only if ASC offers it for 1.13; the header image is the fallback. The poster frame is what the search card shows before play.</li>
+<li><span class="box">&#9744;</span> Check both languages on a phone after saving; previews process for several minutes before they can be submitted.</li>
+<li><span class="box">&#9744;</span> After release, purge the screenshot houses (see the launch plan, "The day it is approved").</li>
+</ul>
+<p class="small">Apple's specification pages were not fetched while building this (no network tool in this session): the sizes above are the ones the brief gave (886 x 1920 preview, 5244 x 2950 and 3840 x 1646 header). Check ASC's upload dialog on the day.</p>
+
+<h2>Regenerate everything</h2>
+<pre>
+# 0. Once per language, open the screenshot house on the simulator (it is remembered):
+xcrun simctl launch booted com.walhallaa.NestZone -storeDemo 1 -screenshotPersona Emma -switchHome "Our Place"   # or "Bizim Ev"
+
+# 1. Record the six raw clips for a language (Debug build, iPhone 18 Pro simulator, theme Basic):
+cd Docs/Launch/preview
+./capture.sh raw/en_today.mov 22 en -todayGlide 1 -pinnedDemo 1
+./capture.sh raw/en_lists.mov 20 en -openTab lists -segmentCycle 4 -shoppingGroupedDemo 1
+./capture.sh raw/en_plans.mov 26 en -openTab plans -segmentCycle 3 -calendarMode month
+./capture.sh raw/en_chat.mov  14 en -openConversation first
+./capture.sh raw/en_fin.mov   14 en -openTab house -appTabSegments finance
+./capture.sh raw/en_inbox.mov 14 en -openInbox activity
+
+# (Recordings are variable frame rate; build.sh first makes a 30 fps copy in raw/cfr/ and every cut
+#  point is measured on that. TR money: LOCALE=tr_US ./capture.sh ... keeps the amounts in lira.)
+# 2. Cut, caption, crossfade, add the soft audio, export the poster:
+POSTER=17.8 ./build.sh en      # or tr  (cut points are in build.sh; clips are VFR, so
+                              # look at a contact sheet if a recording's timing moves)
+
+# 3. The header:
+cd ../header && ./shots.sh en && ./shots.sh tr && ./build.sh
+</pre>
+<p class="small">Needs <code>ffmpeg</code> and Google Chrome. The simulator clock is set to 9:41 and full bars and battery by <code>simctl status_bar</code> inside the scripts. The data in the houses is relative to when it was seeded (<code>demo:seedScreenshotHomes</code>); at 4-5 days old some chores read "4 days ago". Reseed for fresher dates.</p>
+</main>
+</body>
+</html>
