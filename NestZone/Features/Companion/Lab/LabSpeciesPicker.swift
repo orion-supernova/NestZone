@@ -52,7 +52,7 @@ struct LabSpeciesPicker: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(verbatim: "\(title) · \(species.count)")
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(species) { kind in
                     Button { store.pretend(.setSpecies(kind)) } label: { tile(kind, seed: seed, colour: colour) }

@@ -14,21 +14,19 @@ public struct RecipesView: View {
         content
             .background(Backdrop(tint: theme.accent))
             .scrollEdgeEffectStyle(.soft, for: .top)
-            .segmentSearchable(text: $store.searchText, prompt: Text(L10n.commonSearch))
             .navigationTitle(Text(L10n.recipesScreenTitle))
             .navigationBarTitleDisplayMode(.inline)
             .segmentToolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { store.send(.composeTapped) } label: {
                         Image(systemName: "plus")
                     }
                     .accessibilityLabel(Text(L10n.commonAdd))
                 }
             }
+            // After the toolbar so the search is first in the bar, the add last.
+            .segmentSearchable(text: $store.searchText, prompt: Text(L10n.commonSearch))
             .task { await store.send(.task).finish() }
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.detail, action: \.destination.detail)
-            ) { RecipeDetailView(store: $0) }
             .hostedSheet(
                 item: $store.scope(state: \.destination?.compose, action: \.destination.compose)
             ) { ComposeRecipeSheet(store: $0) }
@@ -88,9 +86,7 @@ public struct RecipesView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(L10n.dinnerTonightTitle)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
+                    .groupLabel()
                     .padding(.leading, 4)
                 Spacer(minLength: 0)
                 if store.tonight != nil {
@@ -161,7 +157,7 @@ public struct RecipesView: View {
             ? .init(title: L10n.recipesExploreFiltersClearButton) {
                 store.send(.clearFiltersTapped)
             }
-            : .init(title: L10n.commonAdd) { store.send(.composeTapped) }
+            : .init(title: L10n.recipesAddFirst) { store.send(.composeTapped) }
 
         return EmptyStateView(
             title: L10n.recipesEmptyStateTitle,
@@ -175,11 +171,12 @@ public struct RecipesView: View {
     private var filterBar: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                Picker(selection: $store.tab) {
-                    Text(L10n.recipesScreenTitle).tag(RecipesFeature.State.Tab.mine)
-                    Text(L10n.recipesExploreButton).tag(RecipesFeature.State.Tab.explore)
-                } label: { EmptyView() }
-                .pickerStyle(.segmented)
+                InnerSwitch(
+                    options: Array(RecipesFeature.State.Tab.allCases),
+                    selected: store.tab,
+                    title: { $0 == .mine ? L10n.recipesTabOurs : L10n.recipesTabExplore },
+                    inset: 0
+                ) { store.tab = $0 }
                 .frame(width: 220)
 
                 ForEach(Recipe.Difficulty.allCases, id: \.self) { difficulty in
@@ -244,7 +241,7 @@ private struct RecipeCard: View {
                     if let summary = recipe.summary {
                         Text(summary)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
                     }
@@ -275,7 +272,7 @@ private struct RecipeCard: View {
                 Spacer(minLength: 0)
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
         }
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -328,7 +325,7 @@ struct RecipeDetailView: View {
                 if let summary = store.recipe.summary {
                     Text(summary)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .appear(0)
                 }
 
@@ -375,13 +372,13 @@ struct RecipeDetailView: View {
                                 Image(systemName: store.checkedIngredients.contains(index)
                                     ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(store.checkedIngredients.contains(index)
-                                        ? Palette.success : Color.secondary)
+                                        ? Palette.success : Palette.textSecondary)
                                     .contentTransition(.symbolEffect(.replace))
                                 Text(item)
                                     .font(.subheadline)
                                     .strikethrough(store.checkedIngredients.contains(index))
                                     .foregroundStyle(store.checkedIngredients.contains(index)
-                                        ? .secondary : .primary)
+                                        ? Palette.textSecondary : .primary)
                                     .multilineTextAlignment(.leading)
                                 Spacer(minLength: 0)
                             }
@@ -404,9 +401,9 @@ struct RecipeDetailView: View {
                         HStack(alignment: .top, spacing: 10) {
                             Text("\(index + 1)")
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(theme.onAccent)
                                 .frame(width: 22, height: 22)
-                                .background(theme.accent, in: .circle)
+                                .background(theme.accentFill, in: .circle)
                             Text(step)
                                 .font(.subheadline)
                                 .multilineTextAlignment(.leading)
@@ -470,7 +467,7 @@ struct RecipeDetailView: View {
                     Image(systemName: "moon.stars.fill")
                 }
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
                 .transition(.opacity)
@@ -494,7 +491,7 @@ struct RecipeDetailView: View {
                                 store.ingredientsOnList, store.recipe.ingredients.count
                             ))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .contentTransition(.numericText())
                             .transition(.opacity)
                     }
@@ -519,9 +516,9 @@ private struct Fact: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            Image(systemName: symbol).font(.callout).foregroundStyle(.tint)
+            Image(systemName: symbol).font(.callout).foregroundStyle(.accentText)
             Text(value).font(.system(.headline, design: .rounded))
-            Text(label).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+            Text(label).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -586,7 +583,7 @@ struct CookingModeView: View {
                     .font(.headline)
                 Text(store.recipe.title)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .lineLimit(1)
             }
 
@@ -602,7 +599,7 @@ struct CookingModeView: View {
             HStack {
                 Text(L10n.recipesCookingProgressLabel)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 Spacer()
                 Text(store.phase == .ingredients
                     ? L10n.recipesCookingIngredientsProgress(
@@ -610,7 +607,7 @@ struct CookingModeView: View {
                     : L10n.recipesCookingStepsProgress(
                         store.step + 1, max(store.recipe.steps.count, 1)))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .contentTransition(.numericText())
             }
             ProgressView(value: store.progress)
@@ -624,7 +621,7 @@ struct CookingModeView: View {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text(L10n.recipesCookingCheckIngredientsInstruction)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 Spacer(minLength: 0)
 
@@ -647,12 +644,12 @@ struct CookingModeView: View {
                             HStack(spacing: 12) {
                                 Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
                                     .font(.title3)
-                                    .foregroundStyle(isChecked ? Palette.success : Color.secondary)
+                                    .foregroundStyle(isChecked ? Palette.success : Palette.textSecondary)
                                     .contentTransition(.symbolEffect(.replace))
                                 Text(item)
                                     .font(.subheadline)
-                                    .strikethrough(isChecked, color: .secondary)
-                                    .foregroundStyle(isChecked ? .secondary : .primary)
+                                    .strikethrough(isChecked, color: Palette.textSecondary)
+                                    .foregroundStyle(isChecked ? Palette.textSecondary : .primary)
                                     .multilineTextAlignment(.leading)
                                 Spacer(minLength: 0)
                             }
@@ -682,7 +679,7 @@ struct CookingModeView: View {
                     VStack(spacing: 16) {
                         Text(L10n.recipesCookingStepCardTitle(index + 1, store.recipe.steps.count))
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(.accentText)
                         Text(step)
                             .font(.title3)
                             .multilineTextAlignment(.center)
@@ -711,7 +708,7 @@ struct CookingModeView: View {
             HStack(spacing: 12) {
                 Image(systemName: "timer")
                     .font(.title3)
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
 
                 Text(store.timer.formatted)
@@ -742,10 +739,11 @@ struct CookingModeView: View {
                             Image(systemName: "timer")
                         }
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.onAccent)
                     }
                     .buttonStyle(.glassProminent)
                     .controlSize(.small)
-                    .tint(theme.accent)
+                    .tint(theme.accentFill)
                 }
                 ForEach([5, 10, 20], id: \.self) { minutes in
                     Button { store.send(.timerRequested(seconds: minutes * 60)) } label: {
@@ -880,7 +878,7 @@ struct ComposeRecipeSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }
@@ -947,7 +945,7 @@ private struct AddedToListToast: View {
         HStack(spacing: 12) {
             Image(systemName: count > 0 ? "checkmark.circle.fill" : "cart")
                 .font(.callout)
-                .foregroundStyle(count > 0 ? Palette.success : Color.secondary)
+                .foregroundStyle(count > 0 ? Palette.success : Palette.textSecondary)
                 .symbolEffect(.bounce, options: .nonRepeating, value: count)
 
             Text(count > 0

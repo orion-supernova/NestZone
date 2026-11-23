@@ -207,7 +207,7 @@ struct GlassListLab: View {
             HStack {
                 Text(verdict)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .contentTransition(.numericText())
                 Spacer(minLength: 8)
                 Button {
@@ -334,7 +334,7 @@ struct GlassListLab: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title.uppercased())
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.tertiaryText)
             content()
         }
     }
@@ -526,7 +526,7 @@ private struct LabRow: View {
                     Text(row.due)
                 }
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             }
 
             Spacer(minLength: 0)
@@ -637,7 +637,7 @@ private struct SpacingSampleStack: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(sample.id)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .padding(.horizontal, Metrics.screenPadding)
 
             GlassList(style: sample.style) {

@@ -101,7 +101,7 @@ private struct ChooseView: View {
             VStack(alignment: .leading, spacing: 18) {
                 Text(L10n.chooseHint)
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 20)
                 group(L10n.choosePlants, Species.onShelf.filter { !$0.isPet }, shop, jar: true)
                 group(L10n.choosePets, Species.onShelf.filter(\.isPet), shop)
@@ -348,7 +348,7 @@ private struct DecorateView: View {
                         .oneLineUnlessAccessibility(shrinking: 1)
                     Text(spot == .tree ? L10n.decorateTreeLimit : L10n.decorateOneThing)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility(shrinking: 0.9)
                 } else {
                     Text(L10n.decoratePickSpot)
@@ -380,7 +380,7 @@ private struct DecorateView: View {
             if !store.activeHolidays.isEmpty {
                 Text(L10n.decorateSets)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
                         ForEach(store.activeHolidays) { holiday in
@@ -442,7 +442,7 @@ private struct DecorateView: View {
                 } else {
                     Text(isOn ? L10n.decoratePlaced : standing == .have || standing == .free ? L10n.decorateYours : L10n.decorateFree)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility(shrinking: 0.85)
                         .frame(minHeight: 28)
                 }
@@ -469,7 +469,7 @@ private struct DecorateView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.decoratePreview)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Text(item.title)
                         .font(.headline)
                         .lineLimit(1)
@@ -505,7 +505,7 @@ private struct AlbumView: View {
             if store.house.albumCount == 0 {
                 Text(L10n.albumEmpty)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                     .oneLineUnlessAccessibility()
                     .frame(maxWidth: .infinity)
@@ -528,7 +528,7 @@ private struct AlbumView: View {
                                 .oneLineUnlessAccessibility()
                             Text(verbatim: "\(String(localized: L10n.albumDays(graduate.days))) · \(graduate.graduatedAt.formatted(Date.FormatStyle().month(.abbreviated).year().locale(L10n.locale)))")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .oneLineUnlessAccessibility()
                         }
                         .padding(8)
@@ -547,68 +547,6 @@ private struct AlbumView: View {
                 Button { store.send(.sheetDismissed) } label: { Text(L10n.commonDone) }
             }
         }
-    }
-}
-
-// MARK: - Holidays
-
-/// The days this house celebrates, from every calendar. A suggestion from the
-/// region to start, and every one of them a switch.
-private struct HolidaysView: View {
-    let store: StoreOf<CompanionFeature>
-
-    var body: some View {
-        List {
-            Section {
-                Text(L10n.holidaysHint)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .oneLineUnlessAccessibility()
-                Button { store.send(.holidaysReset) } label: { Text(L10n.holidaysSuggested).oneLineUnlessAccessibility() }
-            }
-            ForEach(Holiday.Family.allCases) { family in
-                Section {
-                    ForEach(Holiday.all.filter { $0.family == family }) { holiday in
-                        row(holiday)
-                    }
-                } header: {
-                    Text(family.title).oneLineUnlessAccessibility()
-                }
-            }
-        }
-        .navigationTitle(Text(L10n.holidaysTitle))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button { store.send(.sheetDismissed) } label: { Text(L10n.commonDone) }
-            }
-        }
-    }
-
-    private func row(_ holiday: Holiday) -> some View {
-        Toggle(isOn: Binding(
-            get: { store.celebrated.contains(holiday.id) },
-            set: { _ in store.send(.holidayToggled(holiday.id)) }
-        )) {
-            HStack(spacing: 10) {
-                // The emoji would be read as its own description.
-                Text(verbatim: holiday.symbol).font(.title3).accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(holiday.id.title)
-                        .oneLineUnlessAccessibility()
-                    Text(when(holiday))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .oneLineUnlessAccessibility()
-                }
-            }
-        }
-    }
-
-    private func when(_ holiday: Holiday) -> String {
-        if holiday.isUnderway(on: store.clock, region: store.placeRegion) { return String(localized: L10n.holidayNow) }
-        guard let next = holiday.next(after: store.clock, region: store.placeRegion) else { return "" }
-        return String(localized: L10n.holidayNext(next.formatted(Date.FormatStyle().day().month(.wide).year().locale(L10n.locale))))
     }
 }
 

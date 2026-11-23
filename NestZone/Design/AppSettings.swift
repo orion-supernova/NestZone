@@ -83,6 +83,14 @@ extension SharedKey where Self == AppStorageKey<String>.Default {
     }
 }
 
+extension SharedKey where Self == AppStorageKey<DockSettings>.Default {
+    /// What the dock above the tab bar shows, per house, on this phone. Read
+    /// it through `DockSettings`' subscript by `HomeID`.
+    public static var dockSettings: Self {
+        Self[.appStorage("appDockSettings"), default: DockSettings()]
+    }
+}
+
 extension SharedKey where Self == FileStorageKey<[Home]>.Default {
     /// The household list as it stood at the end of the last session.
     ///
@@ -203,5 +211,127 @@ public enum CurrencyDefaults {
         var codes = recent.filter { $0 != code }
         codes.insert(code, at: 0)
         $raw.withLock { $0 = codes.prefix(recentLimit).joined(separator: ",") }
+    }
+}
+
+// MARK: - Calendar
+
+extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// The people the calendar is narrowed to, per house (`home:id,id;home:id`,
+    /// see `CalendarLists.users(_:home:)`); empty is "Everyone". Remembered on
+    /// this phone, like the tab segments. Keyed by house because a person
+    /// chosen in one is nobody in another, and a choice carried across would
+    /// filter the second house's calendar down to nothing.
+    public static var calendarPeopleRaw: Self {
+        Self[.appStorage("appCalendarPeople"), default: ""]
+    }
+
+    /// The calendars house events are copied into, as newline-joined EventKit
+    /// calendar ids, across every account. Read it through `CalendarTargets`.
+    public static var calendarCopyTargetsRaw: Self {
+        Self[.appStorage("appCalendarCopyTargets"), default: ""]
+    }
+
+    /// What the composer's "Also add to" row was last left on, in the same
+    /// form. Kept apart from the setting above: a one-off pick for one event
+    /// must not quietly change where everything else is copied.
+    public static var calendarComposerTargetsRaw: Self {
+        Self[.appStorage("appCalendarComposerTargets"), default: ""]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<CalendarCopyMode>.Default {
+    /// Which house events are copied into this person's own calendars. Off
+    /// until they turn it on.
+    public static var calendarCopyMode: Self {
+        Self[.appStorage("appCalendarCopyMode"), default: .off]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Bool>.Default {
+    /// Whether a copy carries the event's reminders as alerts. Off: the house
+    /// already reminds everyone, and the calendar would alert a second time.
+    public static var calendarCopyReminders: Self {
+        Self[.appStorage("appCalendarCopyReminders"), default: false]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Double>.Default {
+    /// When the copies last caught up with the house, as seconds since 1970;
+    /// 0 is never.
+    public static var calendarLastSynced: Self {
+        Self[.appStorage("appCalendarLastSynced"), default: 0]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// Which of this phone's calendars are shared with which house, and how
+    /// much of each: `CalendarShareChoices` as JSON. Per device, because the
+    /// calendars are on this phone.
+    public static var calendarShareChoicesRaw: Self {
+        Self[.appStorage("appCalendarShareChoices"), default: ""]
+    }
+
+    /// What a calendar that turns up after sharing was set up gets: `off`,
+    /// `busy` or `details`. Busy only, which shows when and never what.
+    public static var calendarShareDefaultLevelRaw: Self {
+        Self[.appStorage("appCalendarShareDefaultLevel"), default: CalendarShareLevel.busy.rawValue]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Int>.Default {
+    /// How many weeks ahead the phone shares: 4, 8 or 12.
+    public static var calendarShareWeeks: Self {
+        Self[.appStorage("appCalendarShareWeeks"), default: 8]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Bool>.Default {
+    /// Whether housemates' own calendars are drawn in the Calendar, beside the
+    /// house's events. On: a person who shares a calendar means it to be seen.
+    public static var calendarShowShared: Self {
+        Self[.appStorage("appCalendarShowShared"), default: true]
+    }
+}
+
+/// Reads and writes the lists above, which are strings because app storage
+/// holds scalars. Ids never contain a comma (users) or a newline (calendars).
+public enum CalendarLists {
+    public static func users(_ raw: String) -> [UserID] {
+        raw.split(separator: ",").map { UserID(String($0)) }
+    }
+
+    public static func raw(users: some Sequence<UserID>) -> String {
+        users.map(\.rawValue).joined(separator: ",")
+    }
+
+    /// The people chosen in one house, out of a string that holds every
+    /// house's: `home:id,id;home:id,id`. A string written before the choice was
+    /// kept per house has no `:` in it and is read as nobody.
+    public static func users(_ raw: String, home: HomeID) -> [UserID] {
+        for part in raw.split(separator: ";") {
+            let pair = part.split(separator: ":", maxSplits: 1)
+            if pair.count == 2, pair[0] == home.rawValue { return users(String(pair[1])) }
+        }
+        return []
+    }
+
+    /// `raw` with this house's choice replaced (and dropped when empty), every
+    /// other house's left as it was.
+    public static func raw(users chosen: some Sequence<UserID>, home: HomeID, in raw: String) -> String {
+        var parts = raw.split(separator: ";").map(String.init).filter {
+            $0.contains(":") && !$0.hasPrefix(home.rawValue + ":")
+        }
+        let list = Self.raw(users: chosen)
+        if !list.isEmpty { parts.append(home.rawValue + ":" + list) }
+        return parts.joined(separator: ";")
+    }
+
+    public static func calendars(_ raw: String) -> [String] {
+        raw.split(separator: "\n").map(String.init)
+    }
+
+    public static func raw(calendars: some Sequence<String>) -> String {
+        calendars.joined(separator: "\n")
     }
 }

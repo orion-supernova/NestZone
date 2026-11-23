@@ -110,7 +110,7 @@ public struct CurrencyPicker: View {
 
                 Text(Money.name(for: code))
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .lineLimit(1)
 
                 Spacer(minLength: 8)
@@ -118,12 +118,12 @@ public struct CurrencyPicker: View {
                 if let symbol = Money.symbol(for: code), symbol != code {
                     Text(symbol)
                         .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.tertiaryText)
                 }
                 if code == selected {
                     Image(systemName: "checkmark")
                         .font(.footnote.weight(.bold))
-                        .foregroundStyle(theme.accent)
+                        .foregroundStyle(.accentText)
                 }
             }
             .contentShape(.rect)

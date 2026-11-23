@@ -257,12 +257,14 @@ const PURGE_PARENTS = 5;
  * does not outlive the household it belongs to. `home_activity` and
  * `activity_reads` are home-scoped like the rest; `app_updates` belongs to
  * the app, not to any home. `movies` goes by its own `by_home`, so a list is
- * empty by the time it is deleted.
+ * empty by the time it is deleted. `calendar_shares` and `shared_busy` are
+ * the members' shared calendars (calendarShare.ts).
  */
 const HOME_TABLES = [
   "bills", "events", "tasks", "task_completions", "shopping_items",
   "notes", "recipes", "movies", "meal_plans", "expenses", "settlements",
   "budgets", "issue_comments", "home_activity", "activity_reads",
+  "calendar_shares", "shared_busy",
 ] as const;
 
 /**

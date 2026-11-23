@@ -25,9 +25,10 @@ struct PlusDetailsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
+                PlusLockup(tileSize: 40, font: .system(.title3, design: .rounded, weight: .bold))
                 Text(L10n.plusDetailsSubtitle)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 ForEach(PlusDetail.groups) { group in
                     section(group)
@@ -46,9 +47,7 @@ struct PlusDetailsView: View {
     private func section(_ group: PlusDetailGroup) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(group.title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+                .groupLabel()
                 .accessibilityAddTraits(.isHeader)
             GlassCard {
                 VStack(alignment: .leading, spacing: 18) {
@@ -71,11 +70,11 @@ struct PlusDetailsView: View {
                 Text(detail.title).font(.subheadline.weight(.semibold))
                 Text(detail.text)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 if detail.feature == .multipleHomes, let line = status.coverageLine(homeNames: homeNames) {
                     Text(line)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .padding(.top, 2)
                 }
             }
@@ -87,9 +86,7 @@ struct PlusDetailsView: View {
     private var free: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.plusFreeTitle)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+                .groupLabel()
                 .accessibilityAddTraits(.isHeader)
             GlassCard {
                 VStack(alignment: .leading, spacing: 14) {

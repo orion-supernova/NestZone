@@ -171,14 +171,14 @@ public struct IssueDetailView: View {
                             issue.ageDays
                         ))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
                 }
 
                 if let details = issue.details, !details.isEmpty {
                     Text(details)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -188,10 +188,10 @@ public struct IssueDetailView: View {
                         tint: issue.severity.tint,
                         symbol: issue.severity.symbol
                     )
-                    Badge(String(localized: issue.area.title), tint: .secondary, symbol: issue.area.symbol)
+                    Badge(String(localized: issue.area.title), tint: Palette.textSecondary, symbol: issue.area.symbol)
                     Badge(
                         String(localized: issue.category.title),
-                        tint: .secondary,
+                        tint: Palette.textSecondary,
                         symbol: issue.category.symbol
                     )
                     if issue.isUnderWarranty, let until = issue.warrantyUntil {
@@ -286,7 +286,7 @@ public struct IssueDetailView: View {
                         .font(.caption.weight(.medium))
                 }
             }
-            .foregroundStyle(issue.assignedTo == nil ? Color.secondary : Color.primary)
+            .foregroundStyle(issue.assignedTo == nil ? Palette.textSecondary : Color.primary)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .glassEffect(.regular.interactive(), in: .capsule)
@@ -309,7 +309,7 @@ public struct IssueDetailView: View {
                         Image(systemName: "hand.raised.fill")
                     }
                     .font(.footnote)
-                    .foregroundStyle(Palette.warning)
+                    .foregroundStyle(Palette.warningText)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .transition(.opacity)
                 }
@@ -322,7 +322,7 @@ public struct IssueDetailView: View {
                             .bounces()
                     }
                     .font(.footnote)
-                    .foregroundStyle(Palette.success)
+                    .foregroundStyle(Palette.successText)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .transition(.opacity)
                 }
@@ -356,7 +356,7 @@ public struct IssueDetailView: View {
                 }
                 Text(L10n.issuesVerdictMessage)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: 10) {
@@ -368,7 +368,7 @@ public struct IssueDetailView: View {
                             .contentShape(.rect)
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(Palette.success)
+                    .tint(Palette.answerYes)
 
                     Button { store.send(.statusTapped(.inProgress)) } label: {
                         Text(L10n.issuesVerdictNotYet)
@@ -526,7 +526,7 @@ public struct IssueDetailView: View {
                             .contentShape(.rect)
                         }
                         .buttonStyle(.glassProminent)
-                        .tint(Palette.success)
+                        .tint(Palette.answerYes)
                     }
                     if let web = store.state.vendorWebURL {
                         Button { openURL(web) } label: {
@@ -574,14 +574,14 @@ public struct IssueDetailView: View {
                                 Spacer(minLength: 4)
                                 if let at = entry.resolvedAt {
                                     Text(at.date, format: .dateTime.month(.abbreviated).year())
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondaryText)
                                 }
                             }
                             if let resolution = entry.resolution, !resolution.isEmpty {
                                 Text(resolution)
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
@@ -602,8 +602,8 @@ public struct IssueDetailView: View {
                     HStack(spacing: 5) {
                         ProgressView().controlSize(.mini)
                         Text(L10n.issuesUploading(store.uploading))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                            .foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -672,11 +672,11 @@ public struct IssueDetailView: View {
                     } else {
                         Image(systemName: "arrow.up")
                             .font(.subheadline.weight(.bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.onAccent)
                     }
                 }
                 .frame(width: 32, height: 32)
-                .background(store.canPost ? theme.accent : Color.secondary.opacity(0.35), in: .circle)
+                .background(store.canPost ? theme.accentFill : Color.secondary.opacity(0.35), in: .circle)
                 .contentShape(.circle)
             }
             .buttonStyle(.pressable)
@@ -718,6 +718,7 @@ public struct IssueDetailView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
+        .tint(.primary)
         .accessibilityLabel(Text(L10n.commonMore))
     }
 }
@@ -771,11 +772,11 @@ private struct PlanRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(state == .empty ? .secondary : .primary)
+                    .foregroundStyle(state == .empty ? Palette.textSecondary : .primary)
                 if let detail {
                     detail
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
                 if let progress, progress > 0 {
@@ -883,11 +884,11 @@ private struct TimelineRow: View {
                     Text(authorName ?? String(localized: L10n.appName))
                         .font(.caption.weight(.semibold))
                     Text(verbatim: "·")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.caption)
+                        .foregroundStyle(.tertiaryText)
                     RelativeTimeText(entry.created)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                     Spacer(minLength: 0)
                 }
 
@@ -902,13 +903,13 @@ private struct TimelineRow: View {
                         ))
                     } ?? String(localized: L10n.issuesMovedTo(String(localized: to.title))))
                     .font(.footnote)
-                    .foregroundStyle(to.tint)
+                    .foregroundStyle(.primary)
                 }
 
                 if let body = entry.body, !body.isEmpty {
                     Text(body)
                         .font(.subheadline)
-                        .foregroundStyle(entry.kind == .comment ? .primary : .secondary)
+                        .foregroundStyle(entry.kind == .comment ? .primary : Palette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }

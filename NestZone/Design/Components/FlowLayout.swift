@@ -8,10 +8,15 @@ import SwiftUI
 public struct FlowLayout: Layout {
     private let spacing: CGFloat
     private let lineSpacing: CGFloat
+    /// Where a row sits when it is narrower than the layout: `.leading` (the
+    /// default) or `.trailing`. A row that is not the full width used to hug
+    /// the leading edge whatever the caller's frame said.
+    private let alignment: HorizontalAlignment
 
-    public init(spacing: CGFloat = 8, lineSpacing: CGFloat = 8) {
+    public init(spacing: CGFloat = 8, lineSpacing: CGFloat = 8, alignment: HorizontalAlignment = .leading) {
         self.spacing = spacing
         self.lineSpacing = lineSpacing
+        self.alignment = alignment
     }
 
     public func sizeThatFits(
@@ -35,7 +40,7 @@ public struct FlowLayout: Layout {
     ) {
         var y = bounds.minY
         for row in layout(subviews: subviews, width: bounds.width) {
-            var x = bounds.minX
+            var x = alignment == .trailing ? bounds.maxX - row.width : bounds.minX
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.unspecified)
                 subviews[index].place(

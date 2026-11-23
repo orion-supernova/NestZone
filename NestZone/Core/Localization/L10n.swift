@@ -46,6 +46,11 @@ public enum L10n {
         r("pro_name", "Plus")
     }
 
+    /// The word in the Plus tag. Plain "PLUS" in every language.
+    public static var plusTag: LocalizedStringResource {
+        r("plus_tag", "PLUS")
+    }
+
     /// What the subscription is called with the app's name in front.
     public static var proFullName: LocalizedStringResource {
         r("pro_full_name", "\(appNameText) Plus")
@@ -379,12 +384,12 @@ public enum L10n {
 
     /// Who does what
     public static var contributionsSectionTitle: LocalizedStringResource {
-        r("contributions_section_title", "Who does what")
+        r("contributions_section_title", "Who's doing what")
     }
 
     /// Contributions
     public static var contributionsScreenTitle: LocalizedStringResource {
-        r("contributions_screen_title", "Contributions")
+        r("contributions_screen_title", "Who's doing what")
     }
 
     /// Week
@@ -731,7 +736,7 @@ public enum L10n {
 
     /// Recipes
     public static var recipesScreenTitle: LocalizedStringResource {
-        r("recipes_screen_title", "Recipes")
+        r("recipes_screen_title", "Meals")
     }
 
     /// Back
@@ -1321,7 +1326,7 @@ public enum L10n {
 
     /// What to watch tonight
     public static var whatToWatchTitle: LocalizedStringResource {
-        r("what_to_watch_title", "What to watch tonight")
+        r("what_to_watch_title", "Movie night tonight")
     }
 
     /// Swipe right for Yes, left for No
@@ -2068,7 +2073,7 @@ public enum L10n {
 
     /// Movie Collections
     public static var movieListsTitle: LocalizedStringResource {
-        r("movie_lists_title", "Movie Collections")
+        r("movie_lists_title", "Movies")
     }
 
     /// Organize your movie watchlists and collections
@@ -2078,7 +2083,7 @@ public enum L10n {
 
     /// Quick Collections
     public static var movieListsQuickCollections: LocalizedStringResource {
-        r("movie_lists_quick_collections", "Quick Collections")
+        r("movie_lists_quick_collections", "Watchlists")
     }
 
     /// Wishlist
@@ -2103,22 +2108,22 @@ public enum L10n {
 
     /// Custom Lists
     public static var movieListsCustomLists: LocalizedStringResource {
-        r("movie_lists_custom_lists", "Custom Lists")
+        r("movie_lists_custom_lists", "Your watchlists")
     }
 
     /// No Custom Lists Yet
     public static var movieListsNoCustomLists: LocalizedStringResource {
-        r("movie_lists_no_custom_lists", "No Custom Lists Yet")
+        r("movie_lists_no_custom_lists", "No watchlists of your own yet")
     }
 
     /// Create themed collections like "Horror Movies" or "Rom-Com Classics"
     public static var movieListsNoCustomListsSubtitle: LocalizedStringResource {
-        r("movie_lists_no_custom_lists_subtitle", "Create themed collections like \"Horror Movies\" or \"Rom-Com Classics\"")
+        r("movie_lists_no_custom_lists_subtitle", "Make one for a mood or a genre, like \"Horror nights\" or \"Rom-com classics\"")
     }
 
     /// Create Your First List
     public static var movieListsCreateFirstList: LocalizedStringResource {
-        r("movie_lists_create_first_list", "Create Your First List")
+        r("movie_lists_create_first_list", "Add the first watchlist")
     }
 
     /// Create Movie List
@@ -3429,7 +3434,7 @@ public enum L10n {
 
     /// What to watch
     public static var movienightTitle: LocalizedStringResource {
-        r("movienight_title", "What to watch")
+        r("movienight_title", "Movie night")
     }
 
     /// Start a round
@@ -4080,7 +4085,7 @@ public enum L10n {
 
     /// Add the first one
     public static var financeAddFirstExpense: LocalizedStringResource {
-        r("finance_add_first_expense", "Add the first one")
+        r("finance_add_first_expense", "Add the first expense")
     }
 
     /// Edit expense
@@ -4653,11 +4658,6 @@ public enum L10n {
     /// Search events
     public static var calendarSearchPlaceholder: LocalizedStringResource {
         r("calendar_search_placeholder", "Search events")
-    }
-
-    /// Just mine
-    public static var calendarOnlyMine: LocalizedStringResource {
-        r("calendar_only_mine", "Just mine")
     }
 
     /// Today
@@ -5621,7 +5621,7 @@ public enum L10n {
 
     /// Report the first one
     public static var issuesReportFirst: LocalizedStringResource {
-        r("issues_report_first", "Report the first one")
+        r("issues_report_first", "Add the first problem")
     }
 
     /// Reported
@@ -6768,9 +6768,9 @@ public enum L10n {
         r("inbox_nothing_new", "Nothing new")
     }
 
-    /// House
+    /// Activity
     public static var inboxTabActivity: LocalizedStringResource {
-        r("inbox_tab_activity", "House")
+        r("inbox_tab_activity", "Activity")
     }
 
     /// Updates
@@ -6923,19 +6923,19 @@ public enum L10n {
         r("inbox_category_other", "Other")
     }
 
-    /// New
+    /// Feature
     public static var inboxKindFeature: LocalizedStringResource {
-        r("inbox_kind_feature", "New")
+        r("inbox_kind_feature", "Feature")
     }
 
-    /// Better
+    /// Improvement
     public static var inboxKindImprovement: LocalizedStringResource {
-        r("inbox_kind_improvement", "Better")
+        r("inbox_kind_improvement", "Improvement")
     }
 
-    /// Fixed
+    /// Fix
     public static var inboxKindFix: LocalizedStringResource {
-        r("inbox_kind_fix", "Fixed")
+        r("inbox_kind_fix", "Fix")
     }
 
     /// News
@@ -7165,7 +7165,7 @@ public enum L10n {
 
     /// Leave blank to fall back to the English above
     public static var inboxAdminTranslationNote: LocalizedStringResource {
-        r("inbox_admin_translation_note", "Leave blank to fall back to the English above")
+        r("inbox_admin_translation_note", "Leave blank to show the English version instead")
     }
 
     /// In %@
@@ -7462,6 +7462,121 @@ public enum L10n {
     /// Swipe to vote
     public static var dockMovieRoundSubtitle: LocalizedStringResource {
         r("dock_movie_round_subtitle", "Swipe to vote")
+    }
+
+    /// Dock
+    public static var dockSettingTitle: LocalizedStringResource {
+        r("dock_setting_title", "Dock")
+    }
+
+    /// Show in the dock
+    public static var dockSettingLabel: LocalizedStringResource {
+        r("dock_setting_label", "Shows")
+    }
+
+    /// Show in the dock
+    public static var dockMenuTitle: LocalizedStringResource {
+        r("dock_menu_title", "Show in the dock")
+    }
+
+    /// Edit Today…
+    public static var dockMenuEditToday: LocalizedStringResource {
+        r("dock_menu_edit_today", "Edit Today…")
+    }
+
+    /// Dock is off. Turn it back on in Edit Today.
+    public static var dockOffNotice: LocalizedStringResource {
+        r("dock_off_notice", "Dock is off. Turn it back on in Edit Today.")
+    }
+
+    /// Which one
+    public static var dockThingLabel: LocalizedStringResource {
+        r("dock_thing_label", "Which one")
+    }
+
+    /// Automatic
+    public static var dockModeAutomatic: LocalizedStringResource {
+        r("dock_mode_automatic", "Automatic")
+    }
+
+    /// Always the same thing
+    public static var dockModeAlways: LocalizedStringResource {
+        r("dock_mode_always", "Always one thing")
+    }
+
+    /// Only Add anything
+    public static var dockModeAddOnly: LocalizedStringResource {
+        r("dock_mode_add_only", "Add only")
+    }
+
+    /// Off
+    public static var dockModeOff: LocalizedStringResource {
+        r("dock_mode_off", "Off")
+    }
+
+    /// Dinner
+    public static var dockThingDinner: LocalizedStringResource {
+        r("dock_thing_dinner", "Dinner")
+    }
+
+    /// Next event
+    public static var dockThingEvent: LocalizedStringResource {
+        r("dock_thing_event", "Next event")
+    }
+
+    /// Movie night
+    public static var dockThingMovieRound: LocalizedStringResource {
+        r("dock_thing_movie_round", "Movie night")
+    }
+
+    /// Shows what's on right now: an event, tonight's dinner or a movie round.
+    public static var dockMeaningAutomatic: LocalizedStringResource {
+        r("dock_meaning_automatic", "Shows what's on right now: an event, tonight's dinner or a movie round.")
+    }
+
+    /// Always shows this one. When there's nothing yet, it asks instead.
+    public static var dockMeaningAlways: LocalizedStringResource {
+        r("dock_meaning_always", "Always shows this one. When there's nothing yet, it asks instead.")
+    }
+
+    /// Just the bar with the +, nothing else.
+    public static var dockMeaningAddOnly: LocalizedStringResource {
+        r("dock_meaning_add_only", "Just the bar with the +, nothing else.")
+    }
+
+    /// No bar. Add anything moves to the + at the top.
+    public static var dockMeaningOff: LocalizedStringResource {
+        r("dock_meaning_off", "No bar. Add anything moves to the + at the top.")
+    }
+
+    /// The next event is a Plus thing. Until then the dock stays automatic.
+    public static var dockNeedsPlus: LocalizedStringResource {
+        r("dock_needs_plus", "The next event is a Plus thing. Until then the dock stays automatic.")
+    }
+
+    /// Saved on this phone, for this house only.
+    public static var dockSettingFooter: LocalizedStringResource {
+        r("dock_setting_footer", "Saved on this phone, for this house only.")
+    }
+
+    /// Nothing planned yet
+    public static var dockNoEventTitle: LocalizedStringResource {
+        r("dock_no_event_title", "Nothing planned yet")
+    }
+
+    /// Open the calendar
+    public static var dockNoEventSubtitle: LocalizedStringResource {
+        r("dock_no_event_subtitle", "Open the calendar")
+    }
+
+    /// No movie night yet
+    public static var dockNoMovieTitle: LocalizedStringResource {
+        r("dock_no_movie_title", "No movie night yet")
+    }
+
+    /// Start one
+    public static var dockNoMovieSubtitle: LocalizedStringResource {
+        r("dock_no_movie_subtitle", "Start one")
     }
 
     /// %@ morning
@@ -7801,6 +7916,11 @@ public enum L10n {
     /// Nestie
     public static var companionBrand: LocalizedStringResource {
         r("companion_brand", "Nestie")
+    }
+
+    /// %@, stage %lld of %lld
+    public static func companionStageOf(_ a0: String, _ a1: Int, _ a2: Int) -> LocalizedStringResource {
+        r("companion_stage_of", "\(a0), stage \(a1) of \(a2)")
     }
 
     /// Meet %@
@@ -10454,6 +10574,31 @@ public enum L10n {
         r("plus_feature_homes_text", "Create or join a second home. One subscription covers up to two homes.")
     }
 
+    /// Yours
+    public static var plusYours: LocalizedStringResource {
+        r("plus_yours", "Yours")
+    }
+
+    /// From %@
+    public static func plusFrom(_ a0: String) -> LocalizedStringResource {
+        r("plus_from", "From \(a0)")
+    }
+
+    /// Covers %@
+    public static func plusCoversNames(_ a0: String) -> LocalizedStringResource {
+        r("plus_covers_names", "Covers \(a0)")
+    }
+
+    /// Covers %lld of %lld homes
+    public static func plusCoversCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("plus_covers_count", "Covers \(a0) of \(a1) homes")
+    }
+
+    /// Covers this house
+    public static var plusCoversThisHouse: LocalizedStringResource {
+        r("plus_covers_this_house", "Covers this house")
+    }
+
     /// Your Plus covers %lld of %lld homes: %@
     public static func plusCoverage(_ a0: Int, _ a1: Int, _ a2: String) -> LocalizedStringResource {
         r("plus_coverage", "Your Plus covers \(a0) of \(a1) homes: \(a2)")
@@ -10961,5 +11106,621 @@ public enum L10n {
     /// Block %@
     public static func messagesBlockSender(_ a0: String) -> LocalizedStringResource {
         r("messages_block_sender", "Block \(a0)")
+    }
+}
+
+// MARK: - Calendar: people, copies and the person's own calendars
+
+extension L10n {
+    /// Everyone
+    public static var calendarFilterEveryone: LocalizedStringResource {
+        r("calendar_filter_everyone", "Everyone")
+    }
+
+    /// Me
+    public static var calendarFilterMe: LocalizedStringResource {
+        r("calendar_filter_me", "Me")
+    }
+
+    /// Off
+    public static var calendarCopyOff: LocalizedStringResource {
+        r("calendar_copy_off", "Off")
+    }
+
+    /// Only the ones I add
+    public static var calendarCopyOnlyMine: LocalizedStringResource {
+        r("calendar_copy_only_mine", "Only the ones I add")
+    }
+
+    /// Everything I'm in
+    public static var calendarCopyInvolvingMe: LocalizedStringResource {
+        r("calendar_copy_involving_me", "Everything I'm in")
+    }
+
+    /// Everything in the house
+    public static var calendarCopyEverything: LocalizedStringResource {
+        r("calendar_copy_everything", "Everything in the house")
+    }
+
+    /// Edit this in NestZone.
+    public static var calendarCopyNotesLine: LocalizedStringResource {
+        r("calendar_copy_notes_line", "Edit this in NestZone.")
+    }
+
+    /// Use your calendars
+    public static var calendarAccessTitle: LocalizedStringResource {
+        r("calendar_access_title", "Use your calendars")
+    }
+
+    /// NestZone can put house events in the calendars you choose, and show your housemates the calendars you pick to share. Copies stay on your phone. Only calendars you share are sent, and with Busy only that is nothing but the times.
+    public static var calendarAccessBody: LocalizedStringResource {
+        r("calendar_access_body", "NestZone can put house events in the calendars you choose, and show your housemates the calendars you pick to share. Copies stay on your phone. Only calendars you share are sent, and with Busy only that is nothing but the times.")
+    }
+
+    /// Continue
+    public static var calendarAccessContinue: LocalizedStringResource {
+        r("calendar_access_continue", "Continue")
+    }
+
+    /// Not now
+    public static var calendarAccessNotNow: LocalizedStringResource {
+        r("calendar_access_not_now", "Not now")
+    }
+
+    /// Also add to
+    public static var calendarAlsoAddTitle: LocalizedStringResource {
+        r("calendar_also_add_title", "Also add to")
+    }
+
+    /// Only on this phone. Housemates choose their own.
+    public static var calendarAlsoAddFooter: LocalizedStringResource {
+        r("calendar_also_add_footer", "Only on this phone. Housemates choose their own.")
+    }
+
+    /// Connect
+    public static var calendarAlsoAddConnect: LocalizedStringResource {
+        r("calendar_also_add_connect", "Connect")
+    }
+
+    /// Calendar
+    public static var calendarSettingsTitle: LocalizedStringResource {
+        r("calendar_settings_title", "Calendar")
+    }
+
+    /// Copy to my calendars
+    public static var calendarCopyTitle: LocalizedStringResource {
+        r("calendar_copy_title", "Copy to my calendars")
+    }
+
+    /// House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind.
+    public static var calendarCopyFooter: LocalizedStringResource {
+        r("calendar_copy_footer", "House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind.")
+    }
+
+    /// NestZone needs full access to your calendars to let you choose. You can change it in Settings.
+    public static var calendarAccessDenied: LocalizedStringResource {
+        r("calendar_access_denied", "NestZone needs full access to your calendars to let you choose. You can change it in Settings.")
+    }
+
+    /// Calendar access is restricted on this phone.
+    public static var calendarAccessRestricted: LocalizedStringResource {
+        r("calendar_access_restricted", "Calendar access is restricted on this phone.")
+    }
+
+    /// Open Settings
+    public static var calendarAccessOpenSettings: LocalizedStringResource {
+        r("calendar_access_open_settings", "Open Settings")
+    }
+
+    /// What to copy
+    public static var calendarCopyWhatHeader: LocalizedStringResource {
+        r("calendar_copy_what_header", "What to copy")
+    }
+
+    /// Into
+    public static var calendarCopyIntoHeader: LocalizedStringResource {
+        r("calendar_copy_into_header", "Into")
+    }
+
+    /// Pick as many calendars as you like, from any account.
+    public static var calendarCopyIntoFooter: LocalizedStringResource {
+        r("calendar_copy_into_footer", "Pick as many calendars as you like, from any account.")
+    }
+
+    /// Copy reminders
+    public static var calendarCopyReminders: LocalizedStringResource {
+        r("calendar_copy_reminders", "Copy reminders")
+    }
+
+    /// Off by default: NestZone already reminds everyone, and your calendar would alert you a second time.
+    public static var calendarCopyRemindersFooter: LocalizedStringResource {
+        r("calendar_copy_reminders_footer", "Off by default: NestZone already reminds everyone, and your calendar would alert you a second time.")
+    }
+
+    /// Last synced
+    public static var calendarCopyLastSynced: LocalizedStringResource {
+        r("calendar_copy_last_synced", "Last synced")
+    }
+
+    /// Not yet
+    public static var calendarCopyNeverSynced: LocalizedStringResource {
+        r("calendar_copy_never_synced", "Not yet")
+    }
+
+    /// Remove the copies from your calendars?
+    public static var calendarCopyRemoveTitle: LocalizedStringResource {
+        r("calendar_copy_remove_title", "Remove the copies from your calendars?")
+    }
+
+    /// If you keep them, they stay where they are but stop following the house.
+    public static var calendarCopyRemoveMessage: LocalizedStringResource {
+        r("calendar_copy_remove_message", "If you keep them, they stay where they are but stop following the house.")
+    }
+
+    /// Remove
+    public static var calendarCopyRemove: LocalizedStringResource {
+        r("calendar_copy_remove", "Remove")
+    }
+
+    /// Keep
+    public static var calendarCopyKeep: LocalizedStringResource {
+        r("calendar_copy_keep", "Keep")
+    }
+
+    /// Off
+    public static var calendarShareLevelOff: LocalizedStringResource {
+        r("calendar_share_level_off", "Off")
+    }
+
+    /// Busy only
+    public static var calendarShareLevelBusy: LocalizedStringResource {
+        r("calendar_share_level_busy", "Busy only")
+    }
+
+    /// Details
+    public static var calendarShareLevelDetails: LocalizedStringResource {
+        r("calendar_share_level_details", "Details")
+    }
+
+    /// Share my calendars
+    public static var calendarShareToggle: LocalizedStringResource {
+        r("calendar_share_toggle", "Share my calendars")
+    }
+
+    /// Share with the house
+    public static var calendarShareHeader: LocalizedStringResource {
+        r("calendar_share_header", "Share with the house")
+    }
+
+    /// Pick which of your calendars the house sees. Nothing is shared until you choose it.
+    public static var calendarShareOffFooter: LocalizedStringResource {
+        r("calendar_share_off_footer", "Pick which of your calendars the house sees. Nothing is shared until you choose it.")
+    }
+
+    /// Your calendars
+    public static var calendarShareCalendarsHeader: LocalizedStringResource {
+        r("calendar_share_calendars_header", "Your calendars")
+    }
+
+    /// Default for new calendars
+    public static var calendarShareDefaultTitle: LocalizedStringResource {
+        r("calendar_share_default_title", "Default for new calendars")
+    }
+
+    /// How far ahead
+    public static var calendarShareWindowTitle: LocalizedStringResource {
+        r("calendar_share_window_title", "How far ahead")
+    }
+
+    /// %lld weeks
+    public static func calendarShareWeeks(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_share_weeks", "\(a0) weeks")
+    }
+
+    /// Updated
+    public static var calendarShareUpdated: LocalizedStringResource {
+        r("calendar_share_updated", "Updated")
+    }
+
+    /// Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind.
+    public static var calendarShareFooter: LocalizedStringResource {
+        r("calendar_share_footer", "Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind.")
+    }
+
+    /// %@ · busy
+    public static func calendarSharedBusyLine(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_busy_line", "\(a0) · busy")
+    }
+
+    /// %@ is busy
+    public static func calendarSharedBusyIs(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_busy_is", "\(a0) is busy")
+    }
+
+    /// Shared by %@ from their calendar
+    public static func calendarSharedBy(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_by", "Shared by \(a0) from their calendar")
+    }
+
+    /// You can see this, but not change it.
+    public static var calendarSharedReadOnly: LocalizedStringResource {
+        r("calendar_shared_read_only", "You can see this, but not change it.")
+    }
+
+    /// From their calendar
+    public static var calendarSharedSheetTitle: LocalizedStringResource {
+        r("calendar_shared_sheet_title", "From their calendar")
+    }
+
+    /// Report
+    public static var calendarSharedReport: LocalizedStringResource {
+        r("calendar_shared_report", "Report")
+    }
+
+    /// From their own calendars
+    public static var calendarSharedHeading: LocalizedStringResource {
+        r("calendar_shared_heading", "From their own calendars")
+    }
+
+    /// Their own calendars
+    public static var calendarFilterTheirs: LocalizedStringResource {
+        r("calendar_filter_theirs", "Their own calendars")
+    }
+
+    /// +%lld from their calendars
+    public static func calendarFilterCountShared(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_filter_count_shared", "+\(a0) from their calendars")
+    }
+
+    /// Shared calendar item
+    public static var moderationKindCalendar: LocalizedStringResource {
+        r("moderation_kind_calendar", "Shared calendar item")
+    }
+
+    /// Given to you
+    public static var notifTopicTasksAssigned: LocalizedStringResource {
+        r("notif_topic_tasks_assigned", "Given to you")
+    }
+
+    /// New tasks
+    public static var notifTopicTasksNew: LocalizedStringResource {
+        r("notif_topic_tasks_new", "New tasks")
+    }
+
+    /// Someone finished one
+    public static var notifTopicTasksDone: LocalizedStringResource {
+        r("notif_topic_tasks_done", "Someone finished one")
+    }
+
+    /// Added to the list
+    public static var notifTopicShoppingAdded: LocalizedStringResource {
+        r("notif_topic_shopping_added", "Added to the list")
+    }
+
+    /// Bought
+    public static var notifTopicShoppingBought: LocalizedStringResource {
+        r("notif_topic_shopping_bought", "Bought")
+    }
+
+    /// New and changed events
+    public static var notifTopicCalendarEvents: LocalizedStringResource {
+        r("notif_topic_calendar_events", "New and changed events")
+    }
+
+    /// Answers to your events
+    public static var notifTopicCalendarRSVP: LocalizedStringResource {
+        r("notif_topic_calendar_rsvp", "Answers to your events")
+    }
+
+    /// Reminders
+    public static var notifTopicReminders: LocalizedStringResource {
+        r("notif_topic_reminders", "Reminders")
+    }
+
+    /// Movie nights and rounds
+    public static var notifTopicMovies: LocalizedStringResource {
+        r("notif_topic_movies", "Movie nights and rounds")
+    }
+
+    /// Expenses, bills and settling up
+    public static var notifTopicFinanceExpenses: LocalizedStringResource {
+        r("notif_topic_finance_expenses", "Expenses, bills and settling up")
+    }
+
+    /// Bill reminders
+    public static var notifTopicFinanceReminders: LocalizedStringResource {
+        r("notif_topic_finance_reminders", "Bill reminders")
+    }
+
+    /// New problems
+    public static var notifTopicIssuesNew: LocalizedStringResource {
+        r("notif_topic_issues_new", "New problems")
+    }
+
+    /// Updates on problems
+    public static var notifTopicIssuesUpdates: LocalizedStringResource {
+        r("notif_topic_issues_updates", "Updates on problems")
+    }
+
+    /// Chats with one person
+    public static var notifTopicMessagesDirect: LocalizedStringResource {
+        r("notif_topic_messages_direct", "Chats with one person")
+    }
+
+    /// Group chats
+    public static var notifTopicMessagesGroup: LocalizedStringResource {
+        r("notif_topic_messages_group", "Group chats")
+    }
+
+    /// When you're mentioned
+    public static var notifTopicMessagesMentions: LocalizedStringResource {
+        r("notif_topic_messages_mentions", "When you're mentioned")
+    }
+
+    /// Polls
+    public static var notifTopicPolls: LocalizedStringResource {
+        r("notif_topic_polls", "Polls")
+    }
+
+    /// Ready to grow
+    public static var notifTopicCompanionReady: LocalizedStringResource {
+        r("notif_topic_companion_ready", "Ready to grow")
+    }
+
+    /// The vote
+    public static var notifTopicCompanionVote: LocalizedStringResource {
+        r("notif_topic_companion_vote", "The vote")
+    }
+
+    /// A new one arrives
+    public static var notifTopicCompanionNew: LocalizedStringResource {
+        r("notif_topic_companion_new", "A new one arrives")
+    }
+
+    /// People joining and leaving
+    public static var notifTopicHomeMembers: LocalizedStringResource {
+        r("notif_topic_home_members", "People joining and leaving")
+    }
+
+    /// Nestie
+    public static var notifGroupNestie: LocalizedStringResource {
+        r("notif_group_nestie", "Nestie")
+    }
+
+    /// Around the house
+    public static var notifGroupAround: LocalizedStringResource {
+        r("notif_group_around", "Around the house")
+    }
+
+    /// %lld of %lld on
+    public static func notifGroupCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("notif_group_count", "\(a0) of \(a1) on")
+    }
+
+    /// These need NestZone Plus.
+    public static var notifNeedsPlus: LocalizedStringResource {
+        r("notif_needs_plus", "These need NestZone Plus.")
+    }
+
+    /// See NestZone Plus
+    public static var notifSeePlus: LocalizedStringResource {
+        r("notif_see_plus", "See NestZone Plus")
+    }
+
+    /// A mention still arrives when group chats are off.
+    public static var notifMentionsFooter: LocalizedStringResource {
+        r("notif_mentions_footer", "A mention still arrives when group chats are off.")
+    }
+
+    /// This only changes what buzzes your phone. The bell on every tab keeps everything. Your choices follow you to every phone and every home.
+    public static var notifFeedFooter: LocalizedStringResource {
+        r("notif_feed_footer", "This only changes what buzzes your phone. The bell on every tab keeps everything. Your choices follow you to every phone and every home.")
+    }
+
+    /// Quiet hours
+    public static var notifQuietTitle: LocalizedStringResource {
+        r("notif_quiet_title", "Quiet hours")
+    }
+
+    /// From
+    public static var notifQuietFrom: LocalizedStringResource {
+        r("notif_quiet_from", "From")
+    }
+
+    /// Until
+    public static var notifQuietUntil: LocalizedStringResource {
+        r("notif_quiet_until", "Until")
+    }
+
+    /// Notifications still arrive, silently, and wait in Notification Center.
+    public static var notifQuietFooter: LocalizedStringResource {
+        r("notif_quiet_footer", "Notifications still arrive, silently, and wait in Notification Center.")
+    }
+
+    /// Notifications are off
+    public static var notifSystemOffTitle: LocalizedStringResource {
+        r("notif_system_off_title", "Notifications are off")
+    }
+
+    /// NestZone can't send you anything until you allow notifications in iOS Settings.
+    public static var notifSystemDenied: LocalizedStringResource {
+        r("notif_system_denied", "NestZone can't send you anything until you allow notifications in iOS Settings.")
+    }
+
+    /// Turn them on to hear when the house needs you.
+    public static var notifSystemUndetermined: LocalizedStringResource {
+        r("notif_system_undetermined", "Turn them on to hear when the house needs you.")
+    }
+
+    /// Turn on notifications
+    public static var notifSystemTurnOn: LocalizedStringResource {
+        r("notif_system_turn_on", "Turn on notifications")
+    }
+
+    /// Your choices below are saved, but nothing arrives until notifications are on.
+    public static var notifSystemFooter: LocalizedStringResource {
+        r("notif_system_footer", "Your choices below are saved, but nothing arrives until notifications are on.")
+    }
+
+    /// On
+    public static var notifRowOn: LocalizedStringResource {
+        r("notif_row_on", "On")
+    }
+
+    /// Off
+    public static var notifRowOff: LocalizedStringResource {
+        r("notif_row_off", "Off")
+    }
+
+    /// Coming up
+    public static var holidaysComingUp: LocalizedStringResource {
+        r("holidays_coming_up", "Coming up")
+    }
+
+    /// All
+    public static var holidaysFilterAll: LocalizedStringResource {
+        r("holidays_filter_all", "All")
+    }
+
+    /// Celebrating
+    public static var holidaysFilterCelebrating: LocalizedStringResource {
+        r("holidays_filter_celebrating", "Celebrating")
+    }
+
+    /// Nothing picked yet. Start from the days around where you live.
+    public static var holidaysNoneCelebrated: LocalizedStringResource {
+        r("holidays_none_celebrated", "Nothing picked yet. Start from the days around where you live.")
+    }
+
+    /// Search holidays
+    public static var holidaysSearchPrompt: LocalizedStringResource {
+        r("holidays_search_prompt", "Search holidays")
+    }
+
+    /// Turn all off
+    public static var holidaysTurnAllOff: LocalizedStringResource {
+        r("holidays_turn_all_off", "Turn all off")
+    }
+
+    /// Turn all on
+    public static var holidaysTurnAllOn: LocalizedStringResource {
+        r("holidays_turn_all_on", "Turn all on")
+    }
+
+    /// Less
+    public static var inboxShowLess: LocalizedStringResource {
+        r("inbox_show_less", "Less")
+    }
+
+    /// Written
+    public static var inboxAdminLangWritten: LocalizedStringResource {
+        r("inbox_admin_lang_written", "Written")
+    }
+
+    /// Not written yet
+    public static var inboxAdminLangMissing: LocalizedStringResource {
+        r("inbox_admin_lang_missing", "Not written yet")
+    }
+
+    // MARK: - Navigation (1.13.0)
+
+    /// Search tasks
+    public static var tasksSearchPlaceholder: LocalizedStringResource {
+        r("tasks_search_placeholder", "Search tasks")
+    }
+
+    /// Search watchlists
+    public static var movieListsSearchPlaceholder: LocalizedStringResource {
+        r("movie_lists_search_placeholder", "Search watchlists")
+    }
+
+    /// Nothing found
+    public static var commonSearchEmptyTitle: LocalizedStringResource {
+        r("common_search_empty_title", "Nothing found")
+    }
+
+    /// Try a different word.
+    public static var commonSearchEmptyMessage: LocalizedStringResource {
+        r("common_search_empty_message", "Try a different word.")
+    }
+
+    /// Add the first note
+    public static var notesAddFirst: LocalizedStringResource {
+        r("notes_add_first", "Add the first note")
+    }
+
+    /// Add the first task
+    public static var tasksAddFirst: LocalizedStringResource {
+        r("tasks_add_first", "Add the first task")
+    }
+
+    /// Add the first recipe
+    public static var recipesAddFirst: LocalizedStringResource {
+        r("recipes_add_first", "Add the first recipe")
+    }
+
+    /// Ours
+    public static var recipesTabOurs: LocalizedStringResource {
+        r("recipes_tab_ours", "Ours")
+    }
+
+    /// Explore
+    public static var recipesTabExplore: LocalizedStringResource {
+        r("recipes_tab_explore", "Explore")
+    }
+
+    /// Pin
+    public static var notesPin: LocalizedStringResource {
+        r("notes_pin", "Pin")
+    }
+
+    /// Unpin
+    public static var notesUnpin: LocalizedStringResource {
+        r("notes_unpin", "Unpin")
+    }
+
+    /// Pinned note
+    public static var homePinnedNoteTitle: LocalizedStringResource {
+        r("home_pinned_note_title", "Pinned note")
+    }
+
+    /// Nothing pinned. Long-press a note to pin it.
+    public static var homePinnedNoteQuiet: LocalizedStringResource {
+        r("home_pinned_note_quiet", "Nothing pinned. Long-press a note to pin it.")
+    }
+
+    /// %lld more in Notes
+    public static func homePinnedMore(_ a0: Int) -> LocalizedStringResource {
+        r("home_pinned_more", "\(a0) more in Notes")
+    }
+
+    /// Shows the notes your house has pinned.
+    public static var customizeAutoPinnedNote: LocalizedStringResource {
+        r("customize_auto_pinned_note", "Shows the notes your house has pinned.")
+    }
+
+    /// That event is gone
+    public static var calendarEventGoneTitle: LocalizedStringResource {
+        r("calendar_event_gone_title", "That event is gone")
+    }
+
+    /// It was deleted or moved to another day.
+    public static var calendarEventGoneMessage: LocalizedStringResource {
+        r("calendar_event_gone_message", "It was deleted or moved to another day.")
+    }
+
+    /// That problem is gone
+    public static var issuesGoneTitle: LocalizedStringResource {
+        r("issues_gone_title", "That problem is gone")
+    }
+
+    /// It was deleted, or fixed a long time ago.
+    public static var issuesGoneMessage: LocalizedStringResource {
+        r("issues_gone_message", "It was deleted, or fixed a long time ago.")
+    }
+
+    /// Add the first event
+    public static var calendarAddFirst: LocalizedStringResource {
+        r("calendar_add_first", "Add the first event")
     }
 }

@@ -109,7 +109,7 @@ struct DinnerSheet: View {
                     ? L10n.dinnerRoundSelected(store.ballot.count)
                     : L10n.dinnerRoundNeedsTwo)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .contentTransition(.numericText())
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -155,7 +155,7 @@ struct DinnerSheet: View {
                     ? "party.popper.fill"
                     : "calendar.badge.plus")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(store.makeItAnOccasion ? Palette.eventParty : .secondary)
+                    .foregroundStyle(store.makeItAnOccasion ? Palette.eventParty : Palette.textSecondary)
                     .contentTransition(.symbolEffect(.replace))
                     .bounces(when: store.makeItAnOccasion)
 
@@ -164,8 +164,8 @@ struct DinnerSheet: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.primary)
                     Text(L10n.dinnerMakeItAnOccasionHint)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }
@@ -272,7 +272,7 @@ struct DinnerSheet: View {
                         .font(.headline)
                     Text(L10n.dinnerSetDirectlyHint)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Metrics.screenPadding)
@@ -553,7 +553,7 @@ private struct KindCard: View {
                     Text(kind.title).font(.headline)
                     Text(kind.subtitle)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
@@ -592,7 +592,7 @@ private struct CuisineTile: View {
                     .scaleEffect(isSelected ? 1.12 : 1)
                 Text(cuisine.title)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(isSelected ? Color.primary : .secondary)
+                    .foregroundStyle(isSelected ? Color.primary : Palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -612,7 +612,7 @@ private struct CuisineTile: View {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption)
-                    .foregroundStyle(.white, theme.accent)
+                    .foregroundStyle(theme.onAccent, theme.accentFill)
                     .padding(6)
                     .transition(.scale.combined(with: .opacity))
             }
@@ -635,7 +635,7 @@ private struct RecipeChoice: View {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isSelected ? theme.accent : Color.secondary)
+                    .foregroundStyle(isSelected ? theme.ink : Palette.textSecondary)
                     .contentTransition(.symbolEffect(.replace))
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -645,8 +645,8 @@ private struct RecipeChoice: View {
                         .lineLimit(1)
                     if let minutes = recipe.totalMinutes {
                         Text(L10n.recipesCardTimeFormat(minutes))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                            .foregroundStyle(.secondaryText)
                     }
                 }
                 Spacer(minLength: 0)
@@ -695,7 +695,7 @@ struct DinnerPlanCard: View {
                     if let detail {
                         Text(detail)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(1)
                     }
                     // The meal belongs to something in the calendar. Said here
@@ -740,11 +740,12 @@ struct DinnerPlanCard: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: "party.popper")
-                    .font(.system(size: 9, weight: .bold))
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Palette.eventParty)
                 Text(L10n.dinnerMakeAnEveningOfIt)
-                    .font(.caption2.weight(.medium))
+                    .font(.caption.weight(.medium))
             }
-            .foregroundStyle(Palette.eventParty)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Palette.eventParty.opacity(0.14), in: .capsule)
@@ -757,16 +758,18 @@ struct DinnerPlanCard: View {
     private func occasionBadge(_ event: MealPlan.LinkedEvent) -> some View {
         let label = HStack(spacing: 4) {
             Image(systemName: event.kind.symbol)
-                .font(.system(size: 9, weight: .bold))
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(event.kind.tint)
             Text(L10n.homeTonightPartOf(event.title))
-                .font(.caption2.weight(.medium))
+                .font(.caption.weight(.medium))
                 .lineLimit(1)
             if onOpenEvent != nil {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 7, weight: .bold))
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Palette.accessory)
             }
         }
-        .foregroundStyle(event.kind.tint)
+        .foregroundStyle(.primary)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(event.kind.tint.opacity(0.14), in: .capsule)
@@ -788,7 +791,7 @@ struct DinnerPlanCard: View {
         case .cook:
             Image(systemName: "frying.pan.fill")
                 .font(.title2)
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .frame(width: 52, height: 52)
                 .background(theme.accent.opacity(0.14), in: .rect(cornerRadius: 14, style: .continuous))
         case .order, .out:
@@ -836,7 +839,7 @@ struct UndecidedDinnerCard: View {
             HStack(spacing: 16) {
                 Image(systemName: "fork.knife")
                     .font(.title2)
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .frame(width: 52, height: 52)
                     .background(theme.accent.opacity(0.14), in: .rect(cornerRadius: 14, style: .continuous))
                     // The one thing on this tab actually waiting on a person.
@@ -851,7 +854,7 @@ struct UndecidedDinnerCard: View {
                     Text(L10n.dinnerEmptyTitle).font(.headline)
                     Text(L10n.dinnerEmptySubtitle)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
@@ -887,14 +890,14 @@ private struct AlreadyDecidedBanner: View {
                 Text(L10n.dinnerAlreadyDecided)
                     .font(.footnote.weight(.semibold))
                 Text(L10n.dinnerAlreadyDecidedHint)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
             }
             Spacer(minLength: 0)
 
             Text(summary)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
@@ -933,7 +936,7 @@ private struct RouteCard: View {
                     Text(title).font(.headline)
                     Text(subtitle)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
@@ -1016,7 +1019,7 @@ private struct RoundView: View {
         VStack(spacing: 14) {
             Text(L10n.dinnerRoundTitle)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
             Text(candidate.label)
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .multilineTextAlignment(.center)
@@ -1030,7 +1033,7 @@ private struct RoundView: View {
 
     private func voteButtons(_ candidate: DinnerCandidate) -> some View {
         HStack(spacing: 16) {
-            VoteButton(symbol: "hand.thumbsdown.fill", tint: .secondary, nodsUp: false) {
+            VoteButton(symbol: "hand.thumbsdown.fill", tint: Palette.textSecondary, nodsUp: false) {
                 store.send(.voted(candidate, isYes: false))
             }
             VoteButton(symbol: "hand.thumbsup.fill", tint: Palette.success, nodsUp: true) {
@@ -1044,7 +1047,7 @@ private struct RoundView: View {
         VStack(spacing: 16) {
             Image(systemName: "party.popper.fill")
                 .font(.system(size: 44))
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .bounces()
 
             Text(candidate.label)
@@ -1065,12 +1068,12 @@ private struct RoundView: View {
         VStack(spacing: 12) {
             Image(systemName: "hourglass")
                 .font(.system(size: 34))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .symbolEffect(.pulse, isActive: !reduceMotion)
             Text(L10n.dinnerRoundOpen).font(.headline)
             Text(L10n.dinnerRoundOpenHint)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
 
             // The dead end this screen used to be: everyone has voted, nothing

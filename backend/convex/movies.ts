@@ -117,6 +117,7 @@ export const addMovie = mutation({
       title: user.name ? `${user.name} added a film` : "New film on the list",
       body: list.name ? `${args.title} — ${list.name}` : args.title,
       category: "movies",
+      topic: "movies",
     });
 
     const now = Date.now();

@@ -159,6 +159,9 @@ export const create = mutation({
       title: user.name ? `${user.name} started a vote` : "New vote",
       body: args.title,
       category: "polls",
+      // A movie or recipe round is that module's news; only a chat poll is
+      // `polls` (lib/notificationPrefs.ts).
+      topic: args.type === "movie" ? "movies" : args.type === "recipe" ? "meals" : "polls",
     });
 
     return await ctx.db.get(pollId);

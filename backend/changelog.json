@@ -56,6 +56,114 @@
   ],
   "entries": [
     {
+      "slug": "1.13.0-pinned-notes",
+      "version": "1.13.0",
+      "kind": "feature",
+      "title": "Pin a note, and Notes moves to House",
+      "body": "Long-press a note to pin it. Pinned notes stay first on the board and show up on Today, so the Wi-Fi password is one glance away. Notes now lives in House, next to Money and Problems.",
+      "highlights": [
+        "Long-press a note and tap Pin: it goes to the top of the board",
+        "Today shows your pinned notes as sticky cards (turn it off in Customize)",
+        "Notes moved to House, and Lists is just Tasks and Shopping",
+        "Anybody in the house can pin or unpin"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Notu sabitle, Notlar da Ev'e taşındı",
+          "body": "Bir nota uzun bas, sabitle. Sabit notlar panonun en üstünde durur ve Bugün'de de görünür, yani Wi-Fi şifresi tek bakışta. Notlar artık Ev'de, Para ve Sorunlar'ın yanında.",
+          "highlights": [
+            "Bir nota uzun basıp Sabitle'ye dokun: panonun en üstüne çıkar",
+            "Sabit notların Bugün'de yapışkan kağıt gibi görünür (Özelleştir'den kapatabilirsin)",
+            "Notlar Ev'e taşındı, Listeler'de artık sadece Görevler ve Alışveriş var",
+            "Evdeki herkes sabitleyebilir, kaldırabilir"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.13.0-calendars",
+      "version": "1.13.0",
+      "kind": "feature",
+      "title": "Your iCloud and Google calendars, in NestZone",
+      "body": "House events can land in your own calendars now, the ones already on your iPhone, like iCloud, Gmail or work. You can also show your housemates when you're busy, from the calendars you pick, and see just one person's plans with a tap.",
+      "highlights": [
+        "When you add an event, pick which of your calendars it also goes into",
+        "Changes and cancellations follow along to your copies",
+        "Share any of your calendars with the house: busy only, or with titles",
+        "Filter the calendar by person: just you, one housemate, or a few",
+        "Nothing of yours is shared until you pick it"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "iCloud ve Google takvimlerin artık NestZone'da",
+          "body": "Ev etkinlikleri artık kendi takvimlerine de düşebiliyor: iCloud, Gmail, iş, iPhone'unda hangisi varsa. İstersen seçtiğin takvimlerden ev arkadaşlarına ne zaman dolu olduğunu da gösterebilirsin. Tek dokunuşla sadece bir kişinin planlarına da bakabilirsin.",
+          "highlights": [
+            "Etkinlik eklerken hangi takvimlerine de gideceğini seç",
+            "Saat değişirse ya da iptal olursa kopyalar da güncellenir",
+            "İstediğin takvimini evle paylaş: sadece dolu gözüksün ya da başlıklarıyla",
+            "Takvimi kişiye göre süz: sadece sen, bir ev arkadaşın ya da birkaçı",
+            "Sen seçmeden hiçbir şeyin paylaşılmaz"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.13.0-notification-settings",
+      "version": "1.13.0",
+      "kind": "feature",
+      "title": "Pick which notifications you get",
+      "body": "Settings has a Notifications page now. Turn off what you don't need, one by one or a whole group at once, and set quiet hours so nothing buzzes at night. The bell still keeps everything, so you never miss what happened.",
+      "highlights": [
+        "Switch each kind on or off: chores, calendar, money, problems, chats, Nestie and more",
+        "Mute group chats and still hear it when someone mentions you",
+        "Quiet hours: notifications arrive silently and wait for the morning",
+        "Your choice follows you to every phone and home"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Hangi bildirimleri alacağını sen seç",
+          "body": "Ayarlar'da artık bir Bildirimler sayfası var. İstemediklerini tek tek ya da bütün grubu birden kapat, gece için sessiz saatler ayarla. Zil yine her şeyi tutuyor, yani hiçbir şeyi kaçırmazsın.",
+          "highlights": [
+            "Her türü ayrı aç kapat: işler, takvim, para, sorunlar, sohbetler, Nestie ve fazlası",
+            "Grup sohbetlerini sustur, biri senden bahsedince yine haberin olsun",
+            "Sessiz saatler: bildirimler sessizce gelir, sabahı bekler",
+            "Seçimin tüm telefonlarında ve evlerinde geçerli"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.13.0-fixes",
+      "version": "1.13.0",
+      "kind": "improvement",
+      "title": "Fixes and improvements",
+      "body": "Small things that make the app nicer to use.",
+      "highlights": [
+        "Improved how easy text is to read, in every theme, light and dark",
+        "Added a small badge that shows which features are part of NestZone Plus",
+        "Improved how screens open: an event or a problem opened from Today now opens on its own, with Back going to where you were",
+        "Improved the top bar: each screen's buttons sit next to the bell, with the add button closest to it",
+        "Added search to Tasks, Movies and Calendar in the top bar"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Düzeltmeler ve iyileştirmeler",
+          "body": "Uygulamayı daha keyifli yapan ufak dokunuşlar.",
+          "highlights": [
+            "Yazılar artık her temada, açıkta da koyuda da daha kolay okunuyor",
+            "Hangi özelliklerin NestZone Plus'ta olduğunu gösteren küçük bir rozet eklendi",
+            "Bugün'den açtığın etkinlik ya da sorun artık tek başına açılıyor, Geri de geldiğin yere götürüyor",
+            "Üstteki çubuk düzeldi: her ekranın düğmeleri zilin yanında, ekle düğmesi en yakında",
+            "Görevler, Filmler ve Takvim'e üst çubukta arama eklendi"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.12.0-nestzone-plus",
       "version": "1.12.0",
       "kind": "feature",

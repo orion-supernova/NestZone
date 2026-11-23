@@ -855,6 +855,7 @@ export const stockUp = mutation({
         title: user.name ? `${user.name} added` : "Added to the list",
         body: `${added} ${added === 1 ? "item" : "items"} for ${event.title ?? "an event"}`,
         category: "shopping",
+        topic: "shopping.added",
       });
     }
 
@@ -913,6 +914,7 @@ export const addItems = mutation({
         title: user.name ? `${user.name} added` : "Added to the list",
         body: `${added} ${added === 1 ? "item" : "items"} for ${event.title ?? "an event"}`,
         category: "shopping",
+        topic: "shopping.added",
       });
     }
 
@@ -989,6 +991,7 @@ export const create = mutation({
       title: user.name ? `${user.name} added an event` : "New event",
       body: title,
       category: "calendar",
+      topic: "calendar.events",
       collapseId: `event-${id}`,
     });
 
@@ -1121,6 +1124,7 @@ export const update = mutation({
         title: user.name ? `${user.name} changed an event` : "Event changed",
         body: fields.title ?? "An event was updated",
         category: "calendar",
+        topic: "calendar.events",
         collapseId: `event-${args.id}`,
       });
     }
@@ -1166,6 +1170,7 @@ export const remove = mutation({
         title: user.name ? `${user.name} cancelled an event` : "Event cancelled",
         body: event.title ?? "An event was cancelled",
         category: "calendar",
+        topic: "calendar.events",
       });
     }
     return { ok: true };
@@ -1321,6 +1326,7 @@ export const sweepReminders = internalAction({
         title: nudge.title,
         body: reminderBody(nudge),
         category: "calendar",
+        topic: "calendar.reminders",
         // One nudge per occurrence on the lock screen, whatever the offset:
         // "in an hour" being replaced by "in ten minutes" is the point.
         collapseId: `event-${nudge.eventId}-${nudge.startsAt}`,

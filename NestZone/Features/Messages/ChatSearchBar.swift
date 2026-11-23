@@ -12,7 +12,7 @@ struct ChatSearchBar: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             TextField(text: $text) { Text(L10n.chatSearchPlaceholder) }
                 .focused($isFocused)
                 .submitLabel(.search)
@@ -21,13 +21,13 @@ struct ChatSearchBar: View {
                 Text(resultCount, format: .number)
                     .font(.caption.weight(.medium))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .accessibilityLabel(Text(L10n.chatSearchResults(resultCount)))
             }
             Button(action: close) {
                 Image(systemName: "xmark.circle.fill")
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
                     .contentShape(.rect)
             }

@@ -112,6 +112,7 @@ export const create = mutation({
       title: user.name ? `${user.name} added` : NOTIFY_TITLE,
       body: args.name,
       category: "shopping",
+      topic: "shopping.added",
     });
 
     return createdId;
@@ -207,6 +208,7 @@ export const createMany = mutation({
         title: user.name ? `${user.name} added` : NOTIFY_TITLE,
         body: `${shown}${more}`,
         category: "shopping",
+        topic: "shopping.added",
       });
     }
 
@@ -270,6 +272,7 @@ export const createFromRecipe = mutation({
         title: user.name ? `${user.name} added` : NOTIFY_TITLE,
         body: `${wanted.length} ${wanted.length === 1 ? "item" : "items"} for ${args.recipeTitle}`,
         category: "shopping",
+        topic: "shopping.added",
       });
     }
 

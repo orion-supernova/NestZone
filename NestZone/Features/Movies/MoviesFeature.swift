@@ -10,20 +10,31 @@ public struct MoviesFeature: Sendable {
         public var homeID: HomeID
         public var lists: IdentifiedArrayOf<MovieList> = []
         public var isLoading = true
+        /// The system search in the bar: matches a watchlist's name.
+        public var searchText = ""
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
         public init(homeID: HomeID) { self.homeID = homeID }
 
+        private func matches(_ list: MovieList) -> Bool {
+            let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            return query.isEmpty || list.displayName.localizedCaseInsensitiveContains(query)
+        }
+
+        public var isSearching: Bool {
+            !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+
         /// Wishlist and Watched come first and always exist conceptually; custom
         /// lists follow in creation order.
         public var presets: [MovieList] {
-            lists.filter { $0.kind != .custom }
+            lists.filter { $0.kind != .custom && matches($0) }
                 .sorted { $0.kind == .wishlist && $1.kind != .wishlist }
         }
 
         public var customLists: [MovieList] {
-            lists.filter { $0.kind == .custom }
+            lists.filter { $0.kind == .custom && matches($0) }
                 .sorted { Timestamp.newestFirst($1.created, $0.created) }
         }
     }
@@ -34,8 +45,9 @@ public struct MoviesFeature: Sendable {
         case createList(CreateMovieListFeature)
     }
 
-    public enum Action {
+    public enum Action: BindableAction {
         case task
+        case binding(BindingAction<State>)
         case listsUpdated([MovieList])
         case loadFailed(AppError)
         case listTapped(MovieList)
@@ -69,6 +81,7 @@ public struct MoviesFeature: Sendable {
     public init() {}
 
     public var body: some ReducerOf<Self> {
+        BindingReducer()
         Reduce { state, action in
             switch action {
             case .task:
@@ -142,7 +155,7 @@ public struct MoviesFeature: Sendable {
             case .movieNightTapped:
                 return .send(.delegate(.openMovieNight))
 
-            case .destination, .alert, .delegate:
+            case .binding, .destination, .alert, .delegate:
                 return .none
             }
         }

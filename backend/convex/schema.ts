@@ -296,6 +296,30 @@ export default defineSchema({
     .index("by_user", ["user_id"])
     .index("by_token", ["token"]),
 
+  // What one person wants pushed to their phones (notificationPrefs.ts,
+  // lib/notificationPrefs.ts). At most one row per person; no row is the
+  // default, every push as it always was. It filters the APNs push only:
+  // the household's feed (`inbox.record`) is never touched by it.
+  notification_prefs: defineTable({
+    user_id: v.id("users"),
+    /**
+     * Topic keys switched off (`TOPICS` in lib/notificationPrefs.ts). Kept as
+     * strings, unknown ones included, so a newer build can switch off a topic
+     * this backend does not know yet and an older one does not lose it.
+     */
+    off: v.array(v.string()),
+    /**
+     * Quiet hours in the person's own time zone: minutes after midnight,
+     * `end` exclusive, and a window may wrap midnight (22:00–08:00). Inside
+     * it a push still arrives, but passively: no sound, no lit screen.
+     * Absent: no quiet hours.
+     */
+    quiet: v.optional(
+      v.object({ start: v.number(), end: v.number(), time_zone: v.string() }),
+    ),
+    updated: v.number(),
+  }).index("by_user", ["user_id"]),
+
   // The signed APNs provider JWT, cached. Apple rejects a provider that mints
   // tokens more than once every 20 minutes (`TooManyProviderTokenUpdates`), and
   // actions are stateless, so the token has to live somewhere.
@@ -550,10 +574,16 @@ export default defineSchema({
     home_id: v.id("homes"),
     image: v.optional(v.id("_storage")),
     color: v.optional(v.string()),
+    /**
+     * Pinned to the top of the board and to Today. Absent means not pinned
+     * (every note written before 1.13.0), so nothing needs backfilling.
+     */
+    pinned: v.optional(v.boolean()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
-    .index("by_home", ["home_id"]),
+    .index("by_home", ["home_id"])
+    .index("by_home_pinned", ["home_id", "pinned"]),
 
   conversations: defineTable({
     pbId: v.optional(v.string()),
@@ -1787,7 +1817,12 @@ export default defineSchema({
   reports: defineTable({
     reporter_id: v.id("users"),
     home_id: v.id("homes"),
-    kind: v.union(v.literal("message"), v.literal("issuePhoto"), v.literal("avatar")),
+    kind: v.union(
+      v.literal("message"),
+      v.literal("issuePhoto"),
+      v.literal("avatar"),
+      v.literal("calendarItem"),
+    ),
     /**
      * What the report is about: the message id, or the storage id of the
      * problem photo or of the face (the face's owner is `target_user_id`).
@@ -1815,6 +1850,15 @@ export default defineSchema({
       issue_id: v.optional(v.id("issues")),
       issue_title: v.optional(v.string()),
       user_name: v.optional(v.string()),
+      /**
+       * A shared calendar item (`calendarItem`): what the reporter could see
+       * of it. Its title, when the calendar shared details, is `text`.
+       */
+      location: v.optional(v.string()),
+      calendar_key: v.optional(v.string()),
+      calendar_name: v.optional(v.string()),
+      starts_at: v.optional(v.number()),
+      ends_at: v.optional(v.number()),
     }),
     status: v.union(v.literal("open"), v.literal("dismissed"), v.literal("actioned")),
     created: v.number(),
@@ -1876,7 +1920,12 @@ export default defineSchema({
   // for a message so a thread's read needs only that thread's hides.
   hidden_content: defineTable({
     user_id: v.id("users"),
-    kind: v.union(v.literal("message"), v.literal("issuePhoto"), v.literal("avatar")),
+    kind: v.union(
+      v.literal("message"),
+      v.literal("issuePhoto"),
+      v.literal("avatar"),
+      v.literal("calendarItem"),
+    ),
     target_id: v.string(),
     conversation_id: v.optional(v.id("conversations")),
     created: v.number(),
@@ -1894,6 +1943,58 @@ export default defineSchema({
   })
     .index("by_blocker_blocked", ["blocker_id", "blocked_id"])
     .index("by_blocked", ["blocked_id"]),
+
+  // Calendars a person shares with one home (convex/calendarShare.ts).
+  //
+  // One row per person and home: which of their own calendars (an opaque key
+  // the phone makes, the name they see, a colour) and how much of each,
+  // `busy` (times only) or `details` (title and location too). Only its owner
+  // reads it; housemates see it joined onto `shared_busy` rows.
+  calendar_shares: defineTable({
+    home_id: v.id("homes"),
+    user_id: v.id("users"),
+    calendars: v.array(
+      v.object({
+        key: v.string(),
+        name: v.string(),
+        color: v.optional(v.string()),
+        level: v.union(v.literal("busy"), v.literal("details")),
+      }),
+    ),
+    window_days: v.number(),
+    /** Last `calendarShare:replace`. Absent until the first one. */
+    synced_at: v.optional(v.number()),
+    updated: v.number(),
+  })
+    .index("by_home_user", ["home_id", "user_id"])
+    .index("by_user", ["user_id"])
+    // The 30-day cleanup: shares synced long ago, and (with `synced_at`
+    // absent) shares never synced, by when they were last touched.
+    .index("by_synced_updated", ["synced_at", "updated"])
+    .index("by_home", ["home_id"]),
+
+  // The events of a shared calendar, a window ahead, replaced whole on every
+  // sync (`calendarShare:replace`). Never a household event: nothing links to
+  // these and nothing counts them. `title`/`location` only ever exist for a
+  // calendar shared at `details`.
+  shared_busy: defineTable({
+    home_id: v.id("homes"),
+    user_id: v.id("users"),
+    calendar_key: v.string(),
+    starts_at: v.number(),
+    ends_at: v.number(),
+    is_all_day: v.optional(v.boolean()),
+    title: v.optional(v.string()),
+    location: v.optional(v.string()),
+  })
+    // One person's calendar in one home, by when each item ends: the replace
+    // window, `inRange` per housemate per calendar, and every delete by
+    // person (the prefix) or by calendar.
+    .index("by_user_home_calendar_ends", ["user_id", "home_id", "calendar_key", "ends_at"])
+    // The daily sweep: rows that ended more than a day ago.
+    .index("by_ends", ["ends_at"])
+    // `homes:purgeHomeData`.
+    .index("by_home", ["home_id"]),
 
   pro_entitlements: defineTable({
     user_id: v.id("users"),

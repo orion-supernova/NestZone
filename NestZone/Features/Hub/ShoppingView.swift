@@ -130,7 +130,7 @@ public struct ShoppingView: View {
         .navigationBarTitleDisplayMode(.inline)
         .segmentToolbar {
             if !store.purchased.isEmpty || store.state.isClearing(.purchased) {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button(role: .destructive) {
                         store.send(.clearPurchasedTapped)
                     } label: {
@@ -195,7 +195,7 @@ public struct ShoppingView: View {
                     .font(.headline)
                 Text(L10n.shoppingHeaderSubtitle)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
 
             Spacer(minLength: 0)
@@ -205,16 +205,16 @@ public struct ShoppingView: View {
                     AnimatedNumber(store.leftCount)
                         .font(.system(.title3, design: .rounded, weight: .bold))
                     Text(L10n.shoppingStatsLeft)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                 }
                 HStack(spacing: 4) {
                     AnimatedNumber(store.doneCount)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .foregroundStyle(Palette.success)
+                        .foregroundStyle(Palette.successText)
                     Text(L10n.shoppingStatsDone)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -554,7 +554,7 @@ private struct ShoppingRow: View {
             Button(action: toggle) {
                 Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(item.isPurchased ? Palette.success : Color.secondary)
+                    .foregroundStyle(item.isPurchased ? Palette.success : Palette.textSecondary)
                     // The tick grows out of the ring rather than swapping in.
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                     // Squash, overshoot, settle: the box answers the thumb.
@@ -573,7 +573,7 @@ private struct ShoppingRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.name)
                     .font(.subheadline)
-                    .foregroundStyle(item.isPurchased ? .secondary : .primary)
+                    .foregroundStyle(item.isPurchased ? Palette.textSecondary : .primary)
                     .lineLimit(1)
                     // The line alone, swept across by a copy of the name whose
                     // letters are clear; there only while the item is bought.
@@ -581,7 +581,7 @@ private struct ShoppingRow: View {
                         if item.isPurchased {
                             Text(item.name)
                                 .font(.subheadline)
-                                .strikethrough(color: .secondary)
+                                .strikethrough(color: Palette.textSecondary)
                                 .foregroundStyle(.clear)
                                 .lineLimit(1)
                                 .transition(strikeTransition)
@@ -594,8 +594,8 @@ private struct ShoppingRow: View {
                     } icon: {
                         Image(systemName: item.category.symbol)
                     }
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
                 }
             }
 
@@ -604,7 +604,7 @@ private struct ShoppingRow: View {
             if let quantity = item.quantity, quantity > 1 {
                 Text(quantity, format: .number.precision(.fractionLength(0...1)))
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .monospacedDigit()
                     .contentTransition(.numericText(value: quantity))
                     .animation(Motion.spring, value: quantity)
@@ -653,7 +653,7 @@ private struct CategoryHeader: View {
             HStack(spacing: 10) {
                 Image(systemName: category.symbol)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(.accentText)
                     .frame(width: 28, height: 28)
                     .background(.tint.opacity(0.14), in: .circle)
 
@@ -662,8 +662,8 @@ private struct CategoryHeader: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text(L10n.shoppingCategoryCompletedItems(done, total))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                         .contentTransition(.numericText())
                 }
 
@@ -744,7 +744,7 @@ private struct GroupHeader: View {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(.accentText)
                     .frame(width: 28, height: 28)
                     .background(.tint.opacity(0.14), in: .circle)
 
@@ -754,8 +754,8 @@ private struct GroupHeader: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                     Text(L10n.shoppingCategoryCompletedItems(done, total))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                         .contentTransition(.numericText())
                 }
 

@@ -35,7 +35,7 @@ public struct NotesView: View {
                         title: L10n.notesEmptyStateTitle,
                         message: L10n.notesEmptyStateSubtitle,
                         symbol: "note.text",
-                        action: .init(title: L10n.commonAdd) { store.send(.composeTapped) }
+                        action: .init(title: L10n.notesAddFirst) { store.send(.composeTapped) }
                     )
                     .padding(.top, 60)
                 } else {
@@ -52,16 +52,18 @@ public struct NotesView: View {
         }
         .background(Backdrop(tint: theme.accent))
         .scrollEdgeEffectStyle(.soft, for: .top)
-        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.notesSearchPlaceholder))
         .navigationTitle(Text(L10n.notesScreenTitle))
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarLeading) { HouseStatsButton() }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { store.send(.composeTapped) } label: {
                     Image(systemName: "square.and.pencil")
                 }
                 .accessibilityLabel(Text(L10n.notesComposeTitle))
             }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.notesSearchPlaceholder))
         .task { await store.send(.task).finish() }
         .hostedSheet(item: $store.scope(state: \.destination?.compose, action: \.destination.compose)) {
             ComposeNoteSheet(store: $0, onSave: { savedAt = .now })
@@ -107,6 +109,7 @@ public struct NotesView: View {
                         author: store.state.authorName(for: note),
                         canEdit: store.state.canEdit(note),
                         isNew: fresh,
+                        onPin: { store.send(.pinTapped(note.id)) },
                         onEdit: { store.send(.editTapped(note.id)) },
                         onDelete: { store.send(.deleteTapped(note.id)) }
                     )
@@ -129,6 +132,7 @@ private struct NoteCard: View {
     let author: String
     let canEdit: Bool
     let isNew: Bool
+    let onPin: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
 
@@ -141,19 +145,38 @@ private struct NoteCard: View {
         ) {
             HStack(spacing: 4) {
                 Text(verbatim: "— \(author)")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.black.opacity(0.65))
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(Palette.paperInkSecondary)
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 if let created = note.created {
                     RelativeTimeText(created)
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.45))
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(Palette.paperInkTertiary)
                         .lineLimit(1)
                 }
             }
         }
+        // A pin, small, where a real one would go.
+        .overlay(alignment: .topTrailing) {
+            if note.isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Palette.paperInkSecondary)
+                    .rotationEffect(.degrees(35))
+                    .padding(8)
+                    .accessibilityHidden(true)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
         .contextMenu {
+            Button { onPin() } label: {
+                Label {
+                    Text(note.isPinned ? L10n.notesUnpin : L10n.notesPin)
+                } icon: {
+                    Image(systemName: note.isPinned ? "pin.slash" : "pin")
+                }
+            }
             if canEdit {
                 Button { onEdit() } label: {
                     Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
@@ -164,6 +187,8 @@ private struct NoteCard: View {
             }
         }
         .accessibilityLabel(Text(verbatim: "\(note.body). \(author)"))
+        .accessibilityAddTraits(note.isPinned ? .isSelected : [])
+        .accessibilityAction(named: Text(note.isPinned ? L10n.notesUnpin : L10n.notesPin), onPin)
         .accessibilityHint(canEdit ? Text(L10n.notesEditHint) : Text(""))
     }
 }
@@ -229,7 +254,7 @@ struct ComposeNoteSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.notesPreviewLabel)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             StickyNote(
@@ -243,12 +268,12 @@ struct ComposeNoteSheet: View {
             ) {
                 HStack(spacing: 4) {
                     Text(L10n.notesAuthorYou)
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.65))
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(Palette.paperInkSecondary)
                     Spacer(minLength: 0)
                     Text(L10n.notesPreviewNow)
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.45))
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(Palette.paperInkTertiary)
                 }
             }
             .frame(width: 190)
@@ -261,7 +286,7 @@ struct ComposeNoteSheet: View {
     private var editor: some View {
         TextEditor(text: $store.body_)
             .focused($isFocused)
-            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .font(.system(.callout, design: .rounded, weight: .medium))
             .scrollContentBackground(.hidden)
             .padding(12)
             .frame(minHeight: 130)
@@ -269,7 +294,7 @@ struct ComposeNoteSheet: View {
             .overlay(alignment: .topLeading) {
                 if store.body_.isEmpty {
                     Text(L10n.notesComposePlaceholder)
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.system(.callout, design: .rounded, weight: .medium))
                         .foregroundStyle(Palette.accessory)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 20)
@@ -282,7 +307,7 @@ struct ComposeNoteSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.notesColorLabel)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
 
             FlowLayout(spacing: 8) {
                 ForEach(StickyColor.allCases) { swatch in
@@ -322,7 +347,7 @@ struct ComposeNoteSheet: View {
                 Image(systemName: "exclamationmark.circle.fill")
             }
             .font(.caption)
-            .foregroundStyle(Palette.danger)
+            .foregroundStyle(Palette.dangerText)
             .frame(maxWidth: .infinity, alignment: .leading)
             .transition(.move(edge: .top).combined(with: .opacity))
         }

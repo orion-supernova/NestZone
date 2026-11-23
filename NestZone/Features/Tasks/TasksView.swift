@@ -29,12 +29,12 @@ public struct TasksView: View {
     /// Recipes went the same way for the same reason.
     public var body: some View {
         List {
-            Picker(selection: $store.filter) {
-                ForEach(TasksFeature.State.Filter.allCases, id: \.self) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            } label: { EmptyView() }
-            .pickerStyle(.segmented)
+            InnerSwitch(
+                options: Array(TasksFeature.State.Filter.allCases),
+                selected: store.filter,
+                title: { $0.title },
+                inset: 0
+            ) { store.filter = $0 }
             .glassListRow(insets: .init(
                 top: 0,
                 leading: Metrics.screenPadding,
@@ -56,23 +56,28 @@ public struct TasksView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.tasksScreenTitle))
         .navigationBarTitleDisplayMode(.inline)
+        // The screen's tool first, the add nearest the bell (the bar's rule:
+        // `sessionToolbar`).
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) {
+            // A header control, not a card over the rows: tried as a strip at
+            // the top of a list, the split read as a very large first task.
+            ToolbarItem(placement: .topBarLeading) {
+                Button { store.send(.contributionsTapped) } label: {
+                    Image(systemName: "chart.pie")
+                }
+                .tint(.primary)
+                .accessibilityLabel(Text(L10n.contributionsSectionTitle))
+                .accessibilityIdentifier("TasksContributionsButton")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { store.send(.composeTapped) } label: {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.tasksComposeTitle))
             }
-            // A header control, not a card over the rows: tried as a strip at
-            // the top of a list, the split read as a very large first task.
-            ToolbarItem(placement: .primaryAction) {
-                Button { store.send(.contributionsTapped) } label: {
-                    Image(systemName: "chart.pie")
-                }
-                .accessibilityLabel(Text(L10n.contributionsSectionTitle))
-                .accessibilityIdentifier("TasksContributionsButton")
-            }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.tasksSearchPlaceholder))
         .task { await store.send(.task).finish() }
         .hostedSheet(item: $store.scope(
             state: \.destination?.compose, action: \.destination.compose
@@ -124,7 +129,7 @@ public struct TasksView: View {
             HStack(alignment: .top, spacing: 12) {
                 Text(note)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -154,6 +159,14 @@ public struct TasksView: View {
         if store.isLoading {
             SkeletonList(rows: 5, height: 64)
                 .glassListRow()
+        } else if store.visible.isEmpty, !store.searchText.isEmpty {
+            EmptyStateView(
+                title: L10n.commonSearchEmptyTitle,
+                message: L10n.commonSearchEmptyMessage,
+                symbol: "magnifyingglass"
+            )
+            .padding(.top, 48)
+            .glassListRow()
         } else if store.visible.isEmpty {
             // An empty Done tab is not an empty task list, and offering "Add a
             // task" under "Nothing to do" would be answering a question nobody
@@ -172,7 +185,7 @@ public struct TasksView: View {
                     title: L10n.homeTasksEmptyTitle,
                     message: L10n.homeTasksEmptyMessage,
                     symbol: "checkmark.seal",
-                    action: .init(title: L10n.commonAdd) { store.send(.composeTapped) }
+                    action: .init(title: L10n.tasksAddFirst) { store.send(.composeTapped) }
                 )
                 .padding(.top, 48)
                 .glassListRow()
@@ -217,7 +230,7 @@ public struct TasksView: View {
                             // The lock is the glyph itself: a swipe button is
                             // not a view a badge can sit on.
                             Label { Text(L10n.tasksArchiveAction) } icon: {
-                                Image(systemName: pro.isPro ? "archivebox" : "lock.fill")
+                                Image(systemName: pro.isPro ? "archivebox" : PlusStyle.lockedSymbol)
                             }
                         }
                         .tint(Palette.warning)
@@ -248,7 +261,7 @@ private struct TaskListRow: View {
             Button(action: toggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(task.isCompleted ? Palette.success : Color.secondary)
+                    .foregroundStyle(task.isCompleted ? Palette.success : Palette.textSecondary)
                     // The tick grows out of the ring rather than swapping in.
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                     // Squash, overshoot, settle: the box answers the thumb.
@@ -267,7 +280,7 @@ private struct TaskListRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(task.title)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                    .foregroundStyle(task.isCompleted ? Palette.textSecondary : .primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     // The strikethrough is drawn by a second copy of the title
@@ -279,7 +292,7 @@ private struct TaskListRow: View {
                         if task.isCompleted {
                             Text(task.title)
                                 .font(.subheadline.weight(.medium))
-                                .strikethrough(color: .secondary)
+                                .strikethrough(color: Palette.textSecondary)
                                 .foregroundStyle(.clear)
                                 .lineLimit(2)
                                 .multilineTextAlignment(.leading)
@@ -294,17 +307,17 @@ private struct TaskListRow: View {
                     } icon: {
                         Image(systemName: task.kind.symbol)
                     }
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
 
                     if let assignee {
-                        Text(assignee).font(.caption2).foregroundStyle(.secondary)
+                        Text(assignee).font(.caption).foregroundStyle(.secondaryText)
                     }
 
                     if let due = task.dueDate {
                         Text(due.date, format: .relative(presentation: .named))
-                            .font(.caption2)
-                            .foregroundStyle(task.isOverdue ? Palette.danger : .secondary)
+                            .font(.caption)
+                            .foregroundStyle(task.isOverdue ? Palette.dangerText : Palette.textSecondary)
                     }
                 }
             }
@@ -410,7 +423,7 @@ struct ComposeTaskSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }

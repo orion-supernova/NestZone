@@ -131,7 +131,7 @@ struct ChatComposer: View {
             .buttonStyle(.pressable)
             .glassEffect(.regular.interactive(), in: .capsule)
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.secondaryText)
         .padding(.leading, 14)
         .transition(AnyTransition.move(edge: .bottom).combined(with: .opacity).reduced(reduceMotion))
     }
@@ -176,10 +176,10 @@ struct BlockedComposerBar: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "hand.raised.fill")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Text(L10n.chatBlockedBanner(name))
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Spacer(minLength: 0)
             Button(action: unblock) {
                 Text(L10n.chatUnblock)

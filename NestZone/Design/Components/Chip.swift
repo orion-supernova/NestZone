@@ -8,6 +8,7 @@ public struct Chip: View {
     private let title: String
     private let symbol: String?
     private let isSelected: Bool
+    private let expandsTapTarget: Bool
     private let action: () -> Void
 
     @Environment(\.theme) private var theme
@@ -19,11 +20,13 @@ public struct Chip: View {
         _ title: String,
         symbol: String? = nil,
         isSelected: Bool = false,
+        expandsTapTarget: Bool = false,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.symbol = symbol
         self.isSelected = isSelected
+        self.expandsTapTarget = expandsTapTarget
         self.action = action
     }
 
@@ -44,10 +47,12 @@ public struct Chip: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .foregroundStyle(isSelected ? Color.white : Color.primary)
+            // The label on the accent fill is the theme's `onAccent` (white
+            // was 2.5:1 on Neon Night's green and 3.1 to 3.6 on the pinks).
+            .foregroundStyle(isSelected ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
             .background {
                 if isSelected {
-                    Capsule().fill(theme.accent)
+                    Capsule().fill(theme.accentFill)
                 }
             }
             .glassEffect(
@@ -57,6 +62,10 @@ public struct Chip: View {
             // An unselected chip draws no background, so without a content
             // shape only the label glyphs are tappable.
             .contentShape(.capsule)
+            // The pill stays as drawn; where a chip sits in a row that is the
+            // screen's way of choosing, the finger gets the full 44 points.
+            .frame(minHeight: expandsTapTarget ? Metrics.minTapTarget : nil)
+            .contentShape(.rect)
         }
         // Quiet: the tap's tick below is this chip's one haptic.
         .buttonStyle(.pressableQuiet)
@@ -81,7 +90,7 @@ public struct Badge: View {
     public var body: some View {
         HStack(spacing: 4) {
             if let symbol {
-                Image(systemName: symbol).font(.caption2.weight(.bold))
+                Image(systemName: symbol).font(.caption.weight(.bold)).foregroundStyle(tint)
             }
             Text(text)
                 .font(.caption.weight(.semibold))
@@ -93,8 +102,11 @@ public struct Badge: View {
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
-        .foregroundStyle(tint)
-        .background(tint.opacity(0.15), in: .capsule)
+        // The words are always the label colour: a tint as text on its own
+        // 15% wash is 1.9:1 for amber and 2.1:1 for green on white. The tint
+        // keeps the wash and the glyph, so the colour still says which kind.
+        .foregroundStyle(.primary)
+        .background(tint.opacity(0.22), in: .capsule)
         .animation(Motion.fade, value: text)
     }
 }

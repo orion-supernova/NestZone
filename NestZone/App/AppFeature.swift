@@ -28,6 +28,9 @@ public struct AppFeature: Sendable {
         /// reads and writes the tabs start in the meantime from going out
         /// without a session.
         public var isProvisional = false
+        /// Houses the last live list lacked that this phone still holds things
+        /// for. A house is let go only when two lists in a row lack it.
+        var missingHomes: Set<HomeID> = []
         /// The launch has started its one restore. `.task` runs again when the
         /// language changes (the root view is re-identified), and a second
         /// restore beside the first is two exchanges of a token that rotates.
@@ -100,6 +103,8 @@ public struct AppFeature: Sendable {
         case deviceRegistered(String)
         case deviceRegistrationFailed(String)
         case appEnteredForeground
+        /// Houses this phone holds calendar things for that the live list lacks.
+        case homesMissing(Set<HomeID>)
         /// RevenueCat now knows who this is.
         case purchasesLoggedIn(UserID)
         case retryRestoreTapped
@@ -120,6 +125,8 @@ public struct AppFeature: Sendable {
     @Dependency(\.devices) var devices
     @Dependency(\.purchases) var purchases
     @Dependency(\.pro) var proClient
+    @Dependency(\.calendarMirror) var calendarMirror
+    @Dependency(\.deviceCalendar) var deviceCalendar
 
     public init() {}
 
@@ -423,7 +430,12 @@ public struct AppFeature: Sendable {
                 // A Plus payment that was not credited yet is looked at again.
                 let recheck: Effect<Action> = state.main == nil
                     ? .none
-                    : .send(.main(.proStatus(.becameActive)))
+                    : .merge(
+                        .send(.main(.proStatus(.becameActive))),
+                        // The copies' window slides forward and catches up.
+                        .send(.main(.mirror(.becameActive))),
+                        .send(.main(.share(.becameActive)))
+                    )
                 guard state.status == .authenticated,
                       !state.pushRegistration.isRegistered
                 else { return recheck }
@@ -439,6 +451,23 @@ public struct AppFeature: Sendable {
             // Keep the tab container in step with the open home. Building it
             // here rather than in the view means tab state survives a redraw
             // and dies with the home it belonged to.
+            case let .homeGate(.homesUpdated(live)):
+                // A house that is no longer in the list was left, or the person
+                // was removed from it: what this phone holds for it (copies in
+                // the calendars, pins, what was shared) goes with it.
+                // Not while the list may be the cache's or a launch's guess, and
+                // never because the list is empty: that is the least trustworthy
+                // answer there is.
+                guard !state.isProvisional, !live.isEmpty else { return syncMain(&state) }
+                return .merge(syncMain(&state), findMissingHomes(keeping: Set(live.map(\.id))))
+
+            case let .homesMissing(missing):
+                let confirmed = missing.intersection(state.missingHomes)
+                state.missingHomes = missing
+                guard !confirmed.isEmpty else { return .none }
+                state.missingHomes.subtract(confirmed)
+                return forgetHomes(confirmed)
+
             case .homeGate:
                 return syncMain(&state)
 
@@ -523,6 +552,7 @@ public struct AppFeature: Sendable {
         state.currentUser = nil
         state.main = nil
         state.proCheckedFor = nil
+        state.missingHomes = []
         state.$pro.withLock { $0 = .unknown }
         // Who a person blocked is theirs, not the phone's.
         state.$blockedPeople.withLock { $0 = [] }
@@ -542,7 +572,32 @@ public struct AppFeature: Sendable {
             state.homeGate.$cachedHomes.withLock { $0 = [] }
         }
         state.homeGate = HomeManagementFeature.State()
+        // The calendar settings are per device but the person who chose them is
+        // gone: a second account on this phone starts from nothing, and the
+        // copies the first one's houses put in the calendars come out. Only
+        // when the session truly ended, on the same terms as the cache above.
+        var calendarCleanup: Effect<Action> = .none
+        if clearCache {
+            @Shared(.calendarCopyMode) var copyMode
+            @Shared(.calendarCopyTargetsRaw) var copyTargets
+            @Shared(.calendarComposerTargetsRaw) var composerTargets
+            @Shared(.calendarCopyReminders) var copyReminders
+            @Shared(.calendarLastSynced) var lastSynced
+            @Shared(.calendarPeopleRaw) var people
+            @Shared(.calendarShareChoicesRaw) var shareChoices
+            $copyMode.withLock { $0 = .off }
+            $copyTargets.withLock { $0 = "" }
+            $composerTargets.withLock { $0 = "" }
+            $copyReminders.withLock { $0 = false }
+            $lastSynced.withLock { $0 = 0 }
+            $people.withLock { $0 = "" }
+            $shareChoices.withLock { $0 = "" }
+            calendarCleanup = .run { [calendarMirror, deviceCalendar] _ in
+                _ = await calendarMirror.removeAll(deviceCalendar, nil, true)
+            }
+        }
         return .merge(
+            calendarCleanup,
             .cancel(id: CancelID.currentUser),
             .cancel(id: CancelID.deviceToken),
             // Including a registration still backing off. It would
@@ -561,6 +616,33 @@ public struct AppFeature: Sendable {
             // Purchases are the person's, not the phone's.
             .run { _ in await purchases.logOut() }
         )
+    }
+
+    /// Takes what this phone keeps for houses the person is no longer in: the
+    /// copies in their calendars, the events pinned from the composer, and the
+    /// choice to share calendars with it (the server deletes what was shared
+    /// when somebody leaves; the phone must simply stop sending).
+    private func findMissingHomes(keeping live: Set<HomeID>) -> Effect<Action> {
+        .run { [calendarMirror] send in
+            @Shared(.calendarShareChoicesRaw) var shareChoices
+            var held = await calendarMirror.knownHomes()
+            for key in CalendarShareChoices.decode(shareChoices).houses.keys { held.insert(HomeID(key)) }
+            await send(.homesMissing(held.subtracting(live)))
+        }
+    }
+
+    private func forgetHomes(_ homes: Set<HomeID>) -> Effect<Action> {
+        .run { [calendarMirror, deviceCalendar] _ in
+            @Shared(.calendarShareChoicesRaw) var shareChoices
+            $shareChoices.withLock { raw in
+                var choices = CalendarShareChoices.decode(raw)
+                for home in homes { choices.houses[home.rawValue] = nil }
+                raw = choices.raw
+            }
+            for home in homes {
+                _ = await calendarMirror.removeAll(deviceCalendar, home, true)
+            }
+        }
     }
 
     /// Asks iOS for an APNs token and forwards every token it hands back.

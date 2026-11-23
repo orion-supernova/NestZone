@@ -21,6 +21,7 @@ struct ManageHomesSheet: View {
                 leaveSection
             }
             .scrollContentBackground(.hidden)
+            .settingsRows()
             .background(Backdrop(tint: theme.accent))
             .navigationTitle(Text(store.homes.count > 1
                 ? L10n.homeSelectionSwitchTitle
@@ -81,7 +82,7 @@ struct ManageHomesSheet: View {
             if home.id == store.currentHomeID {
                 Image(systemName: "checkmark")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(.accentText)
             }
         } label: {
             Label {
@@ -90,7 +91,7 @@ struct ManageHomesSheet: View {
                         .foregroundStyle(.primary)
                     Text(L10n.settingsMembersCount(home.members.count))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             } icon: {
                 Image(systemName: "house.fill")
@@ -103,17 +104,13 @@ struct ManageHomesSheet: View {
     private var addSection: some View {
         Section {
             Button { store.send(.createTapped) } label: {
-                HStack {
-                    Label { Text(L10n.homeSetupCreateHomeTitle) } icon: {
-                        Image(systemName: "house.and.flag")
+                Label {
+                    HStack(alignment: .firstTextBaseline, spacing: 0) {
+                        Text(L10n.homeSetupCreateHomeTitle)
+                        PlusMark(isLocked: !pro.allowsAnotherHome)
                     }
-                    Spacer(minLength: 8)
-                    if !pro.allowsAnotherHome {
-                        Image(systemName: "lock.fill")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .accessibilityHidden(true)
-                    }
+                } icon: {
+                    Image(systemName: "house.and.flag")
                 }
             }
             .accessibilityHint(pro.allowsAnotherHome ? "" : String(localized: L10n.proLockedHint))
@@ -142,6 +139,7 @@ struct ManageHomesSheet: View {
                     } icon: {
                         Image(systemName: destructiveSymbol(for: home))
                     }
+                    .labelStyle(.settingsRow(.destructive))
                 }
             } footer: {
                 Text(isSoleMember(home)

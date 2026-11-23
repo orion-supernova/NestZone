@@ -60,6 +60,7 @@ struct MessageBubble: View, Equatable {
     }
 
     @Environment(\.theme) private var theme
+    @Environment(\.chatMenuRegistry) private var menuRegistry
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the bubble has to be dragged for letting go to mean "reply".
@@ -105,7 +106,7 @@ struct MessageBubble: View, Equatable {
             // Their own row, outside the bubble's single accessibility element:
             // each chip is a control and has to stay reachable.
             if !reactions.isEmpty {
-                ReactionChips(reactions: reactions, me: me, toggle: handlers.react)
+                ReactionChips(reactions: reactions, me: me, alignment: isMine ? .trailing : .leading, toggle: handlers.react)
                     .padding(.horizontal, 6)
                     .padding(.top, 2)
                     .frame(maxWidth: 280, alignment: isMine ? .trailing : .leading)
@@ -122,8 +123,8 @@ struct MessageBubble: View, Equatable {
         VStack(alignment: isMine ? .trailing : .leading, spacing: 2) {
             if showsSender {
                 Text(senderName)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 12)
                     .padding(.top, 6)
             }
@@ -139,8 +140,8 @@ struct MessageBubble: View, Equatable {
                     } icon: {
                         Image(systemName: "arrow.clockwise.circle.fill")
                     }
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Palette.danger)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Palette.dangerText)
                     .padding(.horizontal, 12)
                     .contentShape(.rect)
                 }
@@ -153,7 +154,7 @@ struct MessageBubble: View, Equatable {
                 Image(systemName: "pencil.circle.fill")
                     .font(.caption)
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(4)
             }
         }
@@ -205,8 +206,19 @@ struct MessageBubble: View, Equatable {
 
         if canHold {
             // The system lays the menu out and gives the lift and the haptic;
-            // the preview is the bubble itself, as it looks in the thread.
-            positioned(tappable.contextMenu { menu } preview: { surface.frame(maxWidth: 300) })
+            // The thread's one UIKit interaction (`MessageMenuInteraction`) asks
+            // the registry what is under the finger; the bubble reports where
+            // it is and what its menu holds.
+            positioned(
+                tappable
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                        menuRegistry?.setFrame(message.id, $0)
+                    }
+                    .onChange(of: self, initial: true) { _, bubble in
+                        menuRegistry?.setMenu(message.id, model: bubble.menuModel, preview: bubble.previewImage)
+                    }
+                    .onDisappear { menuRegistry?.remove(message.id) }
+            )
         } else {
             positioned(tappable)
         }
@@ -236,7 +248,7 @@ struct MessageBubble: View, Equatable {
                     // The sender's own bubble is solid so the thread is
                     // readable at a glance; everyone else's is glass.
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(theme.accent)
+                        .fill(theme.accentFill)
                 }
             }
             .glassEffect(
@@ -245,65 +257,33 @@ struct MessageBubble: View, Equatable {
             )
     }
 
-    /// Reactions, then what can be done with the message.
-    @ViewBuilder
-    private var menu: some View {
-        let mine = Set(reactions.filter { $0.userID == me }.map(\.emoji))
-        let emoji = ReactionEmoji.all
-        ControlGroup {
-            ForEach(emoji.prefix(3), id: \.self) { reactionButton($0, chosen: mine.contains($0)) }
-        }
-        ControlGroup {
-            ForEach(emoji.suffix(3), id: \.self) { reactionButton($0, chosen: mine.contains($0)) }
-        }
-
-        if canReply {
-            Button { handlers.reply() } label: {
-                Label { Text(L10n.messagesReply) } icon: { Image(systemName: "arrowshape.turn.up.left") }
-            }
-        }
-        if message.kind != .image {
-            Button { handlers.copy() } label: {
-                Label { Text(L10n.messagesCopy) } icon: { Image(systemName: "doc.on.doc") }
-            }
-        }
-        Button { handlers.togglePin() } label: {
-            Label {
-                Text(isPinned ? L10n.messagesUnpin : L10n.messagesPin)
-            } icon: {
-                Image(systemName: isPinned ? "pin.slash" : "pin")
-            }
-        }
-
-        Divider()
-
-        if canModify {
-            Button { handlers.edit() } label: {
-                Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
-            }
-            Button(role: .destructive) { handlers.delete() } label: {
-                Label { Text(L10n.commonDelete) } icon: { Image(systemName: "trash") }
-            }
-        } else {
-            Button { handlers.report() } label: {
-                Label { Text(L10n.messagesReport) } icon: { Image(systemName: "exclamationmark.bubble") }
-            }
-            Button(role: .destructive) { handlers.blockSender() } label: {
-                Label {
-                    Text(L10n.messagesBlockSender(senderName))
-                } icon: {
-                    Image(systemName: "hand.raised")
-                }
-            }
-        }
+    /// What the menu is built from, read when it opens.
+    private var menuModel: MessageMenuModel {
+        MessageMenuModel(
+            myEmoji: Set(reactions.filter { $0.userID == me }.map(\.emoji)),
+            canReply: canReply,
+            canCopy: message.kind != .image,
+            isPinned: isPinned,
+            canModify: canModify,
+            senderName: senderName,
+            handlers: handlers
+        )
     }
 
-    private func reactionButton(_ emoji: String, chosen: Bool) -> some View {
-        Button { handlers.react(emoji) } label: {
-            // The emoji already chosen is marked; tapping it takes it back.
-            Text(chosen ? "\(emoji)\u{2713}" : emoji)
-        }
-        .accessibilityLabel(Text(chosen ? L10n.reactionPickerMine(emoji) : L10n.reactionPickerAdd(emoji)))
+    /// The bubble as a still picture for the lifted preview: a context-menu
+    /// preview is a snapshot, and glass does not draw into one, so the
+    /// others' bubbles stand in as a flat fill.
+    private func previewImage(size: CGSize, scale: CGFloat, scheme: ColorScheme) -> UIImage? {
+        let flat = content
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .frame(width: size.width, height: size.height, alignment: .leading)
+            .background(isMine ? AnyShapeStyle(theme.accentFill) : AnyShapeStyle(Palette.bubblePreview))
+            .environment(\.theme, theme)
+            .environment(\.colorScheme, scheme)
+        let renderer = ImageRenderer(content: flat)
+        renderer.scale = scale
+        return renderer.uiImage
     }
 
     /// The quote, if this is a reply, and the words.
@@ -330,7 +310,7 @@ struct MessageBubble: View, Equatable {
                 isMine: isMine
             )
             .font(.subheadline)
-            .foregroundStyle(isMine ? Color.white : Color.primary)
+            .foregroundStyle(isMine ? theme.onAccent : Color.primary)
         }
     }
 
@@ -342,7 +322,7 @@ struct MessageBubble: View, Equatable {
         if swipe > 0, !reduceMotion {
             Image(systemName: "arrowshape.turn.up.left.fill")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .opacity(min(swipe / Self.swipeThreshold, 1))
                 .scaleEffect(swipe >= Self.swipeThreshold ? 1.15 : 0.85)
                 .padding(.horizontal, 6)
@@ -374,5 +354,31 @@ struct MessageBubble: View, Equatable {
                 .combined(with: .opacity),
             removal: sideways
         )
+    }
+}
+
+
+/// Emoji drawn as images for the reaction palette, cached: the menu asks for
+/// them every time it opens.
+@MainActor
+enum EmojiGlyph {
+    private static var cache: [String: UIImage] = [:]
+
+    static func image(_ emoji: String, chosen: Bool) -> UIImage {
+        let key = chosen ? emoji + "#" : emoji
+        if let hit = cache[key] { return hit }
+        let side: CGFloat = 34
+        let image = UIGraphicsImageRenderer(size: CGSize(width: side, height: side)).image { _ in
+            if chosen {
+                UIColor(Palette.violet).withAlphaComponent(0.45).setFill()
+                UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: side, height: side)).fill()
+            }
+            let font = UIFont.systemFont(ofSize: 24)
+            let text = emoji as NSString
+            let size = text.size(withAttributes: [.font: font])
+            text.draw(at: CGPoint(x: (side - size.width) / 2, y: (side - size.height) / 2), withAttributes: [.font: font])
+        }.withRenderingMode(.alwaysOriginal)
+        cache[key] = image
+        return image
     }
 }

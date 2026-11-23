@@ -29,7 +29,7 @@ public struct MoviesView: View {
                     Text(L10n.homeMinigamesWatchTitle).font(.headline)
                     Text(L10n.homeMinigamesWatchDescription)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
@@ -53,10 +53,24 @@ public struct MoviesView: View {
                     SkeletonList(rows: 3, height: 76)
                         .padding(.horizontal, Metrics.screenPadding)
                 } else {
-                    movieNightCard
-                        .padding(.horizontal, Metrics.screenPadding)
+                    if !store.isSearching {
+                        movieNightCard
+                            .padding(.horizontal, Metrics.screenPadding)
+                    }
                     presetSection
-                    customSection
+                    // While searching, "no watchlists of your own yet" would
+                    // be a wrong answer to a question about a name.
+                    if !store.isSearching || !store.customLists.isEmpty {
+                        customSection
+                    }
+                    if store.isSearching, store.presets.isEmpty, store.customLists.isEmpty {
+                        EmptyStateView(
+                            title: L10n.commonSearchEmptyTitle,
+                            message: L10n.commonSearchEmptyMessage,
+                            symbol: "magnifyingglass"
+                        )
+                        .padding(.top, 24)
+                    }
                 }
             }
             .padding(.top, Metrics.stackSpacing)
@@ -67,14 +81,16 @@ public struct MoviesView: View {
         .navigationTitle(Text(L10n.movieListsTitle))
         .navigationBarTitleDisplayMode(.inline)
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { store.send(.createListTapped) } label: {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.moviesNewListTitle))
-                .proLocked(.customMovieLists)
+                .proLocked(.customMovieLists, placement: .inset)
             }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.movieListsSearchPlaceholder))
         .task { await store.send(.task).finish() }
         .navigationDestination(item: $store.scope(
             state: \.destination?.list, action: \.destination.list
@@ -200,7 +216,7 @@ private struct ListRow: View {
                 if let summary = list.displaySummary {
                     Text(summary)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
             }
@@ -242,7 +258,7 @@ struct MovieListView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.movieListDetailAddMovies))
-                .proLocked(if: store.list.kind == .custom ? .customMovieLists : nil)
+                .proLocked(if: store.list.kind == .custom ? .customMovieLists : nil, placement: .inset)
             }
         }
         .task { await store.send(.task).finish() }
@@ -276,7 +292,7 @@ struct MovieListView: View {
                 if let summary = store.list.displaySummary {
                     Text(summary)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(2)
                 }
             }
@@ -286,10 +302,10 @@ struct MovieListView: View {
             VStack(alignment: .trailing, spacing: 1) {
                 AnimatedNumber(store.movies.count)
                     .font(.system(.title2, design: .rounded, weight: .bold))
-                    .foregroundStyle(store.list.kind.tint)
+                    .foregroundStyle(.primary)
                 Text(L10n.movieListsMoviesCount)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .padding(Metrics.cardPadding)
@@ -392,7 +408,7 @@ struct AddMoviesSheet: View {
                     get: { store.searchText },
                     set: { store.send(.searchChanged($0)) }
                 ),
-                prompt: Text(L10n.moviesSearchPlaceholder)
+                prompt: Text(L10n.movieListsSearchPlaceholder)
             )
             .navigationTitle(Text(L10n.movieListDetailAddMovies))
             .navigationBarTitleDisplayMode(.inline)
@@ -437,9 +453,9 @@ private struct ListChip: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .foregroundStyle(isSaved ? Color.white : Color.primary)
+            .foregroundStyle(isSaved ? Color.primary : Color.primary)
             .background {
-                if isSaved { Capsule().fill(list.kind.tint) }
+                if isSaved { Capsule().fill(list.kind.tint.opacity(0.3)) }
             }
             .glassEffect(isSaved ? .identity : .regular.interactive(), in: .capsule)
             // An unselected chip draws no background, so without a content
@@ -479,7 +495,7 @@ struct MovieInfoSheet: View {
                         if let year = store.movie.year {
                             Text(year, format: .number.grouping(.never))
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
                     }
                     .appear(1)
@@ -537,12 +553,20 @@ struct MovieInfoSheet: View {
                             ) {
                                 store.send(.listToggled(list))
                             }
-                            .proLocked(if: list.kind == .custom && !store.state.isSaved(in: list)
-                                ? .customMovieLists : nil)
+                            // Taking a film off a custom list stays free, so
+                            // only adding is locked; Plus sees the mark either way.
+                            .proLocked(
+                                if: list.kind == .custom ? .customMovieLists : nil,
+                                gated: !store.state.isSaved(in: list)
+                            )
                         }
                     }
-                    .padding(.horizontal, 2)
+                    // Room for the Plus badge that hangs off a chip's corner,
+                    // which a scroll view would otherwise cut.
+                    .padding(.horizontal, 8)
+                    .padding(.top, 8)
                 }
+                .scrollClipDisabled()
                 .scrollIndicators(.hidden)
             }
         }
@@ -566,11 +590,11 @@ struct MovieInfoSheet: View {
 
     private func fact(_ symbol: String, _ value: String, _ label: LocalizedStringResource) -> some View {
         VStack(spacing: 4) {
-            Image(systemName: symbol).font(.callout).foregroundStyle(.tint)
+            Image(systemName: symbol).font(.callout).foregroundStyle(.accentText)
             Text(value)
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .lineLimit(1)
-            Text(label).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+            Text(label).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -591,7 +615,7 @@ struct MovieInfoSheet: View {
                             .frame(width: 62, height: 62)
                             .clipShape(.circle)
                             Text(member.name)
-                                .font(.caption2)
+                                .font(.caption)
                                 .lineLimit(2)
                                 .multilineTextAlignment(.center)
                         }
@@ -644,8 +668,8 @@ struct PosterCard: View {
                 .multilineTextAlignment(.leading)
             if let year {
                 Text(year, format: .number.grouping(.never))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .frame(width: size.width, alignment: .leading)

@@ -48,15 +48,16 @@ public struct EmptyStateView: View {
                 Text(title)
             } icon: {
                 Image(systemName: symbol)
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .bounces()
             }
         } description: {
             if let message { Text(message) }
         } actions: {
             if let action {
-                Button(action: action.handler) { Text(action.title) }
+                Button(action: action.handler) { Text(action.title).foregroundStyle(.onAccent) }
                     .buttonStyle(.glassProminent)
+                    .tint(theme.accentFill)
             }
         }
         .frame(maxHeight: isCompact ? 220 : .infinity)

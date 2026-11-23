@@ -19,12 +19,12 @@ public struct MessagesView: View {
             .scrollEdgeEffectStyle(.soft, for: .top)
             .navigationTitle(Text(L10n.messagesScreenTitle))
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { store.send(.composeTapped) } label: {
                         Image(systemName: "square.and.pencil")
                     }
                     .accessibilityLabel(Text(L10n.messagesNewMessageButton))
-                    .proLocked(.messages)
+                    .proLocked(.messages, placement: .inset)
                 }
             }
             .task { await store.send(.task).finish() }
@@ -98,7 +98,7 @@ private struct ConversationRow: View {
                         .lineLimit(1)
                     Text(preview ?? String(localized: L10n.messagesNoMessagesYet))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
 
@@ -106,7 +106,7 @@ private struct ConversationRow: View {
 
                 if let timestamp {
                     RelativeTimeText(timestamp)
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(Palette.accessory)
                 }
             }
@@ -137,6 +137,8 @@ struct ChatView: View {
     @State private var reactionTaps = 0
     /// Taps on a quote or a pin whose message is not loaded.
     @State private var missTaps = 0
+    /// Where the bubbles are, for the one long-press interaction on the thread.
+    @State private var menuRegistry = ChatMenuRegistry()
 
     var body: some View {
         // Sorted once per render. `startsGroup` used to reach for `ordered`
@@ -171,7 +173,7 @@ struct ChatView: View {
                         if thread.isEmpty, !term.isEmpty {
                             Text(L10n.chatSearchNoResults)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .padding(.top, 40)
                         }
                     }
@@ -188,6 +190,8 @@ struct ChatView: View {
                             .contentShape(.rect)
                             .onTapGesture { dismissEverything() }
                     }
+                    .background { MessageMenuInteraction(registry: menuRegistry) }
+                    .environment(\.chatMenuRegistry, menuRegistry)
                 }
             }
             // Opens on the newest message. `defaultScrollAnchor` is resolved
@@ -371,6 +375,8 @@ struct ChatView: View {
         } label: {
             Image(systemName: "ellipsis")
         }
+        // Neutral like Back: only the screen's one primary action takes the accent.
+        .tint(.primary)
         .accessibilityLabel(Text(L10n.commonMore))
     }
 
@@ -427,7 +433,7 @@ struct NewConversationSheet: View {
                         } icon: {
                             Image(systemName: "person.badge.plus")
                         }
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
 
                     ForEach(store.selectableMembers) { member in
@@ -445,7 +451,7 @@ struct NewConversationSheet: View {
                                 Spacer(minLength: 0)
                                 if store.selected.contains(member.id) {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.tint)
+                                        .foregroundStyle(.accentText)
                                         .transition(.scale.combined(with: .opacity))
                                 }
                             }
@@ -470,7 +476,7 @@ struct NewConversationSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }

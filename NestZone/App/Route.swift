@@ -25,7 +25,12 @@ public enum Route {
     case movieNight(MovieNightFeature)
     case finance(FinanceFeature)
     case calendar(CalendarFeature)
+    /// One event as a screen, for an event opened from outside Calendar. Inside
+    /// Calendar an event is a sheet over the grid.
+    case eventDetail(EventPageFeature)
     case issues(IssuesFeature)
+    /// One problem as a screen, for a problem opened from outside Problems.
+    case issueDetail(IssuePageFeature)
     /// House → At a glance: the counters, for anybody who has not put them on
     /// Today.
     case stats(HouseStatsFeature)
@@ -49,7 +54,7 @@ extension Route.State {
         case var .finance(s): s.currentUserID = currentUserID; self = .finance(s)
         case var .calendar(s): s.currentUserID = currentUserID; self = .calendar(s)
         case var .issues(s): s.currentUserID = currentUserID; self = .issues(s)
-        case .shopping, .recipes, .recipeDetail, .movies, .stats: break
+        case .shopping, .recipes, .recipeDetail, .movies, .stats, .eventDetail, .issueDetail: break
         }
     }
 
@@ -149,7 +154,7 @@ public struct RouteStack: Sendable {
         case event(EventID, CalendarDay)
         case occurrence(EventOccurrence)
         case issue(IssueID)
-        case recipe(Recipe)
+        case recipe(Recipe, duplicates: [RecipeID]? = nil)
         case taskArchive
         case contributions
         case movieNight
@@ -282,11 +287,16 @@ public struct RouteStack: Sendable {
         // same way), and the recipe detail is itself a pushed screen, so
         // neither is mid-dismissal by the time this arrives.
         case .recipeDetail(.delegate(.openShoppingList)),
-             .issues(.delegate(.openShoppingList)):
+             .issues(.delegate(.openShoppingList)),
+             .issueDetail(.delegate(.openShoppingList)):
             return .send(.delegate(.open(.module(.shopping))))
+
+        case let .recipes(.delegate(.openRecipe(recipe, duplicates))):
+            return .send(.delegate(.open(.recipe(recipe, duplicates: duplicates))))
 
         case let .finance(.delegate(.openEvent(eventID, day))),
              let .issues(.delegate(.openEvent(eventID, day))),
+             let .issueDetail(.delegate(.openEvent(eventID, day))),
              let .recipes(.delegate(.openEvent(eventID, day))):
             return .send(.delegate(.open(.event(eventID, day))))
 
@@ -316,7 +326,9 @@ struct RouteView: View {
         case let .movieNight(store): MovieNightView(store: store)
         case let .finance(store): FinanceView(store: store)
         case let .calendar(store): CalendarView(store: store)
+        case let .eventDetail(store): EventPageView(store: store)
         case let .issues(store): IssuesView(store: store)
+        case let .issueDetail(store): IssuePageView(store: store)
         case let .stats(store): HouseStatsView(store: store)
         }
     }

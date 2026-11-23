@@ -74,7 +74,7 @@ struct ReportAgeLabel: View {
         let isStale = Date.now.timeIntervalSince(created.date) > Self.staleAfter
         RelativeTime.text(for: created.date)
             .font(.caption.weight(isStale ? .semibold : .regular))
-            .foregroundStyle(isStale ? Palette.danger : Palette.accessory)
+            .foregroundStyle(isStale ? Palette.dangerText : Palette.textSecondary)
             .accessibilityValue(isStale ? Text(L10n.moderationOverdue) : Text(""))
     }
 }
@@ -85,6 +85,7 @@ extension ReportKind {
         case .message: "bubble.left.fill"
         case .issuePhoto: "photo.fill"
         case .avatar: "person.crop.circle.fill"
+        case .calendarItem: "calendar"
         }
     }
 
@@ -93,6 +94,7 @@ extension ReportKind {
         case .message: L10n.moderationKindMessage
         case .issuePhoto: L10n.moderationKindPhoto
         case .avatar: L10n.moderationKindFace
+        case .calendarItem: L10n.moderationKindCalendar
         }
     }
 }
@@ -106,7 +108,7 @@ private struct ReportRowView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: row.kind.symbol)
                     .font(.body)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(width: 28, height: 28)
                     .accessibilityHidden(true)
 
@@ -121,7 +123,7 @@ private struct ReportRowView: View {
                     if let preview = row.preview, !preview.isEmpty {
                         Text(preview)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
                     }
@@ -130,11 +132,11 @@ private struct ReportRowView: View {
                         row.targetUserName ?? String(localized: L10n.avatarSomeone)
                     ))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .lineLimit(1)
                     if let home = row.homeName, !home.isEmpty {
                         Text(home)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(Palette.accessory)
                             .lineLimit(1)
                     }

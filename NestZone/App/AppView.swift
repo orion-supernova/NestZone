@@ -61,7 +61,7 @@ struct OfflineView: View {
             VStack(spacing: Metrics.sectionSpacing) {
                 Image(systemName: "wifi.exclamationmark")
                     .font(.system(size: 40, weight: .semibold))
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .frame(width: 96, height: 96)
                     .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
 
@@ -70,7 +70,7 @@ struct OfflineView: View {
                         .font(.system(.title2, design: .rounded, weight: .bold))
                     Text(L10n.commonOfflineMessage)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.center)
                 }
 
@@ -92,7 +92,7 @@ struct LaunchView: View {
             Backdrop(tint: theme.accent)
             Image(systemName: "house.fill")
                 .font(.system(size: 44, weight: .semibold))
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .frame(width: 96, height: 96)
                 .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
                 .pulse()
@@ -112,6 +112,7 @@ struct MainView: View {
     /// Which sheets are up, so the paywall opens over the top one
     /// (`PaywallHost`).
     @State private var paywallHosts = PaywallHosts()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         TabView(selection: Binding(
@@ -130,6 +131,8 @@ struct MainView: View {
             } label: {
                 Label { Text(L10n.tabBarHome) } icon: { Image(systemName: "sun.max.fill") }
             }
+            // What the bell says, from every tab: the bell lives on Today only.
+            .badge(store.inbox.badge.hasUnread ? Text(store.inbox.badge.pipText) : nil)
             .accessibilityIdentifier("HomeTab")
 
             groupTab(.lists, store.scope(state: \.lists, action: \.lists))
@@ -139,7 +142,6 @@ struct MainView: View {
             Tab(value: MainFeature.Tab.messages) {
                 MessagesStack(store: store.scope(state: \.messages, action: \.messages)) {
                     MessagesView(store: store.scope(state: \.messages, action: \.messages))
-                        .sessionToolbar(store)
                 }
             } label: {
                 Label {
@@ -200,6 +202,17 @@ struct MainView: View {
             }
         }
         .animation(Motion.spring, value: store.captured)
+        // The dock's menu switched it off: how to bring it back, since the
+        // bar and its menu are gone.
+        .overlay(alignment: .bottom) {
+            if store.dockOffNotice {
+                DockOffToast { store.send(.dockNoticeEditTapped) }
+                    .padding(.horizontal, Metrics.screenPadding)
+                    .padding(.bottom, 96)
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Motion.spring, value: store.dockOffNotice)
         // The badge, for as long as this home is open. One subscription, and
         // the only one the inbox holds while the panel is shut — the feeds
         // themselves are opened by the panel's own `.task` and torn down with
@@ -212,6 +225,11 @@ struct MainView: View {
         .task { await store.send(.proStatus(.task)).finish() }
         // What this person has reported and blocked, for the same life.
         .task { await store.send(.moderation(.task)).finish() }
+        // House events copied into the person's own calendars, for the same
+        // life: it must not stop because Calendar is closed.
+        .task { await store.send(.mirror(.task)).finish() }
+        // And the person's own calendars, shared with the house.
+        .task { await store.send(.share(.task)).finish() }
         // A gated control, or a refusal from the server, asking for the paywall.
         .task {
             for await feature in PaywallBroker.shared.requests() {
@@ -253,6 +271,9 @@ struct MainView: View {
     /// so there are never two text fields stacked over the tab bar. (Only on
     /// iOS 26.1 and later; 26.0 cannot hide an accessory once it is shown.)
     private var showsDock: Bool {
+        // Switched off in Customize: no bar anywhere, and Add anything is the
+        // `+` in each tab's top bar instead (`sessionToolbar`).
+        if !store.now.showsDock { return false }
         // The movie game lays its swipe buttons out over the whole screen, so
         // the accessory would sit on top of them.
         let top = store.state[stack: store.selectedTab].path.last
@@ -276,7 +297,6 @@ struct MainView: View {
         Tab(value: MainFeature.Tab(group)) {
             RouteStackView(store: stack) {
                 SegmentedRoot(group: group, store: stack)
-                    .sessionToolbar(store)
             }
         } label: {
             Label { Text(group.title) } icon: { Image(systemName: group.symbol) }
@@ -336,6 +356,8 @@ private struct SegmentedRoot: View {
                 }
             }
         }
+        // At a glance is a bar item on each House screen; this is how one asks.
+        .environment(\.openHouseStats) { store.send(.statsTapped) }
         .onChange(of: store.selected, initial: true) { _, selected in
             guard let selected else { return }
             // A Plus module held back above is not "visited" yet: a free house
@@ -399,21 +421,6 @@ private struct SegmentedRoot: View {
                 ) { store.send(.segmentPicked($0)) }
 
                 Spacer(minLength: 0)
-
-                // House → At a glance: the one thing at the root of a group
-                // that is not a module of its own.
-                if group == .house {
-                    Button { store.send(.statsTapped) } label: {
-                        Image(systemName: "chart.bar.fill")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(theme.accent)
-                            .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
-                            .contentShape(.rect)
-                    }
-                    .buttonStyle(.pressable)
-                    .accessibilityLabel(Text(L10n.hubStatsTitle))
-                    .accessibilityIdentifier("HouseStatsButton")
-                }
             }
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, 4)
@@ -497,16 +504,13 @@ private struct SegmentSwitch: View {
                 let isSelected = module == selected
                 Button { pick(module) } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 0) {
                             Text(module.title)
                                 .font(.system(.title3, design: .rounded, weight: .bold))
-                                .foregroundStyle(isSelected ? .primary : .secondary)
+                                .foregroundStyle(isSelected ? .primary : Palette.textSecondary)
                                 .lineLimit(1)
-                            if module.needsPlus, !pro.isPro {
-                                Image(systemName: "lock.fill")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(.secondary)
-                                    .accessibilityHidden(true)
+                            if module.needsPlus {
+                                PlusMark(isLocked: !pro.isPro, style: .title3)
                             }
                         }
                             // The name just chosen lands a touch small and
@@ -622,11 +626,10 @@ extension View {
         modifier(NowSheets(store: store))
     }
 
-    /// The avatar and the bell, on the root screen of every tab.
-    ///
-    /// Every tab rather than Today alone: the bell used to vanish the moment
-    /// anybody left the Home tab, and Settings — now behind the avatar — has
-    /// to be one tap away from wherever somebody is.
+    /// The avatar and the bell, on Today alone: one item each side. Every other
+    /// tab root keeps its bar for its own screen (at most one tool on the left,
+    /// search and the add on the right), and the bell's count rides on the
+    /// Today tab's badge so new activity is seen from anywhere.
     func sessionToolbar(_ store: StoreOf<MainFeature>) -> some View {
         toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -639,6 +642,16 @@ extension View {
                 }
                 .accessibilityLabel(Text(L10n.settingsScreenTitle))
                 .accessibilityIdentifier("SettingsButton")
+            }
+            // With the dock off, this is how Add anything is reached.
+            if !store.now.showsDock {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { store.send(.now(.addTapped)) } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(Text(L10n.dockAddPlaceholder))
+                    .accessibilityIdentifier("ToolbarAdd")
+                }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 InboxBell(store: store.scope(state: \.inbox, action: \.inbox))
@@ -709,6 +722,34 @@ private struct CapturedToast: View {
         .onChange(of: outcome) { _, _ in filed += 1 }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: Text(L10n.commonOpen), open)
+    }
+}
+
+/// "Dock is off. Turn it back on in Edit Today." with the way there.
+private struct DockOffToast: View {
+    let editToday: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(L10n.dockOffNotice)
+                .font(.subheadline)
+                .lineLimit(2)
+            Spacer(minLength: 0)
+            Button(action: editToday) {
+                Text(L10n.homeShelfEditToday)
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .contentShape(.capsule)
+            }
+            .buttonStyle(.pressable)
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 4)
+        .padding(.vertical, 6)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .accessibilityElement(children: .combine)
+        .accessibilityAction(named: Text(L10n.homeShelfEditToday), editToday)
     }
 }
 

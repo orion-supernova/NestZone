@@ -359,6 +359,9 @@ export const create = mutation({
       title: user.name ? `${user.name} added a task` : NOTIFY_TITLE,
       body: args.title,
       category: "tasks",
+      topic: "tasks.new",
+      // The person it is for hears it as theirs, `tasks.assigned`.
+      ...(args.assigned_to ? { personal: { userIds: [args.assigned_to], topic: "tasks.assigned" } } : {}),
     });
 
     return createdId;
@@ -442,6 +445,7 @@ export const update = mutation({
         title: user.name ? `${user.name} finished a task` : "Task done",
         body: task.title ?? "",
         category: "tasks",
+        topic: "tasks.done",
       });
 
       // A chore that exists because something is broken owes the problem an
@@ -478,6 +482,7 @@ export const update = mutation({
         title: user.name ? `${user.name} assigned you a task` : "New task for you",
         body: fields.title ?? task.title ?? "",
         category: "tasks",
+        topic: "tasks.assigned",
       });
     }
 

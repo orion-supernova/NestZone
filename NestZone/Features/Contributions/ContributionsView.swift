@@ -107,7 +107,7 @@ public struct ContributionsView: View {
                         Text(verdict.title).font(.headline)
                         Text(verdict.message)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 0)
@@ -220,8 +220,8 @@ private struct MemberRow: View {
                 )
 
                 Text(subtitle)
-                    .font(.caption2)
-                    .foregroundStyle(member.overdue > 0 ? Palette.danger : .secondary)
+                    .font(.caption)
+                    .foregroundStyle(member.overdue > 0 ? Palette.dangerText : Palette.textSecondary)
                     .lineLimit(1)
             }
         }

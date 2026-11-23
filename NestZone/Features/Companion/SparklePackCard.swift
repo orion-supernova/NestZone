@@ -45,7 +45,7 @@ struct SparklePackCard: View {
                 .accessibilityHidden(true)
             Text(L10n.storePackUnit)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .accessibilityHidden(true)
             // A line is always kept for the bonus, so the cards of a row
             // stand level whether it has one or not.
@@ -57,7 +57,7 @@ struct SparklePackCard: View {
                 }
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             if let enoughFor {
@@ -82,7 +82,7 @@ struct SparklePackCard: View {
                 }
                 .font(.footnote)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(note == .failed || note == .unverified ? Palette.dangerText : Color.secondary)
+                .foregroundStyle(note == .failed || note == .unverified ? Palette.dangerText : Palette.textSecondary)
             }
             Spacer(minLength: 4)
             buyButton
@@ -123,17 +123,17 @@ struct SparklePackCard: View {
         if isBest {
             Text(L10n.storeBestValue)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.horizontal, 10)
                 .padding(.vertical, 3)
-                .background(theme.accent, in: .capsule)
+                .background(theme.accentFill, in: .capsule)
                 .offset(y: -12)
         } else if isStarter {
             Text(L10n.storeStarter)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.horizontal, 10)

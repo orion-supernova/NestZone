@@ -249,7 +249,7 @@ struct ShopView: View {
             SectionHeader(title) {
                 Text(items.count, format: .number)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
             ShopGrid(columns: 3) {
                 ForEach(items, id: \.self) { item in
@@ -370,12 +370,12 @@ private struct ShelfSwitch: View {
                     }
                     .lineLimit(1)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(isOn ? Color.white : Color.primary)
+                    .foregroundStyle(isOn ? theme.onAccent : Color.primary)
                     .padding(.horizontal, 6)
                     .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget)
                     .background {
                         if isOn {
-                            Capsule().fill(theme.accent).matchedGeometryEffect(id: "thumb", in: thumb)
+                            Capsule().fill(theme.accentFill).matchedGeometryEffect(id: "thumb", in: thumb)
                         }
                     }
                     .contentShape(.capsule)
@@ -507,7 +507,7 @@ struct ShopTile<Art: View>: View {
                 Image(systemName: "clock")
             }
             .labelStyle(.titleAndIcon)
-            .font(.caption2.weight(.semibold))
+            .font(.caption.weight(.semibold))
             .lineLimit(1)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
@@ -563,7 +563,7 @@ struct StandingFoot: View {
                     status
                 }
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             }
         }
         .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
@@ -808,7 +808,7 @@ private struct PurchaseCard: View {
                 .accessibilityAddTraits(.isHeader)
             Text(verbatim: line)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -857,7 +857,7 @@ private struct PurchaseCard: View {
                         Amount(.leaves, store.house.leaves - coins.leaves)
                         Amount(.sparkles, store.house.sparkles - coins.sparkles)
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
             }
             .padding(.horizontal, 14)
@@ -868,13 +868,13 @@ private struct PurchaseCard: View {
                     .onAppear { fillUp() }
                 HStack(spacing: 6) {
                     Amount(.leaves, coins.leaves).font(.subheadline.weight(.semibold))
-                    Text(L10n.cardFromJarAll).font(.subheadline).foregroundStyle(.secondary)
+                    Text(L10n.cardFromJarAll).font(.subheadline).foregroundStyle(.secondaryText)
                 }
                 HStack(spacing: 6) {
                     Amount(.sparkles, coins.sparkles).font(.subheadline.weight(.semibold))
-                    Text(L10n.cardMakesUp).font(.subheadline).foregroundStyle(.secondary)
+                    Text(L10n.cardMakesUp).font(.subheadline).foregroundStyle(.secondaryText)
                 }
-                Text(L10n.cardRate).font(.footnote).foregroundStyle(.secondary)
+                Text(L10n.cardRate).font(.footnote).foregroundStyle(.secondaryText)
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -889,7 +889,7 @@ private struct PurchaseCard: View {
                 Text(L10n.cardOf(have, total))
                     .font(.caption)
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
             // One sentence ("300 of 500 Sparkles") instead of a percentage
             // and a slash.
@@ -902,7 +902,7 @@ private struct PurchaseCard: View {
 
     private func row<Value: View>(_ label: LocalizedStringResource, @ViewBuilder value: () -> Value) -> some View {
         HStack {
-            Text(label).foregroundStyle(.secondary)
+            Text(label).foregroundStyle(.secondaryText)
             Spacer(minLength: 8)
             value().fontWeight(.semibold)
         }
@@ -944,7 +944,7 @@ private struct PurchaseCard: View {
             .accessibilityIdentifier("CardBuy")
             Text(L10n.cardFromJar)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
         case let .makeUp(coins, _):
             Button { store.send(.cardBuyTapped, animation: Motion.spring) } label: {
@@ -1119,7 +1119,7 @@ struct SparkleStoreView: View {
                 VStack(spacing: 10) {
                     Text(L10n.storeNote)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.center)
                     if SparkleStoreClient.isTestStore {
                         Text(L10n.storeTest)
@@ -1185,7 +1185,7 @@ struct SparkleStoreView: View {
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 Text(L10n.storeHero)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 // A line kept for "+300 in the jar", so nothing moves when it comes.
                 ZStack(alignment: .leading) {
                     if let landed = store.landed {
@@ -1299,7 +1299,7 @@ struct SparkleStoreView: View {
             VStack(spacing: 12) {
                 Text(L10n.storeUnavailable)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 SecondaryButton(L10n.storeRetry, symbol: "arrow.clockwise") { store.send(.storeAppeared) }
             }
             .frame(maxWidth: .infinity)

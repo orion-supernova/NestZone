@@ -30,7 +30,7 @@ public struct LoadingView: View {
             if let message {
                 Text(message)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .overlay {
                         if !reduceMotion {
                             // The same words in the primary colour, seen only

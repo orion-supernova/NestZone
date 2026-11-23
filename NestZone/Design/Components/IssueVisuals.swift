@@ -258,7 +258,7 @@ public struct HouseHealthRing: View {
                         .foregroundStyle(.primary)
                     Text(L10n.issuesOpenLabel)
                         .font(.system(size: max(9, diameter * 0.1)))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -345,8 +345,8 @@ public struct StatusTrack: View {
                         .frame(height: 30)
 
                         Text(rung.title)
-                            .font(.system(size: 9, weight: isHere ? .semibold : .regular))
-                            .foregroundStyle(isHere ? .primary : .secondary)
+                            .font(.caption2.weight(isHere ? .semibold : .regular))
+                            .foregroundStyle(isHere ? .primary : Palette.textSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
@@ -450,12 +450,12 @@ public struct SeveritySplitBar: View {
                                 .fill(entry.severity.tint)
                                 .frame(width: 7, height: 7)
                             Text(entry.severity.title)
-                                .font(.caption2.weight(.medium))
+                                .font(.caption.weight(.medium))
                                 .foregroundStyle(
-                                    selection == entry.severity ? .primary : .secondary
+                                    selection == entry.severity ? .primary : Palette.textSecondary
                                 )
                             Text(entry.count, format: .number)
-                                .font(.caption2.weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .monospacedDigit()
                                 .contentTransition(.numericText())
                         }
@@ -523,18 +523,18 @@ public struct RoomTile: View {
             VStack(spacing: 6) {
                 Image(systemName: area.symbol)
                     .font(.title3)
-                    .foregroundStyle(count > 0 ? theme.accent : Palette.accessory)
+                    .foregroundStyle(count > 0 ? theme.ink : Palette.accessory)
                     .bounces(when: isSelected)
                 Text(area.title)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(count > 0 ? .primary : .secondary)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(count > 0 ? .primary : Palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                 if count > 0 {
                     Text(count, format: .number)
                         .font(.system(.caption, design: .rounded, weight: .bold))
                         .monospacedDigit()
-                        .foregroundStyle(theme.accent)
+                        .foregroundStyle(.accentText)
                         .contentTransition(.numericText())
                 } else {
                     Text(verbatim: "—")
@@ -594,11 +594,11 @@ public struct MeTooButton: View {
                     .font(.caption.weight(.semibold))
                     .contentTransition(.numericText(value: Double(count)))
             }
-            .foregroundStyle(isOn ? Color.white : Color.primary)
+            .foregroundStyle(isOn ? theme.onAccent : Color.primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .background {
-                if isOn { Capsule().fill(theme.accent) }
+                if isOn { Capsule().fill(theme.accentFill) }
             }
             .glassEffect(isOn ? .identity : .regular.interactive(), in: .capsule)
             .contentShape(.capsule)

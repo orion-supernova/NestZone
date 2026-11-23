@@ -222,6 +222,7 @@ export const join = mutation({
           ? `${user.name} joined the home`
           : "Someone joined the home",
         category: "home",
+        topic: "home.members",
       });
     }
 
@@ -315,6 +316,7 @@ export const removeMember = mutation({
         ? `${caller.name} removed you from the home`
         : "You were removed from the home",
       category: "home",
+      topic: "home.removed",
     });
     // And the house is told, so a removal is never silent to the people
     // still living there.
@@ -328,6 +330,7 @@ export const removeMember = mutation({
           : "Someone was removed from the home") +
         ". The invite code has changed.",
       category: "home",
+      topic: "home.members",
     });
     return { ok: true, removed: true };
   },

@@ -92,20 +92,9 @@ struct CaptureView: View {
                     ) {
                         store.send(.kindTapped(kind), animation: Motion.spring)
                     }
-                    // Event, Expense and Problem are Plus; the lock is the chip's own
-                    // and a tap opens the paywall (the reducer asks for it).
-                    .overlay(alignment: .topTrailing) {
-                        if kind.proFeature != nil, !store.pro.isPro {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(.secondary)
-                                .padding(3)
-                                .background(.thinMaterial, in: .circle)
-                                .offset(x: 4, y: -4)
-                                .allowsHitTesting(false)
-                                .accessibilityHidden(true)
-                        }
-                    }
+                    // Event, Expense and Problem are Plus; the badge is the chip's own
+                    // and, locked, a tap opens the paywall (the reducer asks for it).
+                    .plusBadge(isLocked: !store.pro.isPro, shown: kind.proFeature != nil)
                 }
             }
         }
@@ -159,7 +148,7 @@ struct CaptureView: View {
                 let title = store.draft.title(for: .chore)
                 Text(title.isEmpty ? String(localized: L10n.captureChoreNeedsWords) : title)
                     .font(.body.weight(.medium))
-                    .foregroundStyle(title.isEmpty ? .secondary : .primary)
+                    .foregroundStyle(title.isEmpty ? Palette.textSecondary : .primary)
                 details(date: store.draft.date, person: store.assignee, amount: nil)
             }
         }
@@ -168,7 +157,7 @@ struct CaptureView: View {
     private var notePreview: some View {
         GlassCard {
             Text(store.draft.title(for: .note))
-                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .font(.system(.callout, design: .rounded, weight: .medium))
                 .lineLimit(6)
         }
     }
@@ -183,7 +172,7 @@ struct CaptureView: View {
                     .foregroundStyle(store.kind.tint)
             }
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
 
             switch store.kind {
             case .event:

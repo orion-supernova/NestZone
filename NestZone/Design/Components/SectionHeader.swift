@@ -25,7 +25,7 @@ public struct SectionHeader<Trailing: View>: View {
             if let symbol {
                 Image(systemName: symbol)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -33,7 +33,7 @@ public struct SectionHeader<Trailing: View>: View {
                 if let subtitle {
                     Text(subtitle)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
             Spacer(minLength: 8)

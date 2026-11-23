@@ -48,7 +48,7 @@ public struct HomeManagementView: View {
             VStack(spacing: Metrics.sectionSpacing) {
                 Text(L10n.homeSetupSubtitle)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .appear(0)
@@ -84,7 +84,7 @@ public struct HomeManagementView: View {
             VStack(spacing: Metrics.stackSpacing) {
                 Text(L10n.homeSelectionSubtitle)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Metrics.screenPadding)
                     .appear(0)
@@ -135,7 +135,7 @@ private struct ChoiceCard: View {
                     Text(title).font(.headline)
                     Text(subtitle)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
@@ -169,7 +169,7 @@ private struct HomeRow: View {
                 HStack(spacing: 14) {
                     Image(systemName: "house.fill")
                         .font(.title3)
-                        .foregroundStyle(.tint)
+                        .foregroundStyle(.accentText)
                         .frame(width: 44, height: 44)
                         .background(.tint.opacity(0.14), in: .circle)
 
@@ -177,7 +177,7 @@ private struct HomeRow: View {
                         Text(home.name).font(.headline)
                         Text(L10n.settingsMembersCount(home.members.count))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                     Spacer(minLength: 0)
                 }
@@ -201,7 +201,7 @@ private struct HomeRow: View {
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(width: 40, height: 40)
                     .contentShape(.rect)
             }

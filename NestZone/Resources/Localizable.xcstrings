@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "holidays_coming_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming up"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaklaşanlar"
+          }
+        }
+      }
+    },
     "pro_preview_dishes": {
       "comment": "Sample text inside the Plus paywall's feature preview, a decorative miniature of the screen",
       "extractionState": "manual",
@@ -3470,23 +3487,6 @@
         }
       }
     },
-    "calendar_only_mine": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Just mine"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sadece benim"
-          }
-        }
-      }
-    },
     "calendar_over_budget": {
       "extractionState": "manual",
       "localizations": {
@@ -6935,13 +6935,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Contributions"
+            "value": "Who's doing what"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Katkılar"
+            "value": "Kim ne yapıyor"
           }
         }
       }
@@ -6952,7 +6952,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Who does what"
+            "value": "Who's doing what"
           }
         },
         "tr": {
@@ -10223,13 +10223,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add the first one"
+            "value": "Add the first expense"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlkini ekle"
+            "value": "İlk harcamayı ekle"
           }
         }
       }
@@ -14904,6 +14904,40 @@
         }
       }
     },
+    "holidays_filter_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hepsi"
+          }
+        }
+      }
+    },
+    "holidays_filter_celebrating": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celebrating"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kutladıklarımız"
+          }
+        }
+      }
+    },
     "holidays_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -14917,6 +14951,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "O gün gelince sahne kendiliğinden süslenir"
+          }
+        }
+      }
+    },
+    "holidays_none_celebrated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing picked yet. Start from the days around where you live."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz seçtiğin bir gün yok. Yaşadığın yere göre önerilenlerle başla."
+          }
+        }
+      }
+    },
+    "holidays_search_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search holidays"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Özel gün ara"
           }
         }
       }
@@ -14951,6 +15019,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bizim günler"
+          }
+        }
+      }
+    },
+    "holidays_turn_all_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn all off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hepsini kapat"
+          }
+        }
+      }
+    },
+    "holidays_turn_all_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn all on"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hepsini aç"
           }
         }
       }
@@ -16663,6 +16765,40 @@
         }
       }
     },
+    "inbox_admin_lang_missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not written yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz yazılmadı"
+          }
+        }
+      }
+    },
+    "inbox_admin_lang_written": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Written"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazıldı"
+          }
+        }
+      }
+    },
     "inbox_admin_new": {
       "extractionState": "manual",
       "localizations": {
@@ -16890,13 +17026,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leave blank to fall back to the English above"
+            "value": "Leave blank to show the English version instead"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Boş bırakırsan yukarıdaki İngilizce metin görünür"
+            "value": "Boş bırakırsan İngilizce hali görünür"
           }
         }
       }
@@ -17417,13 +17553,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New"
+            "value": "Feature"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni"
+            "value": "Yenilik"
           }
         }
       }
@@ -17434,7 +17570,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fixed"
+            "value": "Fix"
           }
         },
         "tr": {
@@ -17451,7 +17587,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Better"
+            "value": "Improvement"
           }
         },
         "tr": {
@@ -17588,19 +17724,36 @@
         }
       }
     },
+    "inbox_show_less": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha az"
+          }
+        }
+      }
+    },
     "inbox_tab_activity": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "House"
+            "value": "Activity"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev"
+            "value": "Hareketler"
           }
         }
       }
@@ -20425,13 +20578,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Report the first one"
+            "value": "Add the first problem"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlkini bildir"
+            "value": "İlk sorunu ekle"
           }
         }
       }
@@ -23618,13 +23771,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create Your First List"
+            "value": "Add the first watchlist"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk Listeni Oluştur"
+            "value": "İlk listeni ekle"
           }
         }
       }
@@ -23635,13 +23788,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Custom Lists"
+            "value": "Your watchlists"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Özel Listeler"
+            "value": "Kendi listelerin"
           }
         }
       }
@@ -23686,13 +23839,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Custom Lists Yet"
+            "value": "No watchlists of your own yet"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Henüz Özel Liste Yok"
+            "value": "Henüz kendi listen yok"
           }
         }
       }
@@ -23703,13 +23856,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create themed collections like \"Horror Movies\" or \"Rom-Com Classics\""
+            "value": "Make one for a mood or a genre, like \"Horror nights\" or \"Rom-com classics\""
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "\"Korku Filmleri\" ya da \"Romantik Komedi Klasikleri\" gibi temalı listeler oluştur"
+            "value": "Bir ruh haline ya da türe göre yap, mesela \"Korku geceleri\" ya da \"Romantik komedi klasikleri\""
           }
         }
       }
@@ -23720,13 +23873,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quick Collections"
+            "value": "Watchlists"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hızlı Koleksiyonlar"
+            "value": "Listeler"
           }
         }
       }
@@ -23754,13 +23907,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Movie Collections"
+            "value": "Movies"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film Koleksiyonları"
+            "value": "Filmler"
           }
         }
       }
@@ -24179,13 +24332,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What to watch"
+            "value": "Movie night"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne izlesek"
+            "value": "Film gecesi"
           }
         }
       }
@@ -28297,13 +28450,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recipes"
+            "value": "Meals"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifler"
+            "value": "Yemekler"
           }
         }
       }
@@ -33701,13 +33854,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What to watch tonight"
+            "value": "Movie night tonight"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu akşam ne izleyelim"
+            "value": "Bu akşam film gecesi"
           }
         }
       }
@@ -40053,6 +40206,2478 @@
           "stringUnit": {
             "state": "translated",
             "value": "Engelle: %@"
+          }
+        }
+      }
+    },
+    "calendar_filter_everyone": {
+      "comment": "People row on the calendar's filter chips; clears the selection",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herkes"
+          }
+        }
+      }
+    },
+    "calendar_filter_me": {
+      "comment": "The viewer's own chip in the calendar's people row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ben"
+          }
+        }
+      }
+    },
+    "calendar_copy_off": {
+      "comment": "Copy house events to my calendars: off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "calendar_copy_only_mine": {
+      "comment": "Copy mode: events the person created",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the ones I add"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece benim eklediklerim"
+          }
+        }
+      }
+    },
+    "calendar_copy_involving_me": {
+      "comment": "Copy mode: events the person is invited to, answered, or that name nobody",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything I'm in"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benim olduğum her şey"
+          }
+        }
+      }
+    },
+    "calendar_copy_everything": {
+      "comment": "Copy mode: every house event",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything in the house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdeki her şey"
+          }
+        }
+      }
+    },
+    "calendar_copy_notes_line": {
+      "comment": "Last line of the notes of a copy written into the person's own calendar",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this in NestZone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu NestZone'da düzenle."
+          }
+        }
+      }
+    },
+    "calendar_access_title": {
+      "comment": "Explainer shown before the system calendar permission prompt",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerini kullan"
+          }
+        }
+      }
+    },
+    "calendar_access_body": {
+      "comment": "Explainer body",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone can put house events in the calendars you choose, and show your housemates the calendars you pick to share. Copies stay on your phone. Only calendars you share are sent, and with Busy only that is nothing but the times."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone ev etkinliklerini seçtiğin takvimlere ekleyebilir, istersen seçtiğin takvimleri evdekilere de gösterebilir. Kopyalar telefonunda kalır. Sadece paylaşmayı seçtiğin takvimler gönderilir; Sadece meşgul seçersen yalnızca saatler gider."
+          }
+        }
+      }
+    },
+    "calendar_access_continue": {
+      "comment": "Explainer's button; leads to the system prompt",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam"
+          }
+        }
+      }
+    },
+    "calendar_access_not_now": {
+      "comment": "Explainer's dismiss button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi değil"
+          }
+        }
+      }
+    },
+    "calendar_also_add_title": {
+      "comment": "Event composer row: the person's own calendars to copy this event into",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also add to"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şuraya da ekle"
+          }
+        }
+      }
+    },
+    "calendar_also_add_footer": {
+      "comment": "Under the composer's calendar choice",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on this phone. Housemates choose their own."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece bu telefonda. Ev arkadaşların kendi takvimini kendi seçer."
+          }
+        }
+      }
+    },
+    "calendar_also_add_connect": {
+      "comment": "Composer row: offers to connect the person's calendars",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağla"
+          }
+        }
+      }
+    },
+    "calendar_settings_title": {
+      "comment": "Settings row and page title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvim"
+          }
+        }
+      }
+    },
+    "calendar_copy_title": {
+      "comment": "Settings toggle for copying house events",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy to my calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerime kopyala"
+          }
+        }
+      }
+    },
+    "calendar_copy_footer": {
+      "comment": "Under the copy toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev etkinlikleri seçtiğin takvimlere kopyalanır. NestZone'u açtığında güncellenir, yani kopya biraz geriden gelebilir."
+          }
+        }
+      }
+    },
+    "calendar_access_denied": {
+      "comment": "Shown when calendar access was declined or is write-only",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone needs full access to your calendars to let you choose. You can change it in Settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimleri seçebilmen için NestZone'un takvimlerine tam erişimi olması lazım. Ayarlar'dan değiştirebilirsin."
+          }
+        }
+      }
+    },
+    "calendar_access_restricted": {
+      "comment": "Shown when parental controls or a profile block calendar access",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar access is restricted on this phone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu telefonda takvim erişimi kısıtlı."
+          }
+        }
+      }
+    },
+    "calendar_access_open_settings": {
+      "comment": "Opens the system Settings for the app",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'ı aç"
+          }
+        }
+      }
+    },
+    "calendar_copy_what_header": {
+      "comment": "Header over the copy modes",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What to copy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neler kopyalansın"
+          }
+        }
+      }
+    },
+    "calendar_copy_into_header": {
+      "comment": "Header over the calendar list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şuralara"
+          }
+        }
+      }
+    },
+    "calendar_copy_into_footer": {
+      "comment": "Under the calendar list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick as many calendars as you like, from any account."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstediğin hesaptan istediğin kadar takvim seçebilirsin."
+          }
+        }
+      }
+    },
+    "calendar_copy_reminders": {
+      "comment": "Toggle: copies carry the event's reminders as alerts",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy reminders"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hatırlatmaları da kopyala"
+          }
+        }
+      }
+    },
+    "calendar_copy_reminders_footer": {
+      "comment": "Under the copy reminders toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off by default: NestZone already reminds everyone, and your calendar would alert you a second time."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan olarak kapalı: NestZone zaten herkesi uyarıyor, takvimin de uyarırsa iki kere haber gelir."
+          }
+        }
+      }
+    },
+    "calendar_copy_last_synced": {
+      "comment": "Row: when copies last caught up with the house",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last synced"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son eşitleme"
+          }
+        }
+      }
+    },
+    "calendar_copy_never_synced": {
+      "comment": "Last synced value before the first sync",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz değil"
+          }
+        }
+      }
+    },
+    "calendar_copy_remove_title": {
+      "comment": "Dialog title when copying is turned off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the copies from your calendars?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalar takvimlerinden silinsin mi?"
+          }
+        }
+      }
+    },
+    "calendar_copy_remove_message": {
+      "comment": "Dialog message when copying is turned off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you keep them, they stay where they are but stop following the house."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutarsan oldukları yerde kalır ama evle birlikte güncellenmez."
+          }
+        }
+      }
+    },
+    "calendar_copy_remove": {
+      "comment": "Dialog: delete the copies",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil"
+          }
+        }
+      }
+    },
+    "calendar_copy_keep": {
+      "comment": "Dialog: leave the copies",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalsın"
+          }
+        }
+      }
+    },
+    "calendar_share_level_off": {
+      "comment": "Share level: not shared",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "calendar_share_level_busy": {
+      "comment": "Share level: times only",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy only"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece meşgul"
+          }
+        }
+      }
+    },
+    "calendar_share_level_details": {
+      "comment": "Share level: title and place too",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrıntılı"
+          }
+        }
+      }
+    },
+    "calendar_share_toggle": {
+      "comment": "Settings switch",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share my calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerimi paylaş"
+          }
+        }
+      }
+    },
+    "calendar_share_header": {
+      "comment": "Settings section header",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share with the house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdekilerle paylaş"
+          }
+        }
+      }
+    },
+    "calendar_share_off_footer": {
+      "comment": "Footer while sharing is off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick which of your calendars the house sees. Nothing is shared until you choose it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdekilerin hangi takvimlerini göreceğini sen seçersin. Sen seçmeden hiçbir şey paylaşılmaz."
+          }
+        }
+      }
+    },
+    "calendar_share_calendars_header": {
+      "comment": "Settings section header",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerin"
+          }
+        }
+      }
+    },
+    "calendar_share_default_title": {
+      "comment": "Settings row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default for new calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni takvimler için varsayılan"
+          }
+        }
+      }
+    },
+    "calendar_share_window_title": {
+      "comment": "Settings row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How far ahead"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne kadar ilerisi"
+          }
+        }
+      }
+    },
+    "calendar_share_weeks": {
+      "comment": "Settings picker option",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld weeks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hafta"
+          }
+        }
+      }
+    },
+    "calendar_share_updated": {
+      "comment": "Settings row: when the house last got your calendars",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellendi"
+          }
+        }
+      }
+    },
+    "calendar_share_footer": {
+      "comment": "Footer under the sharing options",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece meşgul seçersen evdekiler ne zaman dolu olduğunu görür, ne için olduğunu görmez. Ayrıntılı seçersen başlık ve konum da görünür; notlar, katılımcılar ve linkler asla gitmez. NestZone açıkken güncellenir, o yüzden biraz geriden gelebilir."
+          }
+        }
+      }
+    },
+    "calendar_shared_busy_line": {
+      "comment": "A housemate's busy time on the calendar",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · busy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · meşgul"
+          }
+        }
+      }
+    },
+    "calendar_shared_busy_is": {
+      "comment": "Title of a busy-only item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is busy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ meşgul"
+          }
+        }
+      }
+    },
+    "calendar_shared_by": {
+      "comment": "Under the name on a shared item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared by %@ from their calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kendi takviminden paylaştı"
+          }
+        }
+      }
+    },
+    "calendar_shared_read_only": {
+      "comment": "Note on a shared item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can see this, but not change it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu görebilirsin ama değiştiremezsin."
+          }
+        }
+      }
+    },
+    "calendar_shared_sheet_title": {
+      "comment": "Shared item sheet title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From their calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi takviminden"
+          }
+        }
+      }
+    },
+    "calendar_shared_report": {
+      "comment": "Menu item on a shared item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildir"
+          }
+        }
+      }
+    },
+    "calendar_shared_heading": {
+      "comment": "Heading over housemates' items",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From their own calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi takvimlerinden"
+          }
+        }
+      }
+    },
+    "calendar_filter_theirs": {
+      "comment": "Filter chip: housemates' calendars on or off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their own calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi takvimleri"
+          }
+        }
+      }
+    },
+    "calendar_filter_count_shared": {
+      "comment": "Beside the filter count",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld from their calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld kendi takvimlerinden"
+          }
+        }
+      }
+    },
+    "moderation_kind_calendar": {
+      "comment": "Moderators' queue: what was reported",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared calendar item"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paylaşılan takvim öğesi"
+          }
+        }
+      }
+    },
+    "notif_topic_tasks_assigned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Given to you"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sana verilen görev"
+          }
+        }
+      }
+    },
+    "notif_topic_tasks_new": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New tasks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni görevler"
+          }
+        }
+      }
+    },
+    "notif_topic_tasks_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone finished one"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biri bitirdi"
+          }
+        }
+      }
+    },
+    "notif_topic_shopping_added": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to the list"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listeye eklenenler"
+          }
+        }
+      }
+    },
+    "notif_topic_shopping_bought": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bought"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alınanlar"
+          }
+        }
+      }
+    },
+    "notif_topic_calendar_events": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New and changed events"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni ve değişen etkinlikler"
+          }
+        }
+      }
+    },
+    "notif_topic_calendar_rsvp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answers to your events"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etkinliklerine gelen cevaplar"
+          }
+        }
+      }
+    },
+    "notif_topic_reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hatırlatmalar"
+          }
+        }
+      }
+    },
+    "notif_topic_movies": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movie nights and rounds"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film geceleri ve oylamalar"
+          }
+        }
+      }
+    },
+    "notif_topic_finance_expenses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expenses, bills and settling up"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harcamalar, faturalar ve hesaplaşma"
+          }
+        }
+      }
+    },
+    "notif_topic_finance_reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bill reminders"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fatura hatırlatmaları"
+          }
+        }
+      }
+    },
+    "notif_topic_issues_new": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New problems"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni sorunlar"
+          }
+        }
+      }
+    },
+    "notif_topic_issues_updates": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates on problems"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorunlardaki gelişmeler"
+          }
+        }
+      }
+    },
+    "notif_topic_messages_direct": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats with one person"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birebir sohbetler"
+          }
+        }
+      }
+    },
+    "notif_topic_messages_group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group chats"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grup sohbetleri"
+          }
+        }
+      }
+    },
+    "notif_topic_messages_mentions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you're mentioned"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senden bahsedilince"
+          }
+        }
+      }
+    },
+    "notif_topic_polls": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Polls"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anketler"
+          }
+        }
+      }
+    },
+    "notif_topic_companion_ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to grow"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Büyümeye hazır"
+          }
+        }
+      }
+    },
+    "notif_topic_companion_vote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The vote"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oylama"
+          }
+        }
+      }
+    },
+    "notif_topic_companion_new": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new one arrives"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni biri geliyor"
+          }
+        }
+      }
+    },
+    "notif_topic_home_members": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People joining and leaving"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelenler ve gidenler"
+          }
+        }
+      }
+    },
+    "notif_group_nestie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nestie"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nestie"
+          }
+        }
+      }
+    },
+    "notif_group_around": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Around the house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evde olanlar"
+          }
+        }
+      }
+    },
+    "notif_group_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld on"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld açık"
+          }
+        }
+      }
+    },
+    "notif_needs_plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These need NestZone Plus."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunlar için NestZone Plus gerek."
+          }
+        }
+      }
+    },
+    "notif_see_plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See NestZone Plus"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone Plus'a göz at"
+          }
+        }
+      }
+    },
+    "notif_mentions_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A mention still arrives when group chats are off."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grup sohbetleri kapalıyken bile, biri senden bahsedince haberin olur."
+          }
+        }
+      }
+    },
+    "notif_feed_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This only changes what buzzes your phone. The bell on every tab keeps everything. Your choices follow you to every phone and every home."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu sadece telefonunun ne zaman öteceğini değiştirir. Her sekmedeki zil hepsini tutmaya devam eder. Seçimlerin her telefonunda ve her evde geçerli."
+          }
+        }
+      }
+    },
+    "notif_quiet_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet hours"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessiz saatler"
+          }
+        }
+      }
+    },
+    "notif_quiet_from": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlangıç"
+          }
+        }
+      }
+    },
+    "notif_quiet_until": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitiş"
+          }
+        }
+      }
+    },
+    "notif_quiet_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications still arrive, silently, and wait in Notification Center."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimler yine gelir ama sessizce, Bildirim Merkezi'nde bekler."
+          }
+        }
+      }
+    },
+    "notif_system_off_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimler kapalı"
+          }
+        }
+      }
+    },
+    "notif_system_denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone can't send you anything until you allow notifications in iOS Settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS Ayarları'nda izin vermeden sana hiçbir şey gönderemeyiz."
+          }
+        }
+      }
+    },
+    "notif_system_undetermined": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn them on to hear when the house needs you."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev sana ihtiyaç duyduğunda haberin olsun diye aç."
+          }
+        }
+      }
+    },
+    "notif_system_turn_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on notifications"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimleri aç"
+          }
+        }
+      }
+    },
+    "notif_system_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your choices below are saved, but nothing arrives until notifications are on."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki seçimlerin kaydedilir ama bildirimler açılana kadar bir şey gelmez."
+          }
+        }
+      }
+    },
+    "notif_row_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
+    "notif_row_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "plus_yours": {
+      "comment": "Settings Plus card, first part of the summary line: the subscription is the signed-in person's.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yours"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senin"
+          }
+        }
+      }
+    },
+    "plus_from": {
+      "comment": "Settings Plus card: whose subscription carries the house; the name of a housemate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sağ olsun"
+          }
+        }
+      }
+    },
+    "plus_covers_names": {
+      "comment": "Settings Plus card: the homes this person's Plus covers, comma-separated names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covers %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ için geçerli"
+          }
+        }
+      }
+    },
+    "plus_covers_count": {
+      "comment": "Settings Plus card: homes covered and the cap, when the names are not known.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covers %lld of %lld homes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld ev için geçerli"
+          }
+        }
+      }
+    },
+    "plus_covers_this_house": {
+      "comment": "Settings Plus card: a housemate's Plus covers the open house.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covers this house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu evde açık"
+          }
+        }
+      }
+    },
+    "dock_setting_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alt çubuk"
+          }
+        }
+      }
+    },
+    "dock_setting_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gösterir"
+          }
+        }
+      }
+    },
+    "dock_thing_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which one"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hangisi"
+          }
+        }
+      }
+    },
+    "dock_mode_automatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik"
+          }
+        }
+      }
+    },
+    "dock_mode_always": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always one thing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hep tek şey"
+          }
+        }
+      }
+    },
+    "dock_mode_add_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add only"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece ekle"
+          }
+        }
+      }
+    },
+    "dock_mode_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "dock_thing_dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akşam yemeği"
+          }
+        }
+      }
+    },
+    "dock_thing_event": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next event"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıradaki etkinlik"
+          }
+        }
+      }
+    },
+    "dock_thing_movie_round": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movie night"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film gecesi"
+          }
+        }
+      }
+    },
+    "dock_meaning_automatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what's on right now: an event, tonight's dinner or a movie round."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O an ne varsa onu gösterir: bir etkinlik, bu akşamın yemeği ya da film gecesi."
+          }
+        }
+      }
+    },
+    "dock_meaning_always": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always shows this one. When there's nothing yet, it asks instead."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hep bunu gösterir. Henüz bir şey yoksa sorar."
+          }
+        }
+      }
+    },
+    "dock_meaning_add_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just the bar with the +, nothing else."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece + olan çubuk, başka bir şey yok."
+          }
+        }
+      }
+    },
+    "dock_meaning_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bar. Add anything moves to the + at the top."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çubuk yok. Bir şey ekle, üstteki + düğmesine taşınır."
+          }
+        }
+      }
+    },
+    "dock_needs_plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next event is a Plus thing. Until then the dock stays automatic."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıradaki etkinlik Plus'a özel. O zamana kadar çubuk otomatik kalır."
+          }
+        }
+      }
+    },
+    "dock_setting_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved on this phone, for this house only."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece bu telefonda, sadece bu ev için kaydedilir."
+          }
+        }
+      }
+    },
+    "dock_no_event_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing planned yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz plan yok"
+          }
+        }
+      }
+    },
+    "dock_no_event_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimi aç"
+          }
+        }
+      }
+    },
+    "dock_no_movie_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No movie night yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz film gecesi yok"
+          }
+        }
+      }
+    },
+    "dock_no_movie_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start one"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birini başlat"
+          }
+        }
+      }
+    },
+    "companion_stage_of": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, stage %lld of %lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld/%lld. aşama"
+          }
+        }
+      }
+    },
+    "tasks_search_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search tasks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görev ara"
+          }
+        }
+      }
+    },
+    "movie_lists_search_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search watchlists"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste ara"
+          }
+        }
+      }
+    },
+    "common_search_empty_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing found"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir şey bulunamadı"
+          }
+        }
+      }
+    },
+    "common_search_empty_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a different word."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir kelime dene."
+          }
+        }
+      }
+    },
+    "notes_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first note"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk notu ekle"
+          }
+        }
+      }
+    },
+    "tasks_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first task"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk görevi ekle"
+          }
+        }
+      }
+    },
+    "recipes_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first recipe"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk tarifi ekle"
+          }
+        }
+      }
+    },
+    "recipes_tab_ours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ours"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bizimkiler"
+          }
+        }
+      }
+    },
+    "recipes_tab_explore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keşfet"
+          }
+        }
+      }
+    },
+    "notes_pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitle"
+          }
+        }
+      }
+    },
+    "notes_unpin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlemeyi kaldır"
+          }
+        }
+      }
+    },
+    "home_pinned_note_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned note"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabit not"
+          }
+        }
+      }
+    },
+    "home_pinned_note_quiet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing pinned. Long-press a note to pin it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabit not yok. Bir nota uzun basıp sabitleyebilirsin."
+          }
+        }
+      }
+    },
+    "home_pinned_more": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more in Notes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notlarda %lld tane daha"
+          }
+        }
+      }
+    },
+    "customize_auto_pinned_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the notes your house has pinned."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evin sabitlediği notları gösterir."
+          }
+        }
+      }
+    },
+    "calendar_event_gone_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That event is gone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O etkinlik artık yok"
+          }
+        }
+      }
+    },
+    "calendar_event_gone_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It was deleted or moved to another day."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silinmiş ya da başka güne taşınmış."
+          }
+        }
+      }
+    },
+    "issues_gone_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That problem is gone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O sorun artık yok"
+          }
+        }
+      }
+    },
+    "issues_gone_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It was deleted, or fixed a long time ago."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silinmiş ya da çoktan çözülmüş."
+          }
+        }
+      }
+    },
+    "calendar_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first event"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk etkinliği ekle"
+          }
+        }
+      }
+    },
+    "plus_tag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PLUS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PLUS"
+          }
+        }
+      }
+    },
+    "dock_menu_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in the dock"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock'ta göster"
+          }
+        }
+      }
+    },
+    "dock_menu_edit_today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Today…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün'ü düzenle…"
+          }
+        }
+      }
+    },
+    "dock_off_notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock is off. Turn it back on in Edit Today."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock kapandı. Bugün'ü düzenle'den tekrar açabilirsin."
           }
         }
       }

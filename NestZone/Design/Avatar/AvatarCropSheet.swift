@@ -61,7 +61,7 @@ struct AvatarCropSheet: View {
                 editor
                 Text(L10n.avatarCropHint)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                 Spacer(minLength: 0)
             }

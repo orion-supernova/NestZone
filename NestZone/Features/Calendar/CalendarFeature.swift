@@ -46,14 +46,31 @@ public struct CalendarFeature: Sendable {
         /// five copies.
         public var dayIndex: [CalendarDay: [EventOccurrence.ID]] = [:]
 
+        /// Housemates' own calendars in the window, as they chose to share them.
+        /// Not events: nothing in this feature edits, answers, plans or counts
+        /// them, and nothing outside the Calendar screen reads them.
+        public var shared: IdentifiedArrayOf<SharedBusyItem> = []
+        /// Reported in this session, ahead of the server's own read dropping
+        /// them. Keyed by row id; the server hides by what the item is, so a
+        /// sync that replaces the rows cannot bring one back.
+        public var sharedHidden: Set<String> = []
+        /// The shared items on each day, after the filters, like `dayIndex`.
+        public var sharedDayIndex: [CalendarDay: [String]] = [:]
+        /// Whether housemates' calendars are drawn at all.
+        @Shared(.calendarShowShared) public var showShared: Bool
+
         public var isLoading = true
-        /// Filters. Not persisted: narrowing a calendar is a "show me this now",
-        /// not a preference to be remembered next week.
+        /// Filters. Not persisted, bar the people: narrowing a calendar by kind
+        /// or search is a "show me this now", not a preference to be remembered
+        /// next week, but whose calendar a person looks at is one.
         public var search = ""
         public var kindFilter: EventKind?
-        /// Only what involves the viewer — they are expected, they answered, or
-        /// they wrote it.
-        public var onlyMine = false
+        /// Who the calendar is narrowed to, as comma-joined ids, kept on this
+        /// phone. Empty is Everyone. Read it as `people`.
+        @Shared(.calendarPeopleRaw) public var peopleRaw: String
+        /// The members the row draws, the viewer first and then by name.
+        /// Stored when the members arrive, so `body` sorts nothing.
+        public var peopleRow: [User] = []
         /// Events I am invited to and have not answered.
         public var needsAnswer = false
         /// Events with a budget, a menu or a ticket — the ones with work on
@@ -198,7 +215,7 @@ public struct CalendarFeature: Sendable {
         /// Whether anything passes the filters, which is a different question
         /// from whether the household has any events.
         public var isFiltering: Bool {
-            kindFilter != nil || onlyMine || needsAnswer || withPlan
+            kindFilter != nil || !people.isEmpty || needsAnswer || withPlan
                 || !search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
 
@@ -208,9 +225,10 @@ public struct CalendarFeature: Sendable {
         /// Said out loud because a filter that removes nothing and a filter that
         /// is broken look identical otherwise: the chip lights up, a few dots
         /// quietly leave the grid, and there is no way to tell "3 of 3" from
-        /// "the button does nothing". Both of these filters are frequently
-        /// no-ops on real data — `onlyMine` counts anything you *created*, so
-        /// in a household where you enter every event it excludes nobody.
+        /// "the button does nothing". Several of these filters are frequently
+        /// no-ops on real data — an event that names nobody belongs to every
+        /// person picked, so in a household that never uses the invite list the
+        /// people row excludes nothing.
         public var visibleCount: Int {
             var seen = Set<EventOccurrence.ID>()
             for ids in dayIndex.values { seen.formUnion(ids) }
@@ -218,6 +236,26 @@ public struct CalendarFeature: Sendable {
         }
 
         public var totalCount: Int { occurrences.count }
+
+        /// The people the calendar is narrowed to: what was stored, less anyone
+        /// who is no longer a member. Until the members have arrived nothing
+        /// can be said to have left, so the stored choice stands.
+        ///
+        /// This is the one place a phase that draws other people's shared
+        /// calendars reads the selection from: a shared row belongs to the
+        /// person whose calendar it is, and shows for exactly these people.
+        public var people: Set<UserID> {
+            let stored = Set(CalendarLists.users(peopleRaw, home: homeID))
+            return members.isEmpty ? stored : stored.intersection(members.ids)
+        }
+
+        /// Whether `occurrence` survives the people filter. Nobody picked is
+        /// everyone; otherwise it must concern at least one of them, and an
+        /// event that names nobody is the whole house's and concerns all.
+        public func passesPeople(_ occurrence: EventOccurrence) -> Bool {
+            let people = people
+            return people.isEmpty || occurrence.involvesAny(of: people)
+        }
 
         /// Filters are on and they have hidden everything in the window.
         public var isFilteredEmpty: Bool {
@@ -259,6 +297,38 @@ public struct CalendarFeature: Sendable {
 
         public func count(on day: CalendarDay) -> Int { dayIndex[day]?.count ?? 0 }
 
+        public func sharedItems(on day: CalendarDay) -> [SharedBusyItem] {
+            (sharedDayIndex[day] ?? []).compactMap { shared[id: $0] }
+        }
+
+        public func sharedCount(on day: CalendarDay) -> Int { sharedDayIndex[day]?.count ?? 0 }
+
+        /// Every shared item that survives the filters, soonest first.
+        public var sharedMatches: [SharedBusyItem] {
+            var seen = Set<String>()
+            var found: [SharedBusyItem] = []
+            for ids in sharedDayIndex.values {
+                for id in ids where seen.insert(id).inserted {
+                    if let item = shared[id: id] { found.append(item) }
+                }
+            }
+            return found.sorted { $0.startsAt < $1.startsAt }
+        }
+
+        /// How many shared items the filters keep. Said beside "x of y", which
+        /// is about house events only: a housemate's item is not an event, and
+        /// folding it into the count would make "3 of 12" mean two things.
+        public var sharedVisibleCount: Int {
+            var seen = Set<String>()
+            for ids in sharedDayIndex.values { seen.formUnion(ids) }
+            return seen.count
+        }
+
+        /// Whether the "their own calendars" switch is worth drawing: there is
+        /// something for it to hide, or it is off and has to be able to come
+        /// back on.
+        public var canToggleShared: Bool { !shared.isEmpty || !showShared }
+
         /// The dots under a day cell: up to three, in the order the events
         /// happen, de-duplicated by colour so a day of four dinners is one
         /// orange dot and not four.
@@ -277,13 +347,14 @@ public struct CalendarFeature: Sendable {
         ///
         /// Forward only. An agenda that opens on the middle of a list has
         /// already lost the argument for being an agenda.
-        public var agendaDays: [(day: CalendarDay, items: [EventOccurrence])] {
-            dayIndex.keys
+        public var agendaDays: [(day: CalendarDay, items: [EventOccurrence], shared: [SharedBusyItem])] {
+            Set(dayIndex.keys).union(sharedDayIndex.keys)
                 .filter { $0 >= selectedDay }
                 .sorted()
                 .compactMap { day in
                     let items = occurrences(on: day)
-                    return items.isEmpty ? nil : (day, items)
+                    let theirs = sharedItems(on: day)
+                    return items.isEmpty && theirs.isEmpty ? nil : (day, items, theirs)
                 }
         }
 
@@ -319,11 +390,10 @@ public struct CalendarFeature: Sendable {
         // planned has no "has a plan" — and an always-present control that
         // never removes a row is indistinguishable from one that is broken.
 
-        /// Whether any event in the window is *not* mine, i.e. whether the
-        /// toggle has anything to hide.
-        public var canFilterMine: Bool {
-            currentUserID != nil && occurrences.contains { !$0.isMine(currentUserID) }
-        }
+        /// Whether there is anyone to pick: a house of one has nobody to
+        /// narrow to, and a row of a single "Me" beside "Everyone" cannot
+        /// change what is drawn.
+        public var canFilterPeople: Bool { peopleRow.count > 1 }
 
         public func needsMyAnswer(_ occurrence: EventOccurrence) -> Bool {
             guard let me = currentUserID else { return false }
@@ -352,9 +422,10 @@ public struct CalendarFeature: Sendable {
         public var showsFilterRow: Bool {
             isFiltering
                 || !presentKinds.isEmpty
-                || canFilterMine
+                || canFilterPeople
                 || canFilterNeedsAnswer
                 || canFilterPlanned
+                || canToggleShared
         }
 
         public func member(_ id: UserID?) -> User? { id.flatMap { members[id: $0] } }
@@ -386,6 +457,8 @@ public struct CalendarFeature: Sendable {
         case compose(EventComposerFeature)
         case detail(EventDetailFeature)
         case history(EventHistoryFeature)
+        /// A housemate's own calendar item: read-only, and reportable.
+        case sharedItem(SharedItemDetailFeature)
     }
 
     public enum Action: BindableAction {
@@ -395,6 +468,9 @@ public struct CalendarFeature: Sendable {
         /// last push from the month you just left lands on the one you are now
         /// looking at.
         case occurrencesUpdated(String, [EventOccurrence])
+        case sharedUpdated(String, [SharedBusyItem])
+        case sharedToggled
+        case sharedItemTapped(String)
         case membersUpdated([User])
         case loadFailed(AppError)
         /// There is something still to come, for a house without Plus.
@@ -407,7 +483,10 @@ public struct CalendarFeature: Sendable {
         case todayTapped
 
         case kindFilterTapped(EventKind?)
-        case onlyMineToggled
+        /// One person added to or taken out of the people filter.
+        case personToggled(UserID)
+        /// The Everyone chip: clears the people filter.
+        case everyoneTapped
         case needsAnswerToggled
         case withPlanToggled
         /// One control that undoes every filter at once. Clearing them one by
@@ -442,13 +521,14 @@ public struct CalendarFeature: Sendable {
         public enum Alert: Equatable {}
     }
 
-    private enum CancelID: Hashable { case events, members, undo }
+    private enum CancelID: Hashable { case events, shared, members, undo }
 
     /// How long a delete stays undoable. The same window the ledger and the
     /// shopping list use, so the gesture means one thing app-wide.
     private static let undoWindow: Duration = .seconds(5)
 
     @Dependency(\.events) var events
+    @Dependency(\.calendarShare) var calendarShare
     @Dependency(\.homes) var homes
     @Dependency(\.paywall) var paywall
     @Dependency(\.continuousClock) var clock
@@ -519,10 +599,44 @@ public struct CalendarFeature: Sendable {
                 }
                 return .none
 
+            case let .sharedUpdated(windowID, incoming):
+                guard windowID == state.windowID else { return .none }
+                var array = IdentifiedArray(uniqueElements: incoming)
+                let stillHidden = state.sharedHidden.intersection(array.ids)
+                if stillHidden != state.sharedHidden { state.sharedHidden = stillHidden }
+                for id in stillHidden { array.remove(id: id) }
+                guard array != state.shared else { return .none }
+                state.shared = array
+                reindex(&state)
+                return .none
+
+            case .sharedToggled:
+                state.$showShared.withLock { $0.toggle() }
+                reindex(&state)
+                return .none
+
+            case let .sharedItemTapped(id):
+                guard let item = state.shared[id: id] else { return .none }
+                state.destination = .sharedItem(SharedItemDetailFeature.State(
+                    item: item,
+                    member: state.member(item.userID),
+                    name: state.name(for: item.userID)
+                ))
+                return .none
+
             case let .membersUpdated(members):
                 let incoming = IdentifiedArray(uniqueElements: members)
                 guard incoming != state.members else { return .none }
                 state.members = incoming
+                state.peopleRow = Self.peopleRow(incoming, me: state.currentUserID)
+                // A member who left drops out of the stored choice, so it
+                // cannot keep narrowing the calendar to nobody.
+                let homeID = state.homeID
+                let kept = Self.ordered(state.people, in: state.peopleRow)
+                if kept != CalendarLists.users(state.peopleRaw, home: homeID) {
+                    state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: kept, home: homeID, in: $0) }
+                }
+                reindex(&state)
                 // Written through to whatever is open, rather than only being
                 // read when a sheet is created. A sheet presented before the
                 // membership arrived — the deep-open path above — would
@@ -545,7 +659,7 @@ public struct CalendarFeature: Sendable {
                         history.detail = detail
                     }
                     state.destination = .history(history)
-                case .none:
+                case .sharedItem, .none:
                     break
                 }
                 return .none
@@ -601,8 +715,19 @@ public struct CalendarFeature: Sendable {
                 reindex(&state)
                 return .none
 
-            case .onlyMineToggled:
-                state.onlyMine.toggle()
+            case let .personToggled(id):
+                var people = state.people
+                if !people.insert(id).inserted { people.remove(id) }
+                let homeID = state.homeID
+                let ordered = Self.ordered(people, in: state.peopleRow)
+                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: ordered, home: homeID, in: $0) }
+                reindex(&state)
+                return .none
+
+            case .everyoneTapped:
+                let homeID = state.homeID
+                guard !CalendarLists.users(state.peopleRaw, home: homeID).isEmpty else { return .none }
+                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: [UserID](), home: homeID, in: $0) }
                 reindex(&state)
                 return .none
 
@@ -618,7 +743,8 @@ public struct CalendarFeature: Sendable {
 
             case .filtersCleared:
                 state.kindFilter = nil
-                state.onlyMine = false
+                let homeID = state.homeID
+                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: [UserID](), home: homeID, in: $0) }
                 state.needsAnswer = false
                 state.withPlan = false
                 state.search = ""
@@ -789,6 +915,18 @@ public struct CalendarFeature: Sendable {
                 restoreRSVPs(&state, series: eventID, to: rsvps)
                 return .none
 
+            // A report hides the item at once, whatever the server answered;
+            // the sheet says thanks and closes itself.
+            case let .destination(.presented(.sharedItem(.delegate(.reported(id))))):
+                state.sharedHidden.insert(id)
+                state.shared.remove(id: id)
+                reindex(&state)
+                return .none
+
+            case .destination(.presented(.sharedItem(.delegate(.finished)))):
+                state.destination = nil
+                return .none
+
             case let .writeFailed(error):
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
@@ -827,6 +965,8 @@ public struct CalendarFeature: Sendable {
         // skeleton covers the gap instead.
         state.occurrences = []
         state.dayIndex = [:]
+        state.shared = []
+        state.sharedDayIndex = [:]
         // A kind filter carried into a month without that kind would be
         // invisible, and therefore impossible to clear.
         state.kindFilter = nil
@@ -849,14 +989,47 @@ public struct CalendarFeature: Sendable {
     ) -> Effect<Action> {
         let window = State.window(for: month, mode: mode)
         let windowID = "\(mode.rawValue)-\(month.id)"
-        return .run { send in
-            for try await occurrences in events.inRange(homeID, window.from, window.to) {
-                await send(.occurrencesUpdated(windowID, occurrences))
+        return .merge(
+            .run { send in
+                for try await occurrences in events.inRange(homeID, window.from, window.to) {
+                    await send(.occurrencesUpdated(windowID, occurrences))
+                }
+            } catch: { error, send in
+                await send(.loadFailed(AppError(error)))
             }
-        } catch: { error, send in
-            await send(.loadFailed(AppError(error)))
+            .cancellable(id: CancelID.events, cancelInFlight: true),
+
+            // Housemates' own calendars for the same window. Open to every
+            // house, and never an error worth a screen: the house's events are
+            // the calendar, these are a bonus.
+            .run { send in
+                await Backoff.retrying(clock: clock) { delivered in
+                    for try await items in calendarShare.inRange(homeID, window.from, window.to) {
+                        delivered()
+                        await send(.sharedUpdated(windowID, items))
+                    }
+                }
+            }
+            .cancellable(id: CancelID.shared, cancelInFlight: true)
+        )
+    }
+
+    /// The viewer first, then everybody else by name.
+    static func peopleRow(_ members: IdentifiedArrayOf<User>, me: UserID?) -> [User] {
+        members.sorted { lhs, rhs in
+            if lhs.id == me { return true }
+            if rhs.id == me { return false }
+            return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName) == .orderedAscending
         }
-        .cancellable(id: CancelID.events, cancelInFlight: true)
+    }
+
+    /// `people` in the order of the row, so what is stored does not depend on
+    /// the order of taps.
+    static func ordered(_ people: Set<UserID>, in row: [User]) -> [UserID] {
+        let known = row.map(\.id).filter(people.contains)
+        // Members not drawn yet (the row is empty before the first answer) keep
+        // what was stored rather than losing it.
+        return known + people.filter { id in !row.contains { $0.id == id } }.sorted { $0.rawValue < $1.rawValue }
     }
 
     /// Takes a live push, minus anything a pending delete is hiding.
@@ -881,10 +1054,9 @@ public struct CalendarFeature: Sendable {
     private func reindex(_ state: inout State) {
         let needle = state.search.trimmingCharacters(in: .whitespacesAndNewlines)
         let kind = state.kindFilter
-        let onlyMine = state.onlyMine
+        let people = state.people
         let needsAnswer = state.needsAnswer
         let withPlan = state.withPlan
-        let me = state.currentUserID
         let calendar = Calendar.current
 
         var index: [CalendarDay: [EventOccurrence.ID]] = [:]
@@ -892,7 +1064,7 @@ public struct CalendarFeature: Sendable {
         // sorted without a second pass.
         for occurrence in state.occurrences {
             if let kind, occurrence.kind != kind { continue }
-            if onlyMine, !occurrence.isMine(me) { continue }
+            if !people.isEmpty, !occurrence.involvesAny(of: people) { continue }
             if needsAnswer, !state.needsMyAnswer(occurrence) { continue }
             if withPlan, !state.isPlanned(occurrence) { continue }
             if !needle.isEmpty {
@@ -906,6 +1078,27 @@ public struct CalendarFeature: Sendable {
             }
         }
         state.dayIndex = index
+
+        // Housemates' items follow the same people filter, and are left out
+        // when a filter is about something only a house event has (its kind, an
+        // answer owed, a plan).
+        var sharedIndex: [CalendarDay: [String]] = [:]
+        if state.showShared, kind == nil, !needsAnswer, !withPlan {
+            for item in state.shared {
+                if !people.isEmpty, !people.contains(item.userID) { continue }
+                if !needle.isEmpty {
+                    let matches = (item.shownTitle?.localizedCaseInsensitiveContains(needle) ?? false)
+                        || (item.location?.localizedCaseInsensitiveContains(needle) ?? false)
+                        || item.calendarName.localizedCaseInsensitiveContains(needle)
+                        || state.name(for: item.userID).localizedCaseInsensitiveContains(needle)
+                    if !matches { continue }
+                }
+                for day in item.days(calendar) {
+                    sharedIndex[day, default: []].append(item.id)
+                }
+            }
+        }
+        state.sharedDayIndex = sharedIndex
     }
 
     /// Applies one member's answer across every occurrence of a series.

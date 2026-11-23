@@ -141,6 +141,7 @@ export const set = mutation({
             ? `Ordering ${what}`
             : `Going out: ${what}`,
       category: "meals",
+      topic: "meals",
       collapseId: `meal-${args.homeId}-${args.date}`,
     });
 

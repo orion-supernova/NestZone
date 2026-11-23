@@ -57,13 +57,17 @@ private struct SegmentSearchable: ViewModifier {
 
     // In a background rather than around the screen: a modifier that wrapped
     // the screen in an `if` would rebuild it, state and subscriptions and
-    // scroll position, every time the search came and went.
+    // scroll position, every time the search came and went. The minimised
+    // search is left where the system puts it: it was once placed by hand with
+    // a `DefaultToolbarItem`, and that item, rebuilt as the bar re-evaluated
+    // on dismiss, re-presented the field the moment it closed.
     func body(content: Content) -> some View {
-        content.background {
-            if phase == .onScreen {
-                Color.clear.searchable(text: $text, prompt: prompt)
+        content
+            .background {
+                if phase == .onScreen {
+                    Color.clear.searchable(text: $text, prompt: prompt)
+                }
             }
-        }
     }
 }
 
@@ -96,5 +100,38 @@ private struct SegmentTask<ID: Equatable>: ViewModifier {
             guard isOnScreen else { return }
             await action()
         }
+    }
+}
+
+// MARK: - At a glance
+
+/// How a House screen opens At a glance without knowing where it is shown.
+///
+/// The tab sets it for every segment it holds; a screen draws its own button
+/// and asks (`HouseStatsButton`), so the counters are an ordinary bar item
+/// beside the screen's other tools rather than a control in the switch.
+private struct OpenHouseStatsKey: EnvironmentKey {
+    static let defaultValue: @MainActor () -> Void = {}
+}
+
+extension EnvironmentValues {
+    var openHouseStats: @MainActor () -> Void {
+        get { self[OpenHouseStatsKey.self] }
+        set { self[OpenHouseStatsKey.self] = newValue }
+    }
+}
+
+/// House → At a glance, for a House screen's bar. Neutral, like every tool in
+/// the bar; the add beside it is the one accent item.
+struct HouseStatsButton: View {
+    @Environment(\.openHouseStats) private var open
+
+    var body: some View {
+        Button(action: open) {
+            Image(systemName: "chart.bar.fill")
+        }
+        .tint(.primary)
+        .accessibilityLabel(Text(L10n.hubStatsTitle))
+        .accessibilityIdentifier("HouseStatsButton")
     }
 }

@@ -8,6 +8,8 @@ import SwiftUI
 struct ReactionChips: View {
     let reactions: [MessageReaction]
     let me: UserID?
+    /// Which edge the row hugs: the bubble's own, so it sits right under it.
+    var alignment: HorizontalAlignment = .leading
     let toggle: (String) -> Void
 
     @Environment(\.theme) private var theme
@@ -15,7 +17,7 @@ struct ReactionChips: View {
 
     var body: some View {
         let tallies = ReactionTally.tally(reactions, me: me)
-        FlowLayout(spacing: 4, lineSpacing: 4) {
+        FlowLayout(spacing: 4, lineSpacing: 4, alignment: alignment) {
             ForEach(tallies) { tally in
                 // The one haptic for the tap is the thread's (`ChatView.react`),
                 // which every route to a reaction goes through.
@@ -23,9 +25,9 @@ struct ReactionChips: View {
                     HStack(spacing: 3) {
                         Text(tally.emoji).font(.caption)
                         Text(tally.count, format: .number)
-                            .font(.caption2.weight(tally.isMine ? .semibold : .regular))
+                            .font(.caption.weight(tally.isMine ? .semibold : .regular))
                             .monospacedDigit()
-                            .foregroundStyle(tally.isMine ? .primary : .secondary)
+                            .foregroundStyle(tally.isMine ? .primary : Palette.textSecondary)
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)

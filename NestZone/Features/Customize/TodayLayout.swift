@@ -3,7 +3,7 @@ import Foundation
 /// A section of the Today screen that a person can reorder and set to show
 /// automatically, always, or never.
 public enum TodaySection: String, CaseIterable, Identifiable, Sendable {
-    case tonight, needsYou, upNext, tasks, stats, movieNight
+    case tonight, needsYou, pinnedNote, upNext, tasks, stats, movieNight
 
     public var id: String { rawValue }
 
@@ -11,6 +11,7 @@ public enum TodaySection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .tonight: L10n.dinnerTonightTitle
         case .needsYou: L10n.homeNeedsYouTitle
+        case .pinnedNote: L10n.homePinnedNoteTitle
         case .upNext: L10n.homeUpNextTitle
         case .tasks: L10n.homeTasksTitle
         case .stats: L10n.hubStatsTitle
@@ -22,6 +23,7 @@ public enum TodaySection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .tonight: "moon.stars.fill"
         case .needsYou: "exclamationmark.circle.fill"
+        case .pinnedNote: "pin.fill"
         case .upNext: "calendar.badge.clock"
         case .tasks: "checklist"
         case .stats: "chart.bar.fill"
@@ -36,6 +38,7 @@ public enum TodaySection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .tonight: L10n.customizeAutoTonight
         case .needsYou: L10n.customizeAutoNeedsYou
+        case .pinnedNote: L10n.customizeAutoPinnedNote
         case .upNext: L10n.customizeAutoUpNext
         case .tasks: L10n.customizeAutoTasks
         case .stats: L10n.customizeAutoStats
@@ -86,7 +89,7 @@ public struct TodayLayout: Equatable, Sendable {
     /// when it has something in it. Whatever is wrong comes first, because it
     /// is the one thing on the screen with a date that can pass.
     public static let `default` = TodayLayout(
-        order: [.needsYou, .tonight, .tasks, .upNext, .movieNight, .stats]
+        order: [.needsYou, .pinnedNote, .tonight, .tasks, .upNext, .movieNight, .stats]
     )
 
     public func visibility(of section: TodaySection) -> SectionVisibility {
@@ -132,8 +135,13 @@ public struct TodayLayout: Equatable, Sendable {
             default: break
             }
         }
-        for section in Self.default.order where !order.contains(section) {
-            order.append(section)
+        // A section a stored layout does not know — one added by a later
+        // build — goes where the default puts it, right after the section
+        // before it, rather than in a heap at the end under the counters.
+        let defaults = Self.default.order
+        for (index, section) in defaults.enumerated() where !order.contains(section) {
+            let anchor = defaults[..<index].reversed().compactMap { order.firstIndex(of: $0) }.first
+            order.insert(section, at: anchor.map { $0 + 1 } ?? 0)
         }
         self.init(order: order, visibility: visibility)
     }

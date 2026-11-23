@@ -9,12 +9,19 @@ import SwiftUI
 public struct Backdrop: View {
     private let tint: Color
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     public init(tint: Color) { self.tint = tint }
 
     public var body: some View {
         LinearGradient(
-            colors: [tint.opacity(colorScheme == .dark ? 0.26 : 0.14), .clear],
+            // The theme's character, quieter than it was (0.26 and 0.14): the
+            // top of every screen is where the first card sits, and a strong
+            // wash there is the surface the smallest text has to be read on.
+            // Text roles are checked against this value (readability.html).
+            // With Reduce Transparency on, no wash at all: a flat ground is what
+            // the person asked for, and it is the surface the roles were solved on.
+            colors: [reduceTransparency ? .clear : tint.opacity(colorScheme == .dark ? 0.20 : 0.11), .clear],
             startPoint: .top,
             endPoint: .center
         )

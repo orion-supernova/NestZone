@@ -12,7 +12,6 @@ public struct IssuesView: View {
 
     @Environment(\.theme) private var theme
     @Namespace private var glass
-    @Namespace private var sectionPill
     /// The row with its delete button showing, if any. Held here rather than in
     /// each row so opening one closes the last, as the system list does.
     @State private var revealedID: IssueID?
@@ -63,12 +62,13 @@ public struct IssuesView: View {
         .navigationTitle(Text(L10n.managementModuleMaintenanceTitle))
         .navigationBarTitleDisplayMode(.inline)
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarLeading) { HouseStatsButton() }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { store.send(.addTapped) } label: {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel(Text(L10n.issuesReport))
-                .proLocked(.issues)
+                .proLocked(.issues, placement: .inset)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -110,41 +110,12 @@ public struct IssuesView: View {
     /// theme accent and glide between slots, and a system segmented control on
     /// glass draws its own opaque track underneath the blur.
     private var sectionPicker: some View {
-        HStack(spacing: 2) {
-            ForEach(IssuesFeature.State.Section.allCases) { section in
-                let isSelected = store.section == section
-                Button { store.send(.sectionSelected(section)) } label: {
-                    HStack(spacing: 5) {
-                        // The icon you just chose acknowledges the tap; the one
-                        // you left goes quiet without a fuss.
-                        Image(systemName: section.symbol)
-                            .font(.caption2.weight(.semibold))
-                            .bounces(when: isSelected)
-                        Text(section.title)
-                            .font(.caption.weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .foregroundStyle(isSelected ? Color.white : Color.secondary)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity)
-                    .background {
-                        if isSelected {
-                            Capsule()
-                                .fill(theme.accent)
-                                .matchedGeometryEffect(id: "issueSection", in: sectionPill)
-                        }
-                    }
-                    .contentShape(.capsule)
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-            }
-        }
-        .padding(3)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, Metrics.screenPadding)
-        .animation(Motion.spring, value: store.section)
+        InnerSwitch(
+            options: Array(IssuesFeature.State.Section.allCases),
+            selected: store.section,
+            title: { $0.title },
+            symbol: { $0.symbol }
+        ) { store.send(.sectionSelected($0)) }
     }
 
     // MARK: - Board
@@ -214,7 +185,7 @@ public struct IssuesView: View {
                         ? L10n.issuesAllClearMessage
                         : L10n.issuesOpenMessage)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
 
                     if !store.isAllClear {
@@ -236,7 +207,7 @@ public struct IssuesView: View {
                             if store.summary.unassigned > 0 {
                                 Badge(
                                     String(localized: L10n.issuesUnassignedCount(store.summary.unassigned)),
-                                    tint: .secondary,
+                                    tint: Palette.textSecondary,
                                     symbol: "person.crop.circle.badge.questionmark"
                                 )
                             }
@@ -272,7 +243,7 @@ public struct IssuesView: View {
                     Image(systemName: "checkmark.seal.fill")
                 }
                 .font(.caption.weight(.medium))
-                .foregroundStyle(Palette.success)
+                .foregroundStyle(Palette.successText)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -377,7 +348,7 @@ public struct IssuesView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: entry.area.symbol)
                                     .font(.footnote.weight(.semibold))
-                                    .foregroundStyle(theme.accent)
+                                    .foregroundStyle(.accentText)
                                     .frame(width: 30, height: 30)
                                     .background(theme.accent.opacity(0.14), in: .circle)
 
@@ -385,15 +356,15 @@ public struct IssuesView: View {
                                     Text(entry.area.title)
                                         .font(.subheadline.weight(.medium))
                                     Text(entry.category.title)
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondaryText)
                                 }
 
                                 Spacer(minLength: 4)
 
                                 Badge(
                                     String(localized: L10n.issuesRepeatsCount(entry.count)),
-                                    tint: entry.count >= 3 ? Palette.warning : .secondary
+                                    tint: entry.count >= 3 ? Palette.warning : Palette.textSecondary
                                 )
                                 Image(systemName: "chevron.right")
                                     .font(.caption2.weight(.bold))
@@ -452,7 +423,7 @@ public struct IssuesView: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             TextField(text: $store.search) {
                 Text(L10n.issuesSearchPlaceholder)
             }
@@ -589,10 +560,10 @@ public struct IssuesView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .foregroundStyle(store.statusFilter == nil ? Color.primary : Color.white)
+            .foregroundStyle(store.statusFilter == nil ? Color.primary : Color.primary)
             .background {
                 if let status = store.statusFilter {
-                    Capsule().fill(status.tint)
+                    Capsule().fill(status.tint.opacity(0.3))
                 }
             }
             .glassEffect(store.statusFilter == nil ? .regular.interactive() : .identity, in: .capsule)
@@ -608,7 +579,7 @@ public struct IssuesView: View {
         HStack {
             Text(store.isFiltering ? L10n.issuesFilteredCount : L10n.issuesShowingCount)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Spacer(minLength: 8)
             Text(store.filtered.count, format: .number)
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
@@ -620,7 +591,7 @@ public struct IssuesView: View {
                         .font(.caption.weight(.medium))
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .transition(.opacity)
             }
         }
@@ -674,7 +645,7 @@ public struct IssuesView: View {
                     if inRoom.isEmpty {
                         Text(L10n.issuesRoomClear(String(localized: area.title)))
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         rowStack(inRoom)
@@ -761,7 +732,7 @@ public struct IssuesView: View {
                         currency: store.summary.repairCurrency ?? Money.deviceDefault
                     )))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -775,14 +746,14 @@ public struct IssuesView: View {
         VStack(alignment: .leading, spacing: 3) {
             value
                 .font(.system(.title3, design: .rounded, weight: .bold))
-                .foregroundStyle(tint)
+                .foregroundStyle(.primary)
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .contentTransition(.numericText())
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -920,25 +891,26 @@ private struct IssueRow: View {
                     Text(issue.area.title)
                     Text(verbatim: "·")
                     Text(issue.status.title)
-                        .foregroundStyle(issue.status.tint)
+                        .foregroundStyle(.primary)
                     if let assigneeName {
                         Text(verbatim: "·")
                         Text(assigneeName).lineLimit(1)
                     }
                 }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.secondaryText)
 
                 if !badges.isEmpty {
                     HStack(spacing: 6) {
                         ForEach(badges, id: \.id) { badge in
                             HStack(spacing: 3) {
                                 Image(systemName: badge.symbol)
-                                    .font(.system(size: 8, weight: .bold))
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(badge.tint)
                                 Text(badge.text)
-                                    .font(.system(size: 10, weight: .semibold))
+                                    .font(.caption.weight(.semibold))
                             }
-                            .foregroundStyle(badge.tint)
+                            .foregroundStyle(.secondaryText)
                         }
                     }
                     .padding(.top, 1)
@@ -1034,8 +1006,8 @@ private struct IssueRow: View {
                 // Only once it has actually been standing a day. "0d old" on
                 // something reported a minute ago reads as a broken counter.
                 Text(L10n.issuesAgeDays(issue.ageDays))
-                    .font(.caption2)
-                    .foregroundStyle(issue.isStale ? Palette.warning : .secondary)
+                    .font(.caption)
+                    .foregroundStyle(issue.isStale ? Palette.warningText : Palette.textSecondary)
                     .monospacedDigit()
             }
 
@@ -1045,8 +1017,8 @@ private struct IssueRow: View {
                 } icon: {
                     Image(systemName: "hand.raised.fill")
                 }
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(isAffected ? Palette.warning : .secondary)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(isAffected ? Palette.warningText : Palette.textSecondary)
                 .contentTransition(.numericText(value: Double(issue.affectedCount)))
             }
         }
@@ -1087,7 +1059,7 @@ private struct IssueRow: View {
                 id: "chore",
                 symbol: "checklist",
                 text: String(localized: L10n.issuesHasChore),
-                tint: .secondary
+                tint: Palette.textSecondary
             ))
         }
         if issue.eventID != nil {
@@ -1137,13 +1109,13 @@ private struct SettledRow: View {
                     Text(verbatim: "·")
                     Text(resolvedByName).lineLimit(1)
                 }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.secondaryText)
 
                 if let resolution = issue.resolution, !resolution.isEmpty {
                     Text(resolution)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(2)
                         .padding(.top, 2)
                 }
@@ -1155,7 +1127,7 @@ private struct SettledRow: View {
                 Text(Money.compactText(issue.spent, currency: currency))
                     .font(.caption.weight(.semibold))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .glassRow()

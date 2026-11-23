@@ -47,7 +47,7 @@ struct ReportDetailView: View {
                 row.targetUserName ?? String(localized: L10n.avatarSomeone)
             ))
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             if let home = row.homeName, !home.isEmpty {
                 Text(home)
                     .font(.footnote)
@@ -84,7 +84,7 @@ struct ReportDetailView: View {
                 if let title = detail.snapshot.issueTitle, !title.isEmpty {
                     Text(L10n.moderationOnProblem(title))
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 statusLines(detail)
             }
@@ -104,14 +104,14 @@ struct ReportDetailView: View {
     private func statusLine(_ symbol: String, _ text: LocalizedStringResource) -> some View {
         Label { Text(text) } icon: { Image(systemName: symbol) }
             .font(.footnote)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
     }
 
     private func noteCard(_ note: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(L10n.moderationNoteHeader)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Text(note).font(.subheadline)
         }
         .padding(Metrics.cardPadding)
@@ -157,7 +157,7 @@ struct ReportDetailView: View {
         if let by = store.detail?.resolvedByName {
             Label { Text(L10n.moderationResolvedBy(by)) } icon: { Image(systemName: "checkmark.seal") }
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
     }
 }

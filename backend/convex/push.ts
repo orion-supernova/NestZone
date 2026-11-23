@@ -29,6 +29,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { requireUser, requireHomeMember } from "./lib/auth";
 import { proEnforced } from "./lib/pro";
 import { blockersOf } from "./lib/moderation";
+import { Delivery, deliveryFor, prefsOf, topicFor } from "./lib/notificationPrefs";
 
 /// Apple rejects a provider that mints tokens more often than once per 20
 /// minutes, and accepts one for up to an hour. Refreshing at 40 keeps us clear
@@ -145,8 +146,19 @@ export const tokensForHome = internalQuery({
     exclude: v.optional(v.id("users")),
     /** Only devices on this APNs gateway. Absent: every device, as always. */
     environment: v.optional(environment),
+    /**
+     * The push's topic (lib/notificationPrefs.ts). Present: a member who
+     * switched it off is left out, and one inside their quiet hours gets it
+     * passively. Absent: every device, as always.
+     */
+    topic: v.optional(v.string()),
+    /**
+     * `notifyHome`'s `personal`: these members answer to this topic first,
+     * and to `topic` if they switched this one off.
+     */
+    personal: v.optional(v.object({ userIds: v.array(v.id("users")), topic: v.string() })),
   },
-  handler: async (ctx, { homeId, exclude, environment: only }) => {
+  handler: async (ctx, { homeId, exclude, environment: only, topic, personal }) => {
     const home = await ctx.db.get(homeId);
     if (!home) return [];
     // Nobody hears from somebody they have blocked (lib/moderation.ts).
@@ -158,21 +170,105 @@ export const tokensForHome = internalQuery({
     // One round for the whole household. This runs on the way out of every
     // write that notifies, so a sequential scan per member is a cost every
     // mutation in the app pays.
-    const rows = (
-      await Promise.all(
+    // The members' preferences in the same round, and only for a push that
+    // says what it is about.
+    const [tokens, prefs] = await Promise.all([
+      Promise.all(
         recipients.map((userId) =>
           ctx.db
             .query("push_tokens")
             .withIndex("by_user", (q) => q.eq("user_id", userId))
             .collect(),
         ),
-      )
-    ).flat().filter((r) => !only || r.environment === only);
-    return rows.map((r) => ({
-      id: r._id,
-      token: r.token,
-      environment: r.environment,
-    }));
+      ),
+      topic ? prefsOf(ctx, recipients) : Promise.resolve(new Map()),
+    ]);
+
+    const now = Date.now();
+    const personalIds = new Set(personal?.userIds ?? []);
+    const devices: Device[] = [];
+    recipients.forEach((userId, i) => {
+      // Once per person. `personal` falls back like `notifyUsers`' variant:
+      // an assignee with their own topic off still hears the house's alert if
+      // that topic is on; it is one alert either way, never two.
+      let delivery: Delivery = "normal";
+      if (topic) {
+        const own = prefs.get(userId);
+        delivery = deliveryFor(own, topic, now);
+        if (personal && personalIds.has(userId)) {
+          const mine = deliveryFor(own, personal.topic, now);
+          if (mine !== "off") delivery = mine;
+        }
+      }
+      if (delivery === "off") return;
+      for (const r of tokens[i]) {
+        if (only && r.environment !== only) continue;
+        devices.push({
+          id: r._id,
+          token: r.token,
+          environment: r.environment,
+          ...(delivery === "passive" ? { passive: true } : {}),
+        });
+      }
+    });
+    return devices;
+  },
+});
+
+/**
+ * `notifyUsers`' devices, sorted by which alert each person hears and how.
+ *
+ * `variantUserIds` hear the variant (a mention) on `variantTopic`; one who
+ * switched that off falls back to the main alert on `topic`, so switching
+ * mentions off is "treat me like everyone else", not "never tell me". Nobody
+ * hears both.
+ */
+export const devicesForUsers = internalQuery({
+  args: {
+    userIds: v.array(v.id("users")),
+    topic: v.string(),
+    variantUserIds: v.optional(v.array(v.id("users"))),
+    variantTopic: v.optional(v.string()),
+  },
+  handler: async (ctx, { userIds, topic, variantUserIds, variantTopic }) => {
+    const people = Array.from(new Set(userIds));
+    const [prefs, tokens] = await Promise.all([
+      prefsOf(ctx, people),
+      Promise.all(
+        people.map((userId) =>
+          ctx.db
+            .query("push_tokens")
+            .withIndex("by_user", (q) => q.eq("user_id", userId))
+            .collect(),
+        ),
+      ),
+    ]);
+    const now = Date.now();
+    const alternate = new Set(variantUserIds ?? []);
+    const main: Device[] = [];
+    const variant: Device[] = [];
+    people.forEach((userId, i) => {
+      const own = prefs.get(userId);
+      let target = main;
+      let delivery = deliveryFor(own, topic, now);
+      if (alternate.has(userId) && variantTopic) {
+        const mention = deliveryFor(own, variantTopic, now);
+        if (mention !== "off") {
+          target = variant;
+          delivery = mention;
+        }
+      }
+      if (delivery === "off") return;
+      for (const r of tokens[i]) {
+        target.push({
+          id: r._id,
+          token: r.token,
+          environment: r.environment,
+          ...(delivery === "passive" ? { passive: true } : {}),
+        });
+      }
+    });
+    return { main, variant };
   },
 });
 
@@ -226,6 +322,12 @@ type Device = {
   id: Id<"push_tokens">;
   token: string;
   environment: "sandbox" | "production";
+  /**
+   * Inside its owner's quiet hours: delivered without sound at the `passive`
+   * interruption level, so it waits in Notification Center instead of
+   * lighting the screen.
+   */
+  passive?: boolean;
 };
 
 async function providerToken(ctx: {
@@ -266,6 +368,12 @@ const alertArgs = {
   category: v.optional(v.string()),
   threadId: v.optional(v.string()),
   collapseId: v.optional(v.string()),
+  /**
+   * What the push is about, for the recipients' preferences
+   * (lib/notificationPrefs.ts `TOPICS`). Filters the push only, never the
+   * feed. Absent: derived from `category`, so nothing is unclassified.
+   */
+  topic: v.optional(v.string()),
 };
 
 /**
@@ -398,6 +506,18 @@ async function fanOut(
     },
     category: alert.category ?? "activity",
   };
+  // The same alert for a device inside its owner's quiet hours: no sound, and
+  // `passive`, which iOS (15+) files in Notification Center without lighting
+  // the screen or making a sound. Not withheld: it is still there in the
+  // morning.
+  const quietPayload = {
+    aps: {
+      alert: { title: alert.title, body: alert.body },
+      "interruption-level": "passive",
+      ...(alert.threadId ? { "thread-id": alert.threadId } : {}),
+    },
+    category: alert.category ?? "activity",
+  };
 
   // A collapse id REPLACES whatever is already showing under the same id, so
   // only a caller that genuinely means to supersede an earlier alert may set
@@ -409,7 +529,17 @@ async function fanOut(
     : {};
 
   const results = await Promise.all(
-    devices.map((device) => deliver(ctx, device, jwt, topic, payload, headers, strict)),
+    devices.map((device) =>
+      deliver(
+        ctx,
+        device,
+        jwt,
+        topic,
+        device.passive ? quietPayload : payload,
+        headers,
+        strict,
+      ),
+    ),
   );
 
   return {
@@ -458,8 +588,16 @@ export const notifyHome = internalAction({
      * is about. Absent, as at every other caller: the feed is written first.
      */
     skipFeed: v.optional(v.boolean()),
+    /**
+     * Some members hear this as a different topic: the person a new chore is
+     * for hears `tasks.assigned` while the rest of the house hears
+     * `tasks.new`. Same alert, only the preference it answers to differs; one
+     * with `tasks.assigned` off still hears it if `tasks.new` is on, like
+     * `notifyUsers`' variant.
+     */
+    personal: v.optional(v.object({ userIds: v.array(v.id("users")), topic: v.string() })),
   },
-  handler: async (ctx, { environment: only, skipFeed, ...args }) => {
+  handler: async (ctx, { environment: only, skipFeed, topic, personal, ...args }) => {
     // Money and Calendar are Household Pro. A house without it hears nothing
     // about either — no push and no feed row — which silences every reminder
     // sweep and every mutation's announcement in both domains in one place.
@@ -492,10 +630,14 @@ export const notifyHome = internalAction({
 
     if (!isConfigured()) return { sent: 0, dropped: 0 };
 
+    // The members' preferences decide who hears the push (never the feed,
+    // which is written above whatever they say).
     const devices: Device[] = await ctx.runQuery(internal.push.tokensForHome, {
       homeId: args.homeId,
       exclude: args.actor,
       environment: only,
+      topic: topicFor(topic, args.category),
+      personal,
     });
     return await fanOut(
       ctx,
@@ -533,10 +675,20 @@ export const notifyUsers = internalAction({
      * audience. Ids outside `userIds` are ignored.
      */
     variant: v.optional(
-      v.object({ userIds: v.array(v.id("users")), title: v.string(), body: v.string() }),
+      v.object({
+        userIds: v.array(v.id("users")),
+        title: v.string(),
+        body: v.string(),
+        /**
+         * The variant's own topic (`messages.mentions`). Someone with it on
+         * hears the variant even with the main topic off; someone with it off
+         * hears the main alert if that is on. Absent: the main topic.
+         */
+        topic: v.optional(v.string()),
+      }),
     ),
   },
-  handler: async (ctx, { userIds, variant, ...rest }) => {
+  handler: async (ctx, { userIds, variant, topic: named, ...rest }) => {
     // Nobody hears from somebody they have blocked: not the push, and not the
     // row in their feed. One indexed read, and only when there is an actor.
     const blockers: Id<"users">[] = rest.actor
@@ -572,16 +724,21 @@ export const notifyUsers = internalAction({
     if (!isConfigured()) return { sent: 0, dropped: 0 };
 
     const recipients = args.userIds.filter((id) => id !== args.actor);
-    // The variant's people come out of the main fan-out, so nobody gets two.
-    const alternate = new Set(variant?.userIds ?? []);
-    const devices: Device[] = [];
-    const variantDevices: Device[] = [];
-    for (const userId of recipients) {
-      const forUser: Device[] = await ctx.runQuery(internal.push.tokensForUser, {
-        userId,
-      });
-      (alternate.has(userId) ? variantDevices : devices).push(...forUser);
-    }
+    // The variant's people come out of the main fan-out, so nobody gets two;
+    // each person's preferences decide which, if either, and how loudly.
+    const topic = topicFor(named, args.category);
+    const routed: { main: Device[]; variant: Device[] } = await ctx.runQuery(
+      internal.push.devicesForUsers,
+      {
+        userIds: recipients,
+        topic,
+        ...(variant
+          ? { variantUserIds: variant.userIds, variantTopic: variant.topic ?? topic }
+          : {}),
+      },
+    );
+    const devices = routed.main;
+    const variantDevices = routed.variant;
     // One after the other, so the provider token is minted at most once.
     const main = await fanOut(ctx, devices, args);
     if (!variant) return main;

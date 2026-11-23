@@ -12,12 +12,12 @@ struct LabAlbumSection: View {
     var body: some View {
         Section {
             LabeledContent {
-                Text(verbatim: "\(house.album.count) graduates · \(house.grown.count) species").foregroundStyle(.secondary)
+                Text(verbatim: "\(house.album.count) graduates · \(house.grown.count) species").foregroundStyle(.secondaryText)
             } label: {
                 Text(verbatim: "Album")
             }
             LabeledContent {
-                Text(verbatim: finale).foregroundStyle(.secondary)
+                Text(verbatim: finale).foregroundStyle(.secondaryText)
             } label: {
                 Text(verbatim: "Finale")
             }
@@ -113,7 +113,7 @@ struct LabHouseSection: View {
                             LabBallots(store: store, member: index + 1)
                         } label: {
                             LabeledContent {
-                                Text(verbatim: "\(vote.others[index].count) of \(vote.options.count) answered").foregroundStyle(.secondary)
+                                Text(verbatim: "\(vote.others[index].count) of \(vote.options.count) answered").foregroundStyle(.secondaryText)
                             } label: {
                                 Text(verbatim: "Housemate \(index + 1)'s ballot")
                             }
@@ -138,7 +138,7 @@ struct LabHouseSection: View {
             Text(verbatim: vote.isOpen
                  ? "open · \(vote.answered) of \(vote.members) answered"
                  : "closed · \(vote.how ?? "?") · \(vote.winner ?? "no winner")")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         } label: {
             Text(verbatim: "The vote")
         }

@@ -55,7 +55,7 @@ struct LabSceneSection: View {
                     LabDecorPicker(store: store, spot: spot)
                 } label: {
                     LabeledContent {
-                        Text(verbatim: describe(spot)).foregroundStyle(.secondary).lineLimit(1)
+                        Text(verbatim: describe(spot)).foregroundStyle(.secondaryText).lineLimit(1)
                     } label: {
                         Text(verbatim: spot.labTitle)
                     }
@@ -135,7 +135,7 @@ struct LabDecorPicker: View {
                 LazyVGrid(columns: columns, spacing: 10) {
                     Button { store.pretend(.clearSpot(spot)) } label: {
                         cell(selected: isEmpty) {
-                            Image(systemName: "nosign").font(.title2).foregroundStyle(.secondary)
+                            Image(systemName: "nosign").font(.title2).foregroundStyle(.secondaryText)
                         } title: { "None" }
                     }
                     .buttonStyle(.plain)

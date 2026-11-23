@@ -24,7 +24,7 @@ struct CardVote: View {
             // Graduated a moment ago: the vote is opening, and nothing to pick yet.
             Text(L10n.voteOpening)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         } else if let vote = store.vote, vote.isOpen {
             VoteSummary(store: store, vote: vote)
         } else if store.vote?.winner == nil {
@@ -33,7 +33,7 @@ struct CardVote: View {
                 if store.vote?.status == .closed {
                     Text(L10n.voteNobody)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 PrimaryButton(L10n.companionChoose, symbol: "sparkles") { store.send(.chooseTapped) }
@@ -65,7 +65,7 @@ private struct VoteSummary: View {
                 VoteCloses(date: vote.closesAt)
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             if vote.hasAnsweredAll {
                 SecondaryButton(L10n.voteChange, symbol: "hand.raised.fill") { store.send(.voteTapped) }
                     .accessibilityIdentifier("CompanionVote")
@@ -155,7 +155,7 @@ private struct Portrait: View {
         } else {
             Image(systemName: "questionmark")
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Palette.inset)
         }
@@ -223,14 +223,14 @@ private struct VoteWaiting: View {
             if gaveUp {
                 Text(L10n.voteNobody)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                 SecondaryButton(L10n.votePickInstead, symbol: "sparkles") { store.send(.pickInsteadTapped) }
             } else {
                 ProgressView()
                 Text(L10n.voteLoading)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .frame(maxWidth: .infinity)
@@ -249,7 +249,7 @@ private struct VoteOpen: View {
     var body: some View {
         Text(L10n.voteHint)
             .font(.callout.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .fixedSize(horizontal: false, vertical: true)
         ForEach(vote.options) { option in
             VoteOptionRow(store: store, option: option, answer: vote.mine[option.id], seed: store.look?.seed ?? "")
@@ -262,7 +262,7 @@ private struct VoteOpen: View {
             VoteCloses(date: vote.closesAt)
         }
         .font(.footnote)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.secondaryText)
         VoteSettle(store: store, vote: vote)
     }
 }
@@ -296,11 +296,11 @@ private struct VoteOptionRow: View, Equatable {
                     .oneLineUnlessAccessibility()
                 Text(kind)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .oneLineUnlessAccessibility()
                 Text(L10n.voteCounts(option.yes, option.no))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     // The digits roll; with Reduce Motion they just change.
                     .contentTransition(reduceMotion ? .identity : .numericText())
                     .animation(reduceMotion ? nil : Motion.dataDraw, value: option.yes)
@@ -389,7 +389,7 @@ private struct VoteSettle: View {
             }
             Text(L10n.voteSettleHint)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
             // Only while it still holds: somebody answering since makes it stale.
             if let note = store.voteNote, note == .alone ? !vote.othersVoted : !vote.hasYes {
@@ -431,7 +431,7 @@ private struct VoteOver: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(L10n.voteNobody)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
                 PrimaryButton(L10n.companionChoose, symbol: "sparkles") { store.send(.pickInsteadTapped) }
             }

@@ -39,6 +39,8 @@ public struct NowFeature: Sendable {
         public var now: Date
         /// Whether the house has Plus; without it the dock reads no events.
         @Shared(.pro) public var pro: ProStatus
+        /// What this person lets the dock show, in every house on this phone.
+        @Shared(.dockSettings) public var dockSettings: DockSettings
 
         @Presents public var dinner: DinnerFeature.State?
         /// The event composer, opened to turn a dinner that has already been
@@ -74,14 +76,24 @@ public struct NowFeature: Sendable {
             }
         }
 
-        /// What the dock shows, by the rules in `DockItem`.
+        /// This house's dock setting as it is drawn: what was chosen, except
+        /// that the next event falls back to Automatic without Plus.
+        public var dockSetting: DockSetting {
+            dockSettings[homeID].effective(isPro: pro.isPro)
+        }
+
+        /// Whether the bar above the tabs is drawn at all.
+        public var showsDock: Bool { dockSetting.mode != .off }
+
+        /// What the dock shows, by the rules in `DockItem` and the setting.
         public var dockItem: DockItem {
             DockItem(
                 now: now,
                 upcoming: upcoming,
                 tonight: tonight,
                 suggestion: dinnerSuggestion,
-                movieRound: movieRounds.first(where: \.isOpen)
+                movieRound: movieRounds.first(where: \.isOpen),
+                setting: dockSetting
             )
         }
     }
@@ -98,6 +110,11 @@ public struct NowFeature: Sendable {
         case dockTapped
         /// The dock's "+".
         case addTapped
+        /// The dock's long-press menu: the same per-house setting Customize
+        /// writes, applied at once.
+        case dockModePicked(DockMode)
+        case dockThingPicked(DockThing)
+        case editTodayTapped
         case decideDinnerTapped
         case dinnerSuggestionAccepted
         case makeOccasionTapped
@@ -115,6 +132,13 @@ public struct NowFeature: Sendable {
             case capture
             case openEvent(EventOccurrence)
             case openMovieNight
+            /// A kept dock with nothing in it: the module that would fill it.
+            case openModule(HubModule)
+            /// "Edit Today…" in the dock's menu: Customize, over the tabs.
+            case editToday
+            /// The menu switched the dock off, so the bar (and the menu with
+            /// it) is gone: the container says how to get it back.
+            case dockTurnedOff
         }
     }
 
@@ -244,12 +268,39 @@ public struct NowFeature: Sendable {
                     return .send(.dinnerSuggestionAccepted)
                 case .movieRound:
                     return .send(.delegate(.openMovieNight))
+                case let .nextEvent(occurrence):
+                    return .send(.delegate(.openEvent(occurrence)))
+                case .noEvent:
+                    return .send(.delegate(.openModule(.calendar)))
+                case .noMovieRound:
+                    return .send(.delegate(.openModule(.movies)))
                 case .add:
                     return .send(.delegate(.capture))
                 }
 
             case .addTapped:
                 return .send(.delegate(.capture))
+
+            case let .dockModePicked(mode):
+                let current = state.dockSettings[state.homeID]
+                guard current.mode != mode else { return .none }
+                state.$dockSettings.withLock { [home = state.homeID] in $0[home].mode = mode }
+                return mode == .off ? .send(.delegate(.dockTurnedOff)) : .none
+
+            case let .dockThingPicked(thing):
+                // The next event is Plus: a free house is offered the plans
+                // and the dock stays as it was, never an empty one.
+                if thing.needsPlus, !state.pro.isPro {
+                    return .run { _ in paywall.request(.calendar) }
+                }
+                state.$dockSettings.withLock { [home = state.homeID] in
+                    $0[home].mode = .always
+                    $0[home].thing = thing
+                }
+                return .none
+
+            case .editTodayTapped:
+                return .send(.delegate(.editToday))
 
             // Re-deciding opens on what was already chosen rather than blank.
             case .decideDinnerTapped:
@@ -373,6 +424,12 @@ public enum DockItem: Equatable, Sendable {
     case dinnerSuggestion(EventOccurrence)
     case dinnerUndecided
     case movieRound(Poll)
+    /// Kept by choice (`DockMode.always`), further off than three hours.
+    case nextEvent(EventOccurrence)
+    /// The kept thing has nothing right now: the dock says so, and is still
+    /// the way in. Dinner has its own, `dinnerUndecided`.
+    case noEvent
+    case noMovieRound
     case add
 
     /// How far ahead an event starts claiming the dock.
@@ -387,8 +444,22 @@ public enum DockItem: Equatable, Sendable {
         tonight: MealPlan?,
         suggestion: EventOccurrence?,
         movieRound: Poll?,
+        setting: DockSetting = DockSetting(),
         calendar: Calendar = .current
     ) {
+        switch setting.mode {
+        case .automatic:
+            break
+        case .addOnly, .off:
+            self = .add
+            return
+        case .always:
+            self = Self.kept(
+                setting.thing, now: now, upcoming: upcoming, tonight: tonight,
+                suggestion: suggestion, movieRound: movieRound
+            )
+            return
+        }
         // All-day and multi-day events stay out: a birthday is "today" from
         // midnight to midnight, and would hold the dock all day against the
         // dinner it is probably about.
@@ -417,5 +488,33 @@ public enum DockItem: Equatable, Sendable {
             return
         }
         self = .add
+    }
+
+    /// The chosen thing, in whatever state it is in. Never `add`: the point of
+    /// keeping a thing is that the dock says something about it even when
+    /// there is nothing to say.
+    private static func kept(
+        _ thing: DockThing,
+        now: Date,
+        upcoming: [EventOccurrence],
+        tonight: MealPlan?,
+        suggestion: EventOccurrence?,
+        movieRound: Poll?
+    ) -> DockItem {
+        switch thing {
+        case .dinner:
+            if let tonight { return .dinner(tonight) }
+            if let suggestion { return .dinnerSuggestion(suggestion) }
+            return .dinnerUndecided
+        case .event:
+            guard let next = upcoming.first(where: { $0.end > now }) else { return .noEvent }
+            if !next.isAllDay, !next.isMultiDay {
+                if next.start <= now { return .happening(next) }
+                if next.start.timeIntervalSince(now) <= soonWindow { return .startingSoon(next) }
+            }
+            return .nextEvent(next)
+        case .movieRound:
+            return movieRound.map(DockItem.movieRound) ?? .noMovieRound
+        }
     }
 }

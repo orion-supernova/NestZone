@@ -60,18 +60,23 @@ struct PaywallView: View {
 
     private var hero: some View {
         VStack(spacing: 10) {
-            Image(systemName: store.feature?.symbol ?? "sparkles")
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 72, height: 72)
-                .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
-                .accessibilityHidden(true)
+            if let feature = store.feature {
+                Image(systemName: feature.symbol)
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(.accentText)
+                    .frame(width: 72, height: 72)
+                    .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
+                    .accessibilityHidden(true)
+            } else {
+                PlusBrandTile(size: 72)
+            }
+            PlusLockup(tileSize: nil, font: .system(.title3, design: .rounded, weight: .bold))
             Text(store.feature?.paywallTitle ?? L10n.paywallTitleGeneral)
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .multilineTextAlignment(.center)
             Text(L10n.paywallSubtitle)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -102,7 +107,7 @@ struct PaywallView: View {
                 Image(systemName: "chevron.forward").font(.caption.weight(.bold))
             }
             .font(.subheadline.weight(.medium))
-            .foregroundStyle(theme.accent)
+            .foregroundStyle(.accentText)
             .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget)
             .contentShape(.rect)
         }
@@ -132,7 +137,7 @@ struct PaywallView: View {
                     ? L10n.paywallCarriedByYou
                     : L10n.paywallCarriedBy(carrier.name ?? User.displayName(name: nil, email: nil)))
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .multilineTextAlignment(.center)
@@ -150,7 +155,7 @@ struct PaywallView: View {
                 Text(L10n.paywallUnavailableTitle).font(.headline)
                 Text(store.isConnectionError ? L10n.paywallUnavailableMessage : L10n.paywallNoPlansMessage)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                 SecondaryButton(L10n.commonRetry) { store.send(.task) }
             }
@@ -176,7 +181,7 @@ struct PaywallView: View {
 
                 Button { store.send(.purchaseTapped) } label: {
                     HStack(spacing: 8) {
-                        if store.isPurchasing { ProgressView().tint(.white) }
+                        if store.isPurchasing { ProgressView().tint(theme.onAccent) }
                         Text(ctaTitle)
                     }
                 }
@@ -187,7 +192,7 @@ struct PaywallView: View {
                 // Renewal terms stand next to the button, before the tap.
                 Text(L10n.paywallRenewsNote)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }
@@ -202,7 +207,7 @@ struct PaywallView: View {
     private func messageLine(_ message: PaywallFeature.State.Message) -> some View {
         copy(for: message)
             .font(.footnote)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .transition(.opacity)
@@ -245,7 +250,7 @@ struct PaywallView: View {
 
             Text(L10n.paywallDisclosureFull)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
 
             HStack(spacing: 18) {
@@ -254,7 +259,7 @@ struct PaywallView: View {
             }
             .font(.caption.weight(.medium))
             .buttonStyle(.plain)
-            .foregroundStyle(theme.accent)
+            .foregroundStyle(.accentText)
         }
         .padding(.bottom, Metrics.stackSpacing)
     }
@@ -268,7 +273,7 @@ struct PaywallView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(Palette.success)
             Text(L10n.paywallSuccessTitle).font(.title3.weight(.bold))
-            Text(L10n.paywallSuccessMessage).font(.subheadline).foregroundStyle(.secondary)
+            Text(L10n.paywallSuccessMessage).font(.subheadline).foregroundStyle(.secondaryText)
         }
         .padding(32)
         .glassEffect(.regular, in: .rect(cornerRadius: Metrics.cardRadius))
@@ -291,7 +296,7 @@ private struct PlanCard: View {
             HStack(alignment: .center, spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isSelected ? theme.accent : Color.secondary)
+                    .foregroundStyle(isSelected ? theme.ink : Palette.textSecondary)
                     .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace))
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
@@ -299,20 +304,20 @@ private struct PlanCard: View {
                             .font(.headline)
                         if package.kind == .yearly {
                             Text(L10n.paywallBestValue)
-                                .font(.caption2.weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .foregroundStyle(.white)
-                                .background(theme.accent, in: .capsule)
+                                .foregroundStyle(theme.onAccent)
+                                .background(theme.accentFill, in: .capsule)
                         }
                     }
                     // The billed price and its period lead; anything per month
                     // is a side note, smaller and quieter (Guideline 3.1.2).
                     Text(billedLine).font(.system(.title3, design: .rounded, weight: .bold))
                     if let trial = trialLine {
-                        Text(trial).font(.subheadline.weight(.medium)).foregroundStyle(theme.accent)
+                        Text(trial).font(.subheadline.weight(.medium)).foregroundStyle(.accentText)
                     }
-                    Text(note).font(.footnote).foregroundStyle(.secondary)
+                    Text(note).font(.footnote).foregroundStyle(.secondaryText)
                 }
                 Spacer(minLength: 0)
             }

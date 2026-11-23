@@ -49,12 +49,12 @@ private struct FormSheet<Field: View>: View {
             VStack(spacing: 10) {
                 Image(systemName: symbol)
                     .font(.title)
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .frame(width: 64, height: 64)
                     .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
                 Text(subtitle)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
             .appear(0)
 

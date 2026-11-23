@@ -95,7 +95,7 @@ public struct HomeView<Companion: View>: View {
         return VStack(alignment: .leading, spacing: 6) {
             Text(eyebrow)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 glanceText(glance)
                     .font(.system(.title2, design: .rounded, weight: .bold))
@@ -128,7 +128,7 @@ public struct HomeView<Companion: View>: View {
     private var allClearMark: some View {
         let mark = Image(systemName: "checkmark.circle.fill")
             .font(.system(.title2, design: .rounded, weight: .bold))
-            .foregroundStyle(Palette.success)
+            .foregroundStyle(Palette.successText)
             .accessibilityHidden(true)
         if reduceMotion {
             mark.transition(.opacity)
@@ -165,11 +165,11 @@ public struct HomeView<Companion: View>: View {
     private func clauseText(_ clause: GlanceClause) -> Text {
         switch clause {
         case let .alarm(.issue(issue)):
-            Text(L10n.glanceIssue(issue.title)).foregroundStyle(Palette.danger)
+            Text(L10n.glanceIssue(issue.title)).foregroundStyle(Palette.dangerText)
         case let .alarm(.bill(bill)):
             switch bill.urgency(now: store.now) {
             case .overdue:
-                Text(lateText(bill)).foregroundStyle(Palette.danger)
+                Text(lateText(bill)).foregroundStyle(Palette.dangerText)
             case .dueToday:
                 Text(L10n.glanceBillToday(bill.title))
             case .dueSoon, .upcoming:
@@ -220,6 +220,12 @@ public struct HomeView<Companion: View>: View {
             } else if visibility == .always, store.hero == nil {
                 block(section) { quietLine(L10n.homeNeedsYouClear) }
             }
+        case .pinnedNote:
+            if !store.shownPinnedNotes.isEmpty {
+                block(section) { pinnedNotes }
+            } else if visibility == .always, store.loaded.contains(.notes) {
+                block(section) { quietLine(L10n.homePinnedNoteQuiet) }
+            }
         case .tonight:
             if store.showsTonight {
                 block(section) { tonight }
@@ -249,17 +255,14 @@ public struct HomeView<Companion: View>: View {
         }
     }
 
-    /// A section: a small label over its rows. The label is a footnote, not a
-    /// headline with an icon and a button — those used to be taller than the
-    /// rows under them.
+    /// A section: a small label over its rows. The label is one line of
+    /// subheadline (`groupLabel`), not a headline with an icon and a button —
+    /// those used to be taller than the rows under them.
     private func block(_ section: TodaySection, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(section.title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+                .groupLabel()
                 .padding(.leading, 4)
-                .accessibilityAddTraits(.isHeader)
             content()
         }
     }
@@ -269,7 +272,7 @@ public struct HomeView<Companion: View>: View {
     private func quietLine(_ text: LocalizedStringResource) -> some View {
         Text(text)
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .padding(.leading, 4)
     }
 
@@ -286,7 +289,7 @@ public struct HomeView<Companion: View>: View {
                 Button { store.send(.setupClosed) } label: {
                     Image(systemName: "xmark")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .frame(width: 28, height: 28)
                         .contentShape(.rect)
                 }
@@ -308,12 +311,12 @@ public struct HomeView<Companion: View>: View {
             HStack(spacing: 12) {
                 Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isDone ? Palette.success : Color.secondary)
+                    .foregroundStyle(isDone ? Palette.successText : Palette.textSecondary)
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                 Text(setupTitle(step))
                     .font(.subheadline.weight(.medium))
-                    .strikethrough(isDone, color: .secondary)
-                    .foregroundStyle(isDone ? .secondary : .primary)
+                    .strikethrough(isDone, color: Palette.textSecondary)
+                    .foregroundStyle(isDone ? Palette.textSecondary : .primary)
                 Spacer(minLength: 0)
                 if !isDone {
                     Image(systemName: "chevron.right")
@@ -428,9 +431,12 @@ public struct HomeView<Companion: View>: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
+                    // Words stay the secondary colour: the tint as text was
+                    // orange on white (2.2:1) and red (3.6:1). The glyph in
+                    // its wash carries the colour.
                     Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(tint)
+                        .font(.footnote)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 4)
@@ -516,7 +522,7 @@ public struct HomeView<Companion: View>: View {
                 Button { store.send(.showMoreChoresTapped) } label: {
                     Text(L10n.homeMoreChores(store.hiddenChoreCount))
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(theme.accent)
+                        .foregroundStyle(.accentText)
                         .contentTransition(.numericText())
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.leading, 4)
@@ -546,7 +552,7 @@ public struct HomeView<Companion: View>: View {
                                     .lineLimit(1)
                                 Text(whenText(occurrence))
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                             }
                             .padding(.horizontal, 12)
                             .frame(minHeight: 36)
@@ -650,6 +656,54 @@ public struct HomeView<Companion: View>: View {
         }
     }
 
+    // MARK: - Pinned note
+
+    /// The pinned notes as sticky cards, at most two side by side, and a line
+    /// to the rest. A tap anywhere opens Notes: the card is the house's
+    /// reference (the Wi-Fi, the bin day), read at a glance and not edited here.
+    private var pinnedNotes: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 14) {
+                ForEach(store.shownPinnedNotes) { note in
+                    StickyNote(
+                        text: note.body,
+                        color: StickyColor.parse(note.color),
+                        seed: note.id.rawValue
+                    ) { EmptyView() }
+                    .frame(maxWidth: .infinity)
+                }
+                if store.shownPinnedNotes.count == 1 {
+                    Color.clear.frame(maxWidth: .infinity)
+                }
+            }
+            // The tilted cards' corners reach past their frames.
+            .padding(.vertical, 4)
+            .contentShape(.rect)
+            .onTapGesture { store.send(.delegate(.openNotes)) }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(verbatim: store.shownPinnedNotes.map(\.body).joined(separator: ". ")))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { store.send(.delegate(.openNotes)) }
+
+            if store.morePinnedNotes > 0 {
+                Button { store.send(.delegate(.openNotes)) } label: {
+                    HStack(spacing: 4) {
+                        Text(L10n.homePinnedMore(store.morePinnedNotes))
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.accentText)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Palette.accessory)
+                    }
+                    .frame(minHeight: Metrics.minTapTarget, alignment: .leading)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.pressable)
+                .padding(.leading, 4)
+            }
+        }
+    }
+
     // MARK: - Movie night
 
     private var movieNightRow: some View {
@@ -657,7 +711,7 @@ public struct HomeView<Companion: View>: View {
             HStack(spacing: 12) {
                 Image(systemName: "popcorn.fill")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.onAccent)
                     .frame(width: 32, height: 32)
                     .background(theme.gradient, in: .circle)
                 VStack(alignment: .leading, spacing: 2) {
@@ -666,7 +720,7 @@ public struct HomeView<Companion: View>: View {
                         .foregroundStyle(.primary)
                     Text(store.movieRoundIsOpen ? L10n.homeMovieRoundOpen : L10n.homeMinigamesWatchDescription)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 4)
@@ -685,8 +739,10 @@ public struct HomeView<Companion: View>: View {
     /// Ways into the things Today summarises, at the bottom — where the "See
     /// all" capsules and the unlabelled chart button on every section header
     /// used to be. Four equal glass pills in a 2x2 grid: a glyph and a short
-    /// label each, and a label that does not fit one line wraps inside its
-    /// pill rather than being cut.
+    /// label each, every label on one line (shrinking a little before it
+    /// would wrap), so the four are always the same height — one pill taller
+    /// than its neighbours read as a mistake. At accessibility sizes the
+    /// labels may wrap, all alike.
     private var shelf: some View {
         GlassGroup(spacing: 10) {
             LazyVGrid(columns: shelfColumns, spacing: 10) {
@@ -722,16 +778,17 @@ public struct HomeView<Companion: View>: View {
             HStack(spacing: 8) {
                 Image(systemName: symbol)
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .accessibilityHidden(true)
                 Text(title)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .oneLineUnlessAccessibility()
+                    .minimumScaleFactor(0.8)
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget, alignment: .leading)
             .contentShape(.rect(cornerRadius: Metrics.tightRadius, style: .continuous))
@@ -755,14 +812,13 @@ private struct HeroCard: View {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .font(.headline)
-                    .foregroundStyle(Palette.danger)
+                    .foregroundStyle(Palette.dangerText)
                     .frame(width: 44, height: 44)
                     .background(Palette.danger.opacity(0.16), in: .rect(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(kicker)
-                        .font(.caption2.weight(.bold))
-                        .textCase(.uppercase)
-                        .foregroundStyle(Palette.danger)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Palette.dangerText)
                         .lineLimit(1)
                     Text(title)
                         .font(.headline)
@@ -778,7 +834,7 @@ private struct HeroCard: View {
                             .padding(.horizontal, 6)
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(Palette.danger)
+                    .tint(Palette.answerNo)
                     .accessibilityIdentifier("HeroClaim")
                 }
                 Button(action: open) {
@@ -787,7 +843,7 @@ private struct HeroCard: View {
                         Image(systemName: "chevron.right").font(.caption.weight(.bold))
                     }
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(minHeight: Metrics.minTapTarget)
                     .contentShape(.rect)
                 }
@@ -822,7 +878,7 @@ private struct TaskRow: View {
             Button(action: toggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(task.isCompleted ? Palette.success : Color.secondary)
+                    .foregroundStyle(task.isCompleted ? Palette.successText : Palette.textSecondary)
                     // The tick grows out of the ring rather than swapping in.
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                     // Squash, overshoot, settle. Idle until a tap moves the
@@ -843,7 +899,7 @@ private struct TaskRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                    .foregroundStyle(task.isCompleted ? Palette.textSecondary : .primary)
                     .lineLimit(1)
                     // The line alone, swept across by a copy of the title whose
                     // letters are clear. Only there while the chore is done, so
@@ -853,7 +909,7 @@ private struct TaskRow: View {
                         if task.isCompleted {
                             Text(task.title)
                                 .font(.subheadline.weight(.medium))
-                                .strikethrough(color: .secondary)
+                                .strikethrough(color: Palette.textSecondary)
                                 .foregroundStyle(.clear)
                                 .lineLimit(1)
                                 .transition(strikeTransition)
@@ -863,8 +919,8 @@ private struct TaskRow: View {
 
                 if let due = task.dueDate, !task.isCompleted {
                     Text(dueText(due.date))
-                        .font(.caption2)
-                        .foregroundStyle(due.date < Calendar.current.startOfDay(for: now) ? Palette.danger : .secondary)
+                        .font(.caption)
+                        .foregroundStyle(due.date < Calendar.current.startOfDay(for: now) ? Palette.dangerText : Palette.textSecondary)
                 }
             }
 
@@ -924,6 +980,7 @@ private struct TaskRow: View {
 /// dinner, and evidence is not a reason to write on a household's behalf — so
 /// the way to a different answer stays one tap away underneath.
 private struct SuggestedDinnerCard: View {
+    @Environment(\.theme) private var theme
     let occurrence: EventOccurrence
     let onAccept: () -> Void
     let onDecideOther: () -> Void
@@ -946,7 +1003,7 @@ private struct SuggestedDinnerCard: View {
                         .lineLimit(1)
                     Text(L10n.homeDinnerFromEventMenu(occurrence.recipeIDs.count))
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 Spacer(minLength: 0)
             }
@@ -955,13 +1012,15 @@ private struct SuggestedDinnerCard: View {
                 Button(action: onAccept) {
                     Label { Text(L10n.homeDinnerFromEventAction) } icon: { Image(systemName: "fork.knife") }
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.onAccent)
                 }
                 .buttonStyle(.glassProminent)
+                .tint(theme.accentFill)
 
                 Button(action: onDecideOther) {
                     Text(L10n.homeDinnerFromEventOther)
                         .font(.footnote.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .frame(minHeight: Metrics.minTapTarget)
                         .contentShape(.rect)
                 }

@@ -42,7 +42,7 @@ public struct AvatarStack: View {
                     .overlay {
                         Text("+\(members.count - maxVisible)")
                             .font(.system(size: size * 0.34, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                     .overlay(Circle().strokeBorder(.background, lineWidth: 1.5))
             }

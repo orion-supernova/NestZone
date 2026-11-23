@@ -43,7 +43,7 @@ public final class ModerationDirectory {
             switch item.kind {
             case .issuePhoto: newPhotos.insert(item.targetID)
             case .avatar: newFaces.insert(item.targetID)
-            case .message: break
+            case .message, .calendarItem: break
             }
         }
         // Convex re-publishes every query on any query-set change; writing an

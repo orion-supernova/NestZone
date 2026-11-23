@@ -5,6 +5,10 @@ import ConvexMobile
 @DependencyClient
 public struct NotesClient: Sendable {
     public var byHome: @Sendable (HomeID) -> AsyncThrowingStream<[Note], any Error> = { _ in .never }
+    /// The pinned few, for Today: bounded on the server, so Today never reads
+    /// the whole board to draw two cards.
+    public var pinned: @Sendable (HomeID) -> AsyncThrowingStream<[Note], any Error> = { _ in .never }
+    public var setPinned: @Sendable (NoteID, Bool) async throws -> Void
     public var create: @Sendable (String, String?, HomeID) async throws -> Void
     public var update: @Sendable (NoteID, String, String?) async throws -> Void
     public var remove: @Sendable (NoteID) async throws -> Void
@@ -16,6 +20,14 @@ extension NotesClient: DependencyKey {
             ConvexConnection.shared.subscribe(
                 to: "notes:listByHome", args: ["homeId": homeID], as: [Note].self
             )
+        },
+        pinned: { homeID in
+            ConvexConnection.shared.subscribe(
+                to: "notes:pinned", args: ["homeId": homeID], as: [Note].self
+            )
+        },
+        setPinned: { id, pinned in
+            try await ConvexConnection.shared.mutate("notes:setPinned", args: ["id": id, "pinned": pinned])
         },
         create: { body, color, homeID in
             let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -17,7 +17,7 @@ struct ReportSheet: View {
                     Section {
                         Text(preview)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(4)
                     } header: {
                         Text(L10n.reportSubjectHeader)
@@ -32,7 +32,7 @@ struct ReportSheet: View {
                                 Spacer(minLength: 0)
                                 if store.reason == reason {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.tint)
+                                        .foregroundStyle(.accentText)
                                         .transition(AnyTransition.scale.combined(with: .opacity).reduced(reduceMotion))
                                 }
                             }
@@ -65,12 +65,13 @@ struct ReportSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }
             .animation(Motion.spring, value: store.reason)
             .sensoryFeedback(.selection, trigger: store.reason)
+            .settingsRows()
             .navigationTitle(Text(L10n.reportTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

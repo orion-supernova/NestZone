@@ -1,6 +1,7 @@
 // Reporting, blocking and the moderation queue (App Store guideline 1.2).
 //
-// Anybody who can see a message, a problem photo or a face can report it; the
+// Anybody who can see a message, a problem photo, a face or a housemate's
+// shared calendar item can report it; the
 // report hides it from them at once and goes to the moderators named in
 // `MODERATOR_USER_IDS` (lib/moderation.ts). A moderator can dismiss it, delete
 // the content, take the person out of the home, or stop them writing in chat.
@@ -28,13 +29,19 @@ import {
   releaseHolds,
   requireModerator,
 } from "./lib/moderation";
+import { fingerprintEndsAt, itemFingerprint } from "./lib/calendarShare";
 import { refreshPreview } from "./messages";
 import { detachPhoto } from "./issues";
 
 // ---------------------------------------------------------------------------
 // Shapes
 
-const reportKind = v.union(v.literal("message"), v.literal("issuePhoto"), v.literal("avatar"));
+const reportKind = v.union(
+  v.literal("message"),
+  v.literal("issuePhoto"),
+  v.literal("avatar"),
+  v.literal("calendarItem"),
+);
 const reportReason = v.union(
   v.literal("abuse"),
   v.literal("harassment"),
@@ -50,7 +57,7 @@ const reportAction = v.union(
   v.literal("none"),
 );
 
-type ReportKind = "message" | "issuePhoto" | "avatar";
+type ReportKind = "message" | "issuePhoto" | "avatar" | "calendarItem";
 type ReportReason = "abuse" | "harassment" | "sexual" | "spam" | "other";
 
 /** Reports one person may file in a rolling day. */
@@ -92,6 +99,11 @@ const snapshotValidator = v.object({
   issue_id: v.optional(v.id("issues")),
   issue_title: v.optional(v.string()),
   user_name: v.optional(v.string()),
+  location: v.optional(v.string()),
+  calendar_key: v.optional(v.string()),
+  calendar_name: v.optional(v.string()),
+  starts_at: v.optional(v.number()),
+  ends_at: v.optional(v.number()),
 });
 
 async function nameOf(
@@ -110,7 +122,10 @@ async function toRow(ctx: QueryCtx, report: Doc<"reports">) {
     nameOf(ctx, report.target_user_id),
   ]);
   const preview =
-    report.snapshot.text?.slice(0, 200) ?? report.snapshot.issue_title ?? null;
+    report.snapshot.text?.slice(0, 200) ??
+    report.snapshot.issue_title ??
+    report.snapshot.location?.slice(0, 200) ??
+    null;
   return {
     _id: report._id,
     kind: report.kind,
@@ -244,6 +259,45 @@ async function resolveTarget(
     };
   }
 
+  if (args.kind === "calendarItem") {
+    // A housemate's shared calendar item (calendarShare.ts), by the row id
+    // the phone holds. Filed and hidden under its fingerprint (the person,
+    // the calendar, the times), because every sync replaces the rows: the
+    // hide and a moderator's deletion have to outlive the row id.
+    const id = ctx.db.normalizeId("shared_busy", args.targetId);
+    if (!id) throw invalid("Not a shared calendar item id");
+    const row = await ctx.db.get(id);
+    if (!row) throw notFound();
+    const home = await memberOrNotFound(ctx, row.home_id);
+    if (row.user_id === caller._id) throw invalid("That is your own calendar");
+    // Only what the caller could see: an owner still in the home, a calendar
+    // still shared, and its title and location only at `details`.
+    if (!(home.members ?? []).includes(row.user_id)) throw notFound();
+    const share = await ctx.db
+      .query("calendar_shares")
+      .withIndex("by_home_user", (q) => q.eq("home_id", row.home_id).eq("user_id", row.user_id))
+      .first();
+    const calendar = share?.calendars.find((c) => c.key === row.calendar_key);
+    if (!calendar) throw notFound();
+    const details = calendar.level === "details";
+    const fingerprint = itemFingerprint(row);
+    return {
+      homeId: row.home_id,
+      targetId: fingerprint,
+      hideId: fingerprint,
+      targetUserId: row.user_id,
+      snapshot: {
+        text: details ? row.title : undefined,
+        location: details ? row.location : undefined,
+        calendar_key: row.calendar_key,
+        calendar_name: calendar.name,
+        starts_at: row.starts_at,
+        ends_at: row.ends_at,
+      },
+      files: [],
+    };
+  }
+
   // A face: the person must share the named home with the caller.
   if (!args.homeId) throw invalid("homeId is required for a profile photo");
   const userId = ctx.db.normalizeId("users", args.targetId);
@@ -346,6 +400,7 @@ export const report = mutation({
         title: "New report",
         body: `${REASON_LABEL[args.reason]} · ${KIND_LABEL[args.kind]}`,
         category: "moderation",
+        topic: "moderation",
         threadId: "moderation",
       });
     }
@@ -364,6 +419,7 @@ const KIND_LABEL: Record<ReportKind, string> = {
   message: "a message",
   issuePhoto: "a problem photo",
   avatar: "a profile photo",
+  calendarItem: "a shared calendar item",
 };
 
 async function hideFor(
@@ -616,9 +672,39 @@ async function contentStillThere(
     const issue = report.snapshot.issue_id ? await ctx.db.get(report.snapshot.issue_id) : null;
     return Boolean(issue && (issue.photos ?? []).some((p) => p === report.target_id));
   }
+  if (report.kind === "calendarItem") {
+    return (await sharedItemRows(ctx, report)).length > 0;
+  }
   // A face's report is keyed on the photo; the person is `target_user_id`.
   const user = report.target_user_id ? await ctx.db.get(report.target_user_id) : null;
   return Boolean(user?.avatar && user.avatar === report.target_id);
+}
+
+/**
+ * The shared rows a `calendarItem` report is about: the reported person's
+ * rows in that calendar with the reported times. Normally one; a sync may
+ * have written the same item again under a new id.
+ */
+async function sharedItemRows(
+  ctx: QueryCtx | MutationCtx,
+  report: Doc<"reports">,
+): Promise<Doc<"shared_busy">[]> {
+  const { calendar_key, starts_at, ends_at } = report.snapshot;
+  const userId = report.target_user_id;
+  if (!userId || calendar_key === undefined || starts_at === undefined || ends_at === undefined) {
+    return [];
+  }
+  const rows = await ctx.db
+    .query("shared_busy")
+    .withIndex("by_user_home_calendar_ends", (q) =>
+      q
+        .eq("user_id", userId)
+        .eq("home_id", report.home_id)
+        .eq("calendar_key", calendar_key)
+        .eq("ends_at", ends_at),
+    )
+    .take(20);
+  return rows.filter((r) => r.starts_at === starts_at);
 }
 
 // ---------------------------------------------------------------------------
@@ -702,6 +788,13 @@ export const deleteContent = mutation({
       if (issue && storageId) {
         removed = (await detachPhoto(ctx, issue, storageId)).removed;
       }
+    } else if (report.kind === "calendarItem") {
+      // The row goes now; the owner's next sync cannot write it back, because
+      // `calendarShare:replace` drops any item whose fingerprint has an
+      // actioned `deleted` report (this one, once settled below).
+      const rows = await sharedItemRows(ctx, report);
+      await Promise.all(rows.map((r) => ctx.db.delete(r._id)));
+      removed = rows.length > 0;
     } else {
       const user = report.target_user_id ? await ctx.db.get(report.target_user_id) : null;
       // Only the face that was reported (`target_id`). A newer one is not
@@ -776,6 +869,7 @@ export const removeFromHome = mutation({
       title: homeName,
       body: "You were removed from the home",
       category: "home",
+      topic: "home.removed",
     });
     // And the house is told, so a removal is never silent. No actor: it was
     // not anybody living there.
@@ -784,6 +878,7 @@ export const removeFromHome = mutation({
       title: homeName,
       body: "Someone was removed from the home. The invite code has changed.",
       category: "home",
+      topic: "home.members",
     });
     return { ok: true, removed: true };
   },
@@ -862,6 +957,7 @@ export const nudgeStale = internalMutation({
           ? "A report has been waiting over 12 hours"
           : `${stale.length} reports have been waiting over 12 hours`,
       category: "moderation",
+      topic: "moderation",
       threadId: "moderation",
     });
     return { nudged: stale.length };
@@ -972,6 +1068,11 @@ export const sweepHidden = internalMutation({
       if (row.kind === "message") {
         const id = ctx.db.normalizeId("messages", row.target_id);
         exists = id !== null && (await ctx.db.get(id)) !== null;
+      } else if (row.kind === "calendarItem") {
+        // Keyed on a fingerprint, not a row (lib/calendarShare.ts): it is
+        // needed until the item has ended and the sweep has taken its rows.
+        const endsAt = fingerprintEndsAt(row.target_id);
+        exists = endsAt !== null && endsAt > Date.now() - 2 * DAY_MS;
       } else {
         const id = ctx.db.system.normalizeId("_storage", row.target_id);
         exists = id !== null && (await ctx.db.system.get(id)) !== null;

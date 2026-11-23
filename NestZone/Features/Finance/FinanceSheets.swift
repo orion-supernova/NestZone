@@ -35,6 +35,9 @@ struct AmountField: View {
 
     @Environment(\.theme) private var theme
     @FocusState private var isFocused: Bool
+    /// The amount grows with Dynamic Type, relative to the large title it
+    /// stands in for; the compact size keeps its ratio to the full one.
+    @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 44
     /// Bumped every time a keystroke is thrown away for being past the cap, so
     /// the refusal can be felt as well as read.
     @State private var refusals = 0
@@ -54,7 +57,7 @@ struct AmountField: View {
             TextField(text: $text) {
                 Text(verbatim: "0")
             }
-            .font(.system(size: isCompact ? 28 : 44, weight: .bold, design: .rounded))
+            .font(.system(size: isCompact ? amountSize * 28 / 44 : amountSize, weight: .bold, design: .rounded))
             .monospacedDigit()
             .keyboardType(.decimalPad)
             .multilineTextAlignment(.center)
@@ -83,7 +86,7 @@ struct AmountField: View {
                 } else {
                     Text(currency)
                         .font(.system(.caption, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
 
                 // Says back what was understood, which is the whole reason the
@@ -91,7 +94,7 @@ struct AmountField: View {
                 if minorUnits > 0 {
                     MoneyText(minorUnits, currency: currency)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .transition(.opacity)
@@ -103,8 +106,8 @@ struct AmountField: View {
             // digit is deleted. No timer to get out of step with.
             if isAtLimit {
                 Text(L10n.financeAmountLimit)
-                    .font(.caption2)
-                    .foregroundStyle(Palette.warning)
+                    .font(.caption)
+                    .foregroundStyle(Palette.warningText)
                     .multilineTextAlignment(.center)
                     .transition(.opacity)
             }
@@ -143,7 +146,7 @@ struct AmountField: View {
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.system(size: 8, weight: .bold))
             }
-            .foregroundStyle(theme.accent)
+            .foregroundStyle(.accentText)
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
             .background(theme.accent.opacity(0.12), in: .capsule)
@@ -244,13 +247,13 @@ private struct MemberLabel: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .layoutPriority(-1)
-                .foregroundStyle(isMuted ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+                .foregroundStyle(isMuted ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.primary))
 
             if isLong {
                 Button { isShowingFullName = true } label: {
                     Image(systemName: "info.circle")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .contentShape(.circle)
                 }
                 .buttonStyle(.plain)
@@ -279,7 +282,7 @@ private struct InlineError: View {
             Image(systemName: "exclamationmark.circle.fill")
         }
         .font(.footnote)
-        .foregroundStyle(Palette.danger)
+        .foregroundStyle(Palette.dangerText)
         .transition(.opacity.combined(with: .offset(y: -4)))
     }
 }
@@ -402,7 +405,7 @@ struct ExpenseComposerSheet: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.financeCategoryLabel)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 FlowLayout(spacing: 8, lineSpacing: 8) {
                     ForEach(SpendCategory.allCases) { category in
@@ -411,14 +414,15 @@ struct ExpenseComposerSheet: View {
                             HStack(spacing: 5) {
                                 Image(systemName: category.symbol)
                                     .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(category.tint)
                                 Text(category.title)
                                     .font(.caption.weight(.medium))
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
-                            .foregroundStyle(isSelected ? Color.white : category.tint)
+                            .foregroundStyle(.primary)
                             .background(
-                                isSelected ? category.tint : category.tint.opacity(0.14),
+                                isSelected ? category.tint.opacity(0.3) : category.tint.opacity(0.14),
                                 in: .capsule
                             )
                             .contentShape(.capsule)
@@ -480,7 +484,7 @@ struct ExpenseComposerSheet: View {
             HStack(spacing: 8) {
                 Text(L10n.financeSplitBetween)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 Spacer(minLength: 8)
                 if store.members.count > 1 {
                     splitPreset(
@@ -503,7 +507,7 @@ struct ExpenseComposerSheet: View {
                     HStack(spacing: 10) {
                         Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                             .font(.body)
-                            .foregroundStyle(isOn ? theme.accent : Color.secondary)
+                            .foregroundStyle(isOn ? theme.ink : Palette.textSecondary)
                             .contentTransition(.symbolEffect(.replace))
 
                         // Inside the participant toggle: the tap decides
@@ -524,7 +528,7 @@ struct ExpenseComposerSheet: View {
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .layoutPriority(-1)
-                            .foregroundStyle(isOn ? .primary : .secondary)
+                            .foregroundStyle(isOn ? .primary : Palette.textSecondary)
 
                         Spacer(minLength: 4)
 
@@ -532,7 +536,7 @@ struct ExpenseComposerSheet: View {
                             let share = store.state.share(of: member.id)
                             MoneyText(share, currency: store.currency)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .animation(Motion.spring, value: share)
                         }
                     }
@@ -564,9 +568,9 @@ struct ExpenseComposerSheet: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            .foregroundStyle(isSelected ? Color.white : theme.accent)
+            .foregroundStyle(isSelected ? theme.onAccent : theme.ink)
             .background(
-                isSelected ? theme.accent : theme.accent.opacity(0.14),
+                isSelected ? theme.accentFill : theme.accent.opacity(0.14),
                 in: .capsule
             )
             .contentShape(.capsule)
@@ -579,7 +583,7 @@ struct ExpenseComposerSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.financeSharesHint)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
 
             ForEach(store.orderedMembers) { member in
                 let weight = store.weights[member.id] ?? 0
@@ -607,7 +611,7 @@ struct ExpenseComposerSheet: View {
                     if store.amountMinor > 0 {
                         MoneyText(share, currency: store.currency)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(weight > 0 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tertiary))
+                            .foregroundStyle(weight > 0 ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.tertiaryText))
                             .animation(Motion.spring, value: share)
                     }
 
@@ -618,7 +622,7 @@ struct ExpenseComposerSheet: View {
                     Text(Int(weight), format: .number)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .monospacedDigit()
-                        .foregroundStyle(weight > 0 ? .primary : .secondary)
+                        .foregroundStyle(weight > 0 ? .primary : Palette.textSecondary)
                         .frame(minWidth: 20)
                         .contentTransition(.numericText(value: weight))
 
@@ -748,10 +752,10 @@ struct ExpenseComposerSheet: View {
                     Text(split.userID == store.currentUserID
                         ? String(localized: L10n.financeYou)
                         : (store.members[id: split.userID]?.displayName ?? ""))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                     Text(Money.text(split.amount, currency: store.currency))
-                        .font(.caption2.weight(.semibold))
+                        .font(.caption.weight(.semibold))
                         .monospacedDigit()
                 }
             }
@@ -839,8 +843,8 @@ struct BillComposerSheet: View {
                                     Text(store.autoSplit
                                         ? L10n.financeAutoSplitOn
                                         : L10n.financeAutoSplitOff)
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondaryText)
                                 }
                             }
                         }
@@ -858,7 +862,7 @@ struct BillComposerSheet: View {
                                 Image(systemName: "chart.line.uptrend.xyaxis")
                             }
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             Spacer(minLength: 8)
                             MoneyText(store.monthlyCost, currency: store.currency)
                                 .font(.caption.weight(.bold))
@@ -926,7 +930,7 @@ struct BillComposerSheet: View {
                         ? L10n.financeRemindersOff
                         : L10n.financeReminderCount(store.reminders.count))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .contentTransition(.numericText())
                 }
 
@@ -939,9 +943,9 @@ struct BillComposerSheet: View {
                                 .font(.caption.weight(.medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 7)
-                                .foregroundStyle(isOn ? Color.white : Color.primary)
+                                .foregroundStyle(isOn ? theme.onAccent : Color.primary)
                                 .background(
-                                    isOn ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.quaternary),
+                                    isOn ? AnyShapeStyle(theme.accentFill) : AnyShapeStyle(.quaternary),
                                     in: .capsule
                                 )
                                 .contentShape(.capsule)
@@ -954,8 +958,8 @@ struct BillComposerSheet: View {
                 }
 
                 Text(L10n.financeRemindersHint)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
             }
             .animation(Motion.spring, value: store.reminders)
         }
@@ -966,7 +970,7 @@ struct BillComposerSheet: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.financeCategoryLabel)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 FlowLayout(spacing: 8, lineSpacing: 8) {
                     ForEach(SpendCategory.allCases) { category in
                         let isSelected = store.category == category
@@ -974,13 +978,14 @@ struct BillComposerSheet: View {
                             HStack(spacing: 5) {
                                 Image(systemName: category.symbol)
                                     .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(category.tint)
                                 Text(category.title).font(.caption.weight(.medium))
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
-                            .foregroundStyle(isSelected ? Color.white : category.tint)
+                            .foregroundStyle(.primary)
                             .background(
-                                isSelected ? category.tint : category.tint.opacity(0.14),
+                                isSelected ? category.tint.opacity(0.3) : category.tint.opacity(0.14),
                                 in: .capsule
                             )
                             .contentShape(.capsule)
@@ -1019,7 +1024,7 @@ struct PayBillSheet: View {
                             .font(.headline)
                         Text(store.bill.cycle.title)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                     .padding(.top, 8)
 
@@ -1039,7 +1044,7 @@ struct PayBillSheet: View {
                                 .contentTransition(.symbolEffect(.replace))
                         }
                         .font(.caption)
-                        .foregroundStyle(difference > 0 ? Palette.warning : Palette.success)
+                        .foregroundStyle(difference > 0 ? Palette.warningText : Palette.successText)
                         .transition(.opacity)
                     }
 
@@ -1083,8 +1088,8 @@ struct PayBillSheet: View {
                     Text(store.bill.cycle == .once
                         ? L10n.financePayOnceHint
                         : L10n.financePayRecurringHint)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.center)
                 }
                 .padding(Metrics.screenPadding)
@@ -1131,7 +1136,7 @@ struct BudgetEditorSheet: View {
                             .font(.headline)
                         Text(L10n.financeBudgetHint)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, 8)
@@ -1151,13 +1156,14 @@ struct BudgetEditorSheet: View {
                                         HStack(spacing: 5) {
                                             Image(systemName: category.symbol)
                                                 .font(.caption2.weight(.semibold))
+                                                .foregroundStyle(category.tint)
                                             Text(category.title).font(.caption.weight(.medium))
                                         }
                                         .padding(.horizontal, 10)
                                         .padding(.vertical, 7)
-                                        .foregroundStyle(isSelected ? Color.white : category.tint)
+                                        .foregroundStyle(.primary)
                                         .background(
-                                            isSelected ? category.tint : category.tint.opacity(0.14),
+                                            isSelected ? category.tint.opacity(0.3) : category.tint.opacity(0.14),
                                             in: .capsule
                                         )
                                         .contentShape(.capsule)

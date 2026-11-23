@@ -67,12 +67,12 @@ struct ProPreview: View {
         HStack(spacing: 12) {
             Text(verbatim: day)
                 .font(.system(.headline, design: .rounded, weight: .bold))
-                .foregroundStyle(tint)
+                .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
                 .background(tint.opacity(0.14), in: .rect(cornerRadius: 12, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.subheadline.weight(.semibold))
-                Text(when).font(.caption).foregroundStyle(.secondary)
+                Text(when).font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer(minLength: 0)
         }
@@ -89,7 +89,7 @@ struct ProPreview: View {
             glyph(symbol, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.subheadline.weight(.semibold))
-                Text(who).font(.caption).foregroundStyle(.secondary)
+                Text(who).font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer(minLength: 8)
             Text(amount)
@@ -101,17 +101,16 @@ struct ProPreview: View {
     private func aisle(_ symbol: String, _ title: LocalizedStringResource, _ items: [LocalizedStringResource], tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Label {
-                Text(title).textCase(.uppercase)
+                Text(title)
             } icon: {
-                Image(systemName: symbol)
+                Image(systemName: symbol).foregroundStyle(tint)
             }
-            .font(.caption.weight(.bold))
-            .foregroundStyle(tint)
+            .groupLabel()
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 HStack(spacing: 8) {
                     Image(systemName: "circle")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Text(item).font(.subheadline)
                 }
             }
@@ -126,10 +125,10 @@ struct ProPreview: View {
                 .multilineTextAlignment(.leading)
             Spacer(minLength: 8)
             Text(status)
-                .font(.caption2.weight(.bold))
+                .font(.caption.weight(.bold))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
-                .foregroundStyle(tint)
+                .foregroundStyle(.primary)
                 .background(tint.opacity(0.14), in: .capsule)
         }
     }
@@ -141,9 +140,9 @@ struct ProPreview: View {
                 .font(.subheadline)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .foregroundStyle(mine ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+                .foregroundStyle(mine ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.primary))
                 .background(
-                    mine ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.primary.opacity(0.08)),
+                    mine ? AnyShapeStyle(theme.accentFill) : AnyShapeStyle(.primary.opacity(0.08)),
                     in: .rect(cornerRadius: 16, style: .continuous)
                 )
             if !mine { Spacer(minLength: 40) }
@@ -158,11 +157,11 @@ struct ProPreview: View {
             Text(title)
                 .font(.subheadline)
                 .strikethrough()
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Spacer(minLength: 0)
             Image(systemName: "arrow.right")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.tertiaryText)
         }
     }
 
@@ -173,7 +172,7 @@ struct ProPreview: View {
             Image(systemName: "archivebox.fill")
         }
         .font(.footnote.weight(.semibold))
-        .foregroundStyle(theme.accent)
+        .foregroundStyle(theme.ink)
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(theme.accent.opacity(0.12), in: .capsule)
@@ -186,7 +185,7 @@ struct ProPreview: View {
             Spacer(minLength: 8)
             if current {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(theme.ink)
             }
         }
         .padding(12)
@@ -215,7 +214,7 @@ struct ProPreview: View {
                     .overlay(alignment: .topLeading) {
                         if index.isMultiple(of: 2) {
                             Text(verbatim: "18+")
-                                .font(.caption2.weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)
@@ -234,7 +233,7 @@ struct ProPreview: View {
             .overlay(alignment: .bottom) {
                 Image(systemName: "film")
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(0.9))
                     .padding(.bottom, 4)
             }
     }

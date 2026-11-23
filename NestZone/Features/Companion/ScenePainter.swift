@@ -27,6 +27,9 @@ struct SceneFrame {
     /// Where the sun or the moon stands across the scene, when the hour is not
     /// known (a cached layer is handed the light, not the clock).
     var side: Double?
+    /// What the card lays over the sky, in scene units: the sun and the moon
+    /// keep their discs out of it. Nil where nothing is laid over the scene.
+    var keepClear: SkyKeepClear?
 
     static func dayness(_ hour: Double) -> Double {
         Ink.clamp((cos((hour - 13) / 24 * .pi * 2) + 0.4) / 1.1)
@@ -40,6 +43,34 @@ struct SceneFrame {
     /// Which side of the tree the sun or moon stands on, -1 the far left to 1
     /// the far right, so what is lit and what is in shadow agree with the sky.
     static func skySide(_ hour: Double) -> Double { 2 * skyProgress(hour) - 1 }
+}
+
+/// The corners of the sky the card covers with its holiday chip (top left) and
+/// its Water button (top right), as the sun and the moon must see them: the
+/// widths they take from each side and the depth below the top, all in scene
+/// units, which is why the card's own sizes are divided by the scale.
+struct SkyKeepClear: Equatable, Sendable {
+    var leading: Double
+    var trailing: Double
+    var bottom: Double
+
+    /// The chip is up to about 170 pt wide and the button about 130, both
+    /// 10 pt in from the edge and the button's 44 pt tall.
+    init(scale: Double) {
+        leading = 170 / scale
+        trailing = 130 / scale
+        bottom = 56 / scale
+    }
+
+    /// Where the sun or moon rides in a card with a chip and a button over its
+    /// corners: the whole arc is carried below their band, and flattened, so a
+    /// disc of `radius` is never under glass at any hour. (Clearing only the
+    /// two corners left a clear gap too narrow to cross: the body dipped
+    /// under the band all day and popped up for an hour at noon.) `y` is the
+    /// open-sky height, 24 at the top of the arc to 62 on the horizon.
+    func carried(y: Double, radius: Double) -> Double {
+        bottom + radius + 4 + (y - 24) * 0.5
+    }
 }
 
 /// The scene is drawn in a fixed space 360 points tall, as wide as the card
@@ -189,7 +220,12 @@ struct ScenePainter {
 
     private var sunPosition: (Double, Double) {
         let f = SceneFrame.skyProgress(frame.hour)
-        return (width * (0.12 + 0.76 * f), 62 - sin(f * .pi) * 38)
+        let x = width * (0.12 + 0.76 * f), y = 62 - sin(f * .pi) * 38
+        // The holiday chip and the Water button lie over the top of the sky:
+        // the arc is carried below them (flatter, still rising to noon and
+        // setting), so the sun and moon are never behind glass. (The largest disc is 19, a big moon.)
+        guard let clear = frame.keepClear else { return (x, y) }
+        return (x, clear.carried(y: y, radius: 19))
     }
 
     private func sunAndMoon(_ context: GraphicsContext) {

@@ -42,7 +42,7 @@ public struct UndoToast: View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(width: 26, height: 26)
                 .background {
                     Countdown(window: window)

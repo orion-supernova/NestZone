@@ -15,6 +15,8 @@ public struct NowDock: View {
     /// Taps on the `+`. Each turns it a quarter, which leaves a plus looking
     /// like a plus — so it never has to turn back.
     @State private var adds = 0
+    /// Choices made in the long-press menu: the person's own, so they tick.
+    @State private var picks = 0
 
     public init(store: StoreOf<NowFeature>) {
         self.store = store
@@ -24,7 +26,12 @@ public struct NowDock: View {
 
     public var body: some View {
         HStack(spacing: 10) {
-            Button { store.send(.dockTapped) } label: {
+            // A tap does the dock's own thing; a long press opens the menu in
+            // place (no lifted preview, which let the tab item behind react
+            // to the same touch). The `+` is outside it and keeps its tap.
+            Menu {
+                dockMenu
+            } label: {
                 HStack(spacing: 10) {
                     if store.dockItem != .add {
                         // Stacked, so the emblem leaving and the one arriving
@@ -38,7 +45,7 @@ public struct NowDock: View {
                     VStack(alignment: .leading, spacing: 0) {
                         title
                             .font(.subheadline.weight(store.dockItem == .add ? .regular : .semibold))
-                            .foregroundStyle(store.dockItem == .add ? .secondary : .primary)
+                            .foregroundStyle(store.dockItem == .add ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.primary))
                             .lineLimit(1)
                             // The live thing changing — tonight's dinner giving
                             // way to the movie round, one event to the next —
@@ -46,17 +53,21 @@ public struct NowDock: View {
                             .contentTransition(.interpolate)
                         if !isInline, let subtitle {
                             subtitle
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                                .foregroundStyle(.secondaryText)
                                 .lineLimit(1)
                         }
                     }
                     Spacer(minLength: 0)
                 }
                 .contentShape(.rect)
+            } primaryAction: {
+                store.send(.dockTapped)
             }
+            .menuStyle(.button)
             .buttonStyle(.plain)
             .accessibilityIdentifier("Dock")
+            .accessibilityHint(Text(L10n.dockMenuTitle))
 
             Button {
                 adds += 1
@@ -64,13 +75,13 @@ public struct NowDock: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.onAccent)
                     // A quarter turn as Add anything opens. The light tap is
                     // already the press style's, on the way down.
                     .rotationEffect(.degrees(reduceMotion ? 0 : Double(adds) * 90))
                     .animation(Motion.release, value: adds)
                     .frame(width: 30, height: 30)
-                    .background(theme.accent, in: .circle)
+                    .background(theme.accentFill, in: .circle)
                     .contentShape(.circle)
             }
             .buttonStyle(.pressable)
@@ -79,7 +90,70 @@ public struct NowDock: View {
         }
         .padding(.leading, 14)
         .padding(.trailing, 6)
+        // The whole capsule is ours to touch: a press in the padding or the
+        // gap never falls through to the tab bar or the screen behind.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(.capsule)
+        // A tap on the gap or the padding is the dock's too, and does nothing:
+        // a shape with no gesture is skipped by hit testing, and the touch
+        // would reach what scrolls underneath the glass.
+        .onTapGesture {}
         .animation(Motion.spring, value: store.dockItem)
+        .sensoryFeedback(.selection, trigger: picks)
+    }
+
+    // MARK: - Long-press menu
+
+    /// What the dock shows, as in Customize and writing the same setting, then
+    /// the way into the rest of Today. The checkmark follows what is drawn, so
+    /// a free house that had the next event kept sees Automatic ticked.
+    @ViewBuilder
+    private var dockMenu: some View {
+        let setting = store.dockSetting
+        Section {
+            modeButton(.automatic, selected: setting.mode == .automatic)
+            Menu {
+                ForEach(DockThing.allCases) { thing in
+                    let locked = thing.needsPlus && !store.pro.isPro
+                    Button {
+                        picks += 1
+                        store.send(.dockThingPicked(thing), animation: Motion.spring)
+                    } label: {
+                        Label {
+                            Text(thing.title)
+                        } icon: {
+                            Image(systemName: setting.mode == .always && setting.thing == thing
+                                ? "checkmark" : (locked ? PlusStyle.lockedSymbol : thing.symbol))
+                        }
+                    }
+                }
+            } label: {
+                Label {
+                    Text(L10n.dockModeAlways)
+                } icon: {
+                    Image(systemName: setting.mode == .always ? "checkmark" : DockMode.always.symbol)
+                }
+            }
+            modeButton(.addOnly, selected: setting.mode == .addOnly)
+            modeButton(.off, selected: setting.mode == .off)
+        } header: {
+            Text(L10n.dockMenuTitle)
+        }
+        Divider()
+        Button {
+            store.send(.editTodayTapped)
+        } label: {
+            Label { Text(L10n.dockMenuEditToday) } icon: { Image(systemName: "slider.horizontal.3") }
+        }
+    }
+
+    private func modeButton(_ mode: DockMode, selected: Bool) -> some View {
+        Button {
+            picks += 1
+            store.send(.dockModePicked(mode), animation: Motion.spring)
+        } label: {
+            Label { Text(mode.title) } icon: { Image(systemName: selected ? "checkmark" : mode.symbol) }
+        }
     }
 
     // MARK: - Contents
@@ -89,10 +163,12 @@ public struct NowDock: View {
     /// else taking the dock blurs across to its own.
     private var emblemKey: String {
         switch store.dockItem {
-        case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence):
+        case let .happening(occurrence), let .startingSoon(occurrence), let .dinnerSuggestion(occurrence),
+             let .nextEvent(occurrence):
             occurrence.id
         case .dinner, .dinnerUndecided: "dinner"
-        case .movieRound: "movieRound"
+        case .movieRound, .noMovieRound: "movieRound"
+        case .noEvent: "noEvent"
         case .add: "add"
         }
     }
@@ -105,8 +181,12 @@ public struct NowDock: View {
                 .bounces(when: store.dockItem == .happening(occurrence))
         case .dinner, .dinnerUndecided:
             symbol("fork.knife", tint: Palette.eventFood)
-        case .movieRound:
+        case .movieRound, .noMovieRound:
             symbol("popcorn.fill", tint: Palette.violet)
+        case let .nextEvent(occurrence):
+            symbol(occurrence.kind.symbol, tint: occurrence.kind.tint)
+        case .noEvent:
+            symbol("calendar", tint: Palette.eventGeneral)
         case .add:
             EmptyView()
         }
@@ -132,6 +212,12 @@ public struct NowDock: View {
             Text(L10n.dinnerEmptyTitle)
         case .movieRound:
             Text(L10n.dockMovieRoundTitle)
+        case let .nextEvent(occurrence):
+            Text(occurrence.title)
+        case .noEvent:
+            Text(L10n.dockNoEventTitle)
+        case .noMovieRound:
+            Text(L10n.dockNoMovieTitle)
         case .add:
             Text(L10n.dockAddPlaceholder)
         }
@@ -153,6 +239,14 @@ public struct NowDock: View {
             Text(L10n.dinnerEmptySubtitle)
         case .movieRound:
             Text(L10n.dockMovieRoundSubtitle)
+        case let .nextEvent(occurrence):
+            Text(occurrence.start.formatted(
+                Date.FormatStyle().weekday(.abbreviated).hour().minute().locale(L10n.locale)
+            ))
+        case .noEvent:
+            Text(L10n.dockNoEventSubtitle)
+        case .noMovieRound:
+            Text(L10n.dockNoMovieSubtitle)
         case .add:
             nil
         }

@@ -69,6 +69,9 @@ public struct MainFeature: Sendable {
         /// What Add anything just wrote, said for a few seconds over the tab
         /// bar with a way to go and look at it.
         public var captured: CaptureOutcome?
+        /// The dock's menu switched it off: a few seconds of "turn it back on
+        /// in Edit Today", because the bar and its menu are gone.
+        public var dockOffNotice = false
 
         /// The bell in the corner of every tab.
         ///
@@ -87,6 +90,13 @@ public struct MainFeature: Sendable {
         public var moderation: ModerationSessionFeature.State
         /// `pro:status` has answered once for this house.
         var heardPro = false
+
+        /// House events copied into this person's own calendars, for the life of
+        /// the tab bar: it follows the house whether or not the Calendar screen
+        /// is open.
+        public var mirror: CalendarMirrorFeature.State
+        /// The person's own calendars shared with this house, for the same life.
+        public var share: CalendarShareFeature.State
 
         /// The paywall, opened on whatever was reached for. Presented by
         /// whichever sheet is on top, or the tab bar when none is
@@ -133,6 +143,8 @@ public struct MainFeature: Sendable {
             self.inbox = InboxFeature.State(homeID: homeID, currentUserID: user?.id)
             self.pro = ProStatusFeature.State(homeID: homeID)
             self.moderation = ModerationSessionFeature.State(homeID: homeID, userID: user?.id)
+            self.mirror = CalendarMirrorFeature.State(homeID: homeID, userID: user?.id)
+            self.share = CalendarShareFeature.State(homeID: homeID, userID: user?.id)
         }
 
         /// How many people have to say yes for a movie-night match.
@@ -188,8 +200,13 @@ public struct MainFeature: Sendable {
         /// The confirmation's "Open".
         case capturedOpenTapped
         case capturedDismissed
+        /// The dock-off note's "Edit Today" (it opens Customize), or its timer.
+        case dockNoticeEditTapped
+        case dockNoticeDismissed
         case proStatus(ProStatusFeature.Action)
         case moderation(ModerationSessionFeature.Action)
+        case mirror(CalendarMirrorFeature.Action)
+        case share(CalendarShareFeature.Action)
         case paywall(PresentationAction<PaywallFeature.Action>)
         /// A gated control, or the server, asked for the paywall.
         case paywallRequested(ProFeature?)
@@ -198,10 +215,12 @@ public struct MainFeature: Sendable {
         case paywallNeverShown
     }
 
-    private enum CancelID { case presentSettings, captured, paywallShown }
+    private enum CancelID { case presentSettings, captured, dockNotice, paywallShown }
 
     /// How long "Added 3 to Shopping" stays up.
     static let capturedLinger: Duration = .seconds(4)
+    /// How long the dock-off note stays up: a sentence to read, not a toast to race.
+    static let dockNoticeLinger: Duration = .seconds(5)
     /// How long the paywall has to appear before the request is dropped.
     static let paywallShowDeadline: Duration = .seconds(2)
 
@@ -228,6 +247,8 @@ public struct MainFeature: Sendable {
         Scope(state: \.inbox, action: \.inbox) { InboxFeature() }
         Scope(state: \.pro, action: \.proStatus) { ProStatusFeature() }
         Scope(state: \.moderation, action: \.moderation) { ModerationSessionFeature() }
+        Scope(state: \.mirror, action: \.mirror) { CalendarMirrorFeature() }
+        Scope(state: \.share, action: \.share) { CalendarShareFeature() }
 
         Reduce { state, action in
             switch action {
@@ -255,7 +276,7 @@ public struct MainFeature: Sendable {
                 case .openMovieNight: return open(.movieNight, from: .today, &state)
                 case .openStats: return open(.stats, from: .today, &state)
                 case .openCustomize:
-                    state.customize = CustomizeFeature.State()
+                    state.customize = CustomizeFeature.State(homeID: state.homeID)
                     return .none
                 case .addChore:
                     state.presentCapture(kind: .chore)
@@ -312,6 +333,18 @@ public struct MainFeature: Sendable {
                 case .capture:
                     state.presentCapture()
                     return .none
+                case let .openModule(module):
+                    return open(.module(module), from: state.selectedTab, &state)
+                case .editToday:
+                    state.customize = CustomizeFeature.State(homeID: state.homeID)
+                    return .none
+                case .dockTurnedOff:
+                    state.dockOffNotice = true
+                    return .run { send in
+                        try await clock.sleep(for: Self.dockNoticeLinger)
+                        await send(.dockNoticeDismissed)
+                    }
+                    .cancellable(id: CancelID.dockNotice, cancelInFlight: true)
                 }
 
             // Tonight and the clock, handed to the two screens that draw them.
@@ -327,9 +360,16 @@ public struct MainFeature: Sendable {
                 state.isSettingsPresented = false
                 return .none
 
+            // Where house events are copied to changed.
+            case .settings(.delegate(.calendarSettingsChanged)):
+                return .merge(
+                    .send(.mirror(.settingsChanged)),
+                    .send(.share(.settingsChanged))
+                )
+
             // Opened over Settings, which stays underneath.
             case .settings(.delegate(.customizeTapped)):
-                state.customize = CustomizeFeature.State()
+                state.customize = CustomizeFeature.State(homeID: state.homeID)
                 return .none
 
             #if DEBUG
@@ -347,6 +387,9 @@ public struct MainFeature: Sendable {
 
             case .customize(.presented(.delegate(.finished))):
                 state.customize = nil
+                // The dock setting may have just changed, and only `now`
+                // actions hand the dock's item down to Today.
+                state.propagateNow()
                 return .none
 
             // Closed by the sheet itself, with what was written — or with
@@ -374,6 +417,15 @@ public struct MainFeature: Sendable {
                 state.captured = nil
                 return .none
 
+            case .dockNoticeEditTapped:
+                state.dockOffNotice = false
+                state.customize = CustomizeFeature.State(homeID: state.homeID)
+                return .cancel(id: CancelID.dockNotice)
+
+            case .dockNoticeDismissed:
+                state.dockOffNotice = false
+                return .none
+
             // A row in the notification panel goes to whatever module owns
             // the thing that happened. The panel deliberately does not know
             // where anything lives — it hands over a category, and this is the
@@ -393,7 +445,11 @@ public struct MainFeature: Sendable {
                 state.heardPro = true
                 if !state.pro.status.isPro {
                     if state.plans.selected == .calendar { state.plans.selected = .recipes }
-                    if state.house.selected == .finance { state.house.selected = .maintenance }
+                    // Money and Problems are both Plus: a free house opens
+                    // House on Notes, the one segment it can use.
+                    if state.house.selected == .finance || state.house.selected == .maintenance {
+                        state.house.selected = .notes
+                    }
                 }
                 return .none
 
@@ -431,18 +487,29 @@ public struct MainFeature: Sendable {
             case let .proStatus(.delegate(.changed(isPro, _))):
                 return .merge(
                     .send(.home(.proChanged(isPro))),
-                    .send(.now(.proChanged(isPro)))
+                    .send(.now(.proChanged(isPro))),
+                    // Copying into the person's calendars is Plus: it starts
+                    // with it and stops creating and updating without it.
+                    .send(.mirror(.settingsChanged)),
+                    // Sharing is Plus too: it starts and stops with it.
+                    .send(.share(.settingsChanged))
                 )
 
             case .home, .today, .lists, .plans, .house, .messages,
                  .settings, .inbox, .customize, .capture, .companion,
-                 .proStatus, .moderation, .paywall:
+                 .proStatus, .moderation, .mirror, .share, .paywall:
                 return .none
             }
         }
         .ifLet(\.$paywall, action: \.paywall) { PaywallFeature() }
         .ifLet(\.$customize, action: \.customize) { CustomizeFeature() }
         .ifLet(\.$capture, action: \.capture) { CaptureFeature() }
+        // The session arrives a moment after the tabs on an optimistic launch.
+        // A pass that ran before it knew who "mine" is would have decided on
+        // nothing; this runs it again with the person.
+        .onChange(of: { $0.mirror.userID }) { _, _ in
+            Reduce { _, _ in .send(.mirror(.settingsChanged)) }
+        }
     }
 
     /// Takes the person somewhere a screen asked to go.
@@ -481,13 +548,17 @@ public struct MainFeature: Sendable {
         // paywall. (The module opens on its own locked or read-only screen.)
         case let .issue(issueID):
             if !state.pro.status.isPro { return .send(.paywallRequested(.issues)) }
-            screen = .issues(IssuesFeature.State(
+            screen = .issueDetail(IssuePageFeature.State(
                 homeID: state.homeID,
                 currentUserID: state.user?.id,
-                openingIssueID: issueID
+                issueID: issueID
             ))
-        case let .recipe(recipe):
-            screen = .recipeDetail(RecipeDetailFeature.State(recipe: recipe, homeID: state.homeID))
+        case let .recipe(recipe, duplicates):
+            screen = .recipeDetail(RecipeDetailFeature.State(
+                recipe: recipe,
+                homeID: state.homeID,
+                duplicateIDs: duplicates
+            ))
         case .taskArchive:
             screen = .taskArchive(TaskArchiveFeature.State(
                 homeID: state.homeID,
@@ -523,20 +594,19 @@ public struct MainFeature: Sendable {
         let screen: Route.State
         switch target {
         case let .event(eventID, day):
-            screen = .calendar(CalendarFeature.State(
+            screen = .eventDetail(EventPageFeature.State(
                 homeID: state.homeID,
                 currentUserID: state.user?.id,
                 day: day,
                 openingEventID: eventID
             ))
-        // Opened *at* the event, not merely on its day: the grid behind it
-        // shows the right date and the sheet for the thing that was tapped is
-        // already up.
+        // The event itself, as a page on this stack: Back is the screen that
+        // asked, not a month of a calendar nobody opened.
         case let .occurrence(occurrence):
-            screen = .calendar(CalendarFeature.State(
+            screen = .eventDetail(EventPageFeature.State(
                 homeID: state.homeID,
                 currentUserID: state.user?.id,
-                showing: occurrence
+                occurrence: occurrence
             ))
         default:
             return .none
@@ -711,6 +781,8 @@ extension MainFeature.State {
         settings.home = home
         inbox.currentUserID = user?.id
         moderation.userID = userID
+        mirror.userID = userID
+        share.userID = userID
         // The full-screen avatar viewer reads who this is from the directory
         // (it has no store), so an optimistic launch, which learns the user a
         // moment after the tabs, has to tell it too or it offers to report

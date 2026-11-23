@@ -91,6 +91,7 @@ public struct ContributionDonut: View {
     private static let gap = 0.006
 
     @State private var drawn = false
+    @ScaledMetric(relativeTo: .largeTitle) private var totalSize: CGFloat = 40
 
     public init(
         slices: [ContributionSlice],
@@ -153,10 +154,10 @@ public struct ContributionDonut: View {
 
             VStack(spacing: 2) {
                 AnimatedNumber(total)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .font(.system(size: totalSize, weight: .bold, design: .rounded))
                 Text(caption)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .frame(width: diameter, height: diameter)
@@ -211,8 +212,8 @@ public struct ActivityChart: View {
                     Spacer(minLength: 0)
                     Text(last.start.date, format: .dateTime.day().month(.abbreviated))
                 }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.secondaryText)
             }
         }
         .animation(Motion.spring, value: days)
@@ -253,7 +254,7 @@ public struct ContributionLegend: View {
                         .frame(width: 8, height: 8)
                     Text(slice.label)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Text(slice.value, format: .percent.precision(.fractionLength(0)))
                         .font(.caption.weight(.semibold))
                         .monospacedDigit()

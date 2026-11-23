@@ -82,6 +82,7 @@ export const create = mutation({
       title: user.name ? `${user.name} added a recipe` : "New recipe",
       body: rest.title,
       category: "recipes",
+      topic: "meals",
     });
 
     const now = Date.now();

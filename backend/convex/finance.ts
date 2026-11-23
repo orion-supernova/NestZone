@@ -894,6 +894,7 @@ export const createExpense = mutation({
       title: user.name ? `${user.name} added an expense` : "New expense",
       body: title,
       category: "finance",
+      topic: "finance.expenses",
     });
 
     return id;
@@ -1057,6 +1058,7 @@ export const settle = mutation({
       title: "Settled up",
       body: user.name ? `${user.name} recorded a payment` : "A payment was recorded",
       category: "finance",
+      topic: "finance.expenses",
     });
 
     return id;
@@ -1126,6 +1128,7 @@ export const createBill = mutation({
       title: "New bill",
       body: title,
       category: "finance",
+      topic: "finance.expenses",
     });
 
     return id;
@@ -1258,6 +1261,7 @@ export const payBill = mutation({
       title: "Bill paid",
       body: user.name ? `${user.name} paid ${bill.title ?? "a bill"}` : (bill.title ?? "A bill was paid"),
       category: "finance",
+      topic: "finance.expenses",
     });
 
     return { expenseId };
@@ -1456,6 +1460,7 @@ export const sweepReminders = internalAction({
         title: nudge.daysUntil < 0 ? "Bill overdue" : "Bill due soon",
         body: reminderBody(nudge),
         category: "finance",
+        topic: "finance.reminders",
       });
       sent++;
     }

@@ -15,12 +15,9 @@ public struct CalendarView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var daySelection
-    @Namespace private var modePill
     /// The row with its delete button showing, if any. Held here rather than in
     /// each row so opening one closes the last, as the system list does.
     @State private var revealedID: EventOccurrence.ID?
-    @State private var isSearching = false
-    @FocusState private var isSearchFocused: Bool
     /// Which way the last switch between faces went — see `FaceZoom`.
     @State private var zoom = FaceZoom()
     /// The month grid's frame inside its own face, so a zoom to or from the
@@ -40,7 +37,6 @@ public struct CalendarView: View {
                     monthScrubber
                     modePicker
                 }
-                if isSearching { searchField }
                 if store.state.showsFilterRow { filterRow }
 
                 // Overlaid rather than stacked. In the lazy stack the face on its
@@ -90,11 +86,14 @@ public struct CalendarView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.managementModuleCalendarTitle))
         .navigationBarTitleDisplayMode(.inline)
+        // Search is the system's, minimised into the bar like every other
+        // screen's; history is the tool, the add is nearest the bell.
         .segmentToolbar {
-            ToolbarItem(placement: .topBarLeading) { searchToggle }
-            ToolbarItem(placement: .primaryAction) { historyButton }
-            ToolbarItem(placement: .primaryAction) { addButton }
+            ToolbarItem(placement: .topBarLeading) { historyButton }
+            ToolbarItem(placement: .topBarTrailing) { addButton }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.search, prompt: Text(L10n.calendarSearchPlaceholder))
         .safeAreaInset(edge: .bottom) {
             if let pending = store.pendingDeletion {
                 UndoToast(L10n.calendarEventDeleted(pending.occurrence.title)) {
@@ -106,7 +105,6 @@ public struct CalendarView: View {
             }
         }
         .animation(Motion.spring, value: store.pendingDeletion)
-        .animation(Motion.spring, value: isSearching)
         .task { await store.send(.task).finish() }
         .stagedBuild(3)
         // A house without Plus: locked when there is nothing here, read-only
@@ -135,6 +133,12 @@ public struct CalendarView: View {
         )) { store in
             EventHistorySheet(store: store)
         }
+        .hostedSheet(item: $store.scope(
+            state: \.destination?.sharedItem,
+            action: \.destination.sharedItem
+        )) { store in
+            SharedItemSheet(store: store)
+        }
     }
 
     // MARK: - Chrome
@@ -144,6 +148,7 @@ public struct CalendarView: View {
         Button { store.send(.historyTapped) } label: {
             Image(systemName: "clock.arrow.circlepath")
         }
+        .tint(.primary)
         .accessibilityLabel(Text(L10n.calendarHistoryTitle))
     }
 
@@ -152,62 +157,7 @@ public struct CalendarView: View {
             Image(systemName: "plus")
         }
         .accessibilityLabel(Text(L10n.calendarAddEvent))
-        .proLocked(.calendar)
-    }
-
-    private var searchToggle: some View {
-        Button {
-            withAnimation(Motion.spring) { isSearching.toggle() }
-            if isSearching {
-                isSearchFocused = true
-            } else {
-                store.send(.binding(.set(\.search, "")))
-            }
-        } label: {
-            Image(systemName: isSearching ? "xmark" : "magnifyingglass")
-                // The glyph turns into the other one rather than cross-fading,
-                // which is what says the button is a toggle.
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .accessibilityLabel(Text(isSearching ? L10n.commonCancel : L10n.commonSearch))
-    }
-
-    private var searchField: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            TextField(text: $store.search) {
-                Text(L10n.calendarSearchPlaceholder)
-            }
-            .focused($isSearchFocused)
-            .segmentFocus($isSearchFocused)
-            .font(.subheadline)
-            .submitLabel(.search)
-            // Always in the hierarchy, faded rather than inserted.
-            //
-            // As a conditional it was added to the row on the first keystroke,
-            // inside an animation, which makes SwiftUI re-lay-out and re-commit
-            // the text field's binding — two `.binding` actions for one letter.
-            // It also moved the field's trailing edge under the caret while
-            // somebody was typing into it.
-            Button {
-                store.send(.binding(.set(\.search, "")))
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(Palette.accessory)
-            }
-            .buttonStyle(.plain)
-            .opacity(store.search.isEmpty ? 0 : 1)
-            .disabled(store.search.isEmpty)
-            .accessibilityHidden(store.search.isEmpty)
-        }
-        .padding(.horizontal, 14)
-        .frame(height: 40)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, Metrics.screenPadding)
-        .transition(.move(edge: .top).combined(with: .opacity))
-        .animation(Motion.spring, value: store.search.isEmpty)
+        .proLocked(.calendar, placement: .inset)
     }
 
     /// The month everything on this screen is about.
@@ -227,8 +177,8 @@ public struct CalendarView: View {
                         .contentTransition(.numericText())
                     if !store.month.isCurrent {
                         Text(L10n.calendarJumpToToday)
-                            .font(.caption2)
-                            .foregroundStyle(theme.accent)
+                            .font(.caption)
+                            .foregroundStyle(.accentText)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -270,58 +220,12 @@ public struct CalendarView: View {
     /// slots, and a system segmented control on glass draws its own opaque track
     /// underneath the blur.
     private var modePicker: some View {
-        HStack(spacing: 2) {
-            ForEach(CalendarFeature.State.Mode.allCases) { mode in
-                let isSelected = store.mode == mode
-                Button { switchFace(to: mode) } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: mode.symbol)
-                            .font(.caption2.weight(.semibold))
-                            // The icon you just chose acknowledges the tap; the
-                            // one you left goes quiet without a fuss.
-                            .bounces(when: isSelected)
-                        Text(mode.title)
-                            .font(.caption.weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .foregroundStyle(isSelected ? Color.white : Color.secondary)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity)
-                    // Each slot only marks where the pill can land.
-                    .matchedGeometryEffect(id: mode, in: modePill)
-                    .contentShape(.capsule)
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-            }
-        }
-        // One pill for the whole control rather than one per slot: a pill that
-        // is a different view in every slot can glide between them, but it
-        // cannot stretch on the way, because nothing lives through the move.
-        .background {
-            Capsule()
-                .fill(theme.accent)
-                .matchedGeometryEffect(id: store.mode, in: modePill, isSource: false)
-                // Pulled across rather than slid: a quarter wider mid-way,
-                // settling back to its slot as it lands.
-                .keyframeAnimator(
-                    initialValue: CGFloat(1),
-                    trigger: reduceMotion ? nil : store.mode
-                ) { pill, stretch in
-                    pill.scaleEffect(x: stretch, y: 1)
-                } keyframes: { _ in
-                    CubicKeyframe(1.25, duration: 0.14)
-                    SpringKeyframe(1, duration: 0.28, spring: .init(duration: 0.3, bounce: 0.3))
-                }
-        }
-        .padding(3)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, Metrics.screenPadding)
-        .animation(Motion.spring, value: store.mode)
-        // The mode is this screen's own state — nothing pushed from the server
-        // moves it — so the tick can key on it directly.
-        .sensoryFeedback(.selection, trigger: store.mode)
+        InnerSwitch(
+            options: Array(CalendarFeature.State.Mode.allCases),
+            selected: store.mode,
+            title: { $0.title },
+            symbol: { $0.symbol }
+        ) { switchFace(to: $0) }
     }
 
     /// Records which way the zoom goes, then switches.
@@ -358,13 +262,20 @@ public struct CalendarView: View {
         VStack(alignment: .leading, spacing: 6) {
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
-                    if store.state.canFilterMine || store.onlyMine {
+                    if store.state.canFilterPeople {
+                        peopleChips
+                    }
+
+                    // Housemates' own calendars: on shows them beside the house's
+                    // events, off is a house-only view.
+                    if store.state.canToggleShared {
                         Chip(
-                            String(localized: L10n.calendarOnlyMine),
-                            symbol: store.onlyMine ? "person.fill.checkmark" : "person",
-                            isSelected: store.onlyMine
+                            String(localized: L10n.calendarFilterTheirs),
+                            symbol: "person.crop.rectangle.stack",
+                            isSelected: store.showShared,
+                            expandsTapTarget: true
                         ) {
-                            store.send(.onlyMineToggled)
+                            store.send(.sharedToggled)
                         }
                     }
 
@@ -427,11 +338,19 @@ public struct CalendarView: View {
             // real data, because "just mine" counts events you created and in
             // most households that is all of them.
             if store.state.isFiltering {
-                Text(L10n.calendarFilterCount(
-                    store.state.visibleCount, store.state.totalCount
-                ))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                // "x of y" is house events only; a housemate's items are not
+                // events, so they are said apart instead of folded in.
+                HStack(spacing: 6) {
+                    Text(L10n.calendarFilterCount(
+                        store.state.visibleCount, store.state.totalCount
+                    ))
+                    if store.state.sharedVisibleCount > 0 {
+                        Text("·")
+                        Text(L10n.calendarFilterCountShared(store.state.sharedVisibleCount))
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondaryText)
                 .monospacedDigit()
                 .contentTransition(.numericText())
                 .padding(.horizontal, Metrics.screenPadding)
@@ -439,9 +358,36 @@ public struct CalendarView: View {
             }
         }
         .animation(Motion.spring, value: store.kindFilter)
-        .animation(Motion.spring, value: store.onlyMine)
+        .animation(Motion.spring, value: store.peopleRaw)
         // No tick of its own: every filter here is a `Chip`, which ticks on
         // its own taps.
+    }
+
+    /// Everyone, then each member: me first, then by name. Several can be on at
+    /// once; Everyone is on when none is and clears the rest.
+    @ViewBuilder
+    private var peopleChips: some View {
+        let selected = store.state.people
+        Chip(
+            String(localized: L10n.calendarFilterEveryone),
+            symbol: "person.2",
+            isSelected: selected.isEmpty
+        ) {
+            store.send(.everyoneTapped)
+        }
+
+        ForEach(store.peopleRow) { member in
+            PersonChip(
+                name: member.id == store.currentUserID
+                    ? String(localized: L10n.calendarFilterMe)
+                    : member.displayName,
+                initials: member.initials,
+                seed: member.id.rawValue,
+                isSelected: selected.contains(member.id)
+            ) {
+                store.send(.personToggled(member.id))
+            }
+        }
     }
 
     /// Whichever of the three faces the picker is on.
@@ -488,8 +434,8 @@ public struct CalendarView: View {
         HStack(spacing: 0) {
             ForEach(Array(MonthGrid.weekdayHeadings.enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -504,6 +450,7 @@ public struct CalendarView: View {
                     day: day,
                     kinds: kinds,
                     extra: max(0, store.state.count(on: day) - kinds.count),
+                    shared: store.state.sharedCount(on: day),
                     isInMonth: grid.isInMonth(day),
                     isSelected: day == store.selectedDay,
                     isToday: day == .today,
@@ -538,6 +485,7 @@ public struct CalendarView: View {
     /// What is on the selected day, under the grid.
     private var dayPanel: some View {
         let items = store.state.occurrences(on: store.selectedDay)
+        let theirs = store.state.sharedItems(on: store.selectedDay)
         return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -547,7 +495,7 @@ public struct CalendarView: View {
                     if !items.isEmpty {
                         Text(L10n.calendarEventCount(items.count))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .contentTransition(.numericText())
                     }
                 }
@@ -565,13 +513,15 @@ public struct CalendarView: View {
 
             if store.isLoading {
                 SkeletonList(rows: 2, height: 72)
-            } else if items.isEmpty {
+            } else if items.isEmpty, theirs.isEmpty {
                 emptyDay
             } else {
-                eventList(items, showsDate: false)
+                if !items.isEmpty { eventList(items, showsDate: false) }
+                if !theirs.isEmpty { sharedList(theirs, showsDate: false) }
             }
         }
         .animation(Motion.spring, value: items.map(\.id))
+        .animation(Motion.spring, value: theirs.map(\.id))
     }
 
     /// Everything the active filters keep, wherever it falls in the window.
@@ -582,11 +532,12 @@ public struct CalendarView: View {
     /// and neither of them can show a match that is not on the selected day.
     private var resultsPage: some View {
         let results = store.state.matches
+        let theirs = store.state.sharedMatches
         return VStack(alignment: .leading, spacing: Metrics.stackSpacing) {
             if store.isLoading {
                 SkeletonList(rows: 4, height: 76)
                     .padding(.horizontal, Metrics.screenPadding)
-            } else if results.isEmpty {
+            } else if results.isEmpty, theirs.isEmpty {
                 EmptyStateView(
                     title: L10n.calendarNoMatches,
                     message: store.state.isSearchActive
@@ -603,14 +554,14 @@ public struct CalendarView: View {
                 .padding(.top, 12)
             } else {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(L10n.calendarSearchResults(results.count))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    Text(L10n.calendarSearchResults(results.count + theirs.count))
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     Spacer(minLength: 8)
                     Button { store.send(.filtersCleared) } label: {
-                        Text(L10n.calendarClearFilters).font(.caption2.weight(.medium))
+                        Text(L10n.calendarClearFilters).font(.caption.weight(.medium))
                     }
                     .buttonStyle(.glass)
                     .controlSize(.small)
@@ -619,22 +570,35 @@ public struct CalendarView: View {
 
                 // Dated, because a match three weeks out is the normal case and
                 // "Thursday" alone does not say which Thursday.
-                eventList(results, showsDate: true)
-                    .padding(.horizontal, Metrics.screenPadding)
+                if !results.isEmpty {
+                    eventList(results, showsDate: true)
+                        .padding(.horizontal, Metrics.screenPadding)
+                }
+                if !theirs.isEmpty {
+                    sharedList(theirs, showsDate: true)
+                        .padding(.horizontal, Metrics.screenPadding)
+                }
             }
         }
         .animation(Motion.spring, value: results.map(\.id))
+        .animation(Motion.spring, value: theirs.map(\.id))
     }
 
     private var emptyDay: some View {
         VStack(spacing: 10) {
             Image(systemName: "calendar.badge.plus")
                 .font(.title2)
-                .foregroundStyle(theme.accent.opacity(0.7))
+                .foregroundStyle(theme.ink.opacity(0.7))
                 .bounces()
             Text(store.isFiltering ? L10n.calendarNoMatches : L10n.calendarNothingOn)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
+            // A calendar that has never had an event says how to start, in the
+            // words the bar's add uses.
+            if store.isBlank {
+                SecondaryButton(L10n.calendarAddFirst, symbol: "plus") { store.send(.addTapped) }
+                    .padding(.top, 4)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
@@ -654,10 +618,12 @@ public struct CalendarView: View {
                 } else {
                     DayTimeline(
                         day: store.selectedDay,
-                        occurrences: store.state.occurrences(on: store.selectedDay)
-                    ) { occurrence in
-                        store.send(.eventTapped(occurrence.id))
-                    }
+                        occurrences: store.state.occurrences(on: store.selectedDay),
+                        shared: store.state.sharedItems(on: store.selectedDay),
+                        sharedName: { store.state.name(for: $0) },
+                        action: { occurrence in store.send(.eventTapped(occurrence.id)) },
+                        sharedAction: { item in store.send(.sharedItemTapped(item.id)) }
+                    )
                 }
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -668,15 +634,15 @@ public struct CalendarView: View {
         HStack(spacing: 4) {
             ForEach(store.state.visibleWeek) { day in
                 let isSelected = day == store.selectedDay
-                let count = store.state.count(on: day)
+                let count = store.state.count(on: day) + store.state.sharedCount(on: day)
                 Button { store.send(.daySelected(day)) } label: {
                     VStack(spacing: 4) {
                         Text(weekdayLetter(day))
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(isSelected ? Color.white.opacity(0.8) : .secondary)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
                         Text(day.day, format: .number)
                             .font(.system(.subheadline, design: .rounded, weight: .bold))
-                            .foregroundStyle(isSelected ? .white : (day == .today ? theme.accent : .primary))
+                            .foregroundStyle(isSelected ? theme.onAccent : (day == .today ? theme.ink : .primary))
                             .monospacedDigit()
                         // A bar rather than dots: at week resolution the useful
                         // signal is "how much", not "what kind".
@@ -690,7 +656,7 @@ public struct CalendarView: View {
                     .background {
                         if isSelected {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(theme.accent)
+                                .fill(theme.accentFill)
                                 .matchedGeometryEffect(id: "calendarWeekDay", in: daySelection)
                         }
                     }
@@ -751,11 +717,12 @@ public struct CalendarView: View {
                                 .font(.subheadline.weight(.semibold))
                             Text(section.day.date(), format: .dateTime.weekday(.wide))
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                             Spacer(minLength: 0)
-                            Badge("\(section.items.count)", tint: theme.accent)
+                            Badge("\(section.items.count + section.shared.count)", tint: theme.accent)
                         }
-                        eventList(section.items, showsDate: false)
+                        if !section.items.isEmpty { eventList(section.items, showsDate: false) }
+                        if !section.shared.isEmpty { sharedList(section.shared, showsDate: false) }
                     }
                     .padding(.horizontal, Metrics.screenPadding)
                     .appear(index + 1)
@@ -778,13 +745,11 @@ public struct CalendarView: View {
                         .foregroundStyle(occurrence.kind.tint)
                         .bounces(when: occurrence.isInProgress)
                     Text(occurrence.isInProgress ? L10n.calendarHappeningNow : L10n.calendarNextUp)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
+                        .groupLabel()
                     Spacer(minLength: 0)
                     CountdownText(occurrence.start)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(occurrence.isInProgress ? Palette.danger : theme.accent)
+                        .foregroundStyle(occurrence.isInProgress ? Palette.dangerText : theme.ink)
                         .contentTransition(.numericText())
                 }
 
@@ -801,7 +766,7 @@ public struct CalendarView: View {
                         Image(systemName: "clock")
                     }
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                     if let location = occurrence.location, !location.isEmpty {
                         Label {
@@ -810,7 +775,7 @@ public struct CalendarView: View {
                             Image(systemName: "mappin.and.ellipse")
                         }
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
 
                     Spacer(minLength: 0)
@@ -864,11 +829,11 @@ public struct CalendarView: View {
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
                     }
-                    .foregroundStyle(isMine ? .white : status.tint)
+                    .foregroundStyle(Color.primary)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
                     .background(
-                        isMine ? AnyShapeStyle(status.tint) : AnyShapeStyle(status.tint.opacity(0.14)),
+                        isMine ? AnyShapeStyle(status.tint.opacity(0.3)) : AnyShapeStyle(status.tint.opacity(0.14)),
                         in: .capsule
                     )
                     .contentShape(.capsule)
@@ -959,6 +924,31 @@ public struct CalendarView: View {
                     }
                 }
                 .appear(index)
+                .transition(.opacity.combined(with: .offset(y: 8)))
+            }
+        }
+    }
+
+    /// Housemates' own calendar items: outlines under a small heading, so they
+    /// are never read as house events. Tapping one opens it read-only.
+    private func sharedList(_ items: [SharedBusyItem], showsDate: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.calendarSharedHeading)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondaryText)
+                .padding(.horizontal, 4)
+                .padding(.top, 4)
+
+            ForEach(items) { item in
+                let name = store.state.name(for: item.userID)
+                SharedItemRow(
+                    item: item,
+                    name: name,
+                    initials: store.state.member(item.userID)?.initials ?? User.initials(from: name),
+                    showsDate: showsDate
+                ) {
+                    store.send(.sharedItemTapped(item.id))
+                }
                 .transition(.opacity.combined(with: .offset(y: 8)))
             }
         }

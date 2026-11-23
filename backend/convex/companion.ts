@@ -736,6 +736,7 @@ async function announce(
     title: copy.title,
     body: copy.body,
     category: NESTIE_CATEGORY,
+    topic: key === "arrived" ? "companion.new" : `companion.${key}`,
     ...(mode === "sandbox" ? { environment: "sandbox" as const, skipFeed: true } : {}),
   });
 }

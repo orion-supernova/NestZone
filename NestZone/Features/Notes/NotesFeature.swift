@@ -22,9 +22,12 @@ public struct NotesFeature: Sendable {
             self.currentUserID = currentUserID
         }
 
-        /// Newest first, filtered by the search field.
+        /// Pinned first, then newest first, filtered by the search field.
         public var visibleNotes: [Note] {
-            let sorted = notes.sorted { Timestamp.newestFirst($0.created, $1.created) }
+            let sorted = notes.sorted { lhs, rhs in
+                if lhs.isPinned != rhs.isPinned { return lhs.isPinned }
+                return Timestamp.newestFirst(lhs.created, rhs.created)
+            }
             let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !query.isEmpty else { return sorted }
             return sorted.filter { $0.body.localizedCaseInsensitiveContains(query) }
@@ -59,6 +62,11 @@ public struct NotesFeature: Sendable {
         case editTapped(NoteID)
         case deleteTapped(NoteID)
         case deleteFailed(AppError)
+        /// Pin or unpin, from the long-press menu. Anybody in the house may:
+        /// the board is shared, and a pin says "keep this where everyone sees
+        /// it", not who wrote it.
+        case pinTapped(NoteID)
+        case pinFailed(NoteID, wasPinned: Bool, AppError)
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<Alert>)
@@ -132,6 +140,24 @@ public struct NotesFeature: Sendable {
 
             case let .deleteTapped(id):
                 state.alert = .confirmDeleteNote(id)
+                return .none
+
+            // Optimistic, and it owns its rollback: a refused write changed
+            // nothing on the server, so no push is coming to put the pin back.
+            case let .pinTapped(id):
+                guard let note = state.notes[id: id] else { return .none }
+                let wasPinned = note.isPinned
+                state.notes[id: id]?.isPinned = !wasPinned
+                return .run { _ in
+                    try await notesClient.setPinned(id, !wasPinned)
+                } catch: { error, send in
+                    await send(.pinFailed(id, wasPinned: wasPinned, AppError(error)))
+                }
+
+            case let .pinFailed(id, wasPinned, error):
+                state.notes[id: id]?.isPinned = wasPinned
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
                 return .none
 
             case let .alert(.presented(.confirmDelete(id))):

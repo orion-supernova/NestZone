@@ -11,6 +11,9 @@ public struct Note: Codable, Identifiable, Hashable, Sendable {
     /// so writing hex here would break the ones that predate this app version.
     /// `StickyColor` reads both, and writes names.
     public var color: String?
+    /// On top of the board and on Today. Absent on the server for a note
+    /// nobody pinned, and on notes from before 1.13.0.
+    public var isPinned: Bool
     public var created: Timestamp?
     public var updated: Timestamp?
 
@@ -21,6 +24,7 @@ public struct Note: Codable, Identifiable, Hashable, Sendable {
         case homeID = "home_id"
         case image
         case color
+        case isPinned = "pinned"
         case created, updated
     }
 
@@ -32,6 +36,7 @@ public struct Note: Codable, Identifiable, Hashable, Sendable {
         homeID = try c.decodeIfPresent(HomeID.self, forKey: .homeID)
         image = try c.decodeIfPresent(String.self, forKey: .image)
         color = try c.decodeIfPresent(String.self, forKey: .color)
+        isPinned = try c.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
         created = try c.decodeIfPresent(Timestamp.self, forKey: .created)
         updated = try c.decodeIfPresent(Timestamp.self, forKey: .updated)
     }
@@ -43,6 +48,7 @@ public struct Note: Codable, Identifiable, Hashable, Sendable {
         homeID: HomeID? = nil,
         image: String? = nil,
         color: String? = nil,
+        isPinned: Bool = false,
         created: Timestamp? = nil,
         updated: Timestamp? = nil
     ) {
@@ -52,6 +58,7 @@ public struct Note: Codable, Identifiable, Hashable, Sendable {
         self.homeID = homeID
         self.image = image
         self.color = color
+        self.isPinned = isPinned
         self.created = created
         self.updated = updated
     }

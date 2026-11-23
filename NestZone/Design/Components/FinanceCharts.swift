@@ -315,7 +315,7 @@ public struct SpendDonut: View {
                     .lineLimit(1)
                 Text(selection?.title ?? L10n.financeDonutCaption)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .lineLimit(1)
             }
             .padding(.horizontal, thickness + 8)
@@ -557,7 +557,7 @@ public struct BalanceBars: View {
                     Text(Money.compactText(abs(member.net), currency: currency))
                         .font(.caption2.weight(.semibold))
                         .monospacedDigit()
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 Capsule(style: .continuous)
                     .fill(isOwed ? Color.clear : tint.opacity(0.85))
@@ -573,7 +573,7 @@ public struct BalanceBars: View {
                     Text(Money.compactText(member.net, currency: currency))
                         .font(.caption2.weight(.semibold))
                         .monospacedDigit()
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 Spacer(minLength: 0)
             }
@@ -586,7 +586,7 @@ public struct BalanceBars: View {
                 ? String(localized: L10n.financeYou)
                 : member.displayName)
                 .font(.caption2.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(1)
                 .padding(.horizontal, 6)
                 .background(.background.opacity(0.6), in: .capsule)
