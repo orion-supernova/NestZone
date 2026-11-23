@@ -53,11 +53,18 @@ actor MirrorEngine {
     private var isDirty = false
     private var running = false
     private var queued: (MirrorRequest, DeviceCalendarClient)?
+    /// When each scope (a home id, or `*` for all) was last removed. A request
+    /// built before that moment was built from a session, a home or a setting
+    /// that has since ended, and must not put the copies back.
+    private var removedAt: [String: Date] = [:]
 
     /// Writes between two commits to the calendar database.
     private static let batch = 50
     /// A copy is deleted when this many complete answers in a row lacked it.
     private static let strikesToDelete = 2
+    /// Seconds a strike counts for. Two answers of one session; never one from
+    /// before a relaunch and one after.
+    private static let strikeLife: TimeInterval = 600
 
     private let fileURL: URL = {
         let base = (try? FileManager.default.url(
@@ -142,7 +149,17 @@ actor MirrorEngine {
 
     // MARK: Sync
 
+    private func isStale(_ request: MirrorRequest) -> Bool {
+        let floor = max(removedAt["*"] ?? .distantPast, removedAt[request.homeID.rawValue] ?? .distantPast)
+        return request.now <= floor
+    }
+
     func sync(_ request: MirrorRequest, device: DeviceCalendarClient) async throws -> MirrorSummary {
+        if isStale(request) {
+            var stale = MirrorSummary()
+            stale.didSync = false
+            return stale
+        }
         if running {
             queued = (request, device)
             var merged = MirrorSummary()
@@ -167,6 +184,11 @@ actor MirrorEngine {
         return total
     }
 
+    /// Marker prefix for a scope: every copy of one house, or of any.
+    private static func markerPrefix(_ home: String?) -> String {
+        home.map { "\(MirrorMarker.scheme)://event/\($0)/" } ?? "\(MirrorMarker.scheme)://event/"
+    }
+
     func removeAll(device: DeviceCalendarClient, home: HomeID?, forgetChoices: Bool) async -> Int {
         while running { try? await Task.sleep(for: .milliseconds(100)) }
         running = true
@@ -176,26 +198,50 @@ actor MirrorEngine {
         var removed = 0
         var queuedWrites = 0
         var snapshots: [String: MirrorMap.Entry] = [:]
+        var removedIDs: Set<String> = []
 
+        // What the map knows. A copy that could not be removed (no access, a
+        // failed write) stays remembered, so the next attempt finds it.
         for (key, entry) in current().entries where scope == nil || entry.homeID == scope {
             var kept = entry
             for (calendar, copy) in entry.copies {
                 do {
                     queuedWrites += 1
                     try await device.remove(copy.id)
-                    removed += 1
+                    removedIDs.insert(copy.id)
                     kept.copies[calendar] = nil
-                } catch {
-                    // Stays remembered: the next removal finds it again.
-                }
+                } catch {}
             }
             snapshots[key] = entry
             mutate { $0.entries[key] = kept.copies.isEmpty ? nil : kept }
         }
-        if queuedWrites > 0, (try? await device.commit()) == nil {
-            // None of it landed: everything is as it was.
-            removed = 0
-            mutate { map in for (key, entry) in snapshots { map.entries[key] = entry } }
+
+        // And what the map does not: a copy a restore, a second phone or a lost
+        // map left behind says what it is in its URL. A year back and ahead is
+        // as far as a copy is ever planned or kept.
+        if device.access() == .granted {
+            let ids = await device.calendars().map(\.id)
+            let prefix = Self.markerPrefix(scope)
+            let from = Date.now.addingTimeInterval(-365 * 86_400)
+            let to = Date.now.addingTimeInterval(365 * 86_400)
+            for event in await device.marked(ids, from, to) where event.marker.hasPrefix(prefix) {
+                guard !removedIDs.contains(event.eventIdentifier) else { continue }
+                do {
+                    queuedWrites += 1
+                    try await device.remove(event.eventIdentifier)
+                    removedIDs.insert(event.eventIdentifier)
+                } catch {}
+            }
+        }
+
+        if queuedWrites > 0 {
+            do {
+                _ = try await device.commit()
+                removed = removedIDs.count
+            } catch {
+                // None of it landed: everything is as it was.
+                mutate { map in for (key, entry) in snapshots { map.entries[key] = entry } }
+            }
         }
         if forgetChoices {
             let prefix = scope.map { $0 + "/" }
@@ -206,11 +252,13 @@ actor MirrorEngine {
         }
         flush()
 
-        // A sync that arrived while this ran was folded into `queued`; nothing
-        // else will run it.
+        // Our own commit tells the calendar database it changed, which queues a
+        // sync built before this removal. It is covered by it and dropped; one
+        // for another house is not, and runs.
+        removedAt[scope ?? "*"] = .now
         if let waiting = queued {
             queued = nil
-            _ = await drain(waiting)
+            if scope != nil, waiting.0.homeID.rawValue != scope { _ = await drain(waiting) }
         }
         return removed
     }
@@ -220,7 +268,7 @@ actor MirrorEngine {
     private func pass(_ request: MirrorRequest, device: DeviceCalendarClient) async -> MirrorSummary {
         var summary = MirrorSummary()
         summary.didSync = false
-        guard device.access() == .granted else { return summary }
+        guard device.access() == .granted, !isStale(request) else { return summary }
 
         // Two answers that look like "there is nothing to copy into" or "nobody
         // is signed in" are far likelier a calendar database or a session that
@@ -278,17 +326,18 @@ actor MirrorEngine {
 
             // Calendars the copy no longer belongs in (unticked in Settings, a
             // different choice in the composer, a calendar that is gone).
-            for (calendar, ref) in entry.copies where !copy.calendars.contains(calendar) {
-                if calendarIDs.contains(calendar) {
-                    do {
-                        noteWrite(key)
-                        try await device.remove(ref.id)
-                        summary.removed += 1
-                    } catch { summary.failed += 1; continue }
-                }
+            // A calendar missing from the list is unknown, not unwanted: it may
+            // be an account that has not finished loading. Its copy and its
+            // "deleted by hand" stay as they were.
+            for (calendar, ref) in entry.copies where !copy.calendars.contains(calendar) && calendarIDs.contains(calendar) {
+                do {
+                    noteWrite(key)
+                    try await device.remove(ref.id)
+                    summary.removed += 1
+                } catch { summary.failed += 1; continue }
                 entry.copies[calendar] = nil
             }
-            entry.dismissed.formIntersection(copy.calendars)
+            entry.dismissed = entry.dismissed.filter { copy.calendars.contains($0) || !calendarIDs.contains($0) }
 
             for calendar in copy.calendars.sorted() where !entry.dismissed.contains(calendar) {
                 do {
@@ -319,6 +368,7 @@ actor MirrorEngine {
                         entry.copies[calendar] = .init(id: id, fingerprint: fingerprint)
                         summary.updated += 1
                     } else {
+                        noteWrite(key)
                         let id = try await device.save(copy.draft, calendar, nil)
                         entry.copies[calendar] = .init(id: id, fingerprint: fingerprint)
                         summary.created += 1
@@ -351,12 +401,20 @@ actor MirrorEngine {
                 }
 
                 var entry = entry
-                if !inAnswer.contains(entry.eventID), seen?.contains(entry.eventID) != true {
+                if inAnswer.contains(entry.eventID) {
+                    // The house still has it: whatever doubt there was is over.
+                    entry.strikes = nil
+                    entry.strikeAt = nil
+                } else if seen?.contains(entry.eventID) != true {
                     // Absent, and not seen going: a doubt, not a deletion,
-                    // until a second answer says it too.
-                    if (entry.strikeAt ?? 0) < request.answeredAt.timeIntervalSince1970 {
+                    // until a second answer says it too. A doubt older than
+                    // `strikeLife` is from another launch or another day and
+                    // starts again at one.
+                    let at = request.answeredAt.timeIntervalSince1970
+                    if let last = entry.strikeAt, at - last > Self.strikeLife { entry.strikes = nil }
+                    if (entry.strikeAt ?? 0) < at {
                         entry.strikes = (entry.strikes ?? 0) + 1
-                        entry.strikeAt = request.answeredAt.timeIntervalSince1970
+                        entry.strikeAt = at
                     }
                     if (entry.strikes ?? 0) < Self.strikesToDelete {
                         store(entry, at: key)
@@ -364,7 +422,9 @@ actor MirrorEngine {
                     }
                 }
 
-                for (calendar, ref) in entry.copies {
+                // Only from calendars the phone lists now; one that is missing
+                // is unknown, and its copy stays remembered.
+                for (calendar, ref) in entry.copies where calendarIDs.contains(calendar) {
                     do {
                         noteWrite(key)
                         try await device.remove(ref.id)
@@ -410,7 +470,26 @@ actor MirrorEngine {
         var failed = 0
         if queuedWrites > 0 {
             do {
-                try await device.commit()
+                // New events were saved without committing, so their final
+                // identifiers are known only now.
+                let resolved = try await device.commit()
+                mutate { map in
+                    for (key, var entry) in map.entries {
+                        var changed = false
+                        for (calendar, ref) in entry.copies where ref.id.hasPrefix(DeviceCalendarStore.pendingPrefix) {
+                            changed = true
+                            if let final = resolved[ref.id] {
+                                entry.copies[calendar] = .init(id: final, fingerprint: ref.fingerprint)
+                            } else {
+                                // Written, but no identifier to remember it by:
+                                // forgotten, and found again by its marker.
+                                entry.copies[calendar] = nil
+                                failed += 1
+                            }
+                        }
+                        if changed { map.entries[key] = entry.copies.isEmpty && entry.dismissed.isEmpty ? nil : entry }
+                    }
+                }
             } catch {
                 failed = queuedWrites
                 let before = snapshots
@@ -446,20 +525,16 @@ actor MirrorEngine {
     private func pruneOverrides(home: String, inAnswer: Set<String>, dropped: Set<String>, now: Date) {
         let prefix = home + "/"
         let map = current()
-        let stale = now.addingTimeInterval(-400 * 86_400).timeIntervalSince1970
         var gone: [String] = []
         for key in map.overrides.keys where key.hasPrefix(prefix) {
             let event = String(key.dropFirst(prefix.count))
             guard !inAnswer.contains(event) else { continue }
             let hasEntry = map.entries.values.contains { $0.homeID == home && $0.eventID == event }
-            // Its copies were just let go, or it was pinned long ago for an
-            // event that never turned up (one beyond the window gets its copy
-            // when the window reaches it, so it is not pruned young).
-            guard !hasEntry else { continue }
-            let pinnedAt = map.overrideDates?[key]
-            if dropped.contains(event) || pinnedAt.map({ $0 < stale }) == true {
-                gone.append(key)
-            }
+            // Only a pin whose event is known gone: its copies were just let
+            // go from a complete answer. Age proves nothing (an event further
+            // ahead than the window has not turned up yet).
+            guard !hasEntry, dropped.contains(event) else { continue }
+            gone.append(key)
         }
         guard !gone.isEmpty else { return }
         mutate { map in

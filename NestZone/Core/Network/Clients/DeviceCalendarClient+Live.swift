@@ -49,6 +49,11 @@ actor DeviceCalendarStore {
     static let shared = DeviceCalendarStore()
 
     private let store = EKEventStore()
+    /// Events saved and not yet committed, by the provisional identifier the
+    /// caller was given. The identifier EventKit reports before a commit is not
+    /// one to build on, so it is read again from these once it is final.
+    private var pending: [String: EKEvent] = [:]
+    static let pendingPrefix = "pending:"
 
     nonisolated static func access() -> DeviceCalendarAccess {
         switch EKEventStore.authorizationStatus(for: .event) {
@@ -185,7 +190,12 @@ actor DeviceCalendarStore {
         } else if let minutes = draft.timeZoneOffset {
             // A repeating copy repeats at the series' own offset (see
             // `DeviceEventDraft.timeZoneOffset`), not at the phone's wall time.
+            // To check on a device: that Exchange and CalDAV accounts keep a
+            // "GMT+0300" zone as it is and do not rewrite it to a named one.
             event.timeZone = TimeZone(secondsFromGMT: minutes * 60)
+        } else {
+            // An update that no longer repeats goes back to the phone's zone.
+            event.timeZone = nil
         }
 
         for rule in event.recurrenceRules ?? [] { event.removeRecurrenceRule(rule) }
@@ -196,19 +206,26 @@ actor DeviceCalendarStore {
             event.addAlarm(EKAlarm(relativeOffset: -TimeInterval(minutes) * 60))
         }
 
-        // `.futureEvents` on a series' first event is the whole series. A new
-        // event is committed now because its identifier is only final once it
-        // is; a change waits for `commit`.
-        try store.save(event, span: .futureEvents, commit: isNew)
-        return event.eventIdentifier
+        // `.futureEvents` on a series' first event is the whole series.
+        try store.save(event, span: .futureEvents, commit: false)
+        guard isNew else { return event.eventIdentifier }
+        let token = Self.pendingPrefix + UUID().uuidString
+        pending[token] = event
+        return token
     }
 
     func remove(_ eventID: String) throws {
-        guard Self.access() == .granted, let event = store.event(withIdentifier: eventID) else { return }
+        // Without access nothing was deleted, and saying so is what keeps the
+        // caller from forgetting a copy that is still there. An event that is
+        // simply not found is gone, which is what was wanted.
+        guard Self.access() == .granted else { throw DeviceCalendarError.noAccess }
+        guard let event = store.event(withIdentifier: eventID) else { return }
         try store.remove(event, span: .futureEvents, commit: false)
     }
 
-    func commit() throws {
+    func commit() throws -> [String: String] {
+        let queued = pending
+        pending = [:]
         do {
             try store.commit()
         } catch {
@@ -217,6 +234,11 @@ actor DeviceCalendarStore {
             store.reset()
             throw error
         }
+        var resolved: [String: String] = [:]
+        for (token, event) in queued {
+            if let id = event.eventIdentifier { resolved[token] = id }
+        }
+        return resolved
     }
 
     func existing(_ eventIDs: [String]) -> Set<String> {

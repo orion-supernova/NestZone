@@ -20,14 +20,15 @@ enum Backoff {
             delivered.setValue(false)
             do {
                 try await body { delivered.setValue(true) }
-                return
+                // A read that ends quietly (a refused session ends it so)
+                // is asked for again, like one that failed.
             } catch is CancellationError {
                 return
-            } catch {
-                if delivered.value { wait = 2 }
-                guard (try? await clock.sleep(for: .seconds(wait))) != nil else { return }
-                wait = min(wait * 2, 60)
-            }
+            } catch {}
+            if Task.isCancelled { return }
+            if delivered.value { wait = 2 }
+            guard (try? await clock.sleep(for: .seconds(wait))) != nil else { return }
+            wait = min(wait * 2, 60)
         }
     }
 }

@@ -38,16 +38,18 @@ public struct DeviceCalendarClient: Sendable {
     /// identifier. A repeating draft is one repeating event, and an update
     /// reaches the whole series.
     ///
-    /// A new event is committed on the spot (its identifier is only reliable
-    /// once it is); a change to an existing one waits for `commit`.
+    /// Nothing is committed until `commit`. A new event answers with a
+    /// provisional identifier, which `commit` resolves to the final one.
     public var save: @Sendable (_ draft: DeviceEventDraft, _ calendarID: String, _ existingID: String?) async throws -> String
-    /// Deletes an event, and the rest of its series. Already gone is fine.
+    /// Deletes an event, and the rest of its series. Already gone is fine;
+    /// without access it throws, because nothing was deleted.
     /// Not committed until `commit`, so a pass over many copies is one write
     /// to the calendar database and not one each.
     public var remove: @Sendable (_ eventID: String) async throws -> Void
-    /// Makes the changes `save` and `remove` have queued permanent. When it
-    /// fails the queue is thrown away, so the caller knows none of it landed.
-    public var commit: @Sendable () async throws -> Void
+    /// Makes the changes `save` and `remove` have queued permanent, and answers
+    /// each provisional identifier with its final one. When it fails the queue
+    /// is thrown away, so the caller knows none of it landed.
+    public var commit: @Sendable () async throws -> [String: String]
     /// Which of these events still exist. How the mirror finds out the person
     /// deleted a copy by hand.
     public var existing: @Sendable (_ eventIDs: [String]) async -> Set<String> = { _ in [] }
