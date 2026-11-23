@@ -214,7 +214,7 @@ public struct IssuesView: View {
                         ? L10n.issuesAllClearMessage
                         : L10n.issuesOpenMessage)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
 
                     if !store.isAllClear {
@@ -377,7 +377,7 @@ public struct IssuesView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: entry.area.symbol)
                                     .font(.footnote.weight(.semibold))
-                                    .foregroundStyle(theme.accent)
+                                    .foregroundStyle(.accentText)
                                     .frame(width: 30, height: 30)
                                     .background(theme.accent.opacity(0.14), in: .circle)
 
@@ -386,7 +386,7 @@ public struct IssuesView: View {
                                         .font(.subheadline.weight(.medium))
                                     Text(entry.category.title)
                                         .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.secondaryText)
                                 }
 
                                 Spacer(minLength: 4)
@@ -452,7 +452,7 @@ public struct IssuesView: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             TextField(text: $store.search) {
                 Text(L10n.issuesSearchPlaceholder)
             }
@@ -608,7 +608,7 @@ public struct IssuesView: View {
         HStack {
             Text(store.isFiltering ? L10n.issuesFilteredCount : L10n.issuesShowingCount)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Spacer(minLength: 8)
             Text(store.filtered.count, format: .number)
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
@@ -620,7 +620,7 @@ public struct IssuesView: View {
                         .font(.caption.weight(.medium))
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .transition(.opacity)
             }
         }
@@ -674,7 +674,7 @@ public struct IssuesView: View {
                     if inRoom.isEmpty {
                         Text(L10n.issuesRoomClear(String(localized: area.title)))
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         rowStack(inRoom)
@@ -761,7 +761,7 @@ public struct IssuesView: View {
                         currency: store.summary.repairCurrency ?? Money.deviceDefault
                     )))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -782,7 +782,7 @@ public struct IssuesView: View {
                 .contentTransition(.numericText())
             Text(label)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -927,7 +927,7 @@ private struct IssueRow: View {
                     }
                 }
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
 
                 if !badges.isEmpty {
                     HStack(spacing: 6) {
@@ -1138,12 +1138,12 @@ private struct SettledRow: View {
                     Text(resolvedByName).lineLimit(1)
                 }
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
 
                 if let resolution = issue.resolution, !resolution.isEmpty {
                     Text(resolution)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(2)
                         .padding(.top, 2)
                 }
@@ -1155,7 +1155,7 @@ private struct SettledRow: View {
                 Text(Money.compactText(issue.spent, currency: currency))
                     .font(.caption.weight(.semibold))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .glassRow()

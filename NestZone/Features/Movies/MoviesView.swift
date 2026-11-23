@@ -29,7 +29,7 @@ public struct MoviesView: View {
                     Text(L10n.homeMinigamesWatchTitle).font(.headline)
                     Text(L10n.homeMinigamesWatchDescription)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
@@ -200,7 +200,7 @@ private struct ListRow: View {
                 if let summary = list.displaySummary {
                     Text(summary)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
             }
@@ -276,7 +276,7 @@ struct MovieListView: View {
                 if let summary = store.list.displaySummary {
                     Text(summary)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(2)
                 }
             }
@@ -289,7 +289,7 @@ struct MovieListView: View {
                     .foregroundStyle(store.list.kind.tint)
                 Text(L10n.movieListsMoviesCount)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .padding(Metrics.cardPadding)
@@ -479,7 +479,7 @@ struct MovieInfoSheet: View {
                         if let year = store.movie.year {
                             Text(year, format: .number.grouping(.never))
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
                     }
                     .appear(1)
@@ -570,11 +570,11 @@ struct MovieInfoSheet: View {
 
     private func fact(_ symbol: String, _ value: String, _ label: LocalizedStringResource) -> some View {
         VStack(spacing: 4) {
-            Image(systemName: symbol).font(.callout).foregroundStyle(.tint)
+            Image(systemName: symbol).font(.callout).foregroundStyle(.accentText)
             Text(value)
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .lineLimit(1)
-            Text(label).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+            Text(label).font(.caption2).foregroundStyle(.secondaryText).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -649,7 +649,7 @@ struct PosterCard: View {
             if let year {
                 Text(year, format: .number.grouping(.never))
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .frame(width: size.width, alignment: .leading)

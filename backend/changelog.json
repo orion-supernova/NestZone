@@ -110,6 +110,28 @@
       ]
     },
     {
+      "slug": "1.13.0-fixes",
+      "version": "1.13.0",
+      "kind": "improvement",
+      "title": "Fixes and improvements",
+      "body": "Small things that make the app nicer to use.",
+      "highlights": [
+        "Improved how easy text is to read, in every theme, light and dark",
+        "Added a small badge that shows which features are part of NestZone Plus"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Düzeltmeler ve iyileştirmeler",
+          "body": "Uygulamayı daha keyifli yapan ufak dokunuşlar.",
+          "highlights": [
+            "Yazılar artık her temada, açıkta da koyuda da daha kolay okunuyor",
+            "Hangi özelliklerin NestZone Plus'ta olduğunu gösteren küçük bir rozet eklendi"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.12.0-nestzone-plus",
       "version": "1.12.0",
       "kind": "feature",

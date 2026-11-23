@@ -44,10 +44,13 @@ public struct PrimaryButton: View {
             // the button instead of being cut.
             .frame(minHeight: 26)
             .contentTransition(.opacity)
+            // What is written on the accent is the theme's `onAccent`, not the
+            // style's default white (2.5:1 on Neon Night, 3.1 to 3.6 on pinks).
+            .foregroundStyle(role == .destructive ? AnyShapeStyle(Color.white) : AnyShapeStyle(.onAccent))
         }
         .buttonStyle(.glassProminent)
         .controlSize(.large)
-        .tint(role == .destructive ? Palette.danger : theme.accent)
+        .tint(role == .destructive ? Palette.answerNo : theme.accent)
         // The button stays mounted while work is in flight so the layout never
         // jumps; it just stops accepting taps.
         .disabled(isLoading || !isEnabled)
@@ -79,9 +82,15 @@ public struct SecondaryButton: View {
             .font(.body.weight(.medium))
             .frame(maxWidth: .infinity)
             .frame(minHeight: 26)
+            // Words on glass stay the label colour; the accent belongs on the
+            // one prominent button, not on every control (color.md › Liquid
+            // Glass color).
+            .foregroundStyle(.primary)
         }
         .buttonStyle(.glass)
         .controlSize(.large)
+        // A glass button takes its label from the tint, which is the theme's.
+        .tint(.primary)
     }
 }
 
@@ -144,7 +153,7 @@ public struct DepthButtonStyle: ButtonStyle {
             let pressed = configuration.isPressed && isEnabled
             configuration.label
                 .font(.body.weight(.semibold))
-                .foregroundStyle(isEnabled ? Color.white : Color.secondary)
+                .foregroundStyle(isEnabled ? AnyShapeStyle(.onAccent) : AnyShapeStyle(.secondaryText))
                 .padding(.horizontal, compact ? 16 : 20)
                 .frame(minWidth: compact ? 88 : nil, maxWidth: compact ? nil : .infinity, minHeight: compact ? 44 : 52)
                 .background { face(pressed: pressed) }

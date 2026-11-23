@@ -49,7 +49,7 @@ struct LabJarSection: View {
                 LabOwned(store: store)
             } label: {
                 LabeledContent {
-                    Text(verbatim: "\(house.owned.count) things · \(house.ownedSpecies.count) species").foregroundStyle(.secondary)
+                    Text(verbatim: "\(house.owned.count) things · \(house.ownedSpecies.count) species").foregroundStyle(.secondaryText)
                 } label: {
                     Label { Text(verbatim: "Owned") } icon: { Image(systemName: "checklist") }
                 }

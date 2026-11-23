@@ -23,7 +23,7 @@ struct AvatarSourceRow: View {
                         .foregroundStyle(option.isDestructive ? Palette.danger : .primary)
                     Text(option.subtitle)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
 
                 Spacer(minLength: 0)

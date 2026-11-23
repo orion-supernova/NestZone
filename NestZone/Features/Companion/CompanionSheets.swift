@@ -101,7 +101,7 @@ private struct ChooseView: View {
             VStack(alignment: .leading, spacing: 18) {
                 Text(L10n.chooseHint)
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 20)
                 group(L10n.choosePlants, Species.onShelf.filter { !$0.isPet }, shop, jar: true)
                 group(L10n.choosePets, Species.onShelf.filter(\.isPet), shop)
@@ -348,7 +348,7 @@ private struct DecorateView: View {
                         .oneLineUnlessAccessibility(shrinking: 1)
                     Text(spot == .tree ? L10n.decorateTreeLimit : L10n.decorateOneThing)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility(shrinking: 0.9)
                 } else {
                     Text(L10n.decoratePickSpot)
@@ -380,7 +380,7 @@ private struct DecorateView: View {
             if !store.activeHolidays.isEmpty {
                 Text(L10n.decorateSets)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
                         ForEach(store.activeHolidays) { holiday in
@@ -442,7 +442,7 @@ private struct DecorateView: View {
                 } else {
                     Text(isOn ? L10n.decoratePlaced : standing == .have || standing == .free ? L10n.decorateYours : L10n.decorateFree)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility(shrinking: 0.85)
                         .frame(minHeight: 28)
                 }
@@ -469,7 +469,7 @@ private struct DecorateView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.decoratePreview)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Text(item.title)
                         .font(.headline)
                         .lineLimit(1)
@@ -505,7 +505,7 @@ private struct AlbumView: View {
             if store.house.albumCount == 0 {
                 Text(L10n.albumEmpty)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                     .oneLineUnlessAccessibility()
                     .frame(maxWidth: .infinity)
@@ -528,7 +528,7 @@ private struct AlbumView: View {
                                 .oneLineUnlessAccessibility()
                             Text(verbatim: "\(String(localized: L10n.albumDays(graduate.days))) · \(graduate.graduatedAt.formatted(Date.FormatStyle().month(.abbreviated).year().locale(L10n.locale)))")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .oneLineUnlessAccessibility()
                         }
                         .padding(8)
@@ -562,7 +562,7 @@ private struct HolidaysView: View {
             Section {
                 Text(L10n.holidaysHint)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .oneLineUnlessAccessibility()
                 Button { store.send(.holidaysReset) } label: { Text(L10n.holidaysSuggested).oneLineUnlessAccessibility() }
             }
@@ -598,7 +598,7 @@ private struct HolidaysView: View {
                         .oneLineUnlessAccessibility()
                     Text(when(holiday))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility()
                 }
             }

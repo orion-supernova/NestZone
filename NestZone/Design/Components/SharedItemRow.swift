@@ -55,21 +55,21 @@ public struct SharedItemRow: View {
                 meta {
                     Text(showsDate ? dateAndTime : item.timeText)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .monospacedDigit()
                     if item.shownTitle != nil {
-                        if !typeSize.isAccessibilitySize { Text("·").foregroundStyle(.tertiary) }
-                        Text(name).font(.caption).foregroundStyle(.secondary).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
+                        if !typeSize.isAccessibilitySize { Text("·").foregroundStyle(.tertiaryText) }
+                        Text(name).font(.caption).foregroundStyle(.secondaryText).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
                     }
                     if let location = item.location, !location.isEmpty {
-                        if !typeSize.isAccessibilitySize { Text("·").foregroundStyle(.tertiary) }
+                        if !typeSize.isAccessibilitySize { Text("·").foregroundStyle(.tertiaryText) }
                         Label {
                             Text(location).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
                         } icon: {
                             Image(systemName: "mappin")
                         }
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
                 }
             }

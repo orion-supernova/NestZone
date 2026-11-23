@@ -210,7 +210,7 @@ struct IssueComposerSheet: View {
 
             Text(store.severity.explainer)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentTransition(.opacity)
         }
@@ -239,7 +239,7 @@ struct IssueComposerSheet: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             FlowLayout(spacing: 8, lineSpacing: 8) {
                 ForEach(areas) { area in
                     Chip(
@@ -354,7 +354,7 @@ struct IssueComposerSheet: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.issuesWhoTitle)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 FlowLayout(spacing: 8, lineSpacing: 8) {
                     ForEach(store.orderedMembers) { member in
                         Chip(
@@ -428,7 +428,7 @@ struct IssueComposerSheet: View {
                                         Image(systemName: "chevron.up.chevron.down")
                                             .font(.system(size: 8, weight: .bold))
                                     }
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 6)
                                     .glassEffect(.regular.interactive(), in: .capsule)
@@ -446,7 +446,7 @@ struct IssueComposerSheet: View {
                             }
                             Text(L10n.issuesEstimateHint)
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
 
                         Divider().opacity(0.4)
@@ -480,7 +480,7 @@ struct IssueComposerSheet: View {
                                 Text(L10n.issuesWarrantyTitle).font(.subheadline)
                                 Text(L10n.issuesWarrantyHint)
                                     .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                             }
                         }
                         if store.hasWarranty {
@@ -535,7 +535,7 @@ struct StatusNoteSheet: View {
                             .font(.headline)
                         Text(note.prompt)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                 }
 
@@ -554,7 +554,7 @@ struct StatusNoteSheet: View {
                 // that it was fixed at all, which is the more important half.
                 Text(L10n.issuesStatusNoteOptional)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 Spacer(minLength: 0)
             }
@@ -597,7 +597,7 @@ struct PartsSheet: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text(L10n.issuesPartsHint)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 TextField(text: $text, axis: .vertical) {
                     Text(L10n.issuesPartsPlaceholder)
@@ -615,7 +615,7 @@ struct PartsSheet: View {
                     Image(systemName: "info.circle")
                 }
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
 
                 Spacer(minLength: 0)
             }
@@ -670,7 +670,7 @@ struct VisitSheet: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(L10n.issuesVisitLength)
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                 HStack(spacing: 8) {
                                     ForEach(IssueDetailFeature.VisitDraft.durationChoices, id: \.self) { minutes in
                                         Chip(

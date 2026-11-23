@@ -15,6 +15,7 @@ DOCS = os.path.join(ROOT, "Docs")
 # (path from repo root, title, one line, status)  status: current | reference | history
 CATALOG = [
     ("Start here", [
+        ("Docs/Design/readability.html", "Readability and themes", "Measured contrast per theme, the text roles, surfaces and component rules, and what is left to swap.", "current"),
         ("Docs/Calendar/sharing.html", "Calendar sharing plan", "Your iCloud/Gmail calendars both ways through EventKit, and filtering the calendar by person.", "current"),
         ("Docs/Launch/plus-badge.html", "Plus badge", "The mark every Plus feature wears: the lock without Plus, the accent sparkles with it.", "current"),
         ("Docs/Launch/index.html", "Launch plan", "App Store release: NestZone Plus, Nestie on, review blockers, store setup, status.", "current"),

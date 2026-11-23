@@ -38,7 +38,7 @@ struct EventAlsoAddCard: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(group.account)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                         pillLayout {
                             ForEach(group.calendars) { calendar in
                                 calendarPill(calendar)
@@ -49,7 +49,7 @@ struct EventAlsoAddCard: View {
 
                 Text(L10n.calendarAlsoAddFooter)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
             // Reduce Motion keeps the tick (a glyph change) and drops the
             // pills' spring.
@@ -100,7 +100,7 @@ struct EventAlsoAddCard: View {
         Label {
             Text(L10n.calendarAlsoAddTitle)
         } icon: {
-            Image(systemName: "calendar.badge.plus").foregroundStyle(theme.accent)
+            Image(systemName: "calendar.badge.plus").foregroundStyle(.accentText)
         }
         .font(.subheadline.weight(.medium))
     }
@@ -123,7 +123,7 @@ struct EventAlsoAddCard: View {
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
             }
         }
         .hostedSheet(isPresented: $isExplaining) {

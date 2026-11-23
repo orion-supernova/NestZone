@@ -51,7 +51,7 @@ public struct AuthView: View {
                 signInButton
                 Text(L10n.authLegal)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .tint(theme.accent)
                     .multilineTextAlignment(.center)
             }
@@ -85,7 +85,7 @@ public struct AuthView: View {
                 .multilineTextAlignment(.center)
             Text(L10n.authHeroSubtitle)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
         }
     }

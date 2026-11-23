@@ -14,7 +14,11 @@ public struct Backdrop: View {
 
     public var body: some View {
         LinearGradient(
-            colors: [tint.opacity(colorScheme == .dark ? 0.26 : 0.14), .clear],
+            // The theme's character, quieter than it was (0.26 and 0.14): the
+            // top of every screen is where the first card sits, and a strong
+            // wash there is the surface the smallest text has to be read on.
+            // Text roles are checked against this value (readability.html).
+            colors: [tint.opacity(colorScheme == .dark ? 0.20 : 0.11), .clear],
             startPoint: .top,
             endPoint: .center
         )

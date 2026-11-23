@@ -52,7 +52,7 @@ public struct GlassTextField: View {
                 ZStack(alignment: .leading) {
                     Text(title)
                         .font(isFloating ? .caption2 : .body)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .offset(y: isFloating ? -15 : 0)
                     field
                         .offset(y: isFloating ? 6 : 0)

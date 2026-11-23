@@ -83,7 +83,7 @@ struct AmountField: View {
                 } else {
                     Text(currency)
                         .font(.system(.caption, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
 
                 // Says back what was understood, which is the whole reason the
@@ -91,7 +91,7 @@ struct AmountField: View {
                 if minorUnits > 0 {
                     MoneyText(minorUnits, currency: currency)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .transition(.opacity)
@@ -143,7 +143,7 @@ struct AmountField: View {
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.system(size: 8, weight: .bold))
             }
-            .foregroundStyle(theme.accent)
+            .foregroundStyle(.accentText)
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
             .background(theme.accent.opacity(0.12), in: .capsule)
@@ -250,7 +250,7 @@ private struct MemberLabel: View {
                 Button { isShowingFullName = true } label: {
                     Image(systemName: "info.circle")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .contentShape(.circle)
                 }
                 .buttonStyle(.plain)
@@ -402,7 +402,7 @@ struct ExpenseComposerSheet: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.financeCategoryLabel)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 FlowLayout(spacing: 8, lineSpacing: 8) {
                     ForEach(SpendCategory.allCases) { category in
@@ -480,7 +480,7 @@ struct ExpenseComposerSheet: View {
             HStack(spacing: 8) {
                 Text(L10n.financeSplitBetween)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 Spacer(minLength: 8)
                 if store.members.count > 1 {
                     splitPreset(
@@ -532,7 +532,7 @@ struct ExpenseComposerSheet: View {
                             let share = store.state.share(of: member.id)
                             MoneyText(share, currency: store.currency)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .animation(Motion.spring, value: share)
                         }
                     }
@@ -579,7 +579,7 @@ struct ExpenseComposerSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.financeSharesHint)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
 
             ForEach(store.orderedMembers) { member in
                 let weight = store.weights[member.id] ?? 0
@@ -749,7 +749,7 @@ struct ExpenseComposerSheet: View {
                         ? String(localized: L10n.financeYou)
                         : (store.members[id: split.userID]?.displayName ?? ""))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Text(Money.text(split.amount, currency: store.currency))
                         .font(.caption2.weight(.semibold))
                         .monospacedDigit()
@@ -840,7 +840,7 @@ struct BillComposerSheet: View {
                                         ? L10n.financeAutoSplitOn
                                         : L10n.financeAutoSplitOff)
                                         .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.secondaryText)
                                 }
                             }
                         }
@@ -858,7 +858,7 @@ struct BillComposerSheet: View {
                                 Image(systemName: "chart.line.uptrend.xyaxis")
                             }
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             Spacer(minLength: 8)
                             MoneyText(store.monthlyCost, currency: store.currency)
                                 .font(.caption.weight(.bold))
@@ -926,7 +926,7 @@ struct BillComposerSheet: View {
                         ? L10n.financeRemindersOff
                         : L10n.financeReminderCount(store.reminders.count))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .contentTransition(.numericText())
                 }
 
@@ -955,7 +955,7 @@ struct BillComposerSheet: View {
 
                 Text(L10n.financeRemindersHint)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
             .animation(Motion.spring, value: store.reminders)
         }
@@ -966,7 +966,7 @@ struct BillComposerSheet: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.financeCategoryLabel)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 FlowLayout(spacing: 8, lineSpacing: 8) {
                     ForEach(SpendCategory.allCases) { category in
                         let isSelected = store.category == category
@@ -1019,7 +1019,7 @@ struct PayBillSheet: View {
                             .font(.headline)
                         Text(store.bill.cycle.title)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                     .padding(.top, 8)
 
@@ -1084,7 +1084,7 @@ struct PayBillSheet: View {
                         ? L10n.financePayOnceHint
                         : L10n.financePayRecurringHint)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.center)
                 }
                 .padding(Metrics.screenPadding)
@@ -1131,7 +1131,7 @@ struct BudgetEditorSheet: View {
                             .font(.headline)
                         Text(L10n.financeBudgetHint)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, 8)

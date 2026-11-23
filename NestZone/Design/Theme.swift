@@ -23,8 +23,26 @@ public enum AppTheme: String, CaseIterable, Sendable, Codable, Identifiable {
         case .basic: Palette.violet
         case .cyberpunk: Palette.magenta
         case .retroWave: Palette.hotPink
-        case .neonNight: Palette.emerald
+        case .neonNight: Palette.emeraldFill
         case .deepOcean: Palette.oceanBlue
+        }
+    }
+
+    /// The accent as the colour of *words and glyphs* — a link, a symbol, a
+    /// number — where the brand accent is not legible: violet is 3.1:1 on a
+    /// dark card, magenta 3.6:1 and emerald 2.5:1 on a white one. Each theme
+    /// keeps its hue and saturation and moves only in lightness, to 4.7:1 or
+    /// better on the worst surface it meets (the theme's own wash under glass)
+    /// in light and in dark, and 7:1 under Increase Contrast. Fills, tints and
+    /// selection use `accent`; anything that is read uses this, normally
+    /// through `.foregroundStyle(.accentText)`.
+    public var ink: Color {
+        switch self {
+        case .basic: Palette.inkViolet
+        case .cyberpunk: Palette.inkMagenta
+        case .retroWave: Palette.inkPink
+        case .neonNight: Palette.inkEmerald
+        case .deepOcean: Palette.inkBlue
         }
     }
 
@@ -95,6 +113,11 @@ public enum Palette {
     public static let hotPink = Color(hex: "FF4D8D")
     public static let ultraviolet = Color(hex: "7A5AF8")
     public static let emerald = Color(hex: "10B981")
+    /// Neon Night's accent as a fill. The same green in dark; a step deeper in
+    /// light, where 10B981 is 2.5:1 against white and a selected chip or a
+    /// button all but dissolves into the card (0FA976 is 3.0:1, and the deep
+    /// ink label on it is 6.4:1).
+    public static let emeraldFill = adaptive("0FA976", "10B981", "0B9A6B", "10B981")
     public static let cyan = Color(hex: "06B6D4")
     public static let oceanBlue = Color(hex: "1D4ED8")
     public static let amber = Color(hex: "F59E0B")
@@ -114,11 +137,37 @@ public enum Palette {
     /// are fixed alpha over white and black respectively, which holds up in
     /// both appearances and under every theme. Built from a dynamic `UIColor`
     /// and stored, so a `body` never allocates one.
+    ///
+    /// 3:1 or better as a graphic (a glyph is not text): the light value was
+    /// 0.35 alpha, which is 2.4:1 on white.
     public static let accessory = Color(uiColor: UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(white: 1, alpha: 0.55)
-            : UIColor(white: 0, alpha: 0.35)
+            ? UIColor(white: 1, alpha: 0.6)
+            : UIColor(white: 0, alpha: 0.48)
     })
+
+    // MARK: Text roles
+    //
+    // The system's `.secondary` is label at 60% and `.tertiary` at 30%: 3.4:1
+    // and 1.7:1 on white, 4.0 to 4.7:1 on a dark card under a themed wash — 
+    // and over glass they are the numbers that count, not the ones tuned
+    // against an opaque system background. These are solid colours chosen
+    // against the worst surface under any theme (see Docs/Design/readability.html):
+    // secondary is 6:1 or better, tertiary 4.6:1 or better, and `.tertiary`
+    // stops being a role for words.
+
+    /// A second line, a caption, a label over a figure.
+    public static let textSecondary = adaptive("52525A", "C8C8D0", "3A3A40", "E2E2E8")
+    /// Metadata that can be skipped: a timestamp, a hint. Still words, so
+    /// still 4.5:1.
+    public static let textTertiary = adaptive("66666E", "B2B2BA", "505058", "CACAD2")
+
+    /// Each theme's accent as words (`AppTheme.ink`).
+    public static let inkViolet = adaptive("7B38ED", "B792F5", "5913D0", "D4BFF9")
+    public static let inkMagenta = adaptive("C80060", "FF7CBB", "980049", "FFB9DB")
+    public static let inkPink = adaptive("CD004A", "FF8CB5", "9C0038", "FFC6DB")
+    public static let inkEmerald = adaptive("0A7552", "12D091", "08583D", "7BF4CB")
+    public static let inkBlue = adaptive("1D4ED8", "839FEE", "1840B1", "B3C5F5")
 
     /// The same idea for a glyph that is also a control — an overflow menu —
     /// where "there is more here" has to read as tappable.
@@ -166,6 +215,12 @@ public enum Palette {
     })
 
     private static func currency(light: String, dark: String, lightHigh: String, darkHigh: String) -> Color {
+        adaptive(light, dark, lightHigh, darkHigh)
+    }
+
+    /// A colour with its four faces — light, dark, and each under Increase
+    /// Contrast — built once and stored.
+    static func adaptive(_ light: String, _ dark: String, _ lightHigh: String, _ darkHigh: String) -> Color {
         let colors = [light, dark, lightHigh, darkHigh].map { UIColor(Color(hex: $0)) }
         return Color(uiColor: UIColor { traits in
             let high = traits.accessibilityContrast == .high
@@ -194,6 +249,12 @@ public enum Palette {
         traits.userInterfaceStyle == .dark
             ? UIColor(white: 0.17, alpha: 1)
             : UIColor(white: 0.93, alpha: 1)
+    })
+    /// Under every untinted glass card: black at 14% in dark, nothing in
+    /// light. Keeps secondary text above 4.5:1 where glass sits over a
+    /// theme's wash.
+    public static let glassFloor = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor(white: 0, alpha: 0.14) : UIColor(white: 0, alpha: 0)
     })
     /// The wash under a card's glass, so its words read over anything — the
     /// glass alone let a busy scene show through the secondary text.
@@ -303,6 +364,9 @@ public enum Palette {
     /// the app no longer needs a light and a dark value for everything.
     public static let danger = Color.red
     public static let success = Color.green
+    /// Green as the colour of a word or a small glyph: the system green is
+    /// 2.2:1 on white. Deep green in light, the system's own in dark.
+    public static let successText = adaptive("15803D", "4ADE80", "166534", "86EFAC")
     public static let warning = Color.orange
 
     /// Sits behind a title laid over artwork — a swipe-deck poster, a hero

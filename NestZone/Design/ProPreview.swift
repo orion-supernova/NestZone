@@ -72,7 +72,7 @@ struct ProPreview: View {
                 .background(tint.opacity(0.14), in: .rect(cornerRadius: 12, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.subheadline.weight(.semibold))
-                Text(when).font(.caption).foregroundStyle(.secondary)
+                Text(when).font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer(minLength: 0)
         }
@@ -89,7 +89,7 @@ struct ProPreview: View {
             glyph(symbol, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.subheadline.weight(.semibold))
-                Text(who).font(.caption).foregroundStyle(.secondary)
+                Text(who).font(.caption).foregroundStyle(.secondaryText)
             }
             Spacer(minLength: 8)
             Text(amount)
@@ -111,7 +111,7 @@ struct ProPreview: View {
                 HStack(spacing: 8) {
                     Image(systemName: "circle")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Text(item).font(.subheadline)
                 }
             }
@@ -158,11 +158,11 @@ struct ProPreview: View {
             Text(title)
                 .font(.subheadline)
                 .strikethrough()
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Spacer(minLength: 0)
             Image(systemName: "arrow.right")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.tertiaryText)
         }
     }
 

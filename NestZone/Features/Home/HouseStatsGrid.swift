@@ -108,7 +108,7 @@ struct HouseStatsGrid: View {
                                 .font(.system(.title, design: .rounded, weight: .bold))
                             Text(L10n.homeStatsEventsTitle)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .lineLimit(1)
                         }
                         .padding(Metrics.cardPadding)

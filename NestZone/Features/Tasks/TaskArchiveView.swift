@@ -51,7 +51,7 @@ public struct TaskArchiveView: View {
                 Image(systemName: "archivebox")
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .glassListRow(insets: .init(
@@ -123,7 +123,7 @@ public struct TaskArchiveView: View {
         if !store.isLoading, store.archive.isTruncated {
             Text(L10n.taskArchiveTruncated(store.archive.limit))
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, Metrics.stackSpacing)
                 .glassListRow(insets: .init(
@@ -157,7 +157,7 @@ private struct ArchiveRow: View {
                     .overlay {
                         Image(systemName: "person.fill.questionmark")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                     .accessibilityHidden(true)
             }
@@ -171,7 +171,7 @@ private struct ArchiveRow: View {
                 HStack(spacing: 8) {
                     Text(credit)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
 
                     Label {
@@ -180,7 +180,7 @@ private struct ArchiveRow: View {
                         Image(systemName: entry.kind.symbol)
                     }
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
             }
 
@@ -194,7 +194,7 @@ private struct ArchiveRow: View {
                 format: .dateTime.day().month(.abbreviated).year(.twoDigits)
             )
             .font(.caption2)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .monospacedDigit()
         }
         .glassRow()

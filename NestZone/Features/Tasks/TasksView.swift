@@ -124,7 +124,7 @@ public struct TasksView: View {
             HStack(alignment: .top, spacing: 12) {
                 Text(note)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -295,10 +295,10 @@ private struct TaskListRow: View {
                         Image(systemName: task.kind.symbol)
                     }
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                     if let assignee {
-                        Text(assignee).font(.caption2).foregroundStyle(.secondary)
+                        Text(assignee).font(.caption2).foregroundStyle(.secondaryText)
                     }
 
                     if let due = task.dueDate {

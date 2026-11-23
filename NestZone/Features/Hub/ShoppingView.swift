@@ -195,7 +195,7 @@ public struct ShoppingView: View {
                     .font(.headline)
                 Text(L10n.shoppingHeaderSubtitle)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
 
             Spacer(minLength: 0)
@@ -206,7 +206,7 @@ public struct ShoppingView: View {
                         .font(.system(.title3, design: .rounded, weight: .bold))
                     Text(L10n.shoppingStatsLeft)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 HStack(spacing: 4) {
                     AnimatedNumber(store.doneCount)
@@ -214,7 +214,7 @@ public struct ShoppingView: View {
                         .foregroundStyle(Palette.success)
                     Text(L10n.shoppingStatsDone)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -595,7 +595,7 @@ private struct ShoppingRow: View {
                         Image(systemName: item.category.symbol)
                     }
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
             }
 
@@ -604,7 +604,7 @@ private struct ShoppingRow: View {
             if let quantity = item.quantity, quantity > 1 {
                 Text(quantity, format: .number.precision(.fractionLength(0...1)))
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .monospacedDigit()
                     .contentTransition(.numericText(value: quantity))
                     .animation(Motion.spring, value: quantity)
@@ -653,7 +653,7 @@ private struct CategoryHeader: View {
             HStack(spacing: 10) {
                 Image(systemName: category.symbol)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(.accentText)
                     .frame(width: 28, height: 28)
                     .background(.tint.opacity(0.14), in: .circle)
 
@@ -663,7 +663,7 @@ private struct CategoryHeader: View {
                         .foregroundStyle(.primary)
                     Text(L10n.shoppingCategoryCompletedItems(done, total))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .contentTransition(.numericText())
                 }
 
@@ -744,7 +744,7 @@ private struct GroupHeader: View {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(.accentText)
                     .frame(width: 28, height: 28)
                     .background(.tint.opacity(0.14), in: .circle)
 
@@ -755,7 +755,7 @@ private struct GroupHeader: View {
                         .lineLimit(1)
                     Text(L10n.shoppingCategoryCompletedItems(done, total))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .contentTransition(.numericText())
                 }
 

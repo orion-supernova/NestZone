@@ -172,7 +172,7 @@ struct CaptureView: View {
                     .foregroundStyle(store.kind.tint)
             }
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
 
             switch store.kind {
             case .event:

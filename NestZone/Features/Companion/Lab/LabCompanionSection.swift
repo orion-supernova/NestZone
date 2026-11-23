@@ -24,7 +24,7 @@ struct LabCompanionSection: View {
                     LabeledContent {
                         Text(verbatim: "\(current.points.formatted(.number.precision(.fractionLength(1)))) / \(Int(PretendRules.graduateAt))")
                             .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     } label: {
                         Text(verbatim: "Points")
                     }
@@ -94,7 +94,7 @@ struct LabCompanionSection: View {
         let grown = max(Int(store.now.timeIntervalSince(current.startedAt) / PretendRules.day), 0)
         return Stepper(value: Binding(get: { grown }, set: { store.pretend(.setDaysGrown($0)) }), in: 0...60) {
             LabeledContent {
-                Text(verbatim: "\(grown)").monospacedDigit().foregroundStyle(.secondary)
+                Text(verbatim: "\(grown)").monospacedDigit().foregroundStyle(.secondaryText)
             } label: {
                 Text(verbatim: "Days grown")
             }

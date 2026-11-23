@@ -163,7 +163,7 @@ public struct SettingsView: View {
                             pushTokenBlock(token)
                             if let detail = store.pushTokenDetail {
                                 Text(detail)
-                                    .font(.caption2)
+                                    .font(.caption)
                                     .foregroundStyle(Palette.accessory)
                             }
                         }
@@ -211,7 +211,7 @@ public struct SettingsView: View {
                                 .foregroundStyle(.primary)
                             Text(L10n.settingsProfileCustomizeExperience)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
                         Spacer(minLength: 0)
                         Image(systemName: "pencil")
@@ -251,7 +251,7 @@ public struct SettingsView: View {
                             Image(systemName: store.didCopyInviteCode
                                 ? "checkmark.circle.fill" : "doc.on.doc")
                                 .foregroundStyle(store.didCopyInviteCode
-                                    ? Palette.success : Color.secondary)
+                                    ? Palette.successText : Palette.textSecondary)
                                 .contentTransition(.symbolEffect(.replace))
                         }
                     } label: {
@@ -418,7 +418,7 @@ public struct SettingsView: View {
             } label: {
                 LabeledContent {
                     Text(store.notificationsOn ? L10n.notifRowOn : L10n.notifRowOff)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 } label: {
                     Label { Text(L10n.settingsNotificationsTitle) } icon: {
                         Image(systemName: store.notificationsOn ? "bell.badge" : "bell.slash")
@@ -437,7 +437,7 @@ public struct SettingsView: View {
                     AvatarStack.Member(id: $0.id.rawValue, initials: $0.initials)
                 })
                 Image(systemName: "chevron.right")
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(Palette.accessory)
                     .rotationEffect(.degrees(store.isShowingMembers ? 90 : 0))
             }
@@ -457,14 +457,14 @@ public struct SettingsView: View {
         Button { store.send(.copyPushTokenTapped) } label: {
             HStack(alignment: .top, spacing: 10) {
                 Text(token)
-                    .font(.caption2.monospaced())
+                    .font(.caption.monospaced())
                     .foregroundStyle(Palette.accessoryStrong)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: store.didCopyPushToken
                     ? "checkmark.circle.fill" : "doc.on.doc")
                     .foregroundStyle(store.didCopyPushToken
-                        ? Palette.success : Palette.accessoryStrong)
+                        ? Palette.successText : Palette.accessoryStrong)
                     .contentTransition(.symbolEffect(.replace))
             }
             .padding(10)
@@ -487,12 +487,12 @@ public struct SettingsView: View {
                 // Type size without wrapping.
                 Text(store.pushStatusLabel)
                     .font(.subheadline)
-                    .foregroundStyle(store.pushTokenIsHealthy ? Color.secondary : Color.red)
+                    .foregroundStyle(store.pushTokenIsHealthy ? Palette.textSecondary : Palette.dangerText)
                     .lineLimit(1)
                 if store.pushTokenFull != nil {
                     Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiaryText)
                         .rotationEffect(.degrees(store.isShowingFullPushToken ? 90 : 0))
                 }
             }
@@ -525,7 +525,7 @@ public struct SettingsView: View {
                 CalendarSettingsView(store: calendar)
             } label: {
                 LabeledContent {
-                    Text(store.calendarCopyMode.title).foregroundStyle(.secondary)
+                    Text(store.calendarCopyMode.title).foregroundStyle(.secondaryText)
                 } label: {
                     Label { Text(L10n.calendarSettingsTitle) } icon: {
                         Image(systemName: "calendar")
@@ -557,7 +557,7 @@ public struct SettingsView: View {
             LabeledContent {
                 Text(verbatim: AppVersion.current.raw)
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             } label: {
                 Label { Text(L10n.settingsVersionTitle) } icon: {
                     Image(systemName: "app.badge.checkmark")
@@ -614,7 +614,7 @@ public struct SettingsView: View {
         case .failed:
             Label {
                 Text(L10n.settingsCheckFailed)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             } icon: {
                 Image(systemName: "wifi.exclamationmark").foregroundStyle(Palette.amber)
             }
@@ -631,14 +631,14 @@ public struct SettingsView: View {
                                 .font(.footnote.weight(.semibold))
                         } icon: {
                             Image(systemName: "arrow.down.circle.fill")
-                                .foregroundStyle(theme.accent)
+                                .foregroundStyle(.accentText)
                         }
                     }
                 } else {
                     Label {
                         Text(L10n.settingsUpdateAvailable(version)).font(.footnote)
                     } icon: {
-                        Image(systemName: "arrow.down.circle").foregroundStyle(theme.accent)
+                        Image(systemName: "arrow.down.circle").foregroundStyle(.accentText)
                     }
                 }
             } else if let coming = check.changelogVersion,
@@ -650,7 +650,7 @@ public struct SettingsView: View {
                 Label {
                     Text(L10n.settingsUpdateComing(coming))
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 } icon: {
                     Image(systemName: "clock").foregroundStyle(Palette.amber)
                 }
@@ -658,10 +658,10 @@ public struct SettingsView: View {
                 Label {
                     Text(L10n.settingsUpToDate)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 } icon: {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Palette.emerald)
+                        .foregroundStyle(Palette.successText)
                 }
             }
         }
@@ -681,7 +681,7 @@ public struct SettingsView: View {
         return Section {
             LabeledContent {
                 Text(status.isPro ? L10n.plusStatusOn : L10n.plusStatusOff)
-                    .foregroundStyle(status.isPro ? Palette.success : Color.secondary)
+                    .foregroundStyle(status.isPro ? Palette.successText : Palette.textSecondary)
             } label: {
                 Label { Text(L10n.proFullName) } icon: { Image(systemName: PlusStyle.symbol) }
             }
@@ -692,7 +692,7 @@ public struct SettingsView: View {
                         ? L10n.paywallCarriedByYou
                         : L10n.paywallCarriedBy(carrier.name ?? User.displayName(name: nil, email: nil)))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 if let end = status.expiresAt {
                     // A subscription that is switched off says when it ends, not
@@ -701,9 +701,9 @@ public struct SettingsView: View {
                         ? L10n.plusEnds(end.formatted(date: .abbreviated, time: .omitted))
                         : L10n.plusRenews(end.formatted(date: .abbreviated, time: .omitted)))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 } else {
-                    Text(L10n.plusNoEnd).font(.subheadline).foregroundStyle(.secondary)
+                    Text(L10n.plusNoEnd).font(.subheadline).foregroundStyle(.secondaryText)
                 }
             }
 
@@ -715,7 +715,7 @@ public struct SettingsView: View {
                 Label { Text(L10n.plusSeeEverything) } icon: { Image(systemName: "list.bullet.rectangle") }
             }
             if let line = status.coverageLine(homeNames: plusHomeNames) {
-                Text(line).font(.subheadline).foregroundStyle(.secondary)
+                Text(line).font(.subheadline).foregroundStyle(.secondaryText)
             }
 
             if status.isPro, status.mine {
@@ -742,7 +742,7 @@ public struct SettingsView: View {
             if let result = store.plusRestoreResult {
                 Text(result == .restored ? L10n.plusRestoredOn : L10n.paywallNothingToRestore)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         } header: {
             Text(L10n.proFullName)
@@ -851,7 +851,7 @@ struct EditNameSheet: View {
                 VStack(spacing: Metrics.sectionSpacing) {
                     Text(L10n.settingsEditNameMessage)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.center)
 
                     GlassTextField(

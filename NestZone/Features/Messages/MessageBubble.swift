@@ -124,7 +124,7 @@ struct MessageBubble: View, Equatable {
             if showsSender {
                 Text(senderName)
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 12)
                     .padding(.top, 6)
             }
@@ -154,7 +154,7 @@ struct MessageBubble: View, Equatable {
                 Image(systemName: "pencil.circle.fill")
                     .font(.caption)
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(4)
             }
         }
@@ -322,7 +322,7 @@ struct MessageBubble: View, Equatable {
         if swipe > 0, !reduceMotion {
             Image(systemName: "arrowshape.turn.up.left.fill")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .opacity(min(swipe / Self.swipeThreshold, 1))
                 .scaleEffect(swipe >= Self.swipeThreshold ? 1.15 : 0.85)
                 .padding(.horizontal, 6)

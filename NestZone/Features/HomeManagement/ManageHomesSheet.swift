@@ -81,7 +81,7 @@ struct ManageHomesSheet: View {
             if home.id == store.currentHomeID {
                 Image(systemName: "checkmark")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(.accentText)
             }
         } label: {
             Label {
@@ -90,7 +90,7 @@ struct ManageHomesSheet: View {
                         .foregroundStyle(.primary)
                     Text(L10n.settingsMembersCount(home.members.count))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             } icon: {
                 Image(systemName: "house.fill")

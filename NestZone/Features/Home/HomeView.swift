@@ -95,7 +95,7 @@ public struct HomeView<Companion: View>: View {
         return VStack(alignment: .leading, spacing: 6) {
             Text(eyebrow)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 glanceText(glance)
                     .font(.system(.title2, design: .rounded, weight: .bold))
@@ -128,7 +128,7 @@ public struct HomeView<Companion: View>: View {
     private var allClearMark: some View {
         let mark = Image(systemName: "checkmark.circle.fill")
             .font(.system(.title2, design: .rounded, weight: .bold))
-            .foregroundStyle(Palette.success)
+            .foregroundStyle(Palette.successText)
             .accessibilityHidden(true)
         if reduceMotion {
             mark.transition(.opacity)
@@ -165,11 +165,11 @@ public struct HomeView<Companion: View>: View {
     private func clauseText(_ clause: GlanceClause) -> Text {
         switch clause {
         case let .alarm(.issue(issue)):
-            Text(L10n.glanceIssue(issue.title)).foregroundStyle(Palette.danger)
+            Text(L10n.glanceIssue(issue.title)).foregroundStyle(Palette.dangerText)
         case let .alarm(.bill(bill)):
             switch bill.urgency(now: store.now) {
             case .overdue:
-                Text(lateText(bill)).foregroundStyle(Palette.danger)
+                Text(lateText(bill)).foregroundStyle(Palette.dangerText)
             case .dueToday:
                 Text(L10n.glanceBillToday(bill.title))
             case .dueSoon, .upcoming:
@@ -249,17 +249,14 @@ public struct HomeView<Companion: View>: View {
         }
     }
 
-    /// A section: a small label over its rows. The label is a footnote, not a
-    /// headline with an icon and a button — those used to be taller than the
-    /// rows under them.
+    /// A section: a small label over its rows. The label is one line of
+    /// subheadline (`groupLabel`), not a headline with an icon and a button —
+    /// those used to be taller than the rows under them.
     private func block(_ section: TodaySection, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(section.title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+                .groupLabel()
                 .padding(.leading, 4)
-                .accessibilityAddTraits(.isHeader)
             content()
         }
     }
@@ -269,7 +266,7 @@ public struct HomeView<Companion: View>: View {
     private func quietLine(_ text: LocalizedStringResource) -> some View {
         Text(text)
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .padding(.leading, 4)
     }
 
@@ -286,7 +283,7 @@ public struct HomeView<Companion: View>: View {
                 Button { store.send(.setupClosed) } label: {
                     Image(systemName: "xmark")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .frame(width: 28, height: 28)
                         .contentShape(.rect)
                 }
@@ -308,7 +305,7 @@ public struct HomeView<Companion: View>: View {
             HStack(spacing: 12) {
                 Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isDone ? Palette.success : Color.secondary)
+                    .foregroundStyle(isDone ? Palette.successText : Palette.textSecondary)
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                 Text(setupTitle(step))
                     .font(.subheadline.weight(.medium))
@@ -428,9 +425,12 @@ public struct HomeView<Companion: View>: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
+                    // Words stay the secondary colour: the tint as text was
+                    // orange on white (2.2:1) and red (3.6:1). The glyph in
+                    // its wash carries the colour.
                     Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(tint)
+                        .font(.footnote)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 4)
@@ -516,7 +516,7 @@ public struct HomeView<Companion: View>: View {
                 Button { store.send(.showMoreChoresTapped) } label: {
                     Text(L10n.homeMoreChores(store.hiddenChoreCount))
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(theme.accent)
+                        .foregroundStyle(.accentText)
                         .contentTransition(.numericText())
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.leading, 4)
@@ -546,7 +546,7 @@ public struct HomeView<Companion: View>: View {
                                     .lineLimit(1)
                                 Text(whenText(occurrence))
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                             }
                             .padding(.horizontal, 12)
                             .frame(minHeight: 36)
@@ -666,7 +666,7 @@ public struct HomeView<Companion: View>: View {
                         .foregroundStyle(.primary)
                     Text(store.movieRoundIsOpen ? L10n.homeMovieRoundOpen : L10n.homeMinigamesWatchDescription)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 4)
@@ -722,7 +722,7 @@ public struct HomeView<Companion: View>: View {
             HStack(spacing: 8) {
                 Image(systemName: symbol)
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .accessibilityHidden(true)
                 Text(title)
                     .font(.footnote.weight(.semibold))
@@ -755,14 +755,14 @@ private struct HeroCard: View {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .font(.headline)
-                    .foregroundStyle(Palette.danger)
+                    .foregroundStyle(Palette.dangerText)
                     .frame(width: 44, height: 44)
                     .background(Palette.danger.opacity(0.16), in: .rect(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(kicker)
-                        .font(.caption2.weight(.bold))
+                        .font(.caption.weight(.bold))
                         .textCase(.uppercase)
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                         .lineLimit(1)
                     Text(title)
                         .font(.headline)
@@ -787,7 +787,7 @@ private struct HeroCard: View {
                         Image(systemName: "chevron.right").font(.caption.weight(.bold))
                     }
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(minHeight: Metrics.minTapTarget)
                     .contentShape(.rect)
                 }
@@ -822,7 +822,7 @@ private struct TaskRow: View {
             Button(action: toggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(task.isCompleted ? Palette.success : Color.secondary)
+                    .foregroundStyle(task.isCompleted ? Palette.successText : Palette.textSecondary)
                     // The tick grows out of the ring rather than swapping in.
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                     // Squash, overshoot, settle. Idle until a tap moves the
@@ -863,8 +863,8 @@ private struct TaskRow: View {
 
                 if let due = task.dueDate, !task.isCompleted {
                     Text(dueText(due.date))
-                        .font(.caption2)
-                        .foregroundStyle(due.date < Calendar.current.startOfDay(for: now) ? Palette.danger : .secondary)
+                        .font(.caption)
+                        .foregroundStyle(due.date < Calendar.current.startOfDay(for: now) ? Palette.dangerText : Palette.textSecondary)
                 }
             }
 
@@ -946,7 +946,7 @@ private struct SuggestedDinnerCard: View {
                         .lineLimit(1)
                     Text(L10n.homeDinnerFromEventMenu(occurrence.recipeIDs.count))
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 Spacer(minLength: 0)
             }
@@ -961,7 +961,7 @@ private struct SuggestedDinnerCard: View {
                 Button(action: onDecideOther) {
                     Text(L10n.homeDinnerFromEventOther)
                         .font(.footnote.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .frame(minHeight: Metrics.minTapTarget)
                         .contentShape(.rect)
                 }

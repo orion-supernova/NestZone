@@ -69,7 +69,7 @@ struct CalendarSettingsView: View {
                     ? L10n.calendarAccessRestricted
                     : L10n.calendarAccessDenied)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 if store.access != .restricted {
                     Button { store.send(.openSystemSettingsTapped) } label: {
                         Text(L10n.calendarAccessOpenSettings)
@@ -92,7 +92,7 @@ struct CalendarSettingsView: View {
                         if store.mode == mode {
                             Image(systemName: "checkmark")
                                 .font(.body.weight(.semibold))
-                                .foregroundStyle(theme.accent)
+                                .foregroundStyle(.accentText)
                                 .transition(.opacity)
                         }
                     }
@@ -119,7 +119,7 @@ struct CalendarSettingsView: View {
                             if isOn {
                                 Image(systemName: "checkmark")
                                     .font(.body.weight(.semibold))
-                                    .foregroundStyle(theme.accent)
+                                    .foregroundStyle(.accentText)
                                     .transition(.opacity)
                             }
                         }
@@ -133,7 +133,7 @@ struct CalendarSettingsView: View {
                 if group.id == store.groups.first?.id {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(L10n.calendarCopyIntoHeader)
-                        Text(group.account).font(.caption).foregroundStyle(.secondary)
+                        Text(group.account).font(.caption).foregroundStyle(.secondaryText)
                     }
                 } else {
                     Text(group.account)
@@ -161,9 +161,9 @@ struct CalendarSettingsView: View {
                 if store.lastSynced > 0 {
                     Text(Date(timeIntervalSince1970: store.lastSynced), format: .relative(presentation: .named, unitsStyle: .wide))
                         .environment(\.locale, L10n.locale)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 } else {
-                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondary)
+                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondaryText)
                 }
             } label: {
                 Text(L10n.calendarCopyLastSynced)
@@ -239,7 +239,7 @@ struct CalendarSettingsView: View {
         if group.id == store.shareGroups.first?.id {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.calendarShareCalendarsHeader)
-                Text(verbatim: group.account).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: group.account).font(.caption).foregroundStyle(.secondaryText)
             }
         } else {
             Text(verbatim: group.account)
@@ -274,9 +274,9 @@ struct CalendarSettingsView: View {
                 if let syncedAt = store.shareRow?.syncedAt {
                     Text(syncedAt.date, format: .relative(presentation: .named, unitsStyle: .wide))
                         .environment(\.locale, L10n.locale)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 } else {
-                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondary)
+                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondaryText)
                 }
             } label: {
                 Text(L10n.calendarShareUpdated)

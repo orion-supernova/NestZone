@@ -98,7 +98,7 @@ private struct ConversationRow: View {
                         .lineLimit(1)
                     Text(preview ?? String(localized: L10n.messagesNoMessagesYet))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
 
@@ -173,7 +173,7 @@ struct ChatView: View {
                         if thread.isEmpty, !term.isEmpty {
                             Text(L10n.chatSearchNoResults)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .padding(.top, 40)
                         }
                     }
@@ -431,7 +431,7 @@ struct NewConversationSheet: View {
                         } icon: {
                             Image(systemName: "person.badge.plus")
                         }
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
 
                     ForEach(store.selectableMembers) { member in
@@ -449,7 +449,7 @@ struct NewConversationSheet: View {
                                 Spacer(minLength: 0)
                                 if store.selected.contains(member.id) {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.tint)
+                                        .foregroundStyle(.accentText)
                                         .transition(.scale.combined(with: .opacity))
                                 }
                             }

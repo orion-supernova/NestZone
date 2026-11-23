@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Readability and themes</title>
+<style>
+  :root{--bg:#f4f2f8;--card:#fff;--ink:#17121f;--muted:#5a5466;--line:#00000014;--accent:#6d28d9;--soft:#7C3AED14;--ok:#047857;--okbg:#04785718;--bad:#b91c1c;--badbg:#b91c1c14;--midbg:#b4530914;--mid:#92400e}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0c16;--card:#1b1724;--ink:#f3f0f8;--muted:#b4adc2;--line:#ffffff14;--accent:#c4b5fd;--soft:#a78bfa1f;--ok:#4ade80;--okbg:#4ade8018;--bad:#fca5a5;--badbg:#fca5a518;--mid:#fcd34d;--midbg:#fcd34d18}}
+  :root[data-theme="dark"]{--bg:#0f0c16;--card:#1b1724;--ink:#f3f0f8;--muted:#b4adc2;--line:#ffffff14;--accent:#c4b5fd;--soft:#a78bfa1f;--ok:#4ade80;--okbg:#4ade8018;--bad:#fca5a5;--badbg:#fca5a518;--mid:#fcd34d;--midbg:#fcd34d18}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+  main{max-width:900px;margin:0 auto;padding:32px 16px 72px}
+  h1{font:700 28px/1.2 ui-rounded,-apple-system,system-ui;margin:0 0 6px}
+  h2{font:700 19px/1.3 ui-rounded,-apple-system,system-ui;margin:40px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
+  h3{font:600 15px/1.3 -apple-system,system-ui;margin:22px 0 6px}
+  .lead{color:var(--muted);max-width:68ch}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+  nav a{font-size:13px;color:var(--accent);text-decoration:none;background:var(--soft);padding:4px 10px;border-radius:999px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:12px 0}
+  .decide{border-left:3px solid var(--accent)}
+  code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--line);padding:1px 5px;border-radius:5px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-top:0}
+  ul,ol{padding-left:20px} li{margin:4px 0}
+  small,.cite{color:var(--muted);font-size:12.5px}
+  .r{font:600 12px ui-monospace,Menlo,monospace;padding:1px 6px;border-radius:6px;display:inline-block;margin:2px 0}
+  .r.ok{background:var(--okbg);color:var(--ok)} .r.mid{background:var(--midbg);color:var(--mid)} .r.bad{background:var(--badbg);color:var(--bad)}
+  .smp{display:inline-block;padding:3px 10px;border-radius:8px;margin:2px 0}
+  .rank{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--bg);font-weight:700;font-size:13px;margin-right:8px}
+  .pair{margin:14px 0} .pair .cap{font-weight:600;margin-bottom:6px}
+  .pair{display:grid;grid-template-columns:repeat(4,1fr);gap:8px} .pair .cap{grid-column:1/-1}
+  figure{margin:0} figure img{width:100%;border-radius:14px;border:1px solid var(--line)} figcaption{font-size:11.5px;color:var(--muted);text-align:center}
+  @media (max-width:640px){.pair{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Readability and themes</h1>
+  <p class="lead"><b>Status 2026-11-23: the foundation is built on dev (tokens, text roles, Backdrop, glass floor, shared components, Today and Settings); the rest of the app gets the roles by the mechanical swap below and has a checklist at the foot.</b> Reviewed against the vendored Apple HIG pages (citations are <span class="cite">file › heading</span>). All contrast figures are WCAG 2.x ratios computed from hex values in <code>scratchpad/tools/contrast.py</code>; the surfaces are <em>modelled</em> (backdrop wash, glass lift) and checked against screenshots, not sampled off a device. Real glass over live content can only be darker or lighter than the model, so figures near 4.5 are marked as margins, not guarantees.</p>
+  <nav><a href="#verdict">Verdict</a><a href="#findings">Findings</a><a href="#system">The system</a><a href="#themes">Per theme</a><a href="#components">Components</a><a href="#shots">Before and after</a><a href="#todo">Checklist</a></nav>
+
+  <h2 id="verdict">Verdict</h2>
+  <p>The app is built on the right things (text styles, system label colours, one glass surface) and it still reads badly, for one reason that repeats: <b>every text colour is a system hierarchy style or the raw accent, and both were tuned for opaque grounds, not for glass over a themed wash.</b> Nothing was ever measured against the surface it sits on. A theme here is only an accent colour, so "not pleasant on themes" is the accent used as text, as a fill under white text, and as a wash behind the first cards, each at a different strength in each theme. Two of the five themes (Neon Night, Retro Wave) fail in light, two (Basic, Deep Ocean) fail in dark, and Cyberpunk fails in both.</p>
+  <div class="card decide"><b>Design stance.</b> Themes are a mood, not a text colour. A theme sets the <em>fill</em> (buttons, selection, tints) and a quiet <em>wash</em> at the top of the ground. Words are always one of four neutral roles or the theme's own <em>ink</em>, which is the accent moved only in lightness until it reads. Colour carries category and state through glyphs and washes, never alone and never as the only thing a sentence is made of.</div>
+
+  <h2 id="findings">Findings, most damaging first</h2>
+  <p class="cite">Thresholds: <span class="cite">accessibility.md › Vision</span> (4.5:1 up to 17 pt, 3:1 at 18 pt or bold; check light and dark); <span class="cite">dark-mode.md › Dark Mode colors</span> (no lower than 4.5:1, strive for 7:1 in small text).</p>
+
+  <div class="card"><h3><span class="rank">1</span>Secondary text is 3.4:1 in light and slips under 4.5 on glass in dark</h3>
+  <p>366 uses of <code>.foregroundStyle(.secondary)</code> hold every second line, caption, timestamp and label. The system value is label at 60%: 3.44:1 on white, 3.15 to 3.27 on a themed top, and in dark 4.0 to 4.77 on glass over the wash (Neon Night 4.01, Retro Wave 4.23, Cyberpunk 4.46 fail). The codebase already found this once: <code>Palette.accessory</code>'s comment says hierarchy styles are tuned against opaque backgrounds.</p>
+  <table><tr><th>Theme</th><th>Light: system sec / ter</th><th>Light: new sec / ter</th><th>Dark: system sec / ter</th><th>Dark: new sec / ter</th></tr><tr><td><b>Basic</b></td>
+<td><span class="r mid">3.17</span> / <span class="r bad">1.68</span></td>
+<td><span class="r ok">6.57</span> / <span class="r ok">4.83</span></td>
+<td><span class="r ok">4.67</span> / <span class="r bad">2.28</span></td>
+<td><span class="r ok">8.40</span> / <span class="r ok">6.63</span></td></tr><tr><td><b>Cyberpunk</b></td>
+<td><span class="r mid">3.18</span> / <span class="r bad">1.68</span></td>
+<td><span class="r ok">6.60</span> / <span class="r ok">4.85</span></td>
+<td><span class="r mid">4.46</span> / <span class="r bad">2.20</span></td>
+<td><span class="r ok">8.20</span> / <span class="r ok">6.47</span></td></tr><tr><td><b>Retro Wave</b></td>
+<td><span class="r mid">3.23</span> / <span class="r bad">1.69</span></td>
+<td><span class="r ok">6.81</span> / <span class="r ok">5.00</span></td>
+<td><span class="r mid">4.23</span> / <span class="r bad">2.16</span></td>
+<td><span class="r ok">7.75</span> / <span class="r ok">6.12</span></td></tr><tr><td><b>Neon Night</b></td>
+<td><span class="r mid">3.27</span> / <span class="r bad">1.70</span></td>
+<td><span class="r ok">6.98</span> / <span class="r ok">5.13</span></td>
+<td><span class="r mid">4.01</span> / <span class="r bad">2.11</span></td>
+<td><span class="r ok">7.35</span> / <span class="r ok">5.81</span></td></tr><tr><td><b>Deep Ocean</b></td>
+<td><span class="r mid">3.15</span> / <span class="r bad">1.68</span></td>
+<td><span class="r ok">6.52</span> / <span class="r ok">4.80</span></td>
+<td><span class="r ok">4.77</span> / <span class="r bad">2.31</span></td>
+<td><span class="r ok">8.55</span> / <span class="r ok">6.75</span></td></tr></table>
+  <p class="cite">materials.md › Standard materials ("Help ensure legibility by using vibrant colors", "Thicker materials … better contrast"), dark-mode.md › Text.</p></div>
+
+  <div class="card"><h3><span class="rank">2</span>Tertiary is 1.7 to 2.4:1 everywhere</h3>
+  <p>20 uses (17 as a text style). Tertiary label is 30% alpha: 1.73:1 on white, 2.25 on black, 2.1 to 2.4 on dark glass. It is used for words ("Four people said yes…"), so those words are effectively invisible to anyone not in a dim room. Quaternary is 1.4:1. <span class="cite">dark-mode.md › Text</span> lists tertiary and quaternary as available, but the contrast floor still applies; <span class="cite">liquid-glass.md › Standard materials beneath the glass</span> says to avoid quaternary labels on thin materials.</p></div>
+
+  <div class="card"><h3><span class="rank">3</span>The accent as text fails in whichever appearance its theme is not made for</h3>
+  <p>51 sites draw words or glyphs in <code>theme.accent</code> or <code>.tint</code> (links, "Not now", empty-state icons, counts). A vivid hue that is bright enough for dark is washed out in light, and the other way round. Left column is the old accent on the old surface, middle the new ink on the new surface.</p>
+  <table><tr><th>Theme</th><th>Accent as text, before</th><th>Ink, after (light / dark)</th><th>Label on the fill</th></tr><tr><td><b>Basic</b><br><code>#7C3AED</code></td>
+<td><span class="smp" style="background:#EDE3FC;color:#7C3AED;font-size:15px">Link text</span><br><span class="r ok">4.62</span> light<br><span class="smp" style="background:#3F3159;color:#7C3AED;font-size:15px">Link text</span><br><span class="r bad">2.06</span> dark</td>
+<td><code>#7B38ED</code> / <code>#B792F5</code><br><span class="smp" style="background:#F1E9FD;color:#7B38ED;font-size:15px">Link text</span><br><span class="r ok">4.91</span> light<br><span class="smp" style="background:#312742;color:#B792F5;font-size:15px">Link text</span><br><span class="r ok">5.62</span> dark</td>
+<td>white <span class="r ok">5.70</span><br>ink <span class="r mid">3.40</span><br><small>now uses <code>#FFFFFF</code></small></td></tr><tr><td><b>Cyberpunk</b><br><code>#FF1F8A</code></td>
+<td><span class="smp" style="background:#FFE0EF;color:#FF1F8A;font-size:15px">Link text</span><br><span class="r bad">2.94</span> light<br><span class="smp" style="background:#5D2B43;color:#FF1F8A;font-size:15px">Link text</span><br><span class="r mid">3.09</span> dark</td>
+<td><code>#C80060</code> / <code>#FF7CBB</code><br><span class="smp" style="background:#FFE6F2;color:#C80060;font-size:15px">Link text</span><br><span class="r ok">4.94</span> light<br><span class="smp" style="background:#442333;color:#FF7CBB;font-size:15px">Link text</span><br><span class="r ok">5.75</span> dark</td>
+<td>white <span class="r mid">3.61</span><br>ink <span class="r ok">5.36</span><br><small>now uses <code>#12091F</code></small></td></tr><tr><td><b>Retro Wave</b><br><code>#FF4D8D</code></td>
+<td><span class="smp" style="background:#FFE6EF;color:#FF4D8D;font-size:15px">Link text</span><br><span class="r bad">2.66</span> light<br><span class="smp" style="background:#5D3543;color:#FF4D8D;font-size:15px">Link text</span><br><span class="r mid">3.26</span> dark</td>
+<td><code>#CD004A</code> / <code>#FF8CB5</code><br><span class="smp" style="background:#FFEBF2;color:#CD004A;font-size:15px">Link text</span><br><span class="r ok">5.00</span> light<br><span class="smp" style="background:#442A34;color:#FF8CB5;font-size:15px">Link text</span><br><span class="r ok">5.93</span> dark</td>
+<td>white <span class="r mid">3.14</span><br>ink <span class="r ok">6.18</span><br><small>now uses <code>#12091F</code></small></td></tr><tr><td><b>Neon Night</b><br><code>#10B981</code></td>
+<td><span class="smp" style="background:#DEF5ED;color:#10B981;font-size:15px">Link text</span><br><span class="r bad">2.22</span> light<br><span class="smp" style="background:#274D41;color:#10B981;font-size:15px">Link text</span><br><span class="r mid">3.72</span> dark</td>
+<td><code>#0A7552</code> / <code>#12D091</code><br><span class="smp" style="background:#E5F7F1;color:#0A7552;font-size:15px">Link text</span><br><span class="r ok">5.15</span> light<br><span class="smp" style="background:#213A32;color:#12D091;font-size:15px">Link text</span><br><span class="r ok">6.09</span> dark</td>
+<td>white <span class="r bad">2.54</span><br>ink <span class="r ok">7.63</span><br><small>now uses <code>#12091F</code></small></td></tr><tr><td><b>Deep Ocean</b><br><code>#1D4ED8</code></td>
+<td><span class="smp" style="background:#DFE6FA;color:#1D4ED8;font-size:15px">Link text</span><br><span class="r ok">5.38</span> light<br><span class="smp" style="background:#2A3554;color:#1D4ED8;font-size:15px">Link text</span><br><span class="r bad">1.80</span> dark</td>
+<td><code>#1D4ED8</code> / <code>#839FEE</code><br><span class="smp" style="background:#E6ECFB;color:#1D4ED8;font-size:15px">Link text</span><br><span class="r ok">5.65</span> light<br><span class="smp" style="background:#232A3F;color:#839FEE;font-size:15px">Link text</span><br><span class="r ok">5.52</span> dark</td>
+<td>white <span class="r ok">6.70</span><br>ink <span class="r bad">2.89</span><br><small>now uses <code>#FFFFFF</code></small></td></tr></table>
+  <p class="cite">color.md › Liquid Glass color ("Apply color sparingly … to symbols or text on the material"), accessibility.md › Vision.</p></div>
+
+  <div class="card"><h3><span class="rank">4</span>White text on bright fills: 2.5:1 on Neon Night, 3.1 on Retro Wave, 3.6 on Cyberpunk</h3>
+  <p><code>Chip</code> (selected), <code>PrimaryButton</code> (glass-prominent default label) and <code>DepthButton</code> all hard-coded white. <code>AppTheme.onAccent</code> already existed, with the right answer per theme, and was read in one place (the companion card). Today's "Add" and every selected chip were the worst-contrast text on the screen. <span class="cite">color.md › Liquid Glass color</span> ("apply color to the background rather than to symbols or text") is how it should be built, which only works if the label on that background is legible.</p></div>
+
+  <div class="card"><h3><span class="rank">5</span>Colour as the only text: tinted detail lines and badges</h3>
+  <p>Today's "Needs you" rows drew the detail line in the row's tint: warning orange is 2.2:1 on white, red 3.6. <code>Badge</code> drew a tint on its own 15% wash (amber 1.9, green 2.1 on white). The semantic greens and oranges used as words fail the same way.</p>
+  <table><tr><th>As words</th><th>Before</th><th>Token</th><th>After</th></tr><tr><td>System green as words</td><td><span class="r bad">2.22</span> light / <span class="r ok">7.71</span> dark</td><td>Palette.successText</td><td><span class="r ok">5.02</span> light / <span class="r ok">8.94</span> dark</td></tr><tr><td>System orange / amber</td><td><span class="r bad">2.15</span> light / <span class="r ok">7.25</span> dark</td><td>(icon in wash; words use secondary)</td><td></td></tr><tr><td>System red</td><td><span class="r mid">3.55</span> light / <span class="r ok">4.57</span> dark</td><td>Palette.dangerText</td><td><span class="r ok">6.47</span> light / <span class="r ok">8.21</span> dark</td></tr></table>
+  <p class="cite">color.md › Inclusive color ("avoid relying solely on color"), accessibility.md › Vision.</p></div>
+
+  <div class="card"><h3><span class="rank">6</span>Small glyphs under 3:1</h3>
+  <p><code>Palette.accessory</code> (chevrons and "more" glyphs) is black at 35% in light: 2.4:1, below the 3:1 a graphic needs. Raised to 48% (3.8:1) and white 60% in dark (4.1 to 4.6).</p></div>
+
+  <div class="card"><h3><span class="rank">7</span>Type: too small at the bottom, two header systems, five voices</h3>
+  <ul>
+  <li><b>Section labels on Today are 13 pt, semibold, in capitals, in secondary.</b> The smallest, lowest-contrast line on the screen is the one that names each block. Finance, Issues, Movies and Dinner use <code>SectionHeader</code> (title3 semibold) instead, so the same job has two looks. <span class="cite">typography.md › Conveying hierarchy</span>. Capitals also break in Turkish (dotted and dotless i).</li>
+  <li>179 uses of <code>caption2</code> (11 pt, the platform floor, <span class="cite">typography.md › Ensuring legibility</span>) for things people need: due dates, Settings detail lines, trend numbers.</li>
+  <li>Dynamic Type itself is in good shape: Today and Settings use only text styles. 70 fixed <code>.system(size:)</code> calls remain outside the debug art sheet, nearly all glyph or avatar sizing derived from a frame; the real text ones are Finance's big amounts (28 and 44) and a few Dinner and Notes labels (checklist). <span class="cite">typography.md › Supporting Dynamic Type</span>.</li>
+  <li>Rounded design appears in 80 places (the Today sentence, big numbers, but also sheet labels): one voice is enough. Rounded is for display numerals and the Today sentence, nothing smaller than title3.</li>
+  </ul></div>
+
+  <div class="card"><h3><span class="rank">8</span>The ground behind the first cards is stronger than the cards can use</h3>
+  <p><code>Backdrop</code> washes the top of every screen with the accent at 26% in dark and 14% in light. That is where the header and the first card sit. At 26% Neon Night is a dark-green slab behind the smallest text. Quietened to 20% and 11%; the screens still read as their theme (screenshots below). <span class="cite">color.md › Liquid Glass color › "Be aware of the placement of color in the content layer"</span> (the resting state at the top of a scroll must stay legible).</p></div>
+
+  <div class="card"><h3><span class="rank">9</span>Glass in the content layer, and glass on glass</h3>
+  <p>93 <code>glassCard</code>/<code>GlassCard</code> and 57 <code>glassEffect</code> uses put glass on cards and rows, which <span class="cite">materials.md › Liquid Glass</span> and <span class="cite">layout.md › Visual hierarchy</span> say to keep for controls. That is the owner's rule in CLAUDE.md ("glass goes on things that float, cards over content"), so it stays. The cost is that a card's legibility depends on what is behind it; this pass keeps the look and gives every untinted card a neutral floor (black at 14% in dark, nothing in light) so words hold their contrast on any theme. Chips and badges inside a glass row are the glass-on-glass case: selected chips are solid accent (fine), unselected are glass-in-glass and rely on <code>GlassGroup</code>; not changed.</p></div>
+
+  <div class="card"><h3><span class="rank">10</span>Settings</h3>
+  <p>A native <code>Form</code> on the Backdrop, which is what <span class="cite">settings.md › Best practices</span> and <span class="cite">lists-and-tables.md › Style</span> ask for; its rows are opaque so only footers, headers and trailing values suffer from findings 1 to 3. Fixed here: the secondary role, the 11 pt detail lines, the success/failure glyphs (<code>Palette.success</code> 2.2:1) and the "up to date" mark.</p></div>
+
+  <h2 id="system">The system</h2>
+  <h3>Surfaces: ground, card, content</h3>
+  <ol>
+  <li><b>Ground</b> = <code>Backdrop</code>: system background plus the theme accent as a wash that fades out by mid-screen, 20% dark / 11% light. Never glass (the owner's rule, <span class="cite">materials.md › Liquid Glass</span>).</li>
+  <li><b>Card</b> = <code>glassCard</code>/<code>glassRow</code>: regular glass over the ground, with <code>Palette.glassFloor</code> (black 14% in dark, clear in light) when untinted. Tinted glass (an accent or danger tint) is reserved for the one thing that must stand out; it carries <code>.primary</code> text only.</li>
+  <li><b>Content</b> = text roles below, glyphs, solid fills. Nothing is read through the wash directly: if text sits on the ground (a group label, a footer) it uses the same roles, which were solved against the ground's worst case.</li>
+  </ol>
+  <h3>Text roles (never raw opacity on accent text)</h3>
+  <table><tr><th>Role</th><th>Use it as</th><th>Light</th><th>Dark</th><th>Floor</th></tr>
+  <tr><td>Primary</td><td><code>.primary</code> (system)</td><td>label</td><td>label</td><td>&gt;14:1</td></tr>
+  <tr><td>Secondary</td><td><code>.foregroundStyle(.secondaryText)</code></td><td><code>#52525A</code></td><td><code>#C8C8D0</code></td><td>6.4:1 / 7.4:1</td></tr>
+  <tr><td>Tertiary</td><td><code>.tertiaryText</code> for skippable metadata only</td><td><code>#66666E</code></td><td><code>#B2B2BA</code></td><td>4.7:1 / 5.8:1</td></tr>
+  <tr><td>Accent</td><td><code>.accentText</code> (theme ink)</td><td>per theme</td><td>per theme</td><td>4.7:1 or better</td></tr>
+  <tr><td>On accent</td><td><code>.onAccent</code> on a fill of the accent</td><td colspan="2">white or deep ink per theme</td><td>4.5:1 or better</td></tr>
+  <tr><td>Status words</td><td><code>Palette.dangerText</code>, <code>Palette.successText</code></td><td><code>#B91C1C</code> / <code>#15803D</code></td><td><code>#FCA5A5</code> / <code>#4ADE80</code></td><td>6:1 or better</td></tr></table>
+  <p>Every role has an Increase Contrast face (7:1 on the worst surface). <code>.tertiary</code> and <code>.quaternary</code> remain for hairlines and washes, never words. A caption is secondary at <code>.footnote</code> or <code>.caption</code>, never tertiary at <code>.caption2</code>.</p>
+
+  <h3>Type ramp (Dynamic Type styles only)</h3>
+  <table><tr><th>Job</th><th>Style</th><th>Notes</th></tr>
+  <tr><td>Today's sentence</td><td><code>.title2</code> rounded bold</td><td>the one rounded line; a display voice</td></tr>
+  <tr><td>Screen title, sheet title</td><td>system large title / <code>.headline</code></td><td></td></tr>
+  <tr><td>Section header (big, with a button)</td><td><code>SectionHeader</code>: <code>.title3</code> semibold</td><td>Finance, Issues, Movies</td></tr>
+  <tr><td>Group label over rows</td><td><code>.groupLabel()</code>: <code>.subheadline</code> semibold, secondary, sentence case</td><td>Today, Settings-like groups; replaces 13 pt capitals</td></tr>
+  <tr><td>Row title</td><td><code>.subheadline</code> / <code>.body</code> medium</td><td></td></tr>
+  <tr><td>Row detail</td><td><code>.footnote</code> secondary</td><td>was caption or caption2</td></tr>
+  <tr><td>Metadata</td><td><code>.caption</code> tertiary</td><td>nothing smaller; <code>.caption2</code> is for glyph badges</td></tr>
+  <tr><td>Figures</td><td><code>.title</code> rounded bold</td><td>numerals only</td></tr></table>
+  <p>Weights: regular, medium, semibold, bold. No light or thin (<span class="cite">typography.md › Ensuring legibility</span>).</p>
+
+  <h2 id="themes">Per theme: what changed and what stayed</h2>
+  <table><tr><th>Theme</th><th>Fill (accent)</th><th>Label on fill</th><th>Ink light / dark</th><th>Ink, Increase Contrast</th><th>Character kept by</th></tr>
+  <tr><td>Basic</td><td><code>#7C3AED</code> unchanged</td><td>white 5.7</td><td><code>#7B38ED</code> / <code>#B792F5</code></td><td><code>#5913D0</code> / <code>#D4BFF9</code></td><td>same violet; in dark a lavender of the same hue</td></tr>
+  <tr><td>Cyberpunk</td><td><code>#FF1F8A</code> unchanged</td><td>deep ink 5.4 (was white 3.6)</td><td><code>#C80060</code> / <code>#FF7CBB</code></td><td><code>#980049</code> / <code>#FFB9DB</code></td><td>magenta fill stays electric; words go raspberry in light</td></tr>
+  <tr><td>Retro Wave</td><td><code>#FF4D8D</code> unchanged</td><td>deep ink 6.2 (was white 3.1)</td><td><code>#CD004A</code> / <code>#FF8CB5</code></td><td><code>#9C0038</code> / <code>#FFC6DB</code></td><td>hot-pink fill and gradient untouched</td></tr>
+  <tr><td>Neon Night</td><td><code>#10B981</code> dark; <code>#0FA976</code> light (3.0 vs white, was 2.5)</td><td>deep ink 6.4 to 7.6</td><td><code>#0A7552</code> / <code>#12D091</code></td><td><code>#08583D</code> / <code>#7BF4CB</code></td><td>emerald everywhere, one step deeper only where it sat on white</td></tr>
+  <tr><td>Deep Ocean</td><td><code>#1D4ED8</code> unchanged</td><td>white 6.7</td><td><code>#1D4ED8</code> / <code>#839FEE</code></td><td><code>#1840B1</code> / <code>#B3C5F5</code></td><td>the blue is already right in light; dark gets a periwinkle (it was 1.8:1)</td></tr></table>
+  <p>The gradients, the second hues (<code>support</code>) and <code>highlight</code> are hero-only decoration and untouched. Gradients and washes never sit behind text: the wash fades out by mid-screen and cards carry the floor.</p>
+
+  <h2 id="components">Component rules</h2>
+  <ul>
+  <li><b>Section / group header</b>: two kinds only. <code>SectionHeader</code> when it has a subtitle or a trailing action; <code>.groupLabel()</code> for a plain label. No capitals, no 13 pt.</li>
+  <li><b>List row</b> (<code>glassRow</code>): title primary at subheadline medium or body; detail footnote <code>.secondaryText</code>; status as a <code>Badge</code>; chevron <code>Palette.accessory</code>. Never tint the detail line.</li>
+  <li><b>Chip</b>: unselected is glass with primary text; selected is the accent fill with <code>.onAccent</code>. One selected chip per group.</li>
+  <li><b>Badge</b>: words in primary on a 22% wash of the tint, the glyph (if any) in the tint. Colour says the kind; the word says it again.</li>
+  <li><b>Buttons</b>: one <code>PrimaryButton</code> per view (<span class="cite">liquid-glass.md › Color on glass</span>), label <code>.onAccent</code>; <code>SecondaryButton</code> is a glass button with a primary label, not an accent-coloured one; destructive uses <code>Palette.answerNo</code> under white (6.5:1) instead of system red (3.6).</li>
+  <li><b>Captions</b>: secondary, footnote or caption. A caption that matters (a due date that is late) is <code>Palette.dangerText</code> with the word "late" in it.</li>
+  <li><b>Empty state</b>: glyph in <code>.accentText</code>, title primary, message secondary, one prominent action at most.</li>
+  <li><b>Links</b> in text: <code>.accentText</code> and underlined or chevron-marked, so it is not colour alone.</li>
+  <li><b>New work</b>: no <code>.secondary</code>, <code>.tertiary</code>, <code>theme.accent</code> or <code>.tint</code> as a text colour; no white on an accent; no <code>caption2</code> for words.</li>
+  </ul>
+
+  <h2 id="shots">Before and after</h2>
+  <p>Captured in the simulator with the Debug-only <code>-readabilityLab</code> screen (<code>Design/ReadabilityLab.swift</code>), which draws a Today-shaped page from the real components in each theme. Sign-in is not available on the simulator, so the real Today and Settings are verified by code and by these components, not by a signed-in screenshot. Launch: <code>xcrun simctl launch booted com.walhallaa.NestZone -readabilityLab -appTheme neonNight</code>, then <code>xcrun simctl ui booted appearance dark</code>. "Before" is <code>-readabilityLegacy</code>: a replica of the old styling (system secondary and tertiary, accent as text, white on accent, tint-as-text badges, the 26% / 14% wash, no glass floor) built from the same numbers, so both columns come from one build.</p>
+  <div class="pair"><div class="cap">Basic</div><figure><img loading="lazy" src="shots/before-basic-light.jpg" alt="before basic light"><figcaption>before · light</figcaption></figure><figure><img loading="lazy" src="shots/after-basic-light.jpg" alt="after basic light"><figcaption>after · light</figcaption></figure><figure><img loading="lazy" src="shots/before-basic-dark.jpg" alt="before basic dark"><figcaption>before · dark</figcaption></figure><figure><img loading="lazy" src="shots/after-basic-dark.jpg" alt="after basic dark"><figcaption>after · dark</figcaption></figure></div><div class="pair"><div class="cap">Cyberpunk</div><figure><img loading="lazy" src="shots/before-cyberpunk-light.jpg" alt="before cyberpunk light"><figcaption>before · light</figcaption></figure><figure><img loading="lazy" src="shots/after-cyberpunk-light.jpg" alt="after cyberpunk light"><figcaption>after · light</figcaption></figure><figure><img loading="lazy" src="shots/before-cyberpunk-dark.jpg" alt="before cyberpunk dark"><figcaption>before · dark</figcaption></figure><figure><img loading="lazy" src="shots/after-cyberpunk-dark.jpg" alt="after cyberpunk dark"><figcaption>after · dark</figcaption></figure></div><div class="pair"><div class="cap">Retro Wave</div><figure><img loading="lazy" src="shots/before-retroWave-light.jpg" alt="before retroWave light"><figcaption>before · light</figcaption></figure><figure><img loading="lazy" src="shots/after-retroWave-light.jpg" alt="after retroWave light"><figcaption>after · light</figcaption></figure><figure><img loading="lazy" src="shots/before-retroWave-dark.jpg" alt="before retroWave dark"><figcaption>before · dark</figcaption></figure><figure><img loading="lazy" src="shots/after-retroWave-dark.jpg" alt="after retroWave dark"><figcaption>after · dark</figcaption></figure></div><div class="pair"><div class="cap">Neon Night</div><figure><img loading="lazy" src="shots/before-neonNight-light.jpg" alt="before neonNight light"><figcaption>before · light</figcaption></figure><figure><img loading="lazy" src="shots/after-neonNight-light.jpg" alt="after neonNight light"><figcaption>after · light</figcaption></figure><figure><img loading="lazy" src="shots/before-neonNight-dark.jpg" alt="before neonNight dark"><figcaption>before · dark</figcaption></figure><figure><img loading="lazy" src="shots/after-neonNight-dark.jpg" alt="after neonNight dark"><figcaption>after · dark</figcaption></figure></div><div class="pair"><div class="cap">Deep Ocean</div><figure><img loading="lazy" src="shots/before-deepOcean-light.jpg" alt="before deepOcean light"><figcaption>before · light</figcaption></figure><figure><img loading="lazy" src="shots/after-deepOcean-light.jpg" alt="after deepOcean light"><figcaption>after · light</figcaption></figure><figure><img loading="lazy" src="shots/before-deepOcean-dark.jpg" alt="before deepOcean dark"><figcaption>before · dark</figcaption></figure><figure><img loading="lazy" src="shots/after-deepOcean-dark.jpg" alt="after deepOcean dark"><figcaption>after · dark</figcaption></figure></div>
+
+  <h2 id="todo">Checklist: screens that still need a hand pass</h2>
+  <p>Done everywhere by the mechanical swap: <code>.foregroundStyle(.secondary)</code> to <code>.secondaryText</code> (366), <code>.tertiary</code> to <code>.tertiaryText</code> (17) and accent or tint words to <code>.accentText</code> (about 48). Done by hand: Today, Settings, shared components, tokens. Still to do, by screen:</p>
+  <ul>
+  <li>Ternaries that pick a text style (<code>cond ? .secondary : .primary</code>, 80 of them) were not swapped: rewrite as <code>AnyShapeStyle</code> or <code>Palette.textSecondary</code>.</li>
+  <li>Words in a tint: grep <code>foregroundStyle(tint)</code>, <code>Palette.warning</code>, <code>Palette.success</code> (83 uses), <code>Palette.statXxx</code> and <code>kind.tint</code> used as text, in Finance, Issues (<code>IssueVisuals</code>), Calendar, Shopping, Movies, Messages.</li>
+  <li><code>caption2</code> for words (179): Calendar, Finance, Issues, Messages, Inbox.</li>
+  <li>Fixed text sizes: Finance (28 / 44 pt amounts), Dinner (7), Notes (6), CalendarGrid (6), EventSheets (5): use <code>@ScaledMetric</code> or a text style.</li>
+  <li>Section headers: Finance, Issues, Movies, Dinner, Recipes use <code>SectionHeader</code> or their own capitals; move the capitals (Recipes, Inbox, Calendar, Plus details, Event sheets) to <code>.groupLabel()</code>.</li>
+  <li>Paywall, Plus details and the shop (<code>CompanionShop</code>, <code>SparklePackCard</code>): white on accent in hand-built buttons, <code>ProPreview</code> opacity text; check on Neon Night and Retro Wave.</li>
+  <li><code>Palette.statXxx</code>, event and issue colours as text (amber 2.15, sky 2.1, green 2.3 on white): glyph or wash only.</li>
+  <li>Notes (sticky notes, <code>.black.opacity(0.45)</code> on a pastel): 4.5:1 is not met by the second line.</li>
+  <li>Reduce Transparency and Increase Contrast: glass falls back to system values; verify each screen once with both on.</li>
+  </ul>
+</main>
+</body>
+</html>

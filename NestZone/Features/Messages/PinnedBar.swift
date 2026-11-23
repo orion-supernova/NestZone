@@ -14,11 +14,11 @@ struct PinnedBar: View {
                 HStack(spacing: 10) {
                     Image(systemName: "pin.fill")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(senderName)
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(1)
                         Text(ReplyQuoteView.plain(snippet: pin.snippet, kind: pin.kind))
                             .font(.footnote)
@@ -39,7 +39,7 @@ struct PinnedBar: View {
             Button(action: unpin) {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
                     .contentShape(.rect)
             }

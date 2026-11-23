@@ -271,7 +271,7 @@ struct CompanionCard: View {
                         .oneLineUnlessAccessibility()
                     Text(first ? L10n.companionMeetBody : L10n.companionNextBody)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility()
                 }
             }
@@ -295,10 +295,10 @@ struct CompanionCard: View {
     private var unreadable: some View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Text(L10n.companionUnreadable)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .oneLineUnlessAccessibility()
         }
         .padding(Metrics.cardPadding)
@@ -363,7 +363,7 @@ private struct CardTitle: View {
             }
             Text(subtitle)
                 .font(detail)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .contentTransition(.numericText())
                 .oneLineUnlessAccessibility()
         }
@@ -432,7 +432,7 @@ private struct CardProgress: View {
             .animation(Motion.arrive, value: share)
             Text(caption(next: next, isPet: isPet, potted: store.isPotted, species: store.species))
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .oneLineUnlessAccessibility()
         }
         .accessibilityElement(children: .combine)
@@ -631,7 +631,7 @@ private struct StripAction: View {
                 // The vote is on its way; nothing to offer yet.
                 Image(systemName: "hourglass")
                     .padding(8)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .accessibilityLabel(Text(L10n.voteOpening))
             } else if voting || store.vote?.winner == nil {
               Button { store.send(voting ? .voteTapped : .chooseTapped) } label: {

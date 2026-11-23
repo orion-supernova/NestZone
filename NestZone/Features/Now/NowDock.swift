@@ -47,7 +47,7 @@ public struct NowDock: View {
                         if !isInline, let subtitle {
                             subtitle
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .lineLimit(1)
                         }
                     }

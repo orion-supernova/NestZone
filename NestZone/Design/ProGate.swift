@@ -209,7 +209,7 @@ struct ProLockedScreen: View {
                         .multilineTextAlignment(.center)
                     Text(L10n.proLockedSubtitle)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.center)
                 }
                 PrimaryButton(L10n.proLockedUpgrade, symbol: PlusStyle.unlockSymbol) {

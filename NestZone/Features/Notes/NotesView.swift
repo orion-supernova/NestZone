@@ -229,7 +229,7 @@ struct ComposeNoteSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.notesPreviewLabel)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             StickyNote(
@@ -282,7 +282,7 @@ struct ComposeNoteSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.notesColorLabel)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
 
             FlowLayout(spacing: 8) {
                 ForEach(StickyColor.allCases) { swatch in

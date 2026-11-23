@@ -108,7 +108,7 @@ private struct ReportRowView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: row.kind.symbol)
                     .font(.body)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(width: 28, height: 28)
                     .accessibilityHidden(true)
 
@@ -123,7 +123,7 @@ private struct ReportRowView: View {
                     if let preview = row.preview, !preview.isEmpty {
                         Text(preview)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
                     }
@@ -132,7 +132,7 @@ private struct ReportRowView: View {
                         row.targetUserName ?? String(localized: L10n.avatarSomeone)
                     ))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .lineLimit(1)
                     if let home = row.homeName, !home.isEmpty {
                         Text(home)

@@ -183,7 +183,7 @@ public struct DayCell: View, Equatable {
                     if extra > 0 {
                         Text("+\(extra)")
                             .font(.system(size: 8, weight: .bold, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                 }
                 .frame(height: 6)
@@ -331,14 +331,14 @@ public struct EventRow: View {
                         .foregroundStyle(occurrence.isInProgress ? theme.accent : .secondary)
                         .monospacedDigit()
                     if let location = occurrence.location, !location.isEmpty {
-                        Text("·").foregroundStyle(.tertiary)
+                        Text("·").foregroundStyle(.tertiaryText)
                         Label {
                             Text(location).lineLimit(1)
                         } icon: {
                             Image(systemName: "mappin")
                         }
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
                 }
 
@@ -500,7 +500,7 @@ public struct DayTimeline: View {
                         Spacer(minLength: 0)
                         Text(L10n.calendarAllDay)
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                     .foregroundStyle(occurrence.kind.tint)
                     .padding(.horizontal, 10)
@@ -533,7 +533,7 @@ public struct DayTimeline: View {
                 Spacer(minLength: 0)
                 Text(L10n.calendarAllDay)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
             .foregroundStyle(tint)
             .padding(.horizontal, 10)
@@ -559,7 +559,7 @@ public struct DayTimeline: View {
                     HStack(alignment: .top, spacing: 8) {
                         Text(label(for: hour))
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .monospacedDigit()
                             .frame(width: gutter - 8, alignment: .trailing)
                         Rectangle()

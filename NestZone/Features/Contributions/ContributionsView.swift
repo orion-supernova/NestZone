@@ -107,7 +107,7 @@ public struct ContributionsView: View {
                         Text(verdict.title).font(.headline)
                         Text(verdict.message)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 0)

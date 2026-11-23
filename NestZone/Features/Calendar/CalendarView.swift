@@ -182,7 +182,7 @@ public struct CalendarView: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             TextField(text: $store.search) {
                 Text(L10n.calendarSearchPlaceholder)
             }
@@ -234,7 +234,7 @@ public struct CalendarView: View {
                     if !store.month.isCurrent {
                         Text(L10n.calendarJumpToToday)
                             .font(.caption2)
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(.accentText)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -452,7 +452,7 @@ public struct CalendarView: View {
                     }
                 }
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .monospacedDigit()
                 .contentTransition(.numericText())
                 .padding(.horizontal, Metrics.screenPadding)
@@ -537,7 +537,7 @@ public struct CalendarView: View {
             ForEach(Array(MonthGrid.weekdayHeadings.enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -597,7 +597,7 @@ public struct CalendarView: View {
                     if !items.isEmpty {
                         Text(L10n.calendarEventCount(items.count))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .contentTransition(.numericText())
                     }
                 }
@@ -658,7 +658,7 @@ public struct CalendarView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text(L10n.calendarSearchResults(results.count + theirs.count))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     Spacer(minLength: 8)
@@ -694,7 +694,7 @@ public struct CalendarView: View {
                 .bounces()
             Text(store.isFiltering ? L10n.calendarNoMatches : L10n.calendarNothingOn)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
@@ -813,7 +813,7 @@ public struct CalendarView: View {
                                 .font(.subheadline.weight(.semibold))
                             Text(section.day.date(), format: .dateTime.weekday(.wide))
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                             Spacer(minLength: 0)
                             Badge("\(section.items.count + section.shared.count)", tint: theme.accent)
                         }
@@ -842,7 +842,7 @@ public struct CalendarView: View {
                         .bounces(when: occurrence.isInProgress)
                     Text(occurrence.isInProgress ? L10n.calendarHappeningNow : L10n.calendarNextUp)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .textCase(.uppercase)
                     Spacer(minLength: 0)
                     CountdownText(occurrence.start)
@@ -864,7 +864,7 @@ public struct CalendarView: View {
                         Image(systemName: "clock")
                     }
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                     if let location = occurrence.location, !location.isEmpty {
                         Label {
@@ -873,7 +873,7 @@ public struct CalendarView: View {
                             Image(systemName: "mappin.and.ellipse")
                         }
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
 
                     Spacer(minLength: 0)
@@ -1033,7 +1033,7 @@ public struct CalendarView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.calendarSharedHeading)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .padding(.horizontal, 4)
                 .padding(.top, 4)
 

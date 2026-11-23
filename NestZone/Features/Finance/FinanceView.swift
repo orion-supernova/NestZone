@@ -202,7 +202,7 @@ public struct FinanceView: View {
                     if !store.month.isCurrent {
                         Text(L10n.financeBackToThisMonth)
                             .font(.caption2)
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(.accentText)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -438,7 +438,7 @@ public struct FinanceView: View {
             if isSquare {
                 Text(L10n.financeAllSquareMessage)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             } else if !isTellingSquareUp {
                 // Named, not just counted: "you owe €40" is an amount, "you owe
                 // Bea €40" is something a person can act on.
@@ -456,7 +456,7 @@ public struct FinanceView: View {
                                 ? L10n.financeYouOwePerson(store.state.name(for: transfer.to))
                                 : L10n.financePersonOwesYou(store.state.name(for: transfer.from)))
                                 .font(.footnote)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                                 .lineLimit(1)
                             Spacer(minLength: 4)
                             Text(Money.text(transfer.amount, currency: store.currency))
@@ -562,7 +562,7 @@ public struct FinanceView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(L10n.financeSpentThisMonth)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                         MoneyText(store.summary.monthTotal, currency: store.currency)
                             .font(.system(.title, design: .rounded, weight: .bold))
                     }
@@ -590,7 +590,7 @@ public struct FinanceView: View {
                 if store.summary.expenseCount > 0 {
                     Text(L10n.financeExpenseCount(store.summary.expenseCount))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -657,7 +657,7 @@ public struct FinanceView: View {
                         Divider().opacity(0.4)
                         Text(L10n.financePaidThisMonth)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                         ForEach(store.summary.payers) { member in
                             PayerRow(
                                 member: member,
@@ -857,7 +857,7 @@ public struct FinanceView: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             TextField(text: $store.search) {
                 Text(L10n.financeSearchPlaceholder)
             }
@@ -905,7 +905,7 @@ public struct FinanceView: View {
         HStack {
             Text(store.isFiltering ? L10n.financeFilteredTotal : L10n.financeMonthTotal)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Spacer(minLength: 8)
             MoneyText(store.filteredTotal, currency: store.currency)
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
@@ -955,7 +955,7 @@ public struct FinanceView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(L10n.financeCommittedMonthly)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 MoneyText(store.monthlyCommitted, currency: store.currency)
                     .font(.system(.title2, design: .rounded, weight: .bold))
 
@@ -1119,7 +1119,7 @@ private struct DayHeader: View {
             Text(Money.text(total, currency: currency))
                 .font(.caption.weight(.semibold))
                 .monospacedDigit()
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
@@ -1189,14 +1189,14 @@ private struct ExpenseRow: View {
                     if expense.isFromBill {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .accessibilityLabel(Text(L10n.financeFromBill))
                     }
                 }
                 HStack(spacing: 4) {
                     Text(L10n.financePaidBy(payerName))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                     if let eventName {
                         // Without this the ledger showed a caterer's invoice as
@@ -1204,7 +1204,7 @@ private struct ExpenseRow: View {
                         // the calendar was the reason for it.
                         Text(verbatim: "·")
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.tertiaryText)
                         Label {
                             Text(eventName)
                         } icon: {
@@ -1217,7 +1217,7 @@ private struct ExpenseRow: View {
                     if let issueName {
                         Text(verbatim: "·")
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.tertiaryText)
                         Label {
                             Text(issueName)
                         } icon: {
@@ -1282,7 +1282,7 @@ private struct EventSpendRow: View {
                     .lineLimit(1)
                 Text(event.startsAt.date, format: .dateTime.day().month(.abbreviated))
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 if let progress = event.progress {
                     GeometryReader { geo in
@@ -1312,7 +1312,7 @@ private struct EventSpendRow: View {
                 } else if event.expenseCount > 0 {
                     Text(L10n.financeEventExpenses(event.expenseCount))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -1351,7 +1351,7 @@ private struct RepairSpendRow: View {
                     .lineLimit(1)
                 Text(repair.severity.title)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 if let progress = repair.progress {
                     GeometryReader { geo in
@@ -1381,7 +1381,7 @@ private struct RepairSpendRow: View {
                 } else if repair.expenseCount > 0 {
                     Text(L10n.financeEventExpenses(repair.expenseCount))
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -1444,15 +1444,15 @@ private struct BillRow: View {
                             Text(countdown)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(urgency.tint)
-                            Text("·").font(.caption2).foregroundStyle(.secondary)
+                            Text("·").font(.caption2).foregroundStyle(.secondaryText)
                             Text(bill.cycle.title)
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                             if bill.responsible != nil {
-                                Text("·").font(.caption2).foregroundStyle(.secondary)
+                                Text("·").font(.caption2).foregroundStyle(.secondaryText)
                                 Text(payerName)
                                     .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                     .lineLimit(1)
                             }
                             // Whether anybody will actually be told. A bill with
@@ -1461,7 +1461,7 @@ private struct BillRow: View {
                             if !bill.reminders.isEmpty {
                                 Image(systemName: "bell.fill")
                                     .font(.system(size: 8))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                     .accessibilityLabel(Text(
                                         L10n.financeReminderCount(bill.reminders.count)
                                     ))
@@ -1557,7 +1557,7 @@ private struct PayerRow: View {
             Text(Money.text(member.paidThisMonth, currency: currency))
                 .font(.caption.weight(.semibold))
                 .monospacedDigit()
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
         // Money, so it grows to its share and stops there — no spring past it.
         .drawIn($grown, animation: Motion.dataDraw.delay(0.12))

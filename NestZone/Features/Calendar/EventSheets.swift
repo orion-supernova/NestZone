@@ -149,7 +149,7 @@ struct EventComposerSheet: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(group.title)
                             .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.tertiaryText)
                             .textCase(.uppercase)
                             .padding(.leading, 4)
                         HStack(spacing: 8) {
@@ -207,7 +207,7 @@ struct EventComposerSheet: View {
                         Text(L10n.calendarAllDayToggle)
                     } icon: {
                         Image(systemName: store.isAllDay ? "sun.max.fill" : "clock.fill")
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(.accentText)
                             .contentTransition(.symbolEffect(.replace))
                     }
                     .font(.subheadline)
@@ -242,7 +242,7 @@ struct EventComposerSheet: View {
                             if store.repeats {
                                 Text(store.repeatSummary)
                                     .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                     .transition(.opacity)
                             }
                         }
@@ -329,7 +329,7 @@ struct EventComposerSheet: View {
         GlassCard {
             HStack(spacing: 10) {
                 Image(systemName: "mappin.and.ellipse")
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .frame(width: 20)
                 TextField(text: $store.location) {
                     Text(L10n.calendarLocationPlaceholder)
@@ -348,7 +348,7 @@ struct EventComposerSheet: View {
                         Text(L10n.calendarWhoIsComing)
                     } icon: {
                         Image(systemName: "person.2.fill")
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(.accentText)
                     }
                     .font(.subheadline.weight(.medium))
                     Spacer()
@@ -359,7 +359,7 @@ struct EventComposerSheet: View {
                             .font(.caption.weight(.semibold))
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                 }
 
                 FlowLayout(spacing: 8) {
@@ -481,7 +481,7 @@ struct EventComposerSheet: View {
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.system(size: 8, weight: .bold))
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
                 .buttonStyle(.plain)
                 .hostedSheet(isPresented: $isPickingCurrency) {
@@ -500,7 +500,7 @@ struct EventComposerSheet: View {
                 if store.budgetMinor > 0 {
                     Text(Money.text(store.budgetMinor, currency: store.currency))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                         .transition(.opacity)
                 }
@@ -509,7 +509,7 @@ struct EventComposerSheet: View {
 
             Text(L10n.calendarBudgetHint)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -565,7 +565,7 @@ struct EventComposerSheet: View {
                 ? L10n.calendarShoppingHintWithMenu
                 : L10n.calendarShoppingHint)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -574,7 +574,7 @@ struct EventComposerSheet: View {
             if store.menu.isEmpty {
                 Text(L10n.calendarMenuEmpty)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             } else {
                 FlowLayout(spacing: 8) {
                     ForEach(store.menu) { recipe in
@@ -635,7 +635,7 @@ struct EventComposerSheet: View {
             }
             Text(L10n.calendarTicketsHint)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
         }
     }
 
@@ -875,7 +875,7 @@ struct EventDetailSheet: View {
         HStack(spacing: 10) {
             Image(systemName: symbol)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(width: 18)
             Text(text)
                 .font(.subheadline)
@@ -989,7 +989,7 @@ struct EventDetailSheet: View {
                         } else {
                             Text(L10n.calendarNoAnswer)
                                 .font(.caption)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(.tertiaryText)
                         }
                     }
                 }
@@ -1026,7 +1026,7 @@ struct EventDetailSheet: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(L10n.calendarPlanBudget)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(Money.text(plan.spent, currency: currency))
                                 .font(.system(.title3, design: .rounded, weight: .bold))
@@ -1034,7 +1034,7 @@ struct EventDetailSheet: View {
                             if let budget = plan.budget {
                                 Text(L10n.calendarOfBudget(Money.compactText(budget, currency: currency)))
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                             }
                         }
                         if let remaining = plan.remaining {
@@ -1078,7 +1078,7 @@ struct EventDetailSheet: View {
                                 Spacer(minLength: 4)
                                 Text(store.state.name(for: expense.paidBy))
                                     .font(.caption2)
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(.tertiaryText)
                                 Text(Money.text(expense.amount, currency: expense.currency))
                                     .font(.subheadline.weight(.semibold))
                                     .monospacedDigit()
@@ -1129,7 +1129,7 @@ struct EventDetailSheet: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(L10n.calendarPlanShopping)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                         // "0 of 0 bought" is not a progress report, it is an
                         // empty list pretending to be one.
                         Text(plan.shoppingTotal == 0
@@ -1194,7 +1194,7 @@ struct EventDetailSheet: View {
                     if let recipe = item.recipeTitle, !recipe.isEmpty {
                         Text(recipe)
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.tertiaryText)
                             .lineLimit(1)
                     }
                 }
@@ -1329,7 +1329,7 @@ struct EventDetailSheet: View {
                                     .foregroundStyle(tile.tint)
                             }
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             Text(tile.value)
                                 .font(.system(.title3, design: .rounded, weight: .bold))
                                 .contentTransition(.numericText())
@@ -1382,7 +1382,7 @@ struct EventDetailSheet: View {
                     if plan.menuIngredientCount > 0 {
                         Text(L10n.calendarIngredientCount(plan.menuIngredientCount))
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                 }
 
@@ -1415,7 +1415,7 @@ struct EventDetailSheet: View {
                                     }
                                 }
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                             }
                             Spacer(minLength: 0)
                         }
@@ -1463,7 +1463,7 @@ struct EventDetailSheet: View {
                        !(result.added == 0 && hasNothingToStockUp) {
                         Text(stockUpSummary(result))
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .frame(maxWidth: .infinity)
                             .transition(.opacity)
                     }
@@ -1508,7 +1508,7 @@ struct EventDetailSheet: View {
                     if store.occurrence.isRecurring {
                         Text(L10n.calendarDinnerThisDateOnly)
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .frame(maxWidth: .infinity)
                             .multilineTextAlignment(.center)
                     }
@@ -1567,7 +1567,7 @@ struct EventDetailSheet: View {
                             .font(.subheadline.weight(.semibold))
                         Text(store.occurrence.url ?? "")
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
@@ -1600,7 +1600,7 @@ struct EventDetailSheet: View {
                     .font(.subheadline.weight(.medium))
                 Text(L10n.calendarPlanInvitationMessage)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
@@ -1618,12 +1618,12 @@ struct EventDetailSheet: View {
                     Text(L10n.calendarNotes)
                 } icon: {
                     Image(systemName: "note.text")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 .font(.subheadline.weight(.semibold))
                 Text(notes)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -1650,7 +1650,7 @@ private struct AddItemField: View {
         HStack(spacing: 8) {
             Image(systemName: "basket")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .accessibilityHidden(true)
 
             TextField(text: $text) {
@@ -1715,7 +1715,7 @@ private struct DisclosureRow: View {
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .frame(height: Metrics.minTapTarget)
             .contentShape(.rect)
         }
@@ -1813,7 +1813,7 @@ struct RecipePickerSheet: View {
                         if store.state.adoptedCount > 0 {
                             Text(L10n.calendarWillSaveToHome(store.state.adoptedCount))
                                 .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -1833,7 +1833,7 @@ struct RecipePickerSheet: View {
     ) -> some View {
         Label { Text(title) } icon: { Image(systemName: symbol) }
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .textCase(.uppercase)
             .padding(.leading, 4)
             .padding(.bottom, 2)
@@ -1868,7 +1868,7 @@ struct RecipePickerSheet: View {
                         }
                     }
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
                 Spacer(minLength: 0)
             }

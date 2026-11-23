@@ -43,7 +43,7 @@ private struct ColourPickerCard: View {
                         .accessibilityAddTraits(.isHeader)
                     Text(L10n.colourPickHint)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility()
                 }
                 Spacer()
@@ -118,7 +118,7 @@ private struct ColourPickerCard: View {
                 if grown {
                     Text(L10n.colourGrown)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .oneLineUnlessAccessibility()
                 }
             }

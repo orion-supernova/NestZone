@@ -14,7 +14,7 @@ struct CalendarAccessExplainer: View {
         VStack(spacing: 20) {
             Image(systemName: "calendar.badge.plus")
                 .font(.system(size: 44, weight: .regular))
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .padding(.top, 8)
                 .accessibilityHidden(true)
 
@@ -24,7 +24,7 @@ struct CalendarAccessExplainer: View {
                     .multilineTextAlignment(.center)
                 Text(L10n.calendarAccessBody)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }

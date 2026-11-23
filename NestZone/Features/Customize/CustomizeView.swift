@@ -69,7 +69,7 @@ public struct CustomizeView: View {
                     if store.layout.visibility(of: section) == .automatic {
                         Text(section.automaticMeaning)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             // Comes and goes with the setting, blurring in
                             // and out rather than popping.
                             .transition(reduceMotion ? AnyTransition.opacity : AnyTransition(.blurReplace))

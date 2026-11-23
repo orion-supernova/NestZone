@@ -16,7 +16,7 @@ struct SharedItemSheet: View {
                     card.appear(0)
                     Text(L10n.calendarSharedReadOnly)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 4)
                 }
@@ -74,7 +74,7 @@ struct SharedItemSheet: View {
                         .lineLimit(3)
                     Text(L10n.calendarSharedBy(store.name))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
                 Spacer(minLength: 0)
             }
@@ -96,7 +96,7 @@ struct SharedItemSheet: View {
         HStack(spacing: 10) {
             Image(systemName: symbol)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(width: 20)
             Text(text)
                 .font(.subheadline)

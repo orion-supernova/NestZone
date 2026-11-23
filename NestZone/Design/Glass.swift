@@ -23,7 +23,10 @@ extension View {
         interactive: Bool = false
     ) -> some View {
         glassEffect(
-            .regular.tint(tinted).interactive(interactive),
+            // Untinted glass gets the neutral floor: in dark it is darkened a
+            // little so words keep their contrast over a themed wash; in
+            // light it is clear and changes nothing.
+            .regular.tint(tinted ?? Palette.glassFloor).interactive(interactive),
             in: .rect(cornerRadius: cornerRadius, style: .continuous)
         )
     }

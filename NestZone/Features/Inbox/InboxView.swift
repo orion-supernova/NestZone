@@ -371,7 +371,7 @@ struct InboxPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(section.title)
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .textCase(.uppercase)
                 .padding(.leading, 4)
 
@@ -424,7 +424,7 @@ struct InboxPanel: View {
         } else if !store.sections.isEmpty {
             Text(L10n.inboxRetentionNote(store.retentionDays))
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.tertiaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 8)
         }
@@ -478,7 +478,7 @@ struct InboxPanel: View {
 
                         Text(L10n.inboxVersionFooter(AppVersion.current.raw))
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.tertiaryText)
                             .padding(.top, 8)
                     }
                     .padding(.horizontal, Metrics.screenPadding)
@@ -520,14 +520,14 @@ private struct ActivityRow: View {
                         Spacer(minLength: 4)
                         RelativeTimeText(row.created)
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .layoutPriority(1)
                     }
 
                     if !row.body.isEmpty {
                         Text(row.body)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
                     }
@@ -546,7 +546,7 @@ private struct ActivityRow: View {
                             )
                             Text(name)
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
                         .padding(.top, 1)
                     }
@@ -640,7 +640,7 @@ private struct UpdateCard: View {
 
                 Text(text.body)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if !text.highlights.isEmpty {
@@ -683,7 +683,7 @@ private struct UpdateCard: View {
                 Text(L10n.inboxVersionChip(version))
                     .font(.caption2.weight(.semibold))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(Palette.inset, in: .capsule)
@@ -692,7 +692,7 @@ private struct UpdateCard: View {
             if update.isPinned {
                 Image(systemName: "pin.fill")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .accessibilityLabel(Text(L10n.inboxPinned))
             }
 
@@ -737,7 +737,7 @@ private struct UpdateCard: View {
             HStack(spacing: 6) {
                 RelativeTimeText(update.displayDate)
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.tertiaryText)
             }
             .padding(.top, 2)
         }

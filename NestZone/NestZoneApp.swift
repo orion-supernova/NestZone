@@ -40,7 +40,11 @@ struct NestZoneApp: App {
             } else if ProcessInfo.processInfo.arguments.contains("-readabilityLab") {
                 // Today-shaped components in every theme, no sign-in
                 // (Design/ReadabilityLab.swift).
-                ReadabilityLab()
+                if ProcessInfo.processInfo.arguments.contains("-readabilityLegacy") {
+                    LegacyReadabilityLab()
+                } else {
+                    ReadabilityLab()
+                }
             } else if let page = UserDefaults.standard.string(forKey: "artSheet") {
                 // A contact sheet of the companion's art (Features/Companion/ArtSheet.swift).
                 ArtSheet(page: page)

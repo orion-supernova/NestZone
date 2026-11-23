@@ -53,8 +53,8 @@ public struct StatTile: View {
                 .font(.system(.title, design: .rounded, weight: .bold))
                 .foregroundStyle(.primary)
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.footnote)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(1)
         }
         .padding(Metrics.cardPadding)
@@ -75,9 +75,9 @@ public struct StatTile: View {
         HStack(spacing: 2) {
             trendArrow(up: change > 0)
             Text(abs(change), format: .number)
-                .font(.caption2.weight(.semibold))
+                .font(.caption.weight(.semibold))
         }
-        .foregroundStyle(change > 0 ? Palette.success : .secondary)
+        .foregroundStyle(change > 0 ? AnyShapeStyle(Palette.successText) : AnyShapeStyle(.secondaryText))
         .contentTransition(.numericText(value: Double(change)))
         .onAppear { trendHops += 1 }
         .onChange(of: change) { _, _ in trendHops += 1 }

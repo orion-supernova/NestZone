@@ -27,7 +27,7 @@ struct PlusDetailsView: View {
             VStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
                 Text(L10n.plusDetailsSubtitle)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 ForEach(PlusDetail.groups) { group in
                     section(group)
@@ -47,7 +47,7 @@ struct PlusDetailsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(group.title)
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .textCase(.uppercase)
                 .accessibilityAddTraits(.isHeader)
             GlassCard {
@@ -71,11 +71,11 @@ struct PlusDetailsView: View {
                 Text(detail.title).font(.subheadline.weight(.semibold))
                 Text(detail.text)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 if detail.feature == .multipleHomes, let line = status.coverageLine(homeNames: homeNames) {
                     Text(line)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .padding(.top, 2)
                 }
             }
@@ -88,7 +88,7 @@ struct PlusDetailsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.plusFreeTitle)
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .textCase(.uppercase)
                 .accessibilityAddTraits(.isHeader)
             GlassCard {

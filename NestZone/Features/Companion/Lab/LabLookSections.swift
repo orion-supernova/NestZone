@@ -38,7 +38,7 @@ struct LabMoodSection: View {
             }
             .pickerStyle(.menu)
             LabeledContent {
-                Text(verbatim: String(localized: store.mood.title(isPet: store.isPet))).foregroundStyle(.secondary)
+                Text(verbatim: String(localized: store.mood.title(isPet: store.isPet))).foregroundStyle(.secondaryText)
             } label: {
                 Text(verbatim: "On the card now")
             }
@@ -75,7 +75,7 @@ struct LabMoodSection: View {
         } label: {
             LabeledContent {
                 Text(verbatim: current.lastCare.map { $0.formatted(.relative(presentation: .named)) } ?? "never")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             } label: {
                 Label { Text(verbatim: "Last care") } icon: { Image(systemName: "clock") }
             }
@@ -86,7 +86,7 @@ struct LabMoodSection: View {
             in: 0...14
         ) {
             LabeledContent {
-                Text(verbatim: "\(streak)").monospacedDigit().foregroundStyle(.secondary)
+                Text(verbatim: "\(streak)").monospacedDigit().foregroundStyle(.secondaryText)
             } label: {
                 Text(verbatim: "Care streak (days)")
             }
@@ -285,7 +285,7 @@ struct LabHolidayList: View {
                             VStack(alignment: .trailing, spacing: 2) {
                                 Text(verbatim: row.date?.formatted(.dateTime.day().month(.abbreviated).year()) ?? "—")
                                 if store.celebrated.contains(row.id) {
-                                    Text(verbatim: "celebrated").font(.caption2).foregroundStyle(.secondary)
+                                    Text(verbatim: "celebrated").font(.caption2).foregroundStyle(.secondaryText)
                                 }
                             }
                         } label: {

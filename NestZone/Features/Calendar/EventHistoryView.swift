@@ -59,7 +59,7 @@ struct EventHistorySheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(L10n.calendarHistoryWindow(history.days / 30))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 HStack(alignment: .top, spacing: 10) {
                     figure(
                         symbol: "calendar",
@@ -93,7 +93,7 @@ struct EventHistorySheet: View {
                             .joined(separator: ", ")
                     ))
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -116,7 +116,7 @@ struct EventHistorySheet: View {
                 .contentTransition(.numericText())
             Text(title)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(2, reservesSpace: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -144,7 +144,7 @@ struct EventHistorySheet: View {
                         .lineLimit(1)
                     Text(subtitle(for: row))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
 
@@ -164,7 +164,7 @@ struct EventHistorySheet: View {
                             Image(systemName: "person.2.fill")
                         }
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
                 }
 

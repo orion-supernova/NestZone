@@ -125,7 +125,7 @@ private struct LabPresetsSection: View {
                         Label { Text(verbatim: preset.title) } icon: { Image(systemName: preset.symbol) }
                         Text(verbatim: preset.summary)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                 }
                 .buttonStyle(.plain)

@@ -159,7 +159,7 @@ public struct MovieNightView: View {
 
             Image(systemName: "popcorn.fill")
                 .font(.system(size: 46))
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .frame(width: 108, height: 108)
                 .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
                 .bounces()
@@ -170,7 +170,7 @@ public struct MovieNightView: View {
                     .font(.system(.title2, design: .rounded, weight: .bold))
                 Text(L10n.movienightSwipeHint)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .multilineTextAlignment(.center)
             }
             .appear(1)
@@ -258,7 +258,7 @@ public struct MovieNightView: View {
                     .font(.subheadline.weight(.semibold))
                 Text(L10n.movienightFinishedCount(store.finishedCount, store.memberCount))
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .monospacedDigit()
                     .contentTransition(.numericText())
             }
@@ -472,7 +472,7 @@ private struct DeckSkeleton: View {
                     ProgressView()
                     Text(message)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -711,7 +711,7 @@ struct PollKindSheet: View {
                                 Spacer(minLength: 0)
                                 if store.kind == kind {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(.tint)
+                                        .foregroundStyle(.accentText)
                                         .transition(.scale.combined(with: .opacity))
                                 }
                             }
@@ -822,7 +822,7 @@ struct PollSummarySheet: View {
                                 // worth watching on this screen.
                                 Text(entry.yes, format: .number)
                                     .monospacedDigit()
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                     .contentTransition(.numericText(value: Double(entry.yes)))
                                     .animation(Motion.spring, value: entry.yes)
                             } label: {
@@ -939,7 +939,7 @@ private struct PollOutcomeView: View {
 
                                     Text(item.label ?? "")
                                         .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.secondaryText)
                                         .lineLimit(2)
                                         .multilineTextAlignment(.leading)
                                 }
@@ -958,7 +958,7 @@ private struct PollOutcomeView: View {
             if outcome.isPartialTurnout {
                 Text(L10n.previousPollsTurnout(outcome.voters, outcome.memberCount))
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1006,7 +1006,7 @@ private struct PollHistoryRow: View {
                 HStack(spacing: 12) {
                     Image(systemName: "popcorn.fill")
                         .font(.callout)
-                        .foregroundStyle(.tint)
+                        .foregroundStyle(.accentText)
                         .frame(width: 38, height: 38)
                         .background(.tint.opacity(0.14), in: .circle)
 
@@ -1018,7 +1018,7 @@ private struct PollHistoryRow: View {
                         if let created = poll.created {
                             Text(created.date, format: .dateTime.day().month().year())
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
                     }
 
@@ -1040,7 +1040,7 @@ private struct PollHistoryRow: View {
                             ProgressView().controlSize(.small)
                             Text(L10n.commonLoading)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondaryText)
                         }
                     }
                 }

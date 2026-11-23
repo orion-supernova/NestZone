@@ -58,7 +58,7 @@ struct LabSlider: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             LabeledContent {
-                Text(verbatim: describe(held ?? value)).monospacedDigit().foregroundStyle(.secondary)
+                Text(verbatim: describe(held ?? value)).monospacedDigit().foregroundStyle(.secondaryText)
             } label: {
                 Text(verbatim: title)
             }
@@ -86,7 +86,7 @@ struct LabNote: View {
     var body: some View {
         Text(verbatim: text)
             .font(.footnote)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
     }
 }
 #endif

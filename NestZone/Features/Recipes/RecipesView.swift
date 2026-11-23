@@ -89,7 +89,7 @@ public struct RecipesView: View {
             HStack {
                 Text(L10n.dinnerTonightTitle)
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .textCase(.uppercase)
                     .padding(.leading, 4)
                 Spacer(minLength: 0)
@@ -244,7 +244,7 @@ private struct RecipeCard: View {
                     if let summary = recipe.summary {
                         Text(summary)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
                     }
@@ -275,7 +275,7 @@ private struct RecipeCard: View {
                 Spacer(minLength: 0)
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
         }
         .padding(Metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -328,7 +328,7 @@ struct RecipeDetailView: View {
                 if let summary = store.recipe.summary {
                     Text(summary)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .appear(0)
                 }
 
@@ -470,7 +470,7 @@ struct RecipeDetailView: View {
                     Image(systemName: "moon.stars.fill")
                 }
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
                 .transition(.opacity)
@@ -494,7 +494,7 @@ struct RecipeDetailView: View {
                                 store.ingredientsOnList, store.recipe.ingredients.count
                             ))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .contentTransition(.numericText())
                             .transition(.opacity)
                     }
@@ -519,9 +519,9 @@ private struct Fact: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            Image(systemName: symbol).font(.callout).foregroundStyle(.tint)
+            Image(systemName: symbol).font(.callout).foregroundStyle(.accentText)
             Text(value).font(.system(.headline, design: .rounded))
-            Text(label).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+            Text(label).font(.caption2).foregroundStyle(.secondaryText).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -586,7 +586,7 @@ struct CookingModeView: View {
                     .font(.headline)
                 Text(store.recipe.title)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .lineLimit(1)
             }
 
@@ -602,7 +602,7 @@ struct CookingModeView: View {
             HStack {
                 Text(L10n.recipesCookingProgressLabel)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 Spacer()
                 Text(store.phase == .ingredients
                     ? L10n.recipesCookingIngredientsProgress(
@@ -610,7 +610,7 @@ struct CookingModeView: View {
                     : L10n.recipesCookingStepsProgress(
                         store.step + 1, max(store.recipe.steps.count, 1)))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .contentTransition(.numericText())
             }
             ProgressView(value: store.progress)
@@ -624,7 +624,7 @@ struct CookingModeView: View {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text(L10n.recipesCookingCheckIngredientsInstruction)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
 
                 Spacer(minLength: 0)
 
@@ -682,7 +682,7 @@ struct CookingModeView: View {
                     VStack(spacing: 16) {
                         Text(L10n.recipesCookingStepCardTitle(index + 1, store.recipe.steps.count))
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(.accentText)
                         Text(step)
                             .font(.title3)
                             .multilineTextAlignment(.center)
@@ -711,7 +711,7 @@ struct CookingModeView: View {
             HStack(spacing: 12) {
                 Image(systemName: "timer")
                     .font(.title3)
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
 
                 Text(store.timer.formatted)

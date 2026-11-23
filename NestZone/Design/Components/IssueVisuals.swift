@@ -258,7 +258,7 @@ public struct HouseHealthRing: View {
                         .foregroundStyle(.primary)
                     Text(L10n.issuesOpenLabel)
                         .font(.system(size: max(9, diameter * 0.1)))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
         }
@@ -534,7 +534,7 @@ public struct RoomTile: View {
                     Text(count, format: .number)
                         .font(.system(.caption, design: .rounded, weight: .bold))
                         .monospacedDigit()
-                        .foregroundStyle(theme.accent)
+                        .foregroundStyle(.accentText)
                         .contentTransition(.numericText())
                 } else {
                     Text(verbatim: "—")

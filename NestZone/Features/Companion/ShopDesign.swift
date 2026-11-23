@@ -121,7 +121,7 @@ struct LockBadge: View {
     var body: some View {
         Image(systemName: "lock.fill")
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .symbolEffect(.wiggle, value: reduceMotion ? 0 : wiggle)
             .frame(width: 24, height: 24)
             .background(.ultraThinMaterial, in: .circle)

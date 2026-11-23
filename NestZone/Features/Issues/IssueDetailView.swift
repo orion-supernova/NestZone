@@ -171,14 +171,14 @@ public struct IssueDetailView: View {
                             issue.ageDays
                         ))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     }
                 }
 
                 if let details = issue.details, !details.isEmpty {
                     Text(details)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -356,7 +356,7 @@ public struct IssueDetailView: View {
                 }
                 Text(L10n.issuesVerdictMessage)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: 10) {
@@ -575,13 +575,13 @@ public struct IssueDetailView: View {
                                 if let at = entry.resolvedAt {
                                     Text(at.date, format: .dateTime.month(.abbreviated).year())
                                         .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.secondaryText)
                                 }
                             }
                             if let resolution = entry.resolution, !resolution.isEmpty {
                                 Text(resolution)
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.secondaryText)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
@@ -603,7 +603,7 @@ public struct IssueDetailView: View {
                         ProgressView().controlSize(.mini)
                         Text(L10n.issuesUploading(store.uploading))
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                 }
             }
@@ -775,7 +775,7 @@ private struct PlanRow: View {
                 if let detail {
                     detail
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                 }
                 if let progress, progress > 0 {
@@ -884,10 +884,10 @@ private struct TimelineRow: View {
                         .font(.caption.weight(.semibold))
                     Text(verbatim: "·")
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.tertiaryText)
                     RelativeTimeText(entry.created)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                     Spacer(minLength: 0)
                 }
 

@@ -61,7 +61,7 @@ struct OfflineView: View {
             VStack(spacing: Metrics.sectionSpacing) {
                 Image(systemName: "wifi.exclamationmark")
                     .font(.system(size: 40, weight: .semibold))
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(.accentText)
                     .frame(width: 96, height: 96)
                     .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
 
@@ -70,7 +70,7 @@ struct OfflineView: View {
                         .font(.system(.title2, design: .rounded, weight: .bold))
                     Text(L10n.commonOfflineMessage)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .multilineTextAlignment(.center)
                 }
 
@@ -92,7 +92,7 @@ struct LaunchView: View {
             Backdrop(tint: theme.accent)
             Image(systemName: "house.fill")
                 .font(.system(size: 44, weight: .semibold))
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(.accentText)
                 .frame(width: 96, height: 96)
                 .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
                 .pulse()
@@ -411,7 +411,7 @@ private struct SegmentedRoot: View {
                     Button { store.send(.statsTapped) } label: {
                         Image(systemName: "chart.bar.fill")
                             .font(.body.weight(.semibold))
-                            .foregroundStyle(theme.accent)
+                            .foregroundStyle(.accentText)
                             .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
                             .contentShape(.rect)
                     }

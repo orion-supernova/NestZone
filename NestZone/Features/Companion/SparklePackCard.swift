@@ -45,7 +45,7 @@ struct SparklePackCard: View {
                 .accessibilityHidden(true)
             Text(L10n.storePackUnit)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .accessibilityHidden(true)
             // A line is always kept for the bonus, so the cards of a row
             // stand level whether it has one or not.
@@ -57,7 +57,7 @@ struct SparklePackCard: View {
                 }
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.secondaryText)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             if let enoughFor {
@@ -133,7 +133,7 @@ struct SparklePackCard: View {
         } else if isStarter {
             Text(L10n.storeStarter)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.horizontal, 10)

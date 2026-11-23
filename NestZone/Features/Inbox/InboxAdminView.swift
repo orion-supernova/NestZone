@@ -115,10 +115,10 @@ struct InboxAdminView: View {
             }
             Text(L10n.inboxAdminSyncNote)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
             Text(verbatim: "npx convex run inbox:syncChangelog \"$(cat changelog.json)\"")
                 .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Palette.inset, in: .rect(cornerRadius: 8, style: .continuous))
@@ -139,7 +139,7 @@ struct InboxAdminView: View {
                         Image(systemName: "doc.on.doc")
                             .font(.caption2)
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
                 }
@@ -173,7 +173,7 @@ private struct AdminUpdateRow: View {
                         Text(L10n.inboxVersionChip(version))
                             .font(.caption2.weight(.semibold))
                             .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
                             .background(Palette.inset, in: .capsule)
@@ -181,7 +181,7 @@ private struct AdminUpdateRow: View {
                     if update.isPinned {
                         Image(systemName: "pin.fill")
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.secondaryText)
                     }
                     Spacer(minLength: 4)
                     if update.isDraft {
@@ -199,7 +199,7 @@ private struct AdminUpdateRow: View {
 
                 Text(update.body)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .lineLimit(3)
 
                 HStack(spacing: 10) {
@@ -352,13 +352,13 @@ struct InboxComposerSheet: View {
             // the one that decides who sees what.
             Text(L10n.inboxAdminVersionHelp(AppVersion.current.raw))
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.secondaryText)
                 .padding(.horizontal, 4)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.inboxAdminFieldBody)
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 4)
                 TextEditor(text: $store.draft.body)
                     .font(.callout)
@@ -445,7 +445,7 @@ struct InboxComposerSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.inboxAdminFieldBody)
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 4)
                 TextEditor(text: binding.body)
                     .font(.callout)
@@ -511,7 +511,7 @@ struct InboxComposerSheet: View {
                     Text(L10n.inboxAdminPin).font(.subheadline.weight(.semibold))
                     Text(L10n.inboxAdminPinNote)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                 }
             }
             .tint(theme.accent)

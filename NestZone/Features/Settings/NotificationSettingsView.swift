@@ -57,7 +57,7 @@ struct NotificationSettingsView: View {
                 }
                 Text(denied ? L10n.notifSystemDenied : L10n.notifSystemUndetermined)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondaryText)
                 Button {
                     store.send(denied ? .openSystemSettingsTapped : .turnOnTapped)
                 } label: {
@@ -153,7 +153,7 @@ struct NotificationSettingsView: View {
                     }
                     Text(count)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondaryText)
                         .accessibilityHidden(true)
                 }
             } icon: {
