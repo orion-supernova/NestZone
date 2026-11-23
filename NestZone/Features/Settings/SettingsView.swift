@@ -405,36 +405,27 @@ public struct SettingsView: View {
         }
     }
 
+    /// One row: what the system allows, and the page where each kind of
+    /// notification is switched.
     private var notificationsSection: some View {
         Section {
-            if store.notificationsDenied {
-                Button { store.send(.openSystemSettingsTapped) } label: {
-                    Label {
-                        Text(L10n.settingsNotificationsOpenSettings)
-                    } icon: {
-                        Image(systemName: "bell.slash")
-                    }
-                }
-            } else {
-                Toggle(isOn: Binding(
-                    get: { store.notificationsOn },
-                    set: { store.send(.notificationsToggled($0)) }
-                )) {
-                    Label {
-                        Text(L10n.settingsNotificationsToggle)
-                    } icon: {
-                        Image(systemName: "bell.badge")
+            NavigationLink(
+                item: $store.scope(state: \.destination?.notifications, action: \.destination.notifications)
+            ) { isActive in
+                if isActive { store.send(.notificationsRowTapped) }
+            } destination: { $page in
+                NotificationSettingsView(store: page)
+            } label: {
+                LabeledContent {
+                    Text(store.notificationsOn ? L10n.notifRowOn : L10n.notifRowOff)
+                        .foregroundStyle(.secondary)
+                } label: {
+                    Label { Text(L10n.settingsNotificationsTitle) } icon: {
+                        Image(systemName: store.notificationsOn ? "bell.badge" : "bell.slash")
                     }
                 }
             }
-        } header: {
-            Text(L10n.settingsNotificationsTitle)
-        } footer: {
-            Text(store.notificationsDenied
-                ? L10n.settingsNotificationsDenied
-                : L10n.settingsNotificationsFooter)
         }
-        .animation(Motion.spring, value: store.notificationStatus)
     }
 
     /// Collapsed: the overlapping stack. The chevron is what says there is a

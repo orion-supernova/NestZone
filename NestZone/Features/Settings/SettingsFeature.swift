@@ -166,13 +166,13 @@ public struct SettingsFeature: Sendable {
         case blockedPeople(BlockedPeopleFeature)
         /// Pushed, not presented: it is a page of Settings.
         case calendar(CalendarSettingsFeature)
+        case notifications(NotificationSettingsFeature)
     }
 
     public enum Action: BindableAction {
         case task
         case notificationStatusLoaded(UNAuthorizationStatus)
-        case notificationsToggled(Bool)
-        case openSystemSettingsTapped
+        case notificationsRowTapped
         case sendTestPushTapped
         case testPushFinished(Result<PushResult, AppError>)
         case pushRegistrationChanged(PushRegistration)
@@ -275,6 +275,7 @@ public struct SettingsFeature: Sendable {
     @Dependency(\.push) var push
     @Dependency(\.devices) var devices
     @Dependency(\.openURL) var openURL
+    @Dependency(\.notificationPrefs) var notificationPrefs
     @Dependency(\.inbox) var inbox
     @Dependency(\.moderation) var moderation
 
@@ -306,23 +307,27 @@ public struct SettingsFeature: Sendable {
                 state.notificationStatus = status
                 return .none
 
-            case let .notificationsToggled(isOn):
-                guard isOn else {
-                    // iOS gives no API to revoke permission; only Settings.app
-                    // can. Send them there rather than pretending.
-                    return .send(.openSystemSettingsTapped)
-                }
-                return .run { send in
-                    let granted = await push.requestAuthorization()
-                    await send(.notificationStatusLoaded(push.authorizationStatus()))
-                    if granted { await send(.delegate(.notificationsEnabled)) }
-                }
+            case .notificationsRowTapped:
+                state.destination = .notifications(
+                    NotificationSettingsFeature.State(status: state.notificationStatus)
+                )
+                return .none
 
-            case .openSystemSettingsTapped:
-                return .run { _ in
-                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-                    await openURL(url)
+            case let .destination(.presented(.notifications(.delegate(.statusChanged(status))))):
+                state.notificationStatus = status
+                return .none
+
+            case .destination(.presented(.notifications(.delegate(.enabled)))):
+                return .send(.delegate(.notificationsEnabled))
+
+            // The page sends its edits 400 ms after the last tap, and closing
+            // it before then would cancel that. Whatever was not yet sent goes
+            // from here, which outlives the page.
+            case .destination(.dismiss):
+                guard case let .notifications(page)? = state.destination, let unsent = page.unsent else {
+                    return .none
                 }
+                return .run { _ in _ = try? await notificationPrefs.set(unsent) }
 
             case .checkForUpdatesTapped:
                 guard state.updateCheck != .checking else { return .none }

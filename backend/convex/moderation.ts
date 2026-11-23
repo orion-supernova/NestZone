@@ -400,6 +400,7 @@ export const report = mutation({
         title: "New report",
         body: `${REASON_LABEL[args.reason]} · ${KIND_LABEL[args.kind]}`,
         category: "moderation",
+        topic: "moderation",
         threadId: "moderation",
       });
     }
@@ -868,6 +869,7 @@ export const removeFromHome = mutation({
       title: homeName,
       body: "You were removed from the home",
       category: "home",
+      topic: "home.removed",
     });
     // And the house is told, so a removal is never silent. No actor: it was
     // not anybody living there.
@@ -876,6 +878,7 @@ export const removeFromHome = mutation({
       title: homeName,
       body: "Someone was removed from the home. The invite code has changed.",
       category: "home",
+      topic: "home.members",
     });
     return { ok: true, removed: true };
   },
@@ -954,6 +957,7 @@ export const nudgeStale = internalMutation({
           ? "A report has been waiting over 12 hours"
           : `${stale.length} reports have been waiting over 12 hours`,
       category: "moderation",
+      topic: "moderation",
       threadId: "moderation",
     });
     return { nudged: stale.length };

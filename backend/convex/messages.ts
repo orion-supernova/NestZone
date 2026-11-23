@@ -199,6 +199,7 @@ export const send = mutation({
       title: user.name ?? NOTIFY_TITLE,
       body,
       category: "messages",
+      topic: convo.is_group_chat ? "messages.group" : "messages.direct",
       threadId: args.conversationId,
       ...(mentions.length
         ? {
@@ -206,6 +207,7 @@ export const send = mutation({
               userIds: mentions,
               title: `${user.name ?? "Someone"} mentioned you`,
               body,
+              topic: "messages.mentions",
             },
           }
         : {}),

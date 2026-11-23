@@ -275,7 +275,7 @@ export const deleteAccountStep = internalMutation({
     // (leaving each home above already ended those shares; this catches a
     // row whose home went another way). Reports they filed or were named in stay: a
     // moderator's record outlives the account.
-    const [reads, updateReads, pro, blocking, blockedBy, hidden, shares, shared] = await Promise.all([
+    const [reads, updateReads, pro, blocking, blockedBy, hidden, shares, shared, notificationPrefs] = await Promise.all([
       ctx.db
         .query("activity_reads")
         .withIndex("by_user_home", (q) => q.eq("user_id", userId))
@@ -308,6 +308,10 @@ export const deleteAccountStep = internalMutation({
         .query("shared_busy")
         .withIndex("by_user_home_calendar_ends", (q) => q.eq("user_id", userId))
         .take(DELETE_BATCH),
+      ctx.db
+        .query("notification_prefs")
+        .withIndex("by_user", (q) => q.eq("user_id", userId))
+        .take(DELETE_BATCH),
     ]);
     const own = [
       ...reads,
@@ -318,6 +322,7 @@ export const deleteAccountStep = internalMutation({
       ...hidden,
       ...shares,
       ...shared,
+      ...notificationPrefs,
     ];
     await Promise.all(own.map((r) => ctx.db.delete(r._id)));
     if (own.length > 0) return await continueLater();

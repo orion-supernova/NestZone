@@ -794,6 +794,7 @@ export const create = mutation({
             : "New house problem",
       body: title,
       category: "issues",
+      topic: "issues.new",
     });
 
     // Deliberately no second push for the assignee.
@@ -894,6 +895,7 @@ export const update = mutation({
         title: "A problem just got urgent",
         body: title ?? "A house problem",
         category: "issues",
+        topic: "issues.updates",
       });
     }
 
@@ -964,6 +966,7 @@ export const setStatus = mutation({
           ? `${user.name} fixed ${issue.title ?? "a house problem"}`
           : (issue.title ?? "A house problem"),
       category: "issues",
+      topic: "issues.updates",
     });
 
     // A fix grows Nestie, and reopening takes it back (convex/companion.ts).
@@ -1024,6 +1027,7 @@ export const assign = mutation({
         title: user.name ? `${user.name} asked you to fix this` : "A repair for you",
         body: issue.title ?? "A house problem",
         category: "issues",
+        topic: "issues.updates",
       });
     }
 
@@ -1134,6 +1138,7 @@ export const comment = mutation({
         : "New note on a house problem",
       body: text,
       category: "issues",
+      topic: "issues.updates",
     });
 
     return { ok: true };
@@ -1404,6 +1409,7 @@ export const makeChore = mutation({
         title: user.name ? `${user.name} assigned you a repair` : "A repair for you",
         body: issue.title ?? "A house problem",
         category: "tasks",
+        topic: "tasks.assigned",
       });
     }
 
@@ -1538,6 +1544,7 @@ export const scheduleVisit = mutation({
       title: rebooking ? "A repair visit moved" : "A repair visit is booked",
       body: title,
       category: "calendar",
+      topic: "issues.updates",
     });
 
     return { eventId };
@@ -1623,6 +1630,7 @@ export const addParts = mutation({
       title: user.name ? `${user.name} added parts` : "Parts added to the list",
       body: `${wanted.length} for ${issue.title ?? "a repair"}`,
       category: "shopping",
+      topic: "shopping.added",
     });
 
     return { added: wanted.length, skipped: names.length - wanted.length };
@@ -1784,6 +1792,7 @@ export const sweepStale = internalAction({
         title: nudge.reason === "overdue" ? "A repair is overdue" : "Still not fixed",
         body: nudgeBody(nudge),
         category: "issues",
+        topic: "issues.reminders",
       });
       sent++;
     }

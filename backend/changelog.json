@@ -84,6 +84,32 @@
       ]
     },
     {
+      "slug": "1.13.0-notification-settings",
+      "version": "1.13.0",
+      "kind": "feature",
+      "title": "Pick which notifications you get",
+      "body": "Settings has a Notifications page now. Turn off what you don't need, one by one or a whole group at once, and set quiet hours so nothing buzzes at night. The bell still keeps everything, so you never miss what happened.",
+      "highlights": [
+        "Switch each kind on or off: chores, calendar, money, problems, chats, Nestie and more",
+        "Mute group chats and still hear it when someone mentions you",
+        "Quiet hours: notifications arrive silently and wait for the morning",
+        "Your choice follows you to every phone and home"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Hangi bildirimleri alacağını sen seç",
+          "body": "Ayarlar'da artık bir Bildirimler sayfası var. İstemediklerini tek tek ya da bütün grubu birden kapat, gece için sessiz saatler ayarla. Zil yine her şeyi tutuyor, yani hiçbir şeyi kaçırmazsın.",
+          "highlights": [
+            "Her türü ayrı aç kapat: işler, takvim, para, sorunlar, sohbetler, Nestie ve fazlası",
+            "Grup sohbetlerini sustur, biri senden bahsedince yine haberin olsun",
+            "Sessiz saatler: bildirimler sessizce gelir, sabahı bekler",
+            "Seçimin tüm telefonlarında ve evlerinde geçerli"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.12.0-nestzone-plus",
       "version": "1.12.0",
       "kind": "feature",

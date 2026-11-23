@@ -52,6 +52,7 @@ export const create = mutation({
       title: user.name ? `${user.name} left a note` : NOTIFY_TITLE,
       body: args.description.slice(0, 120),
       category: "notes",
+      topic: "notes",
     });
 
     return createdId;

@@ -11226,4 +11226,199 @@ extension L10n {
     public static var moderationKindCalendar: LocalizedStringResource {
         r("moderation_kind_calendar", "Shared calendar item")
     }
+
+    /// Given to you
+    public static var notifTopicTasksAssigned: LocalizedStringResource {
+        r("notif_topic_tasks_assigned", "Given to you")
+    }
+
+    /// New tasks
+    public static var notifTopicTasksNew: LocalizedStringResource {
+        r("notif_topic_tasks_new", "New tasks")
+    }
+
+    /// Someone finished one
+    public static var notifTopicTasksDone: LocalizedStringResource {
+        r("notif_topic_tasks_done", "Someone finished one")
+    }
+
+    /// Added to the list
+    public static var notifTopicShoppingAdded: LocalizedStringResource {
+        r("notif_topic_shopping_added", "Added to the list")
+    }
+
+    /// Bought
+    public static var notifTopicShoppingBought: LocalizedStringResource {
+        r("notif_topic_shopping_bought", "Bought")
+    }
+
+    /// New and changed events
+    public static var notifTopicCalendarEvents: LocalizedStringResource {
+        r("notif_topic_calendar_events", "New and changed events")
+    }
+
+    /// Answers to your events
+    public static var notifTopicCalendarRSVP: LocalizedStringResource {
+        r("notif_topic_calendar_rsvp", "Answers to your events")
+    }
+
+    /// Reminders
+    public static var notifTopicReminders: LocalizedStringResource {
+        r("notif_topic_reminders", "Reminders")
+    }
+
+    /// Movie nights and rounds
+    public static var notifTopicMovies: LocalizedStringResource {
+        r("notif_topic_movies", "Movie nights and rounds")
+    }
+
+    /// Expenses, bills and settling up
+    public static var notifTopicFinanceExpenses: LocalizedStringResource {
+        r("notif_topic_finance_expenses", "Expenses, bills and settling up")
+    }
+
+    /// Bill reminders
+    public static var notifTopicFinanceReminders: LocalizedStringResource {
+        r("notif_topic_finance_reminders", "Bill reminders")
+    }
+
+    /// New problems
+    public static var notifTopicIssuesNew: LocalizedStringResource {
+        r("notif_topic_issues_new", "New problems")
+    }
+
+    /// Updates on problems
+    public static var notifTopicIssuesUpdates: LocalizedStringResource {
+        r("notif_topic_issues_updates", "Updates on problems")
+    }
+
+    /// Chats with one person
+    public static var notifTopicMessagesDirect: LocalizedStringResource {
+        r("notif_topic_messages_direct", "Chats with one person")
+    }
+
+    /// Group chats
+    public static var notifTopicMessagesGroup: LocalizedStringResource {
+        r("notif_topic_messages_group", "Group chats")
+    }
+
+    /// When you're mentioned
+    public static var notifTopicMessagesMentions: LocalizedStringResource {
+        r("notif_topic_messages_mentions", "When you're mentioned")
+    }
+
+    /// Polls
+    public static var notifTopicPolls: LocalizedStringResource {
+        r("notif_topic_polls", "Polls")
+    }
+
+    /// Ready to grow
+    public static var notifTopicCompanionReady: LocalizedStringResource {
+        r("notif_topic_companion_ready", "Ready to grow")
+    }
+
+    /// The vote
+    public static var notifTopicCompanionVote: LocalizedStringResource {
+        r("notif_topic_companion_vote", "The vote")
+    }
+
+    /// A new one arrives
+    public static var notifTopicCompanionNew: LocalizedStringResource {
+        r("notif_topic_companion_new", "A new one arrives")
+    }
+
+    /// People joining and leaving
+    public static var notifTopicHomeMembers: LocalizedStringResource {
+        r("notif_topic_home_members", "People joining and leaving")
+    }
+
+    /// Nestie
+    public static var notifGroupNestie: LocalizedStringResource {
+        r("notif_group_nestie", "Nestie")
+    }
+
+    /// Around the house
+    public static var notifGroupAround: LocalizedStringResource {
+        r("notif_group_around", "Around the house")
+    }
+
+    /// %lld of %lld on
+    public static func notifGroupCount(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("notif_group_count", "\(a0) of \(a1) on")
+    }
+
+    /// These need NestZone Plus.
+    public static var notifNeedsPlus: LocalizedStringResource {
+        r("notif_needs_plus", "These need NestZone Plus.")
+    }
+
+    /// See NestZone Plus
+    public static var notifSeePlus: LocalizedStringResource {
+        r("notif_see_plus", "See NestZone Plus")
+    }
+
+    /// A mention still arrives when group chats are off.
+    public static var notifMentionsFooter: LocalizedStringResource {
+        r("notif_mentions_footer", "A mention still arrives when group chats are off.")
+    }
+
+    /// This only changes what buzzes your phone. The bell on every tab keeps everything. Your choices follow you to every phone and every home.
+    public static var notifFeedFooter: LocalizedStringResource {
+        r("notif_feed_footer", "This only changes what buzzes your phone. The bell on every tab keeps everything. Your choices follow you to every phone and every home.")
+    }
+
+    /// Quiet hours
+    public static var notifQuietTitle: LocalizedStringResource {
+        r("notif_quiet_title", "Quiet hours")
+    }
+
+    /// From
+    public static var notifQuietFrom: LocalizedStringResource {
+        r("notif_quiet_from", "From")
+    }
+
+    /// Until
+    public static var notifQuietUntil: LocalizedStringResource {
+        r("notif_quiet_until", "Until")
+    }
+
+    /// Notifications still arrive, silently, and wait in Notification Center.
+    public static var notifQuietFooter: LocalizedStringResource {
+        r("notif_quiet_footer", "Notifications still arrive, silently, and wait in Notification Center.")
+    }
+
+    /// Notifications are off
+    public static var notifSystemOffTitle: LocalizedStringResource {
+        r("notif_system_off_title", "Notifications are off")
+    }
+
+    /// NestZone can't send you anything until you allow notifications in iOS Settings.
+    public static var notifSystemDenied: LocalizedStringResource {
+        r("notif_system_denied", "NestZone can't send you anything until you allow notifications in iOS Settings.")
+    }
+
+    /// Turn them on to hear when the house needs you.
+    public static var notifSystemUndetermined: LocalizedStringResource {
+        r("notif_system_undetermined", "Turn them on to hear when the house needs you.")
+    }
+
+    /// Turn on notifications
+    public static var notifSystemTurnOn: LocalizedStringResource {
+        r("notif_system_turn_on", "Turn on notifications")
+    }
+
+    /// Your choices below are saved, but nothing arrives until notifications are on.
+    public static var notifSystemFooter: LocalizedStringResource {
+        r("notif_system_footer", "Your choices below are saved, but nothing arrives until notifications are on.")
+    }
+
+    /// On
+    public static var notifRowOn: LocalizedStringResource {
+        r("notif_row_on", "On")
+    }
+
+    /// Off
+    public static var notifRowOff: LocalizedStringResource {
+        r("notif_row_off", "Off")
+    }
 }

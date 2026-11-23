@@ -296,6 +296,30 @@ export default defineSchema({
     .index("by_user", ["user_id"])
     .index("by_token", ["token"]),
 
+  // What one person wants pushed to their phones (notificationPrefs.ts,
+  // lib/notificationPrefs.ts). At most one row per person; no row is the
+  // default, every push as it always was. It filters the APNs push only:
+  // the household's feed (`inbox.record`) is never touched by it.
+  notification_prefs: defineTable({
+    user_id: v.id("users"),
+    /**
+     * Topic keys switched off (`TOPICS` in lib/notificationPrefs.ts). Kept as
+     * strings, unknown ones included, so a newer build can switch off a topic
+     * this backend does not know yet and an older one does not lose it.
+     */
+    off: v.array(v.string()),
+    /**
+     * Quiet hours in the person's own time zone: minutes after midnight,
+     * `end` exclusive, and a window may wrap midnight (22:00–08:00). Inside
+     * it a push still arrives, but passively: no sound, no lit screen.
+     * Absent: no quiet hours.
+     */
+    quiet: v.optional(
+      v.object({ start: v.number(), end: v.number(), time_zone: v.string() }),
+    ),
+    updated: v.number(),
+  }).index("by_user", ["user_id"]),
+
   // The signed APNs provider JWT, cached. Apple rejects a provider that mints
   // tokens more than once every 20 minutes (`TooManyProviderTokenUpdates`), and
   // actions are stateless, so the token has to live somewhere.
