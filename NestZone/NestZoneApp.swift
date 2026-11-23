@@ -37,6 +37,10 @@ struct NestZoneApp: App {
             //   xcrun simctl launch booted com.walhallaa.NestZone -glassLab
             if ProcessInfo.processInfo.arguments.contains("-glassLab") {
                 GlassListLab()
+            } else if ProcessInfo.processInfo.arguments.contains("-readabilityLab") {
+                // Today-shaped components in every theme, no sign-in
+                // (Design/ReadabilityLab.swift).
+                ReadabilityLab()
             } else if let page = UserDefaults.standard.string(forKey: "artSheet") {
                 // A contact sheet of the companion's art (Features/Companion/ArtSheet.swift).
                 ArtSheet(page: page)
