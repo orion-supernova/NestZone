@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Navigation plan</title>
+<style>
+  :root{--bg:#f4f2f8;--card:#fff;--ink:#17121f;--muted:#5d5767;--line:#00000014;--accent:#7C3AED;--soft:#7C3AED14;--ok:#047857;--okbg:#10b9811a;--warn:#92400e;--warnbg:#f59e0b1f;--bad:#b91c1c;--badbg:#ef44441a}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0c16;--card:#1b1724;--ink:#f3f0f8;--muted:#b2abc0;--line:#ffffff14;--accent:#a78bfa;--soft:#a78bfa1f;--ok:#34d399;--okbg:#34d3991a;--warn:#fcd34d;--warnbg:#fbbf241a;--bad:#fca5a5;--badbg:#f871711a}}
+  :root[data-theme="dark"]{--bg:#0f0c16;--card:#1b1724;--ink:#f3f0f8;--muted:#b2abc0;--line:#ffffff14;--accent:#a78bfa;--soft:#a78bfa1f;--ok:#34d399;--okbg:#34d3991a;--warn:#fcd34d;--warnbg:#fbbf241a;--bad:#fca5a5;--badbg:#f871711a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+  main{max-width:900px;margin:0 auto;padding:32px 16px 72px}
+  h1{font:700 28px/1.2 ui-rounded,-apple-system,system-ui;margin:0 0 6px}
+  h2{font:700 19px/1.3 ui-rounded,-apple-system,system-ui;margin:40px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
+  h3{font:600 15px/1.3 -apple-system,system-ui;margin:22px 0 6px}
+  .lead{color:var(--muted);max-width:66ch}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+  nav a{font-size:13px;color:var(--accent);text-decoration:none;background:var(--soft);padding:4px 10px;border-radius:999px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:12px 0}
+  .decide{border-left:3px solid var(--accent)}
+  code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--line);padding:1px 5px;border-radius:5px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-top:0}
+  ul,ol{padding-left:20px} li{margin:4px 0}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .keep{background:var(--okbg);color:var(--ok)} .move{background:var(--warnbg);color:var(--warn)} .fix{background:var(--badbg);color:var(--bad)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:640px){.cols{grid-template-columns:1fr}}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{flex:1;min-width:110px;background:var(--soft);border-radius:14px;padding:10px}
+  .tab b{display:block;font-size:14px;margin-bottom:6px}
+  .seg{display:block;font-size:13px;padding:3px 8px;border-radius:8px;margin:3px 0;background:var(--card);border:1px solid var(--line)}
+  .seg.new{border-color:var(--accent);color:var(--accent);font-weight:600}
+  .seg.gone{text-decoration:line-through;color:var(--muted)}
+  .bar{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin:8px 0;font-size:13px}
+  .bar span{display:inline-flex;gap:8px;align-items:center}
+  .ic{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--soft);font-size:14px}
+  .ic.a{background:var(--accent);color:#fff}
+  .cap{font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <h1>Where everything lives</h1>
+  <p class="lead">A check of every tab, segment, inner screen and toolbar, and what should move. Most of the app is already in the right place; this changes four things people will notice and tidies the rest underneath. Built from a full inventory of the code on 2026-11-23 (dev, after 490a008).</p>
+  <nav><a href="#verdict">Verdict</a><a href="#tabs">Tabs</a><a href="#bar">Top bar rule</a><a href="#modules">Each place</a><a href="#names">Names</a><a href="#push">Opening things</a><a href="#consistency">Consistency</a><a href="#phases">Order of work</a><a href="#decide">Decisions</a></nav>
+
+  <h2 id="verdict">Verdict</h2>
+  <div class="card">
+    <ul>
+      <li><span class="tag keep">Keep</span> Five tabs: Today, Lists, Plans, House, Messages. The grouping idea is right; a sixth tab would push Messages off the bar's comfortable reach.</li>
+      <li><span class="tag keep">Keep</span> Plans = Calendar, Meals, Movies (all "what are we doing"). Today, Messages, Settings behind the avatar, the dock, Add anything, Shopping's bottom composer.</li>
+      <li><span class="tag move">Move</span> <b>Notes goes to House.</b> Notes is the house's reference board (Wi-Fi password, the landlord's number, the bin day), not a list you tick off. In House it sits with the other things <i>about the home</i>, Lists becomes just the two real lists, and House stops being two Plus-only segments.</li>
+      <li><span class="tag move">Move</span> <b>Avatar and bell share the left; each screen's own actions own the right, add at the far right.</b> Today the bell takes the far-right corner on every tab, so "write new" can never be at the edge.</li>
+      <li><span class="tag fix">Fix</span> <b>Opening an event or a problem from another tab pushes only its detail</b>, not a second whole Calendar or Problems screen underneath it.</li>
+      <li><span class="tag fix">Fix</span> <b>Names</b>: Movies' "lists" become <i>Watchlists</i>; the bell's "House" half becomes <i>Activity</i>; one name per place everywhere.</li>
+    </ul>
+  </div>
+
+  <h2 id="tabs">Tabs and segments</h2>
+  <div class="cols">
+    <div class="card">
+      <h3 style="margin-top:0">Now</h3>
+      <div class="tabs">
+        <div class="tab"><b>Today</b><span class="seg">Today</span></div>
+        <div class="tab"><b>Lists</b><span class="seg">Tasks</span><span class="seg">Shopping</span><span class="seg">Notes</span></div>
+        <div class="tab"><b>Plans</b><span class="seg">Calendar ✦</span><span class="seg">Meals</span><span class="seg">Movies</span></div>
+        <div class="tab"><b>House</b><span class="seg">Money ✦</span><span class="seg">Problems ✦</span></div>
+        <div class="tab"><b>Messages ✦</b><span class="seg">Chats</span></div>
+      </div>
+      <p class="cap">✦ Plus. A free house opening House lands on a locked screen either way.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Proposed</h3>
+      <div class="tabs">
+        <div class="tab"><b>Today</b><span class="seg">Today</span></div>
+        <div class="tab"><b>Lists</b><span class="seg">Tasks</span><span class="seg">Shopping</span><span class="seg gone">Notes</span></div>
+        <div class="tab"><b>Plans</b><span class="seg">Calendar ✦</span><span class="seg">Meals</span><span class="seg">Movies</span></div>
+        <div class="tab"><b>House</b><span class="seg new">Notes</span><span class="seg">Money ✦</span><span class="seg">Problems ✦</span></div>
+        <div class="tab"><b>Messages ✦</b><span class="seg">Chats</span></div>
+      </div>
+      <p class="cap">Every tab now has at least one free segment, and each word means one thing.</p>
+    </div>
+  </div>
+  <ul>
+    <li><b>Order inside House:</b> Notes first for a free house, Money first for a Plus house (the default segment is chosen the same way the code already moves a free house off Calendar). After that, the remembered segment wins as today.</li>
+    <li><b>Lists with two segments</b> is fine: Tasks and Shopping are the two things a household ticks off daily. It also frees space for a third list type later (packing, a party checklist) without inventing a tab.</li>
+    <li><b>Tab glyphs:</b> Lists uses <code>checklist</code>, the same symbol as its Tasks segment; give the tab <code>list.bullet.rectangle</code> so tab and segment don't read as the same thing. House stays <code>house.fill</code>.</li>
+    <li><b>The House switch bar's "At a glance" icon</b> stays (the counters must still live somewhere when Today's stats section is Off — CLAUDE.md, "nothing is removed"), but moves into the module bar as an ordinary trailing item so it obeys the same rule as everything else.</li>
+    <li><b>Migration:</b> the per-device remembered segment for Lists may say "notes"; it falls back to Tasks, and House picks up Notes. No server change, no old-version concern: segments are device storage.</li>
+  </ul>
+
+  <h2 id="bar">The top bar rule</h2>
+  <p>One rule for every tab root, and it answers "write new should be on the right":</p>
+  <div class="cols">
+    <div>
+      <div class="bar"><span><span class="ic">👤</span></span><span><span class="ic">⌕</span><span class="ic">✎</span><span class="ic">🔔</span></span></div>
+      <p class="cap">Now (Notes): the bell owns the corner, compose is squeezed between search and the bell.</p>
+    </div>
+    <div>
+      <div class="bar"><span><span class="ic">👤</span><span class="ic">🔔</span></span><span><span class="ic">⌕</span><span class="ic a">✎</span></span></div>
+      <p class="cap">Proposed: who-you-are and what-happened on the left; this screen's tools on the right, its add or compose last, at the edge.</p>
+    </div>
+  </div>
+  <ul>
+    <li><b>Left (every tab):</b> avatar (Settings), then the bell. They belong together: both are about you and the house, not about the screen.</li>
+    <li><b>Right (per screen):</b> at most two items. Search (minimised, system), any one tool (history, "who's doing what", at a glance), and the add/compose action <i>last</i>, at the edge. If a screen has more tools than that, they go into one "⋯" menu before the add.</li>
+    <li><b>Add glyph:</b> <code>square.and.pencil</code> where you <i>write</i> (Notes, a new chat), <code>plus</code> where you <i>add a thing</i> (task, event, recipe, watchlist, problem, money). Money keeps its "+" menu (expense, bill, budget).</li>
+    <li><b>Colour:</b> the add is the one accent item in the bar; everything else neutral (the rule already in use since the colour pass).</li>
+  </ul>
+
+  <h2 id="modules">Each place: keep, move or fix</h2>
+  <table>
+    <tr><th>Place</th><th></th><th>What changes</th></tr>
+    <tr><td>Today</td><td><span class="tag keep">Keep</span></td><td>Sections stay Automatic / Always / Off. Add an optional <b>Pinned note</b> section (Off by default) so the Wi-Fi card can live on Today for those who want it. The shelf's "At a glance" and "Who's doing what" stay.</td></tr>
+    <tr><td>Tasks</td><td><span class="tag fix">Fix</span></td><td>Bar: "who's doing what" then "+" at the edge (today the order is reversed). To do / Done / All uses the shared inner switch (below).</td></tr>
+    <tr><td>Shopping</td><td><span class="tag keep">Keep</span></td><td>The bottom composer is the right tool for typing ten items in a row; the dock already hides here. "Clear bought" stays the one bar item.</td></tr>
+    <tr><td>Notes</td><td><span class="tag move">Move</span></td><td>To House, first segment for a free house. Compose at the right edge. Add <b>pin</b> to a note (long-press menu): pinned notes sit first on the board and feed Today's Pinned note section. Edit stays on tap, delete in the long-press menu.</td></tr>
+    <tr><td>Calendar</td><td><span class="tag fix">Fix</span></td><td>Its search moves from the left (the only screen with a left item) to the system minimised search on the right. History goes into the bar before "+".</td></tr>
+    <tr><td>Meals</td><td><span class="tag fix">Fix</span></td><td>One name: the segment and the screen are "Meals"; the inner switch reads <i>Ours · Explore</i>. The Tonight card stays on top.</td></tr>
+    <tr><td>Movies</td><td><span class="tag fix">Fix</span></td><td>"Quick Collections" and "Custom Lists" become <b>Watchlists</b> (built-in) and <b>Your watchlists</b>; screen title "Movies". The game is called <b>Movie night</b> everywhere (today it is also "What to watch").</td></tr>
+    <tr><td>Money</td><td><span class="tag keep">Keep</span></td><td>Overview / Expenses / Bills / Budgets on the shared inner switch. Search stays inside Expenses (it only searches expenses).</td></tr>
+    <tr><td>Problems</td><td><span class="tag keep">Keep</span></td><td>Board / List / Rooms / History on the shared inner switch.</td></tr>
+    <tr><td>At a glance</td><td><span class="tag fix">Fix</span></td><td>Reached from Today's shelf and from House's bar (as a normal bar item, not a special button in the switch).</td></tr>
+    <tr><td>Messages</td><td><span class="tag keep">Keep</span></td><td>Own tab; compose at the right edge; chat "⋯" stays neutral.</td></tr>
+    <tr><td>Bell</td><td><span class="tag fix">Fix</span></td><td>Moves left beside the avatar. Its halves become <b>Activity · Updates</b> ("House" clashes with the tab).</td></tr>
+    <tr><td>Settings, Customize</td><td><span class="tag keep">Keep</span></td><td>Avatar → Settings. Customize keeps its three ways in; it gains the Dock section (being built) and Pinned note.</td></tr>
+    <tr><td>Dock, Add anything</td><td><span class="tag keep">Keep</span></td><td>The dock's own setting is being built (Automatic / Always one thing / Only Add / Off, per house).</td></tr>
+  </table>
+
+  <h2 id="names">One name per place</h2>
+  <table>
+    <tr><th>Now</th><th>Proposed</th></tr>
+    <tr><td>Meals / Recipes / Recipes · Explore Recipes</td><td>Meals, with <i>Ours · Explore</i> inside</td></tr>
+    <tr><td>Movies / Movie Collections / Quick Collections / Custom Lists</td><td>Movies; <i>Watchlists</i>, <i>Your watchlists</i></td></tr>
+    <tr><td>Movie night / What to watch</td><td>Movie night</td></tr>
+    <tr><td>Contributions / Who does what / Who's doing what</td><td>Who's doing what</td></tr>
+    <tr><td>Bell: House · Updates</td><td>Activity · Updates</td></tr>
+    <tr><td>Problems / Issues (code) / maintenance (code)</td><td>Problems on screen; code names unchanged (no user sees them)</td></tr>
+  </table>
+
+  <h2 id="push">Opening a specific thing from elsewhere</h2>
+  <p>The rule in CLAUDE.md is right — a whole module switches tab, a specific thing opens in place on the stack that asked. The implementation of "in place" is where it goes wrong:</p>
+  <ul>
+    <li><b>An event</b> opened from Today, Money, Problems, Meals or the dock pushes a whole Calendar opened at that event. Back then lands on a calendar month the person never chose. <b>Fix:</b> push an <code>EventDetail</code> screen (the same content as the detail sheet, as a page). Inside Calendar it stays a sheet.</li>
+    <li><b>A problem</b> opened from Today or Money pushes a whole Problems screen with the detail on top. <b>Fix:</b> push <code>IssueDetail</code> only.</li>
+    <li><b>A recipe</b> has two mechanisms (an in-screen destination inside Meals, a Route from Today). <b>Fix:</b> one <code>Route.recipeDetail</code> used by both.</li>
+    <li>Movie night, Who's doing what, At a glance, the archive: already pushed on the asking stack, keep.</li>
+  </ul>
+  <p>This is invisible when it works and is the one change here that removes real confusion (two Back taps through screens nobody opened).</p>
+
+  <h2 id="consistency">Consistency underneath</h2>
+  <ul>
+    <li><b>Inner switch:</b> one component for every face switch inside a segment (Tasks, Meals, Calendar modes, Money, Problems, the bell) — the chip-style pill Money and Problems already use, not a system segmented control under the type-set segment switch (two stacked segmented controls is what the segment switch's type style was chosen to avoid).</li>
+    <li><b>Search:</b> system minimised search (<code>segmentSearchable</code>) wherever the whole screen is searchable: Notes, Meals, Movies, Calendar, Tasks. In-content search only where it searches one face (Money's expenses, Problems' list).</li>
+    <li><b>Empty states:</b> every module's empty state has the same add action as its bar, wording "Add the first …".</li>
+  </ul>
+
+  <h2 id="phases">Order of work</h2>
+  <ol>
+    <li><b>Visible, small (next build):</b> Notes to House with the default-segment rule; avatar + bell left, add at the right edge on every screen; the names table; Activity · Updates. One pass, mostly Modules.swift, AppView's session toolbar and strings.</li>
+    <li><b>Underneath:</b> event and problem detail pages instead of whole modules; one recipe route; the shared inner switch; search consistency.</li>
+    <li><b>Small additions:</b> pin a note, Today's Pinned note section, Lists tab glyph.</li>
+  </ol>
+  <p>CLAUDE.md's Navigation section is updated in the same commit as step 1 (it states the tab groups).</p>
+
+  <h2 id="decide">Decisions for you</h2>
+  <div class="card decide">
+    <ol>
+      <li><b>Notes → House?</b> Recommended yes.</li>
+      <li><b>Avatar and bell together on the left</b>, screen actions on the right with add at the edge? Recommended yes. (The alternative, keeping the bell right and putting add left of it, cannot satisfy "add at the right".)</li>
+      <li><b>Movies' lists renamed Watchlists</b>, and the bell's halves <b>Activity · Updates</b>? Recommended yes.</li>
+      <li><b>Pinned note on Today</b> (Off by default)? Optional, recommended.</li>
+      <li><b>Do step 1 in 1.13.0</b> (before review), or ship 1.13.0 as is and do this in 1.13.1? Recommended: step 1 now, it is small and visible; steps 2–3 in 1.13.1.</li>
+    </ol>
+  </div>
+</main>
+</body>
+</html>
