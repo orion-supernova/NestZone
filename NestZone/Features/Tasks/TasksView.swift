@@ -248,7 +248,7 @@ private struct TaskListRow: View {
             Button(action: toggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(task.isCompleted ? Palette.success : Color.secondary)
+                    .foregroundStyle(task.isCompleted ? Palette.success : Palette.textSecondary)
                     // The tick grows out of the ring rather than swapping in.
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                     // Squash, overshoot, settle: the box answers the thumb.
@@ -267,7 +267,7 @@ private struct TaskListRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(task.title)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                    .foregroundStyle(task.isCompleted ? Palette.textSecondary : .primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     // The strikethrough is drawn by a second copy of the title
@@ -279,7 +279,7 @@ private struct TaskListRow: View {
                         if task.isCompleted {
                             Text(task.title)
                                 .font(.subheadline.weight(.medium))
-                                .strikethrough(color: .secondary)
+                                .strikethrough(color: Palette.textSecondary)
                                 .foregroundStyle(.clear)
                                 .lineLimit(2)
                                 .multilineTextAlignment(.leading)
@@ -294,17 +294,17 @@ private struct TaskListRow: View {
                     } icon: {
                         Image(systemName: task.kind.symbol)
                     }
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
 
                     if let assignee {
-                        Text(assignee).font(.caption2).foregroundStyle(.secondaryText)
+                        Text(assignee).font(.caption).foregroundStyle(.secondaryText)
                     }
 
                     if let due = task.dueDate {
                         Text(due.date, format: .relative(presentation: .named))
-                            .font(.caption2)
-                            .foregroundStyle(task.isOverdue ? Palette.danger : .secondary)
+                            .font(.caption)
+                            .foregroundStyle(task.isOverdue ? Palette.dangerText : Palette.textSecondary)
                     }
                 }
             }
@@ -410,7 +410,7 @@ struct ComposeTaskSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }

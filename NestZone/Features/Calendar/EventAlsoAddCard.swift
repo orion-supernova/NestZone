@@ -77,7 +77,7 @@ struct EventAlsoAddCard: View {
                 if typeSize.isAccessibilitySize { Spacer(minLength: 0) }
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .font(.caption2)
-                    .foregroundStyle(isOn ? theme.accent : Palette.accessory)
+                    .foregroundStyle(isOn ? theme.ink : Palette.accessory)
                     .contentTransition(.symbolEffect(.replace))
             }
             .padding(.horizontal, 10)

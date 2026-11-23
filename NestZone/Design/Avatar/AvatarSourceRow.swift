@@ -20,7 +20,7 @@ struct AvatarSourceRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(option.title)
                         .font(.body.weight(.medium))
-                        .foregroundStyle(option.isDestructive ? Palette.danger : .primary)
+                        .foregroundStyle(option.isDestructive ? Palette.dangerText : .primary)
                     Text(option.subtitle)
                         .font(.caption)
                         .foregroundStyle(.secondaryText)

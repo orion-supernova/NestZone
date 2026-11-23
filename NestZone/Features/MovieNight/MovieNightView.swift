@@ -502,7 +502,7 @@ private struct SwipeButton: View {
                 // Grey, not a pale version of the tint. A washed-out orange
                 // still reads as orange — as the same button, rendered badly —
                 // where grey reads as a button with nothing behind it.
-                .foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
+                .foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiaryText))
                 .frame(width: diameter, height: diameter)
                 .contentShape(.circle)
         }
@@ -920,9 +920,9 @@ private struct PollOutcomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label { Text(headline) } icon: { Image(systemName: symbol) }
+            Label { Text(headline) } icon: { Image(systemName: symbol).foregroundStyle(tint) }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(tint)
+                .foregroundStyle(.primary)
 
             if !outcome.items.isEmpty {
                 ScrollView(.horizontal) {
@@ -938,7 +938,7 @@ private struct PollOutcomeView: View {
                                     .clipShape(.rect(cornerRadius: 8, style: .continuous))
 
                                     Text(item.label ?? "")
-                                        .font(.caption2)
+                                        .font(.caption)
                                         .foregroundStyle(.secondaryText)
                                         .lineLimit(2)
                                         .multilineTextAlignment(.leading)
@@ -957,7 +957,7 @@ private struct PollOutcomeView: View {
             // for the reader to work out.
             if outcome.isPartialTurnout {
                 Text(L10n.previousPollsTurnout(outcome.voters, outcome.memberCount))
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
             }
         }
@@ -983,7 +983,7 @@ private struct PollOutcomeView: View {
     private var tint: Color {
         switch outcome.result {
         case .agreed: Palette.success
-        case .closest, .nothing: .secondary
+        case .closest, .nothing: Palette.textSecondary
         }
     }
 }
@@ -1017,7 +1017,7 @@ private struct PollHistoryRow: View {
                             .lineLimit(1)
                         if let created = poll.created {
                             Text(created.date, format: .dateTime.day().month().year())
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundStyle(.secondaryText)
                         }
                     }

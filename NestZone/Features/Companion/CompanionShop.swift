@@ -370,7 +370,7 @@ private struct ShelfSwitch: View {
                     }
                     .lineLimit(1)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(isOn ? Color.white : Color.primary)
+                    .foregroundStyle(isOn ? theme.onAccent : Color.primary)
                     .padding(.horizontal, 6)
                     .frame(maxWidth: .infinity, minHeight: Metrics.minTapTarget)
                     .background {
@@ -507,7 +507,7 @@ struct ShopTile<Art: View>: View {
                 Image(systemName: "clock")
             }
             .labelStyle(.titleAndIcon)
-            .font(.caption2.weight(.semibold))
+            .font(.caption.weight(.semibold))
             .lineLimit(1)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)

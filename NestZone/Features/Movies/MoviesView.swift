@@ -286,9 +286,9 @@ struct MovieListView: View {
             VStack(alignment: .trailing, spacing: 1) {
                 AnimatedNumber(store.movies.count)
                     .font(.system(.title2, design: .rounded, weight: .bold))
-                    .foregroundStyle(store.list.kind.tint)
+                    .foregroundStyle(.primary)
                 Text(L10n.movieListsMoviesCount)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
             }
         }
@@ -437,9 +437,9 @@ private struct ListChip: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .foregroundStyle(isSaved ? Color.white : Color.primary)
+            .foregroundStyle(isSaved ? Color.primary : Color.primary)
             .background {
-                if isSaved { Capsule().fill(list.kind.tint) }
+                if isSaved { Capsule().fill(list.kind.tint.opacity(0.3)) }
             }
             .glassEffect(isSaved ? .identity : .regular.interactive(), in: .capsule)
             // An unselected chip draws no background, so without a content
@@ -574,7 +574,7 @@ struct MovieInfoSheet: View {
             Text(value)
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .lineLimit(1)
-            Text(label).font(.caption2).foregroundStyle(.secondaryText).lineLimit(1)
+            Text(label).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -595,7 +595,7 @@ struct MovieInfoSheet: View {
                             .frame(width: 62, height: 62)
                             .clipShape(.circle)
                             Text(member.name)
-                                .font(.caption2)
+                                .font(.caption)
                                 .lineLimit(2)
                                 .multilineTextAlignment(.center)
                         }
@@ -648,7 +648,7 @@ struct PosterCard: View {
                 .multilineTextAlignment(.leading)
             if let year {
                 Text(year, format: .number.grouping(.never))
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
             }
         }

@@ -123,7 +123,7 @@ struct MessageBubble: View, Equatable {
         VStack(alignment: isMine ? .trailing : .leading, spacing: 2) {
             if showsSender {
                 Text(senderName)
-                    .font(.caption2.weight(.medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 12)
                     .padding(.top, 6)
@@ -140,8 +140,8 @@ struct MessageBubble: View, Equatable {
                     } icon: {
                         Image(systemName: "arrow.clockwise.circle.fill")
                     }
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Palette.danger)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Palette.dangerText)
                     .padding(.horizontal, 12)
                     .contentShape(.rect)
                 }
@@ -310,7 +310,7 @@ struct MessageBubble: View, Equatable {
                 isMine: isMine
             )
             .font(.subheadline)
-            .foregroundStyle(isMine ? Color.white : Color.primary)
+            .foregroundStyle(isMine ? theme.onAccent : Color.primary)
         }
     }
 

@@ -114,10 +114,10 @@ struct InboxAdminView: View {
                     .font(.footnote)
             }
             Text(L10n.inboxAdminSyncNote)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
             Text(verbatim: "npx convex run inbox:syncChangelog \"$(cat changelog.json)\"")
-                .font(.system(.caption2, design: .monospaced))
+                .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondaryText)
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -133,9 +133,9 @@ struct InboxAdminView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Text(L10n.inboxAdminYourID)
-                            .font(.caption2)
+                            .font(.caption)
                         Text(id.rawValue)
-                            .font(.system(.caption2, design: .monospaced))
+                            .font(.system(.caption, design: .monospaced))
                         Image(systemName: "doc.on.doc")
                             .font(.caption2)
                     }
@@ -171,7 +171,7 @@ private struct AdminUpdateRow: View {
                     )
                     if let version = update.version, !version.isEmpty {
                         Text(L10n.inboxVersionChip(version))
-                            .font(.caption2.weight(.semibold))
+                            .font(.caption.weight(.semibold))
                             .monospacedDigit()
                             .foregroundStyle(.secondaryText)
                             .padding(.horizontal, 8)
@@ -351,7 +351,7 @@ struct InboxComposerSheet: View {
             // The one field whose meaning is not obvious from its label, and
             // the one that decides who sees what.
             Text(L10n.inboxAdminVersionHelp(AppVersion.current.raw))
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
                 .padding(.horizontal, 4)
 
@@ -510,7 +510,7 @@ struct InboxComposerSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.inboxAdminPin).font(.subheadline.weight(.semibold))
                     Text(L10n.inboxAdminPinNote)
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                 }
             }

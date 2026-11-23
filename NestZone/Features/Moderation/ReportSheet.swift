@@ -65,7 +65,7 @@ struct ReportSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }

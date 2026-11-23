@@ -63,7 +63,7 @@ public struct InboxBell: View {
                 .overlay(alignment: .topTrailing) {
                     if store.badge.hasUnread {
                         Text(store.badge.pipText)
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
                             .monospacedDigit()
                             .contentTransition(.numericText())
                             .foregroundStyle(.white)
@@ -263,7 +263,7 @@ struct InboxPanel: View {
                     .font(.subheadline.weight(.semibold))
                 if count > 0 {
                     Text(count > store.badge.cap ? "\(store.badge.cap)+" : "\(count)")
-                        .font(.caption2.weight(.bold))
+                        .font(.caption.weight(.bold))
                         .monospacedDigit()
                         .contentTransition(.numericText())
                         .padding(.horizontal, 6)
@@ -276,7 +276,7 @@ struct InboxPanel: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 38)
-            .foregroundStyle(isSelected ? Color.white : Color.primary)
+            .foregroundStyle(isSelected ? theme.onAccent : Color.primary)
             .background {
                 if isSelected {
                     Capsule().fill(theme.accent)
@@ -370,9 +370,7 @@ struct InboxPanel: View {
     private func daySection(_ section: ActivitySection, startingAt start: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(section.title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondaryText)
-                .textCase(.uppercase)
+                .groupLabel()
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
@@ -423,7 +421,7 @@ struct InboxPanel: View {
             EmptyView()
         } else if !store.sections.isEmpty {
             Text(L10n.inboxRetentionNote(store.retentionDays))
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.tertiaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 8)
@@ -477,7 +475,7 @@ struct InboxPanel: View {
                         }
 
                         Text(L10n.inboxVersionFooter(AppVersion.current.raw))
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.tertiaryText)
                             .padding(.top, 8)
                     }
@@ -519,7 +517,7 @@ private struct ActivityRow: View {
                             .lineLimit(1)
                         Spacer(minLength: 4)
                         RelativeTimeText(row.created)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.secondaryText)
                             .layoutPriority(1)
                     }
@@ -545,7 +543,7 @@ private struct ActivityRow: View {
                                 viewable: false
                             )
                             Text(name)
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundStyle(.secondaryText)
                         }
                         .padding(.top, 1)
@@ -681,7 +679,7 @@ private struct UpdateCard: View {
 
             if let version = update.version, !version.isEmpty {
                 Text(L10n.inboxVersionChip(version))
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(.secondaryText)
                     .padding(.horizontal, 8)
@@ -729,14 +727,14 @@ private struct UpdateCard: View {
                 Image(systemName: "arrow.down.circle")
                     .font(.caption2.weight(.semibold))
                 Text(L10n.inboxArrivesIn(version, AppVersion.current.raw))
-                    .font(.caption2)
+                    .font(.caption)
             }
             .foregroundStyle(Palette.amber)
             .padding(.top, 2)
         } else {
             HStack(spacing: 6) {
                 RelativeTimeText(update.displayDate)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.tertiaryText)
             }
             .padding(.top, 2)

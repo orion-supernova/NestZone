@@ -53,6 +53,10 @@ struct ReadabilityLab: View {
                 PrimaryButton("Add anything", symbol: "plus") {}
                 SecondaryButton("Not now") {}
                 EmptyStateView(title: "All clear", message: "Nothing needs you today.", symbol: "checkmark.circle", isCompact: true)
+                section("Status words") { statusWords }
+                section("Chips on a tint and on the accent") { selectedChips }
+                section("Sticky notes") { stickyNotes }
+                section("Accent buttons") { accentButtons }
                 systemRoles
             }
             .padding(.horizontal, Metrics.screenPadding)
@@ -60,6 +64,74 @@ struct ReadabilityLab: View {
         }
         .background(Backdrop(tint: theme.accent))
         .appTheme(theme)
+    }
+
+    /// The words that used to be drawn in a tint (green, orange, red): the
+    /// measured text colours, with the tint left on the glyph.
+    private var statusWords: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Label { Text(verbatim: "You are owed 42.00") } icon: { Image(systemName: "arrow.down.left.circle.fill") }
+                    .foregroundStyle(Palette.successText)
+                Label { Text(verbatim: "Over the estimate by 15.00") } icon: { Image(systemName: "exclamationmark.triangle.fill") }
+                    .foregroundStyle(Palette.warningText)
+                Label { Text(verbatim: "Didn't go through") } icon: { Image(systemName: "exclamationmark.circle.fill") }
+                    .foregroundStyle(Palette.dangerText)
+                Text(verbatim: "Event kind: words primary, glyph in its tint")
+                    .font(.footnote)
+                    .foregroundStyle(.secondaryText)
+            }
+            .font(.footnote.weight(.medium))
+        }
+    }
+
+    private var selectedChips: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                ForEach([("Food", Palette.eventFood), ("Party", Palette.eventParty), ("Holiday", Palette.eventHoliday)], id: \.0) { item in
+                    HStack(spacing: 5) {
+                        Image(systemName: "circle.fill").font(.caption2).foregroundStyle(item.1)
+                        Text(verbatim: item.0).font(.caption.weight(.medium))
+                    }
+                    .padding(.horizontal, 10).padding(.vertical, 7)
+                    .foregroundStyle(.primary)
+                    .background(item.1.opacity(0.3), in: .capsule)
+                }
+            }
+            HStack(spacing: 8) {
+                Text(verbatim: "On the accent").font(.caption.weight(.semibold))
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .foregroundStyle(theme.onAccent)
+                    .background(theme.accent, in: .capsule)
+                Text(verbatim: "Accent as ink").font(.caption.weight(.semibold))
+                    .foregroundStyle(.accentText)
+            }
+        }
+    }
+
+    /// Ink on the seven swatches: the author line and the timestamp.
+    private var stickyNotes: some View {
+        HStack(spacing: 10) {
+            ForEach([Palette.paperYellow, Palette.paperRed, Palette.paperPurple, Palette.paperBlue], id: \.self) { paper in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: "Milk, eggs").font(.system(.subheadline, design: .rounded, weight: .medium)).foregroundStyle(Palette.paperInk)
+                    Text(verbatim: "— Zeynep").font(.system(.caption, design: .rounded, weight: .medium)).foregroundStyle(Palette.paperInkSecondary)
+                    Text(verbatim: "2 min ago").font(.system(.caption2, design: .rounded)).foregroundStyle(Palette.paperInkTertiary)
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(paper, in: .rect(cornerRadius: 6))
+            }
+        }
+    }
+
+    private var accentButtons: some View {
+        VStack(spacing: 10) {
+            Button { } label: { Text(verbatim: "Celebrate").font(.subheadline.weight(.semibold)).foregroundStyle(.onAccent).frame(maxWidth: .infinity) }
+                .buttonStyle(.glassProminent).tint(theme.accent)
+            Button { } label: { Text(verbatim: "Mark fixed").font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity) }
+                .buttonStyle(.glassProminent).tint(Palette.answerYes)
+        }
     }
 
     private var header: some View {

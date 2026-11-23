@@ -141,14 +141,14 @@ private struct NoteCard: View {
         ) {
             HStack(spacing: 4) {
                 Text(verbatim: "— \(author)")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.black.opacity(0.65))
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(Palette.paperInkSecondary)
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 if let created = note.created {
                     RelativeTimeText(created)
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.45))
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(Palette.paperInkTertiary)
                         .lineLimit(1)
                 }
             }
@@ -243,12 +243,12 @@ struct ComposeNoteSheet: View {
             ) {
                 HStack(spacing: 4) {
                     Text(L10n.notesAuthorYou)
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.65))
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(Palette.paperInkSecondary)
                     Spacer(minLength: 0)
                     Text(L10n.notesPreviewNow)
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.45))
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(Palette.paperInkTertiary)
                 }
             }
             .frame(width: 190)
@@ -261,7 +261,7 @@ struct ComposeNoteSheet: View {
     private var editor: some View {
         TextEditor(text: $store.body_)
             .focused($isFocused)
-            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .font(.system(.callout, design: .rounded, weight: .medium))
             .scrollContentBackground(.hidden)
             .padding(12)
             .frame(minHeight: 130)
@@ -269,7 +269,7 @@ struct ComposeNoteSheet: View {
             .overlay(alignment: .topLeading) {
                 if store.body_.isEmpty {
                     Text(L10n.notesComposePlaceholder)
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.system(.callout, design: .rounded, weight: .medium))
                         .foregroundStyle(Palette.accessory)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 20)
@@ -322,7 +322,7 @@ struct ComposeNoteSheet: View {
                 Image(systemName: "exclamationmark.circle.fill")
             }
             .font(.caption)
-            .foregroundStyle(Palette.danger)
+            .foregroundStyle(Palette.dangerText)
             .frame(maxWidth: .infinity, alignment: .leading)
             .transition(.move(edge: .top).combined(with: .opacity))
         }

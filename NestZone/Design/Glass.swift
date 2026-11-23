@@ -22,13 +22,7 @@ extension View {
         tinted: Color? = nil,
         interactive: Bool = false
     ) -> some View {
-        glassEffect(
-            // Untinted glass gets the neutral floor: in dark it is darkened a
-            // little so words keep their contrast over a themed wash; in
-            // light it is clear and changes nothing.
-            .regular.tint(tinted ?? Palette.glassFloor).interactive(interactive),
-            in: .rect(cornerRadius: cornerRadius, style: .continuous)
-        )
+        modifier(GlassCardSurface(cornerRadius: cornerRadius, tinted: tinted, interactive: interactive))
     }
 
     /// A floating control — toolbar button, filter chip, FAB.
@@ -40,6 +34,45 @@ extension View {
     /// photo) where `.regular` would wash the picture out.
     public func glassOverlay(cornerRadius: CGFloat = Metrics.cardRadius) -> some View {
         glassEffect(.clear, in: .rect(cornerRadius: cornerRadius, style: .continuous))
+    }
+}
+
+/// The card's glass, with what the two accessibility settings ask of it.
+///
+/// Reduce Transparency: the system frosts glass on its own, but words on a
+/// themed wash were measured against the glass as it looks normally, so the
+/// card gets a solid ground under it and the contrast figures hold on any
+/// ground. Increase Contrast: a hairline edge, so the card is still a card
+/// when the glass has gone nearly flat.
+private struct GlassCardSurface: ViewModifier {
+    let cornerRadius: CGFloat
+    let tinted: Color?
+    let interactive: Bool
+
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                if reduceTransparency {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(Palette.cardSolid)
+                }
+            }
+            .glassEffect(
+                // Untinted glass gets the neutral floor: in dark it is darkened a
+                // little so words keep their contrast over a themed wash; in
+                // light it is clear and changes nothing.
+                .regular.tint(tinted ?? Palette.glassFloor).interactive(interactive),
+                in: .rect(cornerRadius: cornerRadius, style: .continuous)
+            )
+            .overlay {
+                if contrast == .increased {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(Palette.accessory, lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+            }
     }
 }
 

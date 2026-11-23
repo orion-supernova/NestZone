@@ -46,12 +46,12 @@ public struct GlassTextField: View {
                 if let symbol {
                     Image(systemName: symbol)
                         .font(.body)
-                        .foregroundStyle(isFocused ? theme.accent : .secondary)
+                        .foregroundStyle(isFocused ? theme.ink : Palette.textSecondary)
                         .frame(width: 20)
                 }
                 ZStack(alignment: .leading) {
                     Text(title)
-                        .font(isFloating ? .caption2 : .body)
+                        .font(isFloating ? .caption : .body)
                         .foregroundStyle(.secondaryText)
                         .offset(y: isFloating ? -15 : 0)
                     field
@@ -84,7 +84,7 @@ public struct GlassTextField: View {
                     .transition(reduceMotion ? .opacity : AnyTransition(.blurReplace))
                 }
                 .font(.caption)
-                .foregroundStyle(Palette.danger)
+                .foregroundStyle(Palette.dangerText)
                 .transition(reduceMotion ? AnyTransition.opacity : .move(edge: .top).combined(with: .opacity))
             }
         }

@@ -82,7 +82,7 @@ struct SparklePackCard: View {
                 }
                 .font(.footnote)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(note == .failed || note == .unverified ? Palette.dangerText : Color.secondary)
+                .foregroundStyle(note == .failed || note == .unverified ? Palette.dangerText : Palette.textSecondary)
             }
             Spacer(minLength: 4)
             buyButton
@@ -123,7 +123,7 @@ struct SparklePackCard: View {
         if isBest {
             Text(L10n.storeBestValue)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.horizontal, 10)

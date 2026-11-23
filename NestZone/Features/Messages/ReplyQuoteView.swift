@@ -19,16 +19,16 @@ struct ReplyQuoteView: View {
                 .frame(width: 3)
             VStack(alignment: .leading, spacing: 1) {
                 Text(name)
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                     .lineLimit(1)
                 Text(Self.plain(snippet: snippet, kind: kind))
-                    .font(.caption2)
+                    .font(.caption)
                     .lineLimit(2)
                     .opacity(0.85)
             }
             .multilineTextAlignment(.leading)
         }
-        .foregroundStyle(isMine ? Color.white : Color.primary)
+        .foregroundStyle(isMine ? theme.onAccent : Color.primary)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(.rect)

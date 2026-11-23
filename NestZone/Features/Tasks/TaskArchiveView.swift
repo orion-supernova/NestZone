@@ -122,7 +122,7 @@ public struct TaskArchiveView: View {
     private var footer: some View {
         if !store.isLoading, store.archive.isTruncated {
             Text(L10n.taskArchiveTruncated(store.archive.limit))
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, Metrics.stackSpacing)
@@ -170,7 +170,7 @@ private struct ArchiveRow: View {
 
                 HStack(spacing: 8) {
                     Text(credit)
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                         .lineLimit(1)
 
@@ -179,7 +179,7 @@ private struct ArchiveRow: View {
                     } icon: {
                         Image(systemName: entry.kind.symbol)
                     }
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
                 }
             }
@@ -193,7 +193,7 @@ private struct ArchiveRow: View {
                 entry.completedAt.date,
                 format: .dateTime.day().month(.abbreviated).year(.twoDigits)
             )
-            .font(.caption2)
+            .font(.caption)
             .foregroundStyle(.secondaryText)
             .monospacedDigit()
         }

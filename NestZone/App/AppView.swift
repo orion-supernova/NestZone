@@ -505,7 +505,7 @@ private struct SegmentSwitch: View {
                         HStack(spacing: 4) {
                             Text(module.title)
                                 .font(.system(.title3, design: .rounded, weight: .bold))
-                                .foregroundStyle(isSelected ? .primary : .secondary)
+                                .foregroundStyle(isSelected ? .primary : Palette.textSecondary)
                                 .lineLimit(1)
                             if module.needsPlus {
                                 PlusMark(isLocked: !pro.isPro)

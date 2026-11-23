@@ -92,7 +92,7 @@ struct EventHistorySheet: View {
                             .map { Money.compactText($0.amount, currency: $0.currency) }
                             .joined(separator: ", ")
                     ))
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
                 }
             }
@@ -155,7 +155,7 @@ struct EventHistorySheet: View {
                         Text(Money.text(row.spent, currency: currency))
                             .font(.subheadline.weight(.semibold))
                             .monospacedDigit()
-                            .foregroundStyle(row.isOverBudget ? Palette.danger : .primary)
+                            .foregroundStyle(row.isOverBudget ? Palette.dangerText : .primary)
                     }
                     if row.going > 0 {
                         Label {
@@ -163,7 +163,7 @@ struct EventHistorySheet: View {
                         } icon: {
                             Image(systemName: "person.2.fill")
                         }
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                     }
                 }

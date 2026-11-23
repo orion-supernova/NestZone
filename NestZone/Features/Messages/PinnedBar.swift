@@ -17,7 +17,7 @@ struct PinnedBar: View {
                         .foregroundStyle(.secondaryText)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(senderName)
-                            .font(.caption2.weight(.semibold))
+                            .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondaryText)
                             .lineLimit(1)
                         Text(ReplyQuoteView.plain(snippet: pin.snippet, kind: pin.kind))

@@ -38,7 +38,7 @@ public struct NowDock: View {
                     VStack(alignment: .leading, spacing: 0) {
                         title
                             .font(.subheadline.weight(store.dockItem == .add ? .regular : .semibold))
-                            .foregroundStyle(store.dockItem == .add ? .secondary : .primary)
+                            .foregroundStyle(store.dockItem == .add ? Palette.textSecondary : .primary)
                             .lineLimit(1)
                             // The live thing changing — tonight's dinner giving
                             // way to the movie round, one event to the next —
@@ -46,7 +46,7 @@ public struct NowDock: View {
                             .contentTransition(.interpolate)
                         if !isInline, let subtitle {
                             subtitle
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundStyle(.secondaryText)
                                 .lineLimit(1)
                         }
@@ -64,7 +64,7 @@ public struct NowDock: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.onAccent)
                     // A quarter turn as Add anything opens. The light tap is
                     // already the press style's, on the way down.
                     .rotationEffect(.degrees(reduceMotion ? 0 : Double(adds) * 90))

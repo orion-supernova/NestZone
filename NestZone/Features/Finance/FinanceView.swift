@@ -201,7 +201,7 @@ public struct FinanceView: View {
                         .contentTransition(.numericText())
                     if !store.month.isCurrent {
                         Text(L10n.financeBackToThisMonth)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.accentText)
                     }
                 }
@@ -281,7 +281,7 @@ public struct FinanceView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
-                    .foregroundStyle(isSelected ? Color.white : Color.secondary)
+                    .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
                     .background {
@@ -390,6 +390,7 @@ public struct FinanceView: View {
         let isOwed = told > 0
         let isSquare = told == 0
         let tint: Color = isSquare ? Palette.success : (isOwed ? Palette.success : Palette.warning)
+        let textTint: Color = isOwed || isSquare ? Palette.successText : Palette.warningText
 
         return VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
@@ -413,7 +414,7 @@ public struct FinanceView: View {
                             .contentTransition(.symbolEffect(.replace))
                     }
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(tint)
+                    .foregroundStyle(textTint)
 
                     SquareUpFigure(
                         amount: abs(figure),
@@ -448,7 +449,7 @@ public struct FinanceView: View {
                             Image(systemName: transfer.from == store.currentUserID
                                 ? "arrow.up.right"
                                 : "arrow.down.left")
-                                .font(.caption2.weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .foregroundStyle(transfer.from == store.currentUserID
                                     ? Palette.warning
                                     : Palette.success)
@@ -589,7 +590,7 @@ public struct FinanceView: View {
 
                 if store.summary.expenseCount > 0 {
                     Text(L10n.financeExpenseCount(store.summary.expenseCount))
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                 }
             }
@@ -1113,7 +1114,7 @@ private struct DayHeader: View {
             Text(day, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
                 .font(.subheadline.weight(.semibold))
             if Calendar.current.isDateInToday(day) {
-                Badge(String(localized: L10n.financeToday), tint: .secondary)
+                Badge(String(localized: L10n.financeToday), tint: Palette.textSecondary)
             }
             Spacer(minLength: 8)
             Text(Money.text(total, currency: currency))
@@ -1195,7 +1196,7 @@ private struct ExpenseRow: View {
                 }
                 HStack(spacing: 4) {
                     Text(L10n.financePaidBy(payerName))
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                     if let eventName {
@@ -1203,28 +1204,28 @@ private struct ExpenseRow: View {
                         // an unexplained line and gave no hint that a party in
                         // the calendar was the reason for it.
                         Text(verbatim: "·")
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.tertiaryText)
                         Label {
                             Text(eventName)
                         } icon: {
                             Image(systemName: "calendar")
                         }
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(Palette.indigo)
                         .lineLimit(1)
                     }
                     if let issueName {
                         Text(verbatim: "·")
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.tertiaryText)
                         Label {
                             Text(issueName)
                         } icon: {
-                            Image(systemName: "wrench.adjustable.fill")
+                            Image(systemName: "wrench.adjustable.fill").foregroundStyle(Palette.statIssues)
                         }
-                        .font(.caption2)
-                        .foregroundStyle(Palette.statIssues)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
                         .lineLimit(1)
                     }
                 }
@@ -1240,9 +1241,9 @@ private struct ExpenseRow: View {
                     Text(yourShare > 0
                         ? L10n.financeYouLent(Money.text(yourShare, currency: expense.currency))
                         : L10n.financeYouBorrowed(Money.text(-yourShare, currency: expense.currency)))
-                        .font(.caption2.weight(.medium))
+                        .font(.caption.weight(.medium))
                         .monospacedDigit()
-                        .foregroundStyle(yourShare > 0 ? Palette.success : Palette.warning)
+                        .foregroundStyle(yourShare > 0 ? Palette.successText : Palette.warningText)
                 }
             }
         }
@@ -1281,7 +1282,7 @@ private struct EventSpendRow: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 Text(event.startsAt.date, format: .dateTime.day().month(.abbreviated))
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
 
                 if let progress = event.progress {
@@ -1306,12 +1307,12 @@ private struct EventSpendRow: View {
                     Text(L10n.financeEventOfBudget(
                         Money.compactText(budget, currency: event.currency)
                     ))
-                    .font(.caption2)
+                    .font(.caption)
                     .monospacedDigit()
-                    .foregroundStyle(event.isOverBudget ? Palette.danger : .secondary)
+                    .foregroundStyle(event.isOverBudget ? Palette.dangerText : Palette.textSecondary)
                 } else if event.expenseCount > 0 {
                     Text(L10n.financeEventExpenses(event.expenseCount))
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                 }
             }
@@ -1350,7 +1351,7 @@ private struct RepairSpendRow: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 Text(repair.severity.title)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
 
                 if let progress = repair.progress {
@@ -1375,12 +1376,12 @@ private struct RepairSpendRow: View {
                     Text(L10n.financeRepairOfEstimate(
                         Money.compactText(estimate, currency: repair.currency)
                     ))
-                    .font(.caption2)
+                    .font(.caption)
                     .monospacedDigit()
-                    .foregroundStyle(repair.isOverEstimate ? Palette.warning : .secondary)
+                    .foregroundStyle(repair.isOverEstimate ? Palette.warningText : Palette.textSecondary)
                 } else if repair.expenseCount > 0 {
                     Text(L10n.financeEventExpenses(repair.expenseCount))
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                 }
             }
@@ -1442,16 +1443,16 @@ private struct BillRow: View {
                             .lineLimit(1)
                         HStack(spacing: 5) {
                             Text(countdown)
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(urgency.tint)
-                            Text("·").font(.caption2).foregroundStyle(.secondaryText)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.primary)
+                            Text("·").font(.caption).foregroundStyle(.secondaryText)
                             Text(bill.cycle.title)
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundStyle(.secondaryText)
                             if bill.responsible != nil {
-                                Text("·").font(.caption2).foregroundStyle(.secondaryText)
+                                Text("·").font(.caption).foregroundStyle(.secondaryText)
                                 Text(payerName)
-                                    .font(.caption2)
+                                    .font(.caption)
                                     .foregroundStyle(.secondaryText)
                                     .lineLimit(1)
                             }
@@ -1591,8 +1592,8 @@ private struct BudgetCard: View {
                             Money.compactText(-progress.remaining, currency: currency))
                         : L10n.financeBudgetLeft(
                             Money.compactText(progress.remaining, currency: currency)))
-                        .font(.caption2)
-                        .foregroundStyle(progress.isOver ? Palette.danger : .secondary)
+                        .font(.caption)
+                        .foregroundStyle(progress.isOver ? Palette.dangerText : Palette.textSecondary)
                         .lineLimit(1)
                         .contentTransition(.numericText())
                 }
@@ -1625,18 +1626,18 @@ private struct TrendChip: View {
                 .contentTransition(.symbolEffect(.replace))
                 .font(.caption2.weight(.bold))
             Text(abs(change), format: .percent.precision(.fractionLength(0)))
-                .font(.caption2.weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .monospacedDigit()
                 .contentTransition(.numericText(value: abs(change)))
         }
         .animation(Motion.spring, value: change)
         // Spending more is not a failure, so this is not red — it is the
         // household's own number moving, and the colour only says which way.
-        .foregroundStyle(isFlat ? Color.secondary : (isUp ? Palette.warning : Palette.success))
+        .foregroundStyle(isFlat ? Palette.textSecondary : (isUp ? Palette.warningText : Palette.successText))
         .padding(.horizontal, 8)
         .padding(.vertical, 3)
         .background(
-            (isFlat ? Color.secondary : (isUp ? Palette.warning : Palette.success)).opacity(0.15),
+            (isFlat ? Palette.textSecondary : (isUp ? Palette.warning : Palette.success)).opacity(0.15),
             in: .capsule
         )
         .contentTransition(.numericText(value: change))
@@ -1790,6 +1791,8 @@ private struct SquareUpFigure: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let stampSize: CGFloat = 64
+    /// The settled figure scales with Dynamic Type like the title above it.
+    @ScaledMetric(relativeTo: .largeTitle) private var figureSize: CGFloat = 40
     /// From the stamp's centre on the figure to the title's icon, measured off
     /// the hero's own type sizes. The stamp is fading as it arrives, so a point
     /// either way at a larger text size never shows.
@@ -1798,7 +1801,7 @@ private struct SquareUpFigure: View {
     var body: some View {
         KeyframeAnimator(initialValue: SquareUpFrame(), trigger: stamps) { frame in
             MoneyText(amount, currency: currency)
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .font(.system(size: figureSize, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)

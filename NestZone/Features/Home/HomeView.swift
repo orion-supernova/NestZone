@@ -309,8 +309,8 @@ public struct HomeView<Companion: View>: View {
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp)))
                 Text(setupTitle(step))
                     .font(.subheadline.weight(.medium))
-                    .strikethrough(isDone, color: .secondary)
-                    .foregroundStyle(isDone ? .secondary : .primary)
+                    .strikethrough(isDone, color: Palette.textSecondary)
+                    .foregroundStyle(isDone ? Palette.textSecondary : .primary)
                 Spacer(minLength: 0)
                 if !isDone {
                     Image(systemName: "chevron.right")
@@ -657,7 +657,7 @@ public struct HomeView<Companion: View>: View {
             HStack(spacing: 12) {
                 Image(systemName: "popcorn.fill")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.onAccent)
                     .frame(width: 32, height: 32)
                     .background(theme.gradient, in: .circle)
                 VStack(alignment: .leading, spacing: 2) {
@@ -760,8 +760,7 @@ private struct HeroCard: View {
                     .background(Palette.danger.opacity(0.16), in: .rect(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(kicker)
-                        .font(.caption.weight(.bold))
-                        .textCase(.uppercase)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Palette.dangerText)
                         .lineLimit(1)
                     Text(title)
@@ -778,7 +777,7 @@ private struct HeroCard: View {
                             .padding(.horizontal, 6)
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(Palette.danger)
+                    .tint(Palette.answerNo)
                     .accessibilityIdentifier("HeroClaim")
                 }
                 Button(action: open) {
@@ -843,7 +842,7 @@ private struct TaskRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                    .foregroundStyle(task.isCompleted ? Palette.textSecondary : .primary)
                     .lineLimit(1)
                     // The line alone, swept across by a copy of the title whose
                     // letters are clear. Only there while the chore is done, so
@@ -853,7 +852,7 @@ private struct TaskRow: View {
                         if task.isCompleted {
                             Text(task.title)
                                 .font(.subheadline.weight(.medium))
-                                .strikethrough(color: .secondary)
+                                .strikethrough(color: Palette.textSecondary)
                                 .foregroundStyle(.clear)
                                 .lineLimit(1)
                                 .transition(strikeTransition)
@@ -955,6 +954,7 @@ private struct SuggestedDinnerCard: View {
                 Button(action: onAccept) {
                     Label { Text(L10n.homeDinnerFromEventAction) } icon: { Image(systemName: "fork.knife") }
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.onAccent)
                 }
                 .buttonStyle(.glassProminent)
 

@@ -34,7 +34,7 @@ struct MessageText: View {
                 if isMine {
                     run.underlineStyle = .single
                 } else {
-                    run.foregroundColor = theme.accent
+                    run.foregroundColor = theme.ink
                 }
             }
         }

@@ -95,6 +95,14 @@ extension Palette {
     public static let paperGreen = Color(hex: "4ADE80")
     public static let paperBlue = Color(hex: "60A5FA")
     public static let paperPurple = Color(hex: "A78BFA")
+
+    // Ink on the paper. The footer's second line used to be black at 45%,
+    // which is 2.7:1 on every swatch, and the author at 65% was 4.4:1 on red
+    // and purple. Black at 75% is 5.4:1 or better on all seven and 85% is 6.5:1
+    // or better; the paper is the same in light and dark, so these do not adapt.
+    public static let paperInk = Color.black.opacity(0.9)
+    public static let paperInkSecondary = Color.black.opacity(0.85)
+    public static let paperInkTertiary = Color.black.opacity(0.75)
 }
 
 /// A note, drawn as a square of paper pinned to the board.
@@ -158,8 +166,8 @@ public struct StickyNote<Footer: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(text)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
-                .foregroundStyle(.black.opacity(0.85))
+                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .foregroundStyle(Palette.paperInk)
                 .multilineTextAlignment(.leading)
                 .lineLimit(5)
                 .frame(maxWidth: .infinity, alignment: .leading)

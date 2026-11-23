@@ -250,6 +250,9 @@ public enum Palette {
             ? UIColor(white: 0.17, alpha: 1)
             : UIColor(white: 0.93, alpha: 1)
     })
+    /// The card's ground under Reduce Transparency, where the glass is not
+    /// to be trusted to carry the contrast figures.
+    public static let cardSolid = Color(uiColor: .secondarySystemGroupedBackground)
     /// Under every untinted glass card: black at 14% in dark, nothing in
     /// light. Keeps secondary text above 4.5:1 where glass sits over a
     /// theme's wash.
@@ -368,6 +371,9 @@ public enum Palette {
     /// 2.2:1 on white. Deep green in light, the system's own in dark.
     public static let successText = adaptive("15803D", "4ADE80", "166534", "86EFAC")
     public static let warning = Color.orange
+    /// Orange as the colour of a word or a small glyph: the system orange is
+    /// 2.2:1 on white. A deep amber-brown in light, a pale amber in dark.
+    public static let warningText = adaptive("92400E", "FCD34D", "78350F", "FDE68A")
 
     /// Sits behind a title laid over artwork — a swipe-deck poster, a hero
     /// image. Fades to nothing at the top rather than cutting a hard black edge

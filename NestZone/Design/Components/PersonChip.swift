@@ -46,7 +46,7 @@ public struct PersonChip: View {
             .padding(.leading, 6)
             .padding(.trailing, 12)
             .padding(.vertical, 5)
-            .foregroundStyle(isSelected ? Color.white : Color.primary)
+            .foregroundStyle(isSelected ? theme.onAccent : Color.primary)
             .background {
                 if isSelected {
                     Capsule().fill(theme.accent)

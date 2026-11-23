@@ -88,9 +88,7 @@ public struct RecipesView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(L10n.dinnerTonightTitle)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondaryText)
-                    .textCase(.uppercase)
+                    .groupLabel()
                     .padding(.leading, 4)
                 Spacer(minLength: 0)
                 if store.tonight != nil {
@@ -375,13 +373,13 @@ struct RecipeDetailView: View {
                                 Image(systemName: store.checkedIngredients.contains(index)
                                     ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(store.checkedIngredients.contains(index)
-                                        ? Palette.success : Color.secondary)
+                                        ? Palette.success : Palette.textSecondary)
                                     .contentTransition(.symbolEffect(.replace))
                                 Text(item)
                                     .font(.subheadline)
                                     .strikethrough(store.checkedIngredients.contains(index))
                                     .foregroundStyle(store.checkedIngredients.contains(index)
-                                        ? .secondary : .primary)
+                                        ? Palette.textSecondary : .primary)
                                     .multilineTextAlignment(.leading)
                                 Spacer(minLength: 0)
                             }
@@ -404,7 +402,7 @@ struct RecipeDetailView: View {
                         HStack(alignment: .top, spacing: 10) {
                             Text("\(index + 1)")
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(theme.onAccent)
                                 .frame(width: 22, height: 22)
                                 .background(theme.accent, in: .circle)
                             Text(step)
@@ -521,7 +519,7 @@ private struct Fact: View {
         VStack(spacing: 4) {
             Image(systemName: symbol).font(.callout).foregroundStyle(.accentText)
             Text(value).font(.system(.headline, design: .rounded))
-            Text(label).font(.caption2).foregroundStyle(.secondaryText).lineLimit(1)
+            Text(label).font(.caption).foregroundStyle(.secondaryText).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -647,12 +645,12 @@ struct CookingModeView: View {
                             HStack(spacing: 12) {
                                 Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
                                     .font(.title3)
-                                    .foregroundStyle(isChecked ? Palette.success : Color.secondary)
+                                    .foregroundStyle(isChecked ? Palette.success : Palette.textSecondary)
                                     .contentTransition(.symbolEffect(.replace))
                                 Text(item)
                                     .font(.subheadline)
-                                    .strikethrough(isChecked, color: .secondary)
-                                    .foregroundStyle(isChecked ? .secondary : .primary)
+                                    .strikethrough(isChecked, color: Palette.textSecondary)
+                                    .foregroundStyle(isChecked ? Palette.textSecondary : .primary)
                                     .multilineTextAlignment(.leading)
                                 Spacer(minLength: 0)
                             }
@@ -742,6 +740,7 @@ struct CookingModeView: View {
                             Image(systemName: "timer")
                         }
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.onAccent)
                     }
                     .buttonStyle(.glassProminent)
                     .controlSize(.small)
@@ -880,7 +879,7 @@ struct ComposeRecipeSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }
@@ -947,7 +946,7 @@ private struct AddedToListToast: View {
         HStack(spacing: 12) {
             Image(systemName: count > 0 ? "checkmark.circle.fill" : "cart")
                 .font(.callout)
-                .foregroundStyle(count > 0 ? Palette.success : Color.secondary)
+                .foregroundStyle(count > 0 ? Palette.success : Palette.textSecondary)
                 .symbolEffect(.bounce, options: .nonRepeating, value: count)
 
             Text(count > 0

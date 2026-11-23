@@ -25,9 +25,9 @@ struct ReactionChips: View {
                     HStack(spacing: 3) {
                         Text(tally.emoji).font(.caption)
                         Text(tally.count, format: .number)
-                            .font(.caption2.weight(tally.isMine ? .semibold : .regular))
+                            .font(.caption.weight(tally.isMine ? .semibold : .regular))
                             .monospacedDigit()
-                            .foregroundStyle(tally.isMine ? .primary : .secondary)
+                            .foregroundStyle(tally.isMine ? .primary : Palette.textSecondary)
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)

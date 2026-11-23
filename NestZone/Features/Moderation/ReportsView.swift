@@ -74,7 +74,7 @@ struct ReportAgeLabel: View {
         let isStale = Date.now.timeIntervalSince(created.date) > Self.staleAfter
         RelativeTime.text(for: created.date)
             .font(.caption.weight(isStale ? .semibold : .regular))
-            .foregroundStyle(isStale ? Palette.danger : Palette.accessory)
+            .foregroundStyle(isStale ? Palette.dangerText : Palette.textSecondary)
             .accessibilityValue(isStale ? Text(L10n.moderationOverdue) : Text(""))
     }
 }
@@ -136,7 +136,7 @@ private struct ReportRowView: View {
                     .lineLimit(1)
                     if let home = row.homeName, !home.isEmpty {
                         Text(home)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(Palette.accessory)
                             .lineLimit(1)
                     }

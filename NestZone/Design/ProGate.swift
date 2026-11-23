@@ -83,7 +83,7 @@ struct PlusBadge: View {
     var body: some View {
         Image(systemName: PlusStyle.symbol(isLocked: isLocked))
             .font(.system(size: 8.5, weight: .bold))
-            .foregroundStyle(isLocked ? AnyShapeStyle(.secondary) : AnyShapeStyle(PlusStyle.onTint(theme)))
+            .foregroundStyle(isLocked ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(PlusStyle.onTint(theme)))
             .contentTransition(.symbolEffect(.replace))
             .frame(width: 16, height: 16)
             .background(isLocked ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(PlusStyle.tint(theme)), in: .circle)
@@ -102,7 +102,7 @@ struct PlusMark: View {
     var body: some View {
         Image(systemName: PlusStyle.symbol(isLocked: isLocked))
             .font(font)
-            .foregroundStyle(isLocked ? AnyShapeStyle(.secondary) : AnyShapeStyle(PlusStyle.tint(theme)))
+            .foregroundStyle(isLocked ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(PlusStyle.tint(theme)))
             .contentTransition(.symbolEffect(.replace))
             .accessibilityHidden(true)
     }

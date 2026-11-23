@@ -46,9 +46,7 @@ struct PlusDetailsView: View {
     private func section(_ group: PlusDetailGroup) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(group.title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondaryText)
-                .textCase(.uppercase)
+                .groupLabel()
                 .accessibilityAddTraits(.isHeader)
             GlassCard {
                 VStack(alignment: .leading, spacing: 18) {
@@ -87,9 +85,7 @@ struct PlusDetailsView: View {
     private var free: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.plusFreeTitle)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondaryText)
-                .textCase(.uppercase)
+                .groupLabel()
                 .accessibilityAddTraits(.isHeader)
             GlassCard {
                 VStack(alignment: .leading, spacing: 14) {

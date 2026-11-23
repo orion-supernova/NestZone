@@ -233,7 +233,7 @@ struct CompanionCard: View {
                     .oneLineUnlessAccessibility()
                 if listed { Spacer(minLength: 0) }
             }
-            .foregroundStyle(theme.accent)
+            .foregroundStyle(theme.ink)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: listed ? .leading : .center)
             .contentShape(.rect)
         }
@@ -278,6 +278,7 @@ struct CompanionCard: View {
             Button { store.send(.chooseTapped) } label: {
                 Text(L10n.companionChoose)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.onAccent)
                     .oneLineUnlessAccessibility()
                     .frame(maxWidth: .infinity)
             }
@@ -404,6 +405,7 @@ private struct CardProgress: View {
                 Button { store.send(.celebrateTapped) } label: {
                     Label { Text(L10n.companionCelebrate).oneLineUnlessAccessibility() } icon: { Image(systemName: "party.popper.fill") }
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.onAccent)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
@@ -470,7 +472,7 @@ private struct CardJar: View {
             if let pay = store.lastPay, !covered {
                 payment(pay.coins)
                     .font(.caption.weight(.heavy))
-                    .foregroundStyle(Palette.success)
+                    .foregroundStyle(Palette.successText)
                     .fixedSize()
                     .phaseAnimator([0, 1, 2], trigger: pay.id) { content, phase in
                         // Earnings drop into the jar: they show above it, then

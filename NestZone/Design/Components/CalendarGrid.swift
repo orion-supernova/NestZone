@@ -115,7 +115,7 @@ public struct DayCell: View, Equatable {
 
     private var numberColour: Color {
         if isSelected { return .white }
-        if !isInMonth { return Color.secondary.opacity(0.4) }
+        if !isInMonth { return Palette.textTertiary }
         if isToday { return theme.accent }
         return .primary
     }
@@ -182,7 +182,7 @@ public struct DayCell: View, Equatable {
                     }
                     if extra > 0 {
                         Text("+\(extra)")
-                            .font(.system(size: 8, weight: .bold, design: .rounded))
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
                             .foregroundStyle(.secondaryText)
                     }
                 }
@@ -328,7 +328,7 @@ public struct EventRow: View {
                 HStack(spacing: 6) {
                     Text(showsDate ? dateAndTime : occurrence.timeText)
                         .font(.caption)
-                        .foregroundStyle(occurrence.isInProgress ? theme.accent : .secondary)
+                        .foregroundStyle(occurrence.isInProgress ? theme.ink : Palette.textSecondary)
                         .monospacedDigit()
                     if let location = occurrence.location, !location.isEmpty {
                         Text("·").foregroundStyle(.tertiaryText)
@@ -494,15 +494,16 @@ public struct DayTimeline: View {
                     HStack(spacing: 8) {
                         Image(systemName: occurrence.kind.symbol)
                             .font(.caption2.weight(.semibold))
+                            .foregroundStyle(occurrence.kind.tint)
                         Text(occurrence.title)
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
                         Spacer(minLength: 0)
                         Text(L10n.calendarAllDay)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.secondaryText)
                     }
-                    .foregroundStyle(occurrence.kind.tint)
+                    .foregroundStyle(.primary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -532,10 +533,10 @@ public struct DayTimeline: View {
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 Text(L10n.calendarAllDay)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
             }
-            .foregroundStyle(tint)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -558,7 +559,7 @@ public struct DayTimeline: View {
                 ForEach(hours, id: \.self) { hour in
                     HStack(alignment: .top, spacing: 8) {
                         Text(label(for: hour))
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.secondaryText)
                             .monospacedDigit()
                             .frame(width: gutter - 8, alignment: .trailing)
@@ -636,12 +637,12 @@ public struct DayTimeline: View {
                     .lineLimit(height > 40 ? 2 : 1)
                 if height > 40 {
                     Text(occurrence.timeText)
-                        .font(.system(size: 10))
-                        .opacity(0.8)
+                        .font(.caption2)
+                        .foregroundStyle(.secondaryText)
                         .monospacedDigit()
                 }
             }
-            .foregroundStyle(occurrence.kind.tint)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 7)
             .padding(.vertical, 5)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -671,12 +672,12 @@ public struct DayTimeline: View {
                     .lineLimit(height > 40 ? 2 : 1)
                 if height > 40 {
                     Text(item.timeText)
-                        .font(.system(size: 10))
-                        .opacity(0.8)
+                        .font(.caption2)
+                        .foregroundStyle(.secondaryText)
                         .monospacedDigit()
                 }
             }
-            .foregroundStyle(tint)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 7)
             .padding(.vertical, 5)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

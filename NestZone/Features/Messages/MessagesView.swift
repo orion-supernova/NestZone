@@ -106,7 +106,7 @@ private struct ConversationRow: View {
 
                 if let timestamp {
                     RelativeTimeText(timestamp)
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(Palette.accessory)
                 }
             }
@@ -474,7 +474,7 @@ struct NewConversationSheet: View {
                         Label { Text(error) } icon: {
                             Image(systemName: "exclamationmark.circle.fill")
                         }
-                        .foregroundStyle(Palette.danger)
+                        .foregroundStyle(Palette.dangerText)
                     }
                 }
             }

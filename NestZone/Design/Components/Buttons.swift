@@ -33,7 +33,7 @@ public struct PrimaryButton: View {
         Button(role: role, action: action) {
             HStack(spacing: 8) {
                 if isLoading {
-                    ProgressView().controlSize(.small).tint(.white)
+                    ProgressView().controlSize(.small).tint(role == .destructive ? Color.white : theme.onAccent)
                 } else if let symbol {
                     Image(systemName: symbol).font(.body.weight(.semibold))
                 }

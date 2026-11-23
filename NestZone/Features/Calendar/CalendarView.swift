@@ -233,7 +233,7 @@ public struct CalendarView: View {
                         .contentTransition(.numericText())
                     if !store.month.isCurrent {
                         Text(L10n.calendarJumpToToday)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.accentText)
                     }
                 }
@@ -291,7 +291,7 @@ public struct CalendarView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
-                    .foregroundStyle(isSelected ? Color.white : Color.secondary)
+                    .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
                     // Each slot only marks where the pill can land.
@@ -451,7 +451,7 @@ public struct CalendarView: View {
                         Text(L10n.calendarFilterCountShared(store.state.sharedVisibleCount))
                     }
                 }
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
                 .monospacedDigit()
                 .contentTransition(.numericText())
@@ -536,7 +536,7 @@ public struct CalendarView: View {
         HStack(spacing: 0) {
             ForEach(Array(MonthGrid.weekdayHeadings.enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondaryText)
                     .frame(maxWidth: .infinity)
             }
@@ -657,13 +657,13 @@ public struct CalendarView: View {
             } else {
                 HStack(alignment: .firstTextBaseline) {
                     Text(L10n.calendarSearchResults(results.count + theirs.count))
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.secondaryText)
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     Spacer(minLength: 8)
                     Button { store.send(.filtersCleared) } label: {
-                        Text(L10n.calendarClearFilters).font(.caption2.weight(.medium))
+                        Text(L10n.calendarClearFilters).font(.caption.weight(.medium))
                     }
                     .buttonStyle(.glass)
                     .controlSize(.small)
@@ -690,7 +690,7 @@ public struct CalendarView: View {
         VStack(spacing: 10) {
             Image(systemName: "calendar.badge.plus")
                 .font(.title2)
-                .foregroundStyle(theme.accent.opacity(0.7))
+                .foregroundStyle(theme.ink.opacity(0.7))
                 .bounces()
             Text(store.isFiltering ? L10n.calendarNoMatches : L10n.calendarNothingOn)
                 .font(.subheadline)
@@ -734,11 +734,11 @@ public struct CalendarView: View {
                 Button { store.send(.daySelected(day)) } label: {
                     VStack(spacing: 4) {
                         Text(weekdayLetter(day))
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(isSelected ? Color.white.opacity(0.8) : .secondary)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
                         Text(day.day, format: .number)
                             .font(.system(.subheadline, design: .rounded, weight: .bold))
-                            .foregroundStyle(isSelected ? .white : (day == .today ? theme.accent : .primary))
+                            .foregroundStyle(isSelected ? theme.onAccent : (day == .today ? theme.ink : .primary))
                             .monospacedDigit()
                         // A bar rather than dots: at week resolution the useful
                         // signal is "how much", not "what kind".
@@ -841,13 +841,11 @@ public struct CalendarView: View {
                         .foregroundStyle(occurrence.kind.tint)
                         .bounces(when: occurrence.isInProgress)
                     Text(occurrence.isInProgress ? L10n.calendarHappeningNow : L10n.calendarNextUp)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondaryText)
-                        .textCase(.uppercase)
+                        .groupLabel()
                     Spacer(minLength: 0)
                     CountdownText(occurrence.start)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(occurrence.isInProgress ? Palette.danger : theme.accent)
+                        .foregroundStyle(occurrence.isInProgress ? Palette.dangerText : theme.ink)
                         .contentTransition(.numericText())
                 }
 
@@ -927,11 +925,11 @@ public struct CalendarView: View {
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
                     }
-                    .foregroundStyle(isMine ? .white : status.tint)
+                    .foregroundStyle(Color.primary)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
                     .background(
-                        isMine ? AnyShapeStyle(status.tint) : AnyShapeStyle(status.tint.opacity(0.14)),
+                        isMine ? AnyShapeStyle(status.tint.opacity(0.3)) : AnyShapeStyle(status.tint.opacity(0.14)),
                         in: .capsule
                     )
                     .contentShape(.capsule)

@@ -176,7 +176,7 @@ struct PaywallView: View {
 
                 Button { store.send(.purchaseTapped) } label: {
                     HStack(spacing: 8) {
-                        if store.isPurchasing { ProgressView().tint(.white) }
+                        if store.isPurchasing { ProgressView().tint(theme.onAccent) }
                         Text(ctaTitle)
                     }
                 }
@@ -291,7 +291,7 @@ private struct PlanCard: View {
             HStack(alignment: .center, spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isSelected ? theme.accent : Color.secondary)
+                    .foregroundStyle(isSelected ? theme.ink : Palette.textSecondary)
                     .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace))
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
@@ -299,10 +299,10 @@ private struct PlanCard: View {
                             .font(.headline)
                         if package.kind == .yearly {
                             Text(L10n.paywallBestValue)
-                                .font(.caption2.weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(theme.onAccent)
                                 .background(theme.accent, in: .capsule)
                         }
                     }

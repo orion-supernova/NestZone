@@ -72,7 +72,7 @@ private struct IssueInlineError: View {
             Image(systemName: "exclamationmark.circle.fill")
         }
         .font(.footnote)
-        .foregroundStyle(Palette.danger)
+        .foregroundStyle(Palette.dangerText)
         .transition(.opacity.combined(with: .offset(y: -4)))
     }
 }
@@ -184,11 +184,11 @@ struct IssueComposerSheet: View {
                         VStack(spacing: 5) {
                             Image(systemName: severity.symbol)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(isSelected ? Color.white : severity.tint)
+                                .foregroundStyle(isSelected ? Color.primary : severity.tint)
                                 .bounces(when: isSelected)
                             Text(severity.title)
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(isSelected ? Color.white : Color.secondary)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(isSelected ? Color.primary : Palette.textSecondary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                         }
@@ -197,7 +197,7 @@ struct IssueComposerSheet: View {
                         .background {
                             if isSelected {
                                 RoundedRectangle(cornerRadius: Metrics.tightRadius, style: .continuous)
-                                    .fill(severity.tint)
+                                    .fill(severity.tint.opacity(0.3))
                             }
                         }
                         .contentShape(.rect)
@@ -238,7 +238,7 @@ struct IssueComposerSheet: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.caption2.weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondaryText)
             FlowLayout(spacing: 8, lineSpacing: 8) {
                 ForEach(areas) { area in
@@ -332,7 +332,7 @@ struct IssueComposerSheet: View {
                                     Image(systemName: "camera.fill").font(.body)
                                 }
                                 Text(L10n.issuesAddPhoto)
-                                    .font(.caption2)
+                                    .font(.caption)
                             }
                             .foregroundStyle(accent)
                             .frame(width: 84, height: 84)
@@ -445,7 +445,7 @@ struct IssueComposerSheet: View {
                                 }
                             }
                             Text(L10n.issuesEstimateHint)
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundStyle(.secondaryText)
                         }
 
@@ -479,7 +479,7 @@ struct IssueComposerSheet: View {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(L10n.issuesWarrantyTitle).font(.subheadline)
                                 Text(L10n.issuesWarrantyHint)
-                                    .font(.caption2)
+                                    .font(.caption)
                                     .foregroundStyle(.secondaryText)
                             }
                         }
@@ -553,7 +553,7 @@ struct StatusNoteSheet: View {
                 // felt like writing a sentence about it would lose the fact
                 // that it was fixed at all, which is the more important half.
                 Text(L10n.issuesStatusNoteOptional)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondaryText)
 
                 Spacer(minLength: 0)
@@ -614,7 +614,7 @@ struct PartsSheet: View {
                 } icon: {
                     Image(systemName: "info.circle")
                 }
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
 
                 Spacer(minLength: 0)

@@ -125,7 +125,7 @@ public struct IssuesView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
-                    .foregroundStyle(isSelected ? Color.white : Color.secondary)
+                    .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
                     .background {
@@ -236,7 +236,7 @@ public struct IssuesView: View {
                             if store.summary.unassigned > 0 {
                                 Badge(
                                     String(localized: L10n.issuesUnassignedCount(store.summary.unassigned)),
-                                    tint: .secondary,
+                                    tint: Palette.textSecondary,
                                     symbol: "person.crop.circle.badge.questionmark"
                                 )
                             }
@@ -272,7 +272,7 @@ public struct IssuesView: View {
                     Image(systemName: "checkmark.seal.fill")
                 }
                 .font(.caption.weight(.medium))
-                .foregroundStyle(Palette.success)
+                .foregroundStyle(Palette.successText)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -385,7 +385,7 @@ public struct IssuesView: View {
                                     Text(entry.area.title)
                                         .font(.subheadline.weight(.medium))
                                     Text(entry.category.title)
-                                        .font(.caption2)
+                                        .font(.caption)
                                         .foregroundStyle(.secondaryText)
                                 }
 
@@ -393,7 +393,7 @@ public struct IssuesView: View {
 
                                 Badge(
                                     String(localized: L10n.issuesRepeatsCount(entry.count)),
-                                    tint: entry.count >= 3 ? Palette.warning : .secondary
+                                    tint: entry.count >= 3 ? Palette.warning : Palette.textSecondary
                                 )
                                 Image(systemName: "chevron.right")
                                     .font(.caption2.weight(.bold))
@@ -589,10 +589,10 @@ public struct IssuesView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .foregroundStyle(store.statusFilter == nil ? Color.primary : Color.white)
+            .foregroundStyle(store.statusFilter == nil ? Color.primary : Color.primary)
             .background {
                 if let status = store.statusFilter {
-                    Capsule().fill(status.tint)
+                    Capsule().fill(status.tint.opacity(0.3))
                 }
             }
             .glassEffect(store.statusFilter == nil ? .regular.interactive() : .identity, in: .capsule)
@@ -775,13 +775,13 @@ public struct IssuesView: View {
         VStack(alignment: .leading, spacing: 3) {
             value
                 .font(.system(.title3, design: .rounded, weight: .bold))
-                .foregroundStyle(tint)
+                .foregroundStyle(.primary)
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .contentTransition(.numericText())
             Text(label)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
                 .lineLimit(2)
         }
@@ -920,13 +920,13 @@ private struct IssueRow: View {
                     Text(issue.area.title)
                     Text(verbatim: "·")
                     Text(issue.status.title)
-                        .foregroundStyle(issue.status.tint)
+                        .foregroundStyle(.primary)
                     if let assigneeName {
                         Text(verbatim: "·")
                         Text(assigneeName).lineLimit(1)
                     }
                 }
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
 
                 if !badges.isEmpty {
@@ -934,11 +934,12 @@ private struct IssueRow: View {
                         ForEach(badges, id: \.id) { badge in
                             HStack(spacing: 3) {
                                 Image(systemName: badge.symbol)
-                                    .font(.system(size: 8, weight: .bold))
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(badge.tint)
                                 Text(badge.text)
-                                    .font(.system(size: 10, weight: .semibold))
+                                    .font(.caption.weight(.semibold))
                             }
-                            .foregroundStyle(badge.tint)
+                            .foregroundStyle(.secondaryText)
                         }
                     }
                     .padding(.top, 1)
@@ -1034,8 +1035,8 @@ private struct IssueRow: View {
                 // Only once it has actually been standing a day. "0d old" on
                 // something reported a minute ago reads as a broken counter.
                 Text(L10n.issuesAgeDays(issue.ageDays))
-                    .font(.caption2)
-                    .foregroundStyle(issue.isStale ? Palette.warning : .secondary)
+                    .font(.caption)
+                    .foregroundStyle(issue.isStale ? Palette.warningText : Palette.textSecondary)
                     .monospacedDigit()
             }
 
@@ -1045,8 +1046,8 @@ private struct IssueRow: View {
                 } icon: {
                     Image(systemName: "hand.raised.fill")
                 }
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(isAffected ? Palette.warning : .secondary)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(isAffected ? Palette.warningText : Palette.textSecondary)
                 .contentTransition(.numericText(value: Double(issue.affectedCount)))
             }
         }
@@ -1087,7 +1088,7 @@ private struct IssueRow: View {
                 id: "chore",
                 symbol: "checklist",
                 text: String(localized: L10n.issuesHasChore),
-                tint: .secondary
+                tint: Palette.textSecondary
             ))
         }
         if issue.eventID != nil {
@@ -1137,7 +1138,7 @@ private struct SettledRow: View {
                     Text(verbatim: "·")
                     Text(resolvedByName).lineLimit(1)
                 }
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondaryText)
 
                 if let resolution = issue.resolution, !resolution.isEmpty {
