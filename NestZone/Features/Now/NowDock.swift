@@ -17,6 +17,8 @@ public struct NowDock: View {
     @State private var adds = 0
     /// Choices made in the long-press menu: the person's own, so they tick.
     @State private var picks = 0
+    /// Long presses that were held long enough to open the menu; drives its one thud.
+    @State private var menuOpens = 0
 
     public init(store: StoreOf<NowFeature>) {
         self.store = store
@@ -66,6 +68,12 @@ public struct NowDock: View {
             }
             .menuStyle(.button)
             .buttonStyle(.plain)
+            // The menu gives no feedback of its own when a hold opens it. The
+            // gesture runs beside the menu's, ends when the hold is long
+            // enough (a tap never gets there), and counts the person's own
+            // hold, so nothing else can fire it.
+            .simultaneousGesture(LongPressGesture(minimumDuration: 0.35).onEnded { _ in menuOpens += 1 })
+            .sensoryFeedback(.impact(weight: .medium), trigger: menuOpens)
             .accessibilityIdentifier("Dock")
             .accessibilityHint(Text(L10n.dockMenuTitle))
 
