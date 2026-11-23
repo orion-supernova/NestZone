@@ -112,9 +112,12 @@ export function isValidTimeZone(timeZone: string): boolean {
     const resolved = format.resolvedOptions().timeZone;
     if (!resolved) return false;
     const norm = (z: string) => z.toLowerCase();
-    // "UTC" may resolve as "Etc/UTC" and back; anything else must match.
+    // The runtime's ICU reports some zones by their older canonical name
+    // (checked on this deployment: Europe/Kyiv resolves as Europe/Kiev,
+    // Asia/Kolkata as Asia/Calcutta), so the name need not round-trip. What
+    // must not happen is a real zone quietly becoming UTC.
     const utc = new Set(["utc", "etc/utc", "etc/gmt", "gmt", "etc/universal", "universal", "zulu", "etc/zulu"]);
-    return norm(resolved) === norm(timeZone) || (utc.has(norm(resolved)) && utc.has(norm(timeZone)));
+    return !utc.has(norm(resolved)) || utc.has(norm(timeZone));
   } catch {
     return false;
   }
