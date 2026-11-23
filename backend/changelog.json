@@ -59,7 +59,6 @@
       "slug": "1.13.0-calendars",
       "version": "1.13.0",
       "kind": "feature",
-      "draft": true,
       "title": "Your iCloud and Google calendars, in NestZone",
       "body": "House events can land in your own calendars now, the ones already on your iPhone, like iCloud, Gmail or work. You can also show your housemates when you're busy, from the calendars you pick, and see just one person's plans with a tap.",
       "highlights": [
