@@ -19,7 +19,7 @@ public struct MessagesView: View {
             .scrollEdgeEffectStyle(.soft, for: .top)
             .navigationTitle(Text(L10n.messagesScreenTitle))
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { store.send(.composeTapped) } label: {
                         Image(systemName: "square.and.pencil")
                     }

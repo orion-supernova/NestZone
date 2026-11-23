@@ -22,9 +22,9 @@ public enum HubModule: String, CaseIterable, Identifiable, Sendable {
     /// is never on two tabs and never on none.
     public var group: TabGroup {
         switch self {
-        case .tasks, .shopping, .notes: .lists
+        case .tasks, .shopping: .lists
         case .calendar, .recipes, .movies: .plans
-        case .finance, .maintenance: .house
+        case .notes, .finance, .maintenance: .house
         }
     }
 
@@ -92,7 +92,11 @@ public enum TabGroup: String, CaseIterable, Identifiable, Sendable {
     }
 
     /// What the tab opens on before anybody has picked a segment.
-    public var defaultModule: HubModule { modules[0] }
+    ///
+    /// House opens on Money, assuming Plus until the house says otherwise
+    /// (`ProStatus.isPro` starts true too); a free house is moved to Notes
+    /// when its first answer arrives (`MainFeature`).
+    public var defaultModule: HubModule { self == .house ? .finance : modules[0] }
 
     public var title: LocalizedStringResource {
         switch self {
@@ -104,7 +108,7 @@ public enum TabGroup: String, CaseIterable, Identifiable, Sendable {
 
     public var symbol: String {
         switch self {
-        case .lists: "checklist"
+        case .lists: "list.bullet.rectangle"
         case .plans: "calendar"
         case .house: "house.fill"
         }
@@ -118,6 +122,10 @@ public enum TabGroup: String, CaseIterable, Identifiable, Sendable {
 /// asked to understand it.
 public enum TabSegments {
     /// The remembered segment for every group, read from storage.
+    ///
+    /// A name stored under a group it no longer belongs to is read for the
+    /// group it belongs to now (Notes moved from Lists to House in 1.13.0), so
+    /// it simply becomes that group's remembered segment.
     ///
     /// Stored as one comma-joined list of module names, one per group, and read
     /// by membership rather than position — so a name a later build retired,

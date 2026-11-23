@@ -379,12 +379,12 @@ public enum L10n {
 
     /// Who does what
     public static var contributionsSectionTitle: LocalizedStringResource {
-        r("contributions_section_title", "Who does what")
+        r("contributions_section_title", "Who's doing what")
     }
 
     /// Contributions
     public static var contributionsScreenTitle: LocalizedStringResource {
-        r("contributions_screen_title", "Contributions")
+        r("contributions_screen_title", "Who's doing what")
     }
 
     /// Week
@@ -731,7 +731,7 @@ public enum L10n {
 
     /// Recipes
     public static var recipesScreenTitle: LocalizedStringResource {
-        r("recipes_screen_title", "Recipes")
+        r("recipes_screen_title", "Meals")
     }
 
     /// Back
@@ -1321,7 +1321,7 @@ public enum L10n {
 
     /// What to watch tonight
     public static var whatToWatchTitle: LocalizedStringResource {
-        r("what_to_watch_title", "What to watch tonight")
+        r("what_to_watch_title", "Movie night tonight")
     }
 
     /// Swipe right for Yes, left for No
@@ -2068,7 +2068,7 @@ public enum L10n {
 
     /// Movie Collections
     public static var movieListsTitle: LocalizedStringResource {
-        r("movie_lists_title", "Movie Collections")
+        r("movie_lists_title", "Movies")
     }
 
     /// Organize your movie watchlists and collections
@@ -2078,7 +2078,7 @@ public enum L10n {
 
     /// Quick Collections
     public static var movieListsQuickCollections: LocalizedStringResource {
-        r("movie_lists_quick_collections", "Quick Collections")
+        r("movie_lists_quick_collections", "Watchlists")
     }
 
     /// Wishlist
@@ -2103,22 +2103,22 @@ public enum L10n {
 
     /// Custom Lists
     public static var movieListsCustomLists: LocalizedStringResource {
-        r("movie_lists_custom_lists", "Custom Lists")
+        r("movie_lists_custom_lists", "Your watchlists")
     }
 
     /// No Custom Lists Yet
     public static var movieListsNoCustomLists: LocalizedStringResource {
-        r("movie_lists_no_custom_lists", "No Custom Lists Yet")
+        r("movie_lists_no_custom_lists", "No watchlists of your own yet")
     }
 
     /// Create themed collections like "Horror Movies" or "Rom-Com Classics"
     public static var movieListsNoCustomListsSubtitle: LocalizedStringResource {
-        r("movie_lists_no_custom_lists_subtitle", "Create themed collections like \"Horror Movies\" or \"Rom-Com Classics\"")
+        r("movie_lists_no_custom_lists_subtitle", "Make one for a mood or a genre, like \"Horror nights\" or \"Rom-com classics\"")
     }
 
     /// Create Your First List
     public static var movieListsCreateFirstList: LocalizedStringResource {
-        r("movie_lists_create_first_list", "Create Your First List")
+        r("movie_lists_create_first_list", "Add the first watchlist")
     }
 
     /// Create Movie List
@@ -3429,7 +3429,7 @@ public enum L10n {
 
     /// What to watch
     public static var movienightTitle: LocalizedStringResource {
-        r("movienight_title", "What to watch")
+        r("movienight_title", "Movie night")
     }
 
     /// Start a round
@@ -4080,7 +4080,7 @@ public enum L10n {
 
     /// Add the first one
     public static var financeAddFirstExpense: LocalizedStringResource {
-        r("finance_add_first_expense", "Add the first one")
+        r("finance_add_first_expense", "Add the first expense")
     }
 
     /// Edit expense
@@ -5616,7 +5616,7 @@ public enum L10n {
 
     /// Report the first one
     public static var issuesReportFirst: LocalizedStringResource {
-        r("issues_report_first", "Report the first one")
+        r("issues_report_first", "Add the first problem")
     }
 
     /// Reported
@@ -7466,7 +7466,7 @@ public enum L10n {
 
     /// Show in the dock
     public static var dockSettingLabel: LocalizedStringResource {
-        r("dock_setting_label", "Show in the dock")
+        r("dock_setting_label", "Shows")
     }
 
     /// Which one
@@ -7481,12 +7481,12 @@ public enum L10n {
 
     /// Always the same thing
     public static var dockModeAlways: LocalizedStringResource {
-        r("dock_mode_always", "Always the same thing")
+        r("dock_mode_always", "Always one thing")
     }
 
     /// Only Add anything
     public static var dockModeAddOnly: LocalizedStringResource {
-        r("dock_mode_add_only", "Only Add anything")
+        r("dock_mode_add_only", "Add only")
     }
 
     /// Off
@@ -11600,5 +11600,107 @@ extension L10n {
     /// Not written yet
     public static var inboxAdminLangMissing: LocalizedStringResource {
         r("inbox_admin_lang_missing", "Not written yet")
+    }
+
+    // MARK: - Navigation (1.13.0)
+
+    /// Search tasks
+    public static var tasksSearchPlaceholder: LocalizedStringResource {
+        r("tasks_search_placeholder", "Search tasks")
+    }
+
+    /// Search watchlists
+    public static var movieListsSearchPlaceholder: LocalizedStringResource {
+        r("movie_lists_search_placeholder", "Search watchlists")
+    }
+
+    /// Nothing found
+    public static var commonSearchEmptyTitle: LocalizedStringResource {
+        r("common_search_empty_title", "Nothing found")
+    }
+
+    /// Try a different word.
+    public static var commonSearchEmptyMessage: LocalizedStringResource {
+        r("common_search_empty_message", "Try a different word.")
+    }
+
+    /// Add the first note
+    public static var notesAddFirst: LocalizedStringResource {
+        r("notes_add_first", "Add the first note")
+    }
+
+    /// Add the first task
+    public static var tasksAddFirst: LocalizedStringResource {
+        r("tasks_add_first", "Add the first task")
+    }
+
+    /// Add the first recipe
+    public static var recipesAddFirst: LocalizedStringResource {
+        r("recipes_add_first", "Add the first recipe")
+    }
+
+    /// Ours
+    public static var recipesTabOurs: LocalizedStringResource {
+        r("recipes_tab_ours", "Ours")
+    }
+
+    /// Explore
+    public static var recipesTabExplore: LocalizedStringResource {
+        r("recipes_tab_explore", "Explore")
+    }
+
+    /// Pin
+    public static var notesPin: LocalizedStringResource {
+        r("notes_pin", "Pin")
+    }
+
+    /// Unpin
+    public static var notesUnpin: LocalizedStringResource {
+        r("notes_unpin", "Unpin")
+    }
+
+    /// Pinned note
+    public static var homePinnedNoteTitle: LocalizedStringResource {
+        r("home_pinned_note_title", "Pinned note")
+    }
+
+    /// Nothing pinned. Long-press a note to pin it.
+    public static var homePinnedNoteQuiet: LocalizedStringResource {
+        r("home_pinned_note_quiet", "Nothing pinned. Long-press a note to pin it.")
+    }
+
+    /// %lld more in Notes
+    public static func homePinnedMore(_ a0: Int) -> LocalizedStringResource {
+        r("home_pinned_more", "\(a0) more in Notes")
+    }
+
+    /// Shows the notes your house has pinned.
+    public static var customizeAutoPinnedNote: LocalizedStringResource {
+        r("customize_auto_pinned_note", "Shows the notes your house has pinned.")
+    }
+
+    /// That event is gone
+    public static var calendarEventGoneTitle: LocalizedStringResource {
+        r("calendar_event_gone_title", "That event is gone")
+    }
+
+    /// It was deleted or moved to another day.
+    public static var calendarEventGoneMessage: LocalizedStringResource {
+        r("calendar_event_gone_message", "It was deleted or moved to another day.")
+    }
+
+    /// That problem is gone
+    public static var issuesGoneTitle: LocalizedStringResource {
+        r("issues_gone_title", "That problem is gone")
+    }
+
+    /// It was deleted, or fixed a long time ago.
+    public static var issuesGoneMessage: LocalizedStringResource {
+        r("issues_gone_message", "It was deleted, or fixed a long time ago.")
+    }
+
+    /// Add the first event
+    public static var calendarAddFirst: LocalizedStringResource {
+        r("calendar_add_first", "Add the first event")
     }
 }

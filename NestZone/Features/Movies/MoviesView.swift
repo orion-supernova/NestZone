@@ -53,10 +53,24 @@ public struct MoviesView: View {
                     SkeletonList(rows: 3, height: 76)
                         .padding(.horizontal, Metrics.screenPadding)
                 } else {
-                    movieNightCard
-                        .padding(.horizontal, Metrics.screenPadding)
+                    if !store.isSearching {
+                        movieNightCard
+                            .padding(.horizontal, Metrics.screenPadding)
+                    }
                     presetSection
-                    customSection
+                    // While searching, "no watchlists of your own yet" would
+                    // be a wrong answer to a question about a name.
+                    if !store.isSearching || !store.customLists.isEmpty {
+                        customSection
+                    }
+                    if store.isSearching, store.presets.isEmpty, store.customLists.isEmpty {
+                        EmptyStateView(
+                            title: L10n.commonSearchEmptyTitle,
+                            message: L10n.commonSearchEmptyMessage,
+                            symbol: "magnifyingglass"
+                        )
+                        .padding(.top, 24)
+                    }
                 }
             }
             .padding(.top, Metrics.stackSpacing)
@@ -67,7 +81,7 @@ public struct MoviesView: View {
         .navigationTitle(Text(L10n.movieListsTitle))
         .navigationBarTitleDisplayMode(.inline)
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { store.send(.createListTapped) } label: {
                     Image(systemName: "plus")
                 }
@@ -75,6 +89,8 @@ public struct MoviesView: View {
                 .proLocked(.customMovieLists, placement: .inset)
             }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.movieListsSearchPlaceholder))
         .task { await store.send(.task).finish() }
         .navigationDestination(item: $store.scope(
             state: \.destination?.list, action: \.destination.list
@@ -392,7 +408,7 @@ struct AddMoviesSheet: View {
                     get: { store.searchText },
                     set: { store.send(.searchChanged($0)) }
                 ),
-                prompt: Text(L10n.moviesSearchPlaceholder)
+                prompt: Text(L10n.movieListsSearchPlaceholder)
             )
             .navigationTitle(Text(L10n.movieListDetailAddMovies))
             .navigationBarTitleDisplayMode(.inline)

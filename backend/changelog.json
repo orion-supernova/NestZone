@@ -56,6 +56,32 @@
   ],
   "entries": [
     {
+      "slug": "1.13.0-pinned-notes",
+      "version": "1.13.0",
+      "kind": "feature",
+      "title": "Pin a note, and Notes moves to House",
+      "body": "Long-press a note to pin it. Pinned notes stay first on the board and show up on Today, so the Wi-Fi password is one glance away. Notes now lives in House, next to Money and Problems.",
+      "highlights": [
+        "Long-press a note and tap Pin: it goes to the top of the board",
+        "Today shows your pinned notes as sticky cards (turn it off in Customize)",
+        "Notes moved to House, and Lists is just Tasks and Shopping",
+        "Anybody in the house can pin or unpin"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Notu sabitle, Notlar da Ev'e taşındı",
+          "body": "Bir nota uzun bas, sabitle. Sabit notlar panonun en üstünde durur ve Bugün'de de görünür, yani Wi-Fi şifresi tek bakışta. Notlar artık Ev'de, Para ve Sorunlar'ın yanında.",
+          "highlights": [
+            "Bir nota uzun basıp Sabitle'ye dokun: panonun en üstüne çıkar",
+            "Sabit notların Bugün'de yapışkan kağıt gibi görünür (Özelleştir'den kapatabilirsin)",
+            "Notlar Ev'e taşındı, Listeler'de artık sadece Görevler ve Alışveriş var",
+            "Evdeki herkes sabitleyebilir, kaldırabilir"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.13.0-calendars",
       "version": "1.13.0",
       "kind": "feature",
@@ -117,7 +143,10 @@
       "body": "Small things that make the app nicer to use.",
       "highlights": [
         "Improved how easy text is to read, in every theme, light and dark",
-        "Added a small badge that shows which features are part of NestZone Plus"
+        "Added a small badge that shows which features are part of NestZone Plus",
+        "Improved how screens open: an event or a problem opened from Today now opens on its own, with Back going to where you were",
+        "Improved the top bar: each screen's buttons sit next to the bell, with the add button closest to it",
+        "Added search to Tasks, Movies and Calendar in the top bar"
       ],
       "translations": [
         {
@@ -126,7 +155,10 @@
           "body": "Uygulamayı daha keyifli yapan ufak dokunuşlar.",
           "highlights": [
             "Yazılar artık her temada, açıkta da koyuda da daha kolay okunuyor",
-            "Hangi özelliklerin NestZone Plus'ta olduğunu gösteren küçük bir rozet eklendi"
+            "Hangi özelliklerin NestZone Plus'ta olduğunu gösteren küçük bir rozet eklendi",
+            "Bugün'den açtığın etkinlik ya da sorun artık tek başına açılıyor, Geri de geldiğin yere götürüyor",
+            "Üstteki çubuk düzeldi: her ekranın düğmeleri zilin yanında, ekle düğmesi en yakında",
+            "Görevler, Filmler ve Takvim'e üst çubukta arama eklendi"
           ]
         }
       ]

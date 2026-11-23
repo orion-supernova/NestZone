@@ -733,54 +733,67 @@ struct EventDetailSheet: View {
     /// Your own answers here — see `RSVPTaps`.
     @State private var rsvpTaps = RSVPTaps()
 
+    /// True when the page is a screen on a stack (`EventPageView`) and not a
+    /// sheet: no navigation stack of its own and no Close button, because the
+    /// stack's Back is how it is left.
+    var isPushed = false
+
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Metrics.sectionSpacing) {
-                    hero.appear(0)
-                    // Over, the question "are you coming?" has been answered
-                    // by the date. The recap takes its place.
-                    if store.state.isOver {
-                        if !recapTiles.isEmpty { recapCard.appear(1) }
-                    } else {
-                        rsvpCard.appear(1)
-                    }
-                    if !store.state.roster.isEmpty { rosterCard.appear(2) }
+        if isPushed {
+            content
+        } else {
+            NavigationStack { content }
+        }
+    }
 
-                    ForEach(Array(store.state.visibleSections.enumerated()), id: \.element) { index, section in
-                        planCard(section).appear(index + 3)
-                    }
-
-                    if !store.hasPlan && !store.isLoadingPlan && !store.state.isOver {
-                        planInvitation.appear(3)
-                    }
-
-                    if let notes = store.occurrence.notes, !notes.isEmpty {
-                        notesCard(notes).appear(6)
-                    }
+    private var content: some View {
+        ScrollView {
+            VStack(spacing: Metrics.sectionSpacing) {
+                hero.appear(0)
+                // Over, the question "are you coming?" has been answered
+                // by the date. The recap takes its place.
+                if store.state.isOver {
+                    if !recapTiles.isEmpty { recapCard.appear(1) }
+                } else {
+                    rsvpCard.appear(1)
                 }
-                .padding(Metrics.screenPadding)
-                .padding(.bottom, 20)
+                if !store.state.roster.isEmpty { rosterCard.appear(2) }
+
+                ForEach(Array(store.state.visibleSections.enumerated()), id: \.element) { index, section in
+                    planCard(section).appear(index + 3)
+                }
+
+                if !store.hasPlan && !store.isLoadingPlan && !store.state.isOver {
+                    planInvitation.appear(3)
+                }
+
+                if let notes = store.occurrence.notes, !notes.isEmpty {
+                    notesCard(notes).appear(6)
+                }
             }
-            .background(Backdrop(tint: store.occurrence.kind.tint))
-            .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(Text(store.occurrence.title))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .padding(Metrics.screenPadding)
+            .padding(.bottom, 20)
+        }
+        .background(Backdrop(tint: store.occurrence.kind.tint))
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle(Text(store.occurrence.title))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !isPushed {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: { Text(L10n.commonClose) }
                 }
-                ToolbarItem(placement: .primaryAction) { overflow }
             }
-            .task { await store.send(.task).finish() }
-            .alert($store.scope(state: \.alert, action: \.alert))
-            .confirmationDialog($store.scope(state: \.scopeDialog, action: \.scopeDialog))
-            .hostedSheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
-                ExpenseComposerSheet(store: store)
-            }
-            .animation(Motion.spring, value: store.state.visibleSections)
-            .animation(Motion.spring, value: store.plan)
+            ToolbarItem(placement: .primaryAction) { overflow }
         }
+        .task { await store.send(.task).finish() }
+        .alert($store.scope(state: \.alert, action: \.alert))
+        .confirmationDialog($store.scope(state: \.scopeDialog, action: \.scopeDialog))
+        .hostedSheet(item: $store.scope(state: \.expense, action: \.expense)) { store in
+            ExpenseComposerSheet(store: store)
+        }
+        .animation(Motion.spring, value: store.state.visibleSections)
+        .animation(Motion.spring, value: store.plan)
     }
 
     private var overflow: some View {

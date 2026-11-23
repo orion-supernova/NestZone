@@ -19,6 +19,38 @@ export const listByHome = query({
   },
 });
 
+// A few pinned notes, for Today. Bounded: Today must not read the whole board
+// to draw two cards, and a house that pins more than a handful has stopped
+// pinning. One extra row tells the card there are more.
+const PINNED_LIMIT = 4;
+
+export const pinned = query({
+  args: { homeId: v.id("homes") },
+  handler: async (ctx, { homeId }) => {
+    await requireHomeMember(ctx, homeId);
+    return await ctx.db
+      .query("notes")
+      .withIndex("by_home_pinned", (q) => q.eq("home_id", homeId).eq("pinned", true))
+      .order("desc")
+      .take(PINNED_LIMIT);
+  },
+});
+
+// Anybody in the house may pin or unpin: the board is shared, and a pin is
+// about the house's reference, not about the author. `updated` is left alone
+// so pinning never reads as an edit.
+export const setPinned = mutation({
+  args: { id: v.id("notes"), pinned: v.boolean() },
+  handler: async (ctx, { id, pinned }) => {
+    await requireUser(ctx);
+    const note = await ctx.db.get(id);
+    if (!note) throw new Error("Note not found");
+    await requireDocHome(ctx, note, "Note");
+    await ctx.db.patch(id, { pinned: pinned ? true : undefined });
+    return { ok: true };
+  },
+});
+
 export const create = mutation({
   args: {
     homeId: v.id("homes"),

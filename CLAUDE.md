@@ -39,13 +39,68 @@ only place that knows the shape of the whole app.
 
 ## Navigation
 
-Five tabs: **Today**, **Lists** (Tasks, Shopping, Notes), **Plans** (Calendar,
-Meals, Movies), **House** (Money, Problems) and **Messages**. Every module lives
+Five tabs: **Today**, **Lists** (Tasks, Shopping), **Plans** (Calendar,
+Meals, Movies), **House** (Notes, Money, Problems) and **Messages**. Every module lives
 in exactly one group (`HubModule.group`), behind a segment switch at the top of
 its tab, so it is never on two tabs and never on none. There are no pinned
 single-module tabs and no Household list any more — testers called a tab for
-the shopping list alone overkill. The segment each tab was left on is
-remembered per device (`TabSegments`).
+the shopping list alone overkill. Notes is in House because it is the house's
+reference board (the Wi-Fi, the landlord, the bin day), not a list to tick off.
+House opens on Money for a Plus house and on Notes for a free one (the first
+`pro:status` answer moves a free house off Money and Problems,
+`MainFeature`, and `TabGroup.defaultModule` is Money on the assumption of Plus,
+as `ProStatus.isPro` is until it is known); once a person picks a segment, the
+remembered one wins (`TabSegments`, per device). A name stored under a group
+it no longer belongs to is read for the group it belongs to now, so a
+remembered "notes" simply becomes House's. The Lists tab's glyph is
+`list.bullet.rectangle` so the tab and its Tasks segment (`checklist`) do not
+read as one symbol.
+
+**One name per place.** Meals (the tab segment, the screen, and the inner
+switch "Ours · Explore"); Movies, with built-in and own *Watchlists*; "Movie
+night" for the game everywhere; "Who's doing what" for the chore split
+(shelf and screen title); the bell's halves are Activity · Updates; problems
+are "Problems" on screen whatever the code calls them.
+
+**The bar rule.** The avatar (Settings) and the bell are on Today alone, one
+each side (`sessionToolbar`); the bell's count rides on the Today tab's system
+badge, so new activity shows from every tab. Every other tab root keeps its
+bar for its own screen: at most **one** item on the left — the screen's one
+secondary tool (`.topBarLeading`: Tasks' Who's doing what, Calendar's history,
+House's At a glance) — and on the right the screen's search and its add or
+compose, the add at the edge (`.topBarTrailing`, two items at most). A screen
+with more secondary tools than one puts the rest in its content, or in one "⋯"
+menu that *replaces* the left tool; never a third item in a group. Search is
+the system's, minimised into the bar (`segmentSearchable`, which also places
+the search item itself, so declare it *after* the screen's `segmentToolbar`:
+the bar lists outer modifiers first) wherever the whole screen is searchable:
+Notes, Meals, Movies (watchlists), Calendar, Tasks; in-content search stays
+only where it searches one face (Money's Expenses, Problems' List). Glyphs:
+`square.and.pencil` where you write (Notes, a new chat), `plus` where you add
+a thing. The add is the one accent item; every other bar icon is neutral
+(`.tint(.primary)`). House → At a glance is an ordinary left item on each House
+screen (`HouseStatsButton`), not a control in the switch. Pushed screens keep
+a minimal bar: Back and at most one menu or action. With the dock Off, Add
+anything is the `+` on Today's bar. Empty states offer the same action as the
+bar's add, worded "Add the first …".
+
+**One inner switch.** Every switch between the faces of one screen — Tasks'
+To do/Done/All, Meals' Ours/Explore, Calendar's Month/Week/Agenda, Money and
+Problems — is `InnerSwitch` (`Design/Components`): the sliding accent pill on
+glass, a button per face with the selected trait, a tick on the person's own
+tap, no stretch under Reduce Motion. Not a system segmented control: two of
+those stacked under the type-set segment switch read as one control with a
+second row. (The bell's Activity · Updates carries unread counts in each half
+and keeps its own switcher.)
+
+**A specific thing opens as its own page.** An event or occurrence opened from
+outside Calendar (Today, the dock, a bill, a problem's visit) pushes
+`Route.eventDetail` (`EventPageFeature`: the detail sheet's content as a
+screen, with the roster, the plan, edit and delete); inside Calendar it is
+still a sheet over the grid. A problem opened from outside Problems pushes
+`Route.issueDetail` (`IssuePageFeature`), the detail only, never a second whole
+Problems screen. A recipe has one route, `Route.recipeDetail`, used by Meals
+and Today alike. Back always lands on the screen that asked.
 
 A segment is built the first time it is shown and kept after that
 (`SegmentedRoot`): the screens that are not on show stay in the `ZStack` at no
@@ -157,6 +212,13 @@ each tab on the segment you name, to measure a first build of any of them.
 - **Today draws nothing to say "nothing".** Every section is Automatic (drawn
   only when it has something), Always (one quiet line when empty) or Off, set in
   Customize. A quiet day is the sentence "All clear" and the links at the foot.
+  **Pinned note** is a section, Automatic by default: any note the house has
+  pinned (long-press a note in House → Notes: Pin / Unpin, anybody in the
+  house) is drawn as sticky cards, two at most, with "N more in Notes". It
+  reads `notes:pinned`, bounded to a handful of rows on the server, so Today
+  never reads the board; `notes.pinned` (optional) is the flag and
+  `notes:setPinned` the write. A section a person's stored layout predates is
+  inserted where the default puts it, after its predecessor.
 - **Nothing is removed to simplify navigation — it is moved or made
   optional.** A section Off on Today is still in its tab (the counters under
   House → At a glance, the movie game at the top of Movies).

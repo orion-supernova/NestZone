@@ -220,6 +220,12 @@ public struct HomeView<Companion: View>: View {
             } else if visibility == .always, store.hero == nil {
                 block(section) { quietLine(L10n.homeNeedsYouClear) }
             }
+        case .pinnedNote:
+            if !store.shownPinnedNotes.isEmpty {
+                block(section) { pinnedNotes }
+            } else if visibility == .always, store.loaded.contains(.notes) {
+                block(section) { quietLine(L10n.homePinnedNoteQuiet) }
+            }
         case .tonight:
             if store.showsTonight {
                 block(section) { tonight }
@@ -646,6 +652,54 @@ public struct HomeView<Companion: View>: View {
             case .messages: store.send(.delegate(.openMessages))
             case .issues: store.send(.delegate(.openIssues))
             case .events: store.send(.delegate(.openCalendar))
+            }
+        }
+    }
+
+    // MARK: - Pinned note
+
+    /// The pinned notes as sticky cards, at most two side by side, and a line
+    /// to the rest. A tap anywhere opens Notes: the card is the house's
+    /// reference (the Wi-Fi, the bin day), read at a glance and not edited here.
+    private var pinnedNotes: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 14) {
+                ForEach(store.shownPinnedNotes) { note in
+                    StickyNote(
+                        text: note.body,
+                        color: StickyColor.parse(note.color),
+                        seed: note.id.rawValue
+                    ) { EmptyView() }
+                    .frame(maxWidth: .infinity)
+                }
+                if store.shownPinnedNotes.count == 1 {
+                    Color.clear.frame(maxWidth: .infinity)
+                }
+            }
+            // The tilted cards' corners reach past their frames.
+            .padding(.vertical, 4)
+            .contentShape(.rect)
+            .onTapGesture { store.send(.delegate(.openNotes)) }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(verbatim: store.shownPinnedNotes.map(\.body).joined(separator: ". ")))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { store.send(.delegate(.openNotes)) }
+
+            if store.morePinnedNotes > 0 {
+                Button { store.send(.delegate(.openNotes)) } label: {
+                    HStack(spacing: 4) {
+                        Text(L10n.homePinnedMore(store.morePinnedNotes))
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.accentText)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Palette.accessory)
+                    }
+                    .frame(minHeight: Metrics.minTapTarget, alignment: .leading)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.pressable)
+                .padding(.leading, 4)
             }
         }
     }

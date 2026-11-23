@@ -14,21 +14,19 @@ public struct RecipesView: View {
         content
             .background(Backdrop(tint: theme.accent))
             .scrollEdgeEffectStyle(.soft, for: .top)
-            .segmentSearchable(text: $store.searchText, prompt: Text(L10n.commonSearch))
             .navigationTitle(Text(L10n.recipesScreenTitle))
             .navigationBarTitleDisplayMode(.inline)
             .segmentToolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { store.send(.composeTapped) } label: {
                         Image(systemName: "plus")
                     }
                     .accessibilityLabel(Text(L10n.commonAdd))
                 }
             }
+            // After the toolbar so the search is first in the bar, the add last.
+            .segmentSearchable(text: $store.searchText, prompt: Text(L10n.commonSearch))
             .task { await store.send(.task).finish() }
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.detail, action: \.destination.detail)
-            ) { RecipeDetailView(store: $0) }
             .hostedSheet(
                 item: $store.scope(state: \.destination?.compose, action: \.destination.compose)
             ) { ComposeRecipeSheet(store: $0) }
@@ -159,7 +157,7 @@ public struct RecipesView: View {
             ? .init(title: L10n.recipesExploreFiltersClearButton) {
                 store.send(.clearFiltersTapped)
             }
-            : .init(title: L10n.commonAdd) { store.send(.composeTapped) }
+            : .init(title: L10n.recipesAddFirst) { store.send(.composeTapped) }
 
         return EmptyStateView(
             title: L10n.recipesEmptyStateTitle,
@@ -173,11 +171,12 @@ public struct RecipesView: View {
     private var filterBar: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                Picker(selection: $store.tab) {
-                    Text(L10n.recipesScreenTitle).tag(RecipesFeature.State.Tab.mine)
-                    Text(L10n.recipesExploreButton).tag(RecipesFeature.State.Tab.explore)
-                } label: { EmptyView() }
-                .pickerStyle(.segmented)
+                InnerSwitch(
+                    options: Array(RecipesFeature.State.Tab.allCases),
+                    selected: store.tab,
+                    title: { $0 == .mine ? L10n.recipesTabOurs : L10n.recipesTabExplore },
+                    inset: 0
+                ) { store.tab = $0 }
                 .frame(width: 220)
 
                 ForEach(Recipe.Difficulty.allCases, id: \.self) { difficulty in

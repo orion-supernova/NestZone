@@ -130,6 +130,8 @@ struct MainView: View {
             } label: {
                 Label { Text(L10n.tabBarHome) } icon: { Image(systemName: "sun.max.fill") }
             }
+            // What the bell says, from every tab: the bell lives on Today only.
+            .badge(store.inbox.badge.hasUnread ? Text(store.inbox.badge.pipText) : nil)
             .accessibilityIdentifier("HomeTab")
 
             groupTab(.lists, store.scope(state: \.lists, action: \.lists))
@@ -139,7 +141,6 @@ struct MainView: View {
             Tab(value: MainFeature.Tab.messages) {
                 MessagesStack(store: store.scope(state: \.messages, action: \.messages)) {
                     MessagesView(store: store.scope(state: \.messages, action: \.messages))
-                        .sessionToolbar(store)
                 }
             } label: {
                 Label {
@@ -284,7 +285,6 @@ struct MainView: View {
         Tab(value: MainFeature.Tab(group)) {
             RouteStackView(store: stack) {
                 SegmentedRoot(group: group, store: stack)
-                    .sessionToolbar(store)
             }
         } label: {
             Label { Text(group.title) } icon: { Image(systemName: group.symbol) }
@@ -344,6 +344,8 @@ private struct SegmentedRoot: View {
                 }
             }
         }
+        // At a glance is a bar item on each House screen; this is how one asks.
+        .environment(\.openHouseStats) { store.send(.statsTapped) }
         .onChange(of: store.selected, initial: true) { _, selected in
             guard let selected else { return }
             // A Plus module held back above is not "visited" yet: a free house
@@ -407,21 +409,6 @@ private struct SegmentedRoot: View {
                 ) { store.send(.segmentPicked($0)) }
 
                 Spacer(minLength: 0)
-
-                // House → At a glance: the one thing at the root of a group
-                // that is not a module of its own.
-                if group == .house {
-                    Button { store.send(.statsTapped) } label: {
-                        Image(systemName: "chart.bar.fill")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(.accentText)
-                            .frame(width: Metrics.minTapTarget, height: Metrics.minTapTarget)
-                            .contentShape(.rect)
-                    }
-                    .buttonStyle(.pressable)
-                    .accessibilityLabel(Text(L10n.hubStatsTitle))
-                    .accessibilityIdentifier("HouseStatsButton")
-                }
             }
             .padding(.horizontal, Metrics.screenPadding)
             .padding(.bottom, 4)
@@ -627,11 +614,10 @@ extension View {
         modifier(NowSheets(store: store))
     }
 
-    /// The avatar and the bell, on the root screen of every tab.
-    ///
-    /// Every tab rather than Today alone: the bell used to vanish the moment
-    /// anybody left the Home tab, and Settings — now behind the avatar — has
-    /// to be one tap away from wherever somebody is.
+    /// The avatar and the bell, on Today alone: one item each side. Every other
+    /// tab root keeps its bar for its own screen (at most one tool on the left,
+    /// search and the add on the right), and the bell's count rides on the
+    /// Today tab's badge so new activity is seen from anywhere.
     func sessionToolbar(_ store: StoreOf<MainFeature>) -> some View {
         toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -645,9 +631,6 @@ extension View {
                 .accessibilityLabel(Text(L10n.settingsScreenTitle))
                 .accessibilityIdentifier("SettingsButton")
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                InboxBell(store: store.scope(state: \.inbox, action: \.inbox))
-            }
             // With the dock off, this is how Add anything is reached.
             if !store.now.showsDock {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -657,6 +640,9 @@ extension View {
                     .accessibilityLabel(Text(L10n.dockAddPlaceholder))
                     .accessibilityIdentifier("ToolbarAdd")
                 }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                InboxBell(store: store.scope(state: \.inbox, action: \.inbox))
             }
         }
     }

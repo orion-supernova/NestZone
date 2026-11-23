@@ -13,7 +13,6 @@ public struct FinanceView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var glass
-    @Namespace private var sectionPill
     /// The row with its delete button showing, if any. Held here rather than in
     /// each row so opening one closes the last, as the system list does.
     @State private var revealedExpenseID: ExpenseID?
@@ -76,7 +75,8 @@ public struct FinanceView: View {
         .navigationTitle(Text(L10n.managementModuleFinanceTitle))
         .navigationBarTitleDisplayMode(.inline)
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) { addMenu }
+            ToolbarItem(placement: .topBarLeading) { HouseStatsButton() }
+            ToolbarItem(placement: .topBarTrailing) { addMenu }
         }
         .safeAreaInset(edge: .bottom) {
             if let pending = store.pendingDeletion {
@@ -266,41 +266,12 @@ public struct FinanceView: View {
     /// theme accent and glide between slots, and a system segmented control on
     /// glass draws its own opaque track underneath the blur.
     private var sectionPicker: some View {
-        HStack(spacing: 2) {
-            ForEach(FinanceFeature.State.Section.allCases) { section in
-                let isSelected = store.section == section
-                Button { store.send(.sectionSelected(section)) } label: {
-                    HStack(spacing: 5) {
-                        // The icon you just chose acknowledges the tap; the one
-                        // you left goes quiet without a fuss.
-                        Image(systemName: section.symbol)
-                            .font(.caption2.weight(.semibold))
-                            .bounces(when: isSelected)
-                        Text(section.title)
-                            .font(.caption.weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity)
-                    .background {
-                        if isSelected {
-                            Capsule()
-                                .fill(theme.accentFill)
-                                .matchedGeometryEffect(id: "financeSection", in: sectionPill)
-                        }
-                    }
-                    .contentShape(.capsule)
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-            }
-        }
-        .padding(3)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, Metrics.screenPadding)
-        .animation(Motion.spring, value: store.section)
+        InnerSwitch(
+            options: Array(FinanceFeature.State.Section.allCases),
+            selected: store.section,
+            title: { $0.title },
+            symbol: { $0.symbol }
+        ) { store.send(.sectionSelected($0)) }
     }
 
     // MARK: - Overview

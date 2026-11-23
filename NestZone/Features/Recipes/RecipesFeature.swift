@@ -118,7 +118,6 @@ public struct RecipesFeature: Sendable {
 
     @Reducer
     public enum Destination {
-        case detail(RecipeDetailFeature)
         case compose(ComposeRecipeFeature)
     }
 
@@ -152,6 +151,11 @@ public struct RecipesFeature: Sendable {
             /// Relayed from an open recipe: the tab container owns navigation,
             /// and the shopping list lives under a different module.
             case openShoppingList
+            /// A recipe, as a screen on the stack the shelf is on — the same
+            /// route Today's dinner card uses, so there is one way to open a
+            /// recipe. Carries the stored copies of the dish, for a delete that
+            /// has to take them all.
+            case openRecipe(Recipe, duplicates: [RecipeID])
             /// Deciding tonight's dinner, which is a sheet over the whole tab
             /// bar rather than this screen's.
             case decideDinner
@@ -208,14 +212,7 @@ public struct RecipesFeature: Sendable {
                 return .none
 
             case let .recipeTapped(recipe):
-                state.destination = .detail(
-                    RecipeDetailFeature.State(
-                        recipe: recipe,
-                        homeID: state.homeID,
-                        duplicateIDs: state.copies(of: recipe.id)
-                    )
-                )
-                return .none
+                return .send(.delegate(.openRecipe(recipe, duplicates: state.copies(of: recipe.id))))
 
             case .tonightTapped:
                 if let recipe = state.tonight?.recipe {
@@ -276,16 +273,9 @@ public struct RecipesFeature: Sendable {
                 state.alert = .failure(error)
                 return .none
 
-            case .destination(.presented(.compose(.finished))),
-                 .destination(.presented(.detail(.deleted))):
+            case .destination(.presented(.compose(.finished))):
                 state.destination = nil
                 return .none
-
-            case .destination(.presented(.detail(.delegate(.openShoppingList)))):
-                // Close the recipe on the way, so coming back from the list
-                // does not land on a screen the person has finished with.
-                state.destination = nil
-                return .send(.delegate(.openShoppingList))
 
             case .binding, .destination, .alert, .delegate:
                 return .none
@@ -775,9 +765,10 @@ public struct RecipeDetailFeature: Sendable {
                     await send(.failed(AppError(error)))
                 }
 
+            // The recipe is gone: close its screen, wherever it was opened from.
             case .deleted:
                 state.isSaving = false
-                return .none
+                return .run { _ in await dismiss() }
 
             // Every one of these paths used to reset its flag and return, which
             // is why a rejected write looked exactly like a button that did

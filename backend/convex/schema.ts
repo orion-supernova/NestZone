@@ -574,10 +574,16 @@ export default defineSchema({
     home_id: v.id("homes"),
     image: v.optional(v.id("_storage")),
     color: v.optional(v.string()),
+    /**
+     * Pinned to the top of the board and to Today. Absent means not pinned
+     * (every note written before 1.13.0), so nothing needs backfilling.
+     */
+    pinned: v.optional(v.boolean()),
     created: v.optional(v.number()),
     updated: v.optional(v.number()),
   }).index("by_pbId", ["pbId"])
-    .index("by_home", ["home_id"]),
+    .index("by_home", ["home_id"])
+    .index("by_home_pinned", ["home_id", "pinned"]),
 
   conversations: defineTable({
     pbId: v.optional(v.string()),

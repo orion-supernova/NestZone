@@ -15,12 +15,9 @@ public struct CalendarView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var daySelection
-    @Namespace private var modePill
     /// The row with its delete button showing, if any. Held here rather than in
     /// each row so opening one closes the last, as the system list does.
     @State private var revealedID: EventOccurrence.ID?
-    @State private var isSearching = false
-    @FocusState private var isSearchFocused: Bool
     /// Which way the last switch between faces went — see `FaceZoom`.
     @State private var zoom = FaceZoom()
     /// The month grid's frame inside its own face, so a zoom to or from the
@@ -40,7 +37,6 @@ public struct CalendarView: View {
                     monthScrubber
                     modePicker
                 }
-                if isSearching { searchField }
                 if store.state.showsFilterRow { filterRow }
 
                 // Overlaid rather than stacked. In the lazy stack the face on its
@@ -90,11 +86,14 @@ public struct CalendarView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.managementModuleCalendarTitle))
         .navigationBarTitleDisplayMode(.inline)
+        // Search is the system's, minimised into the bar like every other
+        // screen's; history is the tool, the add is nearest the bell.
         .segmentToolbar {
-            ToolbarItem(placement: .topBarLeading) { searchToggle }
-            ToolbarItem(placement: .primaryAction) { historyButton }
-            ToolbarItem(placement: .primaryAction) { addButton }
+            ToolbarItem(placement: .topBarLeading) { historyButton }
+            ToolbarItem(placement: .topBarTrailing) { addButton }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.search, prompt: Text(L10n.calendarSearchPlaceholder))
         .safeAreaInset(edge: .bottom) {
             if let pending = store.pendingDeletion {
                 UndoToast(L10n.calendarEventDeleted(pending.occurrence.title)) {
@@ -106,7 +105,6 @@ public struct CalendarView: View {
             }
         }
         .animation(Motion.spring, value: store.pendingDeletion)
-        .animation(Motion.spring, value: isSearching)
         .task { await store.send(.task).finish() }
         .stagedBuild(3)
         // A house without Plus: locked when there is nothing here, read-only
@@ -160,62 +158,6 @@ public struct CalendarView: View {
         }
         .accessibilityLabel(Text(L10n.calendarAddEvent))
         .proLocked(.calendar, placement: .inset)
-    }
-
-    private var searchToggle: some View {
-        Button {
-            withAnimation(Motion.spring) { isSearching.toggle() }
-            if isSearching {
-                isSearchFocused = true
-            } else {
-                store.send(.binding(.set(\.search, "")))
-            }
-        } label: {
-            Image(systemName: isSearching ? "xmark" : "magnifyingglass")
-                // The glyph turns into the other one rather than cross-fading,
-                // which is what says the button is a toggle.
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .tint(.primary)
-        .accessibilityLabel(Text(isSearching ? L10n.commonCancel : L10n.commonSearch))
-    }
-
-    private var searchField: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.footnote)
-                .foregroundStyle(.secondaryText)
-            TextField(text: $store.search) {
-                Text(L10n.calendarSearchPlaceholder)
-            }
-            .focused($isSearchFocused)
-            .segmentFocus($isSearchFocused)
-            .font(.subheadline)
-            .submitLabel(.search)
-            // Always in the hierarchy, faded rather than inserted.
-            //
-            // As a conditional it was added to the row on the first keystroke,
-            // inside an animation, which makes SwiftUI re-lay-out and re-commit
-            // the text field's binding — two `.binding` actions for one letter.
-            // It also moved the field's trailing edge under the caret while
-            // somebody was typing into it.
-            Button {
-                store.send(.binding(.set(\.search, "")))
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(Palette.accessory)
-            }
-            .buttonStyle(.plain)
-            .opacity(store.search.isEmpty ? 0 : 1)
-            .disabled(store.search.isEmpty)
-            .accessibilityHidden(store.search.isEmpty)
-        }
-        .padding(.horizontal, 14)
-        .frame(height: 40)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, Metrics.screenPadding)
-        .transition(.move(edge: .top).combined(with: .opacity))
-        .animation(Motion.spring, value: store.search.isEmpty)
     }
 
     /// The month everything on this screen is about.
@@ -278,58 +220,12 @@ public struct CalendarView: View {
     /// slots, and a system segmented control on glass draws its own opaque track
     /// underneath the blur.
     private var modePicker: some View {
-        HStack(spacing: 2) {
-            ForEach(CalendarFeature.State.Mode.allCases) { mode in
-                let isSelected = store.mode == mode
-                Button { switchFace(to: mode) } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: mode.symbol)
-                            .font(.caption2.weight(.semibold))
-                            // The icon you just chose acknowledges the tap; the
-                            // one you left goes quiet without a fuss.
-                            .bounces(when: isSelected)
-                        Text(mode.title)
-                            .font(.caption.weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .foregroundStyle(isSelected ? theme.onAccent : Palette.textSecondary)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity)
-                    // Each slot only marks where the pill can land.
-                    .matchedGeometryEffect(id: mode, in: modePill)
-                    .contentShape(.capsule)
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-            }
-        }
-        // One pill for the whole control rather than one per slot: a pill that
-        // is a different view in every slot can glide between them, but it
-        // cannot stretch on the way, because nothing lives through the move.
-        .background {
-            Capsule()
-                .fill(theme.accentFill)
-                .matchedGeometryEffect(id: store.mode, in: modePill, isSource: false)
-                // Pulled across rather than slid: a quarter wider mid-way,
-                // settling back to its slot as it lands.
-                .keyframeAnimator(
-                    initialValue: CGFloat(1),
-                    trigger: reduceMotion ? nil : store.mode
-                ) { pill, stretch in
-                    pill.scaleEffect(x: stretch, y: 1)
-                } keyframes: { _ in
-                    CubicKeyframe(1.25, duration: 0.14)
-                    SpringKeyframe(1, duration: 0.28, spring: .init(duration: 0.3, bounce: 0.3))
-                }
-        }
-        .padding(3)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, Metrics.screenPadding)
-        .animation(Motion.spring, value: store.mode)
-        // The mode is this screen's own state — nothing pushed from the server
-        // moves it — so the tick can key on it directly.
-        .sensoryFeedback(.selection, trigger: store.mode)
+        InnerSwitch(
+            options: Array(CalendarFeature.State.Mode.allCases),
+            selected: store.mode,
+            title: { $0.title },
+            symbol: { $0.symbol }
+        ) { switchFace(to: $0) }
     }
 
     /// Records which way the zoom goes, then switches.
@@ -697,6 +593,12 @@ public struct CalendarView: View {
             Text(store.isFiltering ? L10n.calendarNoMatches : L10n.calendarNothingOn)
                 .font(.subheadline)
                 .foregroundStyle(.secondaryText)
+            // A calendar that has never had an event says how to start, in the
+            // words the bar's add uses.
+            if store.isBlank {
+                SecondaryButton(L10n.calendarAddFirst, symbol: "plus") { store.send(.addTapped) }
+                    .padding(.top, 4)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)

@@ -130,7 +130,7 @@ public struct ShoppingView: View {
         .navigationBarTitleDisplayMode(.inline)
         .segmentToolbar {
             if !store.purchased.isEmpty || store.state.isClearing(.purchased) {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button(role: .destructive) {
                         store.send(.clearPurchasedTapped)
                     } label: {

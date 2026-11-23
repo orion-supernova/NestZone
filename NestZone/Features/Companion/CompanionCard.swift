@@ -543,7 +543,9 @@ private struct CardJar: View {
                 JarAmounts(leaves: jar.leaves, sparkles: jar.sparkles, opensStore: false)
                 Image(systemName: "chevron.right")
                     .font(.caption2.weight(.bold))
-                    .foregroundStyle(.accentText)
+                    // Neutral: the pill is already tappable by its shape, and
+                    // an accent chevron made it the loudest thing on the card.
+                    .foregroundStyle(Palette.accessory)
                     .accessibilityHidden(true)
             }
             .padding(.horizontal, 12)

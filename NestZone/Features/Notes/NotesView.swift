@@ -35,7 +35,7 @@ public struct NotesView: View {
                         title: L10n.notesEmptyStateTitle,
                         message: L10n.notesEmptyStateSubtitle,
                         symbol: "note.text",
-                        action: .init(title: L10n.commonAdd) { store.send(.composeTapped) }
+                        action: .init(title: L10n.notesAddFirst) { store.send(.composeTapped) }
                     )
                     .padding(.top, 60)
                 } else {
@@ -52,16 +52,18 @@ public struct NotesView: View {
         }
         .background(Backdrop(tint: theme.accent))
         .scrollEdgeEffectStyle(.soft, for: .top)
-        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.notesSearchPlaceholder))
         .navigationTitle(Text(L10n.notesScreenTitle))
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarLeading) { HouseStatsButton() }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { store.send(.composeTapped) } label: {
                     Image(systemName: "square.and.pencil")
                 }
                 .accessibilityLabel(Text(L10n.notesComposeTitle))
             }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.notesSearchPlaceholder))
         .task { await store.send(.task).finish() }
         .hostedSheet(item: $store.scope(state: \.destination?.compose, action: \.destination.compose)) {
             ComposeNoteSheet(store: $0, onSave: { savedAt = .now })
@@ -107,6 +109,7 @@ public struct NotesView: View {
                         author: store.state.authorName(for: note),
                         canEdit: store.state.canEdit(note),
                         isNew: fresh,
+                        onPin: { store.send(.pinTapped(note.id)) },
                         onEdit: { store.send(.editTapped(note.id)) },
                         onDelete: { store.send(.deleteTapped(note.id)) }
                     )
@@ -129,6 +132,7 @@ private struct NoteCard: View {
     let author: String
     let canEdit: Bool
     let isNew: Bool
+    let onPin: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
 
@@ -153,7 +157,26 @@ private struct NoteCard: View {
                 }
             }
         }
+        // A pin, small, where a real one would go.
+        .overlay(alignment: .topTrailing) {
+            if note.isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Palette.paperInkSecondary)
+                    .rotationEffect(.degrees(35))
+                    .padding(8)
+                    .accessibilityHidden(true)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
         .contextMenu {
+            Button { onPin() } label: {
+                Label {
+                    Text(note.isPinned ? L10n.notesUnpin : L10n.notesPin)
+                } icon: {
+                    Image(systemName: note.isPinned ? "pin.slash" : "pin")
+                }
+            }
             if canEdit {
                 Button { onEdit() } label: {
                     Label { Text(L10n.commonEdit) } icon: { Image(systemName: "pencil") }
@@ -164,6 +187,8 @@ private struct NoteCard: View {
             }
         }
         .accessibilityLabel(Text(verbatim: "\(note.body). \(author)"))
+        .accessibilityAddTraits(note.isPinned ? .isSelected : [])
+        .accessibilityAction(named: Text(note.isPinned ? L10n.notesUnpin : L10n.notesPin), onPin)
         .accessibilityHint(canEdit ? Text(L10n.notesEditHint) : Text(""))
     }
 }

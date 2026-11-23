@@ -41,6 +41,10 @@ public struct HomeFeature: Sendable {
         /// push when it does.
         public var bills: [Bill] = []
         public var issues: [HouseIssue] = []
+        /// The house's pinned notes, newest first, at most one more than Today
+        /// draws so the card can say "N more". Read through `notes:pinned`,
+        /// which is bounded on the server: Today never reads the board.
+        public var pinnedNotes: [Note] = []
         /// Which of the tab's subscriptions have answered.
         ///
         /// Each part of the screen waits on its own answer, so a screen made
@@ -58,6 +62,7 @@ public struct HomeFeature: Sendable {
             public static let members = Loaded(rawValue: 1 << 3)
             public static let bills = Loaded(rawValue: 1 << 4)
             public static let issues = Loaded(rawValue: 1 << 5)
+            public static let notes = Loaded(rawValue: 1 << 6)
         }
 
         /// Tonight's dinner and the calendar's offer of one, handed down by
@@ -270,6 +275,16 @@ public struct HomeFeature: Sendable {
             case shopping(Int), unread(Int), problems(Int), events(Int)
         }
 
+        // MARK: Pinned note
+
+        /// How many pinned notes Today draws; the rest are "N more".
+        public static let pinnedShown = 2
+
+        public var shownPinnedNotes: [Note] { Array(pinnedNotes.prefix(Self.pinnedShown)) }
+        /// Pinned notes beyond the two drawn. `pinnedNotes` is bounded on the
+        /// server, so past a handful this reads "N+" rather than a count.
+        public var morePinnedNotes: Int { max(pinnedNotes.count - Self.pinnedShown, 0) }
+
         // MARK: Movie night
 
         /// Whether Automatic shows the movie-night row: while a round is open,
@@ -401,6 +416,7 @@ public struct HomeFeature: Sendable {
         case proChanged(Bool)
         case billsUpdated([Bill])
         case issuesUpdated([HouseIssue])
+        case pinnedNotesUpdated([Note])
         case tasksUpdated([HouseTask])
         case upcomingEventsUpdated([EventOccurrence])
         case membersUpdated([User])
@@ -471,7 +487,7 @@ public struct HomeFeature: Sendable {
         }
     }
 
-    private enum CancelID { case stats, tasks, events, members, bills, issues }
+    private enum CancelID { case stats, tasks, events, members, bills, issues, pinned }
 
     /// How close a bill has to be before Today mentions it. Closer than the
     /// Finance screen's "due soon" week: Today is for what needs doing now.
@@ -482,6 +498,7 @@ public struct HomeFeature: Sendable {
     static let tickLinger: Duration = .milliseconds(1200)
 
     @Dependency(\.stats) var statsClient
+    @Dependency(\.notes) var notesClient
     @Dependency(\.finance) var financeClient
     @Dependency(\.issues) var issuesClient
     @Dependency(\.tasks) var tasksClient
@@ -516,6 +533,17 @@ public struct HomeFeature: Sendable {
             await send(.partFailed(.issues))
         }
         .cancellable(id: CancelID.issues, cancelInFlight: true)
+    }
+
+    private func pinnedNotesEffect(_ homeID: HomeID) -> Effect<Action> {
+        .run { send in
+            for try await notes in notesClient.pinned(homeID) {
+                await send(.pinnedNotesUpdated(notes))
+            }
+        } catch: { _, send in
+            await send(.partFailed(.notes))
+        }
+        .cancellable(id: CancelID.pinned, cancelInFlight: true)
     }
 
     private func billsEffect(_ homeID: HomeID) -> Effect<Action> {
@@ -574,6 +602,11 @@ public struct HomeFeature: Sendable {
                     // Problems are Plus as well: no read for a house without it.
                     state.pro.isPro ? issuesEffect(homeID) : .send(.partFailed(.issues)),
 
+                    // Notes are free, so this read is too. Bounded on the
+                    // server (a handful of rows), so it is kept even while the
+                    // section is Off and turning it on in Customize is instant.
+                    pinnedNotesEffect(homeID),
+
                     .send(.askForNotificationsIfNeeded)
                 )
 
@@ -615,6 +648,12 @@ public struct HomeFeature: Sendable {
                 state.loaded.insert(.bills)
                 guard bills != state.bills else { return .none }
                 state.bills = bills
+                return .none
+
+            case let .pinnedNotesUpdated(notes):
+                state.loaded.insert(.notes)
+                guard notes != state.pinnedNotes else { return .none }
+                state.pinnedNotes = notes
                 return .none
 
             case let .issuesUpdated(issues):
@@ -669,7 +708,7 @@ public struct HomeFeature: Sendable {
             case let .loadFailed(error):
                 // Everything stops waiting, not just the query that failed:
                 // `loadFailed` does not say which one it was.
-                state.loaded = [.stats, .tasks, .upcoming, .members, .bills, .issues]
+                state.loaded = [.stats, .tasks, .upcoming, .members, .bills, .issues, .notes]
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none

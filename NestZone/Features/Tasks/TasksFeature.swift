@@ -20,6 +20,8 @@ public struct TasksFeature: Sendable {
         public var tasks: IdentifiedArrayOf<HouseTask> = []
         public var isLoading = true
         public var filter: Filter = .open
+        /// The system search in the bar: matches a chore's title or its notes.
+        public var searchText = ""
         /// How long a finished chore stays on the Done list, as the server
         /// reports it. Shown on the screen rather than assumed, so the sentence
         /// under the list cannot drift from the rule that produced the list.
@@ -92,6 +94,12 @@ public struct TasksFeature: Sendable {
                     case .done: task.isCompleted
                     case .all: true
                     }
+                }
+                .filter { task in
+                    let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !query.isEmpty else { return true }
+                    return task.title.localizedCaseInsensitiveContains(query)
+                        || (task.details?.localizedCaseInsensitiveContains(query) ?? false)
                 }
                 // Urgent first, then soonest due, then newest.
                 .sorted { lhs, rhs in

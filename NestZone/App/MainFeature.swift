@@ -418,7 +418,11 @@ public struct MainFeature: Sendable {
                 state.heardPro = true
                 if !state.pro.status.isPro {
                     if state.plans.selected == .calendar { state.plans.selected = .recipes }
-                    if state.house.selected == .finance { state.house.selected = .maintenance }
+                    // Money and Problems are both Plus: a free house opens
+                    // House on Notes, the one segment it can use.
+                    if state.house.selected == .finance || state.house.selected == .maintenance {
+                        state.house.selected = .notes
+                    }
                 }
                 return .none
 
@@ -517,13 +521,17 @@ public struct MainFeature: Sendable {
         // paywall. (The module opens on its own locked or read-only screen.)
         case let .issue(issueID):
             if !state.pro.status.isPro { return .send(.paywallRequested(.issues)) }
-            screen = .issues(IssuesFeature.State(
+            screen = .issueDetail(IssuePageFeature.State(
                 homeID: state.homeID,
                 currentUserID: state.user?.id,
-                openingIssueID: issueID
+                issueID: issueID
             ))
-        case let .recipe(recipe):
-            screen = .recipeDetail(RecipeDetailFeature.State(recipe: recipe, homeID: state.homeID))
+        case let .recipe(recipe, duplicates):
+            screen = .recipeDetail(RecipeDetailFeature.State(
+                recipe: recipe,
+                homeID: state.homeID,
+                duplicateIDs: duplicates
+            ))
         case .taskArchive:
             screen = .taskArchive(TaskArchiveFeature.State(
                 homeID: state.homeID,
@@ -559,20 +567,19 @@ public struct MainFeature: Sendable {
         let screen: Route.State
         switch target {
         case let .event(eventID, day):
-            screen = .calendar(CalendarFeature.State(
+            screen = .eventDetail(EventPageFeature.State(
                 homeID: state.homeID,
                 currentUserID: state.user?.id,
                 day: day,
                 openingEventID: eventID
             ))
-        // Opened *at* the event, not merely on its day: the grid behind it
-        // shows the right date and the sheet for the thing that was tapped is
-        // already up.
+        // The event itself, as a page on this stack: Back is the screen that
+        // asked, not a month of a calendar nobody opened.
         case let .occurrence(occurrence):
-            screen = .calendar(CalendarFeature.State(
+            screen = .eventDetail(EventPageFeature.State(
                 homeID: state.homeID,
                 currentUserID: state.user?.id,
-                showing: occurrence
+                occurrence: occurrence
             ))
         default:
             return .none

@@ -29,12 +29,12 @@ public struct TasksView: View {
     /// Recipes went the same way for the same reason.
     public var body: some View {
         List {
-            Picker(selection: $store.filter) {
-                ForEach(TasksFeature.State.Filter.allCases, id: \.self) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            } label: { EmptyView() }
-            .pickerStyle(.segmented)
+            InnerSwitch(
+                options: Array(TasksFeature.State.Filter.allCases),
+                selected: store.filter,
+                title: { $0.title },
+                inset: 0
+            ) { store.filter = $0 }
             .glassListRow(insets: .init(
                 top: 0,
                 leading: Metrics.screenPadding,
@@ -56,16 +56,12 @@ public struct TasksView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .navigationTitle(Text(L10n.tasksScreenTitle))
         .navigationBarTitleDisplayMode(.inline)
+        // The screen's tool first, the add nearest the bell (the bar's rule:
+        // `sessionToolbar`).
         .segmentToolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button { store.send(.composeTapped) } label: {
-                    Image(systemName: "plus")
-                }
-                .accessibilityLabel(Text(L10n.tasksComposeTitle))
-            }
             // A header control, not a card over the rows: tried as a strip at
             // the top of a list, the split read as a very large first task.
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarLeading) {
                 Button { store.send(.contributionsTapped) } label: {
                     Image(systemName: "chart.pie")
                 }
@@ -73,7 +69,15 @@ public struct TasksView: View {
                 .accessibilityLabel(Text(L10n.contributionsSectionTitle))
                 .accessibilityIdentifier("TasksContributionsButton")
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { store.send(.composeTapped) } label: {
+                    Image(systemName: "plus")
+                }
+                .accessibilityLabel(Text(L10n.tasksComposeTitle))
+            }
         }
+        // After the toolbar so the search is first in the bar, the add last.
+        .segmentSearchable(text: $store.searchText, prompt: Text(L10n.tasksSearchPlaceholder))
         .task { await store.send(.task).finish() }
         .hostedSheet(item: $store.scope(
             state: \.destination?.compose, action: \.destination.compose
@@ -155,6 +159,14 @@ public struct TasksView: View {
         if store.isLoading {
             SkeletonList(rows: 5, height: 64)
                 .glassListRow()
+        } else if store.visible.isEmpty, !store.searchText.isEmpty {
+            EmptyStateView(
+                title: L10n.commonSearchEmptyTitle,
+                message: L10n.commonSearchEmptyMessage,
+                symbol: "magnifyingglass"
+            )
+            .padding(.top, 48)
+            .glassListRow()
         } else if store.visible.isEmpty {
             // An empty Done tab is not an empty task list, and offering "Add a
             // task" under "Nothing to do" would be answering a question nobody
@@ -173,7 +185,7 @@ public struct TasksView: View {
                     title: L10n.homeTasksEmptyTitle,
                     message: L10n.homeTasksEmptyMessage,
                     symbol: "checkmark.seal",
-                    action: .init(title: L10n.commonAdd) { store.send(.composeTapped) }
+                    action: .init(title: L10n.tasksAddFirst) { store.send(.composeTapped) }
                 )
                 .padding(.top, 48)
                 .glassListRow()

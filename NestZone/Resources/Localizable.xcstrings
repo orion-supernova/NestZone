@@ -6935,13 +6935,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Contributions"
+            "value": "Who's doing what"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Katkılar"
+            "value": "Kim ne yapıyor"
           }
         }
       }
@@ -6952,7 +6952,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Who does what"
+            "value": "Who's doing what"
           }
         },
         "tr": {
@@ -10223,13 +10223,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add the first one"
+            "value": "Add the first expense"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlkini ekle"
+            "value": "İlk harcamayı ekle"
           }
         }
       }
@@ -20578,13 +20578,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Report the first one"
+            "value": "Add the first problem"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlkini bildir"
+            "value": "İlk sorunu ekle"
           }
         }
       }
@@ -23771,13 +23771,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create Your First List"
+            "value": "Add the first watchlist"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk Listeni Oluştur"
+            "value": "İlk listeni ekle"
           }
         }
       }
@@ -23788,13 +23788,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Custom Lists"
+            "value": "Your watchlists"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Özel Listeler"
+            "value": "Kendi listelerin"
           }
         }
       }
@@ -23839,13 +23839,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Custom Lists Yet"
+            "value": "No watchlists of your own yet"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Henüz Özel Liste Yok"
+            "value": "Henüz kendi listen yok"
           }
         }
       }
@@ -23856,13 +23856,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create themed collections like \"Horror Movies\" or \"Rom-Com Classics\""
+            "value": "Make one for a mood or a genre, like \"Horror nights\" or \"Rom-com classics\""
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "\"Korku Filmleri\" ya da \"Romantik Komedi Klasikleri\" gibi temalı listeler oluştur"
+            "value": "Bir ruh haline ya da türe göre yap, mesela \"Korku geceleri\" ya da \"Romantik komedi klasikleri\""
           }
         }
       }
@@ -23873,13 +23873,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quick Collections"
+            "value": "Watchlists"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hızlı Koleksiyonlar"
+            "value": "Listeler"
           }
         }
       }
@@ -23907,13 +23907,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Movie Collections"
+            "value": "Movies"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Film Koleksiyonları"
+            "value": "Filmler"
           }
         }
       }
@@ -24332,13 +24332,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What to watch"
+            "value": "Movie night"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne izlesek"
+            "value": "Film gecesi"
           }
         }
       }
@@ -28450,13 +28450,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recipes"
+            "value": "Meals"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifler"
+            "value": "Yemekler"
           }
         }
       }
@@ -33854,13 +33854,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What to watch tonight"
+            "value": "Movie night tonight"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu akşam ne izleyelim"
+            "value": "Bu akşam film gecesi"
           }
         }
       }
@@ -41940,13 +41940,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show in the dock"
+            "value": "Shows"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alt çubukta"
+            "value": "Gösterir"
           }
         }
       }
@@ -41991,13 +41991,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Always the same thing"
+            "value": "Always one thing"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hep aynı şey"
+            "value": "Hep tek şey"
           }
         }
       }
@@ -42008,13 +42008,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only Add anything"
+            "value": "Add only"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece Bir şey ekle"
+            "value": "Sadece ekle"
           }
         }
       }
@@ -42270,6 +42270,346 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, %lld/%lld. aşama"
+          }
+        }
+      }
+    },
+    "tasks_search_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search tasks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görev ara"
+          }
+        }
+      }
+    },
+    "movie_lists_search_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search watchlists"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste ara"
+          }
+        }
+      }
+    },
+    "common_search_empty_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing found"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir şey bulunamadı"
+          }
+        }
+      }
+    },
+    "common_search_empty_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a different word."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir kelime dene."
+          }
+        }
+      }
+    },
+    "notes_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first note"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk notu ekle"
+          }
+        }
+      }
+    },
+    "tasks_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first task"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk görevi ekle"
+          }
+        }
+      }
+    },
+    "recipes_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first recipe"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk tarifi ekle"
+          }
+        }
+      }
+    },
+    "recipes_tab_ours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ours"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bizimkiler"
+          }
+        }
+      }
+    },
+    "recipes_tab_explore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keşfet"
+          }
+        }
+      }
+    },
+    "notes_pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitle"
+          }
+        }
+      }
+    },
+    "notes_unpin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlemeyi kaldır"
+          }
+        }
+      }
+    },
+    "home_pinned_note_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned note"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabit not"
+          }
+        }
+      }
+    },
+    "home_pinned_note_quiet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing pinned. Long-press a note to pin it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabit not yok. Bir nota uzun basıp sabitleyebilirsin."
+          }
+        }
+      }
+    },
+    "home_pinned_more": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more in Notes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notlarda %lld tane daha"
+          }
+        }
+      }
+    },
+    "customize_auto_pinned_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the notes your house has pinned."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evin sabitlediği notları gösterir."
+          }
+        }
+      }
+    },
+    "calendar_event_gone_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That event is gone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O etkinlik artık yok"
+          }
+        }
+      }
+    },
+    "calendar_event_gone_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It was deleted or moved to another day."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silinmiş ya da başka güne taşınmış."
+          }
+        }
+      }
+    },
+    "issues_gone_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That problem is gone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O sorun artık yok"
+          }
+        }
+      }
+    },
+    "issues_gone_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It was deleted, or fixed a long time ago."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silinmiş ya da çoktan çözülmüş."
+          }
+        }
+      }
+    },
+    "calendar_add_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first event"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk etkinliği ekle"
           }
         }
       }
