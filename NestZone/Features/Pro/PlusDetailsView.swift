@@ -25,6 +25,7 @@ struct PlusDetailsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
+                PlusLockup(tileSize: 40, font: .system(.title3, design: .rounded, weight: .bold))
                 Text(L10n.plusDetailsSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondaryText)

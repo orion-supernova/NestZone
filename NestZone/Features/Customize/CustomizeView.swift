@@ -77,7 +77,7 @@ public struct CustomizeView: View {
                         Label {
                             Text(thing.title)
                         } icon: {
-                            Image(systemName: thing.needsPlus ? PlusStyle.symbol(isLocked: !store.pro.isPro) : thing.symbol)
+                            Image(systemName: thing.needsPlus && !store.pro.isPro ? PlusStyle.lockedSymbol : thing.symbol)
                         }
                         .tag(thing)
                     }

@@ -46,6 +46,11 @@ public enum L10n {
         r("pro_name", "Plus")
     }
 
+    /// The word in the Plus tag. Plain "PLUS" in every language.
+    public static var plusTag: LocalizedStringResource {
+        r("plus_tag", "PLUS")
+    }
+
     /// What the subscription is called with the app's name in front.
     public static var proFullName: LocalizedStringResource {
         r("pro_full_name", "\(appNameText) Plus")
@@ -7467,6 +7472,21 @@ public enum L10n {
     /// Show in the dock
     public static var dockSettingLabel: LocalizedStringResource {
         r("dock_setting_label", "Shows")
+    }
+
+    /// Show in the dock
+    public static var dockMenuTitle: LocalizedStringResource {
+        r("dock_menu_title", "Show in the dock")
+    }
+
+    /// Edit Today…
+    public static var dockMenuEditToday: LocalizedStringResource {
+        r("dock_menu_edit_today", "Edit Today…")
+    }
+
+    /// Dock is off. Turn it back on in Edit Today.
+    public static var dockOffNotice: LocalizedStringResource {
+        r("dock_off_notice", "Dock is off. Turn it back on in Edit Today.")
     }
 
     /// Which one

@@ -148,7 +148,7 @@ struct NotificationSettingsView: View {
         )) {
             Label {
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(group.title).font(.headline)
                         if group.feature != nil { PlusMark(isLocked: isLocked) }
                     }

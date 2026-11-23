@@ -69,6 +69,9 @@ public struct MainFeature: Sendable {
         /// What Add anything just wrote, said for a few seconds over the tab
         /// bar with a way to go and look at it.
         public var captured: CaptureOutcome?
+        /// The dock's menu switched it off: a few seconds of "turn it back on
+        /// in Edit Today", because the bar and its menu are gone.
+        public var dockOffNotice = false
 
         /// The bell in the corner of every tab.
         ///
@@ -197,6 +200,9 @@ public struct MainFeature: Sendable {
         /// The confirmation's "Open".
         case capturedOpenTapped
         case capturedDismissed
+        /// The dock-off note's "Edit Today" (it opens Customize), or its timer.
+        case dockNoticeEditTapped
+        case dockNoticeDismissed
         case proStatus(ProStatusFeature.Action)
         case moderation(ModerationSessionFeature.Action)
         case mirror(CalendarMirrorFeature.Action)
@@ -209,10 +215,12 @@ public struct MainFeature: Sendable {
         case paywallNeverShown
     }
 
-    private enum CancelID { case presentSettings, captured, paywallShown }
+    private enum CancelID { case presentSettings, captured, dockNotice, paywallShown }
 
     /// How long "Added 3 to Shopping" stays up.
     static let capturedLinger: Duration = .seconds(4)
+    /// How long the dock-off note stays up: a sentence to read, not a toast to race.
+    static let dockNoticeLinger: Duration = .seconds(5)
     /// How long the paywall has to appear before the request is dropped.
     static let paywallShowDeadline: Duration = .seconds(2)
 
@@ -327,6 +335,16 @@ public struct MainFeature: Sendable {
                     return .none
                 case let .openModule(module):
                     return open(.module(module), from: state.selectedTab, &state)
+                case .editToday:
+                    state.customize = CustomizeFeature.State(homeID: state.homeID)
+                    return .none
+                case .dockTurnedOff:
+                    state.dockOffNotice = true
+                    return .run { send in
+                        try await clock.sleep(for: Self.dockNoticeLinger)
+                        await send(.dockNoticeDismissed)
+                    }
+                    .cancellable(id: CancelID.dockNotice, cancelInFlight: true)
                 }
 
             // Tonight and the clock, handed to the two screens that draw them.
@@ -397,6 +415,15 @@ public struct MainFeature: Sendable {
 
             case .capturedDismissed:
                 state.captured = nil
+                return .none
+
+            case .dockNoticeEditTapped:
+                state.dockOffNotice = false
+                state.customize = CustomizeFeature.State(homeID: state.homeID)
+                return .cancel(id: CancelID.dockNotice)
+
+            case .dockNoticeDismissed:
+                state.dockOffNotice = false
                 return .none
 
             // A row in the notification panel goes to whatever module owns

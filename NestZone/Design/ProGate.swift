@@ -6,7 +6,7 @@ import SwiftUI
 // it does not navigate.
 
 extension View {
-    /// A control that needs Plus. For a house with it, nothing changes. For a
+    /// A control that needs Plus. For a house with it, nothing is drawn. For a
     /// house without, a small lock sits on the control and a tap opens the
     /// paywall for `feature` instead of doing the thing. Quiet: never a grey,
     /// dead control.
@@ -21,27 +21,21 @@ extension View {
     }
 
     /// A Plus control that is open to everyone in some states (taking a film
-    /// off a custom list is free). A Plus house always sees the mark; a free
-    /// house sees the lock only while `gated`, and nothing otherwise.
+    /// off a custom list is free). A free house sees the lock only while
+    /// `gated`; a Plus house sees nothing on the control itself.
     @ViewBuilder
     func proLocked(if feature: ProFeature?, gated: Bool, placement: PlusBadgePlacement = .corner) -> some View {
         if let feature { modifier(ProLockedModifier(feature: feature, gated: gated, placement: placement)) } else { self }
     }
 
-    /// The Plus badge in a control's top corner: the lock, or the mark once
-    /// the house has Plus. For a control that gates itself (its reducer asks
-    /// for the paywall); `proLocked` wears this for the rest.
-    /// `shown: false` draws nothing, for a list of controls only some of
-    /// which are Plus.
+    /// The Plus lock in a control's top corner, while the house has no Plus.
+    /// With Plus there is nothing to draw: an icon-only control stays clean,
+    /// and the lock fades away when the house upgrades. For a control that
+    /// gates itself (its reducer asks for the paywall); `proLocked` wears this
+    /// for the rest. `shown: false` draws nothing, for a list of controls only
+    /// some of which are Plus.
     func plusBadge(isLocked: Bool, shown: Bool = true, placement: PlusBadgePlacement = .corner) -> some View {
-        overlay(alignment: .topTrailing) {
-            if shown {
-                PlusBadge(isLocked: isLocked, isInset: placement == .inset)
-                    .offset(x: placement == .corner ? 4 : 0, y: placement == .corner ? -4 : 0)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-            }
-        }
+        modifier(PlusBadgeModifier(isLocked: isLocked, shown: shown, placement: placement))
     }
 
     /// A module that is Plus as a whole. A free house with nothing in it sees
@@ -61,63 +55,198 @@ enum PlusBadgePlacement {
     case inset
 }
 
-/// What Plus looks like, in one place. Every badge, mark, the Settings row,
-/// the paywall and the locked screens read these, so changing the mark or its
-/// colour (to purple sparkles, say) is an edit here and nowhere else.
+/// What Plus looks like, in one place. Every lock, tag, brand tile, the
+/// Settings card, the paywall and the locked screens read these, so changing
+/// the tag's wash or the tile's glyph is an edit here and nowhere else.
+///
+/// Plus is a word, not a symbol: "PLUS" in a small tag where a label is, the
+/// house mark where the brand is, and nothing at all on an icon-only control
+/// of a house that has it. The lock is the only glyph, and only while locked.
+/// (Sparkles were Plus's symbol once; they read as magic and clashed with the
+/// Sparkles currency, which keeps `sparkle`.)
 enum PlusStyle {
-    /// Plus itself.
-    static let symbol = "sparkles"
     /// A Plus thing a house without Plus cannot use yet.
     static let lockedSymbol = "lock.fill"
     /// The way in: "see the plans", "get Plus".
     static let unlockSymbol = "lock.open.fill"
+    /// The app's mark in the brand tile.
+    static let brandSymbol = "house.fill"
 
     /// The colour of Plus: today the theme's accent, so it suits every theme.
     static func tint(_ theme: AppTheme) -> Color { theme.accent }
     /// What is drawn on a fill of `tint`.
     static func onTint(_ theme: AppTheme) -> Color { theme.onAccent }
-    /// The mark's own fill: it carries a glyph in `onTint`, so it is the
-    /// accent as a fill.
+    /// A fill that carries a glyph in `onTint`: the accent as a fill.
     static func fill(_ theme: AppTheme) -> Color { theme.accentFill }
 
-    static func symbol(isLocked: Bool) -> String { isLocked ? lockedSymbol : symbol }
+    // MARK: The tag
+
+    /// The tag's word. Plain "PLUS" in both languages, from the catalog.
+    static let tagFont = Font.caption2.weight(.heavy)
+    static let tagTracking: CGFloat = 0.6
+    /// Horizontal and vertical padding that make a `caption2` tag about 16 pt.
+    static let tagPadding = EdgeInsets(top: 1.5, leading: 6, bottom: 1.5, trailing: 6)
+    /// How much of the accent washes behind the ink. Ink on this over a white
+    /// or a dark card holds 4.5:1 or better in every theme (plus-badge.html).
+    static let tagWashOpacity = 0.14
+
+    /// The tag's wash, a stored colour per theme: nothing is built in a body.
+    static func tagWash(_ theme: AppTheme) -> Color {
+        switch theme {
+        case .basic: washViolet
+        case .cyberpunk: washMagenta
+        case .retroWave: washPink
+        case .neonNight: washEmerald
+        case .deepOcean: washBlue
+        }
+    }
+
+    private static let washViolet = Palette.violet.opacity(tagWashOpacity)
+    private static let washMagenta = Palette.magenta.opacity(tagWashOpacity)
+    private static let washPink = Palette.hotPink.opacity(tagWashOpacity)
+    private static let washEmerald = Palette.emeraldFill.opacity(tagWashOpacity)
+    private static let washBlue = Palette.oceanBlue.opacity(tagWashOpacity)
 }
 
-/// The mark every Plus feature wears, with Plus or without, so a house that
-/// pays sees what it pays for. Without: a lock on frosted glass. With: the
-/// same circle in the theme's accent, carrying Plus's sparkles. One shape in
-/// one place, so an upgrade is the lock turning into the mark where it sits.
-struct PlusBadge: View {
-    let isLocked: Bool
-    var isInset = false
+/// The "PLUS" wordmark: a capsule with the word in the theme's ink on a soft
+/// wash of its accent. For beside a label (a segment title, a row, a header)
+/// of a house that has Plus. It carries no glyph, so it needs no explaining,
+/// and it is as tall as a line of `caption2` so it never hangs off bounds.
+struct PlusTag: View {
+    var font: Font = PlusStyle.tagFont
     @Environment(\.theme) private var theme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Image(systemName: PlusStyle.symbol(isLocked: isLocked))
+        Text(L10n.plusTag)
+            .font(font)
+            .tracking(PlusStyle.tagTracking)
+            .foregroundStyle(.accentText)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(PlusStyle.tagPadding)
+            .background(PlusStyle.tagWash(theme), in: .capsule)
+            .accessibilityLabel(Text(L10n.proName))
+    }
+}
+
+/// The app's mark as a tile: `house.fill` in white on the accent fill, in a
+/// continuous rounded square like an app icon. The AppIcon asset cannot be
+/// drawn from code (the system keeps it out of the asset catalog's reach), and
+/// a screenshot of it would not follow the theme; the tile does.
+struct PlusBrandTile: View {
+    var size: CGFloat = 28
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Image(systemName: PlusStyle.brandSymbol)
+            .font(.system(size: size * 0.5, weight: .semibold))
+            .foregroundStyle(PlusStyle.onTint(theme))
+            .frame(width: size, height: size)
+            .background(PlusStyle.fill(theme), in: .rect(cornerRadius: size * 0.27, style: .continuous))
+            .accessibilityHidden(true)
+    }
+}
+
+/// "NestZone [PLUS]": the brand tile (optionally), the app's name and the
+/// tag, for the places Plus is introduced rather than merely marked.
+struct PlusLockup: View {
+    /// The tile's side; nil draws the name and the tag alone.
+    var tileSize: CGFloat? = 28
+    var font: Font = .system(.headline, design: .rounded, weight: .bold)
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            if let tileSize { PlusBrandTile(size: tileSize) }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(L10n.appName).font(font)
+                PlusTag()
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(L10n.proFullName))
+    }
+}
+
+/// The lock every Plus feature wears while the house has no Plus: a grey lock
+/// on frosted glass. With Plus there is no badge at all (see `plusBadge`).
+struct PlusBadge: View {
+    var isInset = false
+
+    var body: some View {
+        Image(systemName: PlusStyle.lockedSymbol)
             .font(.system(size: isInset ? 7 : 8.5, weight: .bold))
-            .foregroundStyle(isLocked ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(PlusStyle.onTint(theme)))
-            .contentTransition(.symbolEffect(.replace))
+            .foregroundStyle(.secondaryText)
             .frame(width: isInset ? 12 : 16, height: isInset ? 12 : 16)
-            .background(isLocked ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(PlusStyle.fill(theme)), in: .circle)
-            .animation(reduceMotion ? Motion.fade : Motion.pop, value: isLocked)
+            .background(.thinMaterial, in: .circle)
+    }
+}
+
+private struct PlusBadgeModifier: ViewModifier {
+    let isLocked: Bool
+    let shown: Bool
+    let placement: PlusBadgePlacement
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content.overlay(alignment: .topTrailing) {
+            ZStack {
+                if shown, isLocked {
+                    PlusBadge(isInset: placement == .inset)
+                        .offset(x: placement == .corner ? 4 : 0, y: placement == .corner ? -4 : 0)
+                        .transition(.opacity)
+                }
+            }
+            // The lock fades away when the house upgrades. Reduce Motion: it
+            // is simply gone.
+            .animation(reduceMotion ? nil : Motion.fade, value: isLocked)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
     }
 }
 
 /// The badge's inline form, for a title or a row's trailing edge where a
-/// corner badge has nothing to sit on: the bare glyph, grey while locked and
-/// in the accent once open.
+/// corner badge has nothing to sit on: the grey lock while locked, and the
+/// PLUS tag once the house has it. One turns into the other in place.
 struct PlusMark: View {
     let isLocked: Bool
+    /// The lock's size. The tag has its own.
     var font: Font = .caption2.weight(.bold)
-    @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Image(systemName: PlusStyle.symbol(isLocked: isLocked))
-            .font(font)
-            .foregroundStyle(isLocked ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(PlusStyle.tint(theme)))
-            .contentTransition(.symbolEffect(.replace))
-            .accessibilityHidden(true)
+        ZStack {
+            if isLocked {
+                Image(systemName: PlusStyle.lockedSymbol)
+                    .font(font)
+                    .foregroundStyle(.secondaryText)
+                    .transition(.opacity)
+            } else {
+                PlusTag().transition(.opacity)
+            }
+        }
+        .animation(reduceMotion ? nil : Motion.fade, value: isLocked)
+        .accessibilityHidden(true)
+    }
+}
+
+/// A row's title with the PLUS tag after it while the house has Plus. For a
+/// Plus row whose lock hangs off its corner while locked (`proLocked`): the
+/// tag is the same mark, where there is text to put it beside.
+struct PlusTitle: View {
+    let title: LocalizedStringResource
+    @Shared(.pro) private var pro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(_ title: LocalizedStringResource) { self.title = title }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(title)
+            if pro.isPro { PlusTag().transition(.opacity) }
+        }
+        .animation(reduceMotion ? nil : Motion.fade, value: pro.isPro)
     }
 }
 
@@ -128,21 +257,23 @@ private struct ProLockedModifier: ViewModifier {
     @Shared(.pro) private var pro
 
     func body(content: Content) -> some View {
-        if pro.isPro {
-            content.plusBadge(isLocked: false, placement: placement)
-        } else if !gated {
-            content
-        } else {
-            content
-                // The control underneath is never reached by touch, and
-                // VoiceOver's activate is taken over: the control keeps its
-                // own label and says what happens instead.
-                .allowsHitTesting(false)
-                .accessibilityHint(Text(L10n.proLockedHint))
-                .accessibilityAction(.default) { PaywallBroker.shared.request(feature) }
-                .overlay { ProLockTap(feature: feature) }
-                .plusBadge(isLocked: true, placement: placement)
+        // The badge sits above the branches, so one lock fades away when Plus
+        // arrives rather than being swapped out with the control.
+        Group {
+            if pro.isPro || !gated {
+                content
+            } else {
+                content
+                    // The control underneath is never reached by touch, and
+                    // VoiceOver's activate is taken over: the control keeps its
+                    // own label and says what happens instead.
+                    .allowsHitTesting(false)
+                    .accessibilityHint(Text(L10n.proLockedHint))
+                    .accessibilityAction(.default) { PaywallBroker.shared.request(feature) }
+                    .overlay { ProLockTap(feature: feature) }
+            }
         }
+        .plusBadge(isLocked: !pro.isPro && gated, placement: placement)
     }
 }
 
@@ -216,6 +347,7 @@ struct ProLockedScreen: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Metrics.sectionSpacing) {
+                PlusLockup(tileSize: 32)
                 ProPreview(feature: feature)
                 VStack(spacing: 8) {
                     Text(feature.paywallTitle)

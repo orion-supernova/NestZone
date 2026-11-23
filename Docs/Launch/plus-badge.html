@@ -3,131 +3,123 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plus badge</title>
+<title>Plus mark</title>
 <style>
-  :root{
-    --bg:#f4f2f8; --card:#ffffffcc; --ink:#17121f; --muted:#6b6577; --line:#0000000f;
-    --accent:#7C3AED; --on-accent:#fff; --glass:#ffffffb8; --glass-line:#00000014;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#0f0c16; --card:#1b1724cc; --ink:#f3f0f8; --muted:#a39cb2; --line:#ffffff12;
-      --glass:#ffffff1f; --glass-line:#ffffff1a;
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#0f0c16; --card:#1b1724cc; --ink:#f3f0f8; --muted:#a39cb2; --line:#ffffff12;
-    --glass:#ffffff1f; --glass-line:#ffffff1a;
-  }
+  :root{--bg:#f4f2f8;--card:#ffffffcc;--ink:#17121f;--muted:#6b6577;--line:#0000000f;--glass:#ffffffb8;--glass-line:#00000014}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0c16;--card:#1b1724cc;--ink:#f3f0f8;--muted:#a39cb2;--line:#ffffff12;--glass:#ffffff1f;--glass-line:#ffffff1a}}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
-  main{max-width:880px;margin:0 auto;padding:32px 16px 64px}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+  main{max-width:900px;margin:0 auto;padding:32px 16px 64px}
   h1{font:700 28px/1.2 ui-rounded,-apple-system,system-ui;margin:0 0 6px}
   h2{font:700 18px/1.3 ui-rounded,-apple-system,system-ui;margin:36px 0 10px}
-  p.lead{color:var(--muted);margin:0 0 24px;max-width:62ch}
+  p.lead{color:var(--muted);margin:0 0 24px;max-width:64ch}
   .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}
-  .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:560px){.pair{grid-template-columns:1fr}}
-  .label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
-
-  /* the badge */
-  .badge{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;
-    display:grid;place-items:center;border:.5px solid var(--glass-line)}
-  .badge.locked{background:var(--glass);backdrop-filter:blur(8px);color:var(--muted)}
-  .badge.open{background:var(--accent);color:var(--on-accent);border-color:transparent}
-  .badge svg{width:9px;height:9px}
-  .mark{display:inline-grid;place-items:center;vertical-align:middle}
-  .mark svg{width:12px;height:12px}
-  .mark.locked{color:var(--muted)} .mark.open{color:var(--accent)}
-
-  /* things the badge sits on */
-  .row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
-  .chip{position:relative;display:inline-flex;gap:6px;align-items:center;padding:7px 13px;border-radius:999px;
-    background:var(--glass);border:1px solid var(--glass-line);font-size:14px;font-weight:500}
-  .tool{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
-    background:var(--glass);border:1px solid var(--glass-line);font-size:22px;font-weight:300}
-  .seg{display:flex;gap:16px;font:700 19px ui-rounded,-apple-system,system-ui}
-  .seg span{display:inline-flex;gap:4px;align-items:center}
-  .seg .dim{color:var(--muted)}
-  .list-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
-  .list-row:first-child{border-top:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
   ul{padding-left:20px} li{margin:4px 0}
-  code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--line);padding:1px 5px;border-radius:5px}
-  .big{display:flex;gap:28px;align-items:center;justify-content:center;padding:12px 0}
-  .big .b{width:56px;height:56px;border-radius:50%;display:grid;place-items:center}
-  .big .b svg{width:28px;height:28px}
-  .big .b.locked{background:var(--glass);border:1px solid var(--glass-line);color:var(--muted)}
-  .big .b.open{background:var(--accent);color:var(--on-accent)}
-  .arrow{color:var(--muted);font-size:22px}
+  code{font:13px ui-monospace,Menlo,monospace;background:var(--line);padding:1px 5px;border-radius:5px}
+  table{border-collapse:collapse;width:100%;font-size:13px} th,td{padding:6px 8px;border-top:1px solid var(--line);text-align:right} th:first-child,td:first-child{text-align:left}
+  /* the swatches are drawn on fixed surfaces so each theme and appearance is visible at once */
+  .sw{border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+  .sw.l{background:#fff;color:#17121f;border:1px solid #0000001a}
+  .sw.d{background:#1c1c1e;color:#f3f0f8}
+  .sw .name{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.6}
+  .seg{font:700 19px ui-rounded,-apple-system,system-ui;display:flex;align-items:baseline;gap:6px}
+  .tag{display:inline-block;font:800 11px/1 -apple-system,system-ui;letter-spacing:.06em;padding:3px 6px;border-radius:999px}
+  .lockup{display:flex;align-items:center;gap:8px;font:700 17px ui-rounded,-apple-system,system-ui}
+  .lockup .t{display:flex;align-items:baseline;gap:6px}
+  .tile{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff}
+  .tile svg{width:16px;height:16px}
+  .lock{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--glass);border:.5px solid var(--glass-line);color:var(--muted)}
+  .lock svg{width:9px;height:9px}
+  .big{display:flex;gap:28px;align-items:center;justify-content:center;padding:8px 0;flex-wrap:wrap}
   .cap{text-align:center;color:var(--muted);font-size:13px}
+  .strike{opacity:.55;text-decoration:line-through}
 </style>
 </head>
 <body>
 <main>
-  <h1>The Plus badge</h1>
-  <p class="lead">Every NestZone Plus feature wears the same small mark, whether the house has Plus or not.
-  Without Plus it's the lock you already have. With Plus it's the same circle in the theme's accent with sparkles,
-  the symbol Settings and the paywall already use for Plus. Same size, same corner, so upgrading looks like the lock turning into the mark.</p>
+  <h1>The Plus mark</h1>
+  <p class="lead">Plus is a word, not a symbol. Where there is text, a small <b>PLUS</b> tag. Where there is the brand, the NestZone house. On an icon-only control of a house that has Plus, nothing. The lock stays exactly as it was, and is the only glyph, only while the house is without Plus.</p>
 
   <div class="card">
+    <div class="label">Before and after</div>
     <div class="big">
-      <div>
-        <div class="b locked"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></div>
-        <div class="cap">Locked</div>
-      </div>
-      <div class="arrow">→</div>
-      <div>
-        <div class="b open"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 2l1.6 5.4L17 9l-5.4 1.6L10 16l-1.6-5.4L3 9l5.4-1.6zM18 13l.9 2.6 2.6.9-2.6.9L18 20l-.9-2.6-2.6-.9 2.6-.9zM18 2l.6 1.9 1.9.6-1.9.6L18 7l-.6-1.9-1.9-.6 1.9-.6z"/></svg></div>
-        <div class="cap">Plus</div>
-      </div>
+      <div><div class="lock" style="width:40px;height:40px"><svg viewBox="0 0 24 24" fill="currentColor" style="width:22px;height:22px"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></div><div class="cap">Locked: unchanged</div></div>
+      <div class="cap" style="font-size:22px">→</div>
+      <div><div class="strike" style="font-size:13px;margin-bottom:4px">sparkles circle</div><div class="cap">Plus, before (retired)</div></div>
+      <div class="cap" style="font-size:22px">→</div>
+      <div><div class="seg" style="justify-content:center">Calendar <span class="tag" id="demo"></span></div><div class="cap">Plus, now: tag beside a label, nothing on an icon</div></div>
     </div>
-    <p class="cap">Grey lock on frosted glass → accent circle with sparkles. Drawn as SF Symbols <code>lock.fill</code> and <code>sparkles</code>; the sketches here are stand-ins.</p>
   </div>
 
-  <h2>Where it shows</h2>
-  <div class="pair" id="pairs"></div>
+  <h2>The tag, in every theme</h2>
+  <div class="grid" id="tags"></div>
 
-  <h2>Why this and not something else</h2>
+  <h2>The brand lockup</h2>
+  <p class="lead" style="margin-bottom:12px">The Settings Plus card, the paywall hero, the Plus details header and the locked screen. A <code>house.fill</code> glyph, white, on the theme's accent fill in a continuous rounded square, then "NestZone" and the tag. I chose the SF Symbol tile over the AppIcon: the app icon is not drawable from code (it does not live in the asset catalog as an image), a bitmap of it would not follow the theme, and the house is already the app's glyph in the tab bar and Settings.</p>
+  <div class="grid" id="lockups"></div>
+
+  <h2>Contrast</h2>
+  <p class="lead" style="margin-bottom:12px">Ink (<code>.accentText</code>, <code>AppTheme.ink</code>) on a wash of the theme's accent at 14%, over the surface it sits on. Text is 11 pt heavy, so it is held to the 4.5:1 body-text bar, not the large-text one. Numbers are WCAG contrast ratios. Computed from <code>Palette.ink*</code> and the theme accents (Neon Night's light accent is <code>0FA976</code>).</p>
+  <div class="card"><table>
+    <tr><th>Theme</th><th>Light on white</th><th>Dark on #1C1C1E</th><th>Dark on black</th><th>Increase Contrast, light</th><th>Increase Contrast, dark</th></tr>
+    <tr><td>Basic</td><td>4.68</td><td>6.19</td><td>7.81</td><td>7.00</td><td>9.25</td></tr>
+    <tr><td>Cyberpunk</td><td>4.73</td><td>6.34</td><td>8.03</td><td>7.06</td><td>9.47</td></tr>
+    <tr><td>Retro Wave</td><td>4.82</td><td>6.57</td><td>8.54</td><td>7.21</td><td>9.75</td></tr>
+    <tr><td>Neon Night</td><td>4.92</td><td>6.81</td><td>9.02</td><td>7.32</td><td>10.18</td></tr>
+    <tr><td>Deep Ocean</td><td>5.37</td><td>6.06</td><td>7.61</td><td>6.99</td><td>9.07</td></tr>
+  </table>
+  <p class="cap" style="text-align:left;margin:10px 0 0">All 4.5:1 or better. At 16% the lightest-ink themes dip to 4.53 (Basic, light), at 18% to 4.42, which is why the wash is 14%.</p></div>
+
+  <h2>Rules</h2>
   <ul>
-    <li><b>Keep the lock.</b> It works, you like it, and "locked" is what a free house needs to hear. Swapping it for a crown on both sides would say "premium" but stop saying "you can't use this yet".</li>
-    <li><b>One shape, two states, instead of two different icons.</b> A Plus house learns the same circle a free house saw. And because it changes in place, the moment someone upgrades every lock they've seen lights up where it is.</li>
-    <li><b>Sparkles, in the accent.</b> Plus already uses <code>sparkles</code> (Settings row, paywall). It's the theme's accent, not amber, and it's the cluster rather than the single four-point star, so it can't be mistaken for the Sparkles currency (<code>sparkle</code>, amber).</li>
-    <li><b>No "+" glyph.</b> On a button that already says "add", a plus badge reads as "add add".</li>
-    <li><b>No "PLUS" text pill.</b> Too wide for a chip corner or a toolbar button, and it needs translating.</li>
+    <li><b>Locked:</b> the lock badge and the inline lock, unchanged.</li>
+    <li><b>Unlocked, with text:</b> <code>PlusTag</code>, on the text baseline, after the label. Segment titles, the Settings Plus card, Calendar settings rows, "Show adult titles", notification group headers, "Create another home".</li>
+    <li><b>Unlocked, icon-only</b> (toolbar +, capture chips, movie list chips, the Add chip): nothing. <code>plusBadge</code>, <code>proLocked</code> and <code>PlusBadge</code> draw the lock or nothing.</li>
+    <li><b>Unlocking</b>: locks fade out and tags fade in with <code>Motion.fade</code>, no bounce. Reduce Motion: no transition at all.</li>
+    <li><b>Native menus</b> (a Picker in Customize) cannot draw a tag, so "Next event" there shows only the lock while locked.</li>
+    <li><b>The Sparkles currency</b> keeps <code>sparkle</code>. Plus no longer uses a sparkles glyph anywhere.</li>
   </ul>
 
-  <h2>Details</h2>
+  <h2>API</h2>
   <ul>
-    <li><b>One place for the look:</b> <code>PlusStyle</code> (Design/ProGate.swift) holds the Plus symbol, the lock symbols and the colour. The badges, inline marks, the Settings row, the paywall, the read-only banner, the locked screen and the chore Archive swipe all read it. Purple sparkles later = change <code>PlusStyle.tint</code> to <code>Palette.violet</code>.</li>
-    <li><code>PlusBadge(isLocked:)</code> is the corner badge, 16 pt. <code>.plusBadge(isLocked:)</code> puts it on a view. <code>.proLocked(feature)</code> now wears it in both states, so every existing gate gets the Plus mark with no call-site change.</li>
-    <li><code>PlusMark(isLocked:)</code> is the inline version for titles and row ends: the segment names (Calendar, Money, Problems), "Create another home" and the Events teaser on Today.</li>
-    <li>The unlock uses <code>.symbolEffect(.replace)</code> and a <code>Motion.pop</code> spring (a badge is allowed a bounce). With Reduce Motion it fades instead.</li>
-    <li>It's decoration: hidden from VoiceOver and never takes a touch. Locked controls still say "Needs NestZone Plus" in their hint, as they do now.</li>
-    <li>Not badged: the Archive swipe on a finished chore (a swipe button has nowhere to put a badge, so locked it shows a lock in place of its glyph and with Plus it's the archive box), the read-only banner and the locked screen (free houses only).</li>
-    <li>Custom movie list chips: a free house sees the lock only when adding is blocked (removing a film is free). A Plus house always sees the mark.</li>
+    <li><code>PlusTag(font:)</code>: the capsule. Tokens in <code>PlusStyle</code>: <code>tagFont</code> (caption2 heavy), <code>tagTracking</code>, <code>tagPadding</code>, <code>tagWashOpacity</code>, <code>tagWash(theme)</code> (stored colours).</li>
+    <li><code>PlusMark(isLocked:)</code>: lock while locked, tag when not, cross-fading. <code>PlusTitle("…")</code>: a row title that gains the tag when the house has Plus.</li>
+    <li><code>PlusBrandTile(size:)</code> and <code>PlusLockup(tileSize:font:)</code> ("NestZone [PLUS]", read by VoiceOver as "NestZone Plus").</li>
+    <li><code>PlusStyle.symbol</code> is gone; <code>lockedSymbol</code>, <code>unlockSymbol</code> and <code>brandSymbol</code> stay.</li>
+  </ul>
+
+  <h2>Alternatives considered</h2>
+  <ul>
+    <li><b>Crown.</b> Says "premium", not "Plus", and reads as a game or royalty; the lock-to-crown swap would also drop the "you can't use this yet" meaning.</li>
+    <li><b>Plus in a square.</b> On an add button it reads "add add", and it is the generic "add" glyph everywhere else in the app.</li>
+    <li><b>Seal or badge.</b> Looks like verification or a store promo, and it needs a corner to hang off, which clipped glass takes away.</li>
+    <li><b>Sparkles.</b> The old mark: reads as magic or AI, and sits next to the Sparkles currency (<code>sparkle</code>) as a near twin.</li>
   </ul>
 </main>
 <script>
-  const lock='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>';
-  const spark='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 2l1.6 5.4L17 9l-5.4 1.6L10 16l-1.6-5.4L3 9l5.4-1.6zM18 13l.9 2.6 2.6.9-2.6.9L18 20l-.9-2.6-2.6-.9 2.6-.9zM18 2l.6 1.9 1.9.6-1.9.6L18 7l-.6-1.9-1.9-.6 1.9-.6z"/></svg>';
-  const b=o=>`<span class="badge ${o?'open':'locked'}">${o?spark:lock}</span>`;
-  const m=o=>`<span class="mark ${o?'open':'locked'}">${o?spark:lock}</span>`;
-  const scene=o=>`
-    <div class="label">Capture chips</div>
-    <div class="row" style="margin-bottom:18px">
-      <span class="chip">Task</span><span class="chip">Shopping</span>
-      <span class="chip">Event${b(o)}</span><span class="chip">Expense${b(o)}</span>
-    </div>
-    <div class="label">Toolbar add (Calendar, Money, Problems, Messages)</div>
-    <div class="row" style="margin-bottom:18px"><span class="tool">+${b(o)}</span><span class="tool">✎${b(o)}</span></div>
-    <div class="label">Segment names</div>
-    <div class="seg" style="margin-bottom:18px"><span>Calendar ${m(o)}</span><span class="dim">Meals</span><span class="dim">Movies</span></div>
-    <div class="label">Settings row</div>
-    <div class="list-row"><span>Create another home</span>${m(o)}</div>`;
-  document.getElementById('pairs').innerHTML =
-    `<div class="card"><div class="label" style="color:var(--ink)">Free house</div>${scene(false)}</div>
-     <div class="card"><div class="label" style="color:var(--accent)">Plus house</div>${scene(true)}</div>`;
+  const T=[
+   {n:'Basic',a:'#7C3AED',fl:'#7C3AED',inkL:'#7B38ED',inkD:'#B792F5'},
+   {n:'Cyberpunk',a:'#FF1F8A',fl:'#E5006D',inkL:'#C80060',inkD:'#FF7CBB'},
+   {n:'Retro Wave',a:'#FF4D8D',fl:'#E80053',inkL:'#CD004A',inkD:'#FF8CB5'},
+   {n:'Neon Night',a:'#10B981',al:'#0FA976',fl:'#0C855D',inkL:'#0A7552',inkD:'#12D091'},
+   {n:'Deep Ocean',a:'#1D4ED8',fl:'#1D4ED8',inkL:'#1D4ED8',inkD:'#839FEE'}];
+  const wash=(c)=>c+'24'; // 14%
+  const house='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></svg>';
+  const tag=(ink,a)=>`<span class="tag" style="color:${ink};background:${wash(a)}">PLUS</span>`;
+  document.getElementById('demo').outerHTML=tag('#7B38ED','#7C3AED');
+  let tags='',lock='';
+  for(const t of T){for(const m of ['l','d']){
+    const ink=m==='l'?t.inkL:t.inkD, a=m==='l'?(t.al||t.a):t.a;
+    tags+=`<div class="sw ${m}"><div class="name">${t.n} · ${m==='l'?'light':'dark'}</div>
+      <div class="seg">Calendar ${tag(ink,a)} <span style="opacity:.55">Meals</span></div>
+      <div style="font-size:15px;display:flex;gap:8px;align-items:baseline">Show adult titles ${tag(ink,a)}</div></div>`;
+    lock+=`<div class="sw ${m}"><div class="name">${t.n} · ${m==='l'?'light':'dark'}</div>
+      <div class="lockup"><span class="tile" style="background:${t.fl}">${house}</span><span class="t">NestZone ${tag(ink,a)}</span></div></div>`;
+  }}
+  document.getElementById('tags').innerHTML=tags;
+  document.getElementById('lockups').innerHTML=lock;
 </script>
 </body>
 </html>

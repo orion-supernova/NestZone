@@ -48,7 +48,7 @@ struct CalendarSettingsView: View {
                 get: { store.isOn },
                 set: { store.send(.copyToggled($0)) }
             )) {
-                Label { Text(L10n.calendarCopyTitle) } icon: {
+                Label { PlusTitle(L10n.calendarCopyTitle) } icon: {
                     Image(systemName: "calendar.badge.plus")
                 }
             }
@@ -154,7 +154,7 @@ struct CalendarSettingsView: View {
                 get: { store.copyReminders },
                 set: { store.send(.remindersToggled($0)) }
             )) {
-                Text(L10n.calendarCopyReminders)
+                PlusTitle(L10n.calendarCopyReminders)
             }
             .proLocked(.calendar)
 
@@ -184,7 +184,7 @@ struct CalendarSettingsView: View {
                 get: { store.isShareOn },
                 set: { store.send(.shareToggled($0)) }
             )) {
-                Label { Text(L10n.calendarShareToggle) } icon: {
+                Label { PlusTitle(L10n.calendarShareToggle) } icon: {
                     Image(systemName: "person.2.badge.gearshape")
                 }
             }

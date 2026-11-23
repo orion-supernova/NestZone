@@ -15,6 +15,8 @@ public struct NowDock: View {
     /// Taps on the `+`. Each turns it a quarter, which leaves a plus looking
     /// like a plus — so it never has to turn back.
     @State private var adds = 0
+    /// Choices made in the long-press menu: the person's own, so they tick.
+    @State private var picks = 0
 
     public init(store: StoreOf<NowFeature>) {
         self.store = store
@@ -57,6 +59,8 @@ public struct NowDock: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("Dock")
+            // On the live part only: the `+` keeps its tap and has no menu.
+            .contextMenu { dockMenu }
 
             Button {
                 adds += 1
@@ -80,6 +84,61 @@ public struct NowDock: View {
         .padding(.leading, 14)
         .padding(.trailing, 6)
         .animation(Motion.spring, value: store.dockItem)
+        .sensoryFeedback(.selection, trigger: picks)
+    }
+
+    // MARK: - Long-press menu
+
+    /// What the dock shows, as in Customize and writing the same setting, then
+    /// the way into the rest of Today. The checkmark follows what is drawn, so
+    /// a free house that had the next event kept sees Automatic ticked.
+    @ViewBuilder
+    private var dockMenu: some View {
+        let setting = store.dockSetting
+        Section {
+            modeButton(.automatic, selected: setting.mode == .automatic)
+            Menu {
+                ForEach(DockThing.allCases) { thing in
+                    let locked = thing.needsPlus && !store.pro.isPro
+                    Button {
+                        picks += 1
+                        store.send(.dockThingPicked(thing), animation: Motion.spring)
+                    } label: {
+                        Label {
+                            Text(thing.title)
+                        } icon: {
+                            Image(systemName: setting.mode == .always && setting.thing == thing
+                                ? "checkmark" : (locked ? PlusStyle.lockedSymbol : thing.symbol))
+                        }
+                    }
+                }
+            } label: {
+                Label {
+                    Text(L10n.dockModeAlways)
+                } icon: {
+                    Image(systemName: setting.mode == .always ? "checkmark" : DockMode.always.symbol)
+                }
+            }
+            modeButton(.addOnly, selected: setting.mode == .addOnly)
+            modeButton(.off, selected: setting.mode == .off)
+        } header: {
+            Text(L10n.dockMenuTitle)
+        }
+        Divider()
+        Button {
+            store.send(.editTodayTapped)
+        } label: {
+            Label { Text(L10n.dockMenuEditToday) } icon: { Image(systemName: "slider.horizontal.3") }
+        }
+    }
+
+    private func modeButton(_ mode: DockMode, selected: Bool) -> some View {
+        Button {
+            picks += 1
+            store.send(.dockModePicked(mode), animation: Motion.spring)
+        } label: {
+            Label { Text(mode.title) } icon: { Image(systemName: selected ? "checkmark" : mode.symbol) }
+        }
     }
 
     // MARK: - Contents

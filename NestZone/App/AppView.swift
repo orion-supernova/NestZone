@@ -112,6 +112,7 @@ struct MainView: View {
     /// Which sheets are up, so the paywall opens over the top one
     /// (`PaywallHost`).
     @State private var paywallHosts = PaywallHosts()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         TabView(selection: Binding(
@@ -201,6 +202,17 @@ struct MainView: View {
             }
         }
         .animation(Motion.spring, value: store.captured)
+        // The dock's menu switched it off: how to bring it back, since the
+        // bar and its menu are gone.
+        .overlay(alignment: .bottom) {
+            if store.dockOffNotice {
+                DockOffToast { store.send(.dockNoticeEditTapped) }
+                    .padding(.horizontal, Metrics.screenPadding)
+                    .padding(.bottom, 96)
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Motion.spring, value: store.dockOffNotice)
         // The badge, for as long as this home is open. One subscription, and
         // the only one the inbox holds while the panel is shut — the feeds
         // themselves are opened by the panel's own `.task` and torn down with
@@ -492,7 +504,7 @@ private struct SegmentSwitch: View {
                 let isSelected = module == selected
                 Button { pick(module) } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 5) {
                             Text(module.title)
                                 .font(.system(.title3, design: .rounded, weight: .bold))
                                 .foregroundStyle(isSelected ? .primary : Palette.textSecondary)
@@ -710,6 +722,34 @@ private struct CapturedToast: View {
         .onChange(of: outcome) { _, _ in filed += 1 }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: Text(L10n.commonOpen), open)
+    }
+}
+
+/// "Dock is off. Turn it back on in Edit Today." with the way there.
+private struct DockOffToast: View {
+    let editToday: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(L10n.dockOffNotice)
+                .font(.subheadline)
+                .lineLimit(2)
+            Spacer(minLength: 0)
+            Button(action: editToday) {
+                Text(L10n.homeShelfEditToday)
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .contentShape(.capsule)
+            }
+            .buttonStyle(.pressable)
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 4)
+        .padding(.vertical, 6)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .accessibilityElement(children: .combine)
+        .accessibilityAction(named: Text(L10n.homeShelfEditToday), editToday)
     }
 }
 

@@ -532,7 +532,7 @@ public struct SettingsView: View {
             Toggle(isOn: store.pro.isPro ? $store.includeAdultTitles : .constant(false)) {
                 Label {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(L10n.settingsAdultTitlesTitle)
+                        PlusTitle(L10n.settingsAdultTitlesTitle)
                         Text(L10n.settingsAdultTitlesFooter)
                             .font(.footnote)
                             .foregroundStyle(.secondaryText)
@@ -730,9 +730,7 @@ public struct SettingsView: View {
     private func plusSummary(_ status: ProStatus) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                Image(systemName: PlusStyle.symbol)
-                    .foregroundStyle(.accentText)
-                Text(L10n.proFullName).font(.headline)
+                PlusLockup(tileSize: 30)
                 Spacer(minLength: 8)
                 Text(status.isPro ? L10n.plusStatusOn : L10n.plusStatusOff)
                     .font(.caption.weight(.semibold))

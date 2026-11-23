@@ -19,7 +19,7 @@ import Foundation
 enum StoreDemoLaunch {
     static func run(_ store: StoreOf<MainFeature>) async {
         let defaults = UserDefaults.standard
-        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode", "openSettings", "openCustomize", "dockMode", "openInbox", "openUpdatesEditor", "openEvent", "pinnedDemo"]
+        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode", "openSettings", "openCustomize", "dockMode", "openInbox", "openUpdatesEditor", "openEvent", "pinnedDemo", "dockNotice"]
             .contains { defaults.object(forKey: $0) != nil }
         guard requested else { return }
         try? await Task.sleep(for: .seconds(3))
@@ -42,6 +42,11 @@ enum StoreDemoLaunch {
             }
             store.now.$dockSettings.withLock { $0[store.homeID] = setting }
             store.send(.now(.tick(store.now.now)))
+        }
+        // `-dockNotice 1`: the note the dock's menu leaves when it is switched
+        // off, which a long press cannot be scripted to do.
+        if defaults.bool(forKey: "dockNotice") {
+            store.send(.now(.delegate(.dockTurnedOff)))
         }
         if defaults.bool(forKey: "openCustomize") {
             store.send(.settings(.delegate(.customizeTapped)))

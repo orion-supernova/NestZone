@@ -60,12 +60,17 @@ struct PaywallView: View {
 
     private var hero: some View {
         VStack(spacing: 10) {
-            Image(systemName: store.feature?.symbol ?? PlusStyle.symbol)
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(.accentText)
-                .frame(width: 72, height: 72)
-                .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
-                .accessibilityHidden(true)
+            if let feature = store.feature {
+                Image(systemName: feature.symbol)
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(.accentText)
+                    .frame(width: 72, height: 72)
+                    .glassEffect(.regular.tint(theme.accent.opacity(0.18)), in: .circle)
+                    .accessibilityHidden(true)
+            } else {
+                PlusBrandTile(size: 72)
+            }
+            PlusLockup(tileSize: nil, font: .system(.title3, design: .rounded, weight: .bold))
             Text(store.feature?.paywallTitle ?? L10n.paywallTitleGeneral)
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .multilineTextAlignment(.center)
