@@ -1,0 +1,47 @@
+{
+  "task": "iOS app icon",
+  "app": {
+    "name": "NestZone",
+    "what_it_is": "A shared app for everyone who lives under one roof: chores, shopping, plans, money, notes, house chat, and Nestie, a little plant or pet the household grows together.",
+    "feeling": ["warm", "together", "calm", "playful but not childish", "trustworthy"]
+  },
+  "concept": {
+    "primary": "A simple, chunky house silhouette with a rounded roof, sitting snugly in a soft woven nest. A small two-leaf sprout grows from the roof where a chimney would be.",
+    "meaning": "Home (the house) + together/shelter (the nest) + growing together (the sprout = Nestie).",
+    "alternatives": [
+      "Two overlapping rounded rooftops forming one shape, with a sprout between them (shared home).",
+      "A rounded house whose doorway is a warm glowing arch, with a sprout as the chimney."
+    ]
+  },
+  "composition": {
+    "canvas": "1024x1024, square, full bleed, no transparency",
+    "subject_size": "about 62% of the canvas width, optically centred (slightly above centre)",
+    "silhouette": "must read instantly as a house at 60x60 px; one bold shape, no thin lines, no text, no letters",
+    "corners": "do NOT draw the rounded-corner mask; iOS applies it",
+    "safe_area": "keep everything important inside the central 80% circle"
+  },
+  "style": {
+    "rendering": "modern iOS 26 / Liquid Glass app icon: soft dimensional glass and matte surfaces, gentle top-left light, subtle inner highlights, soft contact shadow, no harsh gloss, no photorealism",
+    "shapes": "geometric, rounded, friendly; consistent stroke-free forms; 2-3 layers maximum (background, house+nest, sprout)",
+    "detail_level": "minimal; nest texture suggested with 3-4 soft curved bands, not hundreds of twigs"
+  },
+  "color": {
+    "background": "deep violet to indigo vertical gradient (#5B21B6 at top to #312E81 at bottom), very subtle radial glow behind the house",
+    "house": "warm off-white (#FAF7FF) with a faint lavender shadow side",
+    "nest": "warm honey/caramel tones (#E7B26A to #B97A3A), soft",
+    "sprout": "fresh green (#34D399 to #10B981)",
+    "door_or_window": "one small warm amber glow (#FBBF24) suggesting someone is home",
+    "contrast": "house must stand out strongly from the background in light mode, dark mode and greyscale"
+  },
+  "variants_needed": {
+    "light": "as described",
+    "dark": "same artwork on a near-black violet background (#1A1033 to #0B0718); house slightly dimmer, glow slightly stronger",
+    "tinted": "single-colour version: pure white artwork on transparent background, same silhouette, for iOS tinted icons"
+  },
+  "avoid": [
+    "text or letters", "thin outline icons", "generic stock house symbol", "photographs", "people or faces",
+    "busy backgrounds", "neon outlines", "drop shadows outside the canvas", "rounded-square frame drawn into the image",
+    "more than 4 colours in the subject", "copying any existing app's logo"
+  ],
+  "output": "3 separate PNGs: light, dark, tinted (white on transparent). 1024x1024 each."
+}
