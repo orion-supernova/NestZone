@@ -901,7 +901,10 @@ private struct IssueRow: View {
                 .foregroundStyle(.secondaryText)
 
                 if !badges.isEmpty {
-                    HStack(spacing: 6) {
+                    // Each badge stays whole and the row wraps between them: an
+                    // HStack squeezed four of them until "chore" broke into
+                    // "chor / e" once the text grew to caption size.
+                    FlowLayout(spacing: 8, lineSpacing: 4) {
                         ForEach(badges, id: \.id) { badge in
                             HStack(spacing: 3) {
                                 Image(systemName: badge.symbol)
@@ -909,7 +912,9 @@ private struct IssueRow: View {
                                     .foregroundStyle(badge.tint)
                                 Text(badge.text)
                                     .font(.caption.weight(.semibold))
+                                    .lineLimit(1)
                             }
+                            .fixedSize()
                             .foregroundStyle(.secondaryText)
                         }
                     }
