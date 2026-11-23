@@ -245,7 +245,7 @@ public struct CalendarFeature: Sendable {
         /// calendars reads the selection from: a shared row belongs to the
         /// person whose calendar it is, and shows for exactly these people.
         public var people: Set<UserID> {
-            let stored = Set(CalendarLists.users(peopleRaw))
+            let stored = Set(CalendarLists.users(peopleRaw, home: homeID))
             return members.isEmpty ? stored : stored.intersection(members.ids)
         }
 
@@ -631,8 +631,11 @@ public struct CalendarFeature: Sendable {
                 state.peopleRow = Self.peopleRow(incoming, me: state.currentUserID)
                 // A member who left drops out of the stored choice, so it
                 // cannot keep narrowing the calendar to nobody.
-                let kept = CalendarLists.raw(users: Self.ordered(state.people, in: state.peopleRow))
-                if kept != state.peopleRaw { state.$peopleRaw.withLock { $0 = kept } }
+                let homeID = state.homeID
+                let kept = Self.ordered(state.people, in: state.peopleRow)
+                if kept != CalendarLists.users(state.peopleRaw, home: homeID) {
+                    state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: kept, home: homeID, in: $0) }
+                }
                 reindex(&state)
                 // Written through to whatever is open, rather than only being
                 // read when a sheet is created. A sheet presented before the
@@ -715,13 +718,16 @@ public struct CalendarFeature: Sendable {
             case let .personToggled(id):
                 var people = state.people
                 if !people.insert(id).inserted { people.remove(id) }
-                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: Self.ordered(people, in: state.peopleRow)) }
+                let homeID = state.homeID
+                let ordered = Self.ordered(people, in: state.peopleRow)
+                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: ordered, home: homeID, in: $0) }
                 reindex(&state)
                 return .none
 
             case .everyoneTapped:
-                guard !state.people.isEmpty || !state.peopleRaw.isEmpty else { return .none }
-                state.$peopleRaw.withLock { $0 = "" }
+                let homeID = state.homeID
+                guard !CalendarLists.users(state.peopleRaw, home: homeID).isEmpty else { return .none }
+                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: [UserID](), home: homeID, in: $0) }
                 reindex(&state)
                 return .none
 
@@ -737,7 +743,8 @@ public struct CalendarFeature: Sendable {
 
             case .filtersCleared:
                 state.kindFilter = nil
-                state.$peopleRaw.withLock { $0 = "" }
+                let homeID = state.homeID
+                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: [UserID](), home: homeID, in: $0) }
                 state.needsAnswer = false
                 state.withPlan = false
                 state.search = ""
@@ -996,10 +1003,13 @@ public struct CalendarFeature: Sendable {
             // house, and never an error worth a screen: the house's events are
             // the calendar, these are a bonus.
             .run { send in
-                for try await items in calendarShare.inRange(homeID, window.from, window.to) {
-                    await send(.sharedUpdated(windowID, items))
+                await Backoff.retrying(clock: clock) { delivered in
+                    for try await items in calendarShare.inRange(homeID, window.from, window.to) {
+                        delivered()
+                        await send(.sharedUpdated(windowID, items))
+                    }
                 }
-            } catch: { _, _ in }
+            }
             .cancellable(id: CancelID.shared, cancelInFlight: true)
         )
     }

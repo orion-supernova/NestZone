@@ -29,13 +29,25 @@ public struct DeviceCalendarClient: Sendable {
     public var events: @Sendable (_ calendarIDs: [String], _ from: Date, _ to: Date) async -> [DeviceEvent] = { _, _, _ in [] }
     /// The calendar the phone itself would put a new event in, if there is one.
     public var defaultCalendarID: @Sendable () async -> String?
+    /// The NestZone-marked events (`MirrorMarker`) in these calendars that have
+    /// an occurrence in `from...to`, one per event. How a copy is found again
+    /// when the identifier the phone remembers no longer names it.
+    public var marked: @Sendable (_ calendarIDs: [String], _ from: Date, _ to: Date) async -> [DeviceMarkedEvent] = { _, _, _ in [] }
     /// Writes `draft` into `calendarID`: a new event when `existingID` is `nil`
     /// or no longer exists, otherwise that event, changed. Returns the event's
     /// identifier. A repeating draft is one repeating event, and an update
     /// reaches the whole series.
+    ///
+    /// A new event is committed on the spot (its identifier is only reliable
+    /// once it is); a change to an existing one waits for `commit`.
     public var save: @Sendable (_ draft: DeviceEventDraft, _ calendarID: String, _ existingID: String?) async throws -> String
     /// Deletes an event, and the rest of its series. Already gone is fine.
+    /// Not committed until `commit`, so a pass over many copies is one write
+    /// to the calendar database and not one each.
     public var remove: @Sendable (_ eventID: String) async throws -> Void
+    /// Makes the changes `save` and `remove` have queued permanent. When it
+    /// fails the queue is thrown away, so the caller knows none of it landed.
+    public var commit: @Sendable () async throws -> Void
     /// Which of these events still exist. How the mirror finds out the person
     /// deleted a copy by hand.
     public var existing: @Sendable (_ eventIDs: [String]) async -> Set<String> = { _ in [] }

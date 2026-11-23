@@ -240,7 +240,10 @@ public struct CalendarShareFeature: Sendable {
                         }
 
                         let events = await deviceCalendar.events(due.map { $0.0.id }, from, to)
-                        let byCalendar = Dictionary(grouping: events.filter { !skip.contains($0.eventIdentifier) }, by: \.calendarID)
+                        // The marker on the event itself is what survives a restore or
+                        // a second phone, when the map's identifiers do not.
+                        let own = events.filter { !skip.contains($0.eventIdentifier) && !$0.isNestZoneCopy }
+                        let byCalendar = Dictionary(grouping: own, by: \.calendarID)
 
                         for (calendar, level) in due {
                             let items = Self.items(byCalendar[calendar.id] ?? [], level: level)

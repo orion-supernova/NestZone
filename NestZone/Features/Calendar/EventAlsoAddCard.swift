@@ -10,6 +10,8 @@ struct EventAlsoAddCard: View {
 
     @Shared(.pro) private var pro: ProStatus
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isExplaining = false
 
     var body: some View {
@@ -37,7 +39,7 @@ struct EventAlsoAddCard: View {
                         Text(group.account)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        FlowLayout(spacing: 8) {
+                        pillLayout {
                             ForEach(group.calendars) { calendar in
                                 calendarPill(calendar)
                             }
@@ -49,8 +51,18 @@ struct EventAlsoAddCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            .animation(Motion.spring, value: store.alsoAdd)
+            // Reduce Motion keeps the tick (a glyph change) and drops the
+            // pills' spring.
+            .animation(reduceMotion ? nil : Motion.spring, value: store.alsoAdd)
         }
+    }
+
+    /// Pills wrap side by side; at accessibility sizes a calendar's name is
+    /// wider than half the card, so each gets a line of its own.
+    private var pillLayout: AnyLayout {
+        typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(FlowLayout(spacing: 8))
     }
 
     private func calendarPill(_ calendar: DeviceCalendar) -> some View {
@@ -60,7 +72,9 @@ struct EventAlsoAddCard: View {
                 Circle().fill(calendar.color).frame(width: 10, height: 10)
                 Text(calendar.title)
                     .font(.caption.weight(.medium))
-                    .lineLimit(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
+                    .multilineTextAlignment(.leading)
+                if typeSize.isAccessibilitySize { Spacer(minLength: 0) }
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .font(.caption2)
                     .foregroundStyle(isOn ? theme.accent : Palette.accessory)
@@ -73,6 +87,9 @@ struct EventAlsoAddCard: View {
                 if !isOn { Capsule().strokeBorder(.quaternary, lineWidth: 1) }
             }
             .contentShape(.capsule)
+            // The pill stays as drawn; the finger gets the full 44 points.
+            .frame(minHeight: Metrics.minTapTarget)
+            .contentShape(.rect)
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(Text(verbatim: "\(calendar.accountTitle), \(calendar.title)"))
@@ -88,14 +105,22 @@ struct EventAlsoAddCard: View {
         .font(.subheadline.weight(.medium))
     }
 
+    private var connectLayout: AnyLayout {
+        typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+            : AnyLayout(HStackLayout(spacing: 12))
+    }
+
     private var connect: some View {
         GlassCard {
-            HStack(spacing: 12) {
+            connectLayout {
                 header
-                Spacer(minLength: 8)
+                if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
                 Button { isExplaining = true } label: {
                     Text(L10n.calendarAlsoAddConnect)
                         .font(.caption.weight(.semibold))
+                        .frame(minHeight: Metrics.minTapTarget)
+                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(theme.accent)

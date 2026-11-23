@@ -13,6 +13,8 @@ public struct SharedItemRow: View {
     private let showsDate: Bool
     private let action: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     public init(
         item: SharedBusyItem,
         name: String,
@@ -37,27 +39,32 @@ public struct SharedItemRow: View {
                     Text(title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .lineLimit(1)
+                        .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                 } else {
                     Text(L10n.calendarSharedBusyLine(name))
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.primary)
-                        .lineLimit(1)
+                        .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                 }
 
-                HStack(spacing: 6) {
+                // At accessibility sizes the time, the name and the place are
+                // too wide for one line; they stack.
+                let meta = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                    : AnyLayout(HStackLayout(spacing: 6))
+                meta {
                     Text(showsDate ? dateAndTime : item.timeText)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                     if item.shownTitle != nil {
-                        Text("·").foregroundStyle(.tertiary)
-                        Text(name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        if !typeSize.isAccessibilitySize { Text("·").foregroundStyle(.tertiary) }
+                        Text(name).font(.caption).foregroundStyle(.secondary).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
                     }
                     if let location = item.location, !location.isEmpty {
-                        Text("·").foregroundStyle(.tertiary)
+                        if !typeSize.isAccessibilitySize { Text("·").foregroundStyle(.tertiary) }
                         Label {
-                            Text(location).lineLimit(1)
+                            Text(location).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
                         } icon: {
                             Image(systemName: "mappin")
                         }

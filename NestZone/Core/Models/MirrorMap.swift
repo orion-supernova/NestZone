@@ -23,6 +23,12 @@ public struct MirrorMap: Codable, Equatable, Sendable {
         /// `nil` for a series that never ends. An entry whose event is missing
         /// from a window that starts after this is just old, not deleted.
         public var lastEnd: Date?
+        /// How many complete answers in a row have lacked this event, and when
+        /// the last of them arrived. A copy is deleted only on the second, so
+        /// one odd answer is a delay and never a deletion. Optional so a map
+        /// written before it existed still decodes.
+        public var strikes: Int?
+        public var strikeAt: Double?
 
         public init(
             homeID: String,
@@ -58,6 +64,9 @@ public struct MirrorMap: Codable, Equatable, Sendable {
     /// chose for that event, which win over the setting. An empty list is a
     /// choice too: "not this one".
     public var overrides: [String: [String]] = [:]
+    /// When each override was set (seconds since 1970), so one for an event
+    /// that never turned up can age out. Optional for the same reason.
+    public var overrideDates: [String: Double]?
 
     public init() {}
 
@@ -81,5 +90,25 @@ public struct MirrorMap: Codable, Equatable, Sendable {
     /// Whether `identifier` (an `EKEvent.eventIdentifier`) is a NestZone copy.
     public func isCopy(_ identifier: String) -> Bool {
         entries.values.contains { $0.copies.values.contains { $0.id == identifier } }
+    }
+}
+
+/// The mark every copy carries in its URL field:
+/// `nestzone://event/<homeID>/<copyKey>`.
+///
+/// A copy used to be known only by the identifier EventKit gave it, which is
+/// the phone's own: a restore, a second phone writing into the same iCloud
+/// calendar, or a map lost between the write and the save made a copy nobody
+/// could tell from a stranger, and a second one was added. The mark is the copy
+/// saying what it is. Nothing handles the scheme; it only has to be unique.
+public enum MirrorMarker {
+    public static let scheme = "nestzone"
+
+    public static func url(home: String, copyKey: String) -> URL? {
+        URL(string: "\(scheme)://event/\(home)/\(copyKey)")
+    }
+
+    public static func isMarker(_ url: URL?) -> Bool {
+        url?.scheme?.lowercased() == scheme
     }
 }

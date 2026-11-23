@@ -87,6 +87,11 @@ public struct DeviceEvent: Equatable, Sendable {
     public var isAllDay: Bool
     public var title: String
     public var location: String?
+    /// Carries NestZone's marker (`MirrorMarker`): a copy of a house event,
+    /// wherever it is found. The share engine leaves it out, so a house event
+    /// never comes back to the house as somebody's busy time, even when the
+    /// phone's own map has forgotten it (a restore, a second phone).
+    public var isNestZoneCopy: Bool
 
     public init(
         eventIdentifier: String,
@@ -95,7 +100,8 @@ public struct DeviceEvent: Equatable, Sendable {
         end: Date,
         isAllDay: Bool,
         title: String,
-        location: String? = nil
+        location: String? = nil,
+        isNestZoneCopy: Bool = false
     ) {
         self.eventIdentifier = eventIdentifier
         self.calendarID = calendarID
@@ -104,6 +110,22 @@ public struct DeviceEvent: Equatable, Sendable {
         self.isAllDay = isAllDay
         self.title = title
         self.location = location
+        self.isNestZoneCopy = isNestZoneCopy
+    }
+}
+
+/// An event in the person's calendars that carries NestZone's marker, as the
+/// mirror finds it again: by what it says it is, not by an identifier that a
+/// restore or a second phone may not share.
+public struct DeviceMarkedEvent: Equatable, Sendable {
+    public var marker: String
+    public var eventIdentifier: String
+    public var calendarID: String
+
+    public init(marker: String, eventIdentifier: String, calendarID: String) {
+        self.marker = marker
+        self.eventIdentifier = eventIdentifier
+        self.calendarID = calendarID
     }
 }
 
@@ -129,6 +151,17 @@ public struct DeviceEventDraft: Equatable, Sendable {
     /// Minutes before the start, one alert each. Empty unless the person asked
     /// for reminders to be copied.
     public var alarmMinutes: [Int]
+    /// `MirrorMarker`'s URL: which house event, in which house, this copy is.
+    public var marker: URL?
+    /// Minutes east of UTC that a *timed repeating* copy repeats in.
+    ///
+    /// The server expands a series in fixed steps of UTC from the offset it was
+    /// written with; EventKit repeats at the same wall time in the event's own
+    /// zone. Given the phone's zone, a copy drifts an hour at every DST change
+    /// of that zone and no longer shows the instants NestZone shows. Pinning
+    /// the copy to the series' own fixed offset makes the two agree exactly.
+    /// `nil` for all-day and one-off copies, which have no such drift.
+    public var timeZoneOffset: Int?
 
     public init(
         title: String,
@@ -138,7 +171,9 @@ public struct DeviceEventDraft: Equatable, Sendable {
         end: Date,
         isAllDay: Bool = false,
         recurrence: Recurrence? = nil,
-        alarmMinutes: [Int] = []
+        alarmMinutes: [Int] = [],
+        marker: URL? = nil,
+        timeZoneOffset: Int? = nil
     ) {
         self.title = title
         self.location = location
@@ -148,6 +183,8 @@ public struct DeviceEventDraft: Equatable, Sendable {
         self.isAllDay = isAllDay
         self.recurrence = recurrence
         self.alarmMinutes = alarmMinutes
+        self.marker = marker
+        self.timeZoneOffset = timeZoneOffset
     }
 
     /// Whether two drafts would write the same event, as one string that is
@@ -159,6 +196,8 @@ public struct DeviceEventDraft: Equatable, Sendable {
             String(Int(start.timeIntervalSince1970)), String(Int(end.timeIntervalSince1970)),
             isAllDay ? "1" : "0",
             alarmMinutes.sorted().map(String.init).joined(separator: ","),
+            marker?.absoluteString ?? "",
+            timeZoneOffset.map(String.init) ?? "",
         ]
         if let rule = recurrence {
             parts.append([

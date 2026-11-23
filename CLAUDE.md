@@ -994,6 +994,25 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   person's push for "mentioned you" through `notifyUsers`' `variant`, never a
   second push, and the feed keeps one row. React and pin are Plus writes;
   unpin and every read stay open.
+- **A person's own calendars reach the house as times, not events**
+  (`calendarShare.ts`, lib/calendarShare.ts; plan in Docs/Calendar/sharing.html).
+  `calendar_shares` is one row per person and home (which calendars, by an
+  opaque key the phone hashes, each `busy` or `details`); `shared_busy` holds
+  the uploaded window. `replace` swaps one calendar's window in one
+  transaction and the server strips title and location for `busy`, whatever
+  the phone sent. Uploads are Plus (`calendar`); `stop`, `mine` and `inRange`
+  never refuse. `inRange` joins on the owner's live share row, so turning a
+  calendar off or to busy hides it at once while the scheduled cleanup
+  catches up. Departure, account deletion and the house purge delete them; a
+  daily sweep (03:45) drops ended rows and every share not synced for 30
+  days. A report keys the item by `<user>:<calendar>:<start>:<end>`, not the
+  row id, because every sync gives the rows new ids.
+- **Copies of house events in a person's calendars are the phone's alone**
+  (EventKit, `CalendarMirrorFeature`, `MirrorEngine`): no server state, an id
+  map in Application Support and a `nestzone://event/...` marker on each copy.
+  The house is the source of truth; a copy edited elsewhere is put back on
+  the next sync. Nothing a NestZone copy produced is ever uploaded as busy
+  time.
 
 ## graphify
 

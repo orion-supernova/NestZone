@@ -209,9 +209,11 @@ public enum CurrencyDefaults {
 // MARK: - Calendar
 
 extension SharedKey where Self == AppStorageKey<String>.Default {
-    /// The people the calendar is narrowed to, as comma-joined user ids; empty
-    /// is "Everyone". Remembered on this phone, like the tab segments. Read it
-    /// through `CalendarPeople`, which drops anybody who has left the house.
+    /// The people the calendar is narrowed to, per house (`home:id,id;home:id`,
+    /// see `CalendarLists.users(_:home:)`); empty is "Everyone". Remembered on
+    /// this phone, like the tab segments. Keyed by house because a person
+    /// chosen in one is nobody in another, and a choice carried across would
+    /// filter the second house's calendar down to nothing.
     public static var calendarPeopleRaw: Self {
         Self[.appStorage("appCalendarPeople"), default: ""]
     }
@@ -293,6 +295,28 @@ public enum CalendarLists {
 
     public static func raw(users: some Sequence<UserID>) -> String {
         users.map(\.rawValue).joined(separator: ",")
+    }
+
+    /// The people chosen in one house, out of a string that holds every
+    /// house's: `home:id,id;home:id,id`. A string written before the choice was
+    /// kept per house has no `:` in it and is read as nobody.
+    public static func users(_ raw: String, home: HomeID) -> [UserID] {
+        for part in raw.split(separator: ";") {
+            let pair = part.split(separator: ":", maxSplits: 1)
+            if pair.count == 2, pair[0] == home.rawValue { return users(String(pair[1])) }
+        }
+        return []
+    }
+
+    /// `raw` with this house's choice replaced (and dropped when empty), every
+    /// other house's left as it was.
+    public static func raw(users chosen: some Sequence<UserID>, home: HomeID, in raw: String) -> String {
+        var parts = raw.split(separator: ";").map(String.init).filter {
+            $0.contains(":") && !$0.hasPrefix(home.rawValue + ":")
+        }
+        let list = Self.raw(users: chosen)
+        if !list.isEmpty { parts.append(home.rawValue + ":" + list) }
+        return parts.joined(separator: ";")
     }
 
     public static func calendars(_ raw: String) -> [String] {

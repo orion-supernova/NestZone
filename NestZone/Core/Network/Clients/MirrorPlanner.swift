@@ -60,17 +60,25 @@ enum MirrorPlanner {
                 copies.append(Copy(
                     key: eventID.rawValue,
                     eventID: eventID.rawValue,
-                    draft: draft(first, shape: shape, recurrence: rule, alarms: alarms),
+                    draft: draft(
+                        first, shape: shape, recurrence: rule, alarms: alarms,
+                        marker: marker(request, key: eventID.rawValue),
+                        timeZoneOffset: first.isAllDay ? nil : first.tzOffset
+                    ),
                     calendars: calendars,
                     lastEnd: rule.until.map { $0.date.addingTimeInterval(duration) }
                 ))
             } else {
                 for occurrence in occurrences {
                     let shape = shape(start: occurrence.start, duration: occurrence.duration, of: occurrence)
+                    let key = "\(eventID.rawValue)@\(Int(occurrence.startsAt.milliseconds))"
                     copies.append(Copy(
-                        key: "\(eventID.rawValue)@\(Int(occurrence.startsAt.milliseconds))",
+                        key: key,
                         eventID: eventID.rawValue,
-                        draft: draft(occurrence, shape: shape, recurrence: nil, alarms: alarms),
+                        draft: draft(
+                            occurrence, shape: shape, recurrence: nil, alarms: alarms,
+                            marker: marker(request, key: key), timeZoneOffset: nil
+                        ),
                         calendars: calendars,
                         lastEnd: occurrence.end
                     ))
@@ -86,7 +94,9 @@ enum MirrorPlanner {
         _ occurrence: EventOccurrence,
         shape: (start: Date, end: Date),
         recurrence: Recurrence?,
-        alarms: [Int]
+        alarms: [Int],
+        marker: URL?,
+        timeZoneOffset: Int?
     ) -> DeviceEventDraft {
         DeviceEventDraft(
             title: occurrence.title,
@@ -96,8 +106,14 @@ enum MirrorPlanner {
             end: shape.end,
             isAllDay: occurrence.isAllDay,
             recurrence: recurrence,
-            alarmMinutes: alarms
+            alarmMinutes: alarms,
+            marker: marker,
+            timeZoneOffset: timeZoneOffset
         )
+    }
+
+    private static func marker(_ request: MirrorRequest, key: String) -> URL? {
+        MirrorMarker.url(home: request.homeID.rawValue, copyKey: key)
     }
 
     /// The start and end to write. An all-day event is stored as midnight to
@@ -142,6 +158,13 @@ enum MirrorPlanner {
         guard let first = occurrences.first else { return false }
         let tz = first.tzOffset
         let start = first.seriesStart.milliseconds
+
+        // EventKit counts "every other week" from the week its own calendar
+        // starts on, and a rule gives no way to set that (`firstDayOfTheWeek`
+        // is read-only), where the server counts from the Sunday of the first
+        // week. They agree only by luck, so this case is copied one date at a
+        // time.
+        if rule.frequency == .weekly, !rule.weekdays.isEmpty, rule.interval > 1 { return false }
 
         // Where a rule that names weekdays starts on a day it does not name,
         // iCalendar and the server part ways about what the first date is.

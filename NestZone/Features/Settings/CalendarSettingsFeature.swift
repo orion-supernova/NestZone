@@ -113,6 +113,7 @@ public struct CalendarSettingsFeature: Sendable {
     @Dependency(\.calendarShare) var calendarShare
     @Dependency(\.paywall) var paywall
     @Dependency(\.openURL) var openURL
+    @Dependency(\.continuousClock) var clock
 
     public init() {}
 
@@ -141,10 +142,13 @@ public struct CalendarSettingsFeature: Sendable {
                 return .merge(
                     load(),
                     .run { send in
-                        for try await row in calendarShare.mine(homeID) {
-                            await send(.shareRowUpdated(row))
+                        await Backoff.retrying(clock: clock) { delivered in
+                            for try await row in calendarShare.mine(homeID) {
+                                delivered()
+                                await send(.shareRowUpdated(row))
+                            }
                         }
-                    } catch: { _, _ in }
+                    }
                 )
 
             case let .shareRowUpdated(row):
@@ -300,7 +304,7 @@ public struct CalendarSettingsFeature: Sendable {
             case .dialog(.presented(.removeCopies)):
                 state.copyCount = 0
                 return .run { send in
-                    _ = await calendarMirror.removeAll(deviceCalendar)
+                    _ = await calendarMirror.removeAll(deviceCalendar, nil, false)
                     await send(.copiesRemoved)
                 }
 

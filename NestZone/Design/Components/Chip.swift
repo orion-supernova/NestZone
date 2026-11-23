@@ -8,6 +8,7 @@ public struct Chip: View {
     private let title: String
     private let symbol: String?
     private let isSelected: Bool
+    private let expandsTapTarget: Bool
     private let action: () -> Void
 
     @Environment(\.theme) private var theme
@@ -19,11 +20,13 @@ public struct Chip: View {
         _ title: String,
         symbol: String? = nil,
         isSelected: Bool = false,
+        expandsTapTarget: Bool = false,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.symbol = symbol
         self.isSelected = isSelected
+        self.expandsTapTarget = expandsTapTarget
         self.action = action
     }
 
@@ -57,6 +60,10 @@ public struct Chip: View {
             // An unselected chip draws no background, so without a content
             // shape only the label glyphs are tappable.
             .contentShape(.capsule)
+            // The pill stays as drawn; where a chip sits in a row that is the
+            // screen's way of choosing, the finger gets the full 44 points.
+            .frame(minHeight: expandsTapTarget ? Metrics.minTapTarget : nil)
+            .contentShape(.rect)
         }
         // Quiet: the tap's tick below is this chip's one haptic.
         .buttonStyle(.pressableQuiet)

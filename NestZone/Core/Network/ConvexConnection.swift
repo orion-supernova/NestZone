@@ -295,12 +295,20 @@ public final class ConvexConnection: @unchecked Sendable {
     /// because it isn't in the correct format", which is what used to break home
     /// creation and every update and delete in the app. `Discarded` accepts any
     /// JSON shape and keeps none of it.
-    public func mutate(_ name: String, args: [String: ConvexEncodable?]? = nil) async throws {
+    ///
+    /// `presentsPaywall: false` is for a write nobody asked for in the moment (a
+    /// background upload): a Plus refusal still comes back as `.proRequired`,
+    /// but does not open the paywall over whatever the person is doing.
+    public func mutate(
+        _ name: String,
+        args: [String: ConvexEncodable?]? = nil,
+        presentsPaywall: Bool = true
+    ) async throws {
         try await awaitSession(for: name)
         do {
             let _: Discarded? = try await client.mutation(name, with: args)
         } catch {
-            throw Self.mapped(error, at: name)
+            throw Self.mapped(error, at: name, presentsPaywall: presentsPaywall)
         }
     }
 
@@ -308,13 +316,14 @@ public final class ConvexConnection: @unchecked Sendable {
     public func mutate<T: Decodable & Sendable>(
         _ name: String,
         args: [String: ConvexEncodable?]? = nil,
-        as type: T.Type = T.self
+        as type: T.Type = T.self,
+        presentsPaywall: Bool = true
     ) async throws -> T {
         try await awaitSession(for: name)
         do {
             return try await client.mutation(name, with: args)
         } catch {
-            throw Self.mapped(error, at: name)
+            throw Self.mapped(error, at: name, presentsPaywall: presentsPaywall)
         }
     }
 
@@ -407,7 +416,7 @@ public final class ConvexConnection: @unchecked Sendable {
     /// "Something went wrong" and the log said nothing useful. The message is
     /// logged in full and kept on the error; `AppError` still decides what the
     /// *user* sees.
-    static func mapped(_ error: any Error, at name: String) -> AppError {
+    static func mapped(_ error: any Error, at name: String, presentsPaywall: Bool = true) -> AppError {
         let mapped: AppError
         if let clientError = error as? ClientError {
             mapped = switch clientError {
@@ -438,7 +447,7 @@ public final class ConvexConnection: @unchecked Sendable {
             mapped = AppError(error)
         }
         log.error("\(name, privacy: .public) failed: \(mapped.diagnostic, privacy: .public)")
-        if case let .proRequired(feature) = mapped { PaywallBroker.shared.request(feature) }
+        if presentsPaywall, case let .proRequired(feature) = mapped { PaywallBroker.shared.request(feature) }
         return mapped
     }
 }

@@ -57,6 +57,9 @@ public struct PersonChip: View {
                 in: .capsule
             )
             .contentShape(.capsule)
+            // The pill stays as drawn; the finger gets the full 44 points.
+            .frame(minHeight: Metrics.minTapTarget)
+            .contentShape(.rect)
         }
         .buttonStyle(.pressableQuiet)
         .animation(Motion.spring, value: isSelected)

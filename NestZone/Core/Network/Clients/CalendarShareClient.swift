@@ -59,7 +59,10 @@ extension CalendarShareClient: DependencyKey {
                     "calendars": list,
                     "windowDays": windowDays.convexNumber,
                 ],
-                as: CalendarShareRow.self
+                as: CalendarShareRow.self,
+                // Done in the background; a Plus refusal is handled quietly by
+                // the share engine, never as a paywall over something else.
+                presentsPaywall: false
             )
         },
         replace: { homeID, key, from, to, items in
@@ -82,14 +85,15 @@ extension CalendarShareClient: DependencyKey {
                     "to": to.convexMillis,
                     "items": list,
                 ],
-                as: ReplaceAnswer.self
+                as: ReplaceAnswer.self,
+                presentsPaywall: false
             )
             return answer.written
         },
         stop: { homeID, key in
             var args: [String: ConvexEncodable?] = ["homeId": homeID]
             if let key { args["calendarKey"] = key }
-            try await ConvexConnection.shared.mutate("calendarShare:stop", args: args)
+            try await ConvexConnection.shared.mutate("calendarShare:stop", args: args, presentsPaywall: false)
         }
     )
 

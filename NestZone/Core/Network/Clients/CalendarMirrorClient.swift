@@ -18,9 +18,14 @@ public struct CalendarMirrorClient: Sendable {
     /// settings no longer want. Serialised: a request that arrives while one is
     /// running is folded into a second pass, never run alongside it.
     public var sync: @Sendable (_ request: MirrorRequest, _ device: DeviceCalendarClient) async throws -> MirrorSummary
-    /// Deletes every copy this phone has made, in every home, and forgets them.
+    /// Deletes the copies this phone has made (every home's, or one home's)
+    /// and forgets them. A copy that could not be deleted stays remembered, so
+    /// the next attempt finds it. `forgetChoices` also drops the events pinned
+    /// from the composer, which is what leaving a home or signing out means.
     /// Returns how many events it removed.
-    public var removeAll: @Sendable (_ device: DeviceCalendarClient) async -> Int = { _ in 0 }
+    public var removeAll: @Sendable (_ device: DeviceCalendarClient, _ home: HomeID?, _ forgetChoices: Bool) async -> Int = { _, _, _ in 0 }
+    /// The homes this phone holds copies or pinned events for.
+    public var knownHomes: @Sendable () async -> Set<HomeID> = { [] }
     /// How many copies exist, for "Remove the copies?" to know whether to ask.
     public var copyCount: @Sendable () async -> Int = { 0 }
     /// Pins one event to the calendars chosen in the composer's "Also add to"
@@ -32,8 +37,8 @@ public struct CalendarMirrorClient: Sendable {
     /// it got there (the setting or a pin). What the composer's "Also add to"
     /// ticks when an event is reopened, so the card says what is true.
     public var copyCalendars: @Sendable (_ homeID: HomeID, _ eventID: EventID) async -> [String] = { _, _ in [] }
-    /// Whether any event in this home is pinned, which is a reason to follow
-    /// the house's calendar even with copying off.
+    /// Whether any event in this home is pinned to at least one calendar, which
+    /// is a reason to follow the house's calendar even with copying off.
     public var hasOverrides: @Sendable (_ homeID: HomeID) async -> Bool = { _ in false }
     /// Whether this `EKEvent.eventIdentifier` is a copy NestZone wrote. What
     /// sharing the person's calendars with the house must ask before it uploads
@@ -60,6 +65,23 @@ public struct MirrorRequest: Sendable {
     public var windowStart: Date
     public var windowEnd: Date
     public var now: Date
+    /// When `occurrences` arrived. A copy is deleted only after two answers in
+    /// a row lacked its event, and this is how two passes over the same answer
+    /// are told from two answers.
+    public var answeredAt: Date
+    /// The events of the answer before this one, when that was complete. An
+    /// event in it that is not in this one was seen to go; without it (a fresh
+    /// launch) an absent event is only a doubt.
+    public var previousEventIDs: Set<String>?
+
+    /// `MAX_TOTAL` in `backend/convex/events.ts`: `events:inRange` stops
+    /// collecting at this many occurrences, in index order and without saying
+    /// so. An answer this long may be missing whole series, and must never be
+    /// read as "the house deleted them".
+    public static let answerLimit = 800
+
+    /// Whether the house may have said more than it was allowed to.
+    public var isTruncated: Bool { occurrences.count >= Self.answerLimit }
 
     public init(
         homeID: HomeID,
@@ -70,7 +92,9 @@ public struct MirrorRequest: Sendable {
         occurrences: [EventOccurrence],
         windowStart: Date,
         windowEnd: Date,
-        now: Date = .now
+        now: Date = .now,
+        answeredAt: Date = .now,
+        previousEventIDs: Set<String>? = nil
     ) {
         self.homeID = homeID
         self.userID = userID
@@ -81,6 +105,8 @@ public struct MirrorRequest: Sendable {
         self.windowStart = windowStart
         self.windowEnd = windowEnd
         self.now = now
+        self.answeredAt = answeredAt
+        self.previousEventIDs = previousEventIDs
     }
 }
 
@@ -91,10 +117,16 @@ public struct MirrorSummary: Equatable, Sendable {
     /// Copies the person deleted by hand, which are not recreated.
     public var dismissed = 0
     public var failed = 0
+    /// A pass ran to its end. `false` for a request folded into the pass that
+    /// was already running, and for one that had to stand down (no calendars
+    /// to write to, no signed-in person to decide for), neither of which is a
+    /// sync "Last synced" should claim.
+    public var didSync = true
 
     public init() {}
 
     public mutating func add(_ other: MirrorSummary) {
+        didSync = didSync || other.didSync
         created += other.created
         updated += other.updated
         removed += other.removed

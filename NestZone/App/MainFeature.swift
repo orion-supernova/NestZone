@@ -468,6 +468,12 @@ public struct MainFeature: Sendable {
         .ifLet(\.$paywall, action: \.paywall) { PaywallFeature() }
         .ifLet(\.$customize, action: \.customize) { CustomizeFeature() }
         .ifLet(\.$capture, action: \.capture) { CaptureFeature() }
+        // The session arrives a moment after the tabs on an optimistic launch.
+        // A pass that ran before it knew who "mine" is would have decided on
+        // nothing; this runs it again with the person.
+        .onChange(of: { $0.mirror.userID }) { _, _ in
+            Reduce { _, _ in .send(.mirror(.settingsChanged)) }
+        }
     }
 
     /// Takes the person somewhere a screen asked to go.

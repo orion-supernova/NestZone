@@ -11,10 +11,12 @@ extension DeviceCalendarClient: DependencyKey {
         shareableCalendars: { await DeviceCalendarStore.shared.shareableCalendars() },
         events: { ids, from, to in await DeviceCalendarStore.shared.events(in: ids, from: from, to: to) },
         defaultCalendarID: { await DeviceCalendarStore.shared.defaultCalendarID() },
+        marked: { ids, from, to in await DeviceCalendarStore.shared.marked(in: ids, from: from, to: to) },
         save: { draft, calendarID, existingID in
             try await DeviceCalendarStore.shared.save(draft, calendarID: calendarID, existingID: existingID)
         },
         remove: { id in try await DeviceCalendarStore.shared.remove(id) },
+        commit: { try await DeviceCalendarStore.shared.commit() },
         existing: { ids in await DeviceCalendarStore.shared.existing(ids) },
         changes: {
             AsyncStream { continuation in
@@ -124,9 +126,29 @@ actor DeviceCalendarStore {
                 end: event.endDate,
                 isAllDay: event.isAllDay,
                 title: event.title ?? "",
-                location: event.location
+                location: event.location,
+                isNestZoneCopy: MirrorMarker.isMarker(event.url)
             )
         }
+    }
+
+    func marked(in calendarIDs: [String], from: Date, to: Date) -> [DeviceMarkedEvent] {
+        guard Self.access() == .granted, !calendarIDs.isEmpty, from < to else { return [] }
+        let wanted = Set(calendarIDs)
+        let calendars = store.calendars(for: .event).filter { wanted.contains($0.calendarIdentifier) }
+        guard !calendars.isEmpty else { return [] }
+        let predicate = store.predicateForEvents(withStart: from, end: to, calendars: calendars)
+        var seen = Set<String>()
+        var out: [DeviceMarkedEvent] = []
+        for event in store.events(matching: predicate) {
+            guard MirrorMarker.isMarker(event.url), let marker = event.url?.absoluteString,
+                  let identifier = event.eventIdentifier,
+                  let calendarID = event.calendar?.calendarIdentifier else { continue }
+            // A series is one event with many occurrences.
+            guard seen.insert(calendarID + "|" + marker).inserted else { continue }
+            out.append(DeviceMarkedEvent(marker: marker, eventIdentifier: identifier, calendarID: calendarID))
+        }
+        return out
     }
 
     func defaultCalendarID() -> String? {
@@ -140,11 +162,14 @@ actor DeviceCalendarStore {
             throw DeviceCalendarError.calendarMissing
         }
         let event: EKEvent
+        let isNew: Bool
         if let existingID, let found = store.event(withIdentifier: existingID) {
             event = found
+            isNew = false
         } else {
             event = EKEvent(eventStore: store)
             event.calendar = calendar
+            isNew = true
         }
 
         event.title = draft.title
@@ -153,8 +178,15 @@ actor DeviceCalendarStore {
         event.isAllDay = draft.isAllDay
         event.startDate = draft.start
         event.endDate = draft.end
+        event.url = draft.marker
         // A day with no time of day is the same day wherever the phone is.
-        if draft.isAllDay { event.timeZone = nil }
+        if draft.isAllDay {
+            event.timeZone = nil
+        } else if let minutes = draft.timeZoneOffset {
+            // A repeating copy repeats at the series' own offset (see
+            // `DeviceEventDraft.timeZoneOffset`), not at the phone's wall time.
+            event.timeZone = TimeZone(secondsFromGMT: minutes * 60)
+        }
 
         for rule in event.recurrenceRules ?? [] { event.removeRecurrenceRule(rule) }
         if let recurrence = draft.recurrence { event.addRecurrenceRule(Self.rule(for: recurrence)) }
@@ -164,14 +196,27 @@ actor DeviceCalendarStore {
             event.addAlarm(EKAlarm(relativeOffset: -TimeInterval(minutes) * 60))
         }
 
-        // `.futureEvents` on a series' first event is the whole series.
-        try store.save(event, span: .futureEvents, commit: true)
+        // `.futureEvents` on a series' first event is the whole series. A new
+        // event is committed now because its identifier is only final once it
+        // is; a change waits for `commit`.
+        try store.save(event, span: .futureEvents, commit: isNew)
         return event.eventIdentifier
     }
 
     func remove(_ eventID: String) throws {
         guard Self.access() == .granted, let event = store.event(withIdentifier: eventID) else { return }
-        try store.remove(event, span: .futureEvents, commit: true)
+        try store.remove(event, span: .futureEvents, commit: false)
+    }
+
+    func commit() throws {
+        do {
+            try store.commit()
+        } catch {
+            // What was queued did not land; leaving it queued would let the
+            // next write commit half of an answer the caller was told failed.
+            store.reset()
+            throw error
+        }
     }
 
     func existing(_ eventIDs: [String]) -> Set<String> {

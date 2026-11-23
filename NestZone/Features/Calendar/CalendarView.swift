@@ -374,7 +374,8 @@ public struct CalendarView: View {
                         Chip(
                             String(localized: L10n.calendarFilterTheirs),
                             symbol: "person.crop.rectangle.stack",
-                            isSelected: store.showShared
+                            isSelected: store.showShared,
+                            expandsTapTarget: true
                         ) {
                             store.send(.sharedToggled)
                         }
