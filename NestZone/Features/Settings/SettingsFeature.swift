@@ -130,6 +130,8 @@ public struct SettingsFeature: Sendable {
         @Shared(.theme) public var theme: AppTheme
         @Shared(.language) public var language: AppLanguage
         @Shared(.includeAdultTitles) public var includeAdultTitles: Bool
+        /// For the Calendar row's detail line.
+        @Shared(.calendarCopyMode) public var calendarCopyMode: CalendarCopyMode
         /// Who this person has blocked, for the Privacy row's count.
         @Shared(.blockedPeople) public var blocked: [BlockedPerson]
 
@@ -162,6 +164,8 @@ public struct SettingsFeature: Sendable {
         case editName(EditNameFeature)
         case manageHomes(ManageHomesFeature)
         case blockedPeople(BlockedPeopleFeature)
+        /// Pushed, not presented: it is a page of Settings.
+        case calendar(CalendarSettingsFeature)
     }
 
     public enum Action: BindableAction {
@@ -190,6 +194,7 @@ public struct SettingsFeature: Sendable {
         case inviteCodeCopyExpired
         case manageHomesTapped
         case customizeTapped
+        case calendarRowTapped
         case checkForUpdatesTapped
         case updateCheckFinished(Result<ReleaseCheck, AppError>)
         case openAppStoreTapped(URL)
@@ -243,6 +248,9 @@ public struct SettingsFeature: Sendable {
             /// says nothing the root will act on while the launch is still
             /// restoring.
             case signedOut
+            /// A Calendar setting that decides what is copied into the person's
+            /// calendars moved; the tab bar's mirror syncs again.
+            case calendarSettingsChanged
             #if DEBUG
             /// The Nestie Lab belongs to the companion, which `MainFeature`
             /// owns: it brings Today forward and opens the Lab there.
@@ -495,6 +503,13 @@ public struct SettingsFeature: Sendable {
 
             case .customizeTapped:
                 return .send(.delegate(.customizeTapped))
+
+            case .calendarRowTapped:
+                state.destination = .calendar(CalendarSettingsFeature.State())
+                return .none
+
+            case .destination(.presented(.calendar(.delegate(.changed)))):
+                return .send(.delegate(.calendarSettingsChanged))
 
             case .manageHomesTapped:
                 state.destination = .manageHomes(

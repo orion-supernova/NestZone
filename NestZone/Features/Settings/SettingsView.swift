@@ -525,6 +525,22 @@ public struct SettingsView: View {
                 }
             }
             .proLocked(.matureContent)
+
+            NavigationLink(
+                item: $store.scope(state: \.destination?.calendar, action: \.destination.calendar)
+            ) { isActive in
+                if isActive { store.send(.calendarRowTapped) }
+            } destination: { $calendar in
+                CalendarSettingsView(store: calendar)
+            } label: {
+                LabeledContent {
+                    Text(store.calendarCopyMode.title).foregroundStyle(.secondary)
+                } label: {
+                    Label { Text(L10n.calendarSettingsTitle) } icon: {
+                        Image(systemName: "calendar")
+                    }
+                }
+            }
         } header: {
             Text(L10n.settingsGeneralTitle)
         } footer: {

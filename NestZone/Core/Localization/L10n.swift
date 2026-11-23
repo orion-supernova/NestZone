@@ -10963,3 +10963,162 @@ public enum L10n {
         r("messages_block_sender", "Block \(a0)")
     }
 }
+
+// MARK: - Calendar: people, copies and the person's own calendars
+
+extension L10n {
+    /// Everyone
+    public static var calendarFilterEveryone: LocalizedStringResource {
+        r("calendar_filter_everyone", "Everyone")
+    }
+
+    /// Me
+    public static var calendarFilterMe: LocalizedStringResource {
+        r("calendar_filter_me", "Me")
+    }
+
+    /// Off
+    public static var calendarCopyOff: LocalizedStringResource {
+        r("calendar_copy_off", "Off")
+    }
+
+    /// Only the ones I add
+    public static var calendarCopyOnlyMine: LocalizedStringResource {
+        r("calendar_copy_only_mine", "Only the ones I add")
+    }
+
+    /// Everything I'm in
+    public static var calendarCopyInvolvingMe: LocalizedStringResource {
+        r("calendar_copy_involving_me", "Everything I'm in")
+    }
+
+    /// Everything in the house
+    public static var calendarCopyEverything: LocalizedStringResource {
+        r("calendar_copy_everything", "Everything in the house")
+    }
+
+    /// Edit this in NestZone.
+    public static var calendarCopyNotesLine: LocalizedStringResource {
+        r("calendar_copy_notes_line", "Edit this in NestZone.")
+    }
+
+    /// Use your calendars
+    public static var calendarAccessTitle: LocalizedStringResource {
+        r("calendar_access_title", "Use your calendars")
+    }
+
+    /// NestZone can put house events in the calendars you choose, like iCloud or Gmail. To offer the choice it looks at your list of calendars, and what it reads stays on your phone.
+    public static var calendarAccessBody: LocalizedStringResource {
+        r("calendar_access_body", "NestZone can put house events in the calendars you choose, like iCloud or Gmail. To offer the choice it looks at your list of calendars, and what it reads stays on your phone.")
+    }
+
+    /// Continue
+    public static var calendarAccessContinue: LocalizedStringResource {
+        r("calendar_access_continue", "Continue")
+    }
+
+    /// Not now
+    public static var calendarAccessNotNow: LocalizedStringResource {
+        r("calendar_access_not_now", "Not now")
+    }
+
+    /// Also add to
+    public static var calendarAlsoAddTitle: LocalizedStringResource {
+        r("calendar_also_add_title", "Also add to")
+    }
+
+    /// Only on this phone. Housemates choose their own.
+    public static var calendarAlsoAddFooter: LocalizedStringResource {
+        r("calendar_also_add_footer", "Only on this phone. Housemates choose their own.")
+    }
+
+    /// Connect
+    public static var calendarAlsoAddConnect: LocalizedStringResource {
+        r("calendar_also_add_connect", "Connect")
+    }
+
+    /// Calendar
+    public static var calendarSettingsTitle: LocalizedStringResource {
+        r("calendar_settings_title", "Calendar")
+    }
+
+    /// Copy to my calendars
+    public static var calendarCopyTitle: LocalizedStringResource {
+        r("calendar_copy_title", "Copy to my calendars")
+    }
+
+    /// House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind.
+    public static var calendarCopyFooter: LocalizedStringResource {
+        r("calendar_copy_footer", "House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind.")
+    }
+
+    /// NestZone needs full access to your calendars to let you choose. You can change it in Settings.
+    public static var calendarAccessDenied: LocalizedStringResource {
+        r("calendar_access_denied", "NestZone needs full access to your calendars to let you choose. You can change it in Settings.")
+    }
+
+    /// Calendar access is restricted on this phone.
+    public static var calendarAccessRestricted: LocalizedStringResource {
+        r("calendar_access_restricted", "Calendar access is restricted on this phone.")
+    }
+
+    /// Open Settings
+    public static var calendarAccessOpenSettings: LocalizedStringResource {
+        r("calendar_access_open_settings", "Open Settings")
+    }
+
+    /// What to copy
+    public static var calendarCopyWhatHeader: LocalizedStringResource {
+        r("calendar_copy_what_header", "What to copy")
+    }
+
+    /// Into
+    public static var calendarCopyIntoHeader: LocalizedStringResource {
+        r("calendar_copy_into_header", "Into")
+    }
+
+    /// Pick as many calendars as you like, from any account.
+    public static var calendarCopyIntoFooter: LocalizedStringResource {
+        r("calendar_copy_into_footer", "Pick as many calendars as you like, from any account.")
+    }
+
+    /// Copy reminders
+    public static var calendarCopyReminders: LocalizedStringResource {
+        r("calendar_copy_reminders", "Copy reminders")
+    }
+
+    /// Off by default: NestZone already reminds everyone, and your calendar would alert you a second time.
+    public static var calendarCopyRemindersFooter: LocalizedStringResource {
+        r("calendar_copy_reminders_footer", "Off by default: NestZone already reminds everyone, and your calendar would alert you a second time.")
+    }
+
+    /// Last synced
+    public static var calendarCopyLastSynced: LocalizedStringResource {
+        r("calendar_copy_last_synced", "Last synced")
+    }
+
+    /// Not yet
+    public static var calendarCopyNeverSynced: LocalizedStringResource {
+        r("calendar_copy_never_synced", "Not yet")
+    }
+
+    /// Remove the copies from your calendars?
+    public static var calendarCopyRemoveTitle: LocalizedStringResource {
+        r("calendar_copy_remove_title", "Remove the copies from your calendars?")
+    }
+
+    /// If you keep them, they stay where they are but stop following the house.
+    public static var calendarCopyRemoveMessage: LocalizedStringResource {
+        r("calendar_copy_remove_message", "If you keep them, they stay where they are but stop following the house.")
+    }
+
+    /// Remove
+    public static var calendarCopyRemove: LocalizedStringResource {
+        r("calendar_copy_remove", "Remove")
+    }
+
+    /// Keep
+    public static var calendarCopyKeep: LocalizedStringResource {
+        r("calendar_copy_keep", "Keep")
+    }
+}

@@ -47,13 +47,17 @@ public struct CalendarFeature: Sendable {
         public var dayIndex: [CalendarDay: [EventOccurrence.ID]] = [:]
 
         public var isLoading = true
-        /// Filters. Not persisted: narrowing a calendar is a "show me this now",
-        /// not a preference to be remembered next week.
+        /// Filters. Not persisted, bar the people: narrowing a calendar by kind
+        /// or search is a "show me this now", not a preference to be remembered
+        /// next week, but whose calendar a person looks at is one.
         public var search = ""
         public var kindFilter: EventKind?
-        /// Only what involves the viewer — they are expected, they answered, or
-        /// they wrote it.
-        public var onlyMine = false
+        /// Who the calendar is narrowed to, as comma-joined ids, kept on this
+        /// phone. Empty is Everyone. Read it as `people`.
+        @Shared(.calendarPeopleRaw) public var peopleRaw: String
+        /// The members the row draws, the viewer first and then by name.
+        /// Stored when the members arrive, so `body` sorts nothing.
+        public var peopleRow: [User] = []
         /// Events I am invited to and have not answered.
         public var needsAnswer = false
         /// Events with a budget, a menu or a ticket — the ones with work on
@@ -198,7 +202,7 @@ public struct CalendarFeature: Sendable {
         /// Whether anything passes the filters, which is a different question
         /// from whether the household has any events.
         public var isFiltering: Bool {
-            kindFilter != nil || onlyMine || needsAnswer || withPlan
+            kindFilter != nil || !people.isEmpty || needsAnswer || withPlan
                 || !search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
 
@@ -208,9 +212,10 @@ public struct CalendarFeature: Sendable {
         /// Said out loud because a filter that removes nothing and a filter that
         /// is broken look identical otherwise: the chip lights up, a few dots
         /// quietly leave the grid, and there is no way to tell "3 of 3" from
-        /// "the button does nothing". Both of these filters are frequently
-        /// no-ops on real data — `onlyMine` counts anything you *created*, so
-        /// in a household where you enter every event it excludes nobody.
+        /// "the button does nothing". Several of these filters are frequently
+        /// no-ops on real data — an event that names nobody belongs to every
+        /// person picked, so in a household that never uses the invite list the
+        /// people row excludes nothing.
         public var visibleCount: Int {
             var seen = Set<EventOccurrence.ID>()
             for ids in dayIndex.values { seen.formUnion(ids) }
@@ -218,6 +223,26 @@ public struct CalendarFeature: Sendable {
         }
 
         public var totalCount: Int { occurrences.count }
+
+        /// The people the calendar is narrowed to: what was stored, less anyone
+        /// who is no longer a member. Until the members have arrived nothing
+        /// can be said to have left, so the stored choice stands.
+        ///
+        /// This is the one place a phase that draws other people's shared
+        /// calendars reads the selection from: a shared row belongs to the
+        /// person whose calendar it is, and shows for exactly these people.
+        public var people: Set<UserID> {
+            let stored = Set(CalendarLists.users(peopleRaw))
+            return members.isEmpty ? stored : stored.intersection(members.ids)
+        }
+
+        /// Whether `occurrence` survives the people filter. Nobody picked is
+        /// everyone; otherwise it must concern at least one of them, and an
+        /// event that names nobody is the whole house's and concerns all.
+        public func passesPeople(_ occurrence: EventOccurrence) -> Bool {
+            let people = people
+            return people.isEmpty || occurrence.involvesAny(of: people)
+        }
 
         /// Filters are on and they have hidden everything in the window.
         public var isFilteredEmpty: Bool {
@@ -319,11 +344,10 @@ public struct CalendarFeature: Sendable {
         // planned has no "has a plan" — and an always-present control that
         // never removes a row is indistinguishable from one that is broken.
 
-        /// Whether any event in the window is *not* mine, i.e. whether the
-        /// toggle has anything to hide.
-        public var canFilterMine: Bool {
-            currentUserID != nil && occurrences.contains { !$0.isMine(currentUserID) }
-        }
+        /// Whether there is anyone to pick: a house of one has nobody to
+        /// narrow to, and a row of a single "Me" beside "Everyone" cannot
+        /// change what is drawn.
+        public var canFilterPeople: Bool { peopleRow.count > 1 }
 
         public func needsMyAnswer(_ occurrence: EventOccurrence) -> Bool {
             guard let me = currentUserID else { return false }
@@ -352,7 +376,7 @@ public struct CalendarFeature: Sendable {
         public var showsFilterRow: Bool {
             isFiltering
                 || !presentKinds.isEmpty
-                || canFilterMine
+                || canFilterPeople
                 || canFilterNeedsAnswer
                 || canFilterPlanned
         }
@@ -407,7 +431,10 @@ public struct CalendarFeature: Sendable {
         case todayTapped
 
         case kindFilterTapped(EventKind?)
-        case onlyMineToggled
+        /// One person added to or taken out of the people filter.
+        case personToggled(UserID)
+        /// The Everyone chip: clears the people filter.
+        case everyoneTapped
         case needsAnswerToggled
         case withPlanToggled
         /// One control that undoes every filter at once. Clearing them one by
@@ -523,6 +550,12 @@ public struct CalendarFeature: Sendable {
                 let incoming = IdentifiedArray(uniqueElements: members)
                 guard incoming != state.members else { return .none }
                 state.members = incoming
+                state.peopleRow = Self.peopleRow(incoming, me: state.currentUserID)
+                // A member who left drops out of the stored choice, so it
+                // cannot keep narrowing the calendar to nobody.
+                let kept = CalendarLists.raw(users: Self.ordered(state.people, in: state.peopleRow))
+                if kept != state.peopleRaw { state.$peopleRaw.withLock { $0 = kept } }
+                reindex(&state)
                 // Written through to whatever is open, rather than only being
                 // read when a sheet is created. A sheet presented before the
                 // membership arrived — the deep-open path above — would
@@ -601,8 +634,16 @@ public struct CalendarFeature: Sendable {
                 reindex(&state)
                 return .none
 
-            case .onlyMineToggled:
-                state.onlyMine.toggle()
+            case let .personToggled(id):
+                var people = state.people
+                if !people.insert(id).inserted { people.remove(id) }
+                state.$peopleRaw.withLock { $0 = CalendarLists.raw(users: Self.ordered(people, in: state.peopleRow)) }
+                reindex(&state)
+                return .none
+
+            case .everyoneTapped:
+                guard !state.people.isEmpty || !state.peopleRaw.isEmpty else { return .none }
+                state.$peopleRaw.withLock { $0 = "" }
                 reindex(&state)
                 return .none
 
@@ -618,7 +659,7 @@ public struct CalendarFeature: Sendable {
 
             case .filtersCleared:
                 state.kindFilter = nil
-                state.onlyMine = false
+                state.$peopleRaw.withLock { $0 = "" }
                 state.needsAnswer = false
                 state.withPlan = false
                 state.search = ""
@@ -859,6 +900,24 @@ public struct CalendarFeature: Sendable {
         .cancellable(id: CancelID.events, cancelInFlight: true)
     }
 
+    /// The viewer first, then everybody else by name.
+    static func peopleRow(_ members: IdentifiedArrayOf<User>, me: UserID?) -> [User] {
+        members.sorted { lhs, rhs in
+            if lhs.id == me { return true }
+            if rhs.id == me { return false }
+            return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName) == .orderedAscending
+        }
+    }
+
+    /// `people` in the order of the row, so what is stored does not depend on
+    /// the order of taps.
+    static func ordered(_ people: Set<UserID>, in row: [User]) -> [UserID] {
+        let known = row.map(\.id).filter(people.contains)
+        // Members not drawn yet (the row is empty before the first answer) keep
+        // what was stored rather than losing it.
+        return known + people.filter { id in !row.contains { $0.id == id } }.sorted { $0.rawValue < $1.rawValue }
+    }
+
     /// Takes a live push, minus anything a pending delete is hiding.
     private func apply(_ state: inout State, _ incoming: [EventOccurrence]) {
         var array = IdentifiedArray(uniqueElements: incoming)
@@ -881,10 +940,9 @@ public struct CalendarFeature: Sendable {
     private func reindex(_ state: inout State) {
         let needle = state.search.trimmingCharacters(in: .whitespacesAndNewlines)
         let kind = state.kindFilter
-        let onlyMine = state.onlyMine
+        let people = state.people
         let needsAnswer = state.needsAnswer
         let withPlan = state.withPlan
-        let me = state.currentUserID
         let calendar = Calendar.current
 
         var index: [CalendarDay: [EventOccurrence.ID]] = [:]
@@ -892,7 +950,7 @@ public struct CalendarFeature: Sendable {
         // sorted without a second pass.
         for occurrence in state.occurrences {
             if let kind, occurrence.kind != kind { continue }
-            if onlyMine, !occurrence.isMine(me) { continue }
+            if !people.isEmpty, !occurrence.involvesAny(of: people) { continue }
             if needsAnswer, !state.needsMyAnswer(occurrence) { continue }
             if withPlan, !state.isPlanned(occurrence) { continue }
             if !needle.isEmpty {

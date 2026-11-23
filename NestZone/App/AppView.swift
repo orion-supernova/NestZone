@@ -212,6 +212,9 @@ struct MainView: View {
         .task { await store.send(.proStatus(.task)).finish() }
         // What this person has reported and blocked, for the same life.
         .task { await store.send(.moderation(.task)).finish() }
+        // House events copied into the person's own calendars, for the same
+        // life: it must not stop because Calendar is closed.
+        .task { await store.send(.mirror(.task)).finish() }
         // A gated control, or a refusal from the server, asking for the paywall.
         .task {
             for await feature in PaywallBroker.shared.requests() {

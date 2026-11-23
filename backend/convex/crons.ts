@@ -137,6 +137,18 @@ crons.daily(
   {},
 );
 
+// Shared calendars (calendarShare.ts): rows that ended more than a day ago,
+// and every share not synced for 30 days — a phone that is gone should not
+// keep telling the house its owner is busy. Also what clears a house that
+// stopped paying for Plus: nothing syncs, and this takes it from there.
+// At 03:45, after the report retention sweep.
+crons.daily(
+  "shared calendar cleanup",
+  { hourUTC: 3, minuteUTC: 45 },
+  internal.calendarShare.sweep,
+  {},
+);
+
 // What people hid, once the thing hidden is gone: a deleted message, a photo
 // or face whose file was freed. Paged a hundred at a time by cursor
 // (`moderation:sweepHidden`); weekly is plenty for a table this small.

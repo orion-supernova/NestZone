@@ -40056,6 +40056,564 @@
           }
         }
       }
+    },
+    "calendar_filter_everyone": {
+      "comment": "People row on the calendar's filter chips; clears the selection",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herkes"
+          }
+        }
+      }
+    },
+    "calendar_filter_me": {
+      "comment": "The viewer's own chip in the calendar's people row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ben"
+          }
+        }
+      }
+    },
+    "calendar_copy_off": {
+      "comment": "Copy house events to my calendars: off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "calendar_copy_only_mine": {
+      "comment": "Copy mode: events the person created",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the ones I add"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece benim eklediklerim"
+          }
+        }
+      }
+    },
+    "calendar_copy_involving_me": {
+      "comment": "Copy mode: events the person is invited to, answered, or that name nobody",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything I'm in"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benim olduğum her şey"
+          }
+        }
+      }
+    },
+    "calendar_copy_everything": {
+      "comment": "Copy mode: every house event",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything in the house"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdeki her şey"
+          }
+        }
+      }
+    },
+    "calendar_copy_notes_line": {
+      "comment": "Last line of the notes of a copy written into the person's own calendar",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this in NestZone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu NestZone'da düzenle."
+          }
+        }
+      }
+    },
+    "calendar_access_title": {
+      "comment": "Explainer shown before the system calendar permission prompt",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerini kullan"
+          }
+        }
+      }
+    },
+    "calendar_access_body": {
+      "comment": "Explainer body",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone can put house events in the calendars you choose, like iCloud or Gmail. To offer the choice it looks at your list of calendars, and what it reads stays on your phone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone ev etkinliklerini seçtiğin takvimlere ekleyebilir, mesela iCloud ya da Gmail'e. Seçenekleri gösterebilmek için takvim listene bakar, okuduğu şey telefonundan çıkmaz."
+          }
+        }
+      }
+    },
+    "calendar_access_continue": {
+      "comment": "Explainer's button; leads to the system prompt",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam"
+          }
+        }
+      }
+    },
+    "calendar_access_not_now": {
+      "comment": "Explainer's dismiss button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi değil"
+          }
+        }
+      }
+    },
+    "calendar_also_add_title": {
+      "comment": "Event composer row: the person's own calendars to copy this event into",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also add to"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şuraya da ekle"
+          }
+        }
+      }
+    },
+    "calendar_also_add_footer": {
+      "comment": "Under the composer's calendar choice",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on this phone. Housemates choose their own."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece bu telefonda. Ev arkadaşların kendi takvimini kendi seçer."
+          }
+        }
+      }
+    },
+    "calendar_also_add_connect": {
+      "comment": "Composer row: offers to connect the person's calendars",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağla"
+          }
+        }
+      }
+    },
+    "calendar_settings_title": {
+      "comment": "Settings row and page title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvim"
+          }
+        }
+      }
+    },
+    "calendar_copy_title": {
+      "comment": "Settings toggle for copying house events",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy to my calendars"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimlerime kopyala"
+          }
+        }
+      }
+    },
+    "calendar_copy_footer": {
+      "comment": "Under the copy toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ev etkinlikleri seçtiğin takvimlere kopyalanır. NestZone'u açtığında güncellenir, yani kopya biraz geriden gelebilir."
+          }
+        }
+      }
+    },
+    "calendar_access_denied": {
+      "comment": "Shown when calendar access was declined or is write-only",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone needs full access to your calendars to let you choose. You can change it in Settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvimleri seçebilmen için NestZone'un takvimlerine tam erişimi olması lazım. Ayarlar'dan değiştirebilirsin."
+          }
+        }
+      }
+    },
+    "calendar_access_restricted": {
+      "comment": "Shown when parental controls or a profile block calendar access",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar access is restricted on this phone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu telefonda takvim erişimi kısıtlı."
+          }
+        }
+      }
+    },
+    "calendar_access_open_settings": {
+      "comment": "Opens the system Settings for the app",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'ı aç"
+          }
+        }
+      }
+    },
+    "calendar_copy_what_header": {
+      "comment": "Header over the copy modes",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What to copy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neler kopyalansın"
+          }
+        }
+      }
+    },
+    "calendar_copy_into_header": {
+      "comment": "Header over the calendar list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şuralara"
+          }
+        }
+      }
+    },
+    "calendar_copy_into_footer": {
+      "comment": "Under the calendar list",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick as many calendars as you like, from any account."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstediğin hesaptan istediğin kadar takvim seçebilirsin."
+          }
+        }
+      }
+    },
+    "calendar_copy_reminders": {
+      "comment": "Toggle: copies carry the event's reminders as alerts",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy reminders"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hatırlatmaları da kopyala"
+          }
+        }
+      }
+    },
+    "calendar_copy_reminders_footer": {
+      "comment": "Under the copy reminders toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off by default: NestZone already reminds everyone, and your calendar would alert you a second time."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan olarak kapalı: NestZone zaten herkesi uyarıyor, takvimin de uyarırsa iki kere haber gelir."
+          }
+        }
+      }
+    },
+    "calendar_copy_last_synced": {
+      "comment": "Row: when copies last caught up with the house",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last synced"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son eşitleme"
+          }
+        }
+      }
+    },
+    "calendar_copy_never_synced": {
+      "comment": "Last synced value before the first sync",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz değil"
+          }
+        }
+      }
+    },
+    "calendar_copy_remove_title": {
+      "comment": "Dialog title when copying is turned off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the copies from your calendars?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalar takvimlerinden silinsin mi?"
+          }
+        }
+      }
+    },
+    "calendar_copy_remove_message": {
+      "comment": "Dialog message when copying is turned off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you keep them, they stay where they are but stop following the house."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutarsan oldukları yerde kalır ama evle birlikte güncellenmez."
+          }
+        }
+      }
+    },
+    "calendar_copy_remove": {
+      "comment": "Dialog: delete the copies",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil"
+          }
+        }
+      }
+    },
+    "calendar_copy_keep": {
+      "comment": "Dialog: leave the copies",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalsın"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

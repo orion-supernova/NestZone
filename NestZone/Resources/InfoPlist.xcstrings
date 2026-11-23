@@ -25,6 +25,23 @@
         }
       }
     },
+    "NSCalendarsFullAccessUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NestZone puts house events in the calendars you choose, and shows your housemates the calendars you choose to share. Nothing is shared until you pick it."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NestZone, ev etkinliklerini seçtiğin takvimlere ekler ve ev arkadaşlarına paylaşmayı seçtiğin takvimleri gösterir. Sen seçmeden hiçbir şey paylaşılmaz."
+          }
+        }
+      }
+    },
     "NSCameraUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {

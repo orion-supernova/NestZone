@@ -735,8 +735,24 @@ extension EventOccurrence {
     /// other people and not me: somebody else's dentist appointment.
     public func isMine(_ user: UserID?) -> Bool {
         guard let user else { return false }
+        return involves(user)
+    }
+
+    /// Whether this concerns `user`: they are invited, they answered, or it
+    /// names nobody and is the whole house's. `isMine` is this for the viewer.
+    public func involves(_ user: UserID) -> Bool {
         if attendees.isEmpty { return true }
         return attendees.contains(user) || rsvps.contains { $0.userID == user }
+    }
+
+    /// Whether this concerns at least one of `people`, for the calendar's
+    /// people filter. An event naming nobody belongs to everyone, so it shows
+    /// whoever is picked.
+    public func involvesAny(of people: Set<UserID>) -> Bool {
+        if attendees.isEmpty { return true }
+        return people.contains { person in
+            attendees.contains(person) || rsvps.contains { $0.userID == person }
+        }
     }
 
     /// The reminders this build can offer back, de-duplicated.

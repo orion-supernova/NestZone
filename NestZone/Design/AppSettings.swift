@@ -205,3 +205,71 @@ public enum CurrencyDefaults {
         $raw.withLock { $0 = codes.prefix(recentLimit).joined(separator: ",") }
     }
 }
+
+// MARK: - Calendar
+
+extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// The people the calendar is narrowed to, as comma-joined user ids; empty
+    /// is "Everyone". Remembered on this phone, like the tab segments. Read it
+    /// through `CalendarPeople`, which drops anybody who has left the house.
+    public static var calendarPeopleRaw: Self {
+        Self[.appStorage("appCalendarPeople"), default: ""]
+    }
+
+    /// The calendars house events are copied into, as newline-joined EventKit
+    /// calendar ids, across every account. Read it through `CalendarTargets`.
+    public static var calendarCopyTargetsRaw: Self {
+        Self[.appStorage("appCalendarCopyTargets"), default: ""]
+    }
+
+    /// What the composer's "Also add to" row was last left on, in the same
+    /// form. Kept apart from the setting above: a one-off pick for one event
+    /// must not quietly change where everything else is copied.
+    public static var calendarComposerTargetsRaw: Self {
+        Self[.appStorage("appCalendarComposerTargets"), default: ""]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<CalendarCopyMode>.Default {
+    /// Which house events are copied into this person's own calendars. Off
+    /// until they turn it on.
+    public static var calendarCopyMode: Self {
+        Self[.appStorage("appCalendarCopyMode"), default: .off]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Bool>.Default {
+    /// Whether a copy carries the event's reminders as alerts. Off: the house
+    /// already reminds everyone, and the calendar would alert a second time.
+    public static var calendarCopyReminders: Self {
+        Self[.appStorage("appCalendarCopyReminders"), default: false]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Double>.Default {
+    /// When the copies last caught up with the house, as seconds since 1970;
+    /// 0 is never.
+    public static var calendarLastSynced: Self {
+        Self[.appStorage("appCalendarLastSynced"), default: 0]
+    }
+}
+
+/// Reads and writes the lists above, which are strings because app storage
+/// holds scalars. Ids never contain a comma (users) or a newline (calendars).
+public enum CalendarLists {
+    public static func users(_ raw: String) -> [UserID] {
+        raw.split(separator: ",").map { UserID(String($0)) }
+    }
+
+    public static func raw(users: some Sequence<UserID>) -> String {
+        users.map(\.rawValue).joined(separator: ",")
+    }
+
+    public static func calendars(_ raw: String) -> [String] {
+        raw.split(separator: "\n").map(String.init)
+    }
+
+    public static func raw(calendars: some Sequence<String>) -> String {
+        calendars.joined(separator: "\n")
+    }
+}

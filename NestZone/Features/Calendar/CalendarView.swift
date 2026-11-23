@@ -358,14 +358,8 @@ public struct CalendarView: View {
         VStack(alignment: .leading, spacing: 6) {
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
-                    if store.state.canFilterMine || store.onlyMine {
-                        Chip(
-                            String(localized: L10n.calendarOnlyMine),
-                            symbol: store.onlyMine ? "person.fill.checkmark" : "person",
-                            isSelected: store.onlyMine
-                        ) {
-                            store.send(.onlyMineToggled)
-                        }
+                    if store.state.canFilterPeople {
+                        peopleChips
                     }
 
                     if store.state.canFilterNeedsAnswer || store.needsAnswer {
@@ -439,9 +433,36 @@ public struct CalendarView: View {
             }
         }
         .animation(Motion.spring, value: store.kindFilter)
-        .animation(Motion.spring, value: store.onlyMine)
+        .animation(Motion.spring, value: store.peopleRaw)
         // No tick of its own: every filter here is a `Chip`, which ticks on
         // its own taps.
+    }
+
+    /// Everyone, then each member: me first, then by name. Several can be on at
+    /// once; Everyone is on when none is and clears the rest.
+    @ViewBuilder
+    private var peopleChips: some View {
+        let selected = store.state.people
+        Chip(
+            String(localized: L10n.calendarFilterEveryone),
+            symbol: "person.2",
+            isSelected: selected.isEmpty
+        ) {
+            store.send(.everyoneTapped)
+        }
+
+        ForEach(store.peopleRow) { member in
+            PersonChip(
+                name: member.id == store.currentUserID
+                    ? String(localized: L10n.calendarFilterMe)
+                    : member.displayName,
+                initials: member.initials,
+                seed: member.id.rawValue,
+                isSelected: selected.contains(member.id)
+            ) {
+                store.send(.personToggled(member.id))
+            }
+        }
     }
 
     /// Whichever of the three faces the picker is on.

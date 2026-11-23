@@ -96,6 +96,19 @@ public struct EventComposerFeature: Sendable {
         /// and the chip cannot appear until it has an id of its own.
         public var isAdoptingRecipes = false
 
+        /// "Also add to": the person's own calendars this event is copied into,
+        /// on top of the house's. Only drawn once the phone has said yes to
+        /// calendar access, and for a house with Plus.
+        public var calendarAccess: DeviceCalendarAccess = .notDetermined
+        public var deviceCalendars: [DeviceCalendar] = []
+        /// The calendar ids ticked. Preselected with what was chosen last time.
+        public var alsoAdd: Set<String> = []
+        /// The person changed the ticks themselves, which is what makes an
+        /// empty selection mean "not this one" rather than "nothing chosen".
+        public var alsoAddTouched = false
+        public var isConnectingCalendars = false
+        @Shared(.calendarComposerTargetsRaw) public var composerTargetsRaw: String
+
         public var isSubmitting = false
         public var inlineError: String?
         /// Bumped to shake the field the sheet is refusing. A rejection has to
@@ -335,6 +348,13 @@ public struct EventComposerFeature: Sendable {
 
     public enum Action: BindableAction, Equatable {
         case task
+        /// What the phone says about the person's calendars; `pinned` is where
+        /// the event being edited was already sent.
+        case calendarsLoaded(DeviceCalendarAccess, [DeviceCalendar], pinned: [String]?)
+        case alsoAddToggled(String)
+        /// "Connect": the explainer was read and the person went on, so the
+        /// system prompt may be shown now.
+        case connectCalendarsTapped
         case recipesUpdated([Recipe])
         case samplesLoaded([Recipe])
 
@@ -391,6 +411,10 @@ public struct EventComposerFeature: Sendable {
     @Shared(.pro) var pro: ProStatus
 
     @Dependency(\.events) var events
+    @Dependency(\.deviceCalendar) var deviceCalendar
+    @Dependency(\.calendarMirror) var calendarMirror
+    @Shared(.calendarCopyMode) var copyMode: CalendarCopyMode
+    @Shared(.calendarCopyTargetsRaw) var copyTargetsRaw: String
     @Dependency(\.recipes) var recipesClient
     @Dependency(\.dismiss) var dismiss
 
@@ -415,7 +439,43 @@ public struct EventComposerFeature: Sendable {
             }
             switch action {
             case .task:
-                return state.wantsRecipes ? subscribeToRecipes(&state) : .none
+                return .merge(
+                    state.wantsRecipes ? subscribeToRecipes(&state) : .none,
+                    loadCalendars(state)
+                )
+
+            case let .calendarsLoaded(access, calendars, pinned):
+                state.isConnectingCalendars = false
+                state.calendarAccess = access
+                state.deviceCalendars = calendars
+                // Not on top of what the person already ticked: the answer to
+                // the system prompt arrives while the sheet is open.
+                guard !state.alsoAddTouched else { return .none }
+                let existing = Set(calendars.map(\.id))
+                if state.isEditing {
+                    state.alsoAdd = Set(pinned ?? []).intersection(existing)
+                } else {
+                    // Last time's choice; before there was one, where the
+                    // setting copies to, when it copies at all.
+                    var chosen = CalendarLists.calendars(state.composerTargetsRaw)
+                    if chosen.isEmpty, copyMode != .off { chosen = CalendarLists.calendars(copyTargetsRaw) }
+                    state.alsoAdd = Set(chosen).intersection(existing)
+                }
+                return .none
+
+            case let .alsoAddToggled(id):
+                if !state.alsoAdd.insert(id).inserted { state.alsoAdd.remove(id) }
+                state.alsoAddTouched = true
+                return .none
+
+            case .connectCalendarsTapped:
+                guard state.calendarAccess.canAsk, !state.isConnectingCalendars else { return .none }
+                state.isConnectingCalendars = true
+                return .run { send in
+                    let access = (try? await deviceCalendar.requestAccess()) ?? deviceCalendar.access()
+                    let calendars = access == .granted ? await deviceCalendar.calendars() : []
+                    await send(.calendarsLoaded(access, calendars, pinned: nil))
+                }
 
             case let .savedAs(id):
                 state.isSubmitting = false
@@ -716,6 +776,22 @@ public struct EventComposerFeature: Sendable {
         return kept + chosen.filter { !kept.contains($0) }
     }
 
+    private func loadCalendars(_ state: State) -> Effect<Action> {
+        let homeID = state.homeID
+        let editing = state.editing?.eventID
+        return .run { send in
+            let access = deviceCalendar.access()
+            guard access == .granted else {
+                await send(.calendarsLoaded(access, [], pinned: nil))
+                return
+            }
+            let calendars = await deviceCalendar.calendars()
+            var pinned: [String]?
+            if let editing { pinned = await calendarMirror.override(homeID, editing) }
+            await send(.calendarsLoaded(access, calendars, pinned: pinned))
+        }
+    }
+
     private func subscribeToRecipes(_ state: inout State) -> Effect<Action> {
         guard !state.isSubscribedToRecipes else { return .none }
         state.isSubscribedToRecipes = true
@@ -778,6 +854,18 @@ public struct EventComposerFeature: Sendable {
         // Typed before the event existed, so it could not be written yet.
         let drafts = state.sections.contains(.shopping) ? state.shoppingDraft : []
 
+        // Where "Also add to" sends it. What the row shows is what happens: a
+        // new event with something ticked, or any event whose ticks were
+        // changed. An untouched, empty row leaves it to the setting.
+        let homeID = state.homeID
+        let pin: [String]? = state.calendarAccess == .granted && pro.isPro
+            && (state.alsoAddTouched || (!state.isEditing && !state.alsoAdd.isEmpty))
+            ? state.alsoAdd.sorted() : nil
+        if state.alsoAddTouched, pin != nil {
+            let remembered = CalendarLists.raw(calendars: state.alsoAdd.sorted())
+            state.$composerTargetsRaw.withLock { $0 = remembered }
+        }
+
         if let editing = state.editing {
             let times = Self.times(for: state, editing: editing, scope: scope)
             let edit = EventEdit(
@@ -808,6 +896,7 @@ public struct EventComposerFeature: Sendable {
                 if !drafts.isEmpty {
                     _ = try await events.addItems(id, drafts, nil)
                 }
+                if let pin { await calendarMirror.setOverride(homeID, id, pin) }
                 await send(.saved)
             } catch: { error, send in
                 await send(.failed(AppError(error)))
@@ -841,6 +930,7 @@ public struct EventComposerFeature: Sendable {
             if !drafts.isEmpty {
                 _ = try await events.addItems(id, drafts, nil)
             }
+            if let pin { await calendarMirror.setOverride(homeID, id, pin) }
             await send(.savedAs(id))
         } catch: { error, send in
             await send(.failed(AppError(error)))

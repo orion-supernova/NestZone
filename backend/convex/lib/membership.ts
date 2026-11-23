@@ -8,6 +8,7 @@ import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { cascadeDeleteHome } from "./relations";
+import { endShare } from "./calendarShare";
 
 export type Departure =
   | { deletedHome: true; removed: Record<string, number> }
@@ -44,6 +45,10 @@ export async function departHome(
       home_id: (user.home_id ?? []).filter((h) => h !== home._id),
     });
   }
+  // The calendars they shared with this house stop showing at once; their
+  // rows drain behind it (lib/calendarShare.ts). The last-one-out case above
+  // needs nothing: `homes:purgeHomeData` takes the whole house's.
+  await endShare(ctx, home._id, userId);
   // Nestie's vote may have been waiting only on the one who just left: ask
   // "has everyone answered?" again of who is left. Scheduled, so leaving
   // never waits on it or fails for it; a house with no open vote is a no-op.

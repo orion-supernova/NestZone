@@ -423,7 +423,11 @@ public struct AppFeature: Sendable {
                 // A Plus payment that was not credited yet is looked at again.
                 let recheck: Effect<Action> = state.main == nil
                     ? .none
-                    : .send(.main(.proStatus(.becameActive)))
+                    : .merge(
+                        .send(.main(.proStatus(.becameActive))),
+                        // The copies' window slides forward and catches up.
+                        .send(.main(.mirror(.becameActive)))
+                    )
                 guard state.status == .authenticated,
                       !state.pushRegistration.isRegistered
                 else { return recheck }

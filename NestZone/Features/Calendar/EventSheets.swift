@@ -28,6 +28,7 @@ struct EventComposerSheet: View {
                     titleCard.appear(0)
                     kindPicker.appear(1)
                     whenCard.appear(2)
+                    EventAlsoAddCard(store: store).appear(2)
                     whereCard.appear(3)
                     whoCard.appear(4)
                     remindersCard.appear(5)
