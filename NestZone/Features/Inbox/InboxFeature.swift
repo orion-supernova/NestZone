@@ -489,9 +489,11 @@ public struct InboxFeature: Sendable {
             case let .rowTapped(row):
                 guard row.category.isRoutable else { return .none }
                 state.isOpen = false
+                state.feedStalled = false
                 return .merge(
                     .cancel(id: CancelID.feed),
                     .cancel(id: CancelID.categories),
+                    .cancel(id: CancelID.stall),
                     .send(.delegate(.open(row.category)))
                 )
 
@@ -506,9 +508,11 @@ public struct InboxFeature: Sendable {
             // looking at, until the home changed.
             case .binding(\.isOpen):
                 guard !state.isOpen else { return .none }
+                state.feedStalled = false
                 return .merge(
                     .cancel(id: CancelID.feed),
-                    .cancel(id: CancelID.categories)
+                    .cancel(id: CancelID.categories),
+                    .cancel(id: CancelID.stall)
                 )
 
             case .admin, .reports, .alert, .binding, .delegate:
@@ -532,6 +536,7 @@ public struct InboxFeature: Sendable {
         // One watch over whichever feed is opening: if nothing has arrived in
         // twelve seconds the skeleton becomes an offer to try again, while the
         // subscription itself keeps trying underneath.
+        state.feedStalled = false
         let stall: Effect<Action> = .run { send in
             try await clock.sleep(for: .seconds(12))
             await send(.feedStalled)

@@ -13,9 +13,10 @@ struct DeadlineExpired: Error {}
 enum Deadline {
     static func run<T: Sendable>(
         _ limit: Duration,
+        cancelsWork: Bool = true,
         _ body: @escaping @Sendable () async throws -> T
     ) async throws -> T {
-        let race = Race<T>()
+        let race = Race<T>(cancelsWork: cancelsWork)
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, any Error>) in
                 race.arm(continuation)
@@ -44,6 +45,12 @@ enum Deadline {
         private var work: Task<Void, Never>?
         private var timer: Task<Void, Never>?
         private var result: Result<T, any Error>?
+        /// False for a call that must be allowed to finish once it is sent (a
+        /// refresh-token exchange: the server rotates the token when it
+        /// answers, and the answer has to be written down).
+        private let cancelsWork: Bool
+
+        init(cancelsWork: Bool) { self.cancelsWork = cancelsWork }
 
         func arm(_ continuation: CheckedContinuation<T, any Error>) {
             let early = lock.withLock { () -> Result<T, any Error>? in
@@ -60,7 +67,7 @@ enum Deadline {
                 self.timer = timer
                 return result != nil
             }
-            if settled { work.cancel(); timer.cancel() }
+            if settled { if cancelsWork { work.cancel() }; timer.cancel() }
         }
 
         func finish(_ outcome: Result<T, any Error>) {
@@ -71,7 +78,7 @@ enum Deadline {
                 defer { continuation = nil }
                 return (continuation, self.work, self.timer)
             }
-            work?.cancel()
+            if cancelsWork { work?.cancel() }
             timer?.cancel()
             waiting?.resume(with: outcome)
         }

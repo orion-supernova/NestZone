@@ -203,7 +203,9 @@ each tab on the segment you name, to measure a first build of any of them.
   swapped in, a failed attempt changes nothing and is retried with backoff
   (2 s doubling to 60 s, jittered, never twice in 2 s, one at a time). Every
   live `subscribe` is told (`observe`) and re-opens the same query on the new
-  client with no attempt spent and its `last` kept, so features' effects are
+  client (carrying the cached JWT when it has more than 60 s left, so a
+  replacement exchanges nothing and rotates nothing; a replacement that a
+  sign-out overtook is discarded) with no attempt spent and its `last` kept, so features' effects are
   untouched and the dedupe holds. Triggers: back from more than 20 s in the
   background, the network path returning or changing interface (1 s later), the
   socket "connecting" for 15 s while the path is up, a read with no first answer
@@ -214,8 +216,8 @@ each tab on the segment you name, to measure a first build of any of them.
   cancellation and a task group would wait for them): `first` 15 s (throws, so
   the screen can offer a retry), mutation 30 s and action 60 s (`.offline`, so
   the rollback runs), the refresh exchange 8 s (under the library's 10 s
-  refresh-token reuse window; a late answer still stores its rotated token and
-  the action socket is replaced). A write waits for a replacement in progress
+  refresh-token reuse window; it is never cancelled, a late answer still stores
+  its rotated token, and a timeout is retried at once on a new action socket). A write waits for a replacement in progress
   (up to 8 s) so it is not sent down a client about to be dropped. A new
   subscription path goes through `subscribe`; a screen that shows a skeleton
   while it waits shows an offer to try again after a while (Inbox's

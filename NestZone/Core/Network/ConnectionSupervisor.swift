@@ -40,6 +40,11 @@ final class ConnectionSupervisor: @unchecked Sendable {
     private static let firstBackoff = 2
     private static let maxBackoff = 60
 
+    private static func appIsActive() -> Bool {
+        guard Thread.isMainThread else { return true }
+        return MainActor.assumeIsolated { UIApplication.shared.applicationState != .background }
+    }
+
     private static let log = Logger(subsystem: "com.walhallaa.NestZone", category: "Reconnect")
 
     /// The session's state, as the current client last reported it. Forwarded
@@ -67,10 +72,15 @@ final class ConnectionSupervisor: @unchecked Sendable {
     /// delivery is a new problem, one that follows a rebuild is the same one.
     private var delivered = false
 
-    private var isActive = true
+    private var isActive = ConnectionSupervisor.appIsActive()
     private var leftAt: Date?
     private var isConnected = false
     private var connectingTimer: Task<Void, Never>?
+
+    /// Bumped whenever the session is anything but authenticated, so a
+    /// replacement that started before a sign-out can tell it happened.
+    private let signOutLock = NSLock()
+    private var signOuts = 0
 
     private let monitor = NWPathMonitor()
     private var pathSatisfied = true
@@ -163,8 +173,13 @@ final class ConnectionSupervisor: @unchecked Sendable {
             // would fire into a socket the system is about to take.
             connectingTimer?.cancel()
             connectingTimer = nil
-            pending?.cancel()
-            pending = nil
+            // A rebuild that has begun is left to finish: it may have sent a
+            // refresh-token exchange, and that must land. One still waiting its
+            // turn is dropped.
+            if !isRebuilding {
+                pending?.cancel()
+                pending = nil
+            }
         }
     }
 
@@ -286,25 +301,40 @@ final class ConnectionSupervisor: @unchecked Sendable {
         }
         guard proceed else { return }
 
-        // The stale action socket goes first: the exchange below is the first
-        // thing to use it, and it must not be the one that hangs.
+        let generation = signOutLock.withLock { signOuts }
+        // The stale action socket goes first: an exchange, if one is needed,
+        // is the first thing to use it, and it must not be the one that hangs.
         provider.resetTransport()
+        // A session whose JWT is still good is carried over as it is: no
+        // exchange, so nothing rotates and nothing can be lost.
+        provider.reuseNextLogin()
         let fresh = Client(deploymentUrl: deploymentURL, authProvider: provider)
         let outcome = await fresh.loginFromCache()
 
         var retryIn: Int?
         switch outcome {
         case .success:
-            let replaced = lock.withLock { () -> [@Sendable () -> Void] in
+            let replaced = lock.withLock { () -> [@Sendable () -> Void]? in
+                // Signed out (or out and in again) while this was under way:
+                // the fresh client belongs to a session that is over.
+                guard signOutLock.withLock({ signOuts }) == generation,
+                      case .authenticated = authState.value else { return nil }
                 current = fresh
                 epoch += 1
                 delivered = false
                 wiring = wire(fresh, dropReplay: true)
                 return Array(observers.values)
             }
-            Self.log.notice("reconnected (\(reason, privacy: .public)); re-attaching \(replaced.count, privacy: .public) reads")
-            for notify in replaced { notify() }
-            lock.withLock { backoffStep = 0 }
+            if let replaced {
+                Self.log.notice("reconnected (\(reason, privacy: .public)); re-attaching \(replaced.count, privacy: .public) reads")
+                // The new socket's state is not replayed: until it says so,
+                // it is not known to be up.
+                socketStateChanged(connected: false)
+                for notify in replaced { notify() }
+            } else {
+                Self.log.notice("reconnect discarded: signed out meanwhile")
+                provider.discardLastWritten()
+            }
         case let .failure(error):
             Self.log.error("reconnect failed (\(reason, privacy: .public)): \(String(describing: error), privacy: .public)")
             let (step, worthRetrying) = lock.withLock { () -> (Int, Bool) in
@@ -331,6 +361,10 @@ final class ConnectionSupervisor: @unchecked Sendable {
         }
     }
 
+    private func noteSignedOut() {
+        signOutLock.withLock { signOuts += 1 }
+    }
+
     /// Lock held by the caller. Replaces what listens to the previous client.
     private func wire(_ client: Client, dropReplay: Bool) -> [AnyCancellable] {
         let sockets = client.watchWebSocketState().sink { [weak self] state in
@@ -339,7 +373,10 @@ final class ConnectionSupervisor: @unchecked Sendable {
         }
         let auth = client.authState
         let forwarded = (dropReplay ? auth.dropFirst().eraseToAnyPublisher() : auth)
-            .sink { [authState] in authState.send($0) }
+            .sink { [authState, weak self] state in
+                if case .authenticated = state {} else { self?.noteSignedOut() }
+                authState.send(state)
+            }
         return [sockets, forwarded]
     }
 }

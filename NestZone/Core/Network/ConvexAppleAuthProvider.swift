@@ -40,6 +40,11 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     }
 
     private var _pending: PendingCredential?
+    /// The JWT of the last successful exchange, and the refresh token that
+    /// exchange (or a late answer) wrote. Guarded by `lock`.
+    private var lastJWT: String?
+    private var lastWritten: String?
+    private var reuseNext = false
     private let lock = NSLock()
 
     /// Plain unauthenticated client, used only to invoke the public `auth:*`
@@ -102,6 +107,11 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     public func loginFromCache(
         onIdToken: @Sendable @escaping (String?) -> Void
     ) async throws -> ConvexAuthTokens {
+        // A replacement connection asks for a session it can have without
+        // rotating anything: the JWT in hand is still good, and the refresh
+        // token is the one thing whose loss signs somebody out.
+        if consumeReuse(), let reusable = reusableTokens() { return reusable }
+
         await refreshGate.wait()
 
         let refresh: String
@@ -120,9 +130,17 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
 
         let result: SignInActionResult
         do {
-            result = try await exchange(refresh)
+            do {
+                result = try await exchange(refresh)
+            } catch is DeadlineExpired {
+                // On a socket that is not coming back. Straight away on a new
+                // one, still inside the library's 10 s window for presenting a
+                // just-used token again; the first attempt, if it did reach
+                // the server, has written its rotated token by now or will.
+                resetTransport()
+                result = try await exchange(refresh)
+            }
         } catch {
-            // An exchange that hung is on a socket that is not coming back.
             if error is DeadlineExpired { resetTransport() }
             await refreshGate.signal()
             // Could not complete the exchange. The token may or may not have
@@ -154,16 +172,64 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
         let client = actionClient
         let box = ClientBox(client)
         let store = tokenStore
-        return try await Deadline.run(Self.exchangeLimit) {
+        let note: @Sendable (String) -> Void = { [weak self] in self?.noteWritten($0) }
+        return try await Deadline.run(Self.exchangeLimit, cancelsWork: false) {
             let result: SignInActionResult = try await box.client.action(
                 "auth:signIn",
                 with: ["refreshToken": refresh]
             )
             if let tokens = result.tokens, case let .present(stored) = store.lookup(), stored == refresh {
                 store.refreshToken = tokens.refreshToken
+                note(tokens.refreshToken)
             }
             return result
         }
+    }
+
+    private func noteWritten(_ token: String) {
+        lock.withLock { lastWritten = token }
+    }
+
+    /// Asks the next `loginFromCache` to reuse the JWT in hand if it is good
+    /// for another minute, instead of exchanging the refresh token.
+    func reuseNextLogin() {
+        lock.withLock { reuseNext = true }
+    }
+
+    private func consumeReuse() -> Bool {
+        lock.withLock { defer { reuseNext = false }; return reuseNext }
+    }
+
+    /// The session as it stands, when its JWT has more than a minute left.
+    func reusableTokens() -> ConvexAuthTokens? {
+        let jwt = lock.withLock { lastJWT }
+        guard let jwt, let expiry = Self.expiry(of: jwt),
+              expiry.timeIntervalSinceNow > 60,
+              case let .present(refresh) = tokenStore.lookup()
+        else { return nil }
+        return ConvexAuthTokens(token: jwt, refreshToken: refresh)
+    }
+
+    /// Undoes what an exchange wrote after the person signed out, and only if
+    /// the Keychain still holds exactly that token.
+    func discardLastWritten() {
+        let written = lock.withLock { lastWritten }
+        if let written, case let .present(stored) = tokenStore.lookup(), stored == written {
+            tokenStore.refreshToken = nil
+        }
+    }
+
+    /// `exp` of a JWT, read without verifying: it only says when to ask again.
+    private static func expiry(of jwt: String) -> Date? {
+        let parts = jwt.split(separator: ".")
+        guard parts.count == 3 else { return nil }
+        var base64 = parts[1].replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        while base64.count % 4 != 0 { base64 += "=" }
+        guard let data = Data(base64Encoded: base64),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let exp = object["exp"] as? Double
+        else { return nil }
+        return Date(timeIntervalSince1970: exp)
     }
 
     /// Gives the exchanges a new socket. Called when the app comes back from a
@@ -216,6 +282,7 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     ) throws -> ConvexAuthTokens {
         guard let tokens = result.tokens else { throw ConvexAuthError.noTokens }
         tokenStore.refreshToken = tokens.refreshToken
+        lock.withLock { lastJWT = tokens.token; lastWritten = tokens.refreshToken }
         onIdToken(tokens.token)
         return tokens
     }
@@ -225,6 +292,11 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
 public struct ConvexAuthTokens: Decodable, Sendable {
     public let token: String
     public let refreshToken: String
+
+    init(token: String, refreshToken: String) {
+        self.token = token
+        self.refreshToken = refreshToken
+    }
 }
 
 /// `ConvexClient` carries no `Sendable` conformance; it is a thin wrapper over

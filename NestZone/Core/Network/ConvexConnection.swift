@@ -419,8 +419,11 @@ public final class ConvexConnection: @unchecked Sendable {
         do {
             try await gate.admit()
             // A connection being replaced is about to drop the client a write
-            // would go down. Bounded, like the gate.
-            try? await Deadline.run(AuthGate.writeLimit) { [supervisor] in await supervisor.settled() }
+            // would go down. Bounded, like the gate; only the bound is
+            // forgiven, a cancelled caller is not.
+            do {
+                try await Deadline.run(AuthGate.writeLimit) { [supervisor] in await supervisor.settled() }
+            } catch is DeadlineExpired {}
         } catch {
             let mapped = AppError(error)
             Self.log.error("\(name, privacy: .public) not sent: \(mapped.diagnostic, privacy: .public)")
