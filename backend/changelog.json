@@ -91,7 +91,7 @@
     },
     {
       "slug": "1.14.0-fixes",
-      "version": "1.14.0",
+      "version": "1.14.1",
       "kind": "fix",
       "title": "Fixes and improvements",
       "body": "Notifications take you where they should now, and Nestie has a bit more to say.",
