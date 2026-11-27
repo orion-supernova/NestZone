@@ -25,8 +25,8 @@
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "NestZone/NestZoneApp.swift": {
-    "mtime": 1795796738.0502145,
-    "ast_hash": "8d60701fb03225e9c69b6adf78af6519",
+    "mtime": 1795799335.8918548,
+    "ast_hash": "9c233ad7b9f7b559731fabfb8b89b923",
     "semantic_hash": ""
   },
   "Docs/PocketBase/README.md": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1795797160.6578484,
-    "ast_hash": "d39c1c90e8b567187a741dec512629b0",
+    "mtime": 1795799335.8870828,
+    "ast_hash": "2c43d73295a1c9fed6f4603115ebabaf",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
@@ -195,8 +195,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1795796738.0465949,
-    "ast_hash": "594c064243f1d48a704957ec24e6ac78",
+    "mtime": 1795799335.8883643,
+    "ast_hash": "d67b60d57f71f84867d6b5a804e7dc0a",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "NestZone/Design/AppSettings.swift": {
-    "mtime": 1795451897.7821229,
-    "ast_hash": "9abc58526278cb92356d87014e8f7b80",
+    "mtime": 1795799335.8888948,
+    "ast_hash": "fa57eae71d69e61359e434026086c96a",
     "semantic_hash": ""
   },
   "NestZone/Design/Color+Hex.swift": {
@@ -530,8 +530,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/SettingsFeature.swift": {
-    "mtime": 1795451897.7834508,
-    "ast_hash": "a5e33b89055922f00fe2ff6ecbcbe088",
+    "mtime": 1795799335.8915617,
+    "ast_hash": "6ee9544519737b9a564f9a3f4af86e72",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/SettingsView.swift": {
@@ -750,8 +750,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/EventsClient.swift": {
-    "mtime": 1793022428.1540835,
-    "ast_hash": "07e26e683fa1ae359b60effcb9c48c9a",
+    "mtime": 1795799335.8887177,
+    "ast_hash": "9dd4fe4bda2868b9c9a78b77fe4f5b43",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/CalendarGrid.swift": {
@@ -760,13 +760,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarFeature.swift": {
-    "mtime": 1795448052.187202,
-    "ast_hash": "4fe0c0d33a78780f50dedbe981d07653",
+    "mtime": 1795799335.8891652,
+    "ast_hash": "051577b496221a330f7d540112ff718c",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarView.swift": {
-    "mtime": 1795455739.7363002,
-    "ast_hash": "82271c6d6e159ee27cc34b7479743758",
+    "mtime": 1795799335.889412,
+    "ast_hash": "dcb06103ab3d616f5886ba1bd60decae",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventComposerFeature.swift": {
@@ -775,8 +775,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventDetailFeature.swift": {
-    "mtime": 1795796738.0481968,
-    "ast_hash": "769f55811856f4b0840269ada75b0e32",
+    "mtime": 1795799335.889607,
+    "ast_hash": "6922550c1320294b85ce0d79015e2b22",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventSheets.swift": {
@@ -785,8 +785,8 @@
     "semantic_hash": ""
   },
   "backend/convex/events.ts": {
-    "mtime": 1795796738.0537105,
-    "ast_hash": "30c45d298456a118f525b0a554cd7124",
+    "mtime": 1795799335.8961658,
+    "ast_hash": "6d13e9c575587f84d72cd4b202267122",
     "semantic_hash": ""
   },
   "backend/convex/lib/pending.ts": {
@@ -1080,8 +1080,8 @@
     "semantic_hash": ""
   },
   "backend/changelog.json": {
-    "mtime": 1795797160.6586683,
-    "ast_hash": "e822b5cb76009e67048b2ce3ea80cc87",
+    "mtime": 1795799335.8948054,
+    "ast_hash": "3bc94c6dbf34b6dd2b9fde8e30f4c90c",
     "semantic_hash": ""
   },
   "backend/convex/inbox.ts": {
@@ -1130,8 +1130,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/Route.swift": {
-    "mtime": 1795448052.1646624,
-    "ast_hash": "14d8cea73133a6da65705e1aa544deee",
+    "mtime": 1795799335.8872538,
+    "ast_hash": "a779600c63a6c506c08945209dd78617",
     "semantic_hash": ""
   },
   "NestZone/Features/Customize/CustomizeFeature.swift": {
@@ -7600,8 +7600,8 @@
     "semantic_hash": ""
   },
   "Docs/Launch/index.html": {
-    "mtime": 1795797167.16009,
-    "ast_hash": "242cd99e46776ea3b889c3c3e417c3c2",
+    "mtime": 1795799342.807453,
+    "ast_hash": "a7e452003b53286ea85874e24b49948f",
     "semantic_hash": ""
   },
   "Docs/index.html": {
@@ -7670,8 +7670,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/CalendarShareClient.swift": {
-    "mtime": 1795451897.7809825,
-    "ast_hash": "fc71016315563ed584b38179e769f1a1",
+    "mtime": 1795799335.8885565,
+    "ast_hash": "edd9da2167c44e9558d4e0993ebdea81",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/DeviceCalendarClient+Live.swift": {
@@ -7725,23 +7725,23 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/Mirror/CalendarMirrorFeature.swift": {
-    "mtime": 1795448052.1911244,
-    "ast_hash": "77f8e56000561dbc2fdf65a8624242b9",
+    "mtime": 1795799335.8899353,
+    "ast_hash": "6cea79b86760ed8637cc911d76f82802",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/Mirror/CalendarShareFeature.swift": {
-    "mtime": 1795451897.7823617,
-    "ast_hash": "eefbf64dc14e00461146d08dcdf301df",
+    "mtime": 1795799335.8901534,
+    "ast_hash": "b94815359514bfc1342f2c9d5eabae7b",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/SharedItemDetailFeature.swift": {
-    "mtime": 1795448052.191426,
-    "ast_hash": "d6436d017702af15e8af43c1b692a544",
+    "mtime": 1795799335.890479,
+    "ast_hash": "d99177d33bc43b34f25ec5c8da45af0a",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/SharedItemSheet.swift": {
-    "mtime": 1795455739.7368562,
-    "ast_hash": "65674480808f0ab7c2cab76e8518670f",
+    "mtime": 1795799335.890637,
+    "ast_hash": "25edaa381108dedca9552ebb8d5b9715",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/HouseJar.swift": {
@@ -7885,18 +7885,18 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/CalendarSettingsFeature.swift": {
-    "mtime": 1795796738.0498452,
-    "ast_hash": "1060fbd86298910078beb1382851f530",
+    "mtime": 1795799335.891172,
+    "ast_hash": "d05367392a1760f9300ecf0db8dc2511",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/CalendarSettingsView.swift": {
-    "mtime": 1795796738.0500326,
-    "ast_hash": "6e25539b102a2a79651fc95338e341bd",
+    "mtime": 1795799335.8913434,
+    "ast_hash": "d16e3a2c30359adb2e2c75aa1bb87e27",
     "semantic_hash": ""
   },
   "backend/convex/calendarShare.ts": {
-    "mtime": 1795451897.7867732,
-    "ast_hash": "1502b46516d0794d5df1797496d1d0ec",
+    "mtime": 1795799335.8950164,
+    "ast_hash": "265b0c661c69a05c517a8e0f4a166837",
     "semantic_hash": ""
   },
   "backend/convex/demo.ts": {
@@ -8265,8 +8265,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/Mirror/SharedCopyFeature.swift": {
-    "mtime": 1795451897.782485,
-    "ast_hash": "2a200153b3c0dea11f19d4987551b6e6",
+    "mtime": 1795799335.8903193,
+    "ast_hash": "2c2dfd48add59f395029c3b1e3a82a27",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/HolidayBoard.swift": {
@@ -9067,6 +9067,21 @@
   "NestZone/App/PresentationCloser.swift": {
     "mtime": 1795797160.6579778,
     "ast_hash": "b74953f6caa79e9e54d21a0c685d9756",
+    "semantic_hash": ""
+  },
+  "NestZone/App/CalendarBackgroundSync.swift": {
+    "mtime": 1795799335.8868406,
+    "ast_hash": "e9782384415aa5b60865022f1e7f37c6",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Settings/CalendarIntoPage.swift": {
+    "mtime": 1795799335.8907495,
+    "ast_hash": "1d73dd87de74acf5c3068168810ba19b",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/Settings/CalendarListPage.swift": {
+    "mtime": 1795799335.890852,
+    "ast_hash": "cacb1953ff88749c5961b0d17bdf9b8a",
     "semantic_hash": ""
   }
 }
