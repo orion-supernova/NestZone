@@ -38,6 +38,7 @@ public struct CalendarView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: Metrics.sectionSpacing) {
+                if store.state.showsShareNudge { shareNudge }
                 Staged(1) {
                     monthScrubber
                     modePicker
@@ -94,7 +95,7 @@ public struct CalendarView: View {
         // Search is the system's, minimised into the bar like every other
         // screen's; history is the tool, the add is nearest the bell.
         .segmentToolbar {
-            ToolbarItem(placement: .topBarLeading) { historyButton }
+            ToolbarItem(placement: .topBarLeading) { moreMenu }
             ToolbarItem(placement: .topBarTrailing) { addButton }
         }
         // After the toolbar so the search is first in the bar, the add last.
@@ -148,13 +149,39 @@ public struct CalendarView: View {
 
     // MARK: - Chrome
 
-    /// Where finished events go: a year of them, and what they came to.
-    private var historyButton: some View {
-        Button { store.send(.historyTapped) } label: {
-            Image(systemName: "clock.arrow.circlepath")
+    /// The screen's one secondary menu: where finished events go (a year of
+    /// them, and what they came to), and this phone's calendar settings.
+    private var moreMenu: some View {
+        Menu {
+            Button { store.send(.historyTapped) } label: {
+                Label { Text(L10n.calendarHistoryTitle) } icon: { Image(systemName: "clock.arrow.circlepath") }
+            }
+            Button { store.send(.settingsTapped) } label: {
+                Label { Text(L10n.calendarSettingsMenu) } icon: { Image(systemName: "gearshape") }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
         }
         .tint(.primary)
-        .accessibilityLabel(Text(L10n.calendarHistoryTitle))
+        .accessibilityLabel(Text(L10n.commonMore))
+    }
+
+    /// One quiet line, until something of the person's own is shared: the way
+    /// to the same page Settings → Calendar opens.
+    private var shareNudge: some View {
+        Button { store.send(.settingsTapped) } label: {
+            HStack(spacing: 6) {
+                Text(L10n.calendarShareNudge)
+                Image(systemName: "chevron.forward").font(.caption2.weight(.semibold))
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondaryText)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Metrics.screenPadding)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .transition(.opacity)
     }
 
     private var addButton: some View {

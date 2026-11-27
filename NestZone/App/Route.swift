@@ -34,6 +34,9 @@ public enum Route {
     /// House → At a glance: the counters, for anybody who has not put them on
     /// Today.
     case stats(HouseStatsFeature)
+    /// Settings → Calendar, reached from the Calendar screen. The same feature
+    /// and the same per-device settings as the one in Settings.
+    case calendarSettings(CalendarSettingsFeature)
 }
 
 extension Route.State: Equatable {}
@@ -54,7 +57,7 @@ extension Route.State {
         case var .finance(s): s.currentUserID = currentUserID; self = .finance(s)
         case var .calendar(s): s.currentUserID = currentUserID; self = .calendar(s)
         case var .issues(s): s.currentUserID = currentUserID; self = .issues(s)
-        case .shopping, .recipes, .recipeDetail, .movies, .stats, .eventDetail, .issueDetail: break
+        case .shopping, .recipes, .recipeDetail, .movies, .stats, .eventDetail, .issueDetail, .calendarSettings: break
         }
     }
 
@@ -159,6 +162,8 @@ public struct RouteStack: Sendable {
         case contributions
         case movieNight
         case stats
+        /// Settings → Calendar, pushed from the Calendar screen.
+        case calendarSettings
         /// The Chat tab, which has no stack a screen could be pushed onto.
         case messages
         /// Deciding tonight's dinner: a sheet over the whole tab bar, so the
@@ -180,6 +185,10 @@ public struct RouteStack: Sendable {
 
         public enum Delegate: Equatable {
             case open(Target)
+            /// Calendar settings moved: the passes that read them run again.
+            case calendarSettingsChanged
+            /// "Sync now" on the Calendar settings page.
+            case calendarSyncRequested
         }
     }
 
@@ -263,6 +272,15 @@ public struct RouteStack: Sendable {
         case .recipes(.delegate(.decideDinner)):
             return .send(.delegate(.open(.decideDinner)))
 
+        case .calendar(.delegate(.openSettings)):
+            return .send(.delegate(.open(.calendarSettings)))
+
+        case .calendarSettings(.delegate(.changed)):
+            return .send(.delegate(.calendarSettingsChanged))
+
+        case .calendarSettings(.delegate(.syncRequested)):
+            return .send(.delegate(.calendarSyncRequested))
+
         case let .stats(.delegate(.open(module))):
             return .send(.delegate(.open(.module(module))))
 
@@ -330,6 +348,7 @@ struct RouteView: View {
         case let .issues(store): IssuesView(store: store)
         case let .issueDetail(store): IssuePageView(store: store)
         case let .stats(store): HouseStatsView(store: store)
+        case let .calendarSettings(store): CalendarSettingsView(store: store)
         }
     }
 }

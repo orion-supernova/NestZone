@@ -9,24 +9,17 @@ struct CalendarSettingsView: View {
 
     var body: some View {
         Form {
-            shareSection
-
-            if store.isShareOn, store.access == .granted {
-                shareCalendarsSections
-                shareOptionsSection
-                allowCopySection
-            }
-
-            copySection
-
-            if store.isOn, store.access == .granted {
-                modeSection
-                intoSection
-                optionsSection
-            }
-
-            if !store.copyRows.isEmpty {
-                housematesSection
+            if store.access != .granted {
+                accessSection
+            } else {
+                shareSection
+                copySection
+                if !store.copyRows.isEmpty {
+                    housematesSection
+                }
+                if store.hasSomethingToSync {
+                    syncSection
+                }
             }
         }
         .scrollContentBackground(.hidden)
@@ -45,7 +38,97 @@ struct CalendarSettingsView: View {
         }
     }
 
-    // MARK: Sections
+    // MARK: Access
+
+    /// Until the phone has said yes there is nothing to choose, so this is the
+    /// whole page: one card and the way to the answer.
+    private var accessSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                Label { Text(L10n.calendarAccessTitle) } icon: { Image(systemName: "calendar.badge.checkmark") }
+                    .font(.headline)
+                accessNote
+                if store.access == .notDetermined {
+                    Text(L10n.calendarAccessBody)
+                        .font(.footnote)
+                        .foregroundStyle(.secondaryText)
+                    Button { store.send(.allowAccessTapped) } label: {
+                        Text(L10n.calendarAccessAllow).frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
+    // MARK: Your calendars in NestZone
+
+    private var shareSection: some View {
+        Section {
+            Toggle(isOn: Binding(
+                get: { store.isShareOn },
+                set: { store.send(.shareToggled($0)) }
+            )) {
+                Label { PlusTitle(L10n.calendarShareToggle) } icon: {
+                    Image(systemName: "person.2.badge.gearshape")
+                }
+            }
+            .proLocked(.calendar, placement: .inline)
+
+            if store.isShareOn {
+                let count = store.sharedCalendarCount
+                NavigationLink {
+                    CalendarListPage(store: store)
+                } label: {
+                    LabeledContent {
+                        Text(L10n.calendarShareCountOf(count.shared, count.total))
+                            .foregroundStyle(.secondaryText)
+                    } label: {
+                        Text(L10n.calendarShareCalendarsHeader)
+                    }
+                }
+
+                Picker(selection: Binding(
+                    get: { store.shareWeeks },
+                    set: { store.send(.shareWeeksSelected($0)) }
+                )) {
+                    ForEach([4, 8, 12], id: \.self) { weeks in
+                        Text(L10n.calendarShareWeeks(weeks)).tag(weeks)
+                    }
+                } label: {
+                    Text(L10n.calendarShareWindowTitle)
+                }
+
+                Toggle(isOn: Binding(
+                    get: { store.allowCopy },
+                    set: { store.send(.allowCopyToggled($0)) }
+                )) {
+                    PlusTitle(L10n.calendarShareAllowCopy)
+                }
+                .proLocked(.calendar, placement: .inline)
+            }
+        } header: {
+            Text(L10n.calendarShareHeader)
+        } footer: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.calendarShareOffFooter)
+                if store.isShareOn {
+                    Text(verbatim: shareStatus)
+                }
+            }
+        }
+        .animation(Motion.fade, value: store.isShareOn)
+    }
+
+    /// "Sharing 2 calendars · 55 plans": the plans only once a pass has said.
+    private var shareStatus: String {
+        let calendars = String(localized: L10n.calendarShareStatusCalendars(store.sharedCalendarCount.shared))
+        guard store.planCount > 0 else { return calendars }
+        return calendars + " · " + String(localized: L10n.calendarShareStatusPlans(store.planCount))
+    }
+
+    // MARK: NestZone in your calendar
 
     private var copySection: some View {
         Section {
@@ -59,9 +142,88 @@ struct CalendarSettingsView: View {
             }
             .proLocked(.calendar, placement: .inline)
 
-            accessNote
+            if store.isOn {
+                Picker(selection: Binding(
+                    get: { store.mode },
+                    set: { store.send(.modeSelected($0)) }
+                )) {
+                    ForEach(CalendarCopyMode.onModes) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                } label: {
+                    Text(L10n.calendarCopyWhatHeader)
+                }
+
+                NavigationLink {
+                    CalendarIntoPage(store: store)
+                } label: {
+                    LabeledContent {
+                        if let summary = store.intoSummary {
+                            Text(verbatim: summary).foregroundStyle(.secondaryText)
+                        }
+                    } label: {
+                        Text(L10n.calendarCopyIntoHeader)
+                    }
+                }
+
+                Toggle(isOn: Binding(
+                    get: { store.copyReminders },
+                    set: { store.send(.remindersToggled($0)) }
+                )) {
+                    PlusTitle(L10n.calendarCopyReminders)
+                }
+                .proLocked(.calendar, placement: .inline)
+            }
+        } header: {
+            Text(L10n.calendarCopyHeader)
         } footer: {
             Text(L10n.calendarCopyFooter)
+        }
+        .animation(Motion.fade, value: store.isOn)
+    }
+
+    // MARK: Sync
+
+    private var syncSection: some View {
+        Section {
+            Button { store.send(.syncNowTapped) } label: {
+                HStack {
+                    Label { Text(L10n.calendarSyncNow) } icon: { Image(systemName: "arrow.triangle.2.circlepath") }
+                        .foregroundStyle(.primary)
+                    Spacer(minLength: 8)
+                    switch store.syncPhase {
+                    case .idle:
+                        EmptyView()
+                    case .running:
+                        ProgressView()
+                    case .done:
+                        Image(systemName: "checkmark")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.accentText)
+                            .transition(.opacity)
+                    }
+                }
+                .contentShape(.rect)
+            }
+            .disabled(store.syncPhase == .running)
+            .sensoryFeedback(.impact(weight: .light), trigger: store.syncTaps)
+            .animation(Motion.fade, value: store.syncPhase)
+
+            LabeledContent {
+                if let date = store.lastSyncedDate {
+                    Text(date, format: .relative(presentation: .named, unitsStyle: .wide))
+                        .environment(\.locale, L10n.locale)
+                        .foregroundStyle(.secondaryText)
+                } else {
+                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondaryText)
+                }
+            } label: {
+                Text(L10n.calendarCopyLastSynced)
+            }
+        } header: {
+            Text(L10n.calendarSyncHeader)
+        } footer: {
+            Text(L10n.calendarSyncFooter)
         }
     }
 
@@ -85,191 +247,6 @@ struct CalendarSettingsView: View {
             }
         case .notDetermined, .granted:
             EmptyView()
-        }
-    }
-
-    private var modeSection: some View {
-        Section {
-            ForEach(CalendarCopyMode.onModes) { mode in
-                Button { store.send(.modeSelected(mode)) } label: {
-                    HStack {
-                        Text(mode.title).foregroundStyle(.primary)
-                        Spacer(minLength: 8)
-                        if store.mode == mode {
-                            Image(systemName: "checkmark")
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(.accentText)
-                                .transition(.opacity)
-                        }
-                    }
-                    .contentShape(.rect)
-                }
-                .accessibilityAddTraits(store.mode == mode ? [.isButton, .isSelected] : .isButton)
-            }
-        } header: {
-            Text(L10n.calendarCopyWhatHeader)
-        }
-        .animation(Motion.fade, value: store.mode)
-    }
-
-    private var intoSection: some View {
-        ForEach(store.groups) { group in
-            Section {
-                ForEach(group.calendars) { calendar in
-                    let isOn = store.targets.contains(calendar.id)
-                    Button { store.send(.targetToggled(calendar.id)) } label: {
-                        HStack(spacing: 10) {
-                            Circle().fill(calendar.color).frame(width: 12, height: 12)
-                            Text(calendar.title).foregroundStyle(.primary)
-                            Spacer(minLength: 8)
-                            if isOn {
-                                Image(systemName: "checkmark")
-                                    .font(.body.weight(.semibold))
-                                    .foregroundStyle(.accentText)
-                                    .transition(.opacity)
-                            }
-                        }
-                        .contentShape(.rect)
-                    }
-                    .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
-                }
-            } header: {
-                // The first account carries the section's name, so "Into" reads
-                // once and the accounts under it are plain headings.
-                if group.id == store.groups.first?.id {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(L10n.calendarCopyIntoHeader)
-                        Text(group.account).font(.caption).foregroundStyle(.secondaryText)
-                    }
-                } else {
-                    Text(group.account)
-                }
-            } footer: {
-                if group.id == store.groups.last?.id {
-                    Text(L10n.calendarCopyIntoFooter)
-                }
-            }
-            .animation(Motion.fade, value: store.targetsRaw)
-        }
-    }
-
-    private var optionsSection: some View {
-        Section {
-            Toggle(isOn: Binding(
-                get: { store.copyReminders },
-                set: { store.send(.remindersToggled($0)) }
-            )) {
-                PlusTitle(L10n.calendarCopyReminders)
-            }
-            .proLocked(.calendar, placement: .inline)
-
-            LabeledContent {
-                if store.lastSynced > 0 {
-                    Text(Date(timeIntervalSince1970: store.lastSynced), format: .relative(presentation: .named, unitsStyle: .wide))
-                        .environment(\.locale, L10n.locale)
-                        .foregroundStyle(.secondaryText)
-                } else {
-                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondaryText)
-                }
-            } label: {
-                Text(L10n.calendarCopyLastSynced)
-            }
-        } footer: {
-            Text(L10n.calendarCopyRemindersFooter)
-        }
-    }
-
-    // MARK: Sharing
-
-    /// The master switch. Per house: it says which house it is about, because
-    /// the choices below are this house's alone.
-    private var shareSection: some View {
-        Section {
-            Toggle(isOn: Binding(
-                get: { store.isShareOn },
-                set: { store.send(.shareToggled($0)) }
-            )) {
-                Label { PlusTitle(L10n.calendarShareToggle) } icon: {
-                    Image(systemName: "person.2.badge.gearshape")
-                }
-            }
-            .proLocked(.calendar, placement: .inline)
-        } header: {
-            Text(L10n.calendarShareHeader)
-        } footer: {
-            if !store.isShareOn {
-                Text(L10n.calendarShareOffFooter)
-            } else if store.shareGroups.isEmpty, store.access == .granted {
-                Text(L10n.calendarShareMissingFooter)
-            }
-        }
-    }
-
-    private var shareCalendarsSections: some View {
-        ForEach(store.shareGroups) { group in
-            Section {
-                ForEach(group.calendars) { calendar in
-                    shareRow(calendar)
-                }
-            } header: {
-                shareHeader(group)
-            } footer: {
-                if group.id == store.shareGroups.last?.id {
-                    Text(L10n.calendarShareMissingFooter)
-                }
-            }
-        }
-    }
-
-    private func shareRow(_ calendar: DeviceCalendar) -> some View {
-        let level = Binding<CalendarShareLevel>(
-            get: { store.state.shareLevel(of: calendar.key) },
-            set: { store.send(.shareLevelSelected(calendar.key, $0)) }
-        )
-        return LabeledContent {
-            Picker(selection: level) {
-                ForEach(CalendarShareLevel.allCases) { option in
-                    Text(option.title).tag(option)
-                }
-            } label: {
-                Text(verbatim: calendar.title)
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-        } label: {
-            HStack(spacing: 10) {
-                Circle().fill(calendar.color).frame(width: 12, height: 12)
-                Text(verbatim: calendar.title)
-            }
-        }
-    }
-
-    /// The first account carries the section's name, so "Your calendars" reads
-    /// once and the accounts under it are plain headings.
-    @ViewBuilder
-    private func shareHeader(_ group: CalendarSettingsFeature.State.CalendarGroup) -> some View {
-        if group.id == store.shareGroups.first?.id {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.calendarShareCalendarsHeader)
-                Text(verbatim: group.account).font(.caption).foregroundStyle(.secondaryText)
-            }
-        } else {
-            Text(verbatim: group.account)
-        }
-    }
-
-    /// The sharer's consent, per house. Off until they say so.
-    private var allowCopySection: some View {
-        Section {
-            Toggle(isOn: Binding(
-                get: { store.allowCopy },
-                set: { store.send(.allowCopyToggled($0)) }
-            )) {
-                PlusTitle(L10n.calendarShareAllowCopy)
-            }
-            .proLocked(.calendar, placement: .inline)
-        } footer: {
-            Text(L10n.calendarShareAllowCopyFooter)
         }
     }
 
@@ -305,46 +282,6 @@ struct CalendarSettingsView: View {
             Text(L10n.calendarCopyHousematesHeader)
         } footer: {
             Text(L10n.calendarCopyHousematesFooter)
-        }
-    }
-
-    private var shareOptionsSection: some View {
-        Section {
-            Picker(selection: Binding(
-                get: { store.shareDefaultLevel },
-                set: { store.send(.shareDefaultSelected($0)) }
-            )) {
-                ForEach(CalendarShareLevel.allCases) { level in
-                    Text(level.title).tag(level)
-                }
-            } label: {
-                Text(L10n.calendarShareDefaultTitle)
-            }
-
-            Picker(selection: Binding(
-                get: { store.shareWeeks },
-                set: { store.send(.shareWeeksSelected($0)) }
-            )) {
-                ForEach([4, 8, 12], id: \.self) { weeks in
-                    Text(L10n.calendarShareWeeks(weeks)).tag(weeks)
-                }
-            } label: {
-                Text(L10n.calendarShareWindowTitle)
-            }
-
-            LabeledContent {
-                if let syncedAt = store.shareRow?.syncedAt {
-                    Text(syncedAt.date, format: .relative(presentation: .named, unitsStyle: .wide))
-                        .environment(\.locale, L10n.locale)
-                        .foregroundStyle(.secondaryText)
-                } else {
-                    Text(L10n.calendarCopyNeverSynced).foregroundStyle(.secondaryText)
-                }
-            } label: {
-                Text(L10n.calendarShareUpdated)
-            }
-        } footer: {
-            Text(L10n.calendarShareFooter)
         }
     }
 }

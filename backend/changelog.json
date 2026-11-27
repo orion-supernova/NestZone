@@ -57,7 +57,7 @@
   "entries": [
     {
       "slug": "1.14.0-meetings",
-      "version": "1.14.0",
+      "version": "1.14.2",
       "kind": "feature",
       "title": "Meetings, with a Join button",
       "body": "Got a call? Add it as a Meeting, paste the Meet, Zoom or Teams link, and NestZone knows what it is. When it's about to start, Join is right there.",
@@ -91,14 +91,17 @@
     },
     {
       "slug": "1.14.0-fixes",
-      "version": "1.14.1",
+      "version": "1.14.2",
       "kind": "fix",
       "title": "Fixes and improvements",
       "body": "Notifications take you where they should now, and Nestie has a bit more to say.",
       "highlights": [
         "Fixed tapping a notification: it opens the movie vote, the plan or the chat it's about, not just the app",
         "Added a heads-up when someone waters or pets Nestie, and a nudge from Nestie after a few quiet days",
-        "Improved Calendar settings: clearer wording, and how to bring in your Google or work calendar"
+        "Improved Calendar settings: your calendars into NestZone and house plans into your iPhone, side by side, with Sync now, and reachable from Calendar too",
+        "Added a heads-up when someone says they're going, can't make it or might come to your plan",
+        "Fixed your own shared calendar not showing up for you in NestZone's Calendar",
+        "Improved syncing: your shared calendars stay up to date even when NestZone is closed"
       ],
       "translations": [
         {
@@ -108,7 +111,10 @@
           "highlights": [
             "Bildirime dokununca artık uygulama öylece açılmıyor: film oylaması, plan ya da sohbet neyse direkt orası açılıyor",
             "Biri Nestie'yi sulayınca ya da sevince haber geliyor; birkaç gün ses çıkmazsa Nestie kendisi hatırlatıyor",
-            "Takvim ayarları daha anlaşılır oldu, Google ya da iş takvimini nasıl ekleyeceğin de yazıyor"
+            "Takvim ayarları yenilendi: takvimlerin NestZone'a, evin planları iPhone'una, yan yana; Şimdi eşitle düğmesi var, Takvim'den de açılıyor",
+            "Planına biri geliyorum, gelemem ya da belki dediğinde haber geliyor",
+            "Paylaştığın kendi takvimin artık NestZone Takvim'inde sana da görünüyor",
+            "Paylaştığın takvimler NestZone kapalıyken de güncel kalıyor"
           ]
         },
         {
@@ -118,7 +124,10 @@
           "highlights": [
             "Fixat: trycker du på en notis öppnas filmomröstningen, planen eller chatten den gäller, inte bara appen",
             "Nytt: du får veta när någon vattnar eller klappar Nestie, och Nestie hör av sig efter några tysta dagar",
-            "Bättre kalenderinställningar: tydligare text, och hur du får in din Google- eller jobbkalender"
+            "Bättre kalenderinställningar: dina kalendrar in i NestZone och hemmets planer in i iPhone, sida vid sida, med Synka nu, och nåbara från Kalendern också",
+            "Nytt: du får veta när någon säger att de kommer, inte kan eller kanske kommer till din plan",
+            "Fixat: din egen delade kalender syns nu för dig också i NestZones kalender",
+            "Dina delade kalendrar hålls nu uppdaterade även när NestZone är stängd"
           ]
         }
       ]

@@ -1201,8 +1201,17 @@ export const remove = mutation({
  * mean, and an RSVP that had to be repeated weekly would simply be ignored.
  */
 export const rsvp = mutation({
-  args: { id: v.id("events"), status: v.union(rsvpStatus, v.null()) },
-  handler: async (ctx, { id, status }) => {
+  args: {
+    id: v.id("events"),
+    status: v.union(rsvpStatus, v.null()),
+    /**
+     * The occurrence the person answered from, for the push's link only. The
+     * answer itself is per series. Optional (added in 1.15): absent, the link
+     * points at the next occurrence still to come.
+     */
+    occurrenceStart: v.optional(v.number()),
+  },
+  handler: async (ctx, { id, status, occurrenceStart }) => {
     const user = await requireUser(ctx);
     const event = await ctx.db.get(id);
     if (!event) throw new Error("Event not found");
@@ -1211,12 +1220,76 @@ export const rsvp = mutation({
     // Per series, so a series with dates still to come still takes an answer.
     requireNotOver(event.series_end);
 
+    const previous = (event.rsvps ?? []).find((r) => r.user_id === user._id)?.status ?? null;
     const others = (event.rsvps ?? []).filter((r) => r.user_id !== user._id);
     const rsvps = status === null ? others : [...others, { user_id: user._id, status }];
     await ctx.db.patch(id, { rsvps, updated: Date.now() });
+
+    // The creator hears an answer, once per change: re-sending the same status
+    // is silence, and so is the creator answering their own plan. Clearing an
+    // answer (null) is not news either.
+    if (
+      status !== null &&
+      status !== previous &&
+      user._id !== event.created_by &&
+      (home.members ?? []).includes(event.created_by)
+    ) {
+      const start = rsvpOccurrence(event, occurrenceStart);
+      const day = event.recurrence && start !== null ? shortDay(start, event.tz_offset ?? 0) : null;
+      const title = event.title || "An event";
+      await ctx.scheduler.runAfter(0, internal.push.notifyUsers, {
+        userIds: [event.created_by],
+        homeId: event.home_id,
+        actor: user._id,
+        title: rsvpTitle(user.name, status),
+        body: day ? `${title} · ${day}` : title,
+        category: "calendar",
+        topic: "calendar.rsvp",
+        // One line per event and person on the lock screen: changing your mind
+        // replaces "might come" with "is going" rather than stacking both.
+        collapseId: `rsvp-${id}-${user._id}`,
+        link: start !== null ? `event:${id}:${start}` : `event:${id}`,
+      });
+    }
     return { ok: true };
   },
 });
+
+function rsvpTitle(name: string | undefined, status: "going" | "maybe" | "declined"): string {
+  const who = name?.trim() || "Someone";
+  switch (status) {
+    case "going":
+      return `${who} is going`;
+    case "maybe":
+      return `${who} might come`;
+    case "declined":
+      return `${who} can't make it`;
+  }
+}
+
+/**
+ * The occurrence an answer is about: the one the person answered from when the
+ * phone said so and it is a real date of this series, else the next one that
+ * has not ended. Null when the series has none left to point at.
+ */
+function rsvpOccurrence(event: EventDoc, claimed: number | undefined): number | null {
+  if (!event.recurrence) return event.starts_at;
+  if (claimed !== undefined && Number.isFinite(claimed)) {
+    if (expand(event, claimed, claimed).includes(claimed)) return claimed;
+  }
+  const now = Date.now();
+  const next = expand(event, now, now + 400 * DAY);
+  return next.length ? next[0] : null;
+}
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "Tue 3 Dec", on the house's own day. English, like every server push. */
+function shortDay(at: number, tzOffset: number): string {
+  const d = new Date(at + tzOffset * MINUTE);
+  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+}
 
 function normaliseRecurrence(
   rec: Recurrence | undefined,

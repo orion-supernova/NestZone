@@ -25,7 +25,7 @@
     "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
   },
   "NestZone/NestZoneApp.swift": {
-    "mtime": 1795795948.1749768,
+    "mtime": 1795796738.0502145,
     "ast_hash": "8d60701fb03225e9c69b6adf78af6519",
     "semantic_hash": ""
   },
@@ -70,7 +70,7 @@
     "semantic_hash": ""
   },
   "backend/convex/messages.ts": {
-    "mtime": 1795795920.6768932,
+    "mtime": 1795796738.0547981,
     "ast_hash": "ce46486b61306db2fd4e96f7c9ab9542",
     "semantic_hash": ""
   },
@@ -90,12 +90,12 @@
     "semantic_hash": ""
   },
   "backend/convex/recipes.ts": {
-    "mtime": 1795795920.6764624,
+    "mtime": 1795796738.0551505,
     "ast_hash": "d06a0731eeee050e4f11c46a5faedcf9",
     "semantic_hash": ""
   },
   "backend/convex/schema.ts": {
-    "mtime": 1795796374.9513881,
+    "mtime": 1795796738.0555608,
     "ast_hash": "f86043524d1e11081c060450ebc301bd",
     "semantic_hash": ""
   },
@@ -145,7 +145,7 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1795796428.9497008,
+    "mtime": 1795796737.7695282,
     "ast_hash": "ac550b2fc7d983f1776ad4b836b5a98a",
     "semantic_hash": ""
   },
@@ -175,7 +175,7 @@
     "semantic_hash": ""
   },
   "NestZone/App/AppFeature.swift": {
-    "mtime": 1795796431.8301227,
+    "mtime": 1795796738.0420735,
     "ast_hash": "fa299b73fa18874d4b805475ceefe754",
     "semantic_hash": ""
   },
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1795796431.8310373,
-    "ast_hash": "f9499b51724b9a4fc75e2d597d09d866",
+    "mtime": 1795797160.6578484,
+    "ast_hash": "d39c1c90e8b567187a741dec512629b0",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
@@ -195,7 +195,7 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1795796493.2630439,
+    "mtime": 1795796738.0465949,
     "ast_hash": "594c064243f1d48a704957ec24e6ac78",
     "semantic_hash": ""
   },
@@ -435,12 +435,12 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeFeature.swift": {
-    "mtime": 1795796529.867553,
+    "mtime": 1795796738.0488052,
     "ast_hash": "0f814ebfbafa2700c3629a11aa62b720",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeView.swift": {
-    "mtime": 1795796534.0445185,
+    "mtime": 1795796738.0490491,
     "ast_hash": "4015bbe69a73a1bfafe5fd0d5a8a2653",
     "semantic_hash": ""
   },
@@ -475,7 +475,7 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Messages/MessagesFeature.swift": {
-    "mtime": 1795796431.8304307,
+    "mtime": 1795796738.0492406,
     "ast_hash": "cd0b104015f320adeba9c88989a78568",
     "semantic_hash": ""
   },
@@ -600,7 +600,7 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/PushClient.swift": {
-    "mtime": 1795795948.1746137,
+    "mtime": 1795796738.0477507,
     "ast_hash": "625f62d6583fc508de8ab779b4df27d0",
     "semantic_hash": ""
   },
@@ -625,7 +625,7 @@
     "semantic_hash": ""
   },
   "backend/convex/push.ts": {
-    "mtime": 1795796662.1389844,
+    "mtime": 1795796738.0550017,
     "ast_hash": "ae07a3e23dc38f9f9d0e26a9d24f41db",
     "semantic_hash": ""
   },
@@ -735,7 +735,7 @@
     "semantic_hash": ""
   },
   "backend/convex/crons.ts": {
-    "mtime": 1795796027.731195,
+    "mtime": 1795796738.0534482,
     "ast_hash": "b85c27a8ae785322a377375a665a6b72",
     "semantic_hash": ""
   },
@@ -745,7 +745,7 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/CalendarEvent.swift": {
-    "mtime": 1795796493.2615442,
+    "mtime": 1795796738.047287,
     "ast_hash": "d7313d2fa300fbcbffee62749d8a0049",
     "semantic_hash": ""
   },
@@ -775,17 +775,17 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventDetailFeature.swift": {
-    "mtime": 1795796503.3780882,
+    "mtime": 1795796738.0481968,
     "ast_hash": "769f55811856f4b0840269ada75b0e32",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventSheets.swift": {
-    "mtime": 1795796514.4730556,
+    "mtime": 1795796738.0485528,
     "ast_hash": "de4721582494485c3a4c11eea4b87d5e",
     "semantic_hash": ""
   },
   "backend/convex/events.ts": {
-    "mtime": 1795796382.6122797,
+    "mtime": 1795796738.0537105,
     "ast_hash": "30c45d298456a118f525b0a554cd7124",
     "semantic_hash": ""
   },
@@ -845,7 +845,7 @@
     "semantic_hash": ""
   },
   "backend/convex/issues.ts": {
-    "mtime": 1795795905.8945017,
+    "mtime": 1795796738.0542722,
     "ast_hash": "31dc8506718e85b184936258483f3f8d",
     "semantic_hash": ""
   },
@@ -1080,12 +1080,12 @@
     "semantic_hash": ""
   },
   "backend/changelog.json": {
-    "mtime": 1795796413.750846,
-    "ast_hash": "4edc6c57fc7ee690399908a75a74d7e5",
+    "mtime": 1795797160.6586683,
+    "ast_hash": "e822b5cb76009e67048b2ce3ea80cc87",
     "semantic_hash": ""
   },
   "backend/convex/inbox.ts": {
-    "mtime": 1795796654.8523018,
+    "mtime": 1795796738.05396,
     "ast_hash": "b7ae9ec28dc8c57ed24d3ebcf5469cae",
     "semantic_hash": ""
   },
@@ -1095,7 +1095,7 @@
     "semantic_hash": ""
   },
   "deploy.sh": {
-    "mtime": 1795464325.8568726,
+    "mtime": 1795796738.0559084,
     "ast_hash": "79b5a47e4515f52c2a41812215253c95",
     "semantic_hash": ""
   },
@@ -1195,12 +1195,12 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Now/NowDock.swift": {
-    "mtime": 1795796514.4744785,
+    "mtime": 1795796738.0494256,
     "ast_hash": "4482831749e25597307da21c3977b1b1",
     "semantic_hash": ""
   },
   "NestZone/Features/Now/NowFeature.swift": {
-    "mtime": 1795796514.4738674,
+    "mtime": 1795796738.0496309,
     "ast_hash": "d1fb601a92543af7f33c91f7910f6661",
     "semantic_hash": ""
   },
@@ -1245,8 +1245,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionFeature.swift": {
-    "mtime": 1795448052.1948202,
-    "ast_hash": "27867267f933cb912a999f1c3e67da4d",
+    "mtime": 1795797160.658382,
+    "ast_hash": "11ae2ac84c741d63484497faa9b8c3e3",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/CompanionModels.swift": {
@@ -1780,7 +1780,7 @@
     "semantic_hash": ""
   },
   "backend/convex/companion.ts": {
-    "mtime": 1795796662.1394484,
+    "mtime": 1795796738.0532708,
     "ast_hash": "8f36ef0cf729ab84ba9df1f91647d912",
     "semantic_hash": ""
   },
@@ -1860,7 +1860,7 @@
     "semantic_hash": ""
   },
   "backend/convex/lib/companionVote.ts": {
-    "mtime": 1795796027.7303472,
+    "mtime": 1795796738.0544717,
     "ast_hash": "f561fcba57bf4c1f60015c1f4e4b4cec",
     "semantic_hash": ""
   },
@@ -7600,8 +7600,8 @@
     "semantic_hash": ""
   },
   "Docs/Launch/index.html": {
-    "mtime": 1795796423.7915514,
-    "ast_hash": "ccefc453236f282236613b21fe6ce44b",
+    "mtime": 1795797167.16009,
+    "ast_hash": "242cd99e46776ea3b889c3c3e417c3c2",
     "semantic_hash": ""
   },
   "Docs/index.html": {
@@ -7885,12 +7885,12 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/CalendarSettingsFeature.swift": {
-    "mtime": 1795795989.9194756,
+    "mtime": 1795796738.0498452,
     "ast_hash": "1060fbd86298910078beb1382851f530",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/CalendarSettingsView.swift": {
-    "mtime": 1795795989.9199154,
+    "mtime": 1795796738.0500326,
     "ast_hash": "6e25539b102a2a79651fc95338e341bd",
     "semantic_hash": ""
   },
@@ -8150,7 +8150,7 @@
     "semantic_hash": ""
   },
   "Docs/Launch/header/build.sh": {
-    "mtime": 1795463451.3386385,
+    "mtime": 1795796737.770247,
     "ast_hash": "9b3e0d0e6b825f8f87650249fedb8aab",
     "semantic_hash": ""
   },
@@ -8160,7 +8160,7 @@
     "semantic_hash": ""
   },
   "Docs/Launch/icon/icon-prompt.json": {
-    "mtime": 1795463596.2059004,
+    "mtime": 1795796738.0400498,
     "ast_hash": "7619f9a8757a09363fcb6531bda3e655",
     "semantic_hash": ""
   },
@@ -8195,12 +8195,12 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/MeetingLink.swift": {
-    "mtime": 1795796483.1674874,
+    "mtime": 1795796738.0474138,
     "ast_hash": "3e38dbf05e87af739d5aaf2d085f5a23",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/NotificationPrefs.swift": {
-    "mtime": 1795795989.9204278,
+    "mtime": 1795796738.047583,
     "ast_hash": "a13ad6730378dd8aa4a55f69a3db9969",
     "semantic_hash": ""
   },
@@ -8225,7 +8225,7 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Network/PushTap.swift": {
-    "mtime": 1795796431.8296359,
+    "mtime": 1795796738.0478613,
     "ast_hash": "18a7b5c641eed23d88821d30b0c7918a",
     "semantic_hash": ""
   },
@@ -8350,7 +8350,7 @@
     "semantic_hash": ""
   },
   "backend/convex/lib/notificationPrefs.ts": {
-    "mtime": 1795795992.0650067,
+    "mtime": 1795796738.0546281,
     "ast_hash": "a6f017571432649fae844b123d589544",
     "semantic_hash": ""
   },
@@ -8365,17 +8365,17 @@
     "semantic_hash": ""
   },
   "Docs/Launch/header/README.md": {
-    "mtime": 1795463631.48111,
+    "mtime": 1795796737.769927,
     "ast_hash": "b8df5efc2c13d9f71b0ff2b4af020b11",
     "semantic_hash": ""
   },
   "Docs/Launch/header/header.html": {
-    "mtime": 1795463426.1700835,
+    "mtime": 1795796737.921906,
     "ast_hash": "5afb6d218d615f3bc51b5f306582b211",
     "semantic_hash": ""
   },
   "Docs/Launch/icon/concepts.html": {
-    "mtime": 1795463596.374304,
+    "mtime": 1795796738.0291696,
     "ast_hash": "dd78fee895bde19680a28a72a8d14e3f",
     "semantic_hash": ""
   },
@@ -8510,62 +8510,62 @@
     "semantic_hash": ""
   },
   "Docs/Launch/header/header-en-3840x1646.png": {
-    "mtime": 1795463579.457997,
+    "mtime": 1795796737.7844102,
     "ast_hash": "e285fef62d5f67a57a62f17875735f04",
     "semantic_hash": ""
   },
   "Docs/Launch/header/header-en-5244x2950.png": {
-    "mtime": 1795463576.3349743,
+    "mtime": 1795796737.8158927,
     "ast_hash": "2285234ea4529d36a14f5fe8c0e97e8f",
     "semantic_hash": ""
   },
   "Docs/Launch/header/header-sv-3840x1646.png": {
-    "mtime": 1795463497.406086,
+    "mtime": 1795796737.8327436,
     "ast_hash": "99efa0fcb6a921e53417dbd0c5d38d44",
     "semantic_hash": ""
   },
   "Docs/Launch/header/header-sv-5244x2950.png": {
-    "mtime": 1795463492.0896673,
+    "mtime": 1795796737.868488,
     "ast_hash": "691dab75d189c73f11d49b0f1f833dc7",
     "semantic_hash": ""
   },
   "Docs/Launch/header/header-tr-3840x1646.png": {
-    "mtime": 1795463467.2296493,
+    "mtime": 1795796737.884631,
     "ast_hash": "1bbe676ce5ced2a7ad94bb5572e47bea",
     "semantic_hash": ""
   },
   "Docs/Launch/header/header-tr-5244x2950.png": {
-    "mtime": 1795463458.7328663,
+    "mtime": 1795796737.919073,
     "ast_hash": "a4a0ba96014f18f4a6162b3344f2cd56",
     "semantic_hash": ""
   },
   "Docs/Launch/header/search-en-1920x1280.png": {
-    "mtime": 1795463584.61503,
+    "mtime": 1795796737.927648,
     "ast_hash": "21b78c147223dccece64682fb97fef6b",
     "semantic_hash": ""
   },
   "Docs/Launch/header/search-en-3840x2560.png": {
-    "mtime": 1795463583.8349414,
+    "mtime": 1795796737.9517171,
     "ast_hash": "e2876efe3f83288f71649a4c4c7adf8b",
     "semantic_hash": ""
   },
   "Docs/Launch/header/search-sv-1920x1280.png": {
-    "mtime": 1795463513.2960896,
+    "mtime": 1795796737.9600737,
     "ast_hash": "fc2a87e49f8796c23fa4244992c38b18",
     "semantic_hash": ""
   },
   "Docs/Launch/header/search-sv-3840x2560.png": {
-    "mtime": 1795463508.475138,
+    "mtime": 1795796737.9820619,
     "ast_hash": "59d4f51d3873c379d6d95824375f9d45",
     "semantic_hash": ""
   },
   "Docs/Launch/header/search-tr-1920x1280.png": {
-    "mtime": 1795463481.686676,
+    "mtime": 1795796737.9931598,
     "ast_hash": "5173d523aa56d0e98133894f73b234bc",
     "semantic_hash": ""
   },
   "Docs/Launch/header/search-tr-3840x2560.png": {
-    "mtime": 1795463477.3580205,
+    "mtime": 1795796738.0276845,
     "ast_hash": "c9b9c3085a675f850c8e3d5600f659f3",
     "semantic_hash": ""
   },
@@ -8620,7 +8620,7 @@
     "semantic_hash": ""
   },
   "Docs/Launch/icon/concepts.png": {
-    "mtime": 1795463601.7846658,
+    "mtime": 1795796738.0398006,
     "ast_hash": "694acc85ce7e2bdef830beafa02ac1db",
     "semantic_hash": ""
   },
@@ -9062,6 +9062,11 @@
   "Docs/Launch/preview/raw/tr_today.mov": {
     "mtime": 1795450472.9546943,
     "ast_hash": "d7c0dc141fc48a2d132f822a1bf9a9f5",
+    "semantic_hash": ""
+  },
+  "NestZone/App/PresentationCloser.swift": {
+    "mtime": 1795797160.6579778,
+    "ast_hash": "b74953f6caa79e9e54d21a0c685d9756",
     "semantic_hash": ""
   }
 }

@@ -241,6 +241,12 @@ extension SharedKey where Self == AppStorageKey<String>.Default {
 }
 
 extension SharedKey where Self == AppStorageKey<CalendarCopyMode>.Default {
+    /// The mode copying was on in before it was switched off, so the switch is
+    /// a switch and turning it back on is not a new decision.
+    public static var calendarCopyLastMode: Self {
+        Self[.appStorage("appCalendarCopyLastMode"), default: .onlyMine]
+    }
+
     /// Which house events are copied into this person's own calendars. Off
     /// until they turn it on.
     public static var calendarCopyMode: Self {
@@ -261,6 +267,29 @@ extension SharedKey where Self == AppStorageKey<Double>.Default {
     /// 0 is never.
     public static var calendarLastSynced: Self {
         Self[.appStorage("appCalendarLastSynced"), default: 0]
+    }
+
+    /// When the phone last brought what it shares up to date in the house, as
+    /// seconds since 1970; 0 is never. The other direction's `calendarLastSynced`.
+    public static var calendarShareLastSynced: Self {
+        Self[.appStorage("appCalendarShareLastSynced"), default: 0]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Int>.Default {
+    /// How many plans the last sharing pass left in the house, for the status
+    /// line under "Show my calendars in NestZone".
+    public static var calendarSharePlanCount: Self {
+        Self[.appStorage("appCalendarSharePlanCount"), default: 0]
+    }
+}
+
+extension SharedKey where Self == InMemoryKey<Set<String>>.Default {
+    /// Which calendar passes a "Sync now" is still waiting on ("share",
+    /// "mirror", "copies"). Memory only: each pass adds itself when it takes
+    /// the request and leaves when it is done, and Settings watches it empty.
+    public static var calendarSyncActive: Self {
+        Self[.inMemory("calendarSyncActive"), default: []]
     }
 }
 

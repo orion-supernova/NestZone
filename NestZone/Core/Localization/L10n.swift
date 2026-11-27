@@ -11267,14 +11267,14 @@ extension L10n {
         r("calendar_settings_title", "Calendar")
     }
 
-    /// Copy house events to my calendar
+    /// Add house plans to my calendar
     public static var calendarCopyTitle: LocalizedStringResource {
-        r("calendar_copy_title", "Copy house events to my calendar")
+        r("calendar_copy_title", "Add house plans to my calendar")
     }
 
-    /// House plans show up in your iPhone Calendar too, in the calendars you pick. They catch up when you open NestZone.
+    /// House plans copied into your iPhone Calendar.
     public static var calendarCopyFooter: LocalizedStringResource {
-        r("calendar_copy_footer", "House plans show up in your iPhone Calendar too, in the calendars you pick. They catch up when you open NestZone.")
+        r("calendar_copy_footer", "House plans copied into your iPhone Calendar.")
     }
 
     /// NestZone needs full access to your calendars to let you choose. You can change it in Settings.
@@ -11292,9 +11292,9 @@ extension L10n {
         r("calendar_access_open_settings", "Open Settings")
     }
 
-    /// What to copy
+    /// Which plans
     public static var calendarCopyWhatHeader: LocalizedStringResource {
-        r("calendar_copy_what_header", "What to copy")
+        r("calendar_copy_what_header", "Which plans")
     }
 
     /// Into
@@ -11307,14 +11307,59 @@ extension L10n {
         r("calendar_copy_into_footer", "Pick as many calendars as you like, from any account.")
     }
 
-    /// Copy reminders
+    /// Include reminders
     public static var calendarCopyReminders: LocalizedStringResource {
-        r("calendar_copy_reminders", "Copy reminders")
+        r("calendar_copy_reminders", "Include reminders")
     }
 
-    /// Off by default: NestZone already reminds everyone, and your calendar would alert you a second time.
-    public static var calendarCopyRemindersFooter: LocalizedStringResource {
-        r("calendar_copy_reminders_footer", "Off by default: NestZone already reminds everyone, and your calendar would alert you a second time.")
+    /// %lld of %lld
+    public static func calendarShareCountOf(_ a0: Int, _ a1: Int) -> LocalizedStringResource {
+        r("calendar_share_count_of", "\(a0) of \(a1)")
+    }
+
+    /// Sharing %lld calendars
+    public static func calendarShareStatusCalendars(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_share_status_calendars", "Sharing \(a0) calendars")
+    }
+
+    /// %lld plans
+    public static func calendarShareStatusPlans(_ a0: Int) -> LocalizedStringResource {
+        r("calendar_share_status_plans", "\(a0) plans")
+    }
+
+    /// NestZone in your calendar
+    public static var calendarCopyHeader: LocalizedStringResource {
+        r("calendar_copy_header", "NestZone in your calendar")
+    }
+
+    /// Calendar settings
+    public static var calendarSettingsMenu: LocalizedStringResource {
+        r("calendar_settings_menu", "Calendar settings")
+    }
+
+    /// Show your own calendars here
+    public static var calendarShareNudge: LocalizedStringResource {
+        r("calendar_share_nudge", "Show your own calendars here")
+    }
+
+    /// Sync
+    public static var calendarSyncHeader: LocalizedStringResource {
+        r("calendar_sync_header", "Sync")
+    }
+
+    /// Sync now
+    public static var calendarSyncNow: LocalizedStringResource {
+        r("calendar_sync_now", "Sync now")
+    }
+
+    /// Syncs when you open NestZone, when your calendars change, and now and then in the background.
+    public static var calendarSyncFooter: LocalizedStringResource {
+        r("calendar_sync_footer", "Syncs when you open NestZone, when your calendars change, and now and then in the background.")
+    }
+
+    /// Allow calendar access
+    public static var calendarAccessAllow: LocalizedStringResource {
+        r("calendar_access_allow", "Allow calendar access")
     }
 
     /// Last synced
@@ -11362,24 +11407,24 @@ extension L10n {
         r("calendar_share_level_details", "Title and place")
     }
 
-    /// Share my calendars
+    /// Show my calendars in NestZone
     public static var calendarShareToggle: LocalizedStringResource {
-        r("calendar_share_toggle", "Share my calendars")
+        r("calendar_share_toggle", "Show my calendars in NestZone")
     }
 
-    /// Share with the house
+    /// Your calendars in NestZone
     public static var calendarShareHeader: LocalizedStringResource {
-        r("calendar_share_header", "Share with the house")
+        r("calendar_share_header", "Your calendars in NestZone")
     }
 
-    /// Your housemates see your plans in NestZone's Calendar. You choose which calendars, and how much they see.
+    /// Your plans from your iPhone, in NestZone's Calendar for you and the house.
     public static var calendarShareOffFooter: LocalizedStringResource {
-        r("calendar_share_off_footer", "Your housemates see your plans in NestZone's Calendar. You choose which calendars, and how much they see.")
+        r("calendar_share_off_footer", "Your plans from your iPhone, in NestZone's Calendar for you and the house.")
     }
 
-    /// Your calendars
+    /// Calendars
     public static var calendarShareCalendarsHeader: LocalizedStringResource {
-        r("calendar_share_calendars_header", "Your calendars")
+        r("calendar_share_calendars_header", "Calendars")
     }
 
     /// Default for new calendars
@@ -11397,11 +11442,6 @@ extension L10n {
         r("calendar_share_weeks", "\(a0) weeks")
     }
 
-    /// Updated
-    public static var calendarShareUpdated: LocalizedStringResource {
-        r("calendar_share_updated", "Updated")
-    }
-
     /// Busy only: they see when you're busy, not why. Title and place: they see those too, never notes, people or links. Updates whenever you open NestZone.
     public static var calendarShareFooter: LocalizedStringResource {
         r("calendar_share_footer", "Busy only: they see when you're busy, not why. Title and place: they see those too, never notes, people or links. Updates whenever you open NestZone.")
@@ -11410,6 +11450,26 @@ extension L10n {
     /// %@ · busy
     public static func calendarSharedBusyLine(_ a0: String) -> LocalizedStringResource {
         r("calendar_shared_busy_line", "\(a0) · busy")
+    }
+
+    /// From your calendar
+    public static var calendarSharedMineTitle: LocalizedStringResource {
+        r("calendar_shared_mine_title", "From your calendar")
+    }
+
+    /// You're busy
+    public static var calendarSharedMineBusy: LocalizedStringResource {
+        r("calendar_shared_mine_busy", "You're busy")
+    }
+
+    /// The house sees this
+    public static var calendarSharedMineDetails: LocalizedStringResource {
+        r("calendar_shared_mine_details", "The house sees this: the time, the title and the place.")
+    }
+
+    /// The house sees only that you're busy
+    public static var calendarSharedMineBusyOnly: LocalizedStringResource {
+        r("calendar_shared_mine_busy_only", "The house sees this as busy, nothing more.")
     }
 
     /// %@ is busy
@@ -11819,14 +11879,9 @@ extension L10n {
         r("calendar_add_first", "Add the first event")
     }
 
-    /// Let them add it to their phone's calendar
+    /// Housemates can add them to their phone
     public static var calendarShareAllowCopy: LocalizedStringResource {
-        r("calendar_share_allow_copy", "Let them add it to their phone's calendar")
-    }
-
-    /// Off: your plans stay in NestZone. On: a housemate can also get them in their iPhone Calendar, with the same detail you share here. Turn it off and those copies go.
-    public static var calendarShareAllowCopyFooter: LocalizedStringResource {
-        r("calendar_share_allow_copy_footer", "Off: your plans stay in NestZone. On: a housemate can also get them in their iPhone Calendar, with the same detail you share here. Turn it off and those copies go.")
+        r("calendar_share_allow_copy", "Housemates can add them to their phone")
     }
 
     /// Housemates' calendars

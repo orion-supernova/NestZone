@@ -362,10 +362,11 @@ public struct EventDetailFeature: Sendable {
                 if let next { rsvps.append(EventRSVP(userID: userID, status: next)) }
                 state.occurrence.rsvps = rsvps
 
+                let start = state.occurrence.start
                 return .merge(
                     .send(.delegate(.rsvpChanged(eventID, rsvps))),
                     .run { send in
-                        try await events.rsvp(eventID, next)
+                        try await events.rsvp(eventID, next, start)
                     } catch: { error, send in
                         await send(.rsvpFailed(previous, AppError(error)))
                     }

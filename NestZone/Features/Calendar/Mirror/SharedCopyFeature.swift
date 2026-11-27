@@ -35,6 +35,7 @@ public struct SharedCopyFeature: Sendable {
 
         @Shared(.calendarCopyChoicesRaw) var choicesRaw: String
         @Shared(.pro) var pro: ProStatus
+        @Shared(.calendarSyncActive) var active: Set<String>
 
         public init(homeID: HomeID) {
             self.homeID = homeID
@@ -53,9 +54,12 @@ public struct SharedCopyFeature: Sendable {
         case calendarStoreChanged
         case syncDue
         case synced(SharedCopySummary)
+        /// "Sync now" in Settings: sync the answer in hand, or the first one.
+        case syncNow
+        case syncEnded
     }
 
-    private enum CancelID { case items, store, sync }
+    private enum CancelID { case items, store, sync, manual }
 
     /// How far ahead copies reach. The server holds at most 120 days of a
     /// sharer's calendar.
@@ -108,6 +112,20 @@ public struct SharedCopyFeature: Sendable {
                 }
                 .cancellable(id: CancelID.sync, cancelInFlight: true)
 
+            case .syncNow:
+                guard state.pro.isLoaded, state.pro.isPro, state.following != nil else { return .none }
+                state.$active.withLock { _ = $0.insert("copies") }
+                let wait: Effect<Action> = .run { send in
+                    try await clock.sleep(for: .seconds(20))
+                    await send(.syncEnded)
+                }
+                .cancellable(id: CancelID.manual, cancelInFlight: true)
+                return .merge(state.window == nil ? .none : .send(.syncDue), wait)
+
+            case .syncEnded:
+                state.$active.withLock { _ = $0.remove("copies") }
+                return .cancel(id: CancelID.manual)
+
             case .syncDue:
                 guard state.pro.isLoaded, state.pro.isPro, let window = state.window else { return .none }
                 let request = SharedCopyRequest(
@@ -126,9 +144,10 @@ public struct SharedCopyFeature: Sendable {
                 return .run { send in
                     let summary = try await sharedCopy.sync(request, deviceCalendar)
                     await send(.synced(summary))
-                } catch: { _, _ in }
+                } catch: { _, send in await send(.syncEnded) }
 
             case let .synced(summary):
+                state.$active.withLock { _ = $0.remove("copies") }
                 guard !summary.dismissedOwners.isEmpty else { return .none }
                 // The person deleted the calendar in the Calendar app: that is
                 // the switch going off, and nothing is made again.
@@ -174,7 +193,7 @@ public struct SharedCopyFeature: Sendable {
         let to = from.addingTimeInterval(Self.horizon)
         return .run { send in
             await Backoff.retrying(clock: clock) { delivered in
-                for try await items in calendarShare.inRange(homeID, from, to) {
+                for try await items in calendarShare.inRange(homeID, from, to, false) {
                     delivered()
                     await send(.itemsUpdated(items, from: from))
                 }

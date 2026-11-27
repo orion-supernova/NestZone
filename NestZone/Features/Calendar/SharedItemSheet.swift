@@ -14,7 +14,7 @@ struct SharedItemSheet: View {
             ScrollView {
                 VStack(spacing: Metrics.sectionSpacing) {
                     card.appear(0)
-                    Text(L10n.calendarSharedReadOnly)
+                    Text(store.isMine ? mineFooter : L10n.calendarSharedReadOnly)
                         .font(.footnote)
                         .foregroundStyle(.secondaryText)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -23,12 +23,14 @@ struct SharedItemSheet: View {
                 .padding(Metrics.screenPadding)
             }
             .background(Backdrop(tint: tint))
-            .navigationTitle(Text(L10n.calendarSharedSheetTitle))
+            .navigationTitle(Text(store.isMine ? L10n.calendarSharedMineTitle : L10n.calendarSharedSheetTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: { Text(L10n.commonClose) }
                 }
+                // Reporting your own item makes no sense, so there is no menu.
+                if !store.isMine {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button(role: .destructive) { store.send(.reportTapped) } label: {
@@ -41,6 +43,7 @@ struct SharedItemSheet: View {
                     }
                     .tint(.primary)
                     .accessibilityLabel(Text(L10n.commonMore))
+                }
                 }
             }
             .hostedSheet(item: $store.scope(state: \.report, action: \.report)) { store in
@@ -74,7 +77,7 @@ struct SharedItemSheet: View {
                     Text(heading)
                         .font(.headline)
                         .lineLimit(3)
-                    Text(L10n.calendarSharedBy(store.name))
+                    Text(store.isMine ? L10n.calendarSharedMineTitle : L10n.calendarSharedBy(store.name))
                         .font(.caption)
                         .foregroundStyle(.secondaryText)
                 }
@@ -108,7 +111,14 @@ struct SharedItemSheet: View {
     }
 
     private var heading: String {
-        store.item.shownTitle ?? String(localized: L10n.calendarSharedBusyIs(store.name))
+        store.item.shownTitle ?? String(localized: store.isMine
+            ? L10n.calendarSharedMineBusy
+            : L10n.calendarSharedBusyIs(store.name))
+    }
+
+    /// What the house sees of this item, at the level the person chose.
+    private var mineFooter: LocalizedStringResource {
+        store.item.level == .details ? L10n.calendarSharedMineDetails : L10n.calendarSharedMineBusyOnly
     }
 
     /// "Saturday 24 October · 14:00 – 15:30", or the day and "All day".

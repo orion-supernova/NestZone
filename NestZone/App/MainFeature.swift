@@ -331,6 +331,23 @@ public struct MainFeature: Sendable {
             case let .house(.delegate(.open(target))):
                 return open(target, from: .house, &state)
 
+            // The Calendar settings page pushed from the Calendar screen asks
+            // what Settings' own copy of the page asks.
+            case .today(.delegate(.calendarSettingsChanged)), .lists(.delegate(.calendarSettingsChanged)),
+                 .plans(.delegate(.calendarSettingsChanged)), .house(.delegate(.calendarSettingsChanged)):
+                return .merge(
+                    .send(.mirror(.settingsChanged)),
+                    .send(.share(.settingsChanged)),
+                    .send(.sharedCopy(.settingsChanged))
+                )
+            case .today(.delegate(.calendarSyncRequested)), .lists(.delegate(.calendarSyncRequested)),
+                 .plans(.delegate(.calendarSyncRequested)), .house(.delegate(.calendarSyncRequested)):
+                return .merge(
+                    .send(.mirror(.syncNow)),
+                    .send(.share(.syncNow)),
+                    .send(.sharedCopy(.syncNow))
+                )
+
             // The segment each tab was left on is where it opens next launch.
             case let .lists(.segmentPicked(module)),
                  let .plans(.segmentPicked(module)),
@@ -380,6 +397,14 @@ public struct MainFeature: Sendable {
                     .send(.mirror(.settingsChanged)),
                     .send(.share(.settingsChanged)),
                     .send(.sharedCopy(.settingsChanged))
+                )
+
+            // "Sync now": every pass that moves calendars, once, together.
+            case .settings(.delegate(.calendarSyncRequested)):
+                return .merge(
+                    .send(.mirror(.syncNow)),
+                    .send(.share(.syncNow)),
+                    .send(.sharedCopy(.syncNow))
                 )
 
             // Opened over Settings, which stays underneath.
@@ -647,6 +672,11 @@ public struct MainFeature: Sendable {
             ))
         case .stats:
             screen = .stats(HouseStatsFeature.State(homeID: state.homeID))
+        case .calendarSettings:
+            screen = .calendarSettings(CalendarSettingsFeature.State(
+                homeID: state.homeID,
+                members: Array(state.settings.members)
+            ))
         }
 
         let tab = tab == .messages ? Self.owner(of: target) : tab
@@ -695,6 +725,7 @@ public struct MainFeature: Sendable {
         case .taskArchive, .contributions: .lists
         case .event, .occurrence, .recipe, .movieNight, .decideDinner: .plans
         case .issue, .stats: .house
+        case .calendarSettings: .plans
         case .messages: .messages
         }
     }
@@ -915,7 +946,7 @@ extension RouteStack.Target {
     var isSpecific: Bool {
         switch self {
         case .event, .occurrence, .issue, .recipe: true
-        case .module, .taskArchive, .contributions, .movieNight, .stats, .messages, .decideDinner: false
+        case .module, .taskArchive, .contributions, .movieNight, .stats, .messages, .decideDinner, .calendarSettings: false
         }
     }
 }
