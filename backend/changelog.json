@@ -56,6 +56,37 @@
   ],
   "entries": [
     {
+      "slug": "1.14.7-fixes",
+      "version": "1.14.7",
+      "kind": "fix",
+      "title": "Fixes and improvements",
+      "body": "NestZone gets back online by itself now.",
+      "highlights": [
+        "Fixed screens getting stuck loading after the app sat in the background or the Wi-Fi changed: it reconnects on its own, no restart needed",
+        "Improved: if something really can't load, you get a Try again instead of an endless spinner"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Düzeltmeler ve iyileştirmeler",
+          "body": "NestZone artık bağlantısını kendi toparlıyor.",
+          "highlights": [
+            "Uygulama arka planda bekleyince ya da Wi-Fi değişince ekranların yüklenmede takılması düzeldi: kendi kendine yeniden bağlanıyor, kapatıp açmana gerek yok",
+            "Bir şey gerçekten yüklenemezse sonsuza kadar dönen bir şey yerine Tekrar dene çıkıyor"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Fixar och förbättringar",
+          "body": "NestZone kopplar upp sig igen av sig själv nu.",
+          "highlights": [
+            "Fixat att skärmar fastnade och laddade när appen legat i bakgrunden eller wifi bytts: den kopplar upp sig igen själv, ingen omstart behövs",
+            "Bättre: går något verkligen inte att ladda får du Försök igen i stället för en snurra som aldrig slutar"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.14.0-meetings",
       "version": "1.14.6",
       "kind": "feature",
