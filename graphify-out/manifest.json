@@ -195,8 +195,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1795804527.5461087,
-    "ast_hash": "625382090029dbe5038df2ae7250e6f9",
+    "mtime": 1795806043.077859,
+    "ast_hash": "59b88c694aa218e1308ed8bb8312e303",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "NestZone/Design/AppSettings.swift": {
-    "mtime": 1795799335.8888948,
-    "ast_hash": "fa57eae71d69e61359e434026086c96a",
+    "mtime": 1795806043.0783596,
+    "ast_hash": "4a2ddec3ed34135ae2460fc213d0a784",
     "semantic_hash": ""
   },
   "NestZone/Design/Color+Hex.swift": {
@@ -530,13 +530,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/SettingsFeature.swift": {
-    "mtime": 1795799335.8915617,
-    "ast_hash": "6ee9544519737b9a564f9a3f4af86e72",
+    "mtime": 1795806043.081513,
+    "ast_hash": "3280def85ec4b66610ecb04d595fae61",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/SettingsView.swift": {
-    "mtime": 1795804527.549393,
-    "ast_hash": "c4ef6eed9993177166a87ae517a937dc",
+    "mtime": 1795806043.0820112,
+    "ast_hash": "80d4c929ee69037ed82941490de1d297",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TasksFeature.swift": {
@@ -760,13 +760,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarFeature.swift": {
-    "mtime": 1795799335.8891652,
-    "ast_hash": "051577b496221a330f7d540112ff718c",
+    "mtime": 1795806043.0791817,
+    "ast_hash": "eae1075f9b656ef75410b54be55033df",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/CalendarView.swift": {
-    "mtime": 1795799335.889412,
-    "ast_hash": "dcb06103ab3d616f5886ba1bd60decae",
+    "mtime": 1795806043.0797596,
+    "ast_hash": "4c26988c16694d267582f7d83234b1e3",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/EventComposerFeature.swift": {
@@ -1080,8 +1080,8 @@
     "semantic_hash": ""
   },
   "backend/changelog.json": {
-    "mtime": 1795804527.5547342,
-    "ast_hash": "2b31ef6d21bbc69e515ac1e154f9f1f8",
+    "mtime": 1795806043.0880907,
+    "ast_hash": "8132c664d1e5c1d07d6235431227e7c6",
     "semantic_hash": ""
   },
   "backend/convex/inbox.ts": {
@@ -7600,8 +7600,8 @@
     "semantic_hash": ""
   },
   "Docs/Launch/index.html": {
-    "mtime": 1795804541.0898244,
-    "ast_hash": "df2b19937eec407375d5e36e1f39f2f5",
+    "mtime": 1795806075.1556532,
+    "ast_hash": "fa69745b42975b16811f566e49ae6c6b",
     "semantic_hash": ""
   },
   "Docs/index.html": {
@@ -7735,13 +7735,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/SharedItemDetailFeature.swift": {
-    "mtime": 1795799335.890479,
-    "ast_hash": "d99177d33bc43b34f25ec5c8da45af0a",
+    "mtime": 1795806043.0800395,
+    "ast_hash": "5f27ba5c62e9ce804f74f6f0d60512eb",
     "semantic_hash": ""
   },
   "NestZone/Features/Calendar/SharedItemSheet.swift": {
-    "mtime": 1795799335.890637,
-    "ast_hash": "25edaa381108dedca9552ebb8d5b9715",
+    "mtime": 1795806043.0803175,
+    "ast_hash": "e85a1a19806d931b268c0be8e89c78c2",
     "semantic_hash": ""
   },
   "NestZone/Features/Companion/HouseJar.swift": {
@@ -7855,8 +7855,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Moderation/ReportFeature.swift": {
-    "mtime": 1795123676.617282,
-    "ast_hash": "edd38db6a3640cb98407e6b088051c84",
+    "mtime": 1795806043.080599,
+    "ast_hash": "c9617743f890a53e3fe82f9e0f0b2867",
     "semantic_hash": ""
   },
   "NestZone/Features/Moderation/ReportSheet.swift": {
@@ -7885,13 +7885,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/CalendarSettingsFeature.swift": {
-    "mtime": 1795799335.891172,
-    "ast_hash": "d05367392a1760f9300ecf0db8dc2511",
+    "mtime": 1795806043.0809195,
+    "ast_hash": "28e56705126b8168e89a7125dd0a6cff",
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/CalendarSettingsView.swift": {
-    "mtime": 1795799335.8913434,
-    "ast_hash": "d16e3a2c30359adb2e2c75aa1bb87e27",
+    "mtime": 1795806043.0811677,
+    "ast_hash": "088467cb537c96a99e6c3afa6e0fa850",
     "semantic_hash": ""
   },
   "backend/convex/calendarShare.ts": {
