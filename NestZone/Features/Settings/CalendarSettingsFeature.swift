@@ -23,6 +23,7 @@ public struct CalendarSettingsFeature: Sendable {
         @Shared(.calendarShareDefaultLevelRaw) public var shareDefaultLevelRaw: String
         @Shared(.calendarShareWeeks) public var shareWeeks: Int
         @Shared(.calendarCopyChoicesRaw) public var copyChoicesRaw: String
+        @Shared(.calendarHiddenSharersRaw) public var hiddenSharersRaw: String
         @Shared(.calendarCopyMode) public var mode: CalendarCopyMode
         @Shared(.calendarCopyLastMode) public var lastMode: CalendarCopyMode
         @Shared(.calendarCopyTargetsRaw) public var targetsRaw: String
@@ -79,6 +80,10 @@ public struct CalendarSettingsFeature: Sendable {
         public init(homeID: HomeID, members: [User] = []) {
             self.homeID = homeID
             self.members = members
+            // Where access stands is a synchronous answer, so the first frame
+            // of the push is already the right page and not the access card.
+            @Dependency(\.deviceCalendar) var deviceCalendar
+            access = deviceCalendar.access()
         }
 
         /// "Housemates can add my calendar to theirs": this phone's answer, or
@@ -87,6 +92,11 @@ public struct CalendarSettingsFeature: Sendable {
 
         public func name(of id: String) -> String? {
             members.first { $0.id.rawValue == id }?.displayName
+        }
+
+        /// Whether this housemate's shared calendar is drawn in NestZone.
+        public func isShown(_ id: String) -> Bool {
+            !CalendarLists.users(hiddenSharersRaw, home: homeID).contains { $0.rawValue == id }
         }
 
         public func isCopying(_ id: String) -> Bool {
@@ -115,6 +125,12 @@ public struct CalendarSettingsFeature: Sendable {
         /// How many of the phone's calendars are shared, and how many could be.
         public var sharedCalendarCount: (shared: Int, total: Int) {
             let house = shareChoices.house(homeID)
+            // Until the phone's calendars have been read, this phone's own
+            // record answers, so the row's value fills in place and does not
+            // start at 0/0.
+            if shareGroups.isEmpty {
+                return (house.levels.values.filter(\.isShared).count, max(house.known.count, house.levels.count))
+            }
             let all = shareGroups.flatMap(\.calendars)
             return (all.filter { house.level(of: $0.key).isShared }.count, all.count)
         }
@@ -162,6 +178,8 @@ public struct CalendarSettingsFeature: Sendable {
         case allowCopyToggled(Bool)
         case housematesUpdated([HousemateShare])
         case housemateToggled(String, Bool)
+        /// "Show in NestZone" for one housemate.
+        case housemateShownToggled(String, Bool)
         case housemateRemoved
         case copyToggled(Bool)
         case remindersToggled(Bool)
@@ -320,6 +338,16 @@ public struct CalendarSettingsFeature: Sendable {
                 return .none
 
             case .housemateRemoved:
+                return .none
+
+            case let .housemateShownToggled(id, isShown):
+                let homeID = state.homeID
+                state.$hiddenSharersRaw.withLock { raw in
+                    var hidden = CalendarLists.users(raw, home: homeID)
+                    hidden.removeAll { $0.rawValue == id }
+                    if !isShown { hidden.append(UserID(id)) }
+                    raw = CalendarLists.raw(users: hidden, home: homeID, in: raw)
+                }
                 return .none
 
             case let .shareRowUpdated(row):

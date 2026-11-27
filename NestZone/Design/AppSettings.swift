@@ -226,6 +226,16 @@ extension SharedKey where Self == AppStorageKey<String>.Default {
         Self[.appStorage("appCalendarPeople"), default: ""]
     }
 
+    /// The housemates whose shared calendars this person has switched off in
+    /// NestZone, per house (`home:id,id;home:id`, read through
+    /// `CalendarLists.users(_:home:)`). Hiding is the exception, so nothing is
+    /// written for a person who never chose: everybody who shares is shown.
+    /// Per device, like the rest of the calendar's settings, and the sharer is
+    /// never told.
+    public static var calendarHiddenSharersRaw: Self {
+        Self[.appStorage("appCalendarHiddenSharers"), default: ""]
+    }
+
     /// The calendars house events are copied into, as newline-joined EventKit
     /// calendar ids, across every account. Read it through `CalendarTargets`.
     public static var calendarCopyTargetsRaw: Self {

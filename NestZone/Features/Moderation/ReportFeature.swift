@@ -90,6 +90,8 @@ public enum ReportNotice: Equatable, Sendable {
     case limited
     /// A quote or a pin pointed at a message older than what is loaded.
     case notLoaded
+    /// A housemate's shared calendar was switched off for this person.
+    case hidden
 
     public init(_ outcome: ReportOutcome) {
         self = outcome == .limited ? .limited : .thanks
@@ -100,6 +102,7 @@ public enum ReportNotice: Equatable, Sendable {
         case .thanks: L10n.reportThanks
         case .limited: L10n.reportLimited
         case .notLoaded: L10n.chatMessageNotLoaded
+        case .hidden: L10n.calendarSharedHiddenToast
         }
     }
 
@@ -107,6 +110,7 @@ public enum ReportNotice: Equatable, Sendable {
         switch self {
         case .thanks, .limited: "checkmark.shield.fill"
         case .notLoaded: "clock.arrow.circlepath"
+        case .hidden: "eye.slash"
         }
     }
 

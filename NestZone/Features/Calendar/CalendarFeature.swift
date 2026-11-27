@@ -62,8 +62,20 @@ public struct CalendarFeature: Sendable {
         public var sharedHidden: Set<String> = []
         /// The shared items on each day, after the filters, like `dayIndex`.
         public var sharedDayIndex: [CalendarDay: [String]] = [:]
-        /// Whether housemates' calendars are drawn at all.
+        /// Whether housemates' calendars are drawn at all. The quick switch in
+        /// the bar; lasting, per-person choices are `hiddenSharersRaw`, and an
+        /// item is drawn only when both allow it.
         @Shared(.calendarShowShared) public var showShared: Bool
+        /// Housemates this person switched off in Settings → Calendar, per
+        /// house. Read it as `hiddenSharers`.
+        @Shared(.calendarHiddenSharersRaw) public var hiddenSharersRaw: String
+        /// Housemates who share a calendar with the house, once known.
+        public var sharers: Set<UserID>?
+        /// Whether this person shares one of their own, once known: their own
+        /// items come back in the same read, and are never hidden.
+        public var sharesOwn: Bool?
+        /// Whether the read of shared items is running.
+        public var isFetchingShared = true
 
         public var isLoading = true
         /// Filters. Not persisted, bar the people: narrowing a calendar by kind
@@ -309,6 +321,17 @@ public struct CalendarFeature: Sendable {
 
         public func sharedCount(on day: CalendarDay) -> Int { sharedDayIndex[day]?.count ?? 0 }
 
+        public var hiddenSharers: Set<UserID> { Set(CalendarLists.users(hiddenSharersRaw, home: homeID)) }
+
+        /// Whether there is anybody whose items would be drawn. Until both
+        /// answers are in this says yes, so the read starts as it always did;
+        /// once they are, a house where every sharer is hidden and the person
+        /// shares nothing does not ask the server at all.
+        public var wantsShared: Bool {
+            guard let sharers, let sharesOwn else { return true }
+            return sharesOwn || !sharers.subtracting(hiddenSharers).isEmpty
+        }
+
         /// Every shared item that survives the filters, soonest first.
         public var sharedMatches: [SharedBusyItem] {
             var seen = Set<String>()
@@ -333,7 +356,10 @@ public struct CalendarFeature: Sendable {
         /// Whether the "their own calendars" switch is worth drawing: there is
         /// something for it to hide, or it is off and has to be able to come
         /// back on.
-        public var canToggleShared: Bool { !shared.isEmpty || !showShared }
+        public var canToggleShared: Bool {
+            let hidden = hiddenSharers
+            return shared.contains { $0.userID == currentUserID || !hidden.contains($0.userID) } || !showShared
+        }
 
         /// The dots under a day cell: up to three, in the order the events
         /// happen, de-duplicated by colour so a day of four dinners is one
@@ -488,6 +514,11 @@ public struct CalendarFeature: Sendable {
         case occurrencesUpdated(String, [EventOccurrence])
         case sharedUpdated(String, [SharedBusyItem])
         case sharedToggled
+        case sharersUpdated([HousemateShare])
+        case ownShareUpdated(Bool)
+        /// The lasting choice of whose calendars are drawn moved (Settings, or
+        /// the sheet): the grid and the read follow it.
+        case hiddenSharersChanged
         case sharedItemTapped(String)
         case membersUpdated([User])
         case loadFailed(AppError)
@@ -542,7 +573,7 @@ public struct CalendarFeature: Sendable {
         public enum Alert: Equatable {}
     }
 
-    private enum CancelID: Hashable { case events, shared, members, undo }
+    private enum CancelID: Hashable { case events, shared, sharers, ownShare, members, undo }
 
     /// How long a delete stays undoable. The same window the ledger and the
     /// shopping list use, so the gesture means one thing app-wide.
@@ -585,7 +616,27 @@ public struct CalendarFeature: Sendable {
                 } catch: { _, _ in }
                 return .merge(
                     ahead,
-                    subscribe(state.homeID, state.month, state.mode),
+                    subscribe(state.homeID, state.month, state.mode, shared: state.wantsShared),
+                    // Who shares, so the read of their items can be skipped when
+                    // nobody left to show does.
+                    .run { send in
+                        await Backoff.retrying(clock: clock) { delivered in
+                            for try await rows in calendarShare.housemates(homeID) {
+                                delivered()
+                                await send(.sharersUpdated(rows))
+                            }
+                        }
+                    }
+                    .cancellable(id: CancelID.sharers, cancelInFlight: true),
+                    .run { send in
+                        await Backoff.retrying(clock: clock) { delivered in
+                            for try await row in calendarShare.mine(homeID) {
+                                delivered()
+                                await send(.ownShareUpdated(!(row?.calendars.isEmpty ?? true)))
+                            }
+                        }
+                    }
+                    .cancellable(id: CancelID.ownShare, cancelInFlight: true),
                     .run { send in
                         for try await members in homes.members(homeID) {
                             await send(.membersUpdated(members))
@@ -637,6 +688,21 @@ public struct CalendarFeature: Sendable {
                 state.$showShared.withLock { $0.toggle() }
                 reindex(&state)
                 return .none
+
+            case let .sharersUpdated(rows):
+                let ids = Set(rows.map(\.userID))
+                guard ids != state.sharers else { return .none }
+                state.sharers = ids
+                return refreshShared(&state)
+
+            case let .ownShareUpdated(isSharing):
+                guard isSharing != state.sharesOwn else { return .none }
+                state.sharesOwn = isSharing
+                return refreshShared(&state)
+
+            case .hiddenSharersChanged:
+                reindex(&state)
+                return refreshShared(&state)
 
             case let .sharedItemTapped(id):
                 guard let item = state.shared[id: id] else { return .none }
@@ -708,7 +774,8 @@ public struct CalendarFeature: Sendable {
                     return .none
                 }
                 state.isLoading = true
-                return subscribe(state.homeID, state.month, mode)
+                state.isFetchingShared = state.wantsShared
+                return subscribe(state.homeID, state.month, mode, shared: state.isFetchingShared)
 
             case let .monthStepped(by: step):
                 return move(&state, to: state.month.advanced(by: step))
@@ -954,6 +1021,20 @@ public struct CalendarFeature: Sendable {
                 reindex(&state)
                 return .none
 
+            // "Hide this person's calendar": the same choice as the switch in
+            // Settings, so one place undoes it. The sheet says so and closes
+            // itself.
+            case let .destination(.presented(.sharedItem(.delegate(.hideSharer(userID))))):
+                guard userID != state.currentUserID else { return .none }
+                let homeID = state.homeID
+                state.$hiddenSharersRaw.withLock { raw in
+                    var hidden = CalendarLists.users(raw, home: homeID)
+                    if !hidden.contains(userID) { hidden.append(userID) }
+                    raw = CalendarLists.raw(users: hidden, home: homeID, in: raw)
+                }
+                reindex(&state)
+                return refreshShared(&state)
+
             case .destination(.presented(.sharedItem(.delegate(.finished)))):
                 state.destination = nil
                 return .none
@@ -1010,13 +1091,15 @@ public struct CalendarFeature: Sendable {
                 ? .today
                 : CalendarDay(year: month.year, month: month.month, day: 1)
         }()
-        return subscribe(state.homeID, month, state.mode)
+        state.isFetchingShared = state.wantsShared
+        return subscribe(state.homeID, month, state.mode, shared: state.isFetchingShared)
     }
 
     private func subscribe(
         _ homeID: HomeID,
         _ month: CalendarMonth,
-        _ mode: State.Mode
+        _ mode: State.Mode,
+        shared: Bool
     ) -> Effect<Action> {
         let window = State.window(for: month, mode: mode)
         let windowID = "\(mode.rawValue)-\(month.id)"
@@ -1030,19 +1113,44 @@ public struct CalendarFeature: Sendable {
             }
             .cancellable(id: CancelID.events, cancelInFlight: true),
 
-            // Housemates' own calendars for the same window. Open to every
-            // house, and never an error worth a screen: the house's events are
-            // the calendar, these are a bonus.
-            .run { send in
-                await Backoff.retrying(clock: clock) { delivered in
-                    for try await items in calendarShare.inRange(homeID, window.from, window.to, true) {
-                        delivered()
-                        await send(.sharedUpdated(windowID, items))
-                    }
+            shared
+                ? sharedFeed(homeID, window, windowID)
+                : .cancel(id: CancelID.shared)
+        )
+    }
+
+    /// Housemates' own calendars for the same window. Open to every house, and
+    /// never an error worth a screen: the house's events are the calendar,
+    /// these are a bonus.
+    private func sharedFeed(
+        _ homeID: HomeID,
+        _ window: (from: Date, to: Date),
+        _ windowID: String
+    ) -> Effect<Action> {
+        .run { send in
+            await Backoff.retrying(clock: clock) { delivered in
+                for try await items in calendarShare.inRange(homeID, window.from, window.to, true) {
+                    delivered()
+                    await send(.sharedUpdated(windowID, items))
                 }
             }
-            .cancellable(id: CancelID.shared, cancelInFlight: true)
-        )
+        }
+        .cancellable(id: CancelID.shared, cancelInFlight: true)
+    }
+
+    /// Starts or stops the read of shared items when whether anybody is left to
+    /// show has changed. Stopping empties the rows, so a person turned back on
+    /// is not drawn from a stale window.
+    private func refreshShared(_ state: inout State) -> Effect<Action> {
+        let wants = state.wantsShared
+        guard wants != state.isFetchingShared else { return .none }
+        state.isFetchingShared = wants
+        if wants {
+            return sharedFeed(state.homeID, State.window(for: state.month, mode: state.mode), state.windowID)
+        }
+        state.shared = []
+        reindex(&state)
+        return .cancel(id: CancelID.shared)
     }
 
     /// The viewer first, then everybody else by name.
@@ -1115,7 +1223,11 @@ public struct CalendarFeature: Sendable {
         // answer owed, a plan).
         var sharedIndex: [CalendarDay: [String]] = [:]
         if state.showShared, kind == nil, !needsAnswer, !withPlan {
+            let hidden = state.hiddenSharers
+            let me = state.currentUserID
             for item in state.shared {
+                // Own items are never hidden: the choice is about housemates.
+                if item.userID != me, hidden.contains(item.userID) { continue }
                 if !people.isEmpty, !people.contains(item.userID) { continue }
                 if !needle.isEmpty {
                     let matches = (item.shownTitle?.localizedCaseInsensitiveContains(needle) ?? false)

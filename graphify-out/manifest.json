@@ -175,18 +175,18 @@
     "semantic_hash": ""
   },
   "NestZone/App/AppFeature.swift": {
-    "mtime": 1795796738.0420735,
-    "ast_hash": "fa299b73fa18874d4b805475ceefe754",
+    "mtime": 1795804527.543451,
+    "ast_hash": "021648218ec5b138ef2ee75c59a5f38d",
     "semantic_hash": ""
   },
   "NestZone/App/AppView.swift": {
-    "mtime": 1795455739.7340975,
-    "ast_hash": "31c0fdda208d5d51fe434e440e13d1a9",
+    "mtime": 1795804527.543887,
+    "ast_hash": "6a13edffecf7fce1af865b36df4ef081",
     "semantic_hash": ""
   },
   "NestZone/App/MainFeature.swift": {
-    "mtime": 1795799335.8870828,
-    "ast_hash": "2c43d73295a1c9fed6f4603115ebabaf",
+    "mtime": 1795804527.5444367,
+    "ast_hash": "befeb3ba00f00a3f960d9b7e1b8b2f9f",
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/AppLanguage.swift": {
@@ -195,8 +195,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Localization/L10n.swift": {
-    "mtime": 1795799335.8883643,
-    "ast_hash": "d67b60d57f71f84867d6b5a804e7dc0a",
+    "mtime": 1795804527.5461087,
+    "ast_hash": "625382090029dbe5038df2ae7250e6f9",
     "semantic_hash": ""
   },
   "NestZone/Core/Models/AppError.swift": {
@@ -260,8 +260,8 @@
     "semantic_hash": ""
   },
   "NestZone/Core/Models/User.swift": {
-    "mtime": 1793022428.15311,
-    "ast_hash": "5d8dfe574a07f9f39da0c02d38b6027f",
+    "mtime": 1795804527.546461,
+    "ast_hash": "1d080f0c21d4318b0897a5d95f5193c7",
     "semantic_hash": ""
   },
   "NestZone/Core/Network/Clients/AuthClient.swift": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "NestZone/Design/Components/GlassTextField.swift": {
-    "mtime": 1795448052.1813858,
-    "ast_hash": "5dec4c7fefd4f52698977c8bea0d44f7",
+    "mtime": 1795804527.546748,
+    "ast_hash": "a4d533ef39a82107b382f6f9917a50f9",
     "semantic_hash": ""
   },
   "NestZone/Design/Components/LoadingView.swift": {
@@ -435,13 +435,13 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeFeature.swift": {
-    "mtime": 1795796738.0488052,
-    "ast_hash": "0f814ebfbafa2700c3629a11aa62b720",
+    "mtime": 1795804527.5477078,
+    "ast_hash": "0846a9b0280bb311c2c2820c9f93b117",
     "semantic_hash": ""
   },
   "NestZone/Features/Home/HomeView.swift": {
-    "mtime": 1795796738.0490491,
-    "ast_hash": "4015bbe69a73a1bfafe5fd0d5a8a2653",
+    "mtime": 1795804527.5482192,
+    "ast_hash": "1f3b80b5fa0a98b95dd98fe3b78b86e4",
     "semantic_hash": ""
   },
   "NestZone/Features/HomeManagement/CreateHomeFeature.swift": {
@@ -535,8 +535,8 @@
     "semantic_hash": ""
   },
   "NestZone/Features/Settings/SettingsView.swift": {
-    "mtime": 1795448052.2237747,
-    "ast_hash": "5682144628fdd3af3604d51d00d751c5",
+    "mtime": 1795804527.549393,
+    "ast_hash": "c4ef6eed9993177166a87ae517a937dc",
     "semantic_hash": ""
   },
   "NestZone/Features/Tasks/TasksFeature.swift": {
@@ -1080,8 +1080,8 @@
     "semantic_hash": ""
   },
   "backend/changelog.json": {
-    "mtime": 1795799335.8948054,
-    "ast_hash": "3bc94c6dbf34b6dd2b9fde8e30f4c90c",
+    "mtime": 1795804527.5547342,
+    "ast_hash": "2b31ef6d21bbc69e515ac1e154f9f1f8",
     "semantic_hash": ""
   },
   "backend/convex/inbox.ts": {
@@ -7600,8 +7600,8 @@
     "semantic_hash": ""
   },
   "Docs/Launch/index.html": {
-    "mtime": 1795799342.807453,
-    "ast_hash": "a7e452003b53286ea85874e24b49948f",
+    "mtime": 1795804541.0898244,
+    "ast_hash": "df2b19937eec407375d5e36e1f39f2f5",
     "semantic_hash": ""
   },
   "Docs/index.html": {
@@ -9082,6 +9082,21 @@
   "NestZone/Features/Settings/CalendarListPage.swift": {
     "mtime": 1795799335.890852,
     "ast_hash": "cacb1953ff88749c5961b0d17bdf9b8a",
+    "semantic_hash": ""
+  },
+  "NestZone/Design/Components/NameReminder.swift": {
+    "mtime": 1795804527.5471952,
+    "ast_hash": "8fade4cf952d61be86dc5273b536b65e",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/NameAsk/NameAskFeature.swift": {
+    "mtime": 1795804527.5486536,
+    "ast_hash": "a8e36e1eeb4916d14df29fe5e27ba674",
+    "semantic_hash": ""
+  },
+  "NestZone/Features/NameAsk/NameAskView.swift": {
+    "mtime": 1795804527.548843,
+    "ast_hash": "3fdf75d1587e5ed7f498c647926ae819",
     "semantic_hash": ""
   }
 }

@@ -33,6 +33,11 @@ struct SharedItemSheet: View {
                 if !store.isMine {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
+                        Button { store.send(.hideTapped) } label: {
+                            Label { Text(L10n.calendarSharedHide(store.name)) } icon: {
+                                Image(systemName: "eye.slash")
+                            }
+                        }
                         Button(role: .destructive) { store.send(.reportTapped) } label: {
                             Label { Text(L10n.calendarSharedReport) } icon: {
                                 Image(systemName: "exclamationmark.bubble")

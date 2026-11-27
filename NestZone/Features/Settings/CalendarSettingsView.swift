@@ -14,12 +14,16 @@ struct CalendarSettingsView: View {
             } else {
                 shareSection
                 copySection
-                if !store.copyRows.isEmpty {
-                    housematesSection
-                }
-                if store.hasSomethingToSync {
-                    syncSection
-                }
+            }
+            if store.access == .granted, store.hasSomethingToSync {
+                syncSection
+            }
+            // Last, because the housemates arrive from the network after the
+            // page is up: a section that appears at the foot moves nothing.
+            // Seeing a housemate's plans in NestZone needs no calendar access,
+            // so this stands whether or not the phone has said yes.
+            if !store.copyRows.isEmpty {
+                housematesSection
             }
         }
         .scrollContentBackground(.hidden)
@@ -250,38 +254,73 @@ struct CalendarSettingsView: View {
         }
     }
 
-    /// Housemates who share a calendar with the house. Those who allow copies
-    /// get a switch; the rest are greyed with the reason.
+    /// Housemates who share a calendar with the house: whether their plans are
+    /// drawn in NestZone, and, where they allow copies, whether they are also
+    /// put in this phone's calendar. Hiding someone never takes back a copy
+    /// that was chosen; it only stops the copy being switched on.
     private var housematesSection: some View {
         Section {
             ForEach(store.copyRows, id: \.share.id) { row in
-                if row.share.allowCopy {
-                    Toggle(isOn: Binding(
-                        get: { store.state.isCopying(row.share.id) },
-                        set: { store.send(.housemateToggled(row.share.id, $0)) }
-                    )) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: row.name)
-                            Text(L10n.calendarCopyHousemateToggle)
-                                .font(.footnote)
-                                .foregroundStyle(.secondaryText)
-                        }
-                    }
-                    .proLocked(.calendar, placement: .inline)
-                } else {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: row.name)
-                        Text(L10n.calendarCopyHousemateNotAllowed(row.name))
-                            .font(.footnote)
-                    }
-                    .foregroundStyle(.secondaryText)
-                    .accessibilityElement(children: .combine)
-                }
+                housemateRows(row.share, name: row.name)
             }
         } header: {
             Text(L10n.calendarCopyHousematesHeader)
         } footer: {
-            Text(L10n.calendarCopyHousematesFooter)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.calendarHousematesShowFooter)
+                if store.copyRows.contains(where: \.share.allowCopy), store.access == .granted {
+                    Text(L10n.calendarCopyHousematesFooter)
+                }
+            }
+        }
+        .animation(Motion.fade, value: store.hiddenSharersRaw)
+    }
+
+    @ViewBuilder
+    private func housemateRows(_ share: HousemateShare, name: String) -> some View {
+        let isShown = store.state.isShown(share.id)
+        HStack(spacing: 12) {
+            Avatar(
+                initials: store.members.first { $0.id.rawValue == share.id }?.initials ?? User.initials(from: name),
+                seed: share.id,
+                size: 32,
+                viewable: false
+            )
+            Toggle(isOn: Binding(
+                get: { isShown },
+                set: { store.send(.housemateShownToggled(share.id, $0)) }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: name)
+                    Text(L10n.calendarHousemateShowToggle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondaryText)
+                }
+            }
+        }
+
+        if share.allowCopy {
+            let canCopy = isShown && store.access == .granted
+            Toggle(isOn: Binding(
+                get: { store.state.isCopying(share.id) },
+                set: { store.send(.housemateToggled(share.id, $0)) }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.calendarHousemateAlsoIPhone)
+                    if store.access != .granted {
+                        Text(L10n.calendarHousemateNeedsAccess)
+                            .font(.footnote)
+                            .foregroundStyle(.secondaryText)
+                    }
+                }
+            }
+            // A copy that is already on can always be turned off.
+            .disabled(!canCopy && !store.state.isCopying(share.id))
+            .proLocked(.calendar, placement: .inline)
+        } else {
+            Text(L10n.calendarCopyHousemateNotAllowed(name))
+                .font(.footnote)
+                .foregroundStyle(.secondaryText)
         }
     }
 }

@@ -31,6 +31,7 @@ public struct SharedItemDetailFeature: Sendable {
 
     public enum Action {
         case reportTapped
+        case hideTapped
         case report(PresentationAction<ReportFeature.Action>)
         case noticeExpired
         case delegate(Delegate)
@@ -39,6 +40,9 @@ public struct SharedItemDetailFeature: Sendable {
         public enum Delegate: Equatable {
             /// Reported: the calendar hides it from the screen behind.
             case reported(String)
+            /// "Hide this person's calendar": the calendar behind drops everything
+            /// of theirs and remembers the choice.
+            case hideSharer(UserID)
             /// The thanks has been said; close the sheet.
             case finished
         }
@@ -67,6 +71,20 @@ public struct SharedItemDetailFeature: Sendable {
                     .send(.delegate(.reported(state.item.id))),
                     .run { send in
                         try await clock.sleep(for: ReportNotice.linger)
+                        await send(.noticeExpired)
+                    }
+                    .cancellable(id: CancelID.notice, cancelInFlight: true)
+                )
+
+            case .hideTapped:
+                // Nothing to hide for your own item, and nothing a second tap
+                // could add to the first.
+                guard !state.isMine, state.notice == nil else { return .none }
+                state.notice = .hidden
+                return .merge(
+                    .send(.delegate(.hideSharer(state.item.userID))),
+                    .run { send in
+                        try await clock.sleep(for: .seconds(2))
                         await send(.noticeExpired)
                     }
                     .cancellable(id: CancelID.notice, cancelInFlight: true)
