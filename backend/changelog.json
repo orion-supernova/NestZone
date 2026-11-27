@@ -57,7 +57,7 @@
   "entries": [
     {
       "slug": "1.14.0-meetings",
-      "version": "1.14.0",
+      "version": "1.14.2",
       "kind": "feature",
       "title": "Meetings, with a Join button",
       "body": "Got a call? Add it as a Meeting, paste the Meet, Zoom or Teams link, and NestZone knows what it is. When it's about to start, Join is right there.",
