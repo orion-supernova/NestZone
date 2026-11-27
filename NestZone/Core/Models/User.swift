@@ -80,6 +80,24 @@ extension User {
     /// on a user's *first* authorization and most accounts therefore have none.
     public var displayName: String { Self.displayName(name: name, email: email) }
 
+    /// Apple sent no name and the person has not given one. Everyone else then
+    /// reads them as "Someone".
+    public var hasName: Bool {
+        guard let name else { return false }
+        return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// How a person's *own* screens name them. Without a name `displayName`
+    /// falls back to the email, which for Hide My Email is a random
+    /// `@privaterelay.appleid.com` handle: not something to call yourself.
+    public var ownDisplayName: String {
+        hasName ? displayName : String(localized: L10n.contributionsYou)
+    }
+
+    /// Initials for the person's own avatar: "?" while they have no name, not
+    /// the first letters of a relay handle.
+    public var ownInitials: String { hasName ? initials : "?" }
+
     /// Up to two letters for an avatar placeholder.
     public var initials: String { Self.initials(from: displayName) }
 

@@ -204,9 +204,9 @@ public struct SettingsView: View {
         Section {
             HStack(spacing: 14) {
                 AvatarPickerButton(
-                    initials: store.user?.initials ?? "?",
+                    initials: store.user?.ownInitials ?? "?",
                     seed: store.user?.id.rawValue ?? "",
-                    name: store.user?.displayName ?? "",
+                    name: store.user?.ownDisplayName ?? "",
                     photo: store.user?.avatarURL,
                     size: 52,
                     isBusy: store.isUpdatingAvatar,
@@ -217,12 +217,24 @@ public struct SettingsView: View {
                 Button { store.send(.editNameTapped) } label: {
                     HStack(spacing: 0) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(store.user?.displayName ?? "")
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text(L10n.settingsProfileCustomizeExperience)
-                                .font(.caption)
-                                .foregroundStyle(.secondaryText)
+                            if store.user.map({ !$0.hasName }) == true {
+                                // Not the email: for Hide My Email that is a
+                                // random relay handle.
+                                Text(L10n.nameReminderLine)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text(L10n.profileNameAdd)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.accentText)
+                            } else {
+                                Text(store.user?.displayName ?? "")
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                Text(L10n.settingsProfileCustomizeExperience)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondaryText)
+                            }
                         }
                         Spacer(minLength: 0)
                         Image(systemName: "pencil")
@@ -301,7 +313,7 @@ public struct SettingsView: View {
                                         seed: member.id.rawValue,
                                         size: 26
                                     )
-                                    Text(member.displayName)
+                                    Text(member.id == store.user?.id ? member.ownDisplayName : member.displayName)
                                         .font(.subheadline)
                                     Spacer(minLength: 0)
                                     // Not on your own row: leaving is Manage

@@ -2571,6 +2571,31 @@ public enum L10n {
         r("profile_name_add", "Add your name")
     }
 
+    /// What should your housemates call you?
+    public static var nameAskTitle: LocalizedStringResource {
+        r("name_ask_title", "What should your housemates call you?")
+    }
+
+    /// Your name
+    public static var nameAskField: LocalizedStringResource {
+        r("name_ask_field", "Your name")
+    }
+
+    /// Continue
+    public static var nameAskContinue: LocalizedStringResource {
+        r("name_ask_continue", "Continue")
+    }
+
+    /// Later
+    public static var nameAskLater: LocalizedStringResource {
+        r("name_ask_later", "Later")
+    }
+
+    /// Your housemates see you as “Someone”
+    public static var nameReminderLine: LocalizedStringResource {
+        r("name_reminder_line", "Your housemates see you as “Someone”")
+    }
+
     /// Save
     public static var commonSave: LocalizedStringResource {
         r("common_save", "Save")

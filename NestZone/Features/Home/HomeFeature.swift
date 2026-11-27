@@ -469,6 +469,8 @@ public struct HomeFeature: Sendable {
             case openIssue(IssueID)
             case openStats
             case openCustomize
+            /// Today's reminder for an account with no name.
+            case openEditName
             case openEvent(EventOccurrence)
             /// Opening an event the tab only knows the *id* of — the occasion
             /// a meal plan points at.
