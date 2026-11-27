@@ -102,7 +102,8 @@
         "Added a heads-up when someone says they're going, can't make it or might come to your plan",
         "Fixed your own shared calendar not showing up for you in NestZone's Calendar",
         "Improved syncing: your shared calendars stay up to date even when NestZone is closed",
-        "Fixed housemates seeing you as \"Someone\": if your name is missing, NestZone now asks for it"
+        "Fixed housemates seeing you as \"Someone\": if your name is missing, NestZone now asks for it",
+        "Added a way to hide a housemate's shared calendar from your NestZone, without them being told"
       ],
       "translations": [
         {
@@ -116,7 +117,8 @@
             "Planına biri geliyorum, gelemem ya da belki dediğinde haber geliyor",
             "Paylaştığın kendi takvimin artık NestZone Takvim'inde sana da görünüyor",
             "Paylaştığın takvimler NestZone kapalıyken de güncel kalıyor",
-            "Evdekiler seni \"Biri\" diye görüyorsa düzeldi: adın eksikse NestZone artık soruyor"
+            "Evdekiler seni \"Biri\" diye görüyorsa düzeldi: adın eksikse NestZone artık soruyor",
+            "Bir ev arkadaşının paylaştığı takvimi kendi NestZone'undan gizleyebiliyorsun, ona bir şey söylenmiyor"
           ]
         },
         {
@@ -130,7 +132,8 @@
             "Nytt: du får veta när någon säger att de kommer, inte kan eller kanske kommer till din plan",
             "Fixat: din egen delade kalender syns nu för dig också i NestZones kalender",
             "Dina delade kalendrar hålls nu uppdaterade även när NestZone är stängd",
-            "Fixat att de du bor med såg dig som \"Någon\": saknas ditt namn frågar NestZone nu efter det"
+            "Fixat att de du bor med såg dig som \"Någon\": saknas ditt namn frågar NestZone nu efter det",
+            "Nytt: du kan dölja kalendern som någon du bor med delar, utan att de får veta det"
           ]
         }
       ]

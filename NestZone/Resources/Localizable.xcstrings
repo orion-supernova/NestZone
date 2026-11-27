@@ -58642,6 +58642,150 @@
         }
       }
     },
+    "calendar_housemate_show_toggle": {
+      "comment": "Switch under a housemate's name: see their shared calendar in NestZone",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in NestZone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NestZone'da göster"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa i NestZone"
+          }
+        }
+      }
+    },
+    "calendar_housemate_also_iphone": {
+      "comment": "Switch under a housemate's name: copy into the iPhone calendar",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also in my iPhone Calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone Takvim'ime de ekle"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Även i min iPhone-kalender"
+          }
+        }
+      }
+    },
+    "calendar_housemate_needs_access": {
+      "comment": "Why the iPhone copy switch is off",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs calendar access"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvim erişimi gerekiyor"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kräver kalenderåtkomst"
+          }
+        }
+      }
+    },
+    "calendar_housemates_show_footer": {
+      "comment": "Footer of the housemates' calendars section",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What housemates share from their own calendars. Turn someone off and their plans stay out of your NestZone. They won't be told."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdekilerin kendi takvimlerinden paylaştıkları. Birini kapatırsan planları senin NestZone'unda görünmez. Ona bir şey söylenmez."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det de du bor med delar från sina egna kalendrar. Stäng av någon så syns deras planer inte i din NestZone. De får inte veta det."
+          }
+        }
+      }
+    },
+    "calendar_shared_hide": {
+      "comment": "Menu item on a shared item's sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide %@'s calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kişinin takvimini gizle"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dölj %@s kalender"
+          }
+        }
+      }
+    },
+    "calendar_shared_hidden_toast": {
+      "comment": "Toast after hiding a housemate's calendar",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden. Turn it back on in Calendar settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlendi. Takvim ayarlarından geri açabilirsin."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dold. Slå på igen i kalenderinställningarna."
+          }
+        }
+      }
+    },
     "calendar_shared_copy_calendar_name": {
       "comment": "Title of the calendar made for a housemate",
       "extractionState": "manual",

@@ -112,6 +112,9 @@ public struct CalendarView: View {
         }
         .animation(Motion.spring, value: store.pendingDeletion)
         .task { await store.send(.task).finish() }
+        // Settings changes whose calendars are drawn while this screen waits
+        // underneath it.
+        .onChange(of: store.hiddenSharersRaw) { store.send(.hiddenSharersChanged) }
         .stagedBuild(3)
         // A house without Plus: locked when there is nothing here, read-only
         // under a banner when there is.

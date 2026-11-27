@@ -23,6 +23,7 @@ public struct CalendarSettingsFeature: Sendable {
         @Shared(.calendarShareDefaultLevelRaw) public var shareDefaultLevelRaw: String
         @Shared(.calendarShareWeeks) public var shareWeeks: Int
         @Shared(.calendarCopyChoicesRaw) public var copyChoicesRaw: String
+        @Shared(.calendarHiddenSharersRaw) public var hiddenSharersRaw: String
         @Shared(.calendarCopyMode) public var mode: CalendarCopyMode
         @Shared(.calendarCopyLastMode) public var lastMode: CalendarCopyMode
         @Shared(.calendarCopyTargetsRaw) public var targetsRaw: String
@@ -87,6 +88,11 @@ public struct CalendarSettingsFeature: Sendable {
 
         public func name(of id: String) -> String? {
             members.first { $0.id.rawValue == id }?.displayName
+        }
+
+        /// Whether this housemate's shared calendar is drawn in NestZone.
+        public func isShown(_ id: String) -> Bool {
+            !CalendarLists.users(hiddenSharersRaw, home: homeID).contains { $0.rawValue == id }
         }
 
         public func isCopying(_ id: String) -> Bool {
@@ -162,6 +168,8 @@ public struct CalendarSettingsFeature: Sendable {
         case allowCopyToggled(Bool)
         case housematesUpdated([HousemateShare])
         case housemateToggled(String, Bool)
+        /// "Show in NestZone" for one housemate.
+        case housemateShownToggled(String, Bool)
         case housemateRemoved
         case copyToggled(Bool)
         case remindersToggled(Bool)
@@ -320,6 +328,16 @@ public struct CalendarSettingsFeature: Sendable {
                 return .none
 
             case .housemateRemoved:
+                return .none
+
+            case let .housemateShownToggled(id, isShown):
+                let homeID = state.homeID
+                state.$hiddenSharersRaw.withLock { raw in
+                    var hidden = CalendarLists.users(raw, home: homeID)
+                    hidden.removeAll { $0.rawValue == id }
+                    if !isShown { hidden.append(UserID(id)) }
+                    raw = CalendarLists.raw(users: hidden, home: homeID, in: raw)
+                }
                 return .none
 
             case let .shareRowUpdated(row):

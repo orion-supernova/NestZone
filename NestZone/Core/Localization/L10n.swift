@@ -11929,6 +11929,36 @@ extension L10n {
         r("calendar_copy_housemate_not_allowed", "\(a0) keeps theirs in NestZone only")
     }
 
+    /// Show in NestZone
+    public static var calendarHousemateShowToggle: LocalizedStringResource {
+        r("calendar_housemate_show_toggle", "Show in NestZone")
+    }
+
+    /// Also in my iPhone Calendar
+    public static var calendarHousemateAlsoIPhone: LocalizedStringResource {
+        r("calendar_housemate_also_iphone", "Also in my iPhone Calendar")
+    }
+
+    /// Needs calendar access
+    public static var calendarHousemateNeedsAccess: LocalizedStringResource {
+        r("calendar_housemate_needs_access", "Needs calendar access")
+    }
+
+    /// What housemates share from their own calendars. Turn someone off and their plans stay out of your NestZone. They won't be told.
+    public static var calendarHousematesShowFooter: LocalizedStringResource {
+        r("calendar_housemates_show_footer", "What housemates share from their own calendars. Turn someone off and their plans stay out of your NestZone. They won't be told.")
+    }
+
+    /// Hide %@'s calendar
+    public static func calendarSharedHide(_ a0: String) -> LocalizedStringResource {
+        r("calendar_shared_hide", "Hide \(a0)'s calendar")
+    }
+
+    /// Hidden. Turn it back on in Calendar settings.
+    public static var calendarSharedHiddenToast: LocalizedStringResource {
+        r("calendar_shared_hidden_toast", "Hidden. Turn it back on in Calendar settings.")
+    }
+
     /// NestZone · %@
     public static func calendarSharedCopyCalendarName(_ a0: String) -> LocalizedStringResource {
         r("calendar_shared_copy_calendar_name", "NestZone · \(a0)")
