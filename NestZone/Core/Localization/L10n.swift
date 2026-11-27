@@ -11412,6 +11412,26 @@ extension L10n {
         r("calendar_shared_busy_line", "\(a0) · busy")
     }
 
+    /// From your calendar
+    public static var calendarSharedMineTitle: LocalizedStringResource {
+        r("calendar_shared_mine_title", "From your calendar")
+    }
+
+    /// You're busy
+    public static var calendarSharedMineBusy: LocalizedStringResource {
+        r("calendar_shared_mine_busy", "You're busy")
+    }
+
+    /// The house sees this
+    public static var calendarSharedMineDetails: LocalizedStringResource {
+        r("calendar_shared_mine_details", "The house sees this: the time, the title and the place.")
+    }
+
+    /// The house sees only that you're busy
+    public static var calendarSharedMineBusyOnly: LocalizedStringResource {
+        r("calendar_shared_mine_busy_only", "The house sees this as busy, nothing more.")
+    }
+
     /// %@ is busy
     public static func calendarSharedBusyIs(_ a0: String) -> LocalizedStringResource {
         r("calendar_shared_busy_is", "\(a0) is busy")

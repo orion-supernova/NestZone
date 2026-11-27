@@ -55907,6 +55907,102 @@
         }
       }
     },
+    "calendar_shared_mine_title": {
+      "comment": "Sheet title and subtitle of the signed-in person's own shared item",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From your calendar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi takviminden"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Från din kalender"
+          }
+        }
+      }
+    },
+    "calendar_shared_mine_busy": {
+      "comment": "Heading of your own busy-only shared item",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're busy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meşgulsün"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du är upptagen"
+          }
+        }
+      }
+    },
+    "calendar_shared_mine_details": {
+      "comment": "Footer of your own shared item at the details level",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The house sees this: the time, the title and the place."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdekiler bunu görüyor: saati, başlığı ve yeri."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hemmet ser det här: tiden, titeln och platsen."
+          }
+        }
+      }
+    },
+    "calendar_shared_mine_busy_only": {
+      "comment": "Footer of your own shared item at the busy level",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The house sees this as busy, nothing more."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdekiler sadece meşgul olduğunu görüyor, başka bir şey değil."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hemmet ser bara att du är upptagen, inget mer."
+          }
+        }
+      }
+    },
     "calendar_shared_busy_is": {
       "comment": "Title of a busy-only item's sheet",
       "extractionState": "manual",

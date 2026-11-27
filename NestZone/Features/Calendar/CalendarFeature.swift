@@ -620,7 +620,8 @@ public struct CalendarFeature: Sendable {
                 state.destination = .sharedItem(SharedItemDetailFeature.State(
                     item: item,
                     member: state.member(item.userID),
-                    name: state.name(for: item.userID)
+                    name: state.name(for: item.userID),
+                    isMine: item.userID == state.currentUserID
                 ))
                 return .none
 
@@ -818,11 +819,12 @@ public struct CalendarFeature: Sendable {
                 // only way back to "undecided".
                 let next: RSVPStatus? = occurrence.rsvp(of: userID) == status ? nil : status
 
+                let start = occurrence.start
                 state.rsvpInFlight.insert(eventID)
                 setRSVP(&state, series: eventID, user: userID, status: next)
 
                 return .run { send in
-                    try await events.rsvp(eventID, next)
+                    try await events.rsvp(eventID, next, start)
                 } catch: { error, send in
                     await send(.rsvpFailed(eventID, previous, AppError(error)))
                 }
@@ -1004,7 +1006,7 @@ public struct CalendarFeature: Sendable {
             // the calendar, these are a bonus.
             .run { send in
                 await Backoff.retrying(clock: clock) { delivered in
-                    for try await items in calendarShare.inRange(homeID, window.from, window.to) {
+                    for try await items in calendarShare.inRange(homeID, window.from, window.to, true) {
                         delivered()
                         await send(.sharedUpdated(windowID, items))
                     }

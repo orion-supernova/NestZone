@@ -451,18 +451,31 @@ export const stop = mutation({
 
 /**
  * Housemates' shared items overlapping [from, to), for the calendar's
- * screen: everyone's but the caller's, only current members', only calendars
+ * screen: everyone's but the caller's (unless `includeOwn`), only current
+ * members', only calendars
  * still in their owner's list, nothing of a person the caller blocked and
  * nothing the caller reported. Title and location only for a calendar its
  * owner shares at `details`. Up to 1000 rows and a 200-day window. Never
  * refuses for a free house.
  */
 export const inRange = query({
-  args: { homeId: v.id("homes"), from: v.number(), to: v.number() },
+  args: {
+    homeId: v.id("homes"),
+    from: v.number(),
+    to: v.number(),
+    /**
+     * Also the caller's own shared items, from their own live share row, same
+     * shape and level rules, `user_id` the caller. Added in 1.15. Absent or
+     * false: housemates' only, which is what every older build expects (it
+     * would draw the person's own items as a housemate's, with Report).
+     */
+    includeOwn: v.optional(v.boolean()),
+  },
   returns: v.array(sharedRow),
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const home = await requireHomeMember(ctx, args.homeId);
+    const includeOwn = args.includeOwn === true;
     if (!Number.isFinite(args.from) || !Number.isFinite(args.to) || args.from >= args.to) {
       return [];
     }
@@ -470,7 +483,7 @@ export const inRange = query({
     const to = Math.min(args.to, from + MAX_RANGE_MS);
 
     const members = new Set((home.members ?? []).filter((m) => m !== user._id));
-    if (members.size === 0) return [];
+    if (members.size === 0 && !includeOwn) return [];
 
     const [shares, blocked, hiddenRows] = await Promise.all([
       ctx.db
@@ -489,7 +502,9 @@ export const inRange = query({
 
     const out: (typeof sharedRow.type)[] = [];
     for (const share of shares) {
-      if (!members.has(share.user_id) || blocked.has(share.user_id)) continue;
+      // Your own items: never blocked or hidden by you, so neither check applies.
+      const own = includeOwn && share.user_id === user._id;
+      if (!own && (!members.has(share.user_id) || blocked.has(share.user_id))) continue;
       for (const calendar of share.calendars) {
         const room = IN_RANGE_CAP - out.length;
         if (room <= 0) return out;
@@ -507,7 +522,7 @@ export const inRange = query({
         const details = calendar.level === "details";
         for (const r of rows) {
           if (r.starts_at >= to) continue;
-          if (hidden.size > 0 && hidden.has(itemFingerprint(r))) continue;
+          if (!own && hidden.size > 0 && hidden.has(itemFingerprint(r))) continue;
           out.push({
             _id: r._id,
             user_id: r.user_id,

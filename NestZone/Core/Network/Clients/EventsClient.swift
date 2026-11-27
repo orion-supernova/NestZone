@@ -34,7 +34,9 @@ public struct EventsClient: Sendable {
     /// Deletes a series, or skips the occurrence starting at the given instant.
     public var remove: @Sendable (EventID, EventScope, Date?) async throws -> Void
     /// Says whether the signed-in user is coming. `nil` withdraws the answer.
-    public var rsvp: @Sendable (EventID, RSVPStatus?) async throws -> Void
+    /// `occurrenceStart` is the occurrence answered from, for the push's link to
+    /// the event; the server treats it as optional.
+    public var rsvp: @Sendable (EventID, RSVPStatus?, _ occurrenceStart: Date?) async throws -> Void
 
     // MARK: The plan
     //
@@ -269,10 +271,10 @@ extension EventsClient: DependencyKey {
             if let occurrenceStart { args["occurrenceStart"] = occurrenceStart.convexMillis }
             try await ConvexConnection.shared.mutate("events:remove", args: args)
         },
-        rsvp: { id, status in
-            try await ConvexConnection.shared.mutate(
-                "events:rsvp", args: ["id": id, "status": status?.rawValue]
-            )
+        rsvp: { id, status, occurrenceStart in
+            var args: [String: ConvexEncodable?] = ["id": id, "status": status?.rawValue]
+            if let occurrenceStart { args["occurrenceStart"] = occurrenceStart.convexMillis }
+            try await ConvexConnection.shared.mutate("events:rsvp", args: args)
         },
 
         plan: { id in

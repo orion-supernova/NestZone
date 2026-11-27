@@ -174,7 +174,7 @@ public struct SharedCopyFeature: Sendable {
         let to = from.addingTimeInterval(Self.horizon)
         return .run { send in
             await Backoff.retrying(clock: clock) { delivered in
-                for try await items in calendarShare.inRange(homeID, from, to) {
+                for try await items in calendarShare.inRange(homeID, from, to, false) {
                     delivered()
                     await send(.itemsUpdated(items, from: from))
                 }

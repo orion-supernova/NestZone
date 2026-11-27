@@ -13,8 +13,11 @@ public struct CalendarShareClient: Sendable {
     /// What this person shares in this house, live; `nil` before they ever have.
     public var mine: @Sendable (HomeID) -> AsyncThrowingStream<CalendarShareRow?, any Error> = { _ in .never }
     /// Housemates' shared items overlapping `[from, to]`, live, soonest first.
-    /// Other members only: a person's own shares are never in it.
-    public var inRange: @Sendable (HomeID, Date, Date) -> AsyncThrowingStream<[SharedBusyItem], any Error> = { _, _, _ in .never }
+    /// Other members only, unless `includeOwn`: then the caller's own shared
+    /// items come too (same shape, their own `userID`), so a person sees on
+    /// the calendar what the house sees of them. The copy engine never asks
+    /// for them: a person's own meetings are already in their own calendar.
+    public var inRange: @Sendable (HomeID, Date, Date, _ includeOwn: Bool) -> AsyncThrowingStream<[SharedBusyItem], any Error> = { _, _, _, _ in .never }
     /// Replaces the whole list of calendars shared in this house. An empty list
     /// stops sharing, and is never refused.
     /// `allowCopy` is whether housemates may copy them into their own
@@ -41,10 +44,14 @@ extension CalendarShareClient: DependencyKey {
                 as: CalendarShareRow?.self
             )
         },
-        inRange: { homeID, from, to in
-            ConvexConnection.shared.subscribe(
+        inRange: { homeID, from, to, includeOwn in
+            var args: [String: ConvexEncodable?] = ["homeId": homeID, "from": from.convexMillis, "to": to.convexMillis]
+            // Sent only when asked for: a backend that predates the argument
+            // would reject it, and the copy engine never wants it.
+            if includeOwn { args["includeOwn"] = true }
+            return ConvexConnection.shared.subscribe(
                 to: "calendarShare:inRange",
-                args: ["homeId": homeID, "from": from.convexMillis, "to": to.convexMillis],
+                args: args,
                 as: [SharedBusyItem].self
             )
         },

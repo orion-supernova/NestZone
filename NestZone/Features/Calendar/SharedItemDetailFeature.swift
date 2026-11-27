@@ -15,13 +15,17 @@ public struct SharedItemDetailFeature: Sendable {
         /// Whose it is, for the face; `nil` for somebody who has since left.
         public var member: User?
         public var name: String
+        /// The signed-in person's own item: it says so, and there is nothing to
+        /// report (nobody reports themselves).
+        public var isMine: Bool
         @Presents public var report: ReportFeature.State?
         public var notice: ReportNotice?
 
-        public init(item: SharedBusyItem, member: User?, name: String) {
+        public init(item: SharedBusyItem, member: User?, name: String, isMine: Bool = false) {
             self.item = item
             self.member = member
             self.name = name
+            self.isMine = isMine
         }
     }
 
