@@ -15,13 +15,15 @@ struct CalendarSettingsView: View {
                 shareSection
                 copySection
             }
+            if store.access == .granted, store.hasSomethingToSync {
+                syncSection
+            }
+            // Last, because the housemates arrive from the network after the
+            // page is up: a section that appears at the foot moves nothing.
             // Seeing a housemate's plans in NestZone needs no calendar access,
             // so this stands whether or not the phone has said yes.
             if !store.copyRows.isEmpty {
                 housematesSection
-            }
-            if store.access == .granted, store.hasSomethingToSync {
-                syncSection
             }
         }
         .scrollContentBackground(.hidden)

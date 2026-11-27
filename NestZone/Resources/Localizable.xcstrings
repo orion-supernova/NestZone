@@ -55014,6 +55014,54 @@
         }
       }
     },
+    "calendar_row_on": {
+      "comment": "Settings Calendar row value: sharing and/or copying is on",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På"
+          }
+        }
+      }
+    },
+    "calendar_row_sharing": {
+      "comment": "Settings Calendar row value: only sharing my calendars is on",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sharing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paylaşılıyor"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delas"
+          }
+        }
+      }
+    },
     "calendar_copy_off": {
       "comment": "Copy house events to my calendars: off",
       "extractionState": "manual",

@@ -80,6 +80,10 @@ public struct CalendarSettingsFeature: Sendable {
         public init(homeID: HomeID, members: [User] = []) {
             self.homeID = homeID
             self.members = members
+            // Where access stands is a synchronous answer, so the first frame
+            // of the push is already the right page and not the access card.
+            @Dependency(\.deviceCalendar) var deviceCalendar
+            access = deviceCalendar.access()
         }
 
         /// "Housemates can add my calendar to theirs": this phone's answer, or
@@ -121,6 +125,12 @@ public struct CalendarSettingsFeature: Sendable {
         /// How many of the phone's calendars are shared, and how many could be.
         public var sharedCalendarCount: (shared: Int, total: Int) {
             let house = shareChoices.house(homeID)
+            // Until the phone's calendars have been read, this phone's own
+            // record answers, so the row's value fills in place and does not
+            // start at 0/0.
+            if shareGroups.isEmpty {
+                return (house.levels.values.filter(\.isShared).count, max(house.known.count, house.levels.count))
+            }
             let all = shareGroups.flatMap(\.calendars)
             return (all.filter { house.level(of: $0.key).isShared }.count, all.count)
         }

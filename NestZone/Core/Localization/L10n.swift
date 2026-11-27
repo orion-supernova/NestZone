@@ -11227,6 +11227,16 @@ extension L10n {
         r("calendar_filter_me", "Me")
     }
 
+    /// On
+    public static var calendarRowOn: LocalizedStringResource {
+        r("calendar_row_on", "On")
+    }
+
+    /// Sharing
+    public static var calendarRowSharing: LocalizedStringResource {
+        r("calendar_row_sharing", "Sharing")
+    }
+
     /// Off
     public static var calendarCopyOff: LocalizedStringResource {
         r("calendar_copy_off", "Off")

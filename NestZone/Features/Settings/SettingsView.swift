@@ -563,7 +563,7 @@ public struct SettingsView: View {
                 CalendarSettingsView(store: calendar)
             } label: {
                 LabeledContent {
-                    Text(store.calendarCopyMode.title).foregroundStyle(.secondaryText)
+                    Text(store.calendarRowValue).foregroundStyle(.secondaryText)
                 } label: {
                     Label { Text(L10n.calendarSettingsTitle) } icon: {
                         Image(systemName: "calendar")

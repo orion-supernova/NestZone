@@ -132,11 +132,26 @@ public struct SettingsFeature: Sendable {
         @Shared(.includeAdultTitles) public var includeAdultTitles: Bool
         /// For the Calendar row's detail line.
         @Shared(.calendarCopyMode) public var calendarCopyMode: CalendarCopyMode
+        /// Whether this house is shared from this phone, for the same row.
+        @Shared(.calendarShareChoicesRaw) public var calendarShareChoicesRaw: String
         /// Who this person has blocked, for the Privacy row's count.
         @Shared(.blockedPeople) public var blocked: [BlockedPerson]
 
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
+
+        /// The Calendar row's value: both directions in one word. Sharing is per
+        /// house, so it reads this house's switch.
+        public var calendarRowValue: LocalizedStringResource {
+            let sharing = CalendarShareChoices.decode(calendarShareChoicesRaw).house(homeID).isOn
+            let copying = calendarCopyMode != .off
+            switch (sharing, copying) {
+            case (false, false): return L10n.calendarCopyOff
+            case (true, false): return L10n.calendarRowSharing
+            case (false, true): return calendarCopyMode.title
+            case (true, true): return L10n.calendarRowOn
+            }
+        }
 
         public init(homeID: HomeID, home: Home? = nil, user: User? = nil) {
             self.homeID = homeID
