@@ -67,6 +67,10 @@ public struct InboxFeature: Sendable {
         public var pinnedUpdates: [AppUpdate] = []
         public var updateGroups: [UpdateGroup] = []
         public var isLoadingUpdates = true
+        /// The open tab's feed has had no answer for a while. The skeleton gives
+        /// way to an offer to try again, so a dead connection is never a screen
+        /// that looks like it is about to load.
+        public var feedStalled = false
 
         // MARK: Read state
 
@@ -175,6 +179,9 @@ public struct InboxFeature: Sendable {
         case bellTapped
         case closeTapped
         case tabSelected(State.Tab)
+        /// The feed has been loading too long; see `State.feedStalled`.
+        case feedStalled
+        case retryTapped
 
         /// Opens the feed for whichever tab is showing. Sent by the sheet's own
         /// `.task`, so the subscriptions exist only while the panel does.
@@ -222,9 +229,11 @@ public struct InboxFeature: Sendable {
         case feed
         case categories
         case moderator
+        case stall
     }
 
     @Dependency(\.inbox) var inbox
+    @Dependency(\.continuousClock) var clock
     @Dependency(\.moderation) var moderation
 
     public init() {}
@@ -302,14 +311,17 @@ public struct InboxFeature: Sendable {
 
             case .closeTapped:
                 state.isOpen = false
+                state.feedStalled = false
                 return .merge(
                     .cancel(id: CancelID.feed),
-                    .cancel(id: CancelID.categories)
+                    .cancel(id: CancelID.categories),
+                    .cancel(id: CancelID.stall)
                 )
 
             case let .tabSelected(tab):
                 guard tab != state.tab else { return .none }
                 state.tab = tab
+                state.feedStalled = false
                 return feedEffect(&state)
 
             // MARK: The feeds
@@ -317,11 +329,28 @@ public struct InboxFeature: Sendable {
             case .panelTask:
                 return feedEffect(&state)
 
+            case .feedStalled:
+                switch state.tab {
+                case .activity where state.isLoadingActivity: state.feedStalled = true
+                case .updates where state.isLoadingUpdates: state.feedStalled = true
+                default: break
+                }
+                return .none
+
+            case .retryTapped:
+                state.feedStalled = false
+                switch state.tab {
+                case .activity: state.isLoadingActivity = state.activity.isEmpty
+                case .updates: state.isLoadingUpdates = state.updates.isEmpty
+                }
+                return feedEffect(&state)
+
             case var .activityUpdated(page):
                 #if DEBUG
                 page.rows = InboxRunsDemo.adding(to: page.rows)
                 #endif
                 state.isLoadingActivity = false
+                state.feedStalled = false
                 state.retentionDays = page.retentionDays
 
                 // The live subscription owns the *newest* page only. Pages
@@ -355,6 +384,7 @@ public struct InboxFeature: Sendable {
 
             case let .updatesUpdated(updates):
                 state.isLoadingUpdates = false
+                state.feedStalled = false
                 state.updates = IdentifiedArray(uniqueElements: updates)
                 (state.pinnedUpdates, state.updateGroups) = UpdateGroup.shelve(updates)
                 return markUpdatesRead(&state)
@@ -499,10 +529,20 @@ public struct InboxFeature: Sendable {
     /// results server-side, so coming back to a tab is a re-subscribe and not a
     /// recomputation.
     private func feedEffect(_ state: inout State) -> Effect<Action> {
+        // One watch over whichever feed is opening: if nothing has arrived in
+        // twelve seconds the skeleton becomes an offer to try again, while the
+        // subscription itself keeps trying underneath.
+        let stall: Effect<Action> = .run { send in
+            try await clock.sleep(for: .seconds(12))
+            await send(.feedStalled)
+        }
+        .cancellable(id: CancelID.stall, cancelInFlight: true)
+
         switch state.tab {
         case .activity:
             state.isLoadingActivity = state.activity.isEmpty
             return .merge(
+                stall,
                 .run { [homeID = state.homeID, category = state.category] send in
                     for try await page in inbox.activity(homeID, category) {
                         await send(.activityUpdated(page))
@@ -531,6 +571,7 @@ public struct InboxFeature: Sendable {
         case .updates:
             state.isLoadingUpdates = state.updates.isEmpty
             return .merge(
+                stall,
                 .cancel(id: CancelID.categories),
                 .run { send in
                     for try await updates in inbox.updates() {

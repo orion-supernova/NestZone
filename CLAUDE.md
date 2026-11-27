@@ -192,6 +192,34 @@ each tab on the segment you name, to measure a first build of any of them.
   (`LaunchWarmup`).
   `-optimisticLaunch 0` (Debug, MEASURE) launches the old way. See
   `Docs/Companion/HANDOFF.md`, step 0b.
+- **The connection heals itself** (`ConnectionSupervisor`, `Deadline`; log
+  category `Reconnect`). The SDK's Rust client reconnects its own socket, which
+  is not enough: after a long background the socket is half-open, the JWT has
+  expired, and the refresh exchange goes over a second socket (the auth
+  provider's `actionClient`) that went stale in the same nap, so reads sat for
+  ever (the bell's skeleton). So `ConvexConnection.client` is *not stored*: the
+  supervisor owns it and replaces it with a fresh `ConvexClientWithAuth` that
+  has already done `loginFromCache`; only a client that authenticated is
+  swapped in, a failed attempt changes nothing and is retried with backoff
+  (2 s doubling to 60 s, jittered, never twice in 2 s, one at a time). Every
+  live `subscribe` is told (`observe`) and re-opens the same query on the new
+  client with no attempt spent and its `last` kept, so features' effects are
+  untouched and the dedupe holds. Triggers: back from more than 20 s in the
+  background, the network path returning or changing interface (1 s later), the
+  socket "connecting" for 15 s while the path is up, a read with no first answer
+  in 12 s (`noteStall`). Never while inactive, signed out, restoring, or
+  without a stored session; never signs anybody out. Auth state is the
+  supervisor's forwarded `authState`, not a client's. Deadlines, all through
+  `Deadline.run` (an unstructured race, because the Rust futures ignore
+  cancellation and a task group would wait for them): `first` 15 s (throws, so
+  the screen can offer a retry), mutation 30 s and action 60 s (`.offline`, so
+  the rollback runs), the refresh exchange 8 s (under the library's 10 s
+  refresh-token reuse window; a late answer still stores its rotated token and
+  the action socket is replaced). A write waits for a replacement in progress
+  (up to 8 s) so it is not sent down a client about to be dropped. A new
+  subscription path goes through `subscribe`; a screen that shows a skeleton
+  while it waits shows an offer to try again after a while (Inbox's
+  `feedStalled`).
 - **A tap switches tab or opens a screen in place — never both.** A whole
   module goes to its tab, switched to its segment and popped to root. A
   specific thing (an event, a problem, the chore split) is opened on the stack

@@ -44,7 +44,19 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
 
     /// Plain unauthenticated client, used only to invoke the public `auth:*`
     /// actions. The id token itself is owned by the `ConvexClientWithAuth`.
-    private let actionClient: ConvexClient
+    ///
+    /// Replaceable (`resetTransport`): it has a websocket of its own, which
+    /// goes stale in the same background nap as the main one, and an exchange
+    /// sent down a dead socket never answers.
+    private var _actionClient: ConvexClient
+    private let deploymentUrl: String
+    private var actionClient: ConvexClient { lock.withLock { _actionClient } }
+
+    /// How long a refresh-token exchange may take before the socket it went
+    /// down is given up on. Under the library's 10 s window for presenting a
+    /// just-used refresh token again (CLAUDE.md), so that an exchange which
+    /// reached the server but whose answer was lost can be repeated.
+    private static let exchangeLimit: Duration = .seconds(8)
     private let tokenStore: KeychainTokenStore
 
     /// Serialises refresh-token exchanges.
@@ -57,7 +69,8 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
     private let refreshGate = AsyncSemaphore()
 
     public init(deploymentUrl: String) {
-        actionClient = ConvexClient(deploymentUrl: deploymentUrl)
+        self.deploymentUrl = deploymentUrl
+        _actionClient = ConvexClient(deploymentUrl: deploymentUrl)
         tokenStore = KeychainTokenStore()
     }
 
@@ -107,11 +120,10 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
 
         let result: SignInActionResult
         do {
-            result = try await actionClient.action(
-                "auth:signIn",
-                with: ["refreshToken": refresh]
-            )
+            result = try await exchange(refresh)
         } catch {
+            // An exchange that hung is on a socket that is not coming back.
+            if error is DeadlineExpired { resetTransport() }
             await refreshGate.signal()
             // Could not complete the exchange. The token may or may not have
             // been consumed server-side, but discarding it here guarantees a
@@ -129,6 +141,36 @@ public final class ConvexAppleAuthProvider: AuthProvider, @unchecked Sendable {
             await refreshGate.signal()
             throw error
         }
+    }
+
+    /// One refresh-token exchange, bounded in time.
+    ///
+    /// If it answers after the deadline, the new refresh token is stored all
+    /// the same, when the one it replaced is still the stored one: the server
+    /// rotated it when it answered, and a token nobody wrote down is a session
+    /// lost for nothing. The JWT in that late answer is dropped; the next
+    /// exchange makes another.
+    private func exchange(_ refresh: String) async throws -> SignInActionResult {
+        let client = actionClient
+        let box = ClientBox(client)
+        let store = tokenStore
+        return try await Deadline.run(Self.exchangeLimit) {
+            let result: SignInActionResult = try await box.client.action(
+                "auth:signIn",
+                with: ["refreshToken": refresh]
+            )
+            if let tokens = result.tokens, case let .present(stored) = store.lookup(), stored == refresh {
+                store.refreshToken = tokens.refreshToken
+            }
+            return result
+        }
+    }
+
+    /// Gives the exchanges a new socket. Called when the app comes back from a
+    /// long absence, and when an exchange has not answered.
+    public func resetTransport() {
+        let fresh = ConvexClient(deploymentUrl: deploymentUrl)
+        lock.withLock { _actionClient = fresh }
     }
 
     /// Whether a silent restore is even worth attempting.
@@ -185,7 +227,14 @@ public struct ConvexAuthTokens: Decodable, Sendable {
     public let refreshToken: String
 }
 
-private struct SignInActionResult: Decodable {
+/// `ConvexClient` carries no `Sendable` conformance; it is a thin wrapper over
+/// a client built for concurrent use.
+private final class ClientBox: @unchecked Sendable {
+    let client: ConvexClient
+    init(_ client: ConvexClient) { self.client = client }
+}
+
+private struct SignInActionResult: Decodable, Sendable {
     let tokens: ConvexAuthTokens?
 }
 

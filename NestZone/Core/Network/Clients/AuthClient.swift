@@ -84,7 +84,7 @@ extension AuthClient: DependencyKey {
             authState: {
                 AsyncStream { continuation in
                     let box = CancellableBoxPublic()
-                    box.cancellable = connection.client.authState.sink { state in
+                    box.cancellable = connection.authState.sink { state in
                         let status: AuthStatus = switch state {
                         case .authenticated: .authenticated
                         case .unauthenticated: .unauthenticated

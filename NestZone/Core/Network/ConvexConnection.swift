@@ -32,9 +32,19 @@ public final class ConvexConnection: @unchecked Sendable {
     /// Reads and writes wait here while an optimistic launch restores the
     /// session in the background. Open on every other launch. See `AuthGate`.
     let gate = AuthGate()
-    let client: ConvexClientWithAuth<ConvexAuthTokens>
+    /// Owns the client and replaces it when the connection has gone bad. See
+    /// `ConnectionSupervisor`.
+    private let supervisor: ConnectionSupervisor
 
-    private let diagnostics = DiagnosticsBag()
+    /// The client in use right now. Not stored by callers: it is replaced after
+    /// a long background or a network change, and a held reference would be to
+    /// the old one.
+    var client: ConnectionSupervisor.Client { supervisor.client }
+
+    /// The session's state, across replacements of the client.
+    var authState: AnyPublisher<AuthState<ConvexAuthTokens>, Never> {
+        supervisor.authState.eraseToAnyPublisher()
+    }
 
     /// Whether the websocket is up, as the SDK last reported it.
     ///
@@ -49,25 +59,21 @@ public final class ConvexConnection: @unchecked Sendable {
     private init() {
         let provider = ConvexAppleAuthProvider(deploymentUrl: Self.deploymentURL)
         authProvider = provider
-        client = ConvexClientWithAuth(deploymentUrl: Self.deploymentURL, authProvider: provider)
-
-        // Always watched, not just in debug. This used to live in a
-        // `startDiagnostics()` that nothing ever called, so the one signal that
-        // says whether the phone can reach the backend was both compiled out of
-        // release builds and unreachable in debug ones.
-        //
-        // It is what tells a dropped connection apart from a broken server —
-        // see `mapped`.
+        // The websocket's state is always watched, not just in debug: it is
+        // what tells a dropped connection apart from a broken server (see
+        // `mapped`).
         let link = Self.link
-        diagnostics.store(
-            client.watchWebSocketState().sink { state in
-                let connected = if case .connected = state { true } else { false }
+        supervisor = ConnectionSupervisor(
+            provider: provider,
+            deploymentURL: Self.deploymentURL,
+            onConnectionChange: { connected in
                 link.isConnected = connected
                 #if DEBUG
-                Self.log.debug("websocket: \(String(describing: state), privacy: .public)")
+                Self.log.debug("websocket: \(connected ? "connected" : "connecting", privacy: .public)")
                 #endif
             }
         )
+        supervisor.start { [gate] in gate.current == .open }
     }
 
     // MARK: - Reads
@@ -82,6 +88,21 @@ public final class ConvexConnection: @unchecked Sendable {
     /// slow poll rather than giving up.
     private static let firstOfflineWait: Duration = .milliseconds(500)
     private static let maxOfflineWait: Duration = .seconds(30)
+
+    /// How long a read may go without its first answer before the connection
+    /// is suspected rather than the query. A cold query on a busy server is a
+    /// second or two; this is several times that.
+    static let stallLimit: Duration = .seconds(12)
+
+    /// How long a one-shot read may take, end to end, before it fails so its
+    /// screen can say so and offer to try again.
+    static let firstLimit: Duration = .seconds(15)
+    /// A write that has been sent and not answered. Past this it fails
+    /// `.offline` and its owner puts the old value back; the live
+    /// subscription corrects the screen if it did land.
+    static let writeAnswerLimit: Duration = .seconds(30)
+    /// Actions reach third-party APIs and are allowed longer.
+    static let actionAnswerLimit: Duration = .seconds(60)
 
     /// A live query. The stream yields the current value immediately and again
     /// on every server-side *change*, and tears the subscription down when the
@@ -148,7 +169,18 @@ public final class ConvexConnection: @unchecked Sendable {
                             // an error here would raise an alert over it.
                             return continuation.finish()
                         }
+                        // If the first answer is slow, say so: the connection
+                        // may be dead without anything having failed, which is
+                        // how a screen sat on its skeleton for good.
+                        var watchdog: Task<Void, Never>? = Task { [supervisor = self.supervisor] in
+                            do { try await Task.sleep(for: Self.stallLimit) } catch { return }
+                            supervisor.noteStall(name)
+                        }
+                        defer { watchdog?.cancel() }
                         for try await value in self.attemptSubscription(to: name, args: boxed.args, as: T.self) {
+                            watchdog?.cancel()
+                            watchdog = nil
+                            self.supervisor.noteDelivery()
                             // A value proves the query is not broken, so a
                             // long-lived stream gets its full budget back after
                             // every recovery rather than spending it once.
@@ -161,6 +193,13 @@ public final class ConvexConnection: @unchecked Sendable {
                         // The publisher completed on its own. Nothing failed,
                         // so there is nothing to retry.
                         return continuation.finish()
+                    } catch is TransportReplaced {
+                        // The connection was swapped for a fresh one under
+                        // this read. Not a failure: ask the new one, at once,
+                        // for the same query. `last` is kept, so the replay is
+                        // not mistaken for news.
+                        Self.log.debug("\(name, privacy: .public) re-attached to a new connection")
+                        continue
                     } catch {
                         let mapped = AppError(error)
                         guard !Task.isCancelled, Self.isWorthRetrying(mapped) else {
@@ -251,6 +290,9 @@ public final class ConvexConnection: @unchecked Sendable {
             // `@Sendable` closure. The box hands ownership across that boundary;
             // it is only ever cancelled once, from whichever side finishes first.
             let box = CancellableBox()
+            // The client and the promise to be told when it is replaced, taken
+            // together (see `ConnectionSupervisor.observe`).
+            let (client, token) = supervisor.observe { continuation.finish(throwing: TransportReplaced()) }
             box.cancellable = client
                 .subscribe(to: name, with: args, yielding: T.self)
                 .removeDuplicates()
@@ -265,7 +307,10 @@ public final class ConvexConnection: @unchecked Sendable {
                     },
                     receiveValue: { continuation.yield($0) }
                 )
-            continuation.onTermination = { _ in box.cancel() }
+            continuation.onTermination = { [supervisor] _ in
+                supervisor.stopObserving(token)
+                box.cancel()
+            }
         }
     }
 
@@ -278,10 +323,21 @@ public final class ConvexConnection: @unchecked Sendable {
         args: [String: ConvexEncodable?]? = nil,
         as type: T.Type = T.self
     ) async throws -> T {
-        for try await value in subscribe(to: name, args: args, as: T.self) {
-            return value
+        let boxed = ArgumentBox(args)
+        do {
+            // Bounded: a one-shot read that nobody answers would otherwise
+            // wait for ever, because `subscribe` is built never to give up on a
+            // dead network.
+            return try await Deadline.run(Self.firstLimit) { [self] in
+                for try await value in subscribe(to: name, args: boxed.args, as: T.self) {
+                    return value
+                }
+                throw AppError.server("\(name) produced no value")
+            }
+        } catch is DeadlineExpired {
+            Self.log.error("\(name, privacy: .public) gave no answer in \(Self.firstLimit, privacy: .public)")
+            throw Self.link.isConnected ? AppError.server("\(name) timed out") : AppError.offline
         }
-        throw AppError.server("\(name) produced no value")
     }
 
     // MARK: - Writes
@@ -305,8 +361,11 @@ public final class ConvexConnection: @unchecked Sendable {
         presentsPaywall: Bool = true
     ) async throws {
         try await awaitSession(for: name)
+        let boxed = ArgumentBox(args)
         do {
-            let _: Discarded? = try await client.mutation(name, with: args)
+            let _: Discarded? = try await Deadline.run(Self.writeAnswerLimit) { [self] in
+                try await client.mutation(name, with: boxed.args)
+            }
         } catch {
             throw Self.mapped(error, at: name, presentsPaywall: presentsPaywall)
         }
@@ -320,8 +379,11 @@ public final class ConvexConnection: @unchecked Sendable {
         presentsPaywall: Bool = true
     ) async throws -> T {
         try await awaitSession(for: name)
+        let boxed = ArgumentBox(args)
         do {
-            return try await client.mutation(name, with: args)
+            return try await Deadline.run(Self.writeAnswerLimit) { [self] in
+                try await client.mutation(name, with: boxed.args)
+            }
         } catch {
             throw Self.mapped(error, at: name, presentsPaywall: presentsPaywall)
         }
@@ -335,8 +397,11 @@ public final class ConvexConnection: @unchecked Sendable {
         as type: T.Type = T.self
     ) async throws -> T {
         try await awaitSession(for: name)
+        let boxed = ArgumentBox(args)
         do {
-            return try await client.action(name, with: args)
+            return try await Deadline.run(Self.actionAnswerLimit) { [self] in
+                try await client.action(name, with: boxed.args)
+            }
         } catch {
             throw Self.mapped(error, at: name)
         }
@@ -353,6 +418,9 @@ public final class ConvexConnection: @unchecked Sendable {
     private func awaitSession(for name: String) async throws {
         do {
             try await gate.admit()
+            // A connection being replaced is about to drop the client a write
+            // would go down. Bounded, like the gate.
+            try? await Deadline.run(AuthGate.writeLimit) { [supervisor] in await supervisor.settled() }
         } catch {
             let mapped = AppError(error)
             Self.log.error("\(name, privacy: .public) not sent: \(mapped.diagnostic, privacy: .public)")
@@ -403,7 +471,7 @@ public final class ConvexConnection: @unchecked Sendable {
     }
 
     /// Decodes successfully from any JSON value, retaining nothing.
-    struct Discarded: Decodable {
+    struct Discarded: Decodable, Sendable {
         init(from decoder: any Decoder) throws {}
     }
 
@@ -418,7 +486,12 @@ public final class ConvexConnection: @unchecked Sendable {
     /// *user* sees.
     static func mapped(_ error: any Error, at name: String, presentsPaywall: Bool = true) -> AppError {
         let mapped: AppError
-        if let clientError = error as? ClientError {
+        if error is DeadlineExpired {
+            // Sent and not answered. The network is the likelier culprit, and
+            // `.offline` is what every caller answers by putting the old value
+            // back.
+            mapped = .offline
+        } else if let clientError = error as? ClientError {
             mapped = switch clientError {
             // The server ran and said no: a thrown handler error, a rejected
             // argument list, a query that overran its second. All of these mean
@@ -497,15 +570,9 @@ private final class ConnectionState: @unchecked Sendable {
     }
 }
 
-/// Holds Combine cancellables for the process lifetime.
-private final class DiagnosticsBag: @unchecked Sendable {
-    private let lock = NSLock()
-    private var bag: [AnyCancellable] = []
-
-    func store(_ cancellable: AnyCancellable) {
-        lock.withLock { bag.append(cancellable) }
-    }
-}
+/// Ends one attempt at a live query because the connection under it was
+/// replaced. `subscribe` answers by opening the same query on the new one.
+private struct TransportReplaced: Error {}
 
 // MARK: - Typed ids on the wire
 

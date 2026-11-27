@@ -272,7 +272,9 @@ struct InboxPanel: View {
         VStack(spacing: 0) {
             filterBar
 
-            if store.isLoadingActivity {
+            if store.isLoadingActivity, store.feedStalled {
+                stalledFeed
+            } else if store.isLoadingActivity {
                 SkeletonList(rows: 6, height: 68)
                     .padding(.horizontal, Metrics.screenPadding)
                 Spacer(minLength: 0)
@@ -463,11 +465,23 @@ struct InboxPanel: View {
         }
     }
 
+    /// What a feed shows when nothing has answered for a while.
+    private var stalledFeed: some View {
+        EmptyStateView(
+            title: L10n.commonOfflineTitle,
+            message: L10n.commonOfflineMessage,
+            symbol: "wifi.slash",
+            action: .init(title: L10n.commonRetry) { store.send(.retryTapped) }
+        )
+    }
+
     // MARK: The changelog
 
     private var updateFeed: some View {
         Group {
-            if store.isLoadingUpdates {
+            if store.isLoadingUpdates, store.feedStalled {
+                stalledFeed
+            } else if store.isLoadingUpdates {
                 SkeletonList(rows: 4, height: 64)
                     .padding(.horizontal, Metrics.screenPadding)
             } else if store.updateRows.isEmpty {
