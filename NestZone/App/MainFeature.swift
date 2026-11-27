@@ -62,6 +62,8 @@ public struct MainFeature: Sendable {
 
         /// Choosing what Today shows — from Today's own link, or from Settings.
         @Presents public var customize: CustomizeFeature.State?
+        /// Naming yourself, from Today's reminder (Settings has its own).
+        @Presents public var editName: EditNameFeature.State?
 
         /// Add anything: one field that files a line in the right module,
         /// opened by the dock's "+" on every tab.
@@ -195,6 +197,7 @@ public struct MainFeature: Sendable {
         case settingsButtonTapped
         case settingsDismissed
         case customize(PresentationAction<CustomizeFeature.Action>)
+        case editName(PresentationAction<EditNameFeature.Action>)
         /// Settings asked for by a notification row, raised once the panel
         /// that asked has finished going away.
         case presentSettings
@@ -291,6 +294,9 @@ public struct MainFeature: Sendable {
                 case .openStats: return open(.stats, from: .today, &state)
                 case .openCustomize:
                     state.customize = CustomizeFeature.State(homeID: state.homeID)
+                    return .none
+                case .openEditName:
+                    state.editName = EditNameFeature.State(name: state.user?.name ?? "")
                     return .none
                 case .addChore:
                     state.presentCapture(kind: .chore)
@@ -425,6 +431,10 @@ public struct MainFeature: Sendable {
                 }
             #endif
 
+            case .editName(.presented(.finished)):
+                state.editName = nil
+                return .none
+
             case .customize(.presented(.delegate(.finished))):
                 state.customize = nil
                 // The dock setting may have just changed, and only `now`
@@ -488,6 +498,7 @@ public struct MainFeature: Sendable {
                 if state.inbox.isOpen { covered = true; closing.append(.send(.inbox(.closeTapped))) }
                 if state.isSettingsPresented { covered = true; state.isSettingsPresented = false }
                 if state.customize != nil { covered = true; state.customize = nil }
+                if state.editName != nil { covered = true; state.editName = nil }
                 // Add anything closes the way Cancel does, by clearing.
                 if state.capture != nil { covered = true; state.capture = nil }
                 if state.paywall != nil {
@@ -591,13 +602,14 @@ public struct MainFeature: Sendable {
                 )
 
             case .home, .today, .lists, .plans, .house, .messages,
-                 .settings, .inbox, .customize, .capture, .companion,
+                 .settings, .inbox, .customize, .editName, .capture, .companion,
                  .proStatus, .moderation, .mirror, .share, .sharedCopy, .paywall:
                 return .none
             }
         }
         .ifLet(\.$paywall, action: \.paywall) { PaywallFeature() }
         .ifLet(\.$customize, action: \.customize) { CustomizeFeature() }
+        .ifLet(\.$editName, action: \.editName) { EditNameFeature() }
         .ifLet(\.$capture, action: \.capture) { CaptureFeature() }
         // The session arrives a moment after the tabs on an optimistic launch.
         // A pass that ran before it knew who "mine" is would have decided on

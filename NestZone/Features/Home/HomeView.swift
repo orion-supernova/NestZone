@@ -41,6 +41,10 @@ public struct HomeView<Companion: View>: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
+                if store.user.map({ !$0.hasName }) == true {
+                    NameReminderRow { store.send(.delegate(.openEditName)) }
+                        .appear(0)
+                }
                 header.appear(0)
                 if store.showsSetup {
                     setupCard.appear(1)

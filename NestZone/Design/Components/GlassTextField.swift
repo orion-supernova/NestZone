@@ -11,6 +11,8 @@ public struct GlassTextField: View {
     @Binding private var text: String
     private let isSecure: Bool
     private let error: LocalizedStringResource?
+    private let contentType: UITextContentType?
+    private let autofocus: Bool
 
     @FocusState private var isFocused: Bool
     @Environment(\.theme) private var theme
@@ -25,13 +27,17 @@ public struct GlassTextField: View {
         text: Binding<String>,
         symbol: String? = nil,
         isSecure: Bool = false,
-        error: LocalizedStringResource? = nil
+        error: LocalizedStringResource? = nil,
+        contentType: UITextContentType? = nil,
+        autofocus: Bool = false
     ) {
         self.title = title
         self._text = text
         self.symbol = symbol
         self.isSecure = isSecure
         self.error = error
+        self.contentType = contentType
+        self.autofocus = autofocus
     }
 
     private var isFloating: Bool { isFocused || !text.isEmpty }
@@ -98,14 +104,21 @@ public struct GlassTextField: View {
         }
         // Raised by whatever the person just typed or submitted.
         .sensoryFeedback(.error, trigger: refusals)
+        // After the screen's own fade has landed: focusing in the first frame
+        // raises the keyboard over a screen that is still arriving.
+        .task {
+            guard autofocus else { return }
+            try? await Task.sleep(for: .milliseconds(400))
+            isFocused = true
+        }
     }
 
     @ViewBuilder
     private var field: some View {
         if isSecure {
-            SecureField("", text: $text).focused($isFocused)
+            SecureField("", text: $text).textContentType(contentType).focused($isFocused)
         } else {
-            TextField("", text: $text).focused($isFocused)
+            TextField("", text: $text).textContentType(contentType).focused($isFocused)
         }
     }
 }

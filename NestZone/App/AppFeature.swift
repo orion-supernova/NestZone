@@ -53,6 +53,10 @@ public struct AppFeature: Sendable {
         public var auth = AuthFeature.State()
         public var homeGate = HomeManagementFeature.State()
         public var main: MainFeature.State?
+        public var nameAsk = NameAskFeature.State()
+        /// "Later" on the name question, for this launch only: it asks again
+        /// next launch until there is a name.
+        var nameAskDeferred = false
 
         @Shared(.theme) public var theme: AppTheme
         @Shared(.language) public var language: AppLanguage
@@ -77,6 +81,12 @@ public struct AppFeature: Sendable {
             if status == .unauthenticated {
                 return restoreFailedOffline ? .offline : .signedOut
             }
+            // Ahead of the house, so a new person is asked before they create
+            // or join one and a nameless one before the tabs. Only once
+            // `users:me` has answered (`currentUser` is set by nothing else)
+            // and never on the provisional launch above, so a person who has a
+            // name never sees it flash.
+            if asksForName { return .askingName }
             // Stay on the launch screen until the home list has actually
             // arrived. Otherwise every launch flashes the "Let's get started"
             // picker for as long as the round trip takes, because an empty list
@@ -92,8 +102,15 @@ public struct AppFeature: Sendable {
             return main == nil ? .launching : .main
         }
 
+        /// The server's answer is that this account has no name, and the
+        /// person has not put the question off. Screenshot runs never ask.
+        public var asksForName: Bool {
+            guard let currentUser, !currentUser.hasName, !nameAskDeferred else { return false }
+            return !StoreDemo.isOn && StoreDemo.persona == nil
+        }
+
         public enum Screen: Equatable {
-            case launching, signedOut, offline, choosingHome, main
+            case launching, signedOut, offline, askingName, choosingHome, main
         }
     }
 
@@ -120,6 +137,9 @@ public struct AppFeature: Sendable {
         case auth(AuthFeature.Action)
         case homeGate(HomeManagementFeature.Action)
         case main(MainFeature.Action)
+        case nameAsk(NameAskFeature.Action)
+        /// The write failed: the name comes off again and the question says why.
+        case nameSaveFailed(String, AppError)
     }
 
     private enum CancelID {
@@ -141,6 +161,7 @@ public struct AppFeature: Sendable {
     public var body: some ReducerOf<Self> {
         Scope(state: \.auth, action: \.auth) { AuthFeature() }
         Scope(state: \.homeGate, action: \.homeGate) { HomeManagementFeature() }
+        Scope(state: \.nameAsk, action: \.nameAsk) { NameAskFeature() }
 
         Reduce { state, action in
             switch action {
@@ -565,7 +586,38 @@ public struct AppFeature: Sendable {
                     endSession(&state, clearCache: true)
                 )
 
-            case .auth, .main:
+            // Optimistic: the name goes onto the signed-in user at once, which
+            // is what moves the screen on, and the live `users:me` only
+            // confirms it. A failed write changed nothing on the server, so no
+            // push is coming to correct it: the failure takes the name back
+            // itself.
+            case let .nameAsk(.delegate(.save(name))):
+                guard state.currentUser != nil else { return .none }
+                state.currentUser?.name = name
+                let user = state.currentUser
+                state.main?.user = user
+                state.main?.propagateSession()
+                return .run { _ in
+                    try await authClient.updateDisplayName(name)
+                } catch: { error, send in
+                    await send(.nameSaveFailed(name, AppError(error)))
+                }
+
+            case let .nameSaveFailed(name, error):
+                if state.currentUser?.name == name {
+                    state.currentUser?.name = nil
+                    let user = state.currentUser
+                    state.main?.user = user
+                    state.main?.propagateSession()
+                }
+                state.nameAsk.inlineError = error.errorDescription
+                return .none
+
+            case .nameAsk(.delegate(.later)):
+                state.nameAskDeferred = true
+                return .none
+
+            case .auth, .main, .nameAsk:
                 return .none
             }
         }
@@ -576,6 +628,8 @@ public struct AppFeature: Sendable {
     /// the household's cache and faces, and the effects that served them.
     private func endSession(_ state: inout State, clearCache: Bool) -> Effect<Action> {
         state.currentUser = nil
+        state.nameAsk = NameAskFeature.State()
+        state.nameAskDeferred = false
         state.main = nil
         state.proCheckedFor = nil
         state.pendingTap = nil

@@ -27,6 +27,10 @@ public struct AppView: View {
                 OfflineView { store.send(.retryRestoreTapped) }
                     .transition(.opacity)
 
+            case .askingName:
+                NameAskView(store: store.scope(state: \.nameAsk, action: \.nameAsk))
+                    .transition(.opacity)
+
             case .choosingHome:
                 HomeManagementView(store: store.scope(state: \.homeGate, action: \.homeGate))
                     .transition(.opacity)
@@ -184,6 +188,9 @@ struct MainView: View {
         // Over the tabs otherwise: Today's own link.
         .customizeSheet(store, when: false)
         .nowSheets(store.scope(state: \.now, action: \.now))
+        .hostedSheet(item: $store.scope(state: \.editName, action: \.editName)) {
+            EditNameSheet(store: $0)
+        }
         .hostedSheet(item: $store.scope(state: \.capture, action: \.capture)) {
             CaptureView(store: $0)
         }
