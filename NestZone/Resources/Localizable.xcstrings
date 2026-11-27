@@ -55213,13 +55213,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone can put house events in the calendars you choose, and show your housemates the calendars you pick to share. Copies stay on your phone. Only calendars you share are sent, and with Busy only that is nothing but the times."
+            "value": "NestZone can put house plans in the calendars you choose, and show the house the calendars you pick to share. Copies stay on your phone. Only the calendars you share are sent, and with Busy only, just the times."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone ev etkinliklerini seçtiğin takvimlere ekleyebilir, istersen seçtiğin takvimleri evdekilere de gösterebilir. Kopyalar telefonunda kalır. Sadece paylaşmayı seçtiğin takvimler gönderilir; “Sadece meşgul” seçersen yalnızca saatler gider."
+            "value": "Ev planları istediğin takvimlere düşsün, istersen kendi takvimlerini de evdekiler görsün. Kopyalar telefonunda kalır. Sadece seçtiğin takvimler paylaşılır; “Sadece meşgul” dersen yalnızca saatler görünür."
           }
         },
         "sv": {
@@ -55315,7 +55315,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece bu telefonda. Ev arkadaşların kendi takvimini kendi seçer."
+            "value": "Sadece bu telefonda geçerli. Evdekiler kendi takvimlerini kendileri seçer."
           }
         },
         "sv": {
@@ -55435,7 +55435,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvimleri seçebilmen için NestZone'un takvimlerine tam erişimi olması lazım. Ayarlar'dan değiştirebilirsin."
+            "value": "Takvim seçebilmen için NestZone'a takvimlerine tam erişim vermen lazım. Ayarlar'dan açabilirsin."
           }
         },
         "sv": {
@@ -55675,7 +55675,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutarsan oldukları yerde kalır ama evle birlikte güncellenmez."
+            "value": "Kalsın dersen yerinde durur ama artık evdeki değişiklikleri takip etmez."
           }
         },
         "sv": {
@@ -55867,7 +55867,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "iPhone'undaki planların, senin ve evdekilerin NestZone Takvim'inde."
+            "value": "iPhone'undaki planların NestZone takviminde görünsün, hem sana hem evdekilere."
           }
         },
         "sv": {
@@ -55939,7 +55939,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne kadar ilerisi"
+            "value": "Kaç hafta ilerisi"
           }
         },
         "sv": {
@@ -55981,13 +55981,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Busy only: they see when you're busy, not why. Title and place: they see those too, never notes, people or links. Updates whenever you open NestZone."
+            "value": "Busy only: they see when you're busy, not why. Title and place: they see those too, never notes, people or links."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece meşgul: ne zaman meşgul olduğunu görürler, nedenini görmezler. Başlık ve yer: bunları da görürler; notlar, katılımcılar ve linkler asla gitmez. NestZone'u her açtığında güncellenir."
+            "value": "Sadece meşgul: ne zaman meşgul olduğunu görürler, ne yaptığını değil. Başlık ve yer: bunları da görürler. Notlar, katılımcılar ve linkler asla paylaşılmaz."
           }
         },
         "sv": {
@@ -56083,7 +56083,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evdekiler bunu görüyor: saati, başlığı ve yeri."
+            "value": "Evdekiler saatini, başlığını ve yerini görüyor."
           }
         },
         "sv": {
@@ -56107,7 +56107,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evdekiler sadece meşgul olduğunu görüyor, başka bir şey değil."
+            "value": "Evdekiler bunu sadece “meşgul” olarak görüyor."
           }
         },
         "sv": {
@@ -56299,7 +56299,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "+%lld kişisel takvimlerden"
+            "value": "+%lld kişisel takvimden"
           }
         },
         "sv": {
@@ -58583,7 +58583,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evdekiler telefonlarına ekleyebilsin"
+            "value": "Evdekiler kendi telefonlarına ekleyebilsin"
           }
         },
         "sv": {
@@ -58631,7 +58631,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Her biri telefonunda “NestZone · İsim” adlı kendi takvimine kavuşur, istediğin an tek dokunuşla gizleyebilirsin."
+            "value": "Her biri telefonunda “NestZone · İsim” adında ayrı bir takvim olur, istediğin takvim uygulamasından tek dokunuşla gizleyebilirsin."
           }
         },
         "sv": {
@@ -58679,7 +58679,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ sadece NestZone'da paylaşıyor"
+            "value": "%@ sadece NestZone'da gösteriyor"
           }
         },
         "sv": {
@@ -58751,7 +58751,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvim erişimi gerekiyor"
+            "value": "Takvim izni gerekiyor"
           }
         },
         "sv": {
@@ -58769,13 +58769,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What housemates share from their own calendars. Turn someone off and their plans stay out of your NestZone. They won't be told."
+            "value": "Housemates who share their calendars. Turn someone off and their plans stay out of your NestZone. They won't be told."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evdekilerin kendi takvimlerinden paylaştıkları. Birini kapatırsan planları senin NestZone'unda görünmez. Ona bir şey söylenmez."
+            "value": "Evdekilerden takvimini paylaşanlar. Birini kapatırsan planları senin NestZone'unda görünmez, ona da haber gitmez."
           }
         },
         "sv": {
@@ -58895,7 +58895,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ adlı kişinin paylaştığı takvimin kopyası. NestZone güncel tutuyor."
+            "value": "Evden paylaşılan bir takvimin kopyası (%@). NestZone güncel tutar."
           }
         },
         "sv": {
@@ -59134,7 +59134,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "NestZone takviminde"
+            "value": "Ev planları takviminde"
           }
         },
         "sv": {
@@ -59157,7 +59157,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eşitle"
+            "value": "Eşitleme"
           }
         },
         "sv": {
