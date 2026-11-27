@@ -11489,7 +11489,7 @@ extension L10n {
 
     /// From their calendar
     public static var calendarSharedSheetTitle: LocalizedStringResource {
-        r("calendar_shared_sheet_title", "From their calendar")
+        r("calendar_shared_sheet_title", "From a housemate's calendar")
     }
 
     /// Report
@@ -11497,19 +11497,19 @@ extension L10n {
         r("calendar_shared_report", "Report")
     }
 
-    /// From their own calendars
+    /// From personal calendars
     public static var calendarSharedHeading: LocalizedStringResource {
-        r("calendar_shared_heading", "From their own calendars")
+        r("calendar_shared_heading", "From personal calendars")
     }
 
-    /// Their own calendars
+    /// Personal calendars
     public static var calendarFilterTheirs: LocalizedStringResource {
-        r("calendar_filter_theirs", "Their own calendars")
+        r("calendar_filter_theirs", "Personal calendars")
     }
 
-    /// +%lld from their calendars
+    /// +%lld from personal calendars
     public static func calendarFilterCountShared(_ a0: Int) -> LocalizedStringResource {
-        r("calendar_filter_count_shared", "+\(a0) from their calendars")
+        r("calendar_filter_count_shared", "+\(a0) from personal calendars")
     }
 
     /// Shared calendar item
