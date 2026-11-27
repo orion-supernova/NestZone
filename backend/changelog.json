@@ -84,11 +84,12 @@
             "Bättre: går något verkligen inte att ladda får du Försök igen i stället för en snurra som aldrig slutar"
           ]
         }
-      ]
+      ],
+      "draft": true
     },
     {
       "slug": "1.14.0-meetings",
-      "version": "1.14.6",
+      "version": "1.14.7",
       "kind": "feature",
       "title": "Meetings, with a Join button",
       "body": "Got a call? Add it as a Meeting, paste the Meet, Zoom or Teams link, and NestZone knows what it is. When it's about to start, Join is right there.",
@@ -122,11 +123,12 @@
     },
     {
       "slug": "1.14.0-fixes",
-      "version": "1.14.6",
+      "version": "1.14.7",
       "kind": "fix",
       "title": "Fixes and improvements",
       "body": "Notifications take you where they should now, and Nestie has a bit more to say.",
       "highlights": [
+        "Fixed screens getting stuck loading after the app sat in the background or the Wi-Fi changed: it reconnects on its own, no restart needed",
         "Fixed tapping a notification: it opens the movie vote, the plan or the chat it's about, not just the app",
         "Added a heads-up when someone waters or pets Nestie, and a nudge from Nestie after a few quiet days",
         "Improved Calendar settings: your calendars into NestZone and house plans into your iPhone, side by side, with Sync now, and reachable from Calendar too",
@@ -134,7 +136,8 @@
         "Fixed your own shared calendar not showing up for you in NestZone's Calendar",
         "Improved syncing: your shared calendars stay up to date even when NestZone is closed",
         "Fixed housemates seeing you as \"Someone\": if your name is missing, NestZone now asks for it",
-        "Added a way to hide a housemate's shared calendar from your NestZone, without them being told"
+        "Added a way to hide a housemate's shared calendar from your NestZone, without them being told",
+        "Improved: if something really can't load, you get a Try again instead of an endless spinner"
       ],
       "translations": [
         {
@@ -142,6 +145,7 @@
           "title": "Düzeltmeler ve iyileştirmeler",
           "body": "Bildirimler artık seni doğru yere götürüyor, Nestie de biraz daha konuşkan.",
           "highlights": [
+            "Uygulama arka planda bekleyince ya da Wi-Fi değişince ekranların yüklenmede takılması düzeldi: kendi kendine yeniden bağlanıyor, kapatıp açmana gerek yok",
             "Bildirime dokununca artık uygulama öylece açılmıyor: film oylaması, plan ya da sohbet neyse direkt orası açılıyor",
             "Biri Nestie'yi sulayınca ya da sevince haber geliyor; birkaç gün ses çıkmazsa Nestie kendisi hatırlatıyor",
             "Takvim ayarları yenilendi: takvimlerin NestZone'a, evin planları iPhone'una, yan yana; Şimdi eşitle düğmesi var, Takvim'den de açılıyor",
@@ -149,7 +153,8 @@
             "Paylaştığın kendi takvimin artık NestZone Takvim'inde sana da görünüyor",
             "Paylaştığın takvimler NestZone kapalıyken de güncel kalıyor",
             "Evdekiler seni \"Biri\" diye görüyorsa düzeldi: adın eksikse NestZone artık soruyor",
-            "Bir ev arkadaşının paylaştığı takvimi kendi NestZone'undan gizleyebiliyorsun, ona bir şey söylenmiyor"
+            "Bir ev arkadaşının paylaştığı takvimi kendi NestZone'undan gizleyebiliyorsun, ona bir şey söylenmiyor",
+            "Bir şey gerçekten yüklenemezse sonsuza kadar dönen bir şey yerine Tekrar dene çıkıyor"
           ]
         },
         {
@@ -157,6 +162,7 @@
           "title": "Fixar och förbättringar",
           "body": "Notiser tar dig dit de ska nu, och Nestie har lite mer att säga.",
           "highlights": [
+            "Fixat att skärmar fastnade och laddade när appen legat i bakgrunden eller wifi bytts: den kopplar upp sig igen själv, ingen omstart behövs",
             "Fixat: trycker du på en notis öppnas filmomröstningen, planen eller chatten den gäller, inte bara appen",
             "Nytt: du får veta när någon vattnar eller klappar Nestie, och Nestie hör av sig efter några tysta dagar",
             "Bättre kalenderinställningar: dina kalendrar in i NestZone och hemmets planer in i iPhone, sida vid sida, med Synka nu, och nåbara från Kalendern också",
@@ -164,7 +170,8 @@
             "Fixat: din egen delade kalender syns nu för dig också i NestZones kalender",
             "Dina delade kalendrar hålls nu uppdaterade även när NestZone är stängd",
             "Fixat att de du bor med såg dig som \"Någon\": saknas ditt namn frågar NestZone nu efter det",
-            "Nytt: du kan dölja kalendern som någon du bor med delar, utan att de får veta det"
+            "Nytt: du kan dölja kalendern som någon du bor med delar, utan att de får veta det",
+            "Bättre: går något verkligen inte att ladda får du Försök igen i stället för en snurra som aldrig slutar"
           ]
         }
       ]
