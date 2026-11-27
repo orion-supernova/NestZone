@@ -55872,7 +55872,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kendi takviminden"
+            "value": "Senin takviminden"
           }
         },
         "sv": {
@@ -56034,19 +56034,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "From their calendar"
+            "value": "From a housemate's calendar"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kendi takviminden"
+            "value": "Ev arkadaşının takviminden"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Från deras kalender"
+            "value": "Från en kalender hos någon du bor med"
           }
         }
       }
@@ -56082,19 +56082,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "From their own calendars"
+            "value": "From personal calendars"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kendi takvimlerinden"
+            "value": "Kişisel takvimlerden"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Från deras egna kalendrar"
+            "value": "Från personliga kalendrar"
           }
         }
       }
@@ -56106,19 +56106,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Their own calendars"
+            "value": "Personal calendars"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kendi takvimleri"
+            "value": "Kişisel takvimler"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deras egna kalendrar"
+            "value": "Personliga kalendrar"
           }
         }
       }
@@ -56130,19 +56130,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "+%lld from their calendars"
+            "value": "+%lld from personal calendars"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "+%lld kendi takvimlerinden"
+            "value": "+%lld kişisel takvimlerden"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "+%lld från deras kalendrar"
+            "value": "+%lld från personliga kalendrar"
           }
         }
       }
