@@ -19,6 +19,8 @@ public struct NowDock: View {
     @State private var picks = 0
     /// Long presses that were held long enough to open the menu; drives its one thud.
     @State private var menuOpens = 0
+    /// Taps on Join: the person's own, so they tick.
+    @State private var joins = 0
 
     public init(store: StoreOf<NowFeature>) {
         self.store = store
@@ -77,6 +79,25 @@ public struct NowDock: View {
             .accessibilityIdentifier("Dock")
             .accessibilityHint(Text(L10n.dockMenuTitle))
 
+            if store.dockItem.joinableMeeting(at: store.now) != nil {
+                Button {
+                    joins += 1
+                    store.send(.joinTapped)
+                } label: {
+                    Label { Text(L10n.meetingJoin) } icon: { Image(systemName: "video.fill") }
+                        .labelStyle(JoinLabelStyle(isCompact: isInline))
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(theme.onAccent)
+                        .padding(.horizontal, isInline ? 8 : 12)
+                        .frame(height: 30)
+                        .background(theme.accentFill, in: .capsule)
+                        .contentShape(.capsule)
+                }
+                .buttonStyle(.pressable)
+                .transition(reduceMotion ? .opacity : .scale(scale: 0.8).combined(with: .opacity))
+                .accessibilityIdentifier("DockJoin")
+            }
+
             Button {
                 adds += 1
                 store.send(.addTapped)
@@ -111,6 +132,7 @@ public struct NowDock: View {
         .onTapGesture {}
         .animation(Motion.spring, value: store.dockItem)
         .sensoryFeedback(.selection, trigger: picks)
+        .sensoryFeedback(.impact(weight: .light), trigger: joins)
     }
 
     // MARK: - Long-press menu
@@ -272,6 +294,18 @@ extension MealPlan {
         return switch kind {
         case .cook: String(localized: L10n.dinnerKindCook)
         case .order, .out: String(localized: cuisine?.title ?? L10n.cuisineOther)
+        }
+    }
+}
+
+/// Join's label: icon and word, or the icon alone when the dock is inline.
+private struct JoinLabelStyle: LabelStyle {
+    let isCompact: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 5) {
+            configuration.icon
+            if !isCompact { configuration.title }
         }
     }
 }

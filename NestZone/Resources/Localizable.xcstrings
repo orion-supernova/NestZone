@@ -55218,19 +55218,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy to my calendars"
+            "value": "Copy house events to my calendar"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvimlerime kopyala"
+            "value": "Ev etkinliklerini takvimime ekle"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kopiera till mina kalendrar"
+            "value": "Lägg in hemmets händelser i min kalender"
           }
         }
       }
@@ -55242,19 +55242,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind."
+            "value": "House plans show up in your iPhone Calendar too, in the calendars you pick. They catch up when you open NestZone."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev etkinlikleri seçtiğin takvimlere kopyalanır. NestZone'u açtığında güncellenir, yani kopya biraz geriden gelebilir."
+            "value": "Evin planları iPhone Takvim'inde de görünür, seçtiğin takvimlerde. NestZone'u açınca güncellenir."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hemmets händelser kopieras till de kalendrar du väljer. De uppdateras när du öppnar NestZone, så en kopia kan ligga lite efter."
+            "value": "Hemmets planer syns i iPhones Kalender också, i de kalendrar du väljer. De uppdateras när du öppnar NestZone."
           }
         }
       }
@@ -55650,19 +55650,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Details"
+            "value": "Title and place"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ayrıntılı"
+            "value": "Başlık ve yer"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Detaljer"
+            "value": "Rubrik och plats"
           }
         }
       }
@@ -55722,19 +55722,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pick which of your calendars the house sees. Nothing is shared until you choose it."
+            "value": "Your housemates see your plans in NestZone's Calendar. You choose which calendars, and how much they see."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evdekilerin hangi takvimlerini göreceğini sen seçersin. Sen seçmeden hiçbir şey paylaşılmaz."
+            "value": "Evdekiler planlarını NestZone takviminde görür. Hangi takvimler ve ne kadarı görünsün, sen seçersin."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Välj vilka av dina kalendrar hemmet får se. Inget delas förrän du väljer det."
+            "value": "De du bor med ser dina planer i NestZones kalender. Du väljer vilka kalendrar och hur mycket de ser."
           }
         }
       }
@@ -55866,19 +55866,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind."
+            "value": "Busy only: they see when you're busy, not why. Title and place: they see those too, never notes, people or links. Updates whenever you open NestZone."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sadece meşgul seçersen evdekiler ne zaman meşgul olduğunu görür, ne için olduğunu görmez. Ayrıntılı seçersen başlık ve konum da görünür; notlar, katılımcılar ve linkler asla gitmez. NestZone açıkken güncellenir, o yüzden biraz geriden gelebilir."
+            "value": "Sadece meşgul: ne zaman meşgul olduğunu görürler, nedenini görmezler. Başlık ve yer: bunları da görürler; notlar, katılımcılar ve linkler asla gitmez. NestZone'u her açtığında güncellenir."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bara upptagen visar när du är upptagen, aldrig med vad. Detaljer visar också rubrik och plats, men aldrig anteckningar, personer eller länkar. Det uppdateras när NestZone är öppet, så det kan ligga lite efter."
+            "value": "Bara upptagen: de ser när du är upptagen, inte varför. Rubrik och plats: de ser det också, men aldrig anteckningar, personer eller länkar. Uppdateras varje gång du öppnar NestZone."
           }
         }
       }
@@ -56579,6 +56579,190 @@
           "stringUnit": {
             "state": "translated",
             "value": "En ny dyker upp"
+          }
+        }
+      }
+    },
+    "calendar_kind_meeting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meeting"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplantı"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Möte"
+          }
+        }
+      }
+    },
+    "meeting_link_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meeting link"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplantı linki"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Möteslänk"
+          }
+        }
+      }
+    },
+    "meeting_link_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a Meet, Zoom or Teams link"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meet, Zoom ya da Teams linkini yapıştır"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klistra in en Meet-, Zoom- eller Teams-länk"
+          }
+        }
+      }
+    },
+    "meeting_service_other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video call"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görüntülü görüşme"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Videosamtal"
+          }
+        }
+      }
+    },
+    "meeting_join": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Katıl"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anslut"
+          }
+        }
+      }
+    },
+    "notif_topic_companion_thirsty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs some love"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlgi istiyor"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behöver lite kärlek"
+          }
+        }
+      }
+    },
+    "notif_topic_companion_care": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watered or petted"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sulandı ya da sevildi"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vattnad eller klappad"
+          }
+        }
+      }
+    },
+    "calendar_share_missing_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't see your Google or work calendar? NestZone reads the iPhone's Calendar, not the Google Calendar app. Add the account in Settings → Apps → Calendar → Calendar Accounts and it shows up here."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google ya da iş takvimin listede yok mu? NestZone iPhone'un Takvim'ini okuyor, Google Takvim uygulamasını değil. Hesabını Ayarlar → Uygulamalar → Takvim → Takvim Hesapları'ndan ekle, burada görünür."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ser du inte din Google- eller jobbkalender? NestZone läser iPhones Kalender, inte Google Kalender-appen. Lägg till kontot under Inställningar → Appar → Kalender → Kalenderkonton så dyker den upp här."
           }
         }
       }
@@ -58182,19 +58366,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Housemates can add my calendar to theirs"
+            "value": "Let them add it to their phone's calendar"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ev arkadaşların takvimimi kendi takvimine ekleyebilsin"
+            "value": "Telefonlarındaki takvime ekleyebilsinler"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "De du bor med får lägga in min kalender hos sig"
+            "value": "Låt dem lägga in den i telefonens kalender"
           }
         }
       }
@@ -58206,19 +58390,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Off by default. When it is on, a housemate can choose to get a copy of what you share in their own calendar app, kept up to date and at the level you picked. Turn it off and the copies go at their next sync."
+            "value": "Off: your plans stay in NestZone. On: a housemate can also get them in their iPhone Calendar, with the same detail you share here. Turn it off and those copies go."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Varsayılan olarak kapalı. Açıksa bir ev arkadaşın paylaştıklarının bir kopyasını kendi takvim uygulamasına ekleyebilir, senin seçtiğin ayrıntıyla, hep güncel. Kapatınca kopyalar onların bir sonraki eşitlemesinde silinir."
+            "value": "Kapalıyken planların sadece NestZone'da görünür. Açıksa bir ev arkadaşın bunları kendi iPhone Takvim'inde de görebilir, burada paylaştığın kadarıyla. Kapatırsan o kopyalar silinir."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Av från början. När den är på kan de du bor med välja att få en kopia av det du delar i sin egen kalender, alltid uppdaterad och med den detaljnivå du valt. Stänger du av försvinner kopiorna nästa gång deras telefon synkar."
+            "value": "Av: dina planer stannar i NestZone. På: de du bor med kan också få dem i sin iPhone-kalender, med samma detaljnivå som du delar här. Stänger du av försvinner kopiorna."
           }
         }
       }
@@ -58278,19 +58462,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add to my calendar"
+            "value": "Show in my iPhone Calendar"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvimime ekle"
+            "value": "iPhone Takvim'imde göster"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lägg till i min kalender"
+            "value": "Visa i min iPhone-kalender"
           }
         }
       }
@@ -58302,19 +58486,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ hasn't allowed copies"
+            "value": "%@ keeps theirs in NestZone only"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ kopyalamaya izin vermedi"
+            "value": "%@ sadece NestZone'da paylaşıyor"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ har inte tillåtit kopior"
+            "value": "%@ delar bara i NestZone"
           }
         }
       }

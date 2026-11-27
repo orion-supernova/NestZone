@@ -395,6 +395,12 @@ before changing anything here.
 ./deploy.sh --local      # archive and upload from this Mac instead
 ```
 
+**Every build is its own version (owner's rule, 2026-11-23).** Never two
+builds of one version: each release is `./deploy.sh --bump patch` (or minor)
+with its own changelog entry, and the script refuses a version `stage`
+already carries. The build number still increments, but nobody reasons in
+build numbers any more.
+
 **Two branches, and `stage` is not a copy of the code.** `dev` is where work
 happens; `stage` is a pointer at the commit being released, moved only by this
 script, one push per release. **Xcode Cloud watches `stage`** and does the
@@ -905,6 +911,13 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   `notifyUsers` takes a `homeId` so an addressed notification can be filed with
   an `audience`, which is what keeps a private conversation out of everybody
   else's feed.
+- **A push says where a tap goes** (1.14.0). The payload carries `category`,
+  `home` and, when it is about one thing, `link` (`event:<id>:<startMs>`,
+  `event:<id>`, `issue:<id>`, `conversation:<id>`, `recipe:<id>`); a caller
+  passes `link` to `notifyHome`/`notifyUsers`. The app (`PushTap`,
+  `AppFeature`/`MainFeature` `.pushTapped`) switches to that house, opens the
+  link, or routes the category the way the bell does. A new sender about one
+  thing sets `link`; a new link kind needs a case on both sides.
 - **`inbox:badge` is the one query that is open all the time, so it is
   floored.** It never counts further back than a fortnight whatever the read
   watermark says, which is what stops the cost of the bell growing with the

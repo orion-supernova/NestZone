@@ -82,6 +82,8 @@ public enum NotificationTopic: String, CaseIterable, Identifiable, Sendable {
     case companionReady = "companion.ready"
     case companionVote = "companion.vote"
     case companionNew = "companion.new"
+    case companionCare = "companion.care"
+    case companionThirsty = "companion.thirsty"
     case homeMembers = "home.members"
 
     public var id: String { rawValue }
@@ -112,6 +114,8 @@ public enum NotificationTopic: String, CaseIterable, Identifiable, Sendable {
         case .companionReady: L10n.notifTopicCompanionReady
         case .companionVote: L10n.notifTopicCompanionVote
         case .companionNew: L10n.notifTopicCompanionNew
+        case .companionCare: L10n.notifTopicCompanionCare
+        case .companionThirsty: L10n.notifTopicCompanionThirsty
         case .homeMembers: L10n.notifTopicHomeMembers
         }
     }
@@ -144,7 +148,7 @@ public enum NotificationGroup: String, CaseIterable, Identifiable, Sendable {
         case .money: [.financeExpenses, .financeReminders]
         case .problems: [.issuesNew, .issuesUpdates, .issuesReminders]
         case .messages: [.messagesDirect, .messagesGroup, .messagesMentions, .polls]
-        case .nestie: [.companionReady, .companionVote, .companionNew]
+        case .nestie: [.companionReady, .companionVote, .companionNew, .companionCare, .companionThirsty]
         case .around: [.shoppingAdded, .notes, .meals, .movies, .homeMembers]
         }
     }

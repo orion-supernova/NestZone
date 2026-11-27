@@ -22,6 +22,9 @@ public struct PushClient: Sendable {
     public var registerForRemoteNotifications: @Sendable () async -> Void
     /// Device tokens as they arrive or change. iOS can reissue at any time.
     public var deviceTokens: @Sendable () -> AsyncStream<String> = { .never }
+    /// Notifications the person tapped, each once. One that launched the app is
+    /// held until something listens.
+    public var taps: @Sendable () -> AsyncStream<PushTap> = { .never }
 
     /// Schedules the cooking timer. Replaces any previous one.
     public var scheduleTimer: @Sendable (_ seconds: Int, _ stepTitle: String) async -> Void
@@ -55,6 +58,7 @@ extension PushClient: DependencyKey {
                 }
             },
             deviceTokens: { PushTokenBroker.shared.stream() },
+            taps: { PushTapBroker.shared.stream() },
             scheduleTimer: { seconds, stepTitle in
                 guard seconds > 0 else { return }
                 let center = UNUserNotificationCenter.current()

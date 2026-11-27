@@ -854,7 +854,7 @@ export const newestPublishedVersion = internalQuery({
  * comparison says the opposite — which would invert the answer for exactly one
  * release in ten, silently.
  */
-function compareVersions(a: string, b: string): number {
+export function compareVersions(a: string, b: string): number {
   const parts = (value: string) =>
     value
       .trim()

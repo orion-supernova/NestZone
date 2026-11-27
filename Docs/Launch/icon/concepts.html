@@ -1,0 +1,83 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Icon concepts</title>
+<style>
+  body{margin:0;background:#f2f0f7;font:15px -apple-system,system-ui;color:#17121f}
+  .row{display:flex;gap:48px;padding:40px;align-items:flex-end;flex-wrap:wrap}
+  .c{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .tile{width:300px;height:300px;border-radius:68px;overflow:hidden;box-shadow:0 18px 40px #2a145533}
+  .small{display:flex;gap:16px;align-items:center}
+  .small .tile{width:60px;height:60px;border-radius:14px;box-shadow:0 4px 10px #2a145533}
+  .dark{background:#111;padding:24px;border-radius:20px}
+  b{font-size:17px}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6D28D9"/><stop offset="1" stop-color="#312E81"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".46" r=".5"><stop offset="0" stop-color="#A78BFA" stop-opacity=".55"/><stop offset="1" stop-color="#A78BFA" stop-opacity="0"/></radialGradient>
+    <linearGradient id="house" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4DCFA"/></linearGradient>
+    <linearGradient id="nest" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EBB872"/><stop offset="1" stop-color="#B4763A"/></linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4ADE80"/><stop offset="1" stop-color="#059669"/></linearGradient>
+    <radialGradient id="door" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="#FDE68A"/><stop offset="1" stop-color="#F59E0B"/></radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#1E0B4B" flood-opacity=".45"/></filter>
+
+    <!-- A: house in a nest, sprout chimney -->
+    <g id="A">
+      <rect width="1024" height="1024" fill="url(#bg)"/><rect width="1024" height="1024" fill="url(#glow)"/>
+      <g filter="url(#soft)">
+        <path d="M512 250 L760 470 Q772 482 760 494 L732 494 L732 700 Q732 736 696 736 L328 736 Q292 736 292 700 L292 494 L264 494 Q252 482 264 470 Z" fill="url(#house)"/>
+        <path d="M464 736 L464 610 Q464 562 512 562 Q560 562 560 610 L560 736 Z" fill="url(#door)"/>
+        <path d="M228 690 Q512 830 796 690 Q812 760 760 800 Q512 900 264 800 Q212 760 228 690 Z" fill="url(#nest)"/>
+        <path d="M250 742 Q512 850 774 742" stroke="#FFF5E0" stroke-opacity=".45" stroke-width="12" fill="none" stroke-linecap="round"/>
+        <path d="M280 790 Q512 880 744 790" stroke="#7A4A1E" stroke-opacity=".35" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <path d="M640 330 L640 250" stroke="#047857" stroke-width="16" stroke-linecap="round"/>
+        <path d="M640 262 Q600 200 556 214 Q570 268 640 262 Z" fill="url(#leaf)"/>
+        <path d="M640 250 Q684 182 734 198 Q716 258 640 250 Z" fill="url(#leaf)"/>
+      </g>
+    </g>
+
+    <!-- B: two roofs, one home -->
+    <g id="B">
+      <rect width="1024" height="1024" fill="url(#bg)"/><rect width="1024" height="1024" fill="url(#glow)"/>
+      <g filter="url(#soft)">
+        <path d="M380 300 L590 488 L590 740 L210 740 L210 488 Z" fill="#C4B5FD"/>
+        <path d="M630 300 L830 480 L830 740 L430 740 L430 480 Z" fill="url(#house)"/>
+        <path d="M590 740 L590 520 Q630 480 670 520 L670 740 Z" fill="url(#door)"/>
+        <path d="M630 300 L630 214" stroke="#047857" stroke-width="16" stroke-linecap="round"/>
+        <path d="M630 230 Q590 168 546 182 Q560 236 630 230 Z" fill="url(#leaf)"/>
+        <path d="M630 220 Q674 150 724 166 Q706 226 630 220 Z" fill="url(#leaf)"/>
+      </g>
+    </g>
+
+    <!-- C: rounded house, arched glowing door, sprout -->
+    <g id="C">
+      <rect width="1024" height="1024" fill="url(#bg)"/><rect width="1024" height="1024" fill="url(#glow)"/>
+      <g filter="url(#soft)">
+        <path d="M512 236 Q540 236 560 254 L778 448 Q800 468 800 498 L800 712 Q800 776 736 776 L288 776 Q224 776 224 712 L224 498 Q224 468 246 448 L464 254 Q484 236 512 236 Z" fill="url(#house)"/>
+        <path d="M432 776 L432 600 Q432 520 512 520 Q592 520 592 600 L592 776 Z" fill="url(#door)"/>
+        <circle cx="512" cy="430" r="40" fill="#EDE9FE"/>
+        <path d="M512 430 L512 372" stroke="#047857" stroke-width="12" stroke-linecap="round"/>
+        <path d="M512 384 Q480 340 444 350 Q456 392 512 384 Z" fill="url(#leaf)"/>
+        <path d="M512 376 Q546 326 586 338 Q572 384 512 376 Z" fill="url(#leaf)"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<div class="row">
+  <div class="c"><div class="tile"><svg viewBox="0 0 1024 1024" width="300" height="300"><use href="#A"/></svg></div><b>A · House in a nest</b><span>home + together + Nestie's sprout</span></div>
+  <div class="c"><div class="tile"><svg viewBox="0 0 1024 1024" width="300" height="300"><use href="#B"/></svg></div><b>B · Two roofs, one home</b><span>shared living, plainest message</span></div>
+  <div class="c"><div class="tile"><svg viewBox="0 0 1024 1024" width="300" height="300"><use href="#C"/></svg></div><b>C · Someone's home</b><span>warm door, sprout in the window</span></div>
+</div>
+<div class="row">
+  <div class="small"><b>60 px:</b>
+    <div class="tile"><svg viewBox="0 0 1024 1024" width="60" height="60"><use href="#A"/></svg></div>
+    <div class="tile"><svg viewBox="0 0 1024 1024" width="60" height="60"><use href="#B"/></svg></div>
+    <div class="tile"><svg viewBox="0 0 1024 1024" width="60" height="60"><use href="#C"/></svg></div>
+  </div>
+  <div class="small dark"><b style="color:#fff">dark:</b>
+    <div class="tile" style="filter:brightness(.8)"><svg viewBox="0 0 1024 1024" width="60" height="60"><use href="#A"/></svg></div>
+    <div class="tile" style="filter:brightness(.8)"><svg viewBox="0 0 1024 1024" width="60" height="60"><use href="#B"/></svg></div>
+    <div class="tile" style="filter:brightness(.8)"><svg viewBox="0 0 1024 1024" width="60" height="60"><use href="#C"/></svg></div>
+  </div>
+</div>
+</body></html>

@@ -56,6 +56,74 @@
   ],
   "entries": [
     {
+      "slug": "1.14.0-meetings",
+      "version": "1.14.0",
+      "kind": "feature",
+      "title": "Meetings, with a Join button",
+      "body": "Got a call? Add it as a Meeting, paste the Meet, Zoom or Teams link, and NestZone knows what it is. When it's about to start, Join is right there.",
+      "highlights": [
+        "A new Meeting kind when you add a plan",
+        "Paste the link and it shows Meet, Zoom, Teams or FaceTime",
+        "Join from the plan, or from the bar above the tabs ten minutes before it starts"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Toplantılar, Katıl düğmesiyle",
+          "body": "Bir görüşmen mi var? Toplantı olarak ekle, Meet, Zoom ya da Teams linkini yapıştır, gerisini NestZone halleder. Başlamak üzereyken Katıl düğmesi hazır.",
+          "highlights": [
+            "Plan eklerken yeni bir tür: Toplantı",
+            "Linki yapıştır, Meet mi Zoom mu Teams mi FaceTime mı, kendisi anlıyor",
+            "Başlamadan on dakika önce plandan ya da sekmelerin üstündeki çubuktan katıl"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Möten, med en Anslut-knapp",
+          "body": "Har du ett samtal? Lägg in det som ett Möte, klistra in Meet-, Zoom- eller Teams-länken så vet NestZone vad det är. När det är dags finns Anslut precis där.",
+          "highlights": [
+            "En ny sorts plan: Möte",
+            "Klistra in länken så ser du om det är Meet, Zoom, Teams eller FaceTime",
+            "Anslut från planen, eller från raden ovanför flikarna tio minuter innan"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1.14.0-fixes",
+      "version": "1.14.0",
+      "kind": "fix",
+      "title": "Fixes and improvements",
+      "body": "Notifications take you where they should now, and Nestie has a bit more to say.",
+      "highlights": [
+        "Fixed tapping a notification: it opens the movie vote, the plan or the chat it's about, not just the app",
+        "Added a heads-up when someone waters or pets Nestie, and a nudge from Nestie after a few quiet days",
+        "Improved Calendar settings: clearer wording, and how to bring in your Google or work calendar"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Düzeltmeler ve iyileştirmeler",
+          "body": "Bildirimler artık seni doğru yere götürüyor, Nestie de biraz daha konuşkan.",
+          "highlights": [
+            "Bildirime dokununca artık uygulama öylece açılmıyor: film oylaması, plan ya da sohbet neyse direkt orası açılıyor",
+            "Biri Nestie'yi sulayınca ya da sevince haber geliyor; birkaç gün ses çıkmazsa Nestie kendisi hatırlatıyor",
+            "Takvim ayarları daha anlaşılır oldu, Google ya da iş takvimini nasıl ekleyeceğin de yazıyor"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Fixar och förbättringar",
+          "body": "Notiser tar dig dit de ska nu, och Nestie har lite mer att säga.",
+          "highlights": [
+            "Fixat: trycker du på en notis öppnas filmomröstningen, planen eller chatten den gäller, inte bara appen",
+            "Nytt: du får veta när någon vattnar eller klappar Nestie, och Nestie hör av sig efter några tysta dagar",
+            "Bättre kalenderinställningar: tydligare text, och hur du får in din Google- eller jobbkalender"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.13.0-swedish",
       "version": "1.13.0",
       "kind": "feature",

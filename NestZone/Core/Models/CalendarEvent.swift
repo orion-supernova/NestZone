@@ -34,7 +34,7 @@ public enum EventKind: String, Codable, CaseIterable, Sendable, Identifiable {
     // Occasions
     case birthday, anniversary, holiday
     // Admin
-    case appointment, deadline
+    case appointment, deadline, meeting
 
     public var id: String { rawValue }
 
@@ -75,7 +75,7 @@ public enum EventKind: String, Codable, CaseIterable, Sendable, Identifiable {
             .goingOut
         case .birthday, .anniversary, .holiday:
             .occasions
-        case .appointment, .deadline:
+        case .appointment, .deadline, .meeting:
             .admin
         }
     }
@@ -101,6 +101,7 @@ public enum EventKind: String, Codable, CaseIterable, Sendable, Identifiable {
         case .holiday: L10n.calendarKindHoliday
         case .appointment: L10n.calendarKindAppointment
         case .deadline: L10n.calendarKindDeadline
+        case .meeting: L10n.calendarKindMeeting
         }
     }
 
@@ -125,6 +126,7 @@ public enum EventKind: String, Codable, CaseIterable, Sendable, Identifiable {
         case .holiday: "sparkles"
         case .appointment: "stethoscope"
         case .deadline: "flag.checkered"
+        case .meeting: "video.fill"
         }
     }
 
@@ -149,6 +151,7 @@ public enum EventKind: String, Codable, CaseIterable, Sendable, Identifiable {
         case .holiday: Palette.eventHoliday
         case .appointment: Palette.eventAdmin
         case .deadline: Palette.eventDeadline
+        case .meeting: Palette.eventAdmin
         }
     }
 
@@ -166,6 +169,8 @@ public enum EventKind: String, Codable, CaseIterable, Sendable, Identifiable {
         case .visit: [.menu, .shopping]
         case .concert, .cinema, .theatre, .sports: [.tickets, .budget]
         case .dining, .trip: [.budget, .tickets]
+        // A meeting opens with its link and nothing to budget or cook.
+        case .meeting: [.tickets]
         case .general, .chore, .appointment, .deadline: []
         }
     }
@@ -215,6 +220,12 @@ public enum PlanSection: String, CaseIterable, Sendable, Identifiable {
         case .menu: L10n.calendarPlanMenu
         case .tickets: L10n.calendarPlanTickets
         }
+    }
+
+    /// What the section is called on an event of this kind: the tickets
+    /// section is a meeting's join link.
+    public func title(for kind: EventKind) -> LocalizedStringResource {
+        self == .tickets && kind == .meeting ? L10n.meetingLinkTitle : title
     }
 
     public var symbol: String {

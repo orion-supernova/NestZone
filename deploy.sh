@@ -198,8 +198,21 @@ if [[ -n "$BUMP" ]]; then
   set_marketing_version "$CURRENT" "$NEXT"
 fi
 
-VERSION="$(marketing_version)"
+VERSION="${NEXT:-$(marketing_version)}"
 BUILD="$(build_number)"
+
+# Every build is its own version (owner's rule, 2026-11-23): never two builds
+# of one version. If `stage` already carries this version, it went out in an
+# earlier build, so this release has to be a new one — run with --bump patch
+# (and give it its changelog entry).
+if [[ $DO_RELEASE == 1 ]]; then
+  git -C "$ROOT" fetch -q origin "$RELEASE_BRANCH" 2>/dev/null || true
+  RELEASED="$(git -C "$ROOT" show "origin/$RELEASE_BRANCH:NestZone.xcodeproj/project.pbxproj" 2>/dev/null \
+    | grep -m1 -E 'MARKETING_VERSION = ' | sed -E 's/.*MARKETING_VERSION = ([^;]+);.*/\1/' | tr -d ' ')"
+  if [[ -n "$RELEASED" && "$RELEASED" == "$VERSION" ]]; then
+    die "Version $VERSION already went out in a build. Every build gets its own version: run ./deploy.sh --bump patch (and add its changelog entry)."
+  fi
+fi
 bold ""
 bold "  NestZone $VERSION (build $BUILD)"
 bold ""

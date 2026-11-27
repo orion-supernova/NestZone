@@ -45,6 +45,10 @@ public struct AppFeature: Sendable {
         /// Settings screen to put it in, so the arrival of a token and the
         /// display of one cannot be the same event.
         public var pushRegistration: PushRegistration = .none
+        /// A tapped notification waiting for the tabs. A tap that launched the
+        /// app arrives before the session is restored; it is delivered once
+        /// `main` exists, and on to the house it names.
+        var pendingTap: PushTap?
 
         public var auth = AuthFeature.State()
         public var homeGate = HomeManagementFeature.State()
@@ -103,6 +107,9 @@ public struct AppFeature: Sendable {
         case deviceRegistered(String)
         case deviceRegistrationFailed(String)
         case appEnteredForeground
+        /// The person tapped a notification.
+        case pushTapped(PushTap)
+        case pushHomeDeadline
         /// Houses this phone holds calendar things for that the live list lacks.
         case homesMissing(Set<HomeID>)
         /// RevenueCat now knows who this is.
@@ -116,7 +123,7 @@ public struct AppFeature: Sendable {
     }
 
     private enum CancelID {
-        case authState, currentUser, deviceToken, deviceRegistration, foreground, restore, signOutWait, purchasesIdentity
+        case authState, currentUser, deviceToken, deviceRegistration, foreground, restore, signOutWait, purchasesIdentity, pushTaps
     }
 
     @Dependency(\.auth) var authClient
@@ -157,10 +164,17 @@ public struct AppFeature: Sendable {
                 if firstRun, state.isRestoringSession, state.selectedHome != nil,
                    authClient.beginOptimisticLaunch() {
                     state.isProvisional = true
-                    _ = syncMain(&state)
+                    _ = syncMainState(&state)
                 }
                 return .merge(
                     configure,
+                    // Taps, for the life of the app. Started once: the stream
+                    // hands each tap to one listener, and a second would take
+                    // some of them.
+                    firstRun ? .run { send in
+                        for await tap in push.taps() { await send(.pushTapped(tap)) }
+                    }
+                    .cancellable(id: CancelID.pushTaps) : .none,
                     .run { send in
                         for await status in authClient.authState() {
                             await send(.authStatusChanged(status))
@@ -443,6 +457,16 @@ public struct AppFeature: Sendable {
                 else { return recheck }
                 return .merge(recheck, listenForDeviceToken(onlyIfAlreadyAuthorized: true))
 
+            case let .pushTapped(tap):
+                state.pendingTap = tap
+                return deliverPendingTap(&state, settle: false)
+
+            // The house a tap names never turned up in the list: route it by
+            // category in the open one.
+            case .pushHomeDeadline:
+                state.pendingTap?.home = nil
+                return deliverPendingTap(&state, settle: false)
+
             case .retryRestoreTapped:
                 state.isRestoringSession = true
                 state.restoreFailedOffline = false
@@ -554,6 +578,7 @@ public struct AppFeature: Sendable {
         state.currentUser = nil
         state.main = nil
         state.proCheckedFor = nil
+        state.pendingTap = nil
         state.missingHomes = []
         state.$pro.withLock { $0 = .unknown }
         // Who a person blocked is theirs, not the phone's.
@@ -610,6 +635,11 @@ public struct AppFeature: Sendable {
             // signs in next.
             .cancel(id: CancelID.deviceRegistration),
             .cancel(id: CancelID.purchasesIdentity),
+            // A tap waiting on a house, or on its way to the tabs, belonged to
+            // the session that just ended.
+            .cancel(id: PushTapCancel.delivery),
+            .cancel(id: PushTapCancel.routing),
+            .cancel(id: PushTapCancel.deadline),
             // On the same terms as the cached home list above: a
             // household's faces are a household's data, and the
             // directory outlives every screen that filled it. An
@@ -679,8 +709,51 @@ public struct AppFeature: Sendable {
         .cancellable(id: CancelID.deviceToken, cancelInFlight: true)
     }
 
-    /// Creates, updates or tears down the tab container to match the open home.
+    /// `syncMainState`, and then any tapped notification that was waiting for
+    /// the tabs this just built.
     private func syncMain(_ state: inout State) -> Effect<Action> {
+        syncMainState(&state)
+        return deliverPendingTap(&state, settle: true)
+    }
+
+    /// Hands a waiting tap to the tabs, switching to the house it names first
+    /// when the person belongs to it (an unknown house is ignored and the tap
+    /// routes by category in the open one). `settle` waits out the tabs'
+    /// first frames, which drop a sheet or push asked for mid-build.
+    private func deliverPendingTap(_ state: inout State, settle: Bool) -> Effect<Action> {
+        guard let tap = state.pendingTap, let main = state.main else { return .none }
+        var settle = settle || state.isProvisional
+        if let home = tap.home, home != main.homeID {
+            if state.homeGate.homes[id: home] != nil {
+                state.homeGate.$selectedHomeIDRaw.homeID = home
+                syncMainState(&state)
+                settle = true
+            } else if state.isProvisional || state.homeGate.isLoading {
+                // The list is the cache's, or has not answered: the house may
+                // simply not be in it yet. Held (the answer comes back through
+                // `syncMain`) for a few seconds, then routed where we are.
+                return .run { send in
+                    try await clock.sleep(for: .seconds(5))
+                    await send(.pushHomeDeadline)
+                }
+                .cancellable(id: PushTapCancel.deadline, cancelInFlight: true)
+            }
+            // Otherwise the list answered and the person is not in that house.
+        }
+        state.pendingTap = nil
+        return .merge(
+            .cancel(id: PushTapCancel.deadline),
+            .run { [settle] send in
+                if settle { try? await clock.sleep(for: .milliseconds(350)) }
+                await send(.main(.pushTapped(tap)))
+            }
+            .cancellable(id: PushTapCancel.delivery, cancelInFlight: true)
+        )
+    }
+
+    /// Creates, updates or tears down the tab container to match the open home.
+    @discardableResult
+    private func syncMainState(_ state: inout State) -> Effect<Action> {
         // Read before mutating: `selectedHome` reads `state` while the
         // assignments below need exclusive access to it.
         let selected = state.selectedHome

@@ -9,20 +9,20 @@ struct CalendarSettingsView: View {
 
     var body: some View {
         Form {
-            copySection
-
-            if store.isOn, store.access == .granted {
-                modeSection
-                intoSection
-                optionsSection
-            }
-
             shareSection
 
             if store.isShareOn, store.access == .granted {
                 shareCalendarsSections
                 shareOptionsSection
                 allowCopySection
+            }
+
+            copySection
+
+            if store.isOn, store.access == .granted {
+                modeSection
+                intoSection
+                optionsSection
             }
 
             if !store.copyRows.isEmpty {
@@ -199,6 +199,8 @@ struct CalendarSettingsView: View {
         } footer: {
             if !store.isShareOn {
                 Text(L10n.calendarShareOffFooter)
+            } else if store.shareGroups.isEmpty, store.access == .granted {
+                Text(L10n.calendarShareMissingFooter)
             }
         }
     }
@@ -211,6 +213,10 @@ struct CalendarSettingsView: View {
                 }
             } header: {
                 shareHeader(group)
+            } footer: {
+                if group.id == store.shareGroups.last?.id {
+                    Text(L10n.calendarShareMissingFooter)
+                }
             }
         }
     }

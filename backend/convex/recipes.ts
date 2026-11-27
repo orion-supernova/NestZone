@@ -73,18 +73,6 @@ export const create = mutation({
       if (match) return match;
     }
 
-    // Only a recipe that is genuinely new to the shelf. The dedupe branch
-    // above returns early, so adopting the same bundled recipe a second time
-    // stays silent.
-    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
-      homeId,
-      actor: user._id,
-      title: user.name ? `${user.name} added a recipe` : "New recipe",
-      body: rest.title,
-      category: "recipes",
-      topic: "meals",
-    });
-
     const now = Date.now();
     const id = await ctx.db.insert("recipes", {
       ...rest,
@@ -92,6 +80,20 @@ export const create = mutation({
       created_by: user._id,
       created: now,
       updated: now,
+    });
+
+    // Only a recipe that is genuinely new to the shelf. The dedupe branch
+    // above returns early, so adopting the same bundled recipe a second time
+    // stays silent. After the insert so the tap can open this recipe; the
+    // same transaction either way, so nothing is sent for a write that fails.
+    await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+      homeId,
+      actor: user._id,
+      title: user.name ? `${user.name} added a recipe` : "New recipe",
+      body: rest.title,
+      category: "recipes",
+      topic: "meals",
+      link: `recipe:${id}`,
     });
     return await ctx.db.get(id);
   },

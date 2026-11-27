@@ -68,6 +68,9 @@ const eventKind = v.union(
   // Admin
   v.literal("appointment"),
   v.literal("deadline"),
+  // An online call: its `url` is the join link, not a ticket. Added in 1.14.0;
+  // older builds decode an unknown kind leniently and draw a general event.
+  v.literal("meeting"),
 );
 
 // Whether somebody is coming.

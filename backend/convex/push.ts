@@ -30,6 +30,7 @@ import { requireUser, requireHomeMember } from "./lib/auth";
 import { proEnforced } from "./lib/pro";
 import { blockersOf } from "./lib/moderation";
 import { Delivery, deliveryFor, prefsOf, topicFor } from "./lib/notificationPrefs";
+import { compareVersions } from "./inbox";
 
 /// Apple rejects a provider that mints tokens more often than once per 20
 /// minutes, and accepts one for up to an hour. Refreshing at 40 keeps us clear
@@ -157,8 +158,10 @@ export const tokensForHome = internalQuery({
      * and to `topic` if they switched this one off.
      */
     personal: v.optional(v.object({ userIds: v.array(v.id("users")), topic: v.string() })),
+    /** `notifyHome`'s `minAppVersion`: only devices that reported this version or newer. */
+    minAppVersion: v.optional(v.string()),
   },
-  handler: async (ctx, { homeId, exclude, environment: only, topic, personal }) => {
+  handler: async (ctx, { homeId, exclude, environment: only, topic, personal, minAppVersion }) => {
     const home = await ctx.db.get(homeId);
     if (!home) return [];
     // Nobody hears from somebody they have blocked (lib/moderation.ts).
@@ -203,6 +206,8 @@ export const tokensForHome = internalQuery({
       if (delivery === "off") return;
       for (const r of tokens[i]) {
         if (only && r.environment !== only) continue;
+        // A build too old to report its version is too old for this push.
+        if (minAppVersion && (!r.app_version || compareVersions(r.app_version, minAppVersion) < 0)) continue;
         devices.push({
           id: r._id,
           token: r.token,
@@ -358,6 +363,11 @@ type Alert = {
   threadId?: string;
   /// Set only to deliberately REPLACE an earlier notification.
   collapseId?: string;
+  /// The home it is about, sent as `home` so a tap lands in that house even
+  /// when the phone is showing another one.
+  homeId?: string;
+  /// The one thing it is about (`alertArgs.link`), sent as `link`.
+  link?: string;
 };
 
 /// The shape every notifying action takes, so a caller writes the same thing
@@ -374,6 +384,15 @@ const alertArgs = {
    * feed. Absent: derived from `category`, so nothing is unclassified.
    */
   topic: v.optional(v.string()),
+  /**
+   * The one thing a tap should open, sent beside `category` as `link`. The
+   * app parses exactly these: `event:<eventId>:<occurrenceStartMs>` (or
+   * `event:<eventId>` when the occurrence is not known), `issue:<issueId>`,
+   * `conversation:<conversationId>`, `recipe:<recipeId>`. Absent: the tap
+   * goes by `category` alone, which is right for anything that is not one
+   * specific thing.
+   */
+  link: v.optional(v.string()),
 };
 
 /**
@@ -498,6 +517,12 @@ async function fanOut(
   const jwt = await providerToken(ctx);
   const topic = requireEnv("APNS_BUNDLE_ID");
 
+  // What a tap opens: the house, and the one thing in it when there is one.
+  // Top level beside `category`, so a build that reads neither ignores both.
+  const where = {
+    ...(alert.homeId ? { home: alert.homeId } : {}),
+    ...(alert.link ? { link: alert.link } : {}),
+  };
   const payload = {
     aps: {
       alert: { title: alert.title, body: alert.body },
@@ -505,6 +530,7 @@ async function fanOut(
       ...(alert.threadId ? { "thread-id": alert.threadId } : {}),
     },
     category: alert.category ?? "activity",
+    ...where,
   };
   // The same alert for a device inside its owner's quiet hours: no sound, and
   // `passive`, which iOS (15+) files in Notification Center without lighting
@@ -517,6 +543,7 @@ async function fanOut(
       ...(alert.threadId ? { "thread-id": alert.threadId } : {}),
     },
     category: alert.category ?? "activity",
+    ...where,
   };
 
   // A collapse id REPLACES whatever is already showing under the same id, so
@@ -596,8 +623,14 @@ export const notifyHome = internalAction({
      * `notifyUsers`' variant.
      */
     personal: v.optional(v.object({ userIds: v.array(v.id("users")), topic: v.string() })),
+    /**
+     * Only devices on this app version or newer, for a push older builds can
+     * neither switch off nor open (Nestie's care and thirsty, 1.14.0). The feed
+     * row is written for the whole house regardless. Absent: every device.
+     */
+    minAppVersion: v.optional(v.string()),
   },
-  handler: async (ctx, { environment: only, skipFeed, topic, personal, ...args }) => {
+  handler: async (ctx, { environment: only, skipFeed, topic, personal, minAppVersion, ...args }) => {
     // Money and Calendar are Household Pro. A house without it hears nothing
     // about either — no push and no feed row — which silences every reminder
     // sweep and every mutation's announcement in both domains in one place.
@@ -638,6 +671,7 @@ export const notifyHome = internalAction({
       environment: only,
       topic: topicFor(topic, args.category),
       personal,
+      minAppVersion,
     });
     return await fanOut(
       ctx,

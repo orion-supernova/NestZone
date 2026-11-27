@@ -77,6 +77,7 @@ const eventKind = v.union(
   v.literal("holiday"),
   v.literal("appointment"),
   v.literal("deadline"),
+  v.literal("meeting"),
 );
 
 const shoppingCategory = v.union(
@@ -780,6 +781,18 @@ export const detail = query({
  * screen can still group "everything for the lasagne" inside "everything for
  * Saturday".
  */
+/**
+ * A push's `link` for an event (push.ts `alertArgs.link`). With the
+ * occurrence's start when there is only one to mean; a series names no single
+ * date, so it goes as the event alone and the app picks the next one.
+ */
+function eventLink(
+  id: Id<"events">,
+  event: { starts_at: number; recurrence?: unknown },
+): string {
+  return event.recurrence ? `event:${id}` : `event:${id}:${event.starts_at}`;
+}
+
 export const stockUp = mutation({
   args: { id: v.id("events"), category: v.optional(shoppingCategory) },
   handler: async (ctx, { id, category }) => {
@@ -856,6 +869,7 @@ export const stockUp = mutation({
         body: `${added} ${added === 1 ? "item" : "items"} for ${event.title ?? "an event"}`,
         category: "shopping",
         topic: "shopping.added",
+        link: eventLink(id, event),
       });
     }
 
@@ -915,6 +929,7 @@ export const addItems = mutation({
         body: `${added} ${added === 1 ? "item" : "items"} for ${event.title ?? "an event"}`,
         category: "shopping",
         topic: "shopping.added",
+        link: eventLink(id, event),
       });
     }
 
@@ -993,6 +1008,7 @@ export const create = mutation({
       category: "calendar",
       topic: "calendar.events",
       collapseId: `event-${id}`,
+      link: eventLink(id, { starts_at: args.startsAt, recurrence }),
     });
 
     return id;
@@ -1126,6 +1142,7 @@ export const update = mutation({
         category: "calendar",
         topic: "calendar.events",
         collapseId: `event-${args.id}`,
+        link: eventLink(args.id, { starts_at: startsAt, recurrence }),
       });
     }
 
@@ -1330,6 +1347,8 @@ export const sweepReminders = internalAction({
         // One nudge per occurrence on the lock screen, whatever the offset:
         // "in an hour" being replaced by "in ten minutes" is the point.
         collapseId: `event-${nudge.eventId}-${nudge.startsAt}`,
+        // The occurrence it is about, which a reminder always knows.
+        link: `event:${nudge.eventId}:${nudge.startsAt}`,
       });
       sent++;
     }

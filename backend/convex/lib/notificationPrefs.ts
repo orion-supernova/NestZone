@@ -43,6 +43,8 @@ export const TOPICS = [
   "companion.ready",
   "companion.vote",
   "companion.new",
+  "companion.care",
+  "companion.thirsty",
   "home.members",
   // Never switchable (`UNFILTERED`); listed so every push's topic is here.
   "home.removed",
