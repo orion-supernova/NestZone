@@ -47,6 +47,7 @@ public struct CalendarMirrorFeature: Sendable {
         @Shared(.calendarCopyReminders) var copyReminders: Bool
         @Shared(.calendarLastSynced) var lastSynced: Double
         @Shared(.pro) var pro: ProStatus
+        @Shared(.calendarSyncActive) var active: Set<String>
 
         public init(homeID: HomeID, userID: UserID?) {
             self.homeID = homeID
@@ -65,9 +66,14 @@ public struct CalendarMirrorFeature: Sendable {
         case overridesChanged
         case syncDue
         case synced(MirrorSummary)
+        /// "Sync now" in Settings, or a background refresh: sync the answer in
+        /// hand, or the first one to arrive.
+        case syncNow
+        /// A sync asked for by `syncNow` is over, one way or another.
+        case syncEnded
     }
 
-    private enum CancelID { case events, store, overrides, sync }
+    private enum CancelID { case events, store, overrides, sync, manual }
 
     /// How far ahead the copies reach. Past it nothing is copied yet, and a
     /// copy is made when the window gets there. Four months, not six: the
@@ -125,12 +131,31 @@ public struct CalendarMirrorFeature: Sendable {
 
             case .calendarStoreChanged:
                 guard state.window != nil else { return .none }
-                // A burst of changes (ours included) is one sync, a second later.
+                // A burst of changes (ours included) is one sync, two seconds
+                // later. Ours cannot start a loop: a pass finds every copy
+                // already at its fingerprint and writes nothing, so it makes
+                // no change to hear.
                 return .run { send in
-                    try await clock.sleep(for: .seconds(1))
+                    try await clock.sleep(for: .seconds(2))
                     await send(.syncDue)
                 }
                 .cancellable(id: CancelID.sync, cancelInFlight: true)
+
+            case .syncNow:
+                guard state.pro.isLoaded, state.pro.isPro, state.following != nil else { return .none }
+                state.$active.withLock { _ = $0.insert("mirror") }
+                // The answer is on its way when none is in hand yet; its sync
+                // ends this. A phone that never hears one gives up after 20 s.
+                let wait: Effect<Action> = .run { send in
+                    try await clock.sleep(for: .seconds(20))
+                    await send(.syncEnded)
+                }
+                .cancellable(id: CancelID.manual, cancelInFlight: true)
+                return .merge(state.window == nil ? .none : .send(.syncDue), wait)
+
+            case .syncEnded:
+                state.$active.withLock { _ = $0.remove("mirror") }
+                return .cancel(id: CancelID.manual)
 
             case .syncDue:
                 guard state.pro.isLoaded, state.pro.isPro, let window = state.window else { return .none }
@@ -150,9 +175,10 @@ public struct CalendarMirrorFeature: Sendable {
                 return .run { send in
                     let summary = try await calendarMirror.sync(request, deviceCalendar)
                     await send(.synced(summary))
-                } catch: { _, _ in }
+                } catch: { _, send in await send(.syncEnded) }
 
             case let .synced(summary):
+                state.$active.withLock { _ = $0.remove("mirror") }
                 // A request folded into a pass already running, or one that
                 // stood down, is not a sync "Last synced" should claim.
                 guard summary.didSync else { return .none }

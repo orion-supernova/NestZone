@@ -25,6 +25,12 @@ public struct CalendarFeature: Sendable {
         /// whose it is.
         public var currentUserID: UserID?
         public var members: IdentifiedArrayOf<User> = []
+        /// What this phone shares with this house, for the quiet nudge at the
+        /// top while nothing is.
+        @Shared(.calendarShareChoicesRaw) public var shareChoicesRaw: String
+        /// The phone's answer to "may NestZone read your calendars", read when
+        /// the screen opens.
+        public var deviceAccess: DeviceCalendarAccess = .notDetermined
 
         public var mode: Mode = .month
         /// The month the scrubber is on. Drives the subscription window in
@@ -419,6 +425,12 @@ public struct CalendarFeature: Sendable {
         /// Whether the filter row has anything worth drawing. An active filter
         /// always keeps it on screen, or turning one on could hide the control
         /// that turns it off.
+        public var showsShareNudge: Bool {
+            guard deviceAccess != .denied, deviceAccess != .restricted else { return false }
+            let house = CalendarShareChoices.decode(shareChoicesRaw).house(homeID)
+            return !house.isOn || !house.levels.values.contains { $0.isShared }
+        }
+
         public var showsFilterRow: Bool {
             isFiltering
                 || !presentKinds.isEmpty
@@ -462,6 +474,12 @@ public struct CalendarFeature: Sendable {
     }
 
     public enum Action: BindableAction {
+        @CasePathable
+        public enum Delegate: Equatable {
+            /// Settings → Calendar, as a screen on this tab's stack.
+            case openSettings
+        }
+
         case task
         /// Tagged with the window it was asked for. The payload is a bare array
         /// with no range on it, so the subscription has to say — otherwise the
@@ -496,6 +514,9 @@ public struct CalendarFeature: Sendable {
 
         case addTapped
         case historyTapped
+        /// The ⋯ menu's "Calendar settings".
+        case settingsTapped
+        case delegate(Delegate)
         case addOnDayTapped(CalendarDay)
         case eventTapped(EventOccurrence.ID)
         case editTapped(EventOccurrence, EventScope)
@@ -529,6 +550,7 @@ public struct CalendarFeature: Sendable {
 
     @Dependency(\.events) var events
     @Dependency(\.calendarShare) var calendarShare
+    @Dependency(\.deviceCalendar) var deviceCalendar
     @Dependency(\.homes) var homes
     @Dependency(\.paywall) var paywall
     @Dependency(\.continuousClock) var clock
@@ -552,6 +574,7 @@ public struct CalendarFeature: Sendable {
 
             case .task:
                 let homeID = state.homeID
+                state.deviceAccess = deviceCalendar.access()
                 // One look ahead for a house without Plus, whose calendar is
                 // only drawn read-only when it has something in it.
                 let ahead: Effect<Action> = pro.isPro ? .none : .run { send in
@@ -764,6 +787,12 @@ public struct CalendarFeature: Sendable {
                     currentUserID: state.currentUserID,
                     day: day
                 ))
+                return .none
+
+            case .settingsTapped:
+                return .send(.delegate(.openSettings))
+
+            case .delegate:
                 return .none
 
             case .historyTapped:

@@ -24,9 +24,13 @@ public struct CalendarSettingsFeature: Sendable {
         @Shared(.calendarShareWeeks) public var shareWeeks: Int
         @Shared(.calendarCopyChoicesRaw) public var copyChoicesRaw: String
         @Shared(.calendarCopyMode) public var mode: CalendarCopyMode
+        @Shared(.calendarCopyLastMode) public var lastMode: CalendarCopyMode
         @Shared(.calendarCopyTargetsRaw) public var targetsRaw: String
         @Shared(.calendarCopyReminders) public var copyReminders: Bool
         @Shared(.calendarLastSynced) public var lastSynced: Double
+        @Shared(.calendarShareLastSynced) public var shareLastSynced: Double
+        @Shared(.calendarSharePlanCount) public var planCount: Int
+        @Shared(.calendarSyncActive) public var syncActive: Set<String>
         @Shared(.pro) public var pro: ProStatus
 
         public var access: DeviceCalendarAccess = .notDetermined
@@ -55,7 +59,19 @@ public struct CalendarSettingsFeature: Sendable {
         /// The housemate whose "Add to my calendar" opened the explainer.
         public var explainingOwner: String?
 
+        /// Where a "Sync now" is: running while the passes have it, a tick
+        /// for a moment after.
+        public var syncPhase: SyncPhase = .idle
+        /// Taps on "Sync now", so the haptic is the person's own and nothing a
+        /// live push can also move.
+        public var syncTaps = 0
+
+        public enum SyncPhase: Equatable, Sendable { case idle, running, done }
+
         public var isExplaining = false
+        /// The explainer was opened by "Allow calendar access" alone: its yes
+        /// asks the system and switches nothing on.
+        public var isExplainingAccess = false
         public var isConnecting = false
         /// "Remove the copies from your calendars?"
         @Presents public var dialog: ConfirmationDialogState<Action.Dialog>?
@@ -95,6 +111,33 @@ public struct CalendarSettingsFeature: Sendable {
         }
 
         public var isOn: Bool { mode != .off }
+
+        /// How many of the phone's calendars are shared, and how many could be.
+        public var sharedCalendarCount: (shared: Int, total: Int) {
+            let house = shareChoices.house(homeID)
+            let all = shareGroups.flatMap(\.calendars)
+            return (all.filter { house.level(of: $0.key).isShared }.count, all.count)
+        }
+
+        /// The calendar copies go into, said short: the first by name and how
+        /// many more.
+        public var intoSummary: String? {
+            let chosen = calendars.filter { targets.contains($0.id) }
+            guard let first = chosen.first else { return nil }
+            return chosen.count > 1 ? "\(first.title) +\(chosen.count - 1)" : first.title
+        }
+
+        /// The latest of the passes, as a date; `nil` before any.
+        public var lastSyncedDate: Date? {
+            let latest = max(lastSynced, shareLastSynced)
+            return latest > 0 ? Date(timeIntervalSince1970: latest) : nil
+        }
+
+        /// Something is set to move calendars, so syncing has a meaning.
+        public var hasSomethingToSync: Bool { isShareOn || isOn || !copyOwnersEmpty }
+        private var copyOwnersEmpty: Bool {
+            CalendarCopyChoices.decode(copyChoicesRaw).house(homeID).owners.isEmpty
+        }
         public var targets: Set<String> { Set(CalendarLists.calendars(targetsRaw)) }
 
         public struct CalendarGroup: Equatable, Identifiable, Sendable {
@@ -127,6 +170,12 @@ public struct CalendarSettingsFeature: Sendable {
         /// The explainer's Continue: the system prompt may be shown now.
         case connectTapped
         case openSystemSettingsTapped
+        /// The access card's button: the explainer, then the system prompt.
+        case allowAccessTapped
+        /// "Sync now": asks the tab bar's passes to run, and waits for them.
+        case syncNowTapped
+        case syncFinished
+        case syncReset
         case copiesRemoved
         case binding(BindingAction<State>)
         case dialog(PresentationAction<Dialog>)
@@ -141,10 +190,13 @@ public struct CalendarSettingsFeature: Sendable {
         public enum Delegate: Equatable {
             /// A setting that decides what is copied moved: the mirror syncs.
             case changed
+            /// "Sync now": the sharing, copying and housemates' passes run
+            /// once. Raised, never done here: the passes belong to the tab bar.
+            case syncRequested
         }
     }
 
-    private enum CancelID { case reload }
+    private enum CancelID { case reload, sync }
 
     @Dependency(\.deviceCalendar) var deviceCalendar
     @Dependency(\.calendarMirror) var calendarMirror
@@ -160,7 +212,7 @@ public struct CalendarSettingsFeature: Sendable {
     /// and writing is Plus.
     static func writes(_ action: Action) -> Bool {
         switch action {
-        case .copyToggled(true), .modeSelected, .targetToggled, .connectTapped, .remindersToggled,
+        case .syncNowTapped, .copyToggled(true), .modeSelected, .targetToggled, .connectTapped, .remindersToggled,
              .shareToggled(true), .allowCopyToggled(true), .housemateToggled(_, true): true
         // Off is never gated: stopping is always allowed.
         case let .shareLevelSelected(_, level): level.isShared
@@ -392,6 +444,8 @@ public struct CalendarSettingsFeature: Sendable {
 
             case .copyToggled(false):
                 guard state.isOn else { return .none }
+                let current = state.mode
+                state.$lastMode.withLock { $0 = current }
                 state.$mode.withLock { $0 = .off }
                 guard state.copyCount > 0 else { return .send(.delegate(.changed)) }
                 state.dialog = .removeCopies
@@ -408,9 +462,20 @@ public struct CalendarSettingsFeature: Sendable {
                 state.$targetsRaw.withLock { $0 = CalendarLists.raw(calendars: targets.sorted()) }
                 return .send(.delegate(.changed))
 
+            case .allowAccessTapped:
+                state.isExplainingShare = false
+                state.explainingOwner = nil
+                state.isExplainingAccess = true
+                state.isExplaining = true
+                return .none
+
             case .connectTapped:
                 state.isExplaining = false
                 state.isConnecting = true
+                if state.isExplainingAccess {
+                    state.isExplainingAccess = false
+                    return request(then: .nothing)
+                }
                 let thenShare = state.isExplainingShare
                 state.isExplainingShare = false
                 let owner = state.explainingOwner
@@ -451,6 +516,38 @@ public struct CalendarSettingsFeature: Sendable {
                 state.copyCount = 0
                 return .none
 
+            case .syncNowTapped:
+                guard state.syncPhase != .running else { return .none }
+                state.syncPhase = .running
+                state.syncTaps += 1
+                return .merge(
+                    .send(.delegate(.syncRequested)),
+                    .run { [active = state.$syncActive] send in
+                        // The passes put themselves in `active` as they take
+                        // the request; a beat for them to do so, then wait
+                        // for them to leave. A phone that never answers does
+                        // not hold the spinner past twenty seconds.
+                        try await clock.sleep(for: .milliseconds(600))
+                        var waited = 0
+                        while !active.withLock({ $0.isEmpty }), waited < 40 {
+                            try await clock.sleep(for: .milliseconds(500))
+                            waited += 1
+                        }
+                        await send(.syncFinished)
+                        try await clock.sleep(for: .seconds(2))
+                        await send(.syncReset)
+                    }
+                    .cancellable(id: CancelID.sync, cancelInFlight: true)
+                )
+
+            case .syncFinished:
+                state.syncPhase = .done
+                return .none
+
+            case .syncReset:
+                state.syncPhase = .idle
+                return .none
+
             case let .remindersToggled(isOn):
                 state.$copyReminders.withLock { $0 = isOn }
                 return .send(.delegate(.changed))
@@ -465,7 +562,7 @@ public struct CalendarSettingsFeature: Sendable {
     /// The system prompt, after the explainer. Its answer turns copying on
     /// when it is a yes.
     private enum Then: Sendable {
-        case copy, share
+        case copy, share, nothing
         case owner(String)
     }
 
@@ -484,6 +581,7 @@ public struct CalendarSettingsFeature: Sendable {
                 case .copy: await send(.copyToggled(true))
                 case .share: await send(.shareToggled(true))
                 case let .owner(id): await send(.housemateToggled(id, true))
+                case .nothing: break
                 }
             }
         }
@@ -506,7 +604,8 @@ public struct CalendarSettingsFeature: Sendable {
     /// First time on: the least surprising mode, "only the ones I add", into
     /// the phone's own default calendar when nothing was chosen yet.
     private func turnOn(_ state: inout State) -> Effect<Action> {
-        state.$mode.withLock { $0 = .onlyMine }
+        let previous = state.lastMode == .off ? CalendarCopyMode.onlyMine : state.lastMode
+        state.$mode.withLock { $0 = previous }
         if state.targets.isEmpty, let id = state.defaultCalendarID {
             state.$targetsRaw.withLock { $0 = id }
         }

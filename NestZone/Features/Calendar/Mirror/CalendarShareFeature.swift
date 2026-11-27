@@ -33,11 +33,16 @@ public struct CalendarShareFeature: Sendable {
         @Shared(.calendarShareWeeks) var weeks: Int
         @Shared(.calendarShareDefaultLevelRaw) var defaultLevelRaw: String
         @Shared(.pro) var pro: ProStatus
+        @Shared(.calendarShareLastSynced) var lastSynced: Double
+        @Shared(.calendarSharePlanCount) var planCount: Int
+        @Shared(.calendarSyncActive) var active: Set<String>
 
         /// A pass is running; a trigger that arrives meanwhile is folded into
         /// one more pass afterwards.
         var isSyncing = false
         var again = false
+        /// A "Sync now" arrived while a pass ran: the pass after it is manual.
+        var againManual = false
         /// The list last given to the server in this run, so an unchanged list
         /// is not sent on every pass.
         var declared: [SharedCalendarEntry]?
@@ -52,6 +57,11 @@ public struct CalendarShareFeature: Sendable {
         struct Upload: Equatable, Sendable {
             var at: Date
             var stamp: String
+            /// What was sent, so a pass that would send the same again can
+            /// stand down (a calendar change in another calendar, or our own
+            /// copies being written, is not a change to this one).
+            var digest: Int
+            var count: Int
         }
 
         public init(homeID: HomeID, userID: UserID?) {
@@ -69,13 +79,16 @@ public struct CalendarShareFeature: Sendable {
         case settingsChanged
         case becameActive
         case storeChanged
+        /// "Sync now" in Settings: a pass that ignores the pacing and the
+        /// stand-down for unchanged calendars.
+        case syncNow
         case sync(Trigger)
         case calendarsLoaded([DeviceCalendar], Trigger)
         case finished(Outcome)
         case stopped(HomeID, Set<String>, all: Bool)
 
         public enum Trigger: Equatable, Sendable {
-            case launch, foreground, settings, storeChanged, retry
+            case launch, foreground, settings, storeChanged, retry, manual
         }
 
         public struct Outcome: Equatable, Sendable {
@@ -83,6 +96,8 @@ public struct CalendarShareFeature: Sendable {
             var declaredAllowCopy: Bool?
             var uploads: [String: State.Upload] = [:]
             var blocked = false
+            /// The pass got as far as being sure the house is up to date.
+            var completed = false
             /// When something was held back by the five-minute rule, the time
             /// it may go.
             var retryAt: Date?
@@ -95,6 +110,8 @@ public struct CalendarShareFeature: Sendable {
     static let interval: TimeInterval = 5 * 60
     /// The server keeps at most this many items per calendar.
     static let itemCap = 500
+    /// An unchanged calendar is sent again after this long all the same.
+    static let keepAlive: TimeInterval = 6 * 3600
 
     @Dependency(\.calendarShare) var calendarShare
     @Dependency(\.deviceCalendar) var deviceCalendar
@@ -123,6 +140,10 @@ public struct CalendarShareFeature: Sendable {
             case .becameActive:
                 return .send(.sync(.foreground))
 
+            case .syncNow:
+                state.isBlocked = false
+                return .send(.sync(.manual))
+
             case .storeChanged:
                 // A burst of changes, ours included, is one pass, a moment later.
                 return .run { send in
@@ -132,8 +153,10 @@ public struct CalendarShareFeature: Sendable {
                 .cancellable(id: CancelID.debounce, cancelInFlight: true)
 
             case let .sync(trigger):
+                if trigger == .manual { state.$active.withLock { _ = $0.insert("share") } }
                 guard !state.isSyncing else {
                     state.again = true
+                    if trigger == .manual { state.againManual = true }
                     return .none
                 }
                 let house = state.choices.house(state.homeID)
@@ -231,11 +254,15 @@ public struct CalendarShareFeature: Sendable {
                         let due = wanted.filter { calendar, level in
                             let stamp = Self.stamp(calendar, level, weeks: weeks, from: from)
                             guard let last = result.uploads[calendar.key], last.stamp == stamp else { return true }
+                            // A change in the phone's calendars, or the person
+                            // asking: read it now. What it adds up to decides
+                            // below whether anything is sent.
+                            if trigger == .manual || trigger == .storeChanged { return true }
                             let next = last.at.addingTimeInterval(Self.interval)
                             if next > current {
                                 // Held back by the five-minute rule; the retry
                                 // catches it once the time is up.
-                                if trigger == .storeChanged || trigger == .retry {
+                                if trigger == .retry {
                                     result.retryAt = min(result.retryAt ?? next, next)
                                 }
                                 return false
@@ -243,6 +270,7 @@ public struct CalendarShareFeature: Sendable {
                             return true
                         }
                         guard !due.isEmpty else {
+                            result.completed = true
                             await send(.finished(result))
                             return
                         }
@@ -256,9 +284,18 @@ public struct CalendarShareFeature: Sendable {
                         for (calendar, level) in due {
                             let items = Self.items(byCalendar[calendar.id] ?? [], level: level)
                             let stamp = Self.stamp(calendar, level, weeks: weeks, from: from)
+                            let digest = Self.digest(items)
+                            // Nothing new to say. Sent anyway once in a while,
+                            // so the server never thinks the share went quiet
+                            // (it forgets one that is not synced for 30 days).
+                            if trigger != .manual, let last = result.uploads[calendar.key],
+                               last.stamp == stamp, last.digest == digest,
+                               current.timeIntervalSince(last.at) < Self.keepAlive {
+                                continue
+                            }
                             do {
                                 _ = try await replace(homeID, calendar.key, from, to, items, entries, weeks, allowCopy)
-                                result.uploads[calendar.key] = .init(at: current, stamp: stamp)
+                                result.uploads[calendar.key] = .init(at: current, stamp: stamp, digest: digest, count: items.count)
                             } catch let error as AppError {
                                 if case .proRequired = error {
                                     // Not Plus after all: stop quietly.
@@ -269,6 +306,7 @@ public struct CalendarShareFeature: Sendable {
                                 // again; nothing here is shown.
                             }
                         }
+                        result.completed = !result.blocked && result.uploads.count >= wanted.count
                     } catch let error as AppError {
                         if case .proRequired = error { result.blocked = true }
                     } catch {}
@@ -281,6 +319,11 @@ public struct CalendarShareFeature: Sendable {
                 state.declaredAllowCopy = result.declaredAllowCopy
                 state.uploads = result.uploads
                 if result.blocked { state.isBlocked = true }
+                if result.completed {
+                    let total = result.uploads.values.reduce(0) { $0 + $1.count }
+                    state.$planCount.withLock { $0 = total }
+                    state.$lastSynced.withLock { $0 = now.timeIntervalSince1970 }
+                }
                 let again = finishedAgain(&state)
                 guard let retryAt = result.retryAt, !result.blocked else { return again }
                 let wait = max(1, retryAt.timeIntervalSince(now) + 1)
@@ -297,9 +340,14 @@ public struct CalendarShareFeature: Sendable {
     }
 
     private func finishedAgain(_ state: inout State) -> Effect<Action> {
-        guard state.again else { return .none }
+        guard state.again else {
+            state.$active.withLock { _ = $0.remove("share") }
+            return .none
+        }
         state.again = false
-        return .send(.sync(.settings))
+        let trigger: Action.Trigger = state.againManual ? .manual : .settings
+        state.againManual = false
+        return .send(.sync(trigger))
     }
 
     // MARK: Server calls
@@ -345,6 +393,21 @@ public struct CalendarShareFeature: Sendable {
     /// day slides the window.
     static func stamp(_ calendar: DeviceCalendar, _ level: CalendarShareLevel, weeks: Int, from: Date) -> String {
         "\(calendar.key)|\(level.rawValue)|\(weeks)|\(Int(from.timeIntervalSince1970))|\(calendar.title)"
+    }
+
+    /// What a list of items adds up to, to tell a calendar that changed from
+    /// one that did not. Only compared within a run, so the per-process seed
+    /// of `Hasher` does no harm.
+    static func digest(_ items: [SharedItemUpload]) -> Int {
+        var hasher = Hasher()
+        for item in items {
+            hasher.combine(item.startsAt)
+            hasher.combine(item.endsAt)
+            hasher.combine(item.isAllDay)
+            hasher.combine(item.title)
+            hasher.combine(item.location)
+        }
+        return hasher.finalize()
     }
 
     /// The upload for one calendar at one level. Busy only drops the title and

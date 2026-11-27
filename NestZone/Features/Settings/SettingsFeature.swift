@@ -251,6 +251,8 @@ public struct SettingsFeature: Sendable {
             /// A Calendar setting that decides what is copied into the person's
             /// calendars moved; the tab bar's mirror syncs again.
             case calendarSettingsChanged
+            /// "Sync now" on the Calendar page: the tab bar's passes run once.
+            case calendarSyncRequested
             #if DEBUG
             /// The Nestie Lab belongs to the companion, which `MainFeature`
             /// owns: it brings Today forward and opens the Lab there.
@@ -515,6 +517,9 @@ public struct SettingsFeature: Sendable {
 
             case .destination(.presented(.calendar(.delegate(.changed)))):
                 return .send(.delegate(.calendarSettingsChanged))
+
+            case .destination(.presented(.calendar(.delegate(.syncRequested)))):
+                return .send(.delegate(.calendarSyncRequested))
 
             case .manageHomesTapped:
                 state.destination = .manageHomes(

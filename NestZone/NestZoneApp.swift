@@ -82,7 +82,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         // Needed for a notification to show while the app is foregrounded —
         // without a delegate iOS suppresses it, which is wrong for a timer.
         UNUserNotificationCenter.current().delegate = self
+        // Before launch ends, or iOS refuses the handler.
+        CalendarBackgroundSync.register()
         return true
+    }
+
+    /// Asks iOS for a calendar refresh while the app is away.
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        CalendarBackgroundSync.schedule()
     }
 
     func application(
