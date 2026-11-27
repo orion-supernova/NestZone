@@ -114,4 +114,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) {
         completionHandler([.banner, .sound])
     }
+
+    /// A tap on a notification opens what it is about. The payload is read here
+    /// and handed over as a plain value; `AppFeature` decides where it goes,
+    /// once there is a screen to go to (a tap can be what launched the app).
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier,
+           let tap = PushTap(userInfo: response.notification.request.content.userInfo) {
+            PushTapBroker.shared.received(tap)
+        }
+        completionHandler()
+    }
 }

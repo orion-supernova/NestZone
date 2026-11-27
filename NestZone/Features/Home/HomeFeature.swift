@@ -223,7 +223,11 @@ public struct HomeFeature: Sendable {
         /// What is coming, not what is under way — the dock above the tab bar
         /// already says what is happening now.
         public var comingUp: [EventOccurrence] {
-            Array(upcoming.filter { !$0.isInProgress && $0.start > now && $0 != dockEvent }.prefix(4))
+            // A meeting that can be joined stays while it is under way: this
+            // is where Join is when the dock is not showing it.
+            Array(upcoming.filter {
+                $0 != dockEvent && ($0.canJoin(at: now) || (!$0.isInProgress && $0.start > now))
+            }.prefix(4))
         }
 
         /// The event the dock is showing, if it is showing one.
@@ -426,6 +430,8 @@ public struct HomeFeature: Sendable {
         /// ever have said "nothing here".
         case partFailed(State.Loaded)
         case taskToggled(TaskID)
+        /// Join, on a meeting's chip in Coming up.
+        case joinTapped(EventOccurrence)
         case toggleFailed(TaskID, wasCompleted: Bool, AppError)
         /// A ticked chore's moment on screen is over.
         case tickSettled(TaskID)
@@ -505,6 +511,7 @@ public struct HomeFeature: Sendable {
     @Dependency(\.events) var eventsClient
     @Dependency(\.homes) var homesClient
     @Dependency(\.push) var push
+    @Dependency(\.openURL) var openURL
     @Dependency(\.continuousClock) var clock
 
     public init() {}
@@ -712,6 +719,10 @@ public struct HomeFeature: Sendable {
                 guard !error.isSilent else { return .none }
                 state.alert = .failure(error)
                 return .none
+
+            case let .joinTapped(occurrence):
+                guard let url = occurrence.meetingLink?.url else { return .none }
+                return .run { _ in await openURL(url) }
 
             case let .taskToggled(id):
                 guard let task = state.tasks[id: id] else { return .none }

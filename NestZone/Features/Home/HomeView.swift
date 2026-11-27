@@ -29,6 +29,8 @@ public struct HomeView<Companion: View>: View {
     /// the phone tap — the same change arriving from somebody else's phone is
     /// theirs to feel, not this one's.
     @State private var lastOwnTick = Date.distantPast
+    /// Taps on a meeting's Join: the person's own, so they tick.
+    @State private var joins = 0
     @State private var allClears = 0
 
     public init(store: StoreOf<HomeFeature>, @ViewBuilder companion: @escaping (_ compact: Bool) -> Companion) {
@@ -559,29 +561,50 @@ public struct HomeView<Companion: View>: View {
             GlassGroup(spacing: 8) {
                 HStack(spacing: 8) {
                     ForEach(store.comingUp) { occurrence in
-                        Button { store.send(.delegate(.openEvent(occurrence))) } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: occurrence.kind.symbol)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(occurrence.kind.tint)
-                                Text(occurrence.title)
-                                    .font(.subheadline.weight(.medium))
-                                    .lineLimit(1)
-                                Text(whenText(occurrence))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondaryText)
+                        HStack(spacing: 6) {
+                            Button { store.send(.delegate(.openEvent(occurrence))) } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: occurrence.kind.symbol)
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(occurrence.kind.tint)
+                                    Text(occurrence.title)
+                                        .font(.subheadline.weight(.medium))
+                                        .lineLimit(1)
+                                    Text(whenText(occurrence))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondaryText)
+                                }
+                                .padding(.horizontal, 12)
+                                .frame(minHeight: 36)
+                                .glassControl()
                             }
-                            .padding(.horizontal, 12)
-                            .frame(minHeight: 36)
-                            .glassControl()
+                            .buttonStyle(.pressable)
+
+                            // A meeting about to start, or under way, and
+                            // nothing else: not a control on every chip.
+                            if occurrence.canJoin(at: store.now) {
+                                Button {
+                                    joins += 1
+                                    store.send(.joinTapped(occurrence))
+                                } label: {
+                                    Label { Text(L10n.meetingJoin) } icon: { Image(systemName: "video.fill") }
+                                        .font(.footnote.weight(.semibold))
+                                        .foregroundStyle(theme.onAccent)
+                                        .padding(.horizontal, 12)
+                                        .frame(minHeight: 36)
+                                        .background(theme.accentFill, in: .capsule)
+                                        .contentShape(.capsule)
+                                }
+                                .buttonStyle(.pressable)
+                            }
                         }
-                        .buttonStyle(.pressable)
                     }
                 }
                 .padding(.vertical, 2)
             }
         }
         .scrollClipDisabled()
+        .sensoryFeedback(.impact(weight: .light), trigger: joins)
     }
 
     /// "20:00" today, "tomorrow", the weekday this week, a short date after.

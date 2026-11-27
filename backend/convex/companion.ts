@@ -83,9 +83,12 @@ import {
   titleKey,
 } from "./lib/companion";
 import {
+  NESTIE_CARED,
   NESTIE_CATEGORY,
   NESTIE_NOTES,
+  NESTIE_THIRSTY,
   PUSH_LANGUAGE,
+  SOMEONE,
   VOTE_MS,
   VOTE_ROWS_MAX,
   answeredAll,
@@ -742,6 +745,33 @@ async function announce(
 }
 
 /**
+ * The other things Nestie says, which are not once per companion and so carry
+ * their own idempotency at the caller: the same `COMPANION_NOTIFY` gate and
+ * the same route through `push.notifyHome` as `announce`.
+ */
+async function sayToHouse(
+  ctx: MutationCtx,
+  homeId: Id<"homes">,
+  copy: { title: string; body: string },
+  topic: "companion.care" | "companion.thirsty",
+  actor?: Id<"users">,
+): Promise<void> {
+  const mode = companionNotify();
+  if (mode === "off") return;
+  await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
+    homeId,
+    actor,
+    title: copy.title,
+    body: copy.body,
+    category: NESTIE_CATEGORY,
+    topic,
+    // Builds before 1.14.0 have no switch for these and open nothing on a tap.
+    minAppVersion: "1.14.0",
+    ...(mode === "sandbox" ? { environment: "sandbox" as const, skipFeed: true } : {}),
+  });
+}
+
+/**
  * "All grown up", the moment `readiness` first says so: from the wake (the
  * floor passed with the points there), from a recount (the points arrived
  * after the floor), or from a seed being chosen. To the whole house.
@@ -1339,6 +1369,24 @@ export const care = mutation({
       await ctx.db.patch(companion._id, { last_care_at: now });
     }
     if (days.length) await recount(ctx, companion._id, house, days);
+
+    // The rest of the house hears the day's first care, and only that: two
+    // people tapping is still one push a day. `last_care_at` as it was before
+    // this tap says whether anybody already came by today, and a retry of this
+    // write sees its own tap there and stays quiet.
+    const before = companion.last_care_at;
+    if (days.length && (before === undefined || dayOf(before, tz) !== day)) {
+      const kind = isPetSpecies(companion.species) ? "pet" : "plant";
+      const copy = NESTIE_CARED[kind][PUSH_LANGUAGE];
+      const name = user.name?.trim() || SOMEONE[PUSH_LANGUAGE];
+      await sayToHouse(
+        ctx,
+        homeId,
+        { title: copy.title.replace("{name}", name), body: copy.body },
+        "companion.care",
+        user._id,
+      );
+    }
     return { counted: days.length > 0 };
   },
 });
@@ -2229,6 +2277,96 @@ export const sweepEvents = internalAction({
       cursor = page.cursor;
     }
     return { credited };
+  },
+});
+
+// MARK: - A quiet house
+
+/** Companions one `sweepThirsty` page looks at; each page schedules the next. */
+const THIRSTY_PAGE = 50;
+/** The local hours Nestie may ask in: from six in the evening, never after ten. */
+const THIRSTY_FROM_HOUR = 18;
+const THIRSTY_UNTIL_HOUR = 22;
+/** The card's own rule (`CompanionMath.mood` on the phone): thirsty at three quiet days, dozing at seven. */
+const THIRSTY_DAYS = 3;
+const DOZING_DAYS = 7;
+
+/**
+ * Nestie asks for a visit once a house has gone quiet: the same rule the card
+ * draws thirsty by — three of the companion's own days since the latest of its
+ * start, its last care and the last thing the house did that it counted — and
+ * only in the evening of the house's day, never in the night.
+ *
+ * Once per quiet stretch. The stretch is named by the day it began (the day of
+ * that latest thing), written on the companion as `thirsty:<day>` in the same
+ * write that schedules the push, so a re-run, a retry or a second sweep in the
+ * same evening finds it and sends nothing; anything the house does moves the
+ * day on and makes the next quiet stretch a new one. Only the newest such key
+ * is kept, and a stretch is never asked about twice even if its day moves back
+ * (a chore unticked). Not again at dozing, and not for the first time either:
+ * a house that was already a week quiet when this shipped is not woken by it.
+ *
+ * Reads only companions that are growing (`by_status`), a page at a time, and
+ * per companion its newest growth row only when its start and last care alone
+ * don't already say it was busy. Hourly, from crons.ts; the key is written
+ * whatever `COMPANION_NOTIFY` says, as `announce` does, so switching it on
+ * never sends a stale one.
+ */
+export const sweepThirsty = internalMutation({
+  args: { cursor: v.optional(v.union(v.string(), v.null())), now: v.optional(v.number()) },
+  returns: v.object({ sent: v.number(), done: v.boolean() }),
+  handler: async (ctx, args): Promise<{ sent: number; done: boolean }> => {
+    // Pinned across pages, so every page judges the same hour.
+    const now = args.now ?? Date.now();
+    const page = await ctx.db
+      .query("companions")
+      .withIndex("by_status", (q) => q.eq("status", "growing").lte("started_at", now))
+      .paginate({ cursor: args.cursor ?? null, numItems: THIRSTY_PAGE });
+
+    let sent = 0;
+    for (const companion of page.page) {
+      // A seed is waiting on its vote, which is what the house hears about.
+      if (companion.undecided) continue;
+      const house = await houseFor(ctx, companion.home_id);
+      if (!house || house.current_id !== companion._id) continue;
+      // The evening of the days it counts in (`tzOf`), so "three days" and
+      // "six o'clock" are read off the same clock.
+      const offset = tzOf(companion, house);
+      const hour = new Date(now + offset * 60_000).getUTCHours();
+      if (hour < THIRSTY_FROM_HOUR || hour >= THIRSTY_UNTIL_HOUR) continue;
+
+      const today = dayOf(now, offset);
+      const quietSince = (at: number) => daysBetween(dayOf(at, offset), today);
+      const known = Math.max(companion.started_at, companion.last_care_at ?? 0);
+      if (quietSince(known) < THIRSTY_DAYS) continue;
+      const newest = await ctx.db
+        .query("companion_growth")
+        .withIndex("by_companion_at", (q) => q.eq("companion_id", companion._id))
+        .order("desc")
+        .first();
+      const last = Math.max(known, newest?.at ?? 0);
+      const quiet = quietSince(last);
+      if (quiet < THIRSTY_DAYS || quiet >= DOZING_DAYS) continue;
+
+      const stretch = dayOf(last, offset);
+      const notified = companion.notified ?? [];
+      const asked = notified.filter((k) => k.startsWith("thirsty:")).map((k) => k.slice("thirsty:".length));
+      if (asked.some((day) => day >= stretch)) continue;
+      await ctx.db.patch(companion._id, {
+        notified: [...notified.filter((k) => !k.startsWith("thirsty:")), `thirsty:${stretch}`],
+      });
+      const kind = isPetSpecies(companion.species) ? "pet" : "plant";
+      await sayToHouse(ctx, companion.home_id, NESTIE_THIRSTY[kind][PUSH_LANGUAGE], "companion.thirsty");
+      sent++;
+    }
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(0, internal.companion.sweepThirsty, {
+        cursor: page.continueCursor,
+        now,
+      });
+    }
+    return { sent, done: page.isDone };
   },
 });
 

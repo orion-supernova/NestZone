@@ -97,6 +97,18 @@ crons.interval(
   internal.companion.sweepEvents,
 );
 
+// Nestie asks for a visit once a house has been quiet for three of its days,
+// in the house's evening (18:00-22:00 local), once per quiet stretch: the
+// stretch's key goes on the companion in the write that schedules the push.
+// Hourly so every time zone's evening is seen. Growing companions only, a page
+// at a time. See `sweepThirsty` in convex/companion.ts.
+crons.interval(
+  "companion thirsty",
+  { hours: 1 },
+  internal.companion.sweepThirsty,
+  {},
+);
+
 // Household Pro, re-asked of RevenueCat near its end.
 //
 // The app refreshes its own entitlement after a purchase and on every launch,

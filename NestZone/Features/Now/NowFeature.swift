@@ -108,6 +108,8 @@ public struct NowFeature: Sendable {
         case statsUpdated(HomeStats)
         /// The live part of the dock, whatever it is showing.
         case dockTapped
+        /// The dock's Join, on a meeting that is about to start or under way.
+        case joinTapped
         /// The dock's "+".
         case addTapped
         /// The dock's long-press menu: the same per-house setting Customize
@@ -155,6 +157,7 @@ public struct NowFeature: Sendable {
     @Dependency(\.polls) var pollsClient
     @Dependency(\.stats) var statsClient
     @Dependency(\.paywall) var paywall
+    @Dependency(\.openURL) var openURL
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var currentDate
 
@@ -280,6 +283,10 @@ public struct NowFeature: Sendable {
 
             case .addTapped:
                 return .send(.delegate(.capture))
+
+            case .joinTapped:
+                guard let url = state.dockItem.joinableMeeting(at: state.now)?.meetingLink?.url else { return .none }
+                return .run { _ in await openURL(url) }
 
             case let .dockModePicked(mode):
                 let current = state.dockSettings[state.homeID]
@@ -431,6 +438,16 @@ public enum DockItem: Equatable, Sendable {
     case noEvent
     case noMovieRound
     case add
+
+    /// The meeting the dock is showing, if it can be joined now: from ten
+    /// minutes before it starts until it ends.
+    func joinableMeeting(at now: Date) -> EventOccurrence? {
+        switch self {
+        case let .happening(occurrence), let .startingSoon(occurrence), let .nextEvent(occurrence):
+            occurrence.canJoin(at: now) ? occurrence : nil
+        default: nil
+        }
+    }
 
     /// How far ahead an event starts claiming the dock.
     static let soonWindow: TimeInterval = 3 * 3600

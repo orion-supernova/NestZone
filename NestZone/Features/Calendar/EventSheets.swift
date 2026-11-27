@@ -441,7 +441,7 @@ struct EventComposerSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Label {
-                        Text(section.title)
+                        Text(section.title(for: store.kind))
                     } icon: {
                         Image(systemName: section.symbol)
                             .foregroundStyle(section.tint)
@@ -619,18 +619,40 @@ struct EventComposerSheet: View {
     }
 
     private var ticketFields: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let isMeeting = store.kind == .meeting
+        return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                Image(systemName: "link")
+                Image(systemName: isMeeting ? "video.fill" : "link")
                     .foregroundStyle(Palette.violet)
                     .frame(width: 20)
                 TextField(text: $store.url) {
-                    Text(L10n.calendarTicketsPlaceholder)
+                    Text(isMeeting ? L10n.meetingLinkPlaceholder : L10n.calendarTicketsPlaceholder)
                 }
                 .font(.subheadline)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.URL)
+                // Pasted from an invitation, a link often carries a space or
+                // a line break at its end.
+                .onChange(of: store.url) { _, url in
+                    let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if trimmed != url { store.url = trimmed }
+                }
+                // The system's own paste control asks for nothing. Offered
+                // only while the field is empty; it picks the link out of
+                // whatever was copied (a whole invitation, say).
+                if isMeeting, store.url.isEmpty {
+                    PasteButton(payloadType: String.self) { strings in
+                        guard let text = strings.first,
+                              let link = MeetingLink.firstLink(in: text) else { return }
+                        Task { @MainActor in
+                            if store.url.isEmpty { store.url = link }
+                        }
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonBorderShape(.capsule)
+                    .controlSize(.small)
+                }
             }
             Text(L10n.calendarTicketsHint)
                 .font(.caption)
@@ -642,7 +664,7 @@ struct EventComposerSheet: View {
         Menu {
             ForEach(store.availableSections) { section in
                 Button { store.send(.sectionAdded(section)) } label: {
-                    Label { Text(section.title) } icon: {
+                    Label { Text(section.title(for: store.kind)) } icon: {
                         Image(systemName: section.symbol)
                     }
                 }
@@ -1020,7 +1042,8 @@ struct EventDetailSheet: View {
         case .budget: budgetCard
         case .shopping: shoppingCard
         case .menu: menuCard
-        case .tickets: ticketsCard
+        case .tickets:
+            if store.occurrence.kind == .meeting { meetingCard } else { ticketsCard }
         }
     }
 
@@ -1568,6 +1591,32 @@ struct EventDetailSheet: View {
         if result.added == 0 && result.skipped > 0 { return L10n.calendarAllAlreadyListed }
         if result.skipped == 0 { return L10n.calendarItemsAdded(result.added) }
         return L10n.calendarItemsAddedSkipped(result.added, result.skipped)
+    }
+
+    /// A meeting's link: the service it is on, and the way in. Open until the
+    /// meeting has ended, not only once it has begun.
+    @ViewBuilder
+    private var meetingCard: some View {
+        if let link = store.occurrence.meetingLink {
+            GlassCard {
+                HStack(spacing: 12) {
+                    Image(systemName: "video.fill")
+                        .font(.title3)
+                        .foregroundStyle(Palette.violet)
+                        .bounces()
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(L10n.meetingLinkTitle)
+                            .font(.subheadline.weight(.semibold))
+                        link.service.name
+                            .font(.caption)
+                            .foregroundStyle(.secondaryText)
+                    }
+                    Spacer(minLength: 8)
+                    PrimaryButton(L10n.meetingJoin) { store.send(.openURLTapped) }
+                        .fixedSize()
+                }
+            }
+        }
     }
 
     private var ticketsCard: some View {

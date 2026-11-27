@@ -217,6 +217,13 @@ public struct MainFeature: Sendable {
         /// The paywall was asked for and nothing drew it. State that cannot be
         /// seen is dropped rather than left to swallow the next request.
         case paywallNeverShown
+        /// The person tapped a notification: close what is in the way, then
+        /// open what it was about.
+        case pushTapped(PushTap)
+        case pushRouted(PushTap)
+        /// A recipe a notification named, found in the house's list (nil when
+        /// it is not there).
+        case pushRecipeFound(Recipe?)
     }
 
     private enum CancelID { case presentSettings, captured, dockNotice, paywallShown }
@@ -229,6 +236,7 @@ public struct MainFeature: Sendable {
     static let paywallShowDeadline: Duration = .seconds(2)
 
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.recipes) var recipesClient
 
     public init() {}
 
@@ -438,6 +446,43 @@ public struct MainFeature: Sendable {
             // one place in the app that knows the shape of the whole of it.
             case let .inbox(.delegate(.open(category))):
                 return route(&state, to: category)
+
+            // A tapped notification. Whatever is covering the tabs goes first
+            // (a sheet presented while another is leaving is dropped), then the
+            // same routes the bell's rows use, or the one thing it names.
+            case let .pushTapped(tap):
+                var covered = false
+                var closing: [Effect<Action>] = []
+                if state.inbox.isOpen { covered = true; closing.append(.send(.inbox(.closeTapped))) }
+                if state.isSettingsPresented { covered = true; state.isSettingsPresented = false }
+                if state.customize != nil { covered = true; state.customize = nil }
+                // Add anything closes the way Cancel does, by clearing.
+                if state.capture != nil { covered = true; state.capture = nil }
+                if state.paywall != nil {
+                    covered = true
+                    state.paywall = nil
+                    closing.append(.cancel(id: CancelID.paywallShown))
+                }
+                if state.now.dinner != nil { covered = true; state.now.dinner = nil }
+                if state.now.occasion != nil { covered = true; state.now.occasion = nil }
+                // Not closed, for want of a cheap hook: sheets and covers owned
+                // by a screen (the event composer, the Sparkles store, Nestie's
+                // purchase card and ceremony, a chat's own sheets).
+                guard covered else { return .send(.pushRouted(tap)) }
+                return .merge(closing + [
+                    .run { send in
+                        try await clock.sleep(for: RouteStack.unwind)
+                        await send(.pushRouted(tap))
+                    }
+                    .cancellable(id: PushTapCancel.routing, cancelInFlight: true)
+                ])
+
+            case let .pushRouted(tap):
+                return routePush(&state, tap)
+
+            case let .pushRecipeFound(recipe):
+                if let recipe { return open(.recipe(recipe), from: state.selectedTab, &state) }
+                return open(.module(.recipes), from: state.selectedTab, &state)
 
             // The first answer for a house without Plus opens its tabs on the
             // modules it can use. Handled on the status itself rather than on
@@ -653,6 +698,51 @@ public struct MainFeature: Sendable {
             return
         }
         state[stack: tab].path.append(screen)
+    }
+
+    /// Opens what a tapped notification was about: the one thing when it names
+    /// one, else the screen that owns its category, as the bell does.
+    private func routePush(_ state: inout State, _ tap: PushTap) -> Effect<Action> {
+        let from = state.selectedTab
+        switch tap.link {
+        case let .event(eventID, startMs?):
+            let day = CalendarDay(Date(timeIntervalSince1970: Double(startMs) / 1000))
+            return open(.event(eventID, day), from: from, &state)
+        // An event with no occurrence named cannot be found in a day's window,
+        // so it opens the calendar rather than a page that says "gone".
+        case .event, .none:
+            return route(&state, to: tap.category)
+        case let .issue(issueID):
+            return open(.issue(issueID), from: from, &state)
+        case let .conversation(id):
+            state.selectedTab = .messages
+            return .send(.messages(.openRequested(id)))
+        case let .recipe(id):
+            let homeID = state.homeID
+            // The first non-empty list (a list that has not filled yet is
+            // not an answer), for at most three seconds.
+            return .run { send in
+                let found: Recipe? = await withTaskGroup(of: Recipe?.self) { group in
+                    group.addTask {
+                        do {
+                            for try await recipes in recipesClient.byHome(homeID) where !recipes.isEmpty {
+                                return recipes.first { $0.id == id }
+                            }
+                        } catch {}
+                        return nil
+                    }
+                    group.addTask {
+                        try? await clock.sleep(for: .seconds(3))
+                        return nil
+                    }
+                    let first = await group.next() ?? nil
+                    group.cancelAll()
+                    return first
+                }
+                await send(.pushRecipeFound(found))
+            }
+            .cancellable(id: PushTapCancel.routing, cancelInFlight: true)
+        }
     }
 
     /// Opens whatever owns a category of notification.

@@ -166,7 +166,9 @@ export function ranking(options: string[], counts: Tally, grown: Set<string>): s
  * then — only in a house of two or more — `vote` when choosing the next one
  * opens, and `arrived` when it has been chosen. Nothing about falling behind,
  * nobody named for not voting, and nothing at all when a vote ends with no
- * yes: the card on Today asks, the phone doesn't.
+ * yes: the card on Today asks, the phone doesn't. (Two more, not once per
+ * companion and so not `NoteKey`s, follow below: the thirsty nudge, once per
+ * quiet stretch and naming nobody, and the day's first care.)
  *
  * Every other push this server sends is English, because nothing on the
  * server knows a reader's language (`users` and `push_tokens` carry none).
@@ -189,6 +191,43 @@ export const NESTIE_NOTES: Record<NoteKey, Record<"en" | "tr", { title: string; 
   arrived: {
     en: { title: "The new one's here!", body: "Come say hi on Today." },
     tr: { title: "Yenisi geldi!", body: "Bugün'e gel, bir merhaba de." },
+  },
+};
+
+type Copy = Record<"en" | "tr", { title: string; body: string }>;
+
+/**
+ * Nestie asking for a visit, once per quiet stretch (`companion:sweepThirsty`):
+ * the house has done nothing it counts for three of its days, which is when
+ * the card turns thirsty. A plant wants water and a pet a pat, because that is
+ * what the Water button does for each.
+ */
+export const NESTIE_THIRSTY: Record<"plant" | "pet", Copy> = {
+  plant: {
+    en: { title: "Nestie: a little water?", body: "It's been a few quiet days. Come water me on Today." },
+    tr: { title: "Nestie: bir yudum su?", body: "Birkaç gündür ses yok. Bugün'e gel, beni bir sula." },
+  },
+  pet: {
+    en: { title: "Nestie misses you", body: "It's been a few quiet days. Come give me a pat on Today." },
+    tr: { title: "Nestie seni özledi", body: "Birkaç gündür kimse uğramadı. Bugün'e gel, beni bir sev." },
+  },
+};
+
+/** "Somebody" in each language, for a carer with no name. */
+export const SOMEONE: Record<"en" | "tr", string> = { en: "Someone", tr: "Biri" };
+
+/**
+ * The rest of the house hears the day's first watering or pat
+ * (`companion:care`). `{name}` is the carer's.
+ */
+export const NESTIE_CARED: Record<"plant" | "pet", Copy> = {
+  plant: {
+    en: { title: "{name} watered Nestie", body: "Nestie's looking fresh." },
+    tr: { title: "{name} Nestie'yi suladı", body: "Nestie şimdi pırıl pırıl." },
+  },
+  pet: {
+    en: { title: "{name} gave Nestie a pat", body: "Nestie's all smiles." },
+    tr: { title: "{name} Nestie'yi sevdi", body: "Nestie'nin keyfi yerinde." },
   },
 };
 

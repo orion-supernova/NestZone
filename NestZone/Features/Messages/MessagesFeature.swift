@@ -14,6 +14,8 @@ public struct MessagesFeature: Sendable {
         public var members: IdentifiedArrayOf<User> = []
         public var isLoading = true
         public var path = StackState<Path.State>()
+        /// A conversation a notification asked for before the list had it.
+        var pendingOpenID: ConversationID?
         @Presents public var destination: Destination.State?
         @Presents public var alert: AlertState<Action.Alert>?
 
@@ -103,6 +105,9 @@ public struct MessagesFeature: Sendable {
         case membersUpdated([User])
         case loadFailed(AppError)
         case conversationTapped(Conversation)
+        /// A notification named this conversation. Opened now if the list has
+        /// it, otherwise when the list arrives.
+        case openRequested(ConversationID)
         case composeTapped
         case path(StackActionOf<Path>)
         case destination(PresentationAction<Destination.Action>)
@@ -151,7 +156,24 @@ public struct MessagesFeature: Sendable {
                 state.isLoading = false
                 state.conversations = IdentifiedArray(uniqueElements: conversations)
                 state.propagateToOpenChats()
-                return .none
+                guard let wanted = state.pendingOpenID else { return .none }
+                // The list has answered: a chat that is not in it is gone, and
+                // must not open later when something else changes.
+                state.pendingOpenID = nil
+                guard state.conversations[id: wanted] != nil else { return .none }
+                return .send(.openRequested(wanted))
+
+            case let .openRequested(id):
+                guard let conversation = state.conversations[id: id] else {
+                    // Held only until the list arrives; a list that has
+                    // already answered without it means the chat is gone.
+                    state.pendingOpenID = state.isLoading ? id : nil
+                    return .none
+                }
+                state.pendingOpenID = nil
+                // From the list, so Back lands there and not on another chat.
+                state.path.removeAll()
+                return .send(.conversationTapped(conversation))
 
             case let .membersUpdated(members):
                 state.members = IdentifiedArray(uniqueElements: members)

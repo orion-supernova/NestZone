@@ -5140,6 +5140,31 @@ public enum L10n {
         r("calendar_budget_hint", "Anything you log against this event counts towards it.")
     }
 
+    /// Meeting
+    public static var calendarKindMeeting: LocalizedStringResource {
+        r("calendar_kind_meeting", "Meeting")
+    }
+
+    /// Meeting link
+    public static var meetingLinkTitle: LocalizedStringResource {
+        r("meeting_link_title", "Meeting link")
+    }
+
+    /// Paste a Meet, Zoom or Teams link
+    public static var meetingLinkPlaceholder: LocalizedStringResource {
+        r("meeting_link_placeholder", "Paste a Meet, Zoom or Teams link")
+    }
+
+    /// Video call
+    public static var meetingServiceOther: LocalizedStringResource {
+        r("meeting_service_other", "Video call")
+    }
+
+    /// Join
+    public static var meetingJoin: LocalizedStringResource {
+        r("meeting_join", "Join")
+    }
+
     /// Link to the tickets or booking
     public static var calendarTicketsPlaceholder: LocalizedStringResource {
         r("calendar_tickets_placeholder", "Link to the tickets or booking")
@@ -11242,14 +11267,14 @@ extension L10n {
         r("calendar_settings_title", "Calendar")
     }
 
-    /// Copy to my calendars
+    /// Copy house events to my calendar
     public static var calendarCopyTitle: LocalizedStringResource {
-        r("calendar_copy_title", "Copy to my calendars")
+        r("calendar_copy_title", "Copy house events to my calendar")
     }
 
-    /// House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind.
+    /// House plans show up in your iPhone Calendar too, in the calendars you pick. They catch up when you open NestZone.
     public static var calendarCopyFooter: LocalizedStringResource {
-        r("calendar_copy_footer", "House events are copied into the calendars you pick. They update when you open NestZone, so a copy can run a little behind.")
+        r("calendar_copy_footer", "House plans show up in your iPhone Calendar too, in the calendars you pick. They catch up when you open NestZone.")
     }
 
     /// NestZone needs full access to your calendars to let you choose. You can change it in Settings.
@@ -11332,9 +11357,9 @@ extension L10n {
         r("calendar_share_level_busy", "Busy only")
     }
 
-    /// Details
+    /// Title and place
     public static var calendarShareLevelDetails: LocalizedStringResource {
-        r("calendar_share_level_details", "Details")
+        r("calendar_share_level_details", "Title and place")
     }
 
     /// Share my calendars
@@ -11347,9 +11372,9 @@ extension L10n {
         r("calendar_share_header", "Share with the house")
     }
 
-    /// Pick which of your calendars the house sees. Nothing is shared until you choose it.
+    /// Your housemates see your plans in NestZone's Calendar. You choose which calendars, and how much they see.
     public static var calendarShareOffFooter: LocalizedStringResource {
-        r("calendar_share_off_footer", "Pick which of your calendars the house sees. Nothing is shared until you choose it.")
+        r("calendar_share_off_footer", "Your housemates see your plans in NestZone's Calendar. You choose which calendars, and how much they see.")
     }
 
     /// Your calendars
@@ -11377,9 +11402,9 @@ extension L10n {
         r("calendar_share_updated", "Updated")
     }
 
-    /// Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind.
+    /// Busy only: they see when you're busy, not why. Title and place: they see those too, never notes, people or links. Updates whenever you open NestZone.
     public static var calendarShareFooter: LocalizedStringResource {
-        r("calendar_share_footer", "Busy only shows when you are busy, never what for. Details adds the title and the place, never notes, people or links. It updates when NestZone is open, so it can run a little behind.")
+        r("calendar_share_footer", "Busy only: they see when you're busy, not why. Title and place: they see those too, never notes, people or links. Updates whenever you open NestZone.")
     }
 
     /// %@ · busy
@@ -11530,6 +11555,21 @@ extension L10n {
     /// A new one arrives
     public static var notifTopicCompanionNew: LocalizedStringResource {
         r("notif_topic_companion_new", "A new one arrives")
+    }
+
+    /// Watered or petted
+    public static var notifTopicCompanionCare: LocalizedStringResource {
+        r("notif_topic_companion_care", "Watered or petted")
+    }
+
+    /// Needs some love
+    public static var notifTopicCompanionThirsty: LocalizedStringResource {
+        r("notif_topic_companion_thirsty", "Needs some love")
+    }
+
+    /// Don't see your Google or work calendar?
+    public static var calendarShareMissingFooter: LocalizedStringResource {
+        r("calendar_share_missing_footer", "Don't see your Google or work calendar? NestZone reads the iPhone's Calendar, not the Google Calendar app. Add the account in Settings → Apps → Calendar → Calendar Accounts and it shows up here.")
     }
 
     /// People joining and leaving
@@ -11779,14 +11819,14 @@ extension L10n {
         r("calendar_add_first", "Add the first event")
     }
 
-    /// Housemates can add my calendar to theirs
+    /// Let them add it to their phone's calendar
     public static var calendarShareAllowCopy: LocalizedStringResource {
-        r("calendar_share_allow_copy", "Housemates can add my calendar to theirs")
+        r("calendar_share_allow_copy", "Let them add it to their phone's calendar")
     }
 
-    /// Off by default. When it is on, a housemate can choose to get a copy of what you share in their own calendar app, kept up to date and at the level you picked. Turn it off and the copies go at their next sync.
+    /// Off: your plans stay in NestZone. On: a housemate can also get them in their iPhone Calendar, with the same detail you share here. Turn it off and those copies go.
     public static var calendarShareAllowCopyFooter: LocalizedStringResource {
-        r("calendar_share_allow_copy_footer", "Off by default. When it is on, a housemate can choose to get a copy of what you share in their own calendar app, kept up to date and at the level you picked. Turn it off and the copies go at their next sync.")
+        r("calendar_share_allow_copy_footer", "Off: your plans stay in NestZone. On: a housemate can also get them in their iPhone Calendar, with the same detail you share here. Turn it off and those copies go.")
     }
 
     /// Housemates' calendars
@@ -11799,14 +11839,14 @@ extension L10n {
         r("calendar_copy_housemates_footer", "Each one gets its own calendar on your phone, named “NestZone · Name”, so you can hide it with one tap in any calendar app.")
     }
 
-    /// Add to my calendar
+    /// Show in my iPhone Calendar
     public static var calendarCopyHousemateToggle: LocalizedStringResource {
-        r("calendar_copy_housemate_toggle", "Add to my calendar")
+        r("calendar_copy_housemate_toggle", "Show in my iPhone Calendar")
     }
 
-    /// %@ hasn't allowed copies
+    /// %@ keeps theirs in NestZone only
     public static func calendarCopyHousemateNotAllowed(_ a0: String) -> LocalizedStringResource {
-        r("calendar_copy_housemate_not_allowed", "\(a0) hasn't allowed copies")
+        r("calendar_copy_housemate_not_allowed", "\(a0) keeps theirs in NestZone only")
     }
 
     /// NestZone · %@

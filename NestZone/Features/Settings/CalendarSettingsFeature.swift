@@ -106,6 +106,10 @@ public struct CalendarSettingsFeature: Sendable {
 
     public enum Action: BindableAction {
         case task
+        /// The phone's calendar database changed: an account was added, a
+        /// calendar made or hidden, in this app or another.
+        case storeChanged
+        case reload
         case loaded(DeviceCalendarAccess, [DeviceCalendar], defaultID: String?, copies: Int, shareable: [DeviceCalendar])
         case shareToggled(Bool)
         case shareLevelSelected(String, CalendarShareLevel)
@@ -139,6 +143,8 @@ public struct CalendarSettingsFeature: Sendable {
             case changed
         }
     }
+
+    private enum CancelID { case reload }
 
     @Dependency(\.deviceCalendar) var deviceCalendar
     @Dependency(\.calendarMirror) var calendarMirror
@@ -174,6 +180,11 @@ public struct CalendarSettingsFeature: Sendable {
                 let homeID = state.homeID
                 return .merge(
                     load(),
+                    // So an account added in Settings while this page is open
+                    // (the way a Google calendar gets here) shows up on return.
+                    .run { send in
+                        for await _ in deviceCalendar.changes() { await send(.storeChanged) }
+                    },
                     .run { send in
                         await Backoff.retrying(clock: clock) { delivered in
                             for try await row in calendarShare.mine(homeID) {
@@ -191,6 +202,17 @@ public struct CalendarSettingsFeature: Sendable {
                         }
                     }
                 )
+
+            // One change is often several notifications; read once they stop.
+            case .storeChanged:
+                return .run { send in
+                    try await clock.sleep(for: .milliseconds(500))
+                    await send(.reload)
+                }
+                .cancellable(id: CancelID.reload, cancelInFlight: true)
+
+            case .reload:
+                return load()
 
             case let .housematesUpdated(rows):
                 state.housemates = rows

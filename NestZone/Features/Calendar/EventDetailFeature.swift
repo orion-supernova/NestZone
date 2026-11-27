@@ -173,6 +173,8 @@ public struct EventDetailFeature: Sendable {
             if (plan?.shoppingTotal ?? 0) > 0 || isPlanned { sections.append(.shopping) }
             if !occurrence.recipeIDs.isEmpty { sections.append(.menu) }
             // A ticket to something that has happened opens nothing useful.
+            // (A meeting's link is the same field; it goes the same way, once
+            // the meeting has ended, and not before it starts.)
             if occurrence.url?.isEmpty == false && !isOver { sections.append(.tickets) }
             return sections
         }
@@ -226,6 +228,7 @@ public struct EventDetailFeature: Sendable {
         public var isDinner: Bool { didPlanDinner || isDinnerAlready }
 
         public var ticketURL: URL? {
+            if occurrence.kind == .meeting { return occurrence.meetingLink?.url }
             guard let raw = occurrence.url?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !raw.isEmpty else { return nil }
             // A link somebody pasted from a chat rarely carries its scheme.

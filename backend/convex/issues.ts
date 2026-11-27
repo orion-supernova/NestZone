@@ -795,6 +795,7 @@ export const create = mutation({
       body: title,
       category: "issues",
       topic: "issues.new",
+      link: `issue:${id}`,
     });
 
     // Deliberately no second push for the assignee.
@@ -896,6 +897,7 @@ export const update = mutation({
         body: title ?? "A house problem",
         category: "issues",
         topic: "issues.updates",
+        link: `issue:${id}`,
       });
     }
 
@@ -967,6 +969,7 @@ export const setStatus = mutation({
           : (issue.title ?? "A house problem"),
       category: "issues",
       topic: "issues.updates",
+      link: `issue:${id}`,
     });
 
     // A fix grows Nestie, and reopening takes it back (convex/companion.ts).
@@ -1028,6 +1031,7 @@ export const assign = mutation({
         body: issue.title ?? "A house problem",
         category: "issues",
         topic: "issues.updates",
+        link: `issue:${id}`,
       });
     }
 
@@ -1139,6 +1143,7 @@ export const comment = mutation({
       body: text,
       category: "issues",
       topic: "issues.updates",
+      link: `issue:${id}`,
     });
 
     return { ok: true };
@@ -1410,6 +1415,7 @@ export const makeChore = mutation({
         body: issue.title ?? "A house problem",
         category: "tasks",
         topic: "tasks.assigned",
+        link: `issue:${id}`,
       });
     }
 
@@ -1545,6 +1551,7 @@ export const scheduleVisit = mutation({
       body: title,
       category: "calendar",
       topic: "issues.updates",
+      link: `issue:${args.id}`,
     });
 
     return { eventId };
@@ -1631,6 +1638,7 @@ export const addParts = mutation({
       body: `${wanted.length} for ${issue.title ?? "a repair"}`,
       category: "shopping",
       topic: "shopping.added",
+      link: `issue:${id}`,
     });
 
     return { added: wanted.length, skipped: names.length - wanted.length };
@@ -1793,6 +1801,7 @@ export const sweepStale = internalAction({
         body: nudgeBody(nudge),
         category: "issues",
         topic: "issues.reminders",
+        link: `issue:${nudge.issueId}`,
       });
       sent++;
     }

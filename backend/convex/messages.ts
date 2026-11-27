@@ -201,6 +201,8 @@ export const send = mutation({
       category: "messages",
       topic: convo.is_group_chat ? "messages.group" : "messages.direct",
       threadId: args.conversationId,
+      // The variant (a mention) is the same message, so it carries this too.
+      link: `conversation:${args.conversationId}`,
       ...(mentions.length
         ? {
             variant: {
