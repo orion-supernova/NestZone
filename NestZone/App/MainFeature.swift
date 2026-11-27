@@ -237,6 +237,7 @@ public struct MainFeature: Sendable {
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.recipes) var recipesClient
+    @Dependency(\.presentationCloser) var presentationCloser
 
     public init() {}
 
@@ -451,8 +452,14 @@ public struct MainFeature: Sendable {
             // (a sheet presented while another is leaving is dropped), then the
             // same routes the bell's rows use, or the one thing it names.
             case let .pushTapped(tap):
-                var covered = false
+                // Anything presented anywhere, however deep (read before the
+                // state below is cleared, while the sheets are still up).
+                var covered = MainActor.assumeIsolated { presentationCloser.isPresenting() }
                 var closing: [Effect<Action>] = []
+                if state.companion.isCovering { covered = true }
+                // Nestie's card, store and ceremony: the ceremony's moment is
+                // kept, not ended.
+                state.companion.closeForNavigation()
                 if state.inbox.isOpen { covered = true; closing.append(.send(.inbox(.closeTapped))) }
                 if state.isSettingsPresented { covered = true; state.isSettingsPresented = false }
                 if state.customize != nil { covered = true; state.customize = nil }
@@ -465,20 +472,31 @@ public struct MainFeature: Sendable {
                 }
                 if state.now.dinner != nil { covered = true; state.now.dinner = nil }
                 if state.now.occasion != nil { covered = true; state.now.occasion = nil }
-                // Not closed, for want of a cheap hook: sheets and covers owned
-                // by a screen (the event composer, the Sparkles store, Nestie's
-                // purchase card and ceremony, a chat's own sheets).
                 guard covered else { return .send(.pushRouted(tap)) }
+                // State first (so each feature's own presentation is already
+                // cleared), then whatever is still up goes from the root, in
+                // one dismissal that unwinds every level. A person typing in
+                // a composer loses the draft, as with the bell's cross-links.
                 return .merge(closing + [
                     .run { send in
-                        try await clock.sleep(for: RouteStack.unwind)
+                        await presentationCloser.dismissAll()
+                        // A beat more for nested chains still leaving.
+                        try await clock.sleep(for: .milliseconds(450))
                         await send(.pushRouted(tap))
                     }
                     .cancellable(id: PushTapCancel.routing, cancelInFlight: true)
                 ])
 
             case let .pushRouted(tap):
-                return routePush(&state, tap)
+                // A ceremony held for the tap may play once the destination
+                // has had a moment.
+                return .merge(
+                    routePush(&state, tap),
+                    .run { send in
+                        try await clock.sleep(for: .seconds(1))
+                        await send(.companion(.navigationSettled))
+                    }
+                )
 
             case let .pushRecipeFound(recipe):
                 if let recipe { return open(.recipe(recipe), from: state.selectedTab, &state) }

@@ -99,6 +99,31 @@ public struct CompanionFeature: Sendable {
         public var birthdays: Set<CalendarDay> = []
         /// A graduation that happened under a start, to be shown once.
         public var moment: Moment?
+
+        /// Whether a sheet, the purchase card, the store or an alert of this
+        /// feature is up (or about to be): what a notification tap has to clear.
+        public var isCovering: Bool {
+            sheet != nil || pendingSheet != nil || card != nil || storeOpen || alert != nil
+        }
+
+        /// Closes all of it for a notification tap. Unlike a swipe, closing the
+        /// ceremony this way does not end its moment: "a graduation is never
+        /// lost", so it is held and plays again after the destination settles.
+        public mutating func closeForNavigation() {
+            guard isCovering else { return }
+            if moment != nil { momentHold = true }
+            sheet = nil
+            pendingSheet = nil
+            placeOnOpen = nil
+            colourChoice = nil
+            decorateSpot = nil
+            card = nil
+            storeOpen = false
+            pending = nil
+            landed = nil
+            packNote = nil
+            alert = nil
+        }
         /// The graduated companions whose finale has been held, so a retried
         /// call that reports it again can never play it twice.
         var finalesHeld: Set<String> = []
@@ -163,6 +188,9 @@ public struct CompanionFeature: Sendable {
         var pendingSheet: Sheet?
         /// The ceremony for a queued moment is waiting out its pause.
         var momentScheduled = false
+        /// A notification tap closed the ceremony: the moment stays, and plays
+        /// once the destination has settled (`navigationSettled`).
+        var momentHold = false
         /// A readable delivery has come: the first one is not "news".
         var hasRead = false
         /// What today's holidays are, kept while its inputs hold: the
@@ -901,6 +929,9 @@ public struct CompanionFeature: Sendable {
         case welcomeDecorateTapped
         case celebrateTapped
         case ceremonyFinished
+        /// The screen a notification tap opened has settled: a held ceremony
+        /// may play now.
+        case navigationSettled
         /// The ceremony for a graduation that happened under a start.
         case momentDismissed
         /// The pause before a queued ceremony is over.
@@ -1464,6 +1495,10 @@ public struct CompanionFeature: Sendable {
                     return failed(error, "companion:graduate", state: &state)
                 }
 
+            case .navigationSettled:
+                state.momentHold = false
+                return .none
+
             case .momentReady:
                 state.momentScheduled = false
                 guard state.moment != nil, state.sheet == nil, state.placeOnOpen == nil, state.pendingSheet == nil else {
@@ -1638,7 +1673,8 @@ public struct CompanionFeature: Sendable {
         // never over one that is about to open.
         Reduce { state, _ in
             state.refresh()
-            guard state.moment != nil, state.sheet == nil, state.placeOnOpen == nil, state.pendingSheet == nil else {
+            guard state.moment != nil, !state.momentHold, state.sheet == nil,
+                  state.placeOnOpen == nil, state.pendingSheet == nil else {
                 // Something is open or about to be: a pause that is running
                 // is dropped, so every close starts a fresh one and a stale
                 // timer cannot fire into a sheet that is still closing.
