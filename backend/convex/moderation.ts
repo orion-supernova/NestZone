@@ -19,6 +19,7 @@ import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireHomeMember, requireUser, currentUserId } from "./lib/auth";
 import { departHome } from "./lib/membership";
+import { revokeHomeInvites } from "./lib/invites";
 import { publicUser } from "./lib/users";
 import {
   BLOCK_READ_CAP,
@@ -860,6 +861,8 @@ export const removeFromHome = mutation({
     await departHome(ctx, home, userId);
     // A new invite code, or they could walk straight back in.
     await ctx.db.patch(home._id, { invite_code: crypto.randomUUID().toUpperCase() });
+    // And every live link and QR code (lib/invites.ts).
+    await revokeHomeInvites(ctx, home._id);
     await settleAll();
 
     const homeName = home.name ?? "Your home";

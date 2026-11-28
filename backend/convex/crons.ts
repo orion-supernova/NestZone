@@ -180,4 +180,14 @@ crons.weekly(
   {},
 );
 
+// House invites (invites.ts) that ended more than a day ago, expired or
+// revoked, two hundred a batch, chaining while there is more. At 04:15,
+// after the shared calendar cleanup and clear of Sunday's 04:00 sweep.
+crons.daily(
+  "invite cleanup",
+  { hourUTC: 4, minuteUTC: 15 },
+  internal.invites.sweep,
+  {},
+);
+
 export default crons;

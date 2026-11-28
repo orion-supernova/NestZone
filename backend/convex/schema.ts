@@ -2022,4 +2022,33 @@ export default defineSchema({
     // day, oldest answer first — a restore can move a purchase to another
     // user, and a refund can end a lifetime one, without any date nearing.
     .index("by_checked", ["checked_at"]),
+
+  /**
+   * Invites to a home by universal link or QR code (convex/invites.ts).
+   * Beside `homes.invite_code`, never instead of it: old builds join by code.
+   *
+   * `token` is the SHA-256 (hex) of the token, never the token itself, which
+   * is 128 random bits shown once by `invites:create`; a read of this table
+   * lets nobody in. A revoke sets `revoked_at` and pulls `expires_at` down to
+   * the moment of revoking, so a home's live range on `by_home` (expiring after now)
+   * holds only invites still worth counting.
+   */
+  home_invites: defineTable({
+    home_id: v.id("homes"),
+    token: v.string(),
+    created_by: v.id("users"),
+    kind: v.union(v.literal("link"), v.literal("qr")),
+    created: v.number(),
+    expires_at: v.number(),
+    /** Absent is unlimited. */
+    max_uses: v.optional(v.number()),
+    uses: v.number(),
+    revoked_at: v.optional(v.number()),
+  })
+    .index("by_token", ["token"])
+    // A home's live invites (expires_at above now), the cap and the revokes;
+    // also `homes:purgeHomeData`, which reads it by `home_id` alone.
+    .index("by_home", ["home_id", "expires_at"])
+    // The daily sweep: invites expired more than a day ago.
+    .index("by_expires", ["expires_at"]),
 });

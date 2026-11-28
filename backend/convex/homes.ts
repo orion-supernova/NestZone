@@ -1,9 +1,10 @@
-import { query, mutation, internalMutation, MutationCtx } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
-import { homeProStatus, proEnforced, proRequired, userHasPro } from "./lib/pro";
+import { proRequired } from "./lib/pro";
 import { requireUser, requireHomeMember } from "./lib/auth";
-import { departHome } from "./lib/membership";
+import { departHome, joinHome, mayAddHome } from "./lib/membership";
+import { revokeHomeInvites } from "./lib/invites";
 import { purgeHomeBatch } from "./lib/relations";
 import { publicUsers } from "./lib/users";
 import { internal } from "./_generated/api";
@@ -116,29 +117,6 @@ export const create = mutation({
   },
 });
 
-/**
- * Whether this person may take on one more home: always while `PRO_ENFORCE`
- * is off, when they belong to no other home, or when they carry Plus
- * themselves (`userHasPro`; a Plus house they are in does not count — Plus
- * for a second home is the person's). Never takes a home away: somebody
- * already in two keeps both, and leaving stays free.
- */
-async function mayAddHome(
-  ctx: MutationCtx,
-  user: Doc<"users">,
-  joining?: Id<"homes">,
-): Promise<boolean> {
-  if (!proEnforced()) return true;
-  let count = 0;
-  for (const id of user.home_id ?? []) {
-    if (id === joining) continue;
-    const home = await ctx.db.get(id);
-    if (home && (home.members ?? []).includes(user._id)) count += 1;
-  }
-  if (count === 0) return true;
-  return await userHasPro(ctx, user._id);
-}
-
 /** The built-in movie lists, in the order the Movies screen shows them. */
 const PRESET_LISTS = [
   { type: "wishlist", name: "Wishlist" },
@@ -193,38 +171,9 @@ export const join = mutation({
       .first();
     if (!home) throw new Error("Invalid invite code");
 
-    const wasAlreadyMember = (home.members ?? []).some((m) => m === user._id);
-    // A second home is Plus: the person's own, or the house being joined
-    // already has it (the house pays). Re-entering a code for a home you are
-    // in is not a second home.
-    if (
-      !wasAlreadyMember &&
-      !(await mayAddHome(ctx, user, home._id)) &&
-      !(await homeProStatus(ctx, home)).pro
-    ) {
-      throw proRequired("multipleHomes");
-    }
-
-    const members = new Set([...(home.members ?? []), user._id]);
-    await ctx.db.patch(home._id, { members: [...members], updated: Date.now() });
-
-    const homes = new Set([...(user.home_id ?? []), home._id]);
-    await ctx.db.patch(user._id, { home_id: [...homes] });
-
-    // Re-entering a code you are already a member of is a no-op, not an
-    // arrival, and must not announce one.
-    if (!wasAlreadyMember) {
-      await ctx.scheduler.runAfter(0, internal.push.notifyHome, {
-        homeId: home._id,
-        actor: user._id,
-        title: home.name ?? "NestZone",
-        body: user.name
-          ? `${user.name} joined the home`
-          : "Someone joined the home",
-        category: "home",
-        topic: "home.members",
-      });
-    }
+    // The Plus rule, both sides of the membership and the arrival notice
+    // (lib/membership.ts), shared with `invites:redeem`.
+    await joinHome(ctx, user, home);
 
     return await ctx.db.get(home._id);
   },
@@ -304,6 +253,8 @@ export const removeMember = mutation({
     // A new invite code, or the person just removed could walk straight back
     // in with the one they already have. Old codes simply stop matching.
     await ctx.db.patch(homeId, { invite_code: crypto.randomUUID().toUpperCase() });
+    // And every live link and QR code, for the same reason (lib/invites.ts).
+    await revokeHomeInvites(ctx, homeId);
 
     const homeName = home.name ?? "Your home";
     // The person removed hears it as a push only: the home's feed is no

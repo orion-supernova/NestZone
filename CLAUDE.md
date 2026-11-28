@@ -1063,6 +1063,26 @@ cd backend && npx convex run inbox:syncChangelog "$(cat changelog.json)"
   mirrors at once; its rows then drain in bounded batches
   (`homes:purgeHomeData`, logged per batch, an error past 200 batches).
   Removing a member rotates the invite code.
+- **Invites by link or QR code sit beside the invite code, never instead of
+  it** (`invites.ts`, lib/invites.ts; `homes:join` and `invite_code` stay for
+  old builds). `invites:create` returns a 128-bit base64url token once; only
+  its SHA-256 is stored (`home_invites.token`). A `link` lasts 7 days, a `qr`
+  10 minutes, and a new `qr` revokes the same person's earlier ones for that
+  home, which is how the code changes while the sheet is open; `maxUses` is
+  1–20 or unlimited, and a home keeps at most 20 live invites (the oldest are
+  revoked). `invites:redeem` joins through `joinHome` (lib/membership.ts),
+  the same path, Plus rule and arrival notice as `homes:join`, and counts the
+  use in the same transaction; an existing member spends no use. `preview`
+  names the house only for `ok` or `alreadyMember`. Removing a member (by a
+  housemate or a moderator) revokes every live invite with the code; the
+  house purge deletes them; a daily sweep (04:15) drops those ended a day
+  ago. A revoke also pulls `expires_at` down to now, so a home's live range
+  on `by_home` is only invites still counted. The link is
+  `https://nestzone-convex-api.walhallaa.com/.well-known/join/<token>`
+  (`INVITE_LINK_BASE`), and `http.ts` serves it a static page (no house name:
+  nobody is signed in there) plus `/.well-known/apple-app-site-association`
+  (team id from `APNS_TEAM_ID`), both under `/.well-known/` because that is
+  the only path the tunnel forwards to the HTTP-actions origin.
 - **Reports, blocking and moderation** (`moderation.ts`, `lib/moderation.ts`,
   App Store guideline 1.2). Anybody who can see a message, a problem photo or
   a face can report it (`moderation:report`, twenty a day, `REPORT_LIMIT`); it
