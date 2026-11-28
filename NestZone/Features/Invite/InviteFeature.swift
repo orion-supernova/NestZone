@@ -25,6 +25,11 @@ public struct InviteFeature: Sendable {
         public var status: InviteStatus?
         /// A code is being made (the first one, or a replacement).
         public var isCreating = true
+        /// One create at a time: a second ask while one is out is queued, and
+        /// the one in flight is never cancelled (the server runs it either way,
+        /// and its code would be left behind unrevoked).
+        var createInFlight = false
+        var createQueued = false
         public var errorMessage: String?
         /// Somebody else's new code revoked this one. Replaced on a tap, not
         /// on its own: two phones would otherwise revoke each other for ever.
@@ -108,6 +113,10 @@ public struct InviteFeature: Sendable {
                 return create(&state)
 
             case let .created(code):
+                state.createInFlight = false
+                // Asked again while this was out: it is already out of date
+                // (and the next create revokes it on the server).
+                if state.createQueued { return create(&state) }
                 state.isCreating = false
                 state.errorMessage = nil
                 state.isRevoked = false
@@ -116,6 +125,8 @@ public struct InviteFeature: Sendable {
                 return state.isActive ? watch(code, in: state.homeID) : .none
 
             case let .createFailed(error):
+                state.createInFlight = false
+                if state.createQueued { return create(&state) }
                 state.isCreating = false
                 guard !error.isSilent else { return .none }
                 state.errorMessage = error.errorDescription
@@ -197,19 +208,38 @@ public struct InviteFeature: Sendable {
         ShareItem(text: String(localized: L10n.inviteShareMessage(home, link.url.absoluteString)))
     }
 
-    /// A new code, which revokes the person's last one on the server.
+    /// A new code, which revokes the person's last one on the server. One at
+    /// a time: a create asked for while another is out waits behind it.
     private func create(_ state: inout State) -> Effect<Action> {
         state.isCreating = true
         state.errorMessage = nil
+        if state.createInFlight {
+            state.createQueued = true
+            return .none
+        }
+        state.createInFlight = true
+        state.createQueued = false
         return .merge(
             .cancel(id: CancelID.status),
             .cancel(id: CancelID.timer),
-            .run { [homeID = state.homeID, uses = state.limit.maxUses] send in
-                await send(.created(try await invite.create(homeID, .qr, uses)))
+            .run { [homeID = state.homeID, uses = state.limit.maxUses, invite] send in
+                // Unstructured, so closing the sheet cannot cancel the request
+                // halfway: the server makes the code either way, and a code
+                // nobody will ever see is revoked here.
+                let work = Task { try await invite.create(homeID, .qr, uses) }
+                let code = try await withTaskCancellationHandler {
+                    try await work.value
+                } onCancel: {
+                    Task {
+                        if let orphan = try? await work.value {
+                            try? await invite.revoke(homeID, orphan.token)
+                        }
+                    }
+                }
+                await send(.created(code))
             } catch: { error, send in
                 await send(.createFailed(AppError(error)))
             }
-            .cancellable(id: CancelID.create, cancelInFlight: true)
         )
     }
 

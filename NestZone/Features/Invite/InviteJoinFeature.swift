@@ -67,7 +67,10 @@ public struct InviteJoinFeature: Sendable {
 
             case let .previewUpdated(preview):
                 state.loadError = nil
-                guard !state.didJoin else { return .none }
+                // While the redeem is in flight the live answer turns into
+                // "already a member": acting on it would end the card (and
+                // the redeem with it) before the root knew this was a join.
+                guard !state.didJoin, !state.isJoining else { return .none }
                 state.preview = preview
                 // Already in: nothing to ask, only to take them there.
                 if preview.state == .alreadyMember, let home = preview.homeID {
@@ -85,11 +88,14 @@ public struct InviteJoinFeature: Sendable {
                 state.isJoining = true
                 state.inlineError = nil
                 state.joinTaps += 1
-                return .run { [token = state.token] send in
-                    await send(.joined(try await invite.redeem(token)))
-                } catch: { error, send in
-                    await send(.joinFailed(AppError(error)))
-                }
+                return .merge(
+                    .cancel(id: CancelID.preview),
+                    .run { [token = state.token] send in
+                        await send(.joined(try await invite.redeem(token)))
+                    } catch: { error, send in
+                        await send(.joinFailed(AppError(error)))
+                    }
+                )
 
             case let .joined(result):
                 state.isJoining = false
@@ -106,9 +112,10 @@ public struct InviteJoinFeature: Sendable {
             case let .joinFailed(error):
                 state.isJoining = false
                 if case .proRequired = error { return .send(.delegate(.proRequired)) }
-                guard !error.isSilent else { return .none }
+                // The live preview was stopped for the redeem; take it up again.
+                guard !error.isSilent else { return .send(.task) }
                 state.inlineError = error.errorDescription
-                return .none
+                return .send(.task)
 
             case .notNowTapped:
                 return .merge(.cancel(id: CancelID.preview), .send(.delegate(.dismissed)))

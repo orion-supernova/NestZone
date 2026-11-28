@@ -254,7 +254,7 @@ public struct MainFeature: Sendable {
         case pushRecipeFound(Recipe?)
     }
 
-    private enum CancelID { case presentSettings, captured, dockNotice, paywallShown, firstRunPlus, firstWin }
+    private enum CancelID { case presentSettings, captured, dockNotice, paywallShown, firstRunPlus, firstWin, closeForInvite }
 
     /// How long "Added 3 to Shopping" stays up.
     static let capturedLinger: Duration = .seconds(4)
@@ -552,7 +552,7 @@ public struct MainFeature: Sendable {
                         try await clock.sleep(for: .milliseconds(450))
                         await send(.invitePresentationsClosed)
                     }
-                    .cancellable(id: PushTapCancel.routing, cancelInFlight: true)
+                    .cancellable(id: CancelID.closeForInvite, cancelInFlight: true)
                 ])
 
             case .invitePresentationsClosed:

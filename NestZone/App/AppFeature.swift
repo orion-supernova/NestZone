@@ -371,6 +371,11 @@ public struct AppFeature: Sendable {
                 state.currentUser = user
                 state.main?.user = user
                 state.main?.propagateSession()
+                // The home list may have answered before the person was known
+                // (which the tour waits for).
+                if user != nil, !state.homeGate.isLoading {
+                    updateOnboarding(&state, live: Array(state.homeGate.homes))
+                }
                 // Purchases belong to the person, and the server is asked to
                 // look at their subscription once per launch and sign-in.
                 guard let user, state.proCheckedFor != user.id else { return .none }
@@ -755,10 +760,17 @@ public struct AppFeature: Sendable {
     /// A first run is better served by the card first, then the house: the
     /// person came to join these people, and the tour ends in a question the
     /// link has already answered.
+    /// The tabs a close was asked of are gone: the next attempt starts over.
+    private func resetInviteClosing(_ state: inout State) {
+        state.inviteClosing = false
+        state.inviteCleared = false
+    }
+
     private func presentPendingInvite(_ state: inout State) -> Effect<Action> {
         guard state.invite == nil, !state.pendingInviteRaw.isEmpty else { return .none }
         guard let pending = PendingInvite(raw: state.pendingInviteRaw), pending.isFresh(at: now) else {
             state.$pendingInviteRaw.withLock { $0 = "" }
+            state.inviteCleared = false
             return .none
         }
         guard state.status == .authenticated, !state.isProvisional, state.currentUser != nil else { return .none }
@@ -785,6 +797,7 @@ public struct AppFeature: Sendable {
         state.nameAsk = NameAskFeature.State()
         state.nameAskDeferred = false
         state.main = nil
+        resetInviteClosing(&state)
         state.onboarding = nil
         state.firstRunHandoff = false
         state.invite = nil
@@ -947,8 +960,10 @@ public struct AppFeature: Sendable {
             state.onboarding = nil
             return
         }
+        // Only on a real answer about this person: signed in, known, and not
+        // the launch's cached guess.
         guard !state.hasCompletedOnboarding, state.onboarding == nil, !state.firstRunHandoff,
-              !state.isProvisional, state.status == .authenticated
+              !state.isProvisional, state.status == .authenticated, state.currentUser != nil
         else { return }
         state.onboarding = OnboardingFeature.State(mode: .firstRun)
     }
@@ -1007,10 +1022,11 @@ public struct AppFeature: Sendable {
         let homes = state.homeGate.homes
         let pushRegistration = state.pushRegistration
         guard let home = selected else {
-            if state.main != nil { state.main = nil }
+            if state.main != nil { state.main = nil; resetInviteClosing(&state) }
             return .none
         }
         if state.main?.homeID != home.id {
+            resetInviteClosing(&state)
             state.main = MainFeature.State(homeID: home.id, home: home, user: user)
         } else if state.main?.home != home || state.main?.user != user {
             // Only when something actually moved. `homes:listMine` re-publishes

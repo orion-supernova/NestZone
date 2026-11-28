@@ -14,16 +14,31 @@ struct QRScannerScreen: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var found = 0
+    /// The scanner could not start (access refused at the prompt, say).
+    @State private var failed = false
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             if !DataScannerViewController.isSupported {
                 message(L10n.joinScanUnavailable)
-            } else if !DataScannerViewController.isAvailable {
-                message(L10n.joinScanDenied)
+            } else if failed || !DataScannerViewController.isAvailable {
+                VStack(spacing: 16) {
+                    message(L10n.joinScanDenied)
+                    Button {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    } label: {
+                        Text(L10n.settingsNotificationsOpenSettings)
+                            .font(.headline)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .glassEffect(.regular.interactive(), in: .capsule)
+                    }
+                    .foregroundStyle(.white)
+                }
             } else {
-                ScannerRepresentable { text in
+                ScannerRepresentable(onFailure: { failed = true }) { text in
                     found += 1
                     onScan(text)
                 }
@@ -65,6 +80,7 @@ struct QRScannerScreen: View {
 }
 
 private struct ScannerRepresentable: UIViewControllerRepresentable {
+    let onFailure: () -> Void
     let onScan: (String) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(onScan: onScan) }
@@ -84,7 +100,8 @@ private struct ScannerRepresentable: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ scanner: DataScannerViewController, context: Context) {
-        if !scanner.isScanning { try? scanner.startScanning() }
+        guard !scanner.isScanning else { return }
+        do { try scanner.startScanning() } catch { onFailure() }
     }
 
     static func dismantleUIViewController(_ scanner: DataScannerViewController, coordinator: Coordinator) {
