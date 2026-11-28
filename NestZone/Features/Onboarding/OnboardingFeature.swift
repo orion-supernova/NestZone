@@ -32,6 +32,11 @@ public struct OnboardingFeature: Sendable {
         public var index = 0
         var household: HouseholdKind?
         @Presents public var destination: Destination.State?
+        @Presents public var alert: AlertState<Action.Alert>?
+        /// The first run's account menu: deleting asks first, then Apple.
+        public var isConfirmingDelete = false
+        /// Apple's sheet or the server is busy with a deletion.
+        public var isLeaving = false
 
         public init(mode: Mode) {
             self.mode = mode
@@ -66,8 +71,17 @@ public struct OnboardingFeature: Sendable {
         case createTapped
         case joinTapped
         case destination(PresentationAction<Destination.Action>)
+        case alert(PresentationAction<Alert>)
         case delegate(Delegate)
         case binding(BindingAction<State>)
+        case signOutTapped
+        case deleteAccountTapped
+        /// Confirmed; the view asks Apple for a fresh authorisation.
+        case deleteAccountConfirmed
+        case deleteAccountAuthorized(code: String?)
+        case deleteAccountFailed(AppError)
+
+        public enum Alert: Equatable { case confirmSignOut }
 
         @CasePathable
         public enum Delegate: Equatable {
@@ -76,8 +90,13 @@ public struct OnboardingFeature: Sendable {
             /// A home was created or joined from the last page, and its sheet
             /// has closed. The home itself arrives on `homes:listMine`.
             case homeReady
+            /// The person left from the tour's menu (signed out, or deleted
+            /// the account): the root ends the session.
+            case signedOut
         }
     }
+
+    @Dependency(\.auth) var auth
 
     public init() {}
 
@@ -125,11 +144,60 @@ public struct OnboardingFeature: Sendable {
                 state.destination = nil
                 return .send(.delegate(.homeReady))
 
-            case .destination, .delegate, .binding:
+            // The tour replaced the screen that used to carry these two, and
+            // a person who is not ready to make or join a home still has to be
+            // able to leave (and to delete what they made by signing in).
+            case .signOutTapped:
+                state.alert = AlertState {
+                    TextState(String(localized: L10n.settingsLogoutButtonTitle))
+                } actions: {
+                    ButtonState(role: .destructive, action: .confirmSignOut) {
+                        TextState(String(localized: L10n.settingsLogoutButtonTitle))
+                    }
+                    ButtonState(role: .cancel) { TextState(String(localized: L10n.commonCancel)) }
+                } message: {
+                    TextState(String(localized: L10n.settingsLogoutConfirmMessage))
+                }
+                return .none
+
+            case .alert(.presented(.confirmSignOut)):
+                return .run { send in
+                    await auth.signOut(nil)
+                    await send(.delegate(.signedOut))
+                }
+
+            case .deleteAccountTapped:
+                guard !state.isLeaving else { return .none }
+                state.isConfirmingDelete = true
+                return .none
+
+            case .deleteAccountConfirmed:
+                state.isLeaving = true
+                return .none
+
+            case let .deleteAccountAuthorized(code):
+                return .run { send in
+                    try await auth.deleteAccount(code)
+                    await send(.delegate(.signedOut))
+                } catch: { error, send in
+                    let mapped = AppError(error)
+                    // Already gone on the server: it ends like a sign-out.
+                    if mapped.meansSessionIsGone { await send(.delegate(.signedOut)) }
+                    else { await send(.deleteAccountFailed(mapped)) }
+                }
+
+            case let .deleteAccountFailed(error):
+                state.isLeaving = false
+                guard !error.isSilent else { return .none }
+                state.alert = .failure(error)
+                return .none
+
+            case .alert, .destination, .delegate, .binding:
                 return .none
             }
         }
         .ifLet(\.$destination, action: \.destination)
+        .ifLet(\.$alert, action: \.alert)
     }
 }
 

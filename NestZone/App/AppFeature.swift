@@ -61,6 +61,17 @@ public struct AppFeature: Sendable {
         /// not been told yet: the rest of the first run (Plus, the first
         /// shopping item) starts when they exist.
         var firstRunHandoff = false
+        /// "Join <House>?", for a link the person opened. Nil otherwise.
+        @Presents public var invite: InviteJoinFeature.State?
+        /// A link opened while signed out, kept for the sign-in round trip.
+        @Shared(.pendingInviteRaw) var pendingInviteRaw: String
+        /// The house an invite just let the person into, not yet on the live
+        /// list: the root goes there when it arrives (a selection made before
+        /// would be dropped as stale).
+        var joiningHome: HomeID?
+        /// The tabs were told to close what is open for the invite card.
+        var inviteClosing = false
+        var inviteCleared = false
         public var nameAsk = NameAskFeature.State()
         /// "Later" on the name question, for this launch only: it asks again
         /// next launch until there is a name.
@@ -108,7 +119,7 @@ public struct AppFeature: Sendable {
             if homeGate.isLoading { return .launching }
             // A home was just made from the tour and has not reached the list
             // yet: not the picker for a beat.
-            if firstRunHandoff, selectedHome == nil { return .launching }
+            if firstRunHandoff || joiningHome != nil, selectedHome == nil { return .launching }
             guard selectedHome != nil else { return .choosingHome }
             // The tab container is built by `syncMain`, in response to a
             // `homeGate` action. Seeded from the cache the selection is already
@@ -156,16 +167,25 @@ public struct AppFeature: Sendable {
         case main(MainFeature.Action)
         case onboarding(OnboardingFeature.Action)
         case nameAsk(NameAskFeature.Action)
+        /// The app was opened by a link (a universal link or `nestzone://`).
+        /// Only invites are acted on; any other URL just opens the app.
+        case inviteLinkOpened(URL)
+        case invite(PresentationAction<InviteJoinFeature.Action>)
+        /// The house an invite joined never turned up on the list.
+        case joinDeadline
+        /// The card is on screen: only now is the link spent.
+        case inviteShown
         /// The write failed: the name comes off again and the question says why.
         case nameSaveFailed(String, AppError)
     }
 
     private enum CancelID {
-        case authState, currentUser, deviceToken, deviceRegistration, foreground, restore, signOutWait, purchasesIdentity, pushTaps
+        case authState, currentUser, deviceToken, deviceRegistration, foreground, restore, signOutWait, purchasesIdentity, pushTaps, joinDeadline
     }
 
     @Dependency(\.auth) var authClient
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.date.now) var now
     @Dependency(\.push) var push
     @Dependency(\.devices) var devices
     @Dependency(\.purchases) var purchases
@@ -517,6 +537,11 @@ public struct AppFeature: Sendable {
             // here rather than in the view means tab state survives a redraw
             // and dies with the home it belonged to.
             case let .homeGate(.homesUpdated(live)):
+                // The house an invite joined has arrived: this is the switch.
+                if let joining = state.joiningHome, live.contains(where: { $0.id == joining }) {
+                    state.joiningHome = nil
+                    state.homeGate.$selectedHomeIDRaw.homeID = joining
+                }
                 updateOnboarding(&state, live: live)
                 // A house that is no longer in the list was left, or the person
                 // was removed from it: what this phone holds for it (copies in
@@ -645,16 +670,112 @@ public struct AppFeature: Sendable {
                 state.firstRunHandoff = true
                 return syncMain(&state)
 
+            // Left from the tour's menu: signed out, or the account deleted.
+            case .onboarding(.delegate(.signedOut)):
+                state.isProvisional = false
+                state.isRestoringSession = false
+                state.status = .unauthenticated
+                return .merge(
+                    .cancel(id: CancelID.restore),
+                    endSession(&state, clearCache: true)
+                )
+
+            case let .inviteLinkOpened(url):
+                guard let token = InviteLink.token(from: url) else { return .none }
+                let pending = PendingInvite(token: token, opened: now)
+                state.$pendingInviteRaw.withLock { $0 = pending.raw }
+                return .none
+
+            // Joined, or a link to a house the person is in already: go there.
+            case let .invite(.presented(.delegate(.joined(homeID, already)))):
+                state.invite = nil
+                let wasHomeless = state.homeGate.homes.isEmpty
+                // A first run that joined by invite skips the tour (it ends in
+                // the question this just answered) and gets the rest of it:
+                // Plus for a house without it, then the first shopping item.
+                if wasHomeless, !already, state.onboarding != nil || !state.hasCompletedOnboarding {
+                    state.$hasCompletedOnboarding.withLock { $0 = true }
+                    state.onboarding = nil
+                    state.firstRunHandoff = true
+                }
+                if state.homeGate.homes[id: homeID] != nil {
+                    state.homeGate.$selectedHomeIDRaw.homeID = homeID
+                    return syncMain(&state)
+                }
+                state.joiningHome = homeID
+                return .run { send in
+                    try await clock.sleep(for: .seconds(10))
+                    await send(.joinDeadline)
+                }
+                .cancellable(id: CancelID.joinDeadline, cancelInFlight: true)
+
+            case .inviteShown:
+                state.$pendingInviteRaw.withLock { $0 = "" }
+                return .none
+
+            case .main(.invitePresentationsClosed):
+                state.inviteClosing = false
+                state.inviteCleared = true
+                return .none
+
+            case .joinDeadline:
+                state.joiningHome = nil
+                return .none
+
+            case .invite(.presented(.delegate(.proRequired))):
+                state.invite = nil
+                return .send(.main(.paywallRequested(.multipleHomes)))
+
+            case .invite(.presented(.delegate(.dismissed))):
+                state.invite = nil
+                return .none
+
             case .onboarding(.delegate(.finished)):
                 state.onboarding = nil
                 return .none
 
-            case .auth, .main, .nameAsk, .onboarding:
+            case .auth, .main, .nameAsk, .onboarding, .invite:
                 return .none
             }
         }
         .ifLet(\.main, action: \.main) { MainFeature() }
         .ifLet(\.onboarding, action: \.onboarding) { OnboardingFeature() }
+        .ifLet(\.$invite, action: \.invite) { InviteJoinFeature() }
+
+        // After everything above has had its say: a link that is waiting goes
+        // up as soon as there is a screen for it.
+        Reduce { state, _ in presentPendingInvite(&state) }
+    }
+
+    /// Puts a waiting invite link up as the "Join <House>?" card, once the
+    /// person is signed in, named and on a screen that can hold a sheet (not
+    /// the launch, the offline screen or the name question: those would cover
+    /// it, or it them). A link older than a day is dropped.
+    ///
+    /// A first run is better served by the card first, then the house: the
+    /// person came to join these people, and the tour ends in a question the
+    /// link has already answered.
+    private func presentPendingInvite(_ state: inout State) -> Effect<Action> {
+        guard state.invite == nil, !state.pendingInviteRaw.isEmpty else { return .none }
+        guard let pending = PendingInvite(raw: state.pendingInviteRaw), pending.isFresh(at: now) else {
+            state.$pendingInviteRaw.withLock { $0 = "" }
+            return .none
+        }
+        guard state.status == .authenticated, !state.isProvisional, state.currentUser != nil else { return .none }
+        switch state.screen {
+        case .onboarding, .choosingHome, .main: break
+        case .launching, .signedOut, .offline, .askingName: return .none
+        }
+        // Whatever is open comes down first (as for a notification tap). The
+        // link stays stored until the card is on screen (`inviteShown`).
+        if state.main != nil, !state.inviteCleared {
+            guard !state.inviteClosing else { return .none }
+            state.inviteClosing = true
+            return .send(.main(.closeForInvite))
+        }
+        state.inviteCleared = false
+        state.invite = InviteJoinFeature.State(token: pending.token)
+        return .none
     }
 
     /// Everything a session leaving takes with it: the tabs, the signed-in user,
@@ -666,7 +787,14 @@ public struct AppFeature: Sendable {
         state.main = nil
         state.onboarding = nil
         state.firstRunHandoff = false
+        state.invite = nil
+        state.joiningHome = nil
         state.proCheckedFor = nil
+        state.inviteClosing = false
+        state.inviteCleared = false
+        // The next account on this phone gets the tour. A person who already
+        // has a home has it silently marked seen again (`updateOnboarding`).
+        if clearCache { state.$hasCompletedOnboarding.withLock { $0 = false } }
         state.pendingTap = nil
         state.missingHomes = []
         state.$pro.withLock { $0 = .unknown }

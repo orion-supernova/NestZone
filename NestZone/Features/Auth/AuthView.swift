@@ -14,6 +14,7 @@ import SwiftUI
 public struct AuthView: View {
     @Bindable var store: StoreOf<AuthFeature>
 
+    @Shared(.pendingInviteRaw) private var pendingInvite
     @Environment(\.theme) private var theme
     @Environment(\.colorScheme) private var colorScheme
 
@@ -87,6 +88,13 @@ public struct AuthView: View {
                 .font(.callout)
                 .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
+            // An invite link was opened before signing in: say it is kept.
+            if PendingInvite(raw: pendingInvite) != nil {
+                Text(L10n.authPendingInvite)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.accentText)
+                    .multilineTextAlignment(.center)
+            }
         }
     }
 

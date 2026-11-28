@@ -66,19 +66,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "So you can take a profile photo without leaving NestZone. The camera opens only when you tap Take Photo."
+            "value" : "So you can take a profile photo or scan a house invite without leaving NestZone. The camera opens only when you ask it to."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NestZone'dan çıkmadan profil fotoğrafı çekebilmen için. Kamera yalnızca Fotoğraf Çek'e dokunduğunda açılır."
+            "value" : "NestZone'dan çıkmadan profil fotoğrafı çekebilmen ya da ev davetini okutabilmen için. Kamera yalnızca sen istediğinde açılır."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Så att du kan ta en profilbild utan att lämna NestZone. Kameran öppnas bara när du trycker på Ta en bild."
+            "value" : "Så att du kan ta en profilbild eller skanna en inbjudan utan att lämna NestZone. Kameran öppnas bara när du ber om det."
           }
         }
       }

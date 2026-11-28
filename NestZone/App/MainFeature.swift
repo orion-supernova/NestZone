@@ -231,6 +231,10 @@ public struct MainFeature: Sendable {
         /// The person has a home they just made or joined from the tour: the
         /// rest of the first run (Plus, then the first win) starts here.
         case firstRunBegan
+        /// An invite link wants the screen: close everything, then answer
+        /// `invitePresentationsClosed`.
+        case closeForInvite
+        case invitePresentationsClosed
         /// `pro:status` did not answer in time: the offer is skipped, never
         /// guessed.
         case firstRunPlusTimedOut
@@ -333,7 +337,13 @@ public struct MainFeature: Sendable {
                 // The invite code lives in Settings.
                 case .openInvite:
                     state.isSettingsPresented = true
-                    return .none
+                    // The invite sheet goes over Settings once it is up: a
+                    // sheet asked for in the frame that presents its host is
+                    // dropped.
+                    return .run { send in
+                        try await clock.sleep(for: .milliseconds(450))
+                        await send(.settings(.inviteTapped))
+                    }
                 // `AppFeature`'s to answer.
                 case .notificationsEnabled:
                     return .none
@@ -515,25 +525,7 @@ public struct MainFeature: Sendable {
             case let .pushTapped(tap):
                 // Anything presented anywhere, however deep (read before the
                 // state below is cleared, while the sheets are still up).
-                var covered = MainActor.assumeIsolated { presentationCloser.isPresenting() }
-                var closing: [Effect<Action>] = []
-                if state.companion.isCovering { covered = true }
-                // Nestie's card, store and ceremony: the ceremony's moment is
-                // kept, not ended.
-                state.companion.closeForNavigation()
-                if state.inbox.isOpen { covered = true; closing.append(.send(.inbox(.closeTapped))) }
-                if state.isSettingsPresented { covered = true; state.isSettingsPresented = false }
-                if state.customize != nil { covered = true; state.customize = nil }
-                if state.editName != nil { covered = true; state.editName = nil }
-                // Add anything closes the way Cancel does, by clearing.
-                if state.capture != nil { covered = true; state.capture = nil }
-                if state.paywall != nil {
-                    covered = true
-                    state.paywall = nil
-                    closing.append(.cancel(id: CancelID.paywallShown))
-                }
-                if state.now.dinner != nil { covered = true; state.now.dinner = nil }
-                if state.now.occasion != nil { covered = true; state.now.occasion = nil }
+                var (covered, closing) = closeEverything(&state)
                 guard covered else { return .send(.pushRouted(tap)) }
                 // State first (so each feature's own presentation is already
                 // cleared), then whatever is still up goes from the root, in
@@ -548,6 +540,23 @@ public struct MainFeature: Sendable {
                     }
                     .cancellable(id: PushTapCancel.routing, cancelInFlight: true)
                 ])
+
+            // An invite link arrived with something open: the same closing,
+            // then the root shows its card.
+            case .closeForInvite:
+                let (covered, closing) = closeEverything(&state)
+                guard covered else { return .send(.invitePresentationsClosed) }
+                return .merge(closing + [
+                    .run { send in
+                        await presentationCloser.dismissAll()
+                        try await clock.sleep(for: .milliseconds(450))
+                        await send(.invitePresentationsClosed)
+                    }
+                    .cancellable(id: PushTapCancel.routing, cancelInFlight: true)
+                ])
+
+            case .invitePresentationsClosed:
+                return .none
 
             case let .pushRouted(tap):
                 // A ceremony held for the tap may play once the destination
@@ -608,6 +617,7 @@ public struct MainFeature: Sendable {
             // that is known not to have it.
             case .firstRunBegan:
                 state.firstRun = .awaitingPlus
+                state.homeTab.holdsNotificationAsk = true
                 let next = advanceFirstRun(&state)
                 guard state.firstRun == .awaitingPlus else { return next }
                 return .merge(next, .run { send in
@@ -622,17 +632,22 @@ public struct MainFeature: Sendable {
                 return startFirstWin()
 
             case .firstWinReady:
-                guard state.firstWin == nil, state.paywall == nil else { return .none }
+                guard state.firstWin == nil, state.paywall == nil else {
+                    return .send(.home(.releaseNotificationAsk))
+                }
                 state.firstWin = FirstWinFeature.State(homeID: state.homeID)
                 return .none
 
-            case .firstWin(.presented(.delegate(.finished))):
+            case .firstWin(.presented(.delegate(.finished))), .firstWin(.dismiss):
                 state.firstWin = nil
-                return .none
+                return .send(.home(.releaseNotificationAsk))
 
             case .firstWin(.presented(.delegate(.openShopping))):
                 state.firstWin = nil
-                return open(.module(.shopping), from: state.selectedTab, &state)
+                return .merge(
+                    .send(.home(.releaseNotificationAsk)),
+                    open(.module(.shopping), from: state.selectedTab, &state)
+                )
 
             case .settings(.delegate(.tourRequested)):
                 state.tour = OnboardingFeature.State(mode: .replay)
@@ -679,6 +694,31 @@ public struct MainFeature: Sendable {
         EmptyReducer()
             .ifLet(\.$firstWin, action: \.firstWin) { FirstWinFeature() }
             .ifLet(\.$tour, action: \.tour) { OnboardingFeature() }
+    }
+
+    /// Closes every presentation over the tabs, as a notification tap does.
+    /// `covered` says whether anything was up.
+    private func closeEverything(_ state: inout State) -> (covered: Bool, closing: [Effect<Action>]) {
+        var covered = MainActor.assumeIsolated { presentationCloser.isPresenting() }
+        var closing: [Effect<Action>] = []
+        if state.companion.isCovering { covered = true }
+        // Nestie's card, store and ceremony: the ceremony's moment is
+        // kept, not ended.
+        state.companion.closeForNavigation()
+        if state.inbox.isOpen { covered = true; closing.append(.send(.inbox(.closeTapped))) }
+        if state.isSettingsPresented { covered = true; state.isSettingsPresented = false }
+        if state.customize != nil { covered = true; state.customize = nil }
+        if state.editName != nil { covered = true; state.editName = nil }
+        // Add anything closes the way Cancel does, by clearing.
+        if state.capture != nil { covered = true; state.capture = nil }
+        if state.paywall != nil {
+            covered = true
+            state.paywall = nil
+            closing.append(.cancel(id: CancelID.paywallShown))
+        }
+        if state.now.dinner != nil { covered = true; state.now.dinner = nil }
+        if state.now.occasion != nil { covered = true; state.now.occasion = nil }
+        return (covered, closing)
     }
 
     /// Opens the paywall over whatever is on top (`PaywallHost`).

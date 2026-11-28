@@ -84,6 +84,9 @@ public struct SettingsView: View {
         .hostedSheet(item: $store.scope(state: \.destination?.manageHomes, action: \.destination.manageHomes)) {
             ManageHomesSheet(store: $0)
         }
+        .hostedSheet(item: $store.scope(state: \.destination?.invite, action: \.destination.invite)) {
+            InviteSheet(store: $0)
+        }
         .hostedSheet(item: $store.scope(state: \.destination?.blockedPeople, action: \.destination.blockedPeople)) {
             BlockedPeopleView(store: $0)
         }
@@ -266,6 +269,22 @@ public struct SettingsView: View {
                 }
             }
 
+            if store.home != nil {
+                Button { store.send(.inviteTapped) } label: {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L10n.inviteTitle)
+                            Text(L10n.inviteSettingsHelp)
+                                .font(.footnote)
+                                .foregroundStyle(.secondaryText)
+                        }
+                    } icon: {
+                        Image(systemName: "person.crop.circle.badge.plus")
+                    }
+                }
+                .accessibilityIdentifier("InviteSomeone")
+            }
+
             if let code = store.home?.inviteCode {
                 Button { store.send(.copyInviteCodeTapped) } label: {
                     LabeledContent {
@@ -280,7 +299,7 @@ public struct SettingsView: View {
                     } label: {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(L10n.settingsInviteCodeTitle)
+                                Text(L10n.inviteOrShareCode)
                                 Text(L10n.settingsInviteCodeHelpText)
                                     .font(.footnote)
                                     .foregroundStyle(.secondaryText)

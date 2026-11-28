@@ -8,6 +8,7 @@ struct OnboardingPageView: View {
     let isCurrent: Bool
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollView {
@@ -101,7 +102,7 @@ struct OnboardingPageView: View {
                             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                                 .font(.title3)
                                 .foregroundStyle(isSelected ? theme.ink : Palette.textTertiary)
-                                .contentTransition(.symbolEffect(.replace))
+                                .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace))
                         }
                         .padding(.horizontal, Metrics.cardPadding)
                         .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)

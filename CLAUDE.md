@@ -236,6 +236,27 @@ each tab on the segment you name, to measure a first build of any of them.
   for Add anything. It lives for the whole tab bar, so its subscriptions do
   too. `tabViewBottomAccessory(isEnabled:)` is 26.1, behind `#available`: the
   app's floor stays 26.0.
+- **Invites are links and QR codes; the typed code still works**
+  (`Features/Invite/`, `InviteClient`, backend `invites.ts`). Settings →
+  "Invite someone" opens `InviteSheet`: a QR code (`qr`, ten minutes, created
+  on open, replaced 8 s before it runs out, when its `invites:status` says it
+  is used up, and on a tap when it was revoked, never automatically, or two
+  phones would revoke each other for ever; nothing runs while the app is not
+  active, and closing the sheet revokes the code) with a system-drawn
+  countdown, "how many people" (1, 3, 5, anyone) and a share-sheet link
+  (`link`, a week, five uses). A link is `https://nestzone-convex-api.walhallaa.com/.well-known/join/<token>`
+  (Associated Domains entitlement) or `nestzone://join/<token>`; the root's
+  `onOpenURL` and web-browsing activity send `inviteLinkOpened`, and any other
+  URL (the calendar copies' `nestzone://event/...`) only opens the app. The
+  link is held in `@Shared(.pendingInviteRaw)` (token and open time, a day) and
+  presented by `AppFeature` as `InviteJoinSheet` once the person is signed in,
+  named and on a screen that can hold a sheet. Join redeems, then the root
+  switches to the house when it reaches the live list (`joiningHome`: a
+  selection made earlier would be dropped as stale). A first run that joins by
+  invite skips the rest of the tour and still gets Plus and the first win. A
+  second house without Plus hands the refusal to the root for the paywall
+  (`redeem` never opens it itself). The join sheet accepts a link, a token or
+  the old code, and scans QR codes with VisionKit (`QRScannerScreen`).
 - **Tonight's dinner has one owner.** `NowFeature` holds the meal plan and
   presents the dinner sheet; Today, Meals and the dock all ask it, and
   `MainFeature.propagateNow` hands tonight down to the screens that draw it.

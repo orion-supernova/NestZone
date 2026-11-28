@@ -47,6 +47,11 @@ public struct AppView: View {
             }
         }
         .animation(Motion.fade, value: store.screen)
+        // Over whatever screen the link found the person on.
+        .sheet(item: $store.scope(state: \.invite, action: \.invite)) {
+            InviteJoinSheet(store: $0)
+                .onAppear { store.send(.inviteShown) }
+        }
         .appTheme(store.theme)
         // Drives dates, numbers and system controls. `L10n` is pointed at the
         // same locale in the reducer.
@@ -202,6 +207,10 @@ struct MainView: View {
         }
         .hostedSheet(item: $store.scope(state: \.capture, action: \.capture)) {
             CaptureView(store: $0)
+        }
+        // The last step of a first run.
+        .hostedSheet(item: $store.scope(state: \.firstWin, action: \.firstWin)) {
+            FirstWinView(store: $0)
         }
         // Over the tabs when no sheet is up; over the top sheet when one is
         // (every `hostedSheet` hosts it too).

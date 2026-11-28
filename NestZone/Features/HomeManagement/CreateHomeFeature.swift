@@ -82,6 +82,8 @@ public struct JoinHomeFeature: Sendable {
         public var isSubmitting = false
         public var didSucceed = false
         public var inlineError: String?
+        /// The camera is up, looking for an invite's QR code.
+        public var isScanning = false
 
         public init() {}
 
@@ -95,10 +97,15 @@ public struct JoinHomeFeature: Sendable {
         case succeeded
         case failed(AppError)
         case finished
+        case scanTapped
+        /// The camera read a QR code (any text; only our links are used).
+        case scanned(String)
         case binding(BindingAction<State>)
     }
 
     @Dependency(\.homes) var homes
+    @Dependency(\.invite) var invite
+    @Dependency(\.paywall) var paywall
     @Dependency(\.continuousClock) var clock
 
     public init() {}
@@ -112,12 +119,38 @@ public struct JoinHomeFeature: Sendable {
                 guard state.canSubmit else { return .none }
                 state.isSubmitting = true
                 state.inlineError = nil
+                // A link or token goes through the invite; anything else is
+                // the old invite code, which keeps working.
                 return .run { [code = state.code] send in
-                    try await homes.join(code)
+                    if let token = InviteLink.token(in: code) {
+                        do {
+                            _ = try await invite.redeem(token)
+                        } catch {
+                            // This path never opens the paywall by itself.
+                            if case .proRequired = AppError(error) { paywall.request(.multipleHomes) }
+                            throw error
+                        }
+                    } else {
+                        try await homes.join(code)
+                    }
                     await send(.succeeded)
                 } catch: { error, send in
                     await send(.failed(AppError(error)))
                 }
+
+            case .scanTapped:
+                state.inlineError = nil
+                state.isScanning = true
+                return .none
+
+            case let .scanned(text):
+                state.isScanning = false
+                guard InviteLink.token(in: text) != nil else {
+                    state.inlineError = String(localized: L10n.joinScanWrong)
+                    return .none
+                }
+                state.code = text
+                return .send(.submitTapped)
 
             case .succeeded:
                 state.isSubmitting = false

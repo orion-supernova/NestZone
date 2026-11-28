@@ -217,6 +217,13 @@ public enum CurrencyDefaults {
 // MARK: - Calendar
 
 extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// An invite link opened while signed out, `<token>@<opened at, ms>`
+    /// (`PendingInvite`), kept across the sign-in round trip and dropped after
+    /// a day. Empty when there is none.
+    public static var pendingInviteRaw: Self {
+        Self[.appStorage("appPendingInvite"), default: ""]
+    }
+
     /// Who the person lives with, from the tour's one question: a
     /// `HouseholdKind` raw value, or empty until it is answered. Per device,
     /// never sent anywhere; it only tunes how a line of copy talks.

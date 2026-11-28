@@ -18,6 +18,10 @@ public enum ServerRefusal: String, Equatable, Sendable {
     case forbidden = "FORBIDDEN"
     case lastMember = "LAST_MEMBER"
     case invalid = "INVALID"
+    /// An invite link or QR code that cannot be used (`invites:redeem`).
+    case inviteInvalid = "INVITE_INVALID"
+    case inviteFull = "INVITE_FULL"
+    case inviteExpired = "INVITE_EXPIRED"
 
     /// `nil` when the data is not one of these (a Plus refusal, a code a newer
     /// server added, plain text).
@@ -49,6 +53,9 @@ extension ServerRefusal {
         case .forbidden: L10n.refusalForbidden
         case .lastMember: L10n.refusalLastMember
         case .invalid: L10n.refusalInvalid
+        case .inviteInvalid: L10n.inviteStateInvalid
+        case .inviteFull: L10n.inviteStateFull
+        case .inviteExpired: L10n.inviteStateExpired
         }
     }
 }

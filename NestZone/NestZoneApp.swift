@@ -63,6 +63,12 @@ struct NestZoneApp: App {
 
     private var root: some View {
         AppView(store: Self.store)
+            // An invite: the universal link (the system hands it over as web
+            // browsing, or as a URL when it opens us cold) or `nestzone://join`.
+            .onOpenURL { Self.store.send(.inviteLinkOpened($0)) }
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                if let url = activity.webpageURL { Self.store.send(.inviteLinkOpened(url)) }
+            }
             // The window exists by the time its content appears, which is the
             // earliest the recogniser has anything to attach to.
             .onAppear {

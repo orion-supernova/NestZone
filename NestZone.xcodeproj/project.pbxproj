@@ -437,7 +437,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = NestZone;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSCameraUsageDescription = "So you can take a profile photo without leaving NestZone. The camera opens only when you tap Take Photo.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "So you can take a profile photo or scan a house invite without leaving NestZone. The camera opens only when you ask it to.";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "NestZone puts house events in the calendars you choose, and shows your housemates the calendars you choose to share. Nothing is shared until you pick it.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -473,7 +473,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = NestZone;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSCameraUsageDescription = "So you can take a profile photo without leaving NestZone. The camera opens only when you tap Take Photo.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "So you can take a profile photo or scan a house invite without leaving NestZone. The camera opens only when you ask it to.";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "NestZone puts house events in the calendars you choose, and shows your housemates the calendars you choose to share. Nothing is shared until you pick it.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -12275,4 +12275,196 @@ extension L10n {
     public static var paywallNothingDueToday: LocalizedStringResource {
         r("paywall_nothing_due_today", "Nothing to pay today")
     }
+
+    // MARK: - Invites by link and QR code
+
+    /// Invite someone
+    public static var inviteTitle: LocalizedStringResource {
+        r("invite_title", "Invite someone")
+    }
+
+    /// Show a QR code or send a link
+    public static var inviteSettingsHelp: LocalizedStringResource {
+        r("invite_settings_help", "Show a QR code or send a link")
+    }
+
+    /// Or share the code
+    public static var inviteOrShareCode: LocalizedStringResource {
+        r("invite_or_share_code", "Or share the code")
+    }
+
+    /// Ask them to scan this with their camera
+    public static var inviteScanHint: LocalizedStringResource {
+        r("invite_scan_hint", "Ask them to scan this with their camera")
+    }
+
+    /// QR code to join %@
+    public static func inviteQRLabel(_ a0: String) -> LocalizedStringResource {
+        r("invite_qr_label", "QR code to join \(a0)")
+    }
+
+    /// Getting it ready
+    public static var invitePreparing: LocalizedStringResource {
+        r("invite_preparing", "Getting it ready")
+    }
+
+    /// Tap for a new code
+    public static var inviteTapForNew: LocalizedStringResource {
+        r("invite_tap_for_new", "Tap for a new code")
+    }
+
+    /// Joined!
+    public static var inviteJoinedPop: LocalizedStringResource {
+        r("invite_joined_pop", "Joined!")
+    }
+
+    /// Changes in
+    public static var inviteChangesIn: LocalizedStringResource {
+        r("invite_changes_in", "Changes in")
+    }
+
+    /// How many people can join
+    public static var inviteUsesTitle: LocalizedStringResource {
+        r("invite_uses_title", "How many people can join")
+    }
+
+    /// 1
+    public static var inviteLimitOne: LocalizedStringResource {
+        r("invite_limit_one", "1")
+    }
+
+    /// 3
+    public static var inviteLimitThree: LocalizedStringResource {
+        r("invite_limit_three", "3")
+    }
+
+    /// 5
+    public static var inviteLimitFive: LocalizedStringResource {
+        r("invite_limit_five", "5")
+    }
+
+    /// Anyone
+    public static var inviteLimitAnyone: LocalizedStringResource {
+        r("invite_limit_anyone", "Anyone")
+    }
+
+    /// %1$@ of %2$@ joined
+    public static func inviteJoinedOf(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("invite_joined_of", "\(a0) of \(a1) joined")
+    }
+
+    /// %@ joined
+    public static func inviteJoinedCount(_ a0: String) -> LocalizedStringResource {
+        r("invite_joined_count", "\(a0) joined")
+    }
+
+    /// Share link
+    public static var inviteShareLink: LocalizedStringResource {
+        r("invite_share_link", "Share link")
+    }
+
+    /// Join our home “%1$@” on NestZone: %2$@
+    public static func inviteShareMessage(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("invite_share_message", "Join our home “\(a0)” on NestZone: \(a1)")
+    }
+
+    /// Join %@?
+    public static func inviteJoinTitle(_ a0: String) -> LocalizedStringResource {
+        r("invite_join_title", "Join \(a0)?")
+    }
+
+    /// %@ invited you
+    public static func inviteJoinInvitedBy(_ a0: String) -> LocalizedStringResource {
+        r("invite_join_invited_by", "\(a0) invited you")
+    }
+
+    /// %@ people live here
+    public static func inviteJoinMembers(_ a0: String) -> LocalizedStringResource {
+        r("invite_join_members", "\(a0) people live here")
+    }
+
+    /// Join
+    public static var inviteJoinButton: LocalizedStringResource {
+        r("invite_join_button", "Join")
+    }
+
+    /// Not now
+    public static var inviteNotNow: LocalizedStringResource {
+        r("invite_not_now", "Not now")
+    }
+
+    /// You're in!
+    public static var inviteJoinedSuccess: LocalizedStringResource {
+        r("invite_joined_success", "You're in!")
+    }
+
+    /// This invite has expired
+    public static var inviteStateExpired: LocalizedStringResource {
+        r("invite_state_expired", "This invite has expired")
+    }
+
+    /// This invite has been used up
+    public static var inviteStateFull: LocalizedStringResource {
+        r("invite_state_full", "This invite has been used up")
+    }
+
+    /// This invite was cancelled
+    public static var inviteStateRevoked: LocalizedStringResource {
+        r("invite_state_revoked", "This invite was cancelled")
+    }
+
+    /// We can't find this invite
+    public static var inviteStateInvalid: LocalizedStringResource {
+        r("invite_state_invalid", "We can't find this invite")
+    }
+
+    /// Ask for a new invite
+    public static var inviteAskForNew: LocalizedStringResource {
+        r("invite_ask_for_new", "Ask for a new invite")
+    }
+
+    /// Got it
+    public static var inviteGotIt: LocalizedStringResource {
+        r("invite_got_it", "Got it")
+    }
+
+    /// Try again
+    public static var inviteTryAgain: LocalizedStringResource {
+        r("invite_try_again", "Try again")
+    }
+
+    /// Invite link or code
+    public static var joinHomeLinkOrCodeLabel: LocalizedStringResource {
+        r("join_home_link_or_code_label", "Invite link or code")
+    }
+
+    /// Scan QR code
+    public static var joinScanButton: LocalizedStringResource {
+        r("join_scan_button", "Scan QR code")
+    }
+
+    /// Point the camera at the invite's QR code
+    public static var joinScanHint: LocalizedStringResource {
+        r("join_scan_hint", "Point the camera at the invite's QR code")
+    }
+
+    /// Scanning isn't available on this device. Paste the link or type the code instead.
+    public static var joinScanUnavailable: LocalizedStringResource {
+        r("join_scan_unavailable", "Scanning isn't available on this device. Paste the link or type the code instead.")
+    }
+
+    /// Camera access is off. You can turn it on in Settings, or paste the link instead.
+    public static var joinScanDenied: LocalizedStringResource {
+        r("join_scan_denied", "Camera access is off. You can turn it on in Settings, or paste the link instead.")
+    }
+
+    /// That's not a NestZone invite
+    public static var joinScanWrong: LocalizedStringResource {
+        r("join_scan_wrong", "That's not a NestZone invite")
+    }
+
+    /// Sign in to join your invite
+    public static var authPendingInvite: LocalizedStringResource {
+        r("auth_pending_invite", "Sign in to join your invite")
+    }
 }

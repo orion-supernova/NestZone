@@ -9,6 +9,7 @@ private struct FormSheet<Field: View>: View {
     let symbol: String
     let submitTitle: LocalizedStringResource
     let successTitle: LocalizedStringResource
+    var height: CGFloat = 340
     let isSubmitting: Bool
     let didSucceed: Bool
     let canSubmit: Bool
@@ -40,7 +41,7 @@ private struct FormSheet<Field: View>: View {
                 }
             }
         }
-        .presentationDetents([.height(340)])
+        .presentationDetents([.height(height)])
         .presentationBackground(.regularMaterial)
     }
 
@@ -121,23 +122,34 @@ struct JoinHomeSheet: View {
             symbol: "person.2.badge.key",
             submitTitle: L10n.joinHomeButton,
             successTitle: L10n.joinHomeSuccessMessage,
+            height: 430,
             isSubmitting: store.isSubmitting,
             didSucceed: store.didSucceed,
             canSubmit: store.canSubmit,
             onSubmit: { store.send(.submitTapped) }
         ) {
-            GlassTextField(
-                L10n.joinHomeInviteCodeLabel,
-                text: $store.code,
-                symbol: "key",
-                error: store.inlineError.map { LocalizedStringResource(stringLiteral: $0) }
-            )
-            // Invite codes are case-insensitive on the server and always
-            // uppercase in the UI, so autocorrect only gets in the way.
-            .textInputAutocapitalization(.characters)
-            .autocorrectionDisabled()
-            .submitLabel(.go)
-            .onSubmit { store.send(.submitTapped) }
+            VStack(spacing: 12) {
+                GlassTextField(
+                    L10n.joinHomeLinkOrCodeLabel,
+                    text: $store.code,
+                    symbol: "key",
+                    error: store.inlineError.map { LocalizedStringResource(stringLiteral: $0) }
+                )
+                // A link is case-sensitive, so nothing is capitalised; the
+                // server reads an invite code either way (`homes:join`).
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.go)
+                .onSubmit { store.send(.submitTapped) }
+
+                SecondaryButton(L10n.joinScanButton, symbol: "qrcode.viewfinder") {
+                    store.send(.scanTapped)
+                }
+                .disabled(store.isSubmitting)
+            }
+        }
+        .fullScreenCover(isPresented: $store.isScanning) {
+            QRScannerScreen { store.send(.scanned($0)) }
         }
     }
 }

@@ -6,6 +6,17 @@
 	<array>
 		<string>com.walhallaa.NestZone.calendarSync</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.walhallaa.NestZone</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nestzone</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

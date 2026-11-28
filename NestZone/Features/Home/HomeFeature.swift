@@ -95,6 +95,10 @@ public struct HomeFeature: Sendable {
         /// Persisted, so the soft ask happens once per install rather than on
         /// every visit to this tab.
         @Shared(.hasAskedForNotifications) public var hasAskedForNotifications: Bool
+        /// A first run is on its way through Plus and the first shopping item,
+        /// which present over Today; the question waits its turn so neither is
+        /// dropped. Set and released by `MainFeature`.
+        public var holdsNotificationAsk = false
 
         /// Which sections show, when, and in what order. Live: saving
         /// Customize rearranges this screen without anything being sent to it.
@@ -447,6 +451,8 @@ public struct HomeFeature: Sendable {
         /// yet. Raised by an effect rather than from `.task` directly so the
         /// prompt lands on a drawn screen, not a blank one.
         case notificationPromptReady
+        /// The first run is over: the notification question may go up now.
+        case releaseNotificationAsk
         case notificationAuthorizationAnswered(Bool)
         /// Bubbled to the tab container, which owns navigation.
         case delegate(Delegate)
@@ -800,7 +806,14 @@ public struct HomeFeature: Sendable {
                 state.$setupDone.withLock { $0 = true }
                 return .none
 
+            case .releaseNotificationAsk:
+                state.holdsNotificationAsk = false
+                return .send(.askForNotificationsIfNeeded)
+
             case .notificationPromptReady:
+                // Held while a first run presents its own screens: not marked
+                // as asked, so it is raised again when they are done.
+                guard !state.holdsNotificationAsk else { return .none }
                 // Marked as asked the moment the alert goes up, not when it is
                 // answered: dismissing it is an answer too, and iOS only ever
                 // shows its own prompt once.

@@ -182,6 +182,7 @@ public struct SettingsFeature: Sendable {
         /// Pushed, not presented: it is a page of Settings.
         case calendar(CalendarSettingsFeature)
         case notifications(NotificationSettingsFeature)
+        case invite(InviteFeature)
     }
 
     public enum Action: BindableAction {
@@ -206,6 +207,8 @@ public struct SettingsFeature: Sendable {
         case themeSelected(AppTheme)
         case languageSelected(AppLanguage)
         case copyInviteCodeTapped
+        /// "Invite someone": the QR code and the link.
+        case inviteTapped
         case inviteCodeCopyExpired
         case manageHomesTapped
         case customizeTapped
@@ -511,6 +514,11 @@ public struct SettingsFeature: Sendable {
             case let .languageSelected(language):
                 state.$language.withLock { $0 = language }
                 return .send(.delegate(.languageChanged(language)))
+
+            case .inviteTapped:
+                guard let home = state.home else { return .none }
+                state.destination = .invite(InviteFeature.State(homeID: home.id, homeName: home.name))
+                return .none
 
             case .copyInviteCodeTapped:
                 guard let code = state.home?.inviteCode else { return .none }
