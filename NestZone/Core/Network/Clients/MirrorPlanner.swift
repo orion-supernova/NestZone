@@ -98,10 +98,21 @@ enum MirrorPlanner {
         marker: URL?,
         timeZoneOffset: Int?
     ) -> DeviceEventDraft {
-        DeviceEventDraft(
+        // The copy's own `url` is the marker that finds it again, so the
+        // event's link (a meeting's join link, a ticket) rides in the notes,
+        // first line, where every calendar app makes it tappable. A meeting
+        // with no place also gets it as its location: Calendar shows a Join
+        // button for a call link there.
+        let link = occurrence.url?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasLink = link?.isEmpty == false
+        let ownNotes = occurrence.notes?.isEmpty == false ? occurrence.notes : nil
+        let notes = hasLink ? [link!, ownNotes].compactMap { $0 }.joined(separator: "\n\n") : ownNotes
+        var location = occurrence.location?.isEmpty == false ? occurrence.location : nil
+        if location == nil, hasLink, occurrence.kind == .meeting { location = link }
+        return DeviceEventDraft(
             title: occurrence.title,
-            location: occurrence.location?.isEmpty == false ? occurrence.location : nil,
-            notes: occurrence.notes?.isEmpty == false ? occurrence.notes : nil,
+            location: location,
+            notes: notes,
             start: shape.start,
             end: shape.end,
             isAllDay: occurrence.isAllDay,

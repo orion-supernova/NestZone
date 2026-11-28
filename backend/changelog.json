@@ -56,6 +56,34 @@
   ],
   "entries": [
     {
+      "slug": "1.14.8-fixes",
+      "version": "1.14.8",
+      "kind": "fix",
+      "title": "Fixes and improvements",
+      "body": "House plans you copy into your own calendar now bring their link along.",
+      "highlights": [
+        "Fixed meeting links going missing from house plans copied into your calendar: the link is in the notes now, and a meeting gets a Join button"
+      ],
+      "translations": [
+        {
+          "language": "tr",
+          "title": "Düzeltmeler ve iyileştirmeler",
+          "body": "Takvimine düşen ev planları artık linkiyle geliyor.",
+          "highlights": [
+            "Takvimine kopyalanan toplantılarda linkin kaybolması düzeldi: link artık notlarda, toplantılarda da Katıl düğmesi çıkıyor"
+          ]
+        },
+        {
+          "language": "sv",
+          "title": "Fixar och förbättringar",
+          "body": "Hushållets planer i din egen kalender har nu med sig sin länk.",
+          "highlights": [
+            "Fixat att möteslänkar försvann från hushållets planer i din kalender: länken ligger nu i anteckningarna, och ett möte får en Anslut-knapp"
+          ]
+        }
+      ]
+    },
+    {
       "slug": "1.14.7-fixes",
       "version": "1.14.7",
       "kind": "fix",
