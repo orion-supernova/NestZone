@@ -384,12 +384,25 @@ warn "this version there as well — two binaries, one build number."
 
 run rm -rf "$ARCHIVE" "$EXPORT_DIR"
 run mkdir -p "$BUILD_DIR"
+# With the API key, xcodebuild can create or refresh the signing profile
+# itself (a new capability, say) without an Apple ID signed in to Xcode.
+AUTH_ARGS=()
+if [[ -n "${ASC_KEY_ID:-}" && -n "${ASC_ISSUER_ID:-}" ]]; then
+  AUTH_ARGS=(
+    -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+    -authenticationKeyID "$ASC_KEY_ID"
+    -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+  )
+fi
+# pipefail: without it `| tail` hides a failed archive and the script goes on.
+set -o pipefail
 run xcodebuild archive \
   -project "$PROJECT" \
   -scheme "$SCHEME" \
   -destination "generic/platform=iOS" \
   -archivePath "$ARCHIVE" \
   -allowProvisioningUpdates \
+  "${AUTH_ARGS[@]}" \
   | tail -3 || die "Archive failed."
 info "archived: $ARCHIVE"
 
